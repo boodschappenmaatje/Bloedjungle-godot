@@ -22,21 +22,21 @@ void fragment() {
 	float n4 = texture(noise_a, p * 1.7).r;
 	float n5 = texture(noise_b, p * 3.8).r;
 
-	vec3 grass_dark = vec3(0.035, 0.085, 0.032);
-	vec3 grass_mid = vec3(0.105, 0.17, 0.075);
-	vec3 grass_light = vec3(0.19, 0.25, 0.105);
+	vec3 grass_dark = vec3(0.095, 0.13, 0.068);
+	vec3 grass_mid = vec3(0.17, 0.215, 0.105);
+	vec3 grass_light = vec3(0.23, 0.285, 0.145);
 	float grass_mix = smoothstep(0.28, 0.74, n1 * 0.62 + n2 * 0.38);
 	vec3 grass = mix(grass_dark, grass_mid, grass_mix);
 	grass = mix(grass, grass_light, smoothstep(0.68, 0.91, n2) * 0.52);
-	grass *= 0.78 + 0.32 * n3;
+	grass *= 0.91 + 0.16 * n3;
 	grass = mix(grass, grass * vec3(1.14, 1.08, 0.83), smoothstep(0.69, 0.9, n4) * 0.27);
 
-	vec3 soil = mix(vec3(0.105, 0.075, 0.048), vec3(0.19, 0.125, 0.075), n2);
-	soil *= 0.78 + 0.34 * n3 + 0.16 * n4;
-	vec3 sand = mix(vec3(0.31, 0.235, 0.135), vec3(0.47, 0.355, 0.22), n3 * 0.7 + n4 * 0.3);
-	vec3 dirt = mix(soil, sand, smoothstep(0.34, 0.8, n2) * 0.68);
+	vec3 soil = mix(vec3(0.18, 0.145, 0.105), vec3(0.27, 0.205, 0.135), n2);
+	soil *= 0.91 + 0.17 * n3 + 0.06 * n4;
+	vec3 sand = mix(vec3(0.34, 0.27, 0.17), vec3(0.45, 0.355, 0.235), n3 * 0.7 + n4 * 0.3);
+	vec3 dirt = mix(soil, sand, smoothstep(0.36, 0.72, n2) * 0.46);
 	// Tiny granular value changes keep dirt legible without a costly normal map.
-	dirt *= 0.91 + 0.18 * n5;
+	dirt *= 0.96 + 0.09 * n5;
 
 	float box_edge = max(abs(p.x), abs(p.y));
 	float inside = 1.0 - smoothstep(compound - 0.25, compound + 2.8 + (n3 - 0.5) * 1.6, box_edge);
@@ -48,8 +48,8 @@ void fragment() {
 	float apron = (1.0 - smoothstep(0.0, 2.2, abs(p.x)))
 		* (1.0 - smoothstep(0.0, 4.0, abs(abs(p.y) - (compound + 2.0))));
 	float patches = smoothstep(0.68, 0.84, n1 * 0.75 + n2 * 0.25);
-	float dm = clamp(max(max(inside, road_mask), max(apron * 0.66, patches * 0.48)), 0.0, 1.0);
-	dm = smoothstep(0.28, 0.72, dm + (n3 - 0.5) * 0.32);
+	float dm = clamp(max(max(inside, road_mask), max(apron * 0.66, patches * 0.16)), 0.0, 1.0);
+	dm = smoothstep(0.28, 0.72, dm + (n3 - 0.5) * 0.12);
 
 	// Two shallow wheel-worn tracks run along the road without becoming hard stripes.
 	float track_a = 1.0 - smoothstep(0.22, 0.72, abs(abs(p.x) - 1.45 + (n3 - 0.5) * 0.22));
@@ -57,6 +57,6 @@ void fragment() {
 	dirt = mix(dirt, soil * 0.88, tracks);
 	grass = mix(grass, mix(sand, soil, 0.45), tracks * 0.42);
 
-	ALBEDO = pow(mix(grass, dirt, dm), vec3(2.2));  // kleuren hierboven zijn sRGB gekozen
+	ALBEDO = pow(mix(grass, dirt, dm), vec3(2.0));  // slightly lifted midtones for small mobile displays
 	ROUGHNESS = mix(0.91 + n5 * 0.06, 0.97 + n5 * 0.03, dm);
 }

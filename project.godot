@@ -1,13 +1,23 @@
-; Bloedjungle in Godot 4 (proef). Open deze map in Godot 4.4 of nieuwer.
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
+
+[animation]
+
+compatibility/default_parent_skeleton_in_mesh_instance_3d=true
 
 [application]
 
 config/name="Bloedjungle"
 config/description="Top-down shooter: verdedig je jungle-bunker tegen golven vijanden."
 run/main_scene="res://scenes/main.tscn"
-config/features=PackedStringArray("4.4", "GL Compatibility")
+config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
@@ -18,12 +28,7 @@ Game="*res://scripts/game.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
-window/stretch/mode="disabled"
 window/handheld/orientation=4
-
-[input_devices]
-
-pointing/emulate_mouse_from_touch=true
 
 [layer_names]
 
@@ -37,6 +42,5 @@ pointing/emulate_mouse_from_touch=true
 [rendering]
 
 renderer/rendering_method="mobile"
-renderer/rendering_method.web="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true
 anti_aliasing/quality/msaa_3d=1

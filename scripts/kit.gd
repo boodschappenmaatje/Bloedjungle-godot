@@ -176,7 +176,8 @@ static func scatter(parent: Node3D, mesh: Mesh, mat: Material, xforms: Array, co
 			mm.set_instance_color(i, colors[i])
 	var inst := MultiMeshInstance3D.new()
 	inst.multimesh = mm
-	inst.material_override = mat
+	if mat != null:
+		inst.material_override = mat
 	inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if shadows else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(inst)
 	return inst

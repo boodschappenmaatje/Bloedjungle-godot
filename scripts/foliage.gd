@@ -187,6 +187,8 @@ static func _scatter(rng: RandomNumberGenerator, count: int, r_min: float, r_max
 			continue
 		if absf(p.x) < 4.6 and absf(p.z) > Data.COMPOUND and absf(p.z) < 50.0:
 			continue  # pad vanaf de poorten
+		if p.x > Data.COMPOUND and p.x < 25.5 and absf(p.z) < 23.0:
+			continue  # tankbaan langs de oostmuur
 		var s := rng.randf_range(s_min, s_max)
 		var b := Basis.from_euler(Vector3(rng.randf_range(-tilt, tilt), rng.randf() * TAU, rng.randf_range(-tilt, tilt))).scaled(Vector3(s, s * rng.randf_range(0.85, 1.2), s))
 		out.append(Transform3D(b, p))

@@ -96,6 +96,11 @@ static func _bunker(root: Node3D) -> void:
 	for x in [-1.65, -0.95]:
 		Kit.box(root, Vector3(x, 0.78, 2.33), Vector3(0.42, 0.07, 0.045), Kit.flat(Color("252824"), 0.9, 0.05))
 		Kit.box(root, Vector3(x, 0.63, 2.33), Vector3(0.42, 0.07, 0.045), Kit.flat(Color("252824"), 0.9, 0.05))
+	# Raised roof parapets and reinforced corner caps provide a readable bunker silhouette.
+	var trim := Kit.concrete_dark()
+	for side in [-1.0, 1.0]:
+		Kit.box(root, Vector3(side * 2.48, 2.43, 0), Vector3(0.24, 0.42, 5.16), trim)
+		Kit.box(root, Vector3(0, 2.43, side * 2.48), Vector3(5.16, 0.42, 0.24), trim)
 	# camouflagenet over de rand van het dak
 	var net := Kit.box(root, Vector3(-1.2, 2.62, -1.0), Vector3(2.8, 0.06, 2.6), Kit.olive(), 0.15)
 	net.rotation.z = 0.06
@@ -161,6 +166,13 @@ static func _tower(root: Node3D, pos: Vector3) -> void:
 		for sz in [-1.0, 1.0]:
 			Kit.box(holder, Vector3(sx * 1.1, h + 0.16, sz * 1.1), Vector3(0.12, 1.9, 0.12), wood)
 	Kit.gable(holder, Vector3(0, h + 2.0, 0), Vector3(2.9, 0.9, 2.9), Kit.roof())
+	# Extra platform bracing and matte corrugated roof ribs (visual only).
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			var brace := Kit.box(holder, Vector3(sx * 0.85, 3.45, sz * 0.85), Vector3(0.1, 2.5, 0.11), wood)
+			brace.rotation.z = sx * 0.26
+	for i in 7:
+		Kit.box(holder, Vector3(-1.22 + i * 0.4, h + 2.22, 0), Vector3(0.065, 0.055, 2.75), Kit.roof())
 	# ladder
 	Kit.box(holder, Vector3(1.15, 0, 0.3), Vector3(0.08, h, 0.08), wood)
 	Kit.box(holder, Vector3(1.15, 0, -0.3), Vector3(0.08, h, 0.08), wood)

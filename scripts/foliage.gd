@@ -88,8 +88,8 @@ static func palm(seed_ := 5) -> ArrayMesh:
 	# kroon van takken met bladpunten
 	var crown := SurfaceTool.new()
 	crown.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var white := Color(0.66, 0.76, 0.53)
-	var dark := Color(0.34, 0.48, 0.28)
+	var white := Color(0.46, 0.56, 0.34)
+	var dark := Color(0.23, 0.34, 0.20)
 	for k in 12:
 		var yaw := TAU * k / 12.0 + rng.randf_range(-0.2, 0.2)
 		_frond(crown, top + Vector3.UP * 0.05, yaw, rng.randf_range(2.4, 3.6), rng.randf_range(0.55, 0.82), rng.randf_range(0.7, 1.35), rng.randf_range(1.15, 2.0), dark, white, 7)
@@ -110,7 +110,7 @@ static func bush(seed_ := 9) -> ArrayMesh:
 	for k in leaf_count:
 		var yaw := TAU * k / leaf_count + rng.randf_range(-0.28, 0.28)
 		var o := Vector3(cos(yaw), 0, sin(yaw)) * rng.randf_range(0.0, 0.3) + Vector3.UP * rng.randf_range(0.05, 0.5)
-		_frond(st, o, yaw, rng.randf_range(0.75, 1.45), rng.randf_range(0.34, 0.58), rng.randf_range(0.45, 0.95), rng.randf_range(0.3, 0.8), Color(0.42, 0.54, 0.36), Color(0.72, 0.78, 0.57), 3)
+		_frond(st, o, yaw, rng.randf_range(0.75, 1.45), rng.randf_range(0.34, 0.58), rng.randf_range(0.45, 0.95), rng.randf_range(0.3, 0.8), Color(0.30, 0.42, 0.27), Color(0.53, 0.61, 0.40), 3)
 	var m := st.commit()
 	m.surface_set_material(0, material("leaf"))
 	return m
@@ -124,7 +124,7 @@ static func fern(seed_ := 3) -> ArrayMesh:
 	var frond_count := rng.randi_range(8, 12)
 	for k in frond_count:
 		var yaw := TAU * k / frond_count + rng.randf_range(-0.2, 0.2)
-		_frond(st, Vector3(0, 0.05, 0), yaw, rng.randf_range(0.85, 1.55), rng.randf_range(0.24, 0.36), rng.randf_range(0.45, 0.95), rng.randf_range(0.55, 1.0), Color(0.38, 0.52, 0.32), Color(0.69, 0.76, 0.52), 4)
+		_frond(st, Vector3(0, 0.05, 0), yaw, rng.randf_range(0.85, 1.55), rng.randf_range(0.24, 0.36), rng.randf_range(0.45, 0.95), rng.randf_range(0.55, 1.0), Color(0.28, 0.42, 0.25), Color(0.50, 0.61, 0.39), 4)
 	var m := st.commit()
 	m.surface_set_material(0, material("fern"))
 	return m
@@ -142,7 +142,7 @@ static func grass() -> ArrayMesh:
 		for idx in [0, 1, 2, 0, 2, 3]:
 			var v: Array = q[idx]
 			st.set_uv(v[1])
-			st.set_color(Color(0.60, 0.69, 0.48, v[2]))
+			st.set_color(Color(0.45, 0.56, 0.34, v[2]))
 			st.set_normal(Vector3.UP)
 			st.add_vertex(v[0])
 	var m := st.commit()

@@ -1,0 +1,41 @@
+; Bloedjungle in Godot 4 (proef). Open deze map in Godot 4.4 of nieuwer.
+
+config_version=5
+
+[application]
+
+config/name="Bloedjungle"
+config/description="Top-down shooter: verdedig je jungle-bunker tegen golven vijanden."
+run/main_scene="res://scenes/main.tscn"
+config/features=PackedStringArray("4.4", "GL Compatibility")
+config/icon="res://icon.svg"
+
+[autoload]
+
+Game="*res://scripts/game.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="disabled"
+window/handheld/orientation=4
+
+[input_devices]
+
+pointing/emulate_mouse_from_touch=true
+
+[layer_names]
+
+3d_physics/layer_1="grond"
+3d_physics/layer_2="muur"
+3d_physics/layer_3="speler"
+3d_physics/layer_4="vijand"
+3d_physics/layer_5="bunker"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=1

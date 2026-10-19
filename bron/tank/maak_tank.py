@@ -1,4 +1,4 @@
-"""Low-poly tank voor Bloedjungle. Blender +Y = voorkant (wordt -Z in Godot), 1 eenheid = 1 meter."""
+"""Low-poly tank voor Bloedjungle met losse wielen en rupsschakels plus animaties. Blender +Y = voorkant (wordt -Z in Godot), 1 eenheid = 1 meter."""
 import math, sys, os
 import bpy, bmesh
 import numpy as np
@@ -99,17 +99,20 @@ def box(name, size, material, parent=None, loc=(0, 0, 0)):
     bmesh.ops.scale(bm, vec=size, verts=bm.verts)
     return mesh_obj(name, bm, material, parent, loc)
 
+from mathutils import Matrix
+
 def cyl(name, r1, r2, depth, material, axis="Z", segs=12, parent=None, loc=(0, 0, 0), smooth=True):
     bm = bmesh.new()
     bmesh.ops.create_cone(bm, cap_ends=True, segments=segs, radius1=r1, radius2=r2, depth=depth)
     if axis == "X":
-        bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=__import__("mathutils").Matrix.Rotation(math.pi / 2, 3, "Y"))
+        bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(math.pi / 2, 3, "Y"))
     elif axis == "Y":
-        bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=__import__("mathutils").Matrix.Rotation(-math.pi / 2, 3, "X"))
+        bmesh.ops.rotate(bm, verts=bm.verts, cent=(0, 0, 0), matrix=Matrix.Rotation(-math.pi / 2, 3, "X"))
     o = mesh_obj(name, bm, material, parent, loc, smooth)
     if smooth:
         o.data.set_sharp_from_angle(angle=math.radians(40))
     return o
+
 
 def bevel(o, w=0.03, segs=1):
     m = o.modifiers.new("bevel", "BEVEL")
@@ -117,76 +120,156 @@ def bevel(o, w=0.03, segs=1):
     m.segments = segs
     m.limit_method = "ANGLE"
 
-# ---------- romp ----------
+
+LOS = []  # losse, bewegende delen (wielen, schakels): niet samenvoegen met de romp
+
+# ---------- hiërarchie: Tank > Body > romp, wielen, schakels, Toren > Loop ----------
 root = link(bpy.data.objects.new("Tank", None))
+body = link(bpy.data.objects.new("Body", None), root)
 
 romp = prism_x("Romp", [(-3.0, 0.55), (3.05, 0.55), (3.45, 0.95), (3.1, 1.45), (-2.85, 1.45), (-3.15, 1.1)],
-               2.3, CAMO, root)
+               2.3, CAMO, body)
 bevel(romp, 0.04)
-# achterdek met motorroosters
-dek = box("Motordek", (1.9, 1.5, 0.12), GROEN, root, (0, -2.05, 1.5))
+dek = box("Motordek", (1.9, 1.5, 0.12), GROEN, body, (0, -2.05, 1.5))
 bevel(dek, 0.02)
 for i in range(6):
-    box(f"Rooster{i}", (1.7, 0.08, 0.04), METAAL, root, (0, -2.65 + i * 0.24, 1.57))
+    box(f"Rooster{i}", (1.7, 0.08, 0.04), METAAL, body, (0, -2.65 + i * 0.24, 1.57))
 
-# rupsbanden + spatborden
+# Rupsprofiel (y, z) in zijaanzicht; de schakels lopen hieromheen.
+PROFIEL = [(-3.3, 0.55), (-3.0, 0.12), (-2.6, 0.0), (2.75, 0.0), (3.2, 0.2), (3.55, 0.75),
+           (3.3, 1.02), (-3.2, 1.02), (-3.45, 0.8)]
+
+
+def chaikin(pts, n=3):
+    for _ in range(n):
+        out = []
+        for i in range(len(pts)):
+            a, b = pts[i], pts[(i + 1) % len(pts)]
+            out.append((a[0] * 0.75 + b[0] * 0.25, a[1] * 0.75 + b[1] * 0.25))
+            out.append((a[0] * 0.25 + b[0] * 0.75, a[1] * 0.25 + b[1] * 0.75))
+        pts = out
+    return pts
+
+
+PAD = chaikin(PROFIEL)
+SEG = []
+for i in range(len(PAD)):
+    a, b = PAD[i], PAD[(i + 1) % len(PAD)]
+    SEG.append((a, b, math.hypot(b[0] - a[0], b[1] - a[1])))
+OMTREK = sum(s[2] for s in SEG)
+N_SCHAKEL = int(OMTREK / 0.36)
+STEEK = OMTREK / N_SCHAKEL
+
+
+def op_pad(s):
+    """Positie (y, z) en hoek langs de rups op booglengte s."""
+    s %= OMTREK
+    for a, b, l in SEG:
+        if s <= l:
+            k = s / l
+            return a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k, math.atan2(b[1] - a[1], b[0] - a[0])
+        s -= l
+    a, b, l = SEG[-1]
+    return b[0], b[1], math.atan2(b[1] - a[1], b[0] - a[0])
+
+
+WIELEN = {}   # naam -> (object, straal, symmetrie-hoek)
+SCHAKELS = {"L": [], "R": []}
 for side, sx in (("L", -1), ("R", 1)):
     x = sx * 1.47
-    rups = prism_x(f"Rups{side}", [(-3.3, 0.55), (-3.0, 0.12), (-2.6, 0.0), (2.75, 0.0), (3.2, 0.2), (3.55, 0.75),
-                                  (3.3, 1.02), (-3.2, 1.02), (-3.45, 0.8)], 0.66, RUPS, root, (x, 0, 0))
-    bevel(rups, 0.05)
-    # schakels als ribbels op de zichtbare onderkant voor/achter
-    for i in range(18):
-        box(f"Schakel{side}{i}", (0.7, 0.07, 0.04), RUBBER, root, (x, -2.55 + i * 0.3, -0.005))
-    # loopwielen aan de buitenkant
-    for i in range(6):
-        y = -2.35 + i * 0.93
-        cyl(f"Wiel{side}{i}", 0.4, 0.4, 0.12, WIEL, "X", 14, root, (x + sx * 0.34, y, 0.42))
-        cyl(f"Naaf{side}{i}", 0.13, 0.1, 0.06, METAAL, "X", 8, root, (x + sx * 0.42, y, 0.42))
-    cyl(f"Tandwiel{side}", 0.36, 0.36, 0.14, METAAL, "X", 10, root, (x + sx * 0.34, -3.05, 0.62))
-    cyl(f"Spanwiel{side}", 0.32, 0.32, 0.14, WIEL, "X", 12, root, (x + sx * 0.34, 3.2, 0.62))
-    for i in range(3):
-        cyl(f"Steunrol{side}{i}", 0.1, 0.1, 0.1, METAAL, "X", 8, root, (x + sx * 0.34, -1.6 + i * 1.5, 0.93))
-    sb = prism_x(f"Spatbord{side}", [(-3.25, 1.06), (3.3, 1.06), (3.55, 0.9), (3.55, 0.84), (3.25, 1.0), (-3.25, 1.0)],
-                 0.78, GROEN, root, (x + sx * 0.02, 0, 0))
-    # opbergkisten op het spatbord
-    for i, y in enumerate((-1.9, -0.6)):
-        k = box(f"Kist{side}{i}", (0.55, 1.05, 0.38), HOUT if i else GROEN, root, (x, y, 1.26))
-        bevel(k, 0.03)
-    # koplampen
-    cyl(f"Lamp{side}", 0.11, 0.11, 0.14, GLAS, "Y", 10, root, (sx * 0.85, 3.25, 1.3))
-    box(f"Lampkap{side}", (0.3, 0.12, 0.05), METAAL, root, (sx * 0.85, 3.25, 1.43))
-# reservewiel / brandstofvaten achter
-for i, x in enumerate((-0.6, 0.6)):
-    cyl(f"Vat{i}", 0.26, 0.26, 0.8, GROEN, "X", 12, root, (x, -3.2, 1.25))
-# bestuurdersluik
-cyl("Bestuurderluik", 0.3, 0.28, 0.08, GROEN, "Z", 12, root, (0.55, 2.25, 1.5))
+    # donkere kern van de rupsband (iets kleiner), de schakels liggen eromheen
+    kern = prism_x(f"Rupskern{side}", [(y * 0.985, 0.03 + z * 0.94) for y, z in PROFIEL], 0.5, RUPS, body, (x, 0, 0))
+    bevel(kern, 0.05)
+    for i in range(N_SCHAKEL):
+        bm = bmesh.new()
+        bmesh.ops.create_cube(bm, size=1)
+        bmesh.ops.scale(bm, vec=(0.7, STEEK * 0.86, 0.06), verts=bm.verts)
+        nok = bmesh.ops.create_cube(bm, size=1)
+        bmesh.ops.scale(bm, vec=(0.7, 0.07, 0.05), verts=nok["verts"])
+        bmesh.ops.translate(bm, vec=(0, 0, -0.05), verts=nok["verts"])
+        o = mesh_obj(f"Schakel{side}{i:02d}", bm, RUBBER if i % 2 else RUPS, body)
+        y, z, a = op_pad(i * STEEK)
+        o.location = (x, y, z)
+        o.rotation_euler = (a, 0, 0)
+        SCHAKELS[side].append(o)
+        LOS.append(o)
 
-# ---------- toren (draait om Z) ----------
-toren = link(bpy.data.objects.new("Toren", None), root)
+    def wiel(naam, r, breed, mat_, y, z, bouten, steun=False):
+        w = cyl(naam, r, r, breed, mat_, "X", 16 if not steun else 8, body, (x + sx * 0.34, y, z))
+        delen = [cyl(naam + "naaf", r * 0.35, r * 0.28, breed + 0.08, METAAL, "X", 8, w)]
+        for k in range(bouten):
+            a = k * math.tau / bouten
+            delen.append(box(naam + f"bout{k}", (breed + 0.05, 0.05, 0.05), METAAL, w,
+                             (0, math.cos(a) * r * 0.62, math.sin(a) * r * 0.62)))
+        if not steun:
+            delen.append(cyl(naam + "band", r * 1.02, r * 1.02, breed * 0.35, RUBBER, "X", 16, w,
+                             (sx * breed * 0.32, 0, 0)))
+        bpy.ops.object.select_all(action="DESELECT")
+        for d in delen:
+            d.select_set(True)
+        w.select_set(True)
+        bpy.context.view_layer.objects.active = w
+        bpy.ops.object.join()
+        WIELEN[naam] = (w, r, math.tau / bouten)
+        LOS.append(w)
+
+    for i in range(6):
+        wiel(f"Wiel{side}{i}", 0.4, 0.14, WIEL, -2.35 + i * 0.93, 0.42, 6)
+    # aandrijfwiel met tanden achter, spanwiel voor, steunrollen boven
+    tw = cyl(f"Tandwiel{side}", 0.34, 0.34, 0.16, METAAL, "X", 10, body, (x + sx * 0.34, -3.05, 0.62))
+    tanden = [box(f"Tand{side}{k}", (0.12, 0.09, 0.14), METAAL, tw,
+                  (0, math.cos(k * math.tau / 10) * 0.38, math.sin(k * math.tau / 10) * 0.38)) for k in range(10)]
+    for k, t_ in enumerate(tanden):
+        t_.rotation_euler = (k * math.tau / 10, 0, 0)
+    bpy.ops.object.select_all(action="DESELECT")
+    for d in tanden:
+        d.select_set(True)
+    tw.select_set(True)
+    bpy.context.view_layer.objects.active = tw
+    bpy.ops.object.join()
+    WIELEN[f"Tandwiel{side}"] = (tw, 0.42, math.tau / 10)
+    LOS.append(tw)
+    wiel(f"Spanwiel{side}", 0.32, 0.14, WIEL, 3.2, 0.62, 5)
+    for i in range(3):
+        wiel(f"Steunrol{side}{i}", 0.1, 0.1, METAAL, -1.6 + i * 1.5, 0.95, 4, steun=True)
+
+    sb = prism_x(f"Spatbord{side}", [(-3.25, 1.10), (3.3, 1.10), (3.6, 0.92), (3.6, 0.86), (3.25, 1.04), (-3.25, 1.04)],
+                 0.8, GROEN, body, (x + sx * 0.02, 0, 0))
+    for i, y in enumerate((-1.9, -0.6)):
+        k = box(f"Kist{side}{i}", (0.55, 1.05, 0.38), HOUT if i else GROEN, body, (x, y, 1.30))
+        bevel(k, 0.03)
+    cyl(f"Lamp{side}", 0.11, 0.11, 0.14, GLAS, "Y", 10, body, (sx * 0.85, 3.25, 1.3))
+    box(f"Lampkap{side}", (0.3, 0.12, 0.05), METAAL, body, (sx * 0.85, 3.25, 1.43))
+for i, x in enumerate((-0.6, 0.6)):
+    cyl(f"Vat{i}", 0.26, 0.26, 0.8, GROEN, "X", 12, body, (x, -3.2, 1.25))
+cyl("Bestuurderluik", 0.3, 0.28, 0.08, GROEN, "Z", 12, body, (0.55, 2.25, 1.5))
+# uitlaten achter (voor rook in het spel)
+for sx in (-1, 1):
+    cyl(f"Uitlaat{sx}", 0.09, 0.09, 0.3, METAAL, "Y", 8, body, (sx * 0.75, -3.25, 0.95))
+uitlaat = link(bpy.data.objects.new("Uitlaat", None), body)
+uitlaat.location = (0, -3.45, 0.95)
+
+# ---------- toren (draait om Z) en kanon (kantelt om X) ----------
+toren = link(bpy.data.objects.new("Toren", None), body)
 toren.location = (0, 0.2, 1.45)
 koepel = cyl("TorenKoepel", 1.45, 1.12, 0.75, CAMO, "Z", 16, toren, (0, 0, 0.37))
 koepel.scale = (0.95, 1.25, 1.0)
 koepel.location = (0, -0.1, 0.37)
-rand = cyl("TorenRing", 1.3, 1.3, 0.1, METAAL, "Z", 16, toren, (0, 0, 0.03))
-bm_achter = box("TorenAchterbak", (1.7, 0.9, 0.45), GROEN, toren, (0, -1.75, 0.38))
-bevel(bm_achter, 0.04)
+cyl("TorenRing", 1.3, 1.3, 0.1, METAAL, "Z", 16, toren, (0, 0, 0.03))
+ab = box("TorenAchterbak", (1.7, 0.9, 0.45), GROEN, toren, (0, -1.75, 0.38))
+bevel(ab, 0.04)
 cyl("Commandokoepel", 0.38, 0.33, 0.32, GROEN, "Z", 12, toren, (-0.45, -0.45, 0.88))
 cyl("Commandoluik", 0.33, 0.3, 0.07, METAAL, "Z", 12, toren, (-0.45, -0.45, 1.07))
 cyl("Laderluik", 0.28, 0.27, 0.07, GROEN, "Z", 12, toren, (0.5, -0.3, 0.78))
-# machinegeweer op de koepel
 box("MGBody", (0.1, 0.55, 0.13), METAAL, toren, (-0.45, -0.25, 1.22))
 cyl("MGLoop", 0.025, 0.025, 0.7, METAAL, "Y", 6, toren, (-0.45, 0.3, 1.24))
 box("MGKist", (0.14, 0.16, 0.14), GROEN, toren, (-0.33, -0.3, 1.15))
-# rookgranaatwerpers
 for sx in (-1, 1):
     for i in range(3):
         cyl(f"Rook{sx}{i}", 0.06, 0.06, 0.3, METAAL, "Y", 8, toren, (sx * (0.95 + i * 0.1), 0.85 - i * 0.12, 0.45))
-# antennes
 cyl("Antenne1", 0.015, 0.008, 2.0, METAAL, "Z", 5, toren, (0.7, -2.0, 1.6), smooth=False)
 cyl("Antenne2", 0.015, 0.008, 1.5, METAAL, "Z", 5, toren, (-0.7, -2.0, 1.35), smooth=False)
 
-# ---------- kanon (kantelt om X) ----------
 loop = link(bpy.data.objects.new("Loop", None), toren)
 loop.location = (0, 1.25, 0.42)
 mantel = box("Mantel", (0.75, 0.5, 0.55), GROEN, loop, (0, 0.1, 0))
@@ -197,8 +280,8 @@ cyl("Mondingsrem", 0.15, 0.15, 0.3, METAAL, "Y", 8, loop, (0, 3.95, 0))
 mond = link(bpy.data.objects.new("Monding", None), loop)
 mond.location = (0, 4.15, 0)
 
-# ---------- UV's ----------
-for o in scene.objects:
+# ---------- UV's, modifiers, samenvoegen ----------
+for o in list(scene.objects):
     if o.type == "MESH":
         bpy.context.view_layer.objects.active = o
         for s in scene.objects:
@@ -207,27 +290,152 @@ for o in scene.objects:
         bpy.ops.mesh.select_all(action="SELECT")
         bpy.ops.uv.cube_project(cube_size=2.5)
         bpy.ops.object.mode_set(mode="OBJECT")
-
-# modifiers toepassen en per beweegbaar deel samenvoegen (minder draw calls in Godot)
 for o in scene.objects:
     o.select_set(o.type == "MESH")
-bpy.context.view_layer.objects.active = next(o for o in scene.objects if o.type == "MESH")
+bpy.context.view_layer.objects.active = romp
 bpy.ops.object.convert(target="MESH")
-for parent, naam in ((root, "RompMesh"), (toren, "TorenMesh"), (loop, "LoopMesh")):
-    delen = [o for o in parent.children if o.type == "MESH"]
+los_namen = {o.name for o in LOS}
+for parent, naam, eerste in ((body, "RompMesh", romp), (toren, "TorenMesh", koepel), (loop, "LoopMesh", mantel)):
+    delen = [o for o in parent.children if o.type == "MESH" and o.name not in los_namen]
     bpy.ops.object.select_all(action="DESELECT")
     for o in delen:
         o.select_set(True)
-    bpy.context.view_layer.objects.active = delen[0]
+    bpy.context.view_layer.objects.active = eerste
     bpy.ops.object.join()
-    delen[0].name = naam
-    delen[0].data.name = naam
+    eerste.name = eerste.data.name = naam
+    bpy.ops.object.select_all(action="DESELECT")
+    eerste.select_set(True)
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+loopmesh = bpy.data.objects["LoopMesh"]
 bpy.data.images["tank_camo"].pack()
+
+# ---------- animaties ----------
+FPS = 30
+scene.render.fps = FPS
+LUS = 2.0  # seconden; alle lussen zijn hierop afgestemd zodat ze naadloos herhalen
+
+
+def ease(t):
+    return t * t * (3 - 2 * t)
+
+
+def snap_snelheid(v):
+    """Rupssnelheid zo afronden dat de schakels in LUS seconden een geheel aantal steken opschuiven."""
+    k = round(v * LUS / STEEK)
+    return k * STEEK / LUS
+
+
+def clip(naam, duur, rups, pose, loop_y=lambda t: 0.0):
+    """rups(t) -> (vL, vR) in m/s (positief = vooruit); pose(t) -> (x, y, z, pitch, roll) van Body."""
+    frames = int(round(duur * FPS))
+    objs = [body, loopmesh] + [w for w, _, _ in WIELEN.values()] + SCHAKELS["L"] + SCHAKELS["R"]
+    for o in objs:
+        o.animation_data_create()
+        o.animation_data.action = bpy.data.actions.new(f"{naam}_{o.name}")
+    basis = {o: (o.location.copy(), o.rotation_euler.copy()) for o in objs}
+    afstand = {"L": 0.0, "R": 0.0}
+    eind = {"L": 0.0, "R": 0.0}
+    for f in range(1, frames + 1):
+        vl, vr = rups(f / FPS)
+        eind["L"] += vl / FPS
+        eind["R"] += vr / FPS
+    # per wiel een kleine correctie zodat de eindhoek een geheel aantal boutstappen is (naadloze lus)
+    corr = {}
+    for n, (w, r, sym) in WIELEN.items():
+        side = n[-1] if n[-1] in "LR" else n[-2]
+        raw = eind[side] / r
+        corr[n] = (round(raw / sym) * sym / raw) if abs(raw) > 1e-6 and round(raw / sym) else 1.0
+    for f in range(frames + 1):
+        t = f / FPS
+        if f:
+            vl, vr = rups(t)
+            afstand["L"] += vl / FPS
+            afstand["R"] += vr / FPS
+        x, y, z, pitch, roll = pose(t)
+        body.location = (x, y, z)
+        body.rotation_euler = (pitch, roll, 0)
+        body.keyframe_insert("location", frame=f)
+        body.keyframe_insert("rotation_euler", frame=f)
+        lp = basis[loopmesh][0]
+        loopmesh.location = (lp.x, lp.y + loop_y(t), lp.z)
+        loopmesh.keyframe_insert("location", frame=f)
+        for side in ("L", "R"):
+            for i, o in enumerate(SCHAKELS[side]):
+                # bij vooruit rijden schuift de onderkant naar achteren: booglengte neemt af
+                yy, zz, a = op_pad(i * STEEK - afstand[side])
+                o.location = (basis[o][0].x, yy, zz)
+                o.rotation_euler = (a, 0, 0)
+                o.keyframe_insert("location", frame=f)
+                o.keyframe_insert("rotation_euler", frame=f)
+        for n, (w, r, sym) in WIELEN.items():
+            side = n[-1] if n[-1] in "LR" else n[-2]
+            totaal = afstand[side]
+            w.rotation_euler = (-totaal / r * corr[n], 0, 0)
+            w.keyframe_insert("rotation_euler", frame=f)
+    for o in objs:
+        a = o.animation_data.action
+        tr = o.animation_data.nla_tracks.new()
+        tr.name = naam
+        st = tr.strips.new(naam, 0, a)
+        st.name = naam
+        o.animation_data.action = None
+        o.location, o.rotation_euler = basis[o]
+
+
+def tril(t, sterk=1.0):
+    """Motortrilling: snelle kleine beweging, periode deelt LUS."""
+    return (0.004 * sterk * math.sin(t * math.tau * 15), 0.0025 * sterk * math.sin(t * math.tau * 10 + 1.3))
+
+
+V_RIJ = snap_snelheid(3.2)
+V_ACH = snap_snelheid(1.8)
+V_DRAAI = snap_snelheid(1.6)
+
+clip("Stationair-loop", LUS, lambda t: (0, 0),
+     lambda t: (0, 0, tril(t)[0], tril(t)[1], 0.0015 * math.sin(t * math.tau * 5)))
+
+clip("Rijden-loop", LUS, lambda t: (V_RIJ, V_RIJ),
+     lambda t: (0, 0, 0.012 * math.sin(t * math.tau * 2) + tril(t, 0.6)[0],
+                math.radians(-0.9) + math.radians(0.7) * math.sin(t * math.tau * 1 + 0.4) + tril(t, 0.6)[1],
+                math.radians(0.6) * math.sin(t * math.tau * 0.5)))
+
+clip("Achteruit-loop", LUS, lambda t: (-V_ACH, -V_ACH),
+     lambda t: (0, 0, 0.01 * math.sin(t * math.tau * 2) + tril(t, 0.6)[0],
+                math.radians(0.7) + math.radians(0.5) * math.sin(t * math.tau + 1.0) + tril(t, 0.6)[1],
+                math.radians(0.5) * math.sin(t * math.tau * 0.5)))
+
+clip("Draaien-loop", LUS, lambda t: (-V_DRAAI, V_DRAAI),
+     lambda t: (0, 0, 0.008 * math.sin(t * math.tau * 2) + tril(t, 0.7)[0], tril(t, 0.7)[1],
+                math.radians(-1.0) + math.radians(0.4) * math.sin(t * math.tau)))
+
+
+def schiet_pose(t):
+    # de terugslag duwt de neus omhoog; de vering laat de romp een paar keer na-wippen
+    k = math.exp(-t * 3.2)
+    pitch = math.radians(2.6) * k * math.sin(t * math.tau * 1.6 + 0.35)
+    z = 0.03 * k * math.sin(t * math.tau * 1.6)
+    y = -0.06 * k * math.sin(min(t * 6, math.pi / 2))
+    tz, tp = tril(t)
+    return (0, y, z + tz, pitch + tp, 0)
+
+
+def terugslag(t):
+    if t < 0.06:
+        return -0.55 * ease(t / 0.06)
+    return -0.55 * (1 - ease(min(1.0, (t - 0.06) / 0.9)))
+
+
+clip("Schieten", 1.6, lambda t: (0, 0), schiet_pose, terugslag)
+
+scene.frame_start, scene.frame_end = 0, 60
 bpy.ops.object.select_all(action="DESELECT")
-bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "tank.glb"), export_format="GLB",
-                          export_apply=True, export_yup=True)
+bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "tank.glb"), export_format="GLB", export_apply=True,
+                          export_yup=True, export_animations=True, export_animation_mode="NLA_TRACKS",
+                          export_force_sampling=True, export_optimize_animation_size=False)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "tank.blend"))
-tris = sum(len(o.evaluated_get(bpy.context.evaluated_depsgraph_get()).data.loop_triangles) if False else 0 for o in [])
-tris = sum(len(o.data.loop_triangles) for o in scene.objects if o.type == "MESH" and not o.data.calc_loop_triangles())
-print("TRIS", tris)
-print("KLAAR", len([o for o in scene.objects if o.type == "MESH"]), "meshes")
+tris = 0
+for o in scene.objects:
+    if o.type == "MESH":
+        o.data.calc_loop_triangles()
+        tris += len(o.data.loop_triangles)
+print("TRIS", tris, "SCHAKELS", N_SCHAKEL, "STEEK", round(STEEK, 3), "V", round(V_RIJ, 2))

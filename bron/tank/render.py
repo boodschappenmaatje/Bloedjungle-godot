@@ -3,6 +3,10 @@ from mathutils import Vector
 
 blend, out = sys.argv[1], sys.argv[2]
 bpy.ops.wm.open_mainfile(filepath=blend)
+for o in bpy.data.objects:
+    if o.animation_data:
+        for tr in o.animation_data.nla_tracks:
+            tr.mute = True
 scene = bpy.context.scene
 
 # grondvlak, zandkleur

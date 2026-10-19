@@ -1,7 +1,8 @@
 extends AnimatableBody3D
 ## Eigen tank die buiten de oostmuur heen en weer patrouilleert. De koepel draait naar de
 ## dichtstbijzijnde vijand. Model: assets/tank.glb (gemaakt in Blender), voorkant is -Z,
-## met de delen Toren (draait om Y) en Loop (kantelt om X).
+## met de delen Toren (draait om Y) en Loop (kantelt om X). De animaties uit Blender (Stationair,
+## Rijden, Achteruit, Draaien, Schieten) laten wielen, rupsschakels en de vering bewegen.
 
 const SPEED := 3.2         # m/s rijden
 const TURN := 0.7          # rad/s draaien op de plek
@@ -11,15 +12,14 @@ const ROUTE := [Vector3(20.5, 0, 17.0), Vector3(20.5, 0, -17.0)]
 
 var _next := 0
 var _turning := false
-var _t := 0.0
-@onready var _toren: Node3D = $Model/Tank/Toren
-@onready var _loop: Node3D = $Model/Tank/Toren/Loop
-@onready var _romp: Node3D = $Model/Tank/RompMesh
-@onready var _romp_y := _romp.position.y
+const ANIM_SPEED := 3.12   # m/s waarmee de rups in de clip Rijden loopt
+var _clip := ""
+@onready var _toren: Node3D = $Model/Tank/Body/Toren
+@onready var _loop: Node3D = $Model/Tank/Body/Toren/Loop
+@onready var _anim: AnimationPlayer = $Model/AnimationPlayer
 
 
 func _physics_process(delta: float) -> void:
-	_t += delta
 	var goal: Vector3 = ROUTE[_next]
 	var to := goal - global_position
 	to.y = 0.0
@@ -31,12 +31,19 @@ func _physics_process(delta: float) -> void:
 	elif _turning:
 		rotation.y += clampf(diff, -TURN * delta, TURN * delta)
 		_turning = absf(diff) > 0.02
+		_play("Draaien", 1.0)
 	else:
 		rotation.y += clampf(diff, -TURN * delta, TURN * delta)
 		global_position += to.normalized() * minf(SPEED * delta, to.length())
-	# motor laat de romp een beetje trillen
-	_romp.position.y = _romp_y + sin(_t * 31.0) * 0.012
+		_play("Rijden", SPEED / ANIM_SPEED)
 	_aim(delta)
+
+
+func _play(clip: String, speed: float) -> void:
+	if clip != _clip:
+		_clip = clip
+		_anim.play(clip, 0.35)
+	_anim.speed_scale = speed
 
 
 func _aim(delta: float) -> void:

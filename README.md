@@ -11,6 +11,10 @@ De web-versie in `src/` blijft zoals hij is; dit is een losse map.
 - Golven met messen, geweren en (vanaf golf 4) zware MG's, met dezelfde levens, snelheid, schade en punten als nu. Vijanden lopen via de poorten naar jou of de bunker.
 - Het soldaatmodel met de Mixamo-geweeranimaties (stil, lopen, rennen, achteruit, schieten, herladen, steken, sterven).
 
+## Stijl
+
+De bedoelde look staat in `referentie-stijl.png` (donkere, dichte jungle, schuine camera, echte 3D-gebouwen, zon met lange schaduwen). Alles wat we bouwen houdt dat als richting aan. Dit is nu gedaan: de zwaardere (mobiele) renderer met schaduwen, mist, gloed en filmkleuren, een bodem met gras, modder en paden, zelfgemaakte palmen, struiken en varens die in de wind bewegen, en een basis met muur, poortposten, bunker met zandzakken en antenne, vier wachttorens, hutten en kratten. De webversie gebruikt automatisch de lichtere renderer.
+
 Nog niet: winkel, andere wapens kopen, granaten, gebouwen, jeep, gore, geluid. Dat komt stap voor stap.
 
 ## Indeling

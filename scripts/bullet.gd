@@ -61,7 +61,7 @@ func _physics_process(delta: float) -> void:
 		if c.has_method("hit"):
 			c.hit(dmg, dir, from_player)
 		else:
-			Fx.dust(get_parent(), hit.position)
+			Fx.impact(get_parent(), hit.position, hit.normal)
 		queue_free()
 		return
 	global_position += step

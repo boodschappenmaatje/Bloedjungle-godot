@@ -145,6 +145,8 @@ func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	hp -= dmg
 	model.flash()
 	Fx.blood(get_parent(), global_position + Vector3.UP * 1.2, dir)
+	if randf() < 0.5:
+		Fx.ground_blood(get_parent(), global_position + dir * 0.6, 0.5)
 	if hp <= 0.0:
 		_die(dir)
 
@@ -157,5 +159,8 @@ func _die(dir: Vector3) -> void:
 	collision_layer = 0
 	collision_mask = 0
 	Fx.blood(get_parent(), global_position + Vector3.UP, dir, 26)
+	Fx.ground_blood(get_parent(), global_position + dir * 0.4, 1.7)
+	if type == "heavy":
+		Fx.explosion(get_parent(), global_position, 0.8)
 	model.play("dood1" if randf() < 0.5 else "dood2", 0.08)
 	get_tree().create_timer(8.0).timeout.connect(queue_free)

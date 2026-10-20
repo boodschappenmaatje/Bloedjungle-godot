@@ -9,6 +9,7 @@ uniform sampler2D grass_tex : source_color, repeat_enable, filter_linear_mipmap;
 uniform sampler2D jungle_tex : source_color, repeat_enable, filter_linear_mipmap;
 uniform sampler2D dirt_tex : source_color, repeat_enable, filter_linear_mipmap;
 uniform sampler2D mud_tex : source_color, repeat_enable, filter_linear_mipmap;
+uniform sampler2D dirt_height : repeat_enable, filter_linear_mipmap;
 uniform sampler2D dirt_normal : hint_normal, repeat_enable, filter_linear_mipmap;
 uniform float compound = 14.0;
 uniform float gate_gap = 2.4;
@@ -34,8 +35,12 @@ void fragment() {
 	grass = grass * (0.65 + 0.7 * g3.g) * (0.75 + 0.5 * n3);
 	grass *= vec3(0.46, 0.56, 0.38);  // donkerder en minder fel, past bij de jungle
 
-	vec3 d1 = texture(dirt_tex, p * 0.11).rgb;
-	vec3 d2 = texture(mud_tex, p * 0.09 + 0.5).rgb;
+	// diepte in de aarde: de kijkhoek verschuift het beeld per hoogte, zodat kiezels boven de modder uitsteken
+	vec3 vw = normalize((INV_VIEW_MATRIX * vec4(VIEW, 0.0)).xyz);
+	float hgt = texture(dirt_height, p * 0.11).r;
+	vec2 pp = p + vw.xz / max(vw.y, 0.25) * (hgt - 0.5) * 0.16;
+	vec3 d1 = texture(dirt_tex, pp * 0.11).rgb;
+	vec3 d2 = texture(mud_tex, pp * 0.09 + 0.5).rgb;
 	vec3 dirt = mix(d1, d2, smoothstep(0.3, 0.7, n2));
 	dirt *= (0.85 + 0.2 * n3) * vec3(0.7, 0.62, 0.55);
 
@@ -50,6 +55,6 @@ void fragment() {
 
 	ALBEDO = mix(grass, dirt, dm);  // texturen zijn al lineair ingelezen (source_color)
 	ROUGHNESS = 1.0;
-	NORMAL_MAP = texture(dirt_normal, p * 0.11).rgb;
-	NORMAL_MAP_DEPTH = dm * 0.5;
+	NORMAL_MAP = texture(dirt_normal, pp * 0.11).rgb;
+	NORMAL_MAP_DEPTH = dm * 1.1;
 }

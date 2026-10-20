@@ -77,6 +77,7 @@ static func _gates(root: Node3D) -> void:
 static func _bunker(root: Node3D) -> void:
 	var b := Kit.box(root, Vector3.ZERO, Vector3(4.6, 2.0, 4.6), Kit.concrete(), 0.0, Kit.LAYER_BUNKER)
 	b.set_script(preload("res://scripts/bunker.gd"))
+	b.set_process(true)
 	Kit.box(root, Vector3(0, 2.0, 0), Vector3(5.2, 0.4, 5.2), Kit.concrete_dark())
 	Kit.box(root, Vector3(0, 2.4, 0), Vector3(4.2, 0.18, 4.2), Kit.concrete())
 	# schietgleuven rondom en een stalen deur

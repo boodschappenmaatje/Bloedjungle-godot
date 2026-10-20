@@ -19,10 +19,10 @@ var climb_dir := 1
 var climb_cd := 0.0
 var _mask0 := 0
 
-const STAIR_FOOT := 7.4      # trap staat op x = 7,7 .. 1,3 van de toren (zie bron/wachttoren)
+const STAIR_FOOT := 1.8      # de klimladder staat aan de +X zijde van de toren (zie bron/wachttoren)
 const STAIR_TOP := 1.3
 const DECK := 5.3
-const CLIMB_SPEED := 3.1
+const CLIMB_SPEED := 2.2
 
 
 func _ready() -> void:
@@ -103,7 +103,7 @@ func _find_stairs(mv: Vector2) -> void:
 	for t: Node3D in get_tree().get_nodes_in_group("tower"):
 		var lp: Vector3 = t.to_local(global_position)
 		var ld: Vector3 = t.global_transform.basis.inverse() * Vector3(mv.x, 0.0, mv.y)
-		if lp.x > STAIR_FOOT - 0.5 and lp.x < STAIR_FOOT + 1.2 and absf(lp.z) < 0.7 and ld.x < -0.3:
+		if lp.x > STAIR_FOOT - 0.3 and lp.x < STAIR_FOOT + 1.0 and absf(lp.z) < 0.55 and ld.x < -0.3:
 			tower = t
 			climb = 0.0
 			climb_dir = 1

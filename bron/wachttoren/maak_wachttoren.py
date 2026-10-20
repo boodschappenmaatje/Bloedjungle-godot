@@ -1,4 +1,4 @@
-"""Houten wachttoren voor Bloedjungle. Middelpunt op de grond = (0,0,0), platform op 5,3 m, lange trap naar +X
+"""Houten wachttoren voor Bloedjungle. Middelpunt op de grond = (0,0,0), platform op 5,3 m, klimladder aan de +X zijde
 (Blender X = Godot X). Een speler kan de trap op en over het platform lopen. 1 eenheid = 1 meter."""
 import math, sys, os, random
 import bpy, bmesh
@@ -85,8 +85,6 @@ for i in range(len(LEV) - 1):
     z0, z1 = LEV[i], LEV[i + 1]
     flip = i % 2
     for (a, b) in [((-1, -1), (1, -1)), ((1, -1), (1, 1)), ((1, 1), (-1, 1)), ((-1, 1), (-1, -1))]:
-        if (a[0] == 1 and b[0] == 1) and i == 0:
-            continue  # aan de trapzijde onderaan open laten
         if flip:
             beam("paal", at(*a, z0), at(*b, z1), w=0.09)
         else:
@@ -153,38 +151,27 @@ for sx in (-1, 1):
 beam("metaal", (0.9, 0, ROOF_Z), (0.9, 0, ROOF_Z - 0.18), w=0.03)
 box("lamp", (0.9, 0, ROOF_Z - 0.3), (0.16, 0.16, 0.2))
 
-# ---- trap naar +X: 22 treden van x=7.7 (grond) naar x=1.3 (platform)
-X0, X1, NSTEP, SW = 7.7, 1.3, 22, 1.0
-rise = H / NSTEP
-run = (X0 - X1) / NSTEP
+# ---- klimladder tegen de +X zijde: twee leuningen, sporten en een paar beugels
+LX0, LX1 = 1.75, 1.32          # x onderaan (grond) en bovenaan (platform), de ladder staat iets schuin
+LZT = H + 0.95                 # de leuningen steken boven het platform uit
+def lx(z):
+    return LX0 + (LX1 - LX0) * min(1.0, z / H)
 for sy in (-1, 1):
-    beam("paal", (X0 + 0.2, sy * (SW / 2 + 0.06), -0.1), (X1 - 0.1, sy * (SW / 2 + 0.06), H - 0.1), w=0.1, w2=0.12)
-for i in range(NSTEP):
-    z = rise * (i + 1)
-    x = X0 - run * (i + 0.5)
-    box(rnd.choice(PL), (x, 0, z - 0.04), (run + 0.03, SW, 0.07))
-    box("paal", (x - run / 2 + 0.01, 0, z - rise / 2 - 0.02), (0.03, SW - 0.06, rise - 0.02))
-# leuning met palen
-for sy in (-1, 1):
-    y = sy * (SW / 2 + 0.06)
-    for i in range(0, NSTEP + 1, 4):
-        z = rise * i
-        x = X0 - run * i
-        beam("paal", (x, y, z), (x, y, z + 1.0), w=0.08)
-    beam("paal", (X0, y, 1.0), (X1, y, H + 1.0), w=0.07, w2=0.1)
-    beam("paal", (X0, y, 0.5), (X1, y, H + 0.5), w=0.05, w2=0.06)
-# steunpoten onder de trap
-for i in (4, 10, 16):
-    x = X0 - run * i
-    z = rise * i
+    beam("paal", (lx(0), sy * 0.34, -0.05), (lx(H), sy * 0.34, H), w=0.09, w2=0.07)
+    beam("paal", (lx(H), sy * 0.34, H), (lx(H), sy * 0.34, LZT), w=0.09, w2=0.07)
+z = 0.3
+while z < H + 0.8:
+    box("plank3", (lx(z), 0, z), (0.07, 0.68, 0.06))
+    z += 0.3
+# bevestiging aan de poten
+for zz in (1.0, 2.6, 4.2):
     for sy in (-1, 1):
-        beam("paal", (x, sy * (SW / 2 + 0.06), -0.1), (x, sy * (SW / 2 + 0.06), z - 0.05), w=0.12)
-    beam("paal", (x, -SW / 2 - 0.06, z * 0.5), (x, SW / 2 + 0.06, z * 0.5), w=0.08)
+        beam("metaal", (lx(zz), sy * 0.34, zz), (1.1 - 0.15 * zz / H, sy * 0.9, zz), w=0.05, w2=0.05)
 
 # ---- zandzakken rond de voet (open bij de trap)
 for ang in range(0, 360, 24):
     a = math.radians(ang)
-    if abs(math.degrees(math.atan2(math.sin(a), math.cos(a)))) < 40:
+    if abs(math.degrees(math.atan2(math.sin(a), math.cos(a)))) < 28:
         continue
     r = 1.95
     blob("zak", (math.cos(a) * r, math.sin(a) * r, 0.12), (0.62, 0.36, 0.24), a + math.pi / 2)

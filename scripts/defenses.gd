@@ -173,13 +173,26 @@ func _bag_wall(root: Node3D) -> void:
 
 
 func _trench(root: Node3D) -> void:
-	var dirt := Kit.flat(Color("2c2014"), 1.0)
-	Kit.box(root, Vector3(0, 0.0, 0), Vector3(4.8, 0.04, 1.4), dirt)
-	var berm := Kit.flat(Color("5b4630"), 1.0)
-	for s in [-1.0, 1.0]:
-		Kit.box(root, Vector3(0, 0.0, s * 0.8), Vector3(4.9, 0.28, 0.3), berm)
-	for s in [-1.0, 1.0]:
-		Kit.box(root, Vector3(s * 2.45, 0.0, 0), Vector3(0.3, 0.28, 1.4), berm)
+	var model: Node3D = (load("res://assets/loopgraaf.glb") as PackedScene).instantiate()
+	root.add_child(model)
+	call_deferred("_cut_ground")
+
+
+# De put is echt uitgegraven: de grondschil krijgt een gat op de plek van elke loopgraaf.
+func _cut_ground() -> void:
+	var g := get_tree().get_first_node_in_group("ground")
+	if g == null or not g.has_meta("mat"):
+		return
+	var arr := PackedVector4Array()
+	for d in items:
+		if d.kind == "trench" and arr.size() < 8:
+			arr.append(Vector4(d.pos.x, d.pos.z, cos(d.a), sin(d.a)))
+	var cnt := arr.size()
+	while arr.size() < 8:
+		arr.append(Vector4(0, 0, 1, 0))
+	var mat: ShaderMaterial = g.get_meta("mat")
+	mat.set_shader_parameter("pits", arr)
+	mat.set_shader_parameter("pit_n", cnt)
 
 
 func _mine(root: Node3D) -> void:
@@ -352,6 +365,6 @@ func in_trench(p: Vector3) -> bool:
 			var rel: Vector3 = p - d.pos
 			var ca := cos(d.a)
 			var sa := sin(d.a)
-			if absf(rel.x * ca - rel.z * sa) < 2.3 and absf(rel.x * sa + rel.z * ca) < 0.65:
+			if absf(rel.x * ca - rel.z * sa) < 2.2 and absf(rel.x * sa + rel.z * ca) < 0.55:
 				return true
 	return false

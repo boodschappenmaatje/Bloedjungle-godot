@@ -49,7 +49,7 @@ func _physics_process(delta: float) -> void:
 		position = Vector3(flat.x, position.y, flat.y)
 	position.y = 0.0
 	var sunk: bool = Game.defs != null and Game.defs.in_trench(global_position)
-	model.position.y = lerpf(model.position.y, -0.55 if sunk else 0.0, minf(1.0, delta * 10.0))
+	model.position.y = lerpf(model.position.y, -0.78 if sunk else 0.0, minf(1.0, delta * 8.0))
 
 	var moving := mv.length()
 	var aim := face

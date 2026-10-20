@@ -41,4 +41,6 @@ func _ground() -> void:
 	mat.set_shader_parameter("gate_gap", Data.GATE_GAP)
 	mesh.material_override = mat
 	body.add_child(mesh)
+	body.add_to_group("ground")
+	body.set_meta("mat", mat)
 	add_child(body)

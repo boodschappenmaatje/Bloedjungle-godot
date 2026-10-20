@@ -13,6 +13,8 @@ uniform sampler2D dirt_height : repeat_enable, filter_linear_mipmap;
 uniform sampler2D dirt_normal : hint_normal, repeat_enable, filter_linear_mipmap;
 uniform float compound = 14.0;
 uniform float gate_gap = 2.4;
+uniform vec4 pits[8];  // loopgraven: x, z, cos, sin
+uniform int pit_n = 0;
 
 varying vec3 wpos;
 
@@ -22,6 +24,14 @@ void vertex() {
 
 void fragment() {
 	vec2 p = wpos.xz;
+	for (int i = 0; i < pit_n; i++) {
+		vec2 r = p - pits[i].xy;
+		float lx = r.x * pits[i].z - r.y * pits[i].w;
+		float lz = r.x * pits[i].w + r.y * pits[i].z;
+		if (abs(lx) < 2.36 && abs(lz) < 0.66) {
+			discard;
+		}
+	}
 	float n1 = texture(noise_a, p * 0.025).r;
 	float n2 = texture(noise_b, p * 0.09).r;
 	float n3 = texture(noise_b, p * 0.55).r;

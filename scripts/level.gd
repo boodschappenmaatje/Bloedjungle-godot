@@ -34,7 +34,7 @@ func _ground() -> void:
 	mat.set_shader_parameter("grass_tex", load("res://assets/textures/terrain/grass/base_color.jpg"))
 	mat.set_shader_parameter("jungle_tex", load("res://assets/textures/terrain/jungle_ground/base_color.jpg"))
 	mat.set_shader_parameter("dirt_tex", load("res://assets/textures/terrain/dry_earth/base_color.jpg"))
-	mat.set_shader_parameter("mud_tex", load("res://assets/textures/terrain/mud/base_color.jpg"))
+	mat.set_shader_parameter("mud_tex", load("res://assets/textures/terrain/gravel_rock/base_color.jpg"))
 	mat.set_shader_parameter("dirt_height", load("res://assets/textures/terrain/dry_earth/roughness.jpg"))
 	mat.set_shader_parameter("dirt_normal", load("res://assets/textures/terrain/dry_earth/normal_gl.jpg"))
 	mat.set_shader_parameter("compound", Data.COMPOUND)

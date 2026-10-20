@@ -51,7 +51,7 @@ func _refresh() -> void:
 		var w: Dictionary = Data.WEAPONS[p.weapon]
 		ammo.text = "%s   %s" % [w.name, "herladen..." if p.reload_t > 0.0 else "%d / %d" % [p.ammo, w.mag]]
 	base_bar.value = Game.base_hp / Game.base_max * 100.0
-	info.text = "Golf %d   Punten %d   Kills %d   (v8)" % [Game.wave, Game.points, Game.kills]
+	info.text = "Golf %d   Punten %d   Kills %d   (v9)" % [Game.wave, Game.points, Game.kills]
 
 
 func _on_banner(b: String, s: String, t: float) -> void:

@@ -42,6 +42,8 @@ window/vsync/vsync_mode=1
 
 [rendering]
 
+textures/default_filters/anisotropic_filtering_level=3
+
 anti_aliasing/quality/screen_space_aa=1
 
 renderer/rendering_method="mobile"

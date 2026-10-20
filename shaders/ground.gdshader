@@ -41,8 +41,8 @@ void fragment() {
 	vec2 pp = p + vw.xz / max(vw.y, 0.25) * (hgt - 0.5) * 0.16;
 	vec3 d1 = texture(dirt_tex, pp * 0.11).rgb;
 	vec3 d2 = texture(mud_tex, pp * 0.09 + 0.5).rgb;
-	vec3 dirt = mix(d1, d2, smoothstep(0.3, 0.7, n2));
-	dirt *= (0.85 + 0.2 * n3) * vec3(0.58, 0.54, 0.5);
+	vec3 dirt = mix(d1, d2, 0.5 * smoothstep(0.3, 0.7, n2));
+	dirt *= (0.85 + 0.2 * n3) * vec3(0.52, 0.5, 0.47);
 
 	float box = max(abs(p.x), abs(p.y));
 	float inside = 1.0 - smoothstep(compound - 0.5, compound + 3.0, box);

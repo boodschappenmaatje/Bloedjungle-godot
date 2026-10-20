@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/dry_earth/base_color.jpg" id="1_h1hcp"]
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/dry_earth/normal_gl.jpg" id="2_qvwhu"]
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/dry_earth/roughness.jpg" id="3_qpcrj"]
+
+[resource]
+resource_name = "dry_earth"
+albedo_texture = ExtResource("1_h1hcp")
+roughness_texture = ExtResource("3_qpcrj")
+normal_enabled = true
+normal_texture = ExtResource("2_qvwhu")

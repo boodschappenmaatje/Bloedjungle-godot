@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/rusted_metal/base_color.jpg" id="1_rn6rr"]
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/rusted_metal/normal_gl.jpg" id="2_6xd54"]
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/rusted_metal/roughness.jpg" id="3_m83g2"]
+
+[resource]
+resource_name = "rusted_metal"
+albedo_texture = ExtResource("1_rn6rr")
+roughness_texture = ExtResource("3_m83g2")
+normal_enabled = true
+normal_texture = ExtResource("2_6xd54")

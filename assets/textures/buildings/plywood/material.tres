@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/plywood/base_color.jpg" id="1_vufbu"]
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/plywood/normal_gl.jpg" id="2_cclel"]
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/plywood/roughness.jpg" id="3_cyw3v"]
+
+[resource]
+resource_name = "plywood"
+albedo_texture = ExtResource("1_vufbu")
+roughness_texture = ExtResource("3_cyw3v")
+normal_enabled = true
+normal_texture = ExtResource("2_cclel")

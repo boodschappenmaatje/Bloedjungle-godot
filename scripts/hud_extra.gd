@@ -140,8 +140,8 @@ func _build_ammo() -> void:
 	box.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
 	box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
 	box.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	box.offset_right = -14
-	box.offset_bottom = -8
+	box.offset_right = -30
+	box.offset_bottom = -30
 	add_child(box)
 	_weapon = _shadowed(UI.label("", UI.display(1), 14, UI.INK))
 	_weapon.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT

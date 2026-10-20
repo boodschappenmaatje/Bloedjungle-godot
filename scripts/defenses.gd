@@ -109,6 +109,8 @@ func _spot(k: String) -> Vector3:
 func can_place(k: String, at: Vector3) -> bool:
 	if Vector2(at.x, at.z).length() > Data.WORLD_R - 1.0:
 		return false
+	if _blocked(k, at):
+		return false
 	if k == "trench":
 		for d in items:
 			if d.kind == "trench" and Vector2(d.pos.x - at.x, d.pos.z - at.z).length() < 3.2:
@@ -116,6 +118,23 @@ func can_place(k: String, at: Vector3) -> bool:
 		if _trench_count() >= 8:
 			return false
 	return true
+
+
+# Staat er een muur, bunker, toren of hut in de weg? (zelfde vorm als het spookbeeld)
+func _blocked(k: String, at: Vector3) -> bool:
+	if k == "mine":
+		return false
+	var sz: Vector3 = GHOST_SIZE[k]
+	# de poort zelf: de weg erdoorheen blijft vrij
+	if absf(at.x) < Data.GATE_GAP + 1.5 and absf(absf(at.z) - Data.COMPOUND) < 2.0:
+		return true
+	var shape := BoxShape3D.new()
+	shape.size = Vector3(sz.x, 1.0, sz.z)
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = shape
+	q.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER
+	q.transform = Transform3D(Basis(Vector3.UP, Game.player.face), at + Vector3(0, 0.8, 0))
+	return not get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
 
 
 func _trench_count() -> int:

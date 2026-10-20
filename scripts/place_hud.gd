@@ -67,7 +67,7 @@ func _ready() -> void:
 		t.add_to_group("hud_button")
 		t.focus_mode = Control.FOCUS_NONE
 		t.size = Vector2(TILE, TILE)
-		t.pressed.connect(func():
+		t.button_down.connect(func():
 			Sfx.play("click")
 			Game.place_sel = k
 			Game.changed.emit())

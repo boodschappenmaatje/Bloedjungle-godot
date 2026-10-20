@@ -6,6 +6,7 @@ Requires Pillow only for 1K texture conversion. Run from any directory:
 """
 
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -62,9 +63,8 @@ def inspect(path, kind, resize_1k=False):
         return path, {"meshes": len(model["meshes"]), "materials": len(model.get("materials", [])),
                       "embedded_images": len(model.get("images", []))}
     if kind == "hdri":
-        if path.open("rb").read(11) not in (b"#?RADIANCE\n", b"#?RGBE\n\n\n\n\n"):
-            # HDR headers may use either of these signatures; inspect the prefix explicitly.
-            if not path.open("rb").read(12).startswith((b"#?RADIANCE", b"#?RGBE")):
+        with path.open("rb") as stream:
+            if not stream.read(12).startswith((b"#?RADIANCE", b"#?RGBE")):
                 raise ValueError("not a Radiance HDR image")
         return path, {}
     raise ValueError(f"unknown kind: {kind}")
@@ -86,6 +86,41 @@ def download(url, destination):
             output.write(block)
         if size == 0 or (length and length != size):
             raise ValueError("empty or truncated download")
+
+
+def embed_dependencies(source, entry, tempdir):
+    """Embed manifest-approved external PNGs as glTF data URIs in a standalone GLB."""
+    dependencies = entry.get("dependencies")
+    if not dependencies:
+        return source, {}
+    raw = source.read_bytes()
+    if raw[:4] != b"glTF":
+        raise ValueError("not a GLB")
+    json_size = struct.unpack_from("<I", raw, 12)[0]
+    model = json.loads(raw[20:20 + json_size])
+    hashes = {}
+    for image in model.get("images", []):
+        uri = image.get("uri")
+        if not uri or uri.startswith("data:"):
+            continue
+        if uri not in dependencies or not uri.endswith(".png"):
+            raise ValueError(f"unapproved dependency: {uri}")
+        dependency = Path(tempdir) / Path(uri).name
+        download(dependencies[uri], dependency)
+        from PIL import Image
+        with Image.open(dependency) as pixels:
+            pixels.verify()
+        hashes[uri] = sha256(dependency)
+        image["uri"] = "data:image/png;base64," + base64.b64encode(dependency.read_bytes()).decode("ascii")
+    if not hashes:
+        raise ValueError("declared dependencies were not found in GLB")
+    encoded = json.dumps(model, separators=(",", ":")).encode("utf-8")
+    encoded += b" " * ((-len(encoded)) % 4)
+    remainder = raw[20 + json_size:]
+    output = Path(tempdir) / "embedded.glb"
+    output.write_bytes(struct.pack("<4sII", b"glTF", 2, 20 + len(encoded) + len(remainder))
+                       + struct.pack("<II", len(encoded), 0x4E4F534A) + encoded + remainder)
+    return output, hashes
 
 
 def main():
@@ -117,10 +152,12 @@ def main():
             try:
                 download(entry["url"], source)
                 source_hash = sha256(source)
-                if entry.get("source_sha256") and source_hash != entry["source_sha256"]:
+                expected = entry.get("source_sha256") or lock.get(str(relative), {}).get("source_sha256")
+                if expected and source_hash != expected:
                     raise ValueError("source SHA-256 mismatch")
-                prepared, details = inspect(source, entry["kind"], entry.get("resize_1k", False))
-                if prepared != source:
+                embedded, dependency_hashes = embed_dependencies(source, entry, tempdir)
+                prepared, details = inspect(embedded, entry["kind"], entry.get("resize_1k", False))
+                if prepared != embedded:
                     prepared, checked = inspect(prepared, entry["kind"])
                     details.update(checked)
                 digest = sha256(prepared)
@@ -130,7 +167,8 @@ def main():
                 known[digest] = str(relative)
                 lock[str(relative)] = {"sha256": digest, "source_sha256": source_hash,
                                        "bytes": path.stat().st_size, "source_url": entry["url"],
-                                       "license": entry["license"], "creator": entry["creator"], **details}
+                                       "license": entry["license"], "creator": entry["creator"],
+                                       "dependency_sha256": dependency_hashes, **details}
                 LOCK.parent.mkdir(parents=True, exist_ok=True)
                 LOCK.write_text(json.dumps(lock, indent=2, ensure_ascii=False, sort_keys=True) + "\n", encoding="utf-8")
                 print(f"OK {relative} {digest} ({path.stat().st_size} bytes)")

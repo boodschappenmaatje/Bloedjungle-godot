@@ -7,6 +7,95 @@
     "source_sha256": "99451201586489ef3288c97bfac2a2ac232a5491c51a1faf0ec8ea39f3ccd533",
     "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/skyboxes/polyhaven-hdri/kloppenheim_06_puresky_2k.hdr"
   },
+  "assets/models/military/barrel.glb": {
+    "bytes": 28260,
+    "creator": "Kenney",
+    "dependency_sha256": {
+      "Textures/colormap.png": "2acae7ff27edbb52417c92beb6a741628b18c2052ca4a77741d70bc84b5bd5e9"
+    },
+    "embedded_images": 1,
+    "license": "CC0-1.0",
+    "materials": 1,
+    "meshes": 1,
+    "sha256": "6cdbc20749b622a7058f4ece793621b030e1ed0d3232c576035df9a77ff653e1",
+    "source_sha256": "ca735e8eb8f9170b3d9413ee9e30a51cb275e9597b87e0b70dd5c02f404cea4d",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/mini-dungeon/barrel.glb"
+  },
+  "assets/models/military/bridge.glb": {
+    "bytes": 15692,
+    "creator": "Kenney",
+    "embedded_images": 0,
+    "license": "CC0-1.0",
+    "materials": 3,
+    "meshes": 1,
+    "sha256": "3da4c208b0f72b7f2ba42db521b62ec4b0278050c75256a6982c40d21aab5701",
+    "source_sha256": "3da4c208b0f72b7f2ba42db521b62ec4b0278050c75256a6982c40d21aab5701",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/bridge_wood.glb"
+  },
+  "assets/models/military/crate.glb": {
+    "bytes": 72968,
+    "creator": "Kenney",
+    "dependency_sha256": {
+      "Textures/colormap.png": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc"
+    },
+    "embedded_images": 1,
+    "license": "CC0-1.0",
+    "materials": 1,
+    "meshes": 2,
+    "sha256": "c13129df3322289521ff0797f9b3a0d0b0e860a55430bd1589c3ef700ed9f837",
+    "source_sha256": "187c32592fedaecbbb84152102bbf536f733cbc0c2cfee60828fb18a4803619c",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/crate-medium.glb"
+  },
+  "assets/models/military/fence.glb": {
+    "bytes": 4300,
+    "creator": "Kenney",
+    "embedded_images": 0,
+    "license": "CC0-1.0",
+    "materials": 1,
+    "meshes": 1,
+    "sha256": "12fec55c302bdcfc7d67946e8c4bed8d96bcb2a8d42817c3021cc94b7272891e",
+    "source_sha256": "12fec55c302bdcfc7d67946e8c4bed8d96bcb2a8d42817c3021cc94b7272891e",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/fence_simpleHigh.glb"
+  },
+  "assets/models/military/fuel_tank.glb": {
+    "bytes": 38264,
+    "creator": "Kenney",
+    "dependency_sha256": {
+      "Textures/colormap.png": "4a912ef8e95fbec4ac0cacc295b9221a4b66c482d4f90bec4e2277689c21a623"
+    },
+    "embedded_images": 1,
+    "license": "CC0-1.0",
+    "materials": 1,
+    "meshes": 1,
+    "sha256": "6189be579c889d0ebddefbb0d55d59c91abbc132fcca1b2e405697ec140b8ec9",
+    "source_sha256": "b1edc2953c590c16f1d8280dfeb9073af6c710ac3d587f3dba144f69363d799b",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/city-industrial/detail-tank.glb"
+  },
+  "assets/models/military/tent.glb": {
+    "bytes": 15460,
+    "creator": "Kenney",
+    "embedded_images": 0,
+    "license": "CC0-1.0",
+    "materials": 3,
+    "meshes": 1,
+    "sha256": "fe8a2f9033cc87f1ec01b6c18bae7c57b84e787b4b210328ed708a4a3f9bb994",
+    "source_sha256": "fe8a2f9033cc87f1ec01b6c18bae7c57b84e787b4b210328ed708a4a3f9bb994",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/tent_detailedClosed.glb"
+  },
+  "assets/models/military/tower.glb": {
+    "bytes": 45296,
+    "creator": "Kenney",
+    "dependency_sha256": {
+      "Textures/colormap.png": "66fd49be148f32e88f6c8cace67120250d1943a7856601158ad0ff24651db0b0"
+    },
+    "embedded_images": 1,
+    "license": "CC0-1.0",
+    "materials": 1,
+    "meshes": 1,
+    "sha256": "ce989f28add7da1c4344a173fe014fb73245682c0561db32e32b45a6ac3ea3a1",
+    "source_sha256": "e44adf48cbde19f84d579fbd492664e4b39e39f96cad234bbd6d5758f83f89a6",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/modular-buildings/building-sample-tower-a.glb"
+  },
   "assets/models/nature/bush.glb": {
     "bytes": 10172,
     "creator": "Kenney",

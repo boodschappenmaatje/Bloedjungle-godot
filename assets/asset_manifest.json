@@ -222,7 +222,10 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/modular-buildings/building-sample-tower-a.glb"
+      "source_asset": "3d/modular-buildings/building-sample-tower-a.glb",
+      "dependencies": {
+        "Textures/colormap.png": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/modular-buildings/Textures/colormap.png"
+      }
     },
     {
       "batch": "military",
@@ -240,7 +243,10 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/blaster/crate-medium.glb"
+      "source_asset": "3d/blaster/crate-medium.glb",
+      "dependencies": {
+        "Textures/colormap.png": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/Textures/colormap.png"
+      }
     },
     {
       "batch": "military",
@@ -249,7 +255,10 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/mini-dungeon/barrel.glb"
+      "source_asset": "3d/mini-dungeon/barrel.glb",
+      "dependencies": {
+        "Textures/colormap.png": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/mini-dungeon/Textures/colormap.png"
+      }
     },
     {
       "batch": "military",
@@ -267,7 +276,10 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/city-industrial/detail-tank.glb"
+      "source_asset": "3d/city-industrial/detail-tank.glb",
+      "dependencies": {
+        "Textures/colormap.png": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/city-industrial/Textures/colormap.png"
+      }
     },
     {
       "batch": "vehicles",

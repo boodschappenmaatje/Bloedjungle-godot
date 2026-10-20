@@ -98,18 +98,81 @@ func cycle() -> void:
 	Game.changed.emit()
 
 
+# Plek vlak voor de speler waar het gekozen ding komt (ook voor het spookbeeld).
+func _spot(k: String) -> Vector3:
+	var a: float = Game.player.face
+	var at: Vector3 = Game.player.global_position + Vector3(sin(a), 0, cos(a)) * (2.3 if k == "trench" else 1.7)
+	at.y = 0.0
+	return at
+
+
+func can_place(k: String, at: Vector3) -> bool:
+	if Vector2(at.x, at.z).length() > Data.WORLD_R - 1.0:
+		return false
+	if k == "trench":
+		for d in items:
+			if d.kind == "trench" and Vector2(d.pos.x - at.x, d.pos.z - at.z).length() < 3.2:
+				return false
+		if _trench_count() >= 8:
+			return false
+	return true
+
+
+func _trench_count() -> int:
+	var n := 0
+	for d in items:
+		if d.kind == "trench":
+			n += 1
+	return n
+
+
+# ---- spookbeeld: doorzichtig groen (kan) of rood (kan niet) op de plek waar het ding komt
+const GHOST_SIZE := {"bags": Vector3(3.2, 0.9, 0.7), "trench": Vector3(4.8, 0.12, 1.4), "mine": Vector3(0.7, 0.25, 0.7),
+	"wire": Vector3(4.4, 0.9, 0.5), "sentry": Vector3(0.9, 1.2, 0.9)}
+var _ghost: MeshInstance3D
+var _ghost_kind := ""
+
+
+func _update_ghost() -> void:
+	var k: String = Game.place_sel
+	var on: bool = (Game.state == "play" or Game.state == "prep") and Game.player != null \
+		and Game.inv.get(k, 0) > 0
+	if not on:
+		if _ghost:
+			_ghost.visible = false
+		return
+	if _ghost == null:
+		_ghost = MeshInstance3D.new()
+		_ghost.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_ghost.material_override = m
+		add_child(_ghost)
+	if _ghost_kind != k:
+		var bm := BoxMesh.new()
+		bm.size = GHOST_SIZE[k]
+		_ghost.mesh = bm
+		_ghost_kind = k
+	var at: Vector3 = _spot(k)
+	var sz: Vector3 = GHOST_SIZE[k]
+	_ghost.visible = true
+	_ghost.global_position = at + Vector3(0, sz.y * 0.5 + 0.02, 0)
+	_ghost.rotation.y = Game.player.face
+	var ok := can_place(k, at)
+	(_ghost.material_override as StandardMaterial3D).albedo_color = Color(0.25, 0.95, 0.35, 0.33) if ok else Color(0.95, 0.2, 0.15, 0.38)
+
+
 func place() -> void:
 	if Game.state != "play" and Game.state != "prep":
 		return
 	var k: String = Game.place_sel
 	if Game.inv[k] <= 0 or Game.player == null:
 		return
-	var p: Node3D = Game.player
-	var a: float = p.face
-	var fwd := Vector3(sin(a), 0, cos(a))
-	var at: Vector3 = p.global_position + fwd * (2.3 if k == "trench" else 1.7)
-	at.y = 0.0
-	if Vector2(at.x, at.z).length() > Data.WORLD_R:
+	var a: float = Game.player.face
+	var at: Vector3 = _spot(k)
+	if not can_place(k, at):
+		Sfx.play("ping")
 		return
 	var d := {"kind": k, "pos": at, "a": a}
 	var node := Node3D.new()
@@ -276,6 +339,7 @@ func _shoot(from: Vector3, ang: float, dmg: float, spd: float, life: float, high
 
 
 func _physics_process(delta: float) -> void:
+	_update_ghost()
 	if Game.state != "play" and Game.state != "prep":
 		return
 	var up: float = Game.upg.sentry

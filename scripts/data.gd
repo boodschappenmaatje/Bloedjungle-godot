@@ -5,13 +5,25 @@ class_name Data
 ## Soldaten zijn ietsje groter dan levensgroot zodat ze op de telefoon goed te zien zijn; hutten schalen mee.
 const SOLDIER_SCALE := 1.2
 
-# Wapens. rate = seconden tussen schoten, speed = kogelsnelheid (m/s), life = levensduur kogel.
+# Wapens (01-data.js). rate = seconden tussen schoten, speed = kogelsnelheid (m/s), life = levensduur kogel,
+# pierce = extra mensen waar de kogel doorheen gaat, slow = loopsnelheid met dit wapen, explosive = ontploffingsstraal.
 const WEAPONS := {
-	"m1911": {"name": "M1911 Pistool", "dmg": 26.0, "rate": 0.19, "mag": 8, "reload": 1.1, "spread": 0.035, "speed": 75.0, "pellets": 1, "life": 0.6},
-	"thompson": {"name": "Thompson M1928", "dmg": 18.0, "rate": 0.075, "mag": 30, "reload": 2.0, "spread": 0.08, "speed": 75.0, "pellets": 1, "life": 0.55},
-	"garand": {"name": "M1 Garand", "dmg": 80.0, "rate": 0.3, "mag": 8, "reload": 1.9, "spread": 0.012, "speed": 120.0, "pellets": 1, "life": 0.6},
-	"trench": {"name": "Winchester M1897", "dmg": 16.0, "rate": 0.62, "mag": 6, "reload": 2.6, "spread": 0.2, "speed": 65.0, "pellets": 9, "life": 0.32},
+	"m1911": {"short": "Pistool", "name": "M1911 Pistool", "price": 0, "dmg": 26.0, "rate": 0.19, "mag": 8, "reload": 1.1, "spread": 0.035, "speed": 75.0, "pellets": 1, "pierce": 0, "life": 0.6, "desc": "Betrouwbaar zijwapen. Altijd bij je."},
+	"thompson": {"short": "Thompson", "name": "Thompson M1928", "price": 700, "dmg": 18.0, "rate": 0.075, "mag": 30, "reload": 2.0, "spread": 0.08, "speed": 75.0, "pellets": 1, "pierce": 0, "life": 0.55, "desc": "De Tommy gun. Snel, luid en hongerig."},
+	"garand": {"short": "Garand", "name": "M1 Garand", "price": 1000, "dmg": 80.0, "rate": 0.3, "mag": 8, "reload": 1.9, "spread": 0.012, "speed": 120.0, "pellets": 1, "pierce": 2, "life": 0.6, "desc": "Semi-automatisch geweer. Kogel gaat door drie man heen."},
+	"trench": {"short": "Shotgun", "name": "Winchester M1897", "price": 1400, "dmg": 16.0, "rate": 0.62, "mag": 6, "reload": 2.6, "spread": 0.2, "speed": 65.0, "pellets": 9, "pierce": 0, "life": 0.32, "desc": "Loopgraafshotgun. Van dichtbij blijft er weinig over."},
+	"mg42": {"short": "MG 42", "name": "MG 42", "price": 2800, "dmg": 27.0, "rate": 0.05, "mag": 100, "reload": 3.6, "spread": 0.1, "speed": 95.0, "pellets": 1, "pierce": 1, "life": 0.6, "slow": 0.78, "desc": "1200 schoten per minuut. Je loopt er wel trager mee."},
+	"bazooka": {"short": "Bazooka", "name": "M1 Bazooka", "price": 3800, "dmg": 240.0, "rate": 1.0, "mag": 1, "reload": 2.1, "spread": 0.01, "speed": 32.0, "pellets": 1, "pierce": 0, "life": 1.4, "explosive": 4.8, "desc": "Raketwerper. Enorme ontploffing, houd afstand."},
 }
+const WEAPON_ORDER := ["m1911", "thompson", "garand", "trench", "mg42", "bazooka"]
+const UPGS := [["dmg", "Schade", "+30% schade"], ["rate", "Vuursnelheid", "14% sneller"], ["mag", "Magazijn", "+30% kogels"], ["rel", "Herladen", "18% sneller"]]
+const UPG_MAX := 5
+
+
+## Prijs van het volgende wapenniveau (upgCost in 01-data.js).
+static func upg_cost(id: String, lvl: int) -> int:
+	return int(round((140.0 + WEAPONS[id].price * 0.22) * (lvl + 1) / 10.0)) * 10
+
 
 # Vijandtypes. range = schietafstand, rate = seconden tussen aanvallen, burst/pause = salvo's van de MG.
 const ETYPES := {

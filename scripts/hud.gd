@@ -21,6 +21,8 @@ func _ready() -> void:
 	start_btn.pressed.connect(func(): get_parent().start_wave())
 	%Restart.pressed.connect(func(): get_tree().reload_current_scene())
 	over_box.hide()
+	add_child(HudExtra.new())
+	add_child(Shop.new())
 	# schermtekst en sticks schalen mee met de schermgrootte: op een telefoon staat 1 punt = meerdere pixels
 	get_window().size_changed.connect(_rescale)
 	_rescale()
@@ -47,11 +49,18 @@ func _process(delta: float) -> void:
 func _refresh() -> void:
 	var p = Game.player
 	if p:
-		hp_bar.value = p.hp / Data.PLAYER_HP * 100.0
-		var w: Dictionary = Data.WEAPONS[p.weapon]
-		ammo.text = "%s   %s" % [w.name, "herladen..." if p.reload_t > 0.0 else "%d / %d" % [p.ammo, w.mag]]
+		hp_bar.value = p.hp / Game.max_hp() * 100.0
+		$Top/HpLabel.text = "Leven   %d / %d" % [ceili(p.hp), roundi(Game.max_hp())]
+		var w: Dictionary = Game.wstat(p.weapon)
+		ammo.text = "…" if p.reload_t > 0.0 else "%d | %d" % [p.ammo, w.mag]
+		ammo.add_theme_font_size_override("font_size", 30)
+		ammo.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+		ammo.add_theme_constant_override("outline_size", 6)
+		var low: bool = p.reload_t <= 0.0 and p.ammo <= w.mag * 0.25
+		ammo.add_theme_color_override("font_color", Color(1, 0.3, 0.25) if low else (Color(1, 0.86, 0.45) if p.reload_t > 0.0 else Color(1, 1, 1)))
 	base_bar.value = Game.base_hp / Game.base_max * 100.0
-	info.text = "Golf %d   Punten %d   Kills %d   (v12)" % [Game.wave, Game.points, Game.kills]
+	$Top/BaseLabel.text = "Bunker   %d / %d" % [ceili(Game.base_hp), roundi(Game.base_max)]
+	info.text = "Kills %d   (v13)" % Game.kills
 
 
 func _on_banner(b: String, s: String, t: float) -> void:

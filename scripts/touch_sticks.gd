@@ -71,7 +71,7 @@ func _process(_delta: float) -> void:
 		fire = _mouse_down
 	Game.move = mv.limit_length(1.0)
 	Game.aim = aim
-	Game.fire = fire and Game.state != "over"
+	Game.fire = fire and Game.state != "over" and Game.state != "shop"
 
 
 func _draw() -> void:

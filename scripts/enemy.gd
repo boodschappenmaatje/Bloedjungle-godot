@@ -63,6 +63,7 @@ func _physics_process(delta: float) -> void:
 			if fire_t <= 0.0:
 				fire_t = t.rate
 				model.play("steken", 0.08, 1.7)
+				Game.mark_attack(global_position)
 				if at_player:
 					player.hit(t.dmg, Vector3(sin(look), 0, cos(look)), false)
 				else:
@@ -103,6 +104,7 @@ func _shoot(a: float) -> void:
 		fire_t = t.rate
 	var fwd := Vector3(sin(a), 0.0, cos(a))
 	var muzzle: Vector3 = global_position + fwd * (0.6 * t.scale) + Vector3.UP * 1.33 * minf(t.scale, 1.2) * Data.SOLDIER_SCALE
+	Game.mark_attack(global_position)
 	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread, Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false)
 	Fx.muzzle(get_parent(), muzzle)
 

@@ -4,9 +4,9 @@ extends CharacterBody3D
 
 @onready var model: SoldierModel = $Model
 
-var hp := Data.PLAYER_HP
+var hp := Game.max_hp()
 var face := PI       # waar hij naartoe kijkt (0 = zuid, naar de camera toe)
-var weapon := "m1911"
+var weapon := "m1911"  # het uitgeruste wapen (Game.cur)
 var ammo := 0
 var fire_t := 0.0
 var reload_t := 0.0
@@ -18,16 +18,20 @@ func _ready() -> void:
 	Game.player = self
 	model.setup(Data.PLAYER_COLOR)
 	model.scale = Vector3.ONE * Data.SOLDIER_SCALE
-	ammo = Data.WEAPONS[weapon].mag
+	weapon = Game.cur
+	ammo = Game.owned[weapon].ammo
 	rotation.y = face
 
 
 func _physics_process(delta: float) -> void:
-	if dead:
+	if dead or Game.state == "shop":
 		return
-	var w: Dictionary = Data.WEAPONS[weapon]
+	if weapon != Game.cur:
+		equip(Game.cur)
+	var w: Dictionary = Game.wstat(weapon)
 	var mv := Game.move
-	velocity = Vector3(mv.x, 0.0, mv.y) * Data.PLAYER_SPEED
+	var spd_mul: float = (1.0 + 0.07 * Game.upg.speed) * w.get("slow", 1.0)
+	velocity = Vector3(mv.x, 0.0, mv.y) * Data.PLAYER_SPEED * spd_mul
 	move_and_slide()
 	var flat := Vector2(position.x, position.z)
 	if flat.length() > Data.WORLD_R:
@@ -73,11 +77,25 @@ func _shoot(w: Dictionary) -> void:
 	var over := _hugging_wall(fwd)
 	for i in w.pellets:
 		var a: float = face + (randf() - 0.5) * w.spread * 2.0
-		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg, w.life * randf_range(0.85, 1.1), true, over)
+		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0))
 	Fx.muzzle(get_parent(), muzzle)
 	Game.changed.emit()
 	if ammo <= 0:
 		_reload(w)
+
+
+## Wapenwissel: het magazijn van het oude wapen blijft bewaard.
+func equip(id: String) -> void:
+	if not Game.owned.has(id):
+		return
+	if Game.owned.has(weapon):
+		Game.owned[weapon].ammo = ammo
+	weapon = id
+	Game.cur = id
+	ammo = Game.owned[id].ammo
+	reload_t = 0.0
+	fire_t = 0.3
+	Game.changed.emit()
 
 
 func _reload(w: Dictionary) -> void:
@@ -132,7 +150,7 @@ func _animate(mv: Vector2, moving: float) -> void:
 func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	if from_player or dead or Game.state == "over":
 		return
-	hp -= dmg
+	hp -= dmg * (1.0 - 0.08 * Game.upg.armor)
 	model.flash()
 	Fx.blood(get_parent(), global_position + Vector3.UP * 1.3, dir, 8)
 	Game.changed.emit()

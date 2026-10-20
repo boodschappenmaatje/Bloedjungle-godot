@@ -18,10 +18,12 @@ var dmg := 10.0
 var life := 0.6
 var mask := 0
 var from_player := true
+var pierce := 0
+var explosive := 0.0
 
 
 ## Maakt een kogel. over_wall: de schutter staat tegen de muur en schiet eroverheen.
-static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false) -> void:
+static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false, pierce_ := 0, explosive_ := 0.0) -> void:
 	if _mesh == null:
 		_mesh = BoxMesh.new()
 		_mesh.size = Vector3(0.05, 0.05, 0.9)
@@ -35,6 +37,8 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.dmg = damage
 	b.life = lifetime
 	b.from_player = by_player
+	b.pierce = pierce_
+	b.explosive = explosive_
 	b.mask = (MASK_ENEMY if by_player else MASK_PLAYER) | MASK_BUNKER | (0 if over_wall else MASK_WALL)
 	parent.add_child(b)
 	b.global_position = from
@@ -58,10 +62,29 @@ func _physics_process(delta: float) -> void:
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	if hit:
 		var c: Object = hit.collider
+		if explosive > 0.0:
+			_explode(hit.position)
+			queue_free()
+			return
 		if c.has_method("hit"):
 			c.hit(dmg, dir, from_player)
+			if pierce > 0 and c.collision_layer == MASK_ENEMY:
+				pierce -= 1
+				dmg *= 0.85
+				global_position = hit.position + dir * 0.5
+				return
 		else:
 			Fx.impact(get_parent(), hit.position, hit.normal)
 		queue_free()
 		return
 	global_position += step
+
+
+## Raket: grote ontploffing, schade neemt af met de afstand (alleen vijanden).
+func _explode(at: Vector3) -> void:
+	Fx.explosion(get_parent(), at, 1.4)
+	for e in Game.enemies.duplicate():
+		if is_instance_valid(e):
+			var d: float = e.global_position.distance_to(at)
+			if d < explosive:
+				e.hit(dmg * (1.0 - d / explosive * 0.7), (e.global_position - at).normalized(), true)

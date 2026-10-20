@@ -13,6 +13,7 @@ static func material(kind := "") -> ShaderMaterial:
 		m.set_shader_parameter("use_tex", kind != "")
 		if kind != "":
 			m.set_shader_parameter("tex", LeafTex.get_tex(kind))
+			m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
 		if kind == "grass":
 			m.set_shader_parameter("sway", 0.08)
 			m.set_shader_parameter("cut", 0.35)

@@ -764,6 +764,16 @@ func _base_cards() -> void:
 	_plain_card("Bunker repareren", "Herstelt 350 punten structuur.", "%d / %d" % [ceili(Game.base_hp), roundi(Game.base_max)], 0, 0, "Repareer · 250", Game.points >= 250 and missing > 0.0, func():
 		if Game.buy(250):
 			Game.base_hp = minf(Game.base_max, Game.base_hp + 350.0))
+	var gcost: int = Game.gates.total_repair_cost()
+	var gtag := " · ".join(Game.gates.list.map(func(g): return "%s %s" % [g.name, "kapot" if g.broken else "%d%%" % roundi(g.hp / g.max_hp * 100.0)]))
+	if gcost > 0:
+		_plain_card("Poorten repareren", "Zet de stalen schuifpoorten weer als nieuw in de muur. Jij opent ze met de knop bij de poort.", gtag, 0, 0, "Repareer · %s" % UI.nl(gcost), Game.points >= gcost, func():
+			if Game.buy(gcost):
+				Game.gates.repair_all())
+	var gl: int = Game.upg["gate"]
+	_plain_card("Poorten versterken", "Dikker staal: +40%% stevigheid voor beide poorten (nu %d). Tip: houd bij een beschadigde poort de knop ingedrukt." % roundi(Game.gates.max_hp()), "", gl, 5, "Max" if gl >= 5 else "Versterk · %s" % UI.nl(350 * (gl + 1)), gl < 5 and Game.points >= 350 * (gl + 1), func():
+		if Game.buy(350 * (gl + 1)):
+			Game.gates.upgrade())
 	_tiered("Beton versterken", "+300 maximale structuur en direct hersteld.", "fort", 5, 400, "Versterk", func():
 		Game.base_max += 300.0
 		Game.base_hp = Game.base_max)

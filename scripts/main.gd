@@ -16,6 +16,8 @@ func _ready() -> void:
 	add_child(Game.defs)
 	Game.builds = Buildings.new()
 	add_child(Game.builds)
+	Game.gates = Gates.new()
+	add_child(Game.gates)
 	if Progress.autostart:
 		Progress.autostart = false
 		_start_prep()

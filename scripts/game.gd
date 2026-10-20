@@ -18,7 +18,7 @@ var bonus := 0  # bonus van de laatste overleefde golf, getoond in de wapenkamer
 # Wat je bezit: per wapen de upgradeniveaus en de kogels in het magazijn, en de uitrusting-upgrades.
 var owned := _fresh_owned()
 var cur := "m1911"
-var upg := {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0}
+var upg := {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0, "gate": 0}
 # spullen in je tas om neer te zetten (Defenses)
 var inv := {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
 var place_sel := "bags"
@@ -27,6 +27,7 @@ var place_armed := false  # spookbeeld en neerzetten aan/uit
 const BUILD_CREDIT := 1000
 var build_credit := BUILD_CREDIT
 var builds: Buildings
+var gates: Gates
 var build_mode := false  # bouwscherm open: camera hoog boven de basis
 var bcam := Vector3(0.0, 0.0, 1.0)  # bouwcamera: x, z en zoom
 var buildings: Array = []
@@ -59,7 +60,7 @@ func reset() -> void:
 	enemies.clear()
 	owned = _fresh_owned()
 	cur = "m1911"
-	upg = {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0}
+	upg = {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0, "gate": 0}
 	inv = {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
 	place_sel = "bags"
 	place_armed = false

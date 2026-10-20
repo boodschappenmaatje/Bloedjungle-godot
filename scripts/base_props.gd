@@ -6,6 +6,8 @@ class_name BaseProps
 const C := Data.COMPOUND
 const G := Data.GATE_GAP
 
+static var GATE_LAMP: StandardMaterial3D  # kleur wisselt in gates.gd (rood dicht, groen open)
+
 
 static func build(root: Node3D) -> void:
 	_wall(root)
@@ -48,9 +50,10 @@ static func _wall(root: Node3D) -> void:
 			Kit.box(root, pp, Vector3(0.55 if along_x else t + 0.25, h + 0.3, t + 0.25 if along_x else 0.55), Kit.concrete_dark())
 
 
-## Poortposten met een rood lampje; de stalen poorten komen later weer terug.
+## Poortposten met een lampje; de stalen schuifpoorten zelf staan in gates.gd.
 static func _gates(root: Node3D) -> void:
 	var lamp := Kit.flat(Color(1.0, 0.15, 0.08), 0.4)
+	GATE_LAMP = lamp
 	lamp.emission_enabled = true
 	lamp.emission = Color(1.0, 0.1, 0.05)
 	lamp.emission_energy_multiplier = 2.5

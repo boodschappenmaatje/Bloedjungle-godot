@@ -81,6 +81,21 @@ func _physics_process(delta: float) -> void:
 		if fire_t <= 0.0:
 			_shoot(look)
 
+	# een dichte poort in de weg: erop slaan of schieten tot hij kapot is
+	var gate: Variant = Game.gates.blocking(global_position, goal) if want_move and Game.gates else null
+	if gate != null:
+		want_move = false
+		look = _angle_to(Game.gates.pos_of(gate))
+		if fire_t <= 0.0:
+			fire_t = t.rate if melee else maxf(t.rate, 0.45)
+			if melee:
+				model.play("steken", 0.08, 1.7)
+				Sfx.play("knife", 1.0, global_position)
+			else:
+				Sfx.play("ping", 0.8, global_position)
+			Game.mark_attack(global_position)
+			Game.gates.damage(Game.gates.list.find(gate), t.dmg, "melee" if melee else "bullet")
+
 	var vel := Vector3.ZERO
 	if want_move:
 		var wp := Route.waypoint(global_position, goal)

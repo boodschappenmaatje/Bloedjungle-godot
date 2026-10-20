@@ -63,6 +63,7 @@ func _spawn(kind: String) -> void:
 func _wave_cleared() -> void:
 	var bonus := 150 + Game.wave * 60 + roundi(Game.base_hp / Game.base_max * 200.0)
 	Game.add_points(bonus)
+	Game.bonus = bonus
 	var w := Game.wave
 	_start_prep()
 	Game.banner.emit("GOLF %d OVERLEEFD" % w, "Bonus +%d" % bonus, 3.0)

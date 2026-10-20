@@ -1,19 +1,26 @@
 class_name HudExtra
 extends Control
-## De rest van de web-interface (23-hud.js): golf, punten en overgebleven vijanden bovenin, grotere
-## munitie met rood bij bijna leeg, wapennaam bij wisselen, rode rand bij schade en de kant waar de
-## aanval vandaan komt (N/O/Z/W). Alles tekent mee met de schermgrootte.
+## De HUD van de web-versie (23-hud.js, styles.css): balken met icoontjes linksboven, golf, vijanden,
+## punten en score met pauzeknop rechtsboven, munitie rechtsonder, rode rand bij schade en
+## aanvalspijltjes aan de kant waar de aanval vandaan komt.
 
+var _hp_bar: ProgressBar
+var _base_bar: ProgressBar
 var _wave: Label
 var _enemies: Label
 var _points: Label
+var _score: Label
 var _weapon: Label
+var _ammo: Label
 var _weapon_t := 0.0
 var _last_weapon := ""
 var _hurt: ColorRect
 var _hurt_a := 0.0
 var _last_hp := -1.0
-var _edges := {}
+var _arrows: Control
+var _bars: VBoxContainer
+var _top_right: HBoxContainer
+var _pause: Control
 
 
 func _ready() -> void:
@@ -25,58 +32,169 @@ func _ready() -> void:
 	_hurt.material = _vignette_material()
 	_hurt.color = Color.WHITE
 	add_child(_hurt)
-	for d in ["N", "O", "Z", "W"]:
-		var l := Label.new()
-		l.text = d
-		l.add_theme_font_size_override("font_size", 22)
-		l.add_theme_color_override("font_color", Color(1, 0.35, 0.25))
-		l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
-		l.add_theme_constant_override("outline_size", 6)
-		l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		l.modulate.a = 0.0
-		match d:
-			"N":
-				l.set_anchors_preset(Control.PRESET_CENTER_TOP)
-				l.offset_top = 150
-				l.offset_left = -10
-			"Z":
-				l.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
-				l.offset_top = -90
-				l.offset_left = -10
-			"O":
-				l.set_anchors_preset(Control.PRESET_CENTER_RIGHT)
-				l.offset_left = -40
-				l.offset_top = -14
-			"W":
-				l.set_anchors_preset(Control.PRESET_CENTER_LEFT)
-				l.offset_left = 14
-				l.offset_top = -14
-		add_child(l)
-		_edges[d] = l
-	_wave = _top_label(Control.PRESET_CENTER_TOP, 12, 26)
-	_enemies = _top_label(Control.PRESET_CENTER_TOP, 44, 17)
-	_points = _top_label(Control.PRESET_CENTER_TOP, 70, 17)
-	_points.add_theme_color_override("font_color", Color(1, 0.86, 0.5))
-	_weapon = _top_label(Control.PRESET_CENTER_BOTTOM, -120, 24)
-	_weapon.modulate.a = 0.0
-	Game.changed.connect(_sync)
-	_sync()
+	_arrows = Control.new()
+	_arrows.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_arrows.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_arrows.draw.connect(_draw_arrows)
+	add_child(_arrows)
+	_build_bars()
+	_build_top_right()
+	_build_ammo()
+	_build_pause()
+	resized.connect(_layout)
+	_layout()
 
 
-func _top_label(preset: int, y: float, size: int) -> Label:
-	var l := Label.new()
-	l.set_anchors_preset(preset)
-	l.offset_left = -200
-	l.offset_right = 200
-	l.offset_top = y
-	l.offset_bottom = y + size + 8
-	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.add_theme_font_size_override("font_size", size)
-	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
-	l.add_theme_constant_override("outline_size", 6)
-	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(l)
+func _shadowed(l: Label) -> Label:
+	l.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.85))
+	l.add_theme_constant_override("shadow_offset_y", 1)
+	l.add_theme_constant_override("shadow_outline_size", 2)
 	return l
+
+
+func _build_bars() -> void:
+	_bars = VBoxContainer.new()
+	_bars.add_theme_constant_override("separation", 5)
+	_bars.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_bars)
+	_hp_bar = _bar_row("heart", Color8(224, 71, 58), UI.BLOOD_HI)
+	_base_bar = _bar_row("base", UI.OLIVE_HI, UI.OLIVE_HI)
+
+
+func _bar_row(icon: String, icon_col: Color, fill: Color) -> ProgressBar:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 6)
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bars.add_child(row)
+	var ic := TextureRect.new()
+	ic.texture = load("res://assets/ui/icons/icon_%s.png" % icon)
+	ic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ic.custom_minimum_size = Vector2(14, 14)
+	ic.modulate = icon_col
+	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_child(ic)
+	var pb := ProgressBar.new()
+	pb.show_percentage = false
+	pb.min_value = 0.0
+	pb.max_value = 1.0
+	pb.value = 1.0
+	pb.custom_minimum_size = Vector2(0, 8)
+	pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	pb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	pb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pb.add_theme_stylebox_override("background", UI.box(Color(0, 0, 0, 0.55), Color(UI.INK, 0.25), 1, 2, 0))
+	pb.add_theme_stylebox_override("fill", UI.box(fill, Color(0, 0, 0, 0), 0, 1, 0))
+	row.add_child(pb)
+	return pb
+
+
+func _build_top_right() -> void:
+	_top_right = HBoxContainer.new()
+	_top_right.add_theme_constant_override("separation", 10)
+	_top_right.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_top_right)
+	_wave = _shadowed(UI.label("GOLF 1", UI.display(1), 16, UI.INK))
+	_wave.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_top_right.add_child(_wave)
+	var en := HBoxContainer.new()
+	en.add_theme_constant_override("separation", 3)
+	en.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	en.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_top_right.add_child(en)
+	var sk := TextureRect.new()
+	sk.texture = load("res://assets/ui/icons/icon_skull.png")
+	sk.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	sk.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	sk.custom_minimum_size = Vector2(14, 14)
+	sk.modulate = UI.INK_DIM
+	sk.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	en.add_child(sk)
+	_enemies = _shadowed(UI.label("–", UI.body(700, 0), 13, UI.INK_DIM))
+	en.add_child(_enemies)
+	_points = _shadowed(UI.label("0 pt", UI.display(0), 16, UI.BRASS))
+	_points.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_top_right.add_child(_points)
+	_score = _shadowed(UI.label("★ 0", UI.body(700, 0), 12, UI.INK_DIM))
+	_score.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_top_right.add_child(_score)
+	var pb := Button.new()
+	pb.text = "II"
+	pb.custom_minimum_size = Vector2(34, 30)
+	pb.add_to_group("hud_button")
+	pb.process_mode = Node.PROCESS_MODE_ALWAYS
+	UI.style_button(pb, "pause")
+	pb.pressed.connect(func(): _set_paused(true))
+	_top_right.add_child(pb)
+
+
+func _build_ammo() -> void:
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 0)
+	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	box.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_RIGHT)
+	box.grow_horizontal = Control.GROW_DIRECTION_BEGIN
+	box.grow_vertical = Control.GROW_DIRECTION_BEGIN
+	box.offset_right = -14
+	box.offset_bottom = -8
+	add_child(box)
+	_weapon = _shadowed(UI.label("", UI.display(1), 14, UI.INK))
+	_weapon.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_weapon.modulate.a = 0.0
+	box.add_child(_weapon)
+	_ammo = _shadowed(UI.label("8 | 8", UI.body(700, 0), 15, UI.BRASS))
+	_ammo.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	box.add_child(_ammo)
+
+
+func _build_pause() -> void:
+	_pause = ColorRect.new()
+	(_pause as ColorRect).color = Color(6.0 / 255.0, 8.0 / 255.0, 4.0 / 255.0, 0.72)
+	_pause.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_pause.add_to_group("hud_button")
+	_pause.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_pause)
+	_pause.hide()
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_pause.add_child(center)
+	var sheet := PanelContainer.new()
+	sheet.custom_minimum_size.x = 380
+	var sb := UI.box(UI.PANEL, UI.PANEL_LINE, 1, 6, 20)
+	sb.shadow_color = Color(0, 0, 0, 0.6)
+	sb.shadow_size = 30
+	sheet.add_theme_stylebox_override("panel", sb)
+	center.add_child(sheet)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 12)
+	sheet.add_child(v)
+	v.add_child(UI.label("PAUZE", UI.display(1), 34, UI.INK))
+	var resume := Button.new()
+	resume.text = "VERDER"
+	UI.style_button(resume, "primary")
+	resume.pressed.connect(func(): _set_paused(false))
+	v.add_child(resume)
+	var again := Button.new()
+	again.text = "OPNIEUW BEGINNEN"
+	UI.style_button(again, "secondary")
+	again.pressed.connect(func():
+		get_tree().paused = false
+		get_tree().reload_current_scene())
+	v.add_child(again)
+
+
+func _set_paused(on: bool) -> void:
+	get_tree().paused = on
+	_pause.visible = on
+
+
+func _layout() -> void:
+	_bars.position = Vector2(12, 10)
+	_bars.size = Vector2(minf(size.x * 0.3, 150.0), 0)
+	_top_right.reset_size()
+	_top_right.position = Vector2(size.x - 12.0 - _top_right.size.x, 10)
+	_arrows.queue_redraw()
 
 
 func _vignette_material() -> ShaderMaterial:
@@ -84,22 +202,25 @@ func _vignette_material() -> ShaderMaterial:
 	sh.code = """shader_type canvas_item;
 uniform float amount = 0.0;
 void fragment() {
-	float d = distance(UV, vec2(0.5)) * 1.45;
-	COLOR = vec4(0.75, 0.04, 0.02, smoothstep(0.35, 1.0, d) * amount);
+	float d = length(UV - vec2(0.5)) / 0.7071;
+	COLOR = vec4(0.59, 0.0, 0.0, smoothstep(0.45, 1.0, d) * 0.85 * amount);
 }"""
 	var m := ShaderMaterial.new()
 	m.shader = sh
 	return m
 
 
-func _sync() -> void:
-	_wave.text = "GOLF %d" % maxi(Game.wave, 1)
+func _process(delta: float) -> void:
 	var main := get_parent().get_parent()
 	var left: int = Game.enemies.size() + (main.queue.size() if "queue" in main else 0)
-	_enemies.text = "–" if Game.state != "play" else "%d vijanden" % left
-	_points.text = "%d pt   ★ %d" % [Game.points, Game.score]
+	_wave.text = "GOLF %d" % maxi(Game.wave, 1)
+	_enemies.text = "–" if Game.state != "play" else str(left)
+	_points.text = "%s pt" % UI.nl(Game.points)
+	_score.text = "★ %s" % UI.nl(Game.score)
+	_base_bar.value = Game.base_hp / Game.base_max
 	var p = Game.player
 	if p:
+		_hp_bar.value = p.hp / Game.max_hp()
 		if _last_hp >= 0.0 and p.hp < _last_hp:
 			_hurt_a = 0.5
 		_last_hp = p.hp
@@ -108,21 +229,39 @@ func _sync() -> void:
 				_weapon.text = Data.WEAPONS[p.weapon].name.to_upper()
 				_weapon_t = 0.9
 			_last_weapon = p.weapon
-
-
-func _process(delta: float) -> void:
-	_sync()
-	if _weapon_t > 0.0:
-		_weapon_t -= delta
+		var w: Dictionary = Game.wstat(p.weapon)
+		_ammo.text = "…" if p.reload_t > 0.0 else "%d | %d" % [p.ammo, w.mag]
+		var low: bool = p.reload_t <= 0.0 and p.ammo <= w.mag * 0.25
+		_ammo.add_theme_color_override("font_color", Color8(255, 90, 58) if low else (UI.INK_DIM if p.reload_t > 0.0 else UI.BRASS))
+	_top_right.reset_size()
+	_top_right.position.x = size.x - 12.0 - _top_right.size.x
+	_weapon_t = maxf(0.0, _weapon_t - delta)
 	_weapon.modulate.a = clampf(_weapon_t / 0.3, 0.0, 1.0)
 	_hurt_a = maxf(0.0, _hurt_a - delta)
-	var low := 0.0
-	if Game.player and Game.state == "play":
-		var f: float = Game.player.hp / Game.max_hp()
+	var low_hp := 0.0
+	if p and Game.state == "play":
+		var f: float = p.hp / Game.max_hp()
 		if f < 0.3:
-			low = (0.3 - f) * 2.0 * (0.6 + 0.4 * sin(Time.get_ticks_msec() / 180.0))
-	(_hurt.material as ShaderMaterial).set_shader_parameter("amount", clampf(maxf(_hurt_a * 2.0, low), 0.0, 1.0))
-	for d in _edges:
+			low_hp = (0.3 - f) * 2.0 * (0.6 + 0.4 * sin(Time.get_ticks_msec() / 180.0))
+	(_hurt.material as ShaderMaterial).set_shader_parameter("amount", clampf(maxf(_hurt_a * 2.0, low_hp), 0.0, 1.0))
+	for d in Game.attack:
 		Game.attack[d] = maxf(0.0, Game.attack[d] - delta)
-		var on: bool = Game.attack[d] > 0.0 and Game.state == "play"
-		_edges[d].modulate.a = move_toward(_edges[d].modulate.a, 1.0 if on else 0.0, delta * 6.0)
+	_arrows.queue_redraw()
+
+
+## Rode pijltjes aan de rand, knipperend, zoals .atk in styles.css.
+func _draw_arrows() -> void:
+	if Game.state != "play":
+		return
+	var a := 0.675 + 0.325 * cos(Time.get_ticks_msec() / 400.0 * PI)
+	var w := size.x
+	var h := size.y
+	var shapes := {
+		"N": PackedVector2Array([Vector2(w / 2.0, 50), Vector2(w / 2.0 + 15, 72), Vector2(w / 2.0 - 15, 72)]),
+		"Z": PackedVector2Array([Vector2(w / 2.0, h - 8), Vector2(w / 2.0 + 15, h - 30), Vector2(w / 2.0 - 15, h - 30)]),
+		"W": PackedVector2Array([Vector2(2, h / 2.0), Vector2(24, h / 2.0 - 15), Vector2(24, h / 2.0 + 15)]),
+		"O": PackedVector2Array([Vector2(w - 2, h / 2.0), Vector2(w - 24, h / 2.0 - 15), Vector2(w - 24, h / 2.0 + 15)]),
+	}
+	for d in shapes:
+		if Game.attack[d] > 0.0:
+			_arrows.draw_colored_polygon(shapes[d], Color(1.0, 0.23, 0.12, a))

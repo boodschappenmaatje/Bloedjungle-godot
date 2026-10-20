@@ -13,6 +13,7 @@ var kills := 0
 var base_hp := Data.BASE_HP
 var base_max := Data.BASE_HP
 var prep_t := 0.0
+var bonus := 0  # bonus van de laatste overleefde golf, getoond in de wapenkamer
 
 # Wat je bezit: per wapen de upgradeniveaus en de kogels in het magazijn, en de uitrusting-upgrades.
 var owned := _fresh_owned()
@@ -38,6 +39,7 @@ func reset() -> void:
 	points = Data.START_POINTS
 	score = 0
 	kills = 0
+	bonus = 0
 	base_hp = Data.BASE_HP
 	base_max = Data.BASE_HP
 	enemies.clear()

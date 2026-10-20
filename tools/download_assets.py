@@ -75,21 +75,48 @@ def inspect(path, kind, resize_1k=False):
 
 
 def download(url, destination):
-    request = urllib.request.Request(url, headers={"User-Agent": "Bloedjungle-asset-downloader/1.0"})
-    with urllib.request.urlopen(request, timeout=45) as response, destination.open("wb") as output:
-        if response.status != 200:
+    cache = ROOT / ".asset-download-cache"
+    cache.mkdir(exist_ok=True)
+    stem = hashlib.sha256(url.encode("utf-8")).hexdigest()
+    partial, complete = cache / (stem + ".part"), cache / (stem + ".source")
+    if complete.exists():
+        shutil.copyfile(complete, destination)
+        return
+    offset = partial.stat().st_size if partial.exists() else 0
+    headers = {"User-Agent": "Bloedjungle-asset-downloader/1.0"}
+    if offset:
+        headers["Range"] = f"bytes={offset}-"
+    request = urllib.request.Request(url, headers=headers)
+    try:
+        response = urllib.request.urlopen(request, timeout=45)
+    except Exception:
+        # Keep the partial file so the next run can use an HTTP Range request.
+        raise
+    with response:
+        if response.status not in (200, 206):
             raise ValueError(f"HTTP {response.status}")
+        if offset and response.status == 206:
+            content_range = response.headers.get("Content-Range", "")
+            if not content_range.startswith(f"bytes {offset}-"):
+                raise ValueError("server returned an invalid Content-Range; partial retained")
+            mode = "ab"
+        else:
+            offset = 0
+            mode = "wb"
         length = int(response.headers.get("Content-Length", "0"))
-        if length > MAX_BYTES:
+        if length + offset > MAX_BYTES:
             raise ValueError("download exceeds 40 MiB limit")
-        size = 0
-        while block := response.read(1024 * 1024):
-            size += len(block)
-            if size > MAX_BYTES:
-                raise ValueError("download exceeds 40 MiB limit")
-            output.write(block)
-        if size == 0 or (length and length != size):
-            raise ValueError("empty or truncated download")
+        total = offset
+        with partial.open(mode) as output:
+            while block := response.read(1024 * 1024):
+                total += len(block)
+                if total > MAX_BYTES:
+                    raise ValueError("download exceeds 40 MiB limit")
+                output.write(block)
+        if total == 0 or (length and total != offset + length):
+            raise ValueError("empty or truncated download; partial retained")
+    os.replace(partial, complete)
+    shutil.copyfile(complete, destination)
 
 
 def embed_dependencies(source, entry, tempdir):
@@ -159,6 +186,24 @@ def convert_ktx2(source, tempdir):
                     "effective_resolution": "at most 512px source resampled to 1K"}
 
 
+def convert_blend_model(source, output):
+    """Export mesh objects from an approved Blender source as a standalone GLB."""
+    blender = os.environ.get("BLENDER_BIN") or shutil.which("blender")
+    if not blender:
+        raise ValueError("Blender CLI is required to convert this approved .blend model")
+    expression = (
+        "import bpy; bpy.ops.object.select_all(action='DESELECT'); "
+        "[o.select_set(True) for o in bpy.data.objects if o.type == 'MESH']; "
+        "bpy.context.view_layer.objects.active = next((o for o in bpy.data.objects if o.type == 'MESH'), None); "
+        f"bpy.ops.export_scene.gltf(filepath={json.dumps(str(output))}, export_format='GLB', "
+        "use_selection=True, export_yup=True, export_apply=True)"
+    )
+    result = subprocess.run([blender, "--background", str(source), "--python-expr", expression],
+                            capture_output=True, text=True, timeout=180)
+    if result.returncode:
+        raise ValueError(f"Blender GLB export failed: {result.stdout[-500:]} {result.stderr[-500:]}")
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--batch", choices=["terrain", "buildings", "nature", "military", "vehicles", "all"], default="all")
@@ -184,7 +229,8 @@ def main():
             continue
         path.parent.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(prefix="asset-", dir=ROOT) as tempdir:
-            source = Path(tempdir) / ("source" + (".ktx2" if entry["kind"] == "ktx2_texture" else path.suffix))
+            source_suffix = {"ktx2_texture": ".ktx2", "blend_model": ".blend"}.get(entry["kind"], path.suffix)
+            source = Path(tempdir) / ("source" + source_suffix)
             try:
                 download(entry["url"], source)
                 source_hash = sha256(source)
@@ -196,6 +242,11 @@ def main():
                     prepared, details = convert_ktx2(source, tempdir)
                     _, checked = inspect(prepared, "texture")
                     details.update(checked)
+                elif entry["kind"] == "blend_model":
+                    prepared = Path(tempdir) / "converted.glb"
+                    convert_blend_model(source, prepared)
+                    embedded, dependency_hashes = prepared, {}
+                    prepared, details = inspect(prepared, "model")
                 else:
                     embedded, dependency_hashes = embed_dependencies(source, entry, tempdir)
                     prepared, details = inspect(embedded, entry["kind"], entry.get("resize_1k", False))

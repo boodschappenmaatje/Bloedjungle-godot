@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Approved pinned CC0 downloads. 2K ambientCG maps resized to 1K; Poly Haven 512px mirror maps resampled to 1K with effective 512px detail.",
+  "description": "Approved pinned asset downloads. Four ambientCG material sets have 2K source detail resized to 1K output; the other 14 material sets have at most 512px source detail resampled to 1K.",
   "assets": [
     {
       "batch": "terrain",
@@ -881,6 +881,17 @@
       "upstream_url": "https://polyhaven.com/a/worn_rock_natural_01",
       "role": "roughness",
       "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "military",
+      "path": "assets/models/military/hut.glb",
+      "url": "https://raw.githubusercontent.com/medmatix/WW2_Building_Models/d9583dee0864b4519541ee3dea6172eb200a72d1/Blender_Sources/H-hut.blend",
+      "kind": "blend_model",
+      "license": "MIT",
+      "creator": "D A York (medmatix)",
+      "source_asset": "H-hut.blend",
+      "source_sha256": "18900fdf51d0f9cda0da006ed3d881515b5b4346dcd64813d52489eb7dc2524b",
+      "export": "Blender 4.3.2 to standalone glTF 2.0 GLB, mesh objects only, Y-up"
     }
   ]
 }

@@ -71,6 +71,25 @@
     "source_sha256": "b1edc2953c590c16f1d8280dfeb9073af6c710ac3d587f3dba144f69363d799b",
     "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/city-industrial/detail-tank.glb"
   },
+  "assets/models/military/hut.glb": {
+    "bytes": 99892,
+    "conversion": "Blender 4.3.2; standalone glTF 2.0 GLB; mesh only; Y-up",
+    "creator": "D A York (medmatix)",
+    "dependency_sha256": {},
+    "dimensions_m": [
+      38.0,
+      6.0,
+      28.0
+    ],
+    "embedded_images": 0,
+    "license": "MIT",
+    "materials": 1,
+    "meshes": 1,
+    "sha256": "7ed91ac929a7071acb1b203787a3c10bd408386a6b21195e335b37343050b5a5",
+    "source_sha256": "18900fdf51d0f9cda0da006ed3d881515b5b4346dcd64813d52489eb7dc2524b",
+    "source_url": "https://raw.githubusercontent.com/medmatix/WW2_Building_Models/d9583dee0864b4519541ee3dea6172eb200a72d1/Blender_Sources/H-hut.blend",
+    "triangles": 1627
+  },
   "assets/models/military/tent.glb": {
     "bytes": 15460,
     "creator": "Kenney",

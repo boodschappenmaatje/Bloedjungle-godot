@@ -5,3 +5,4 @@
 # Godot extracts these embedded GLB images while importing; the GLB remains the source.
 assets/models/**/*_colormap.png
 assets/models/nature/fern_Leaves.png
+.asset-download-cache/

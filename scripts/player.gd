@@ -12,6 +12,7 @@ var fire_t := 0.0
 var reload_t := 0.0
 var idle_t := 0.0
 var dead := false
+var driving := false         # zit in de jeep: dan rijdt jeep.gd en loopt hij niet zelf
 var elev := 0.0              # hoogte: 0 op de grond, TOWER_TOP op een wachttoren
 var tower: Node3D = null     # de toren waar hij op staat of die hij beklimt
 var climb := -1.0            # voortgang op de trap (0 = onderaan, 1 = boven), -1 = niet aan het klimmen
@@ -47,6 +48,8 @@ func refresh_look() -> void:
 
 func _physics_process(delta: float) -> void:
 	if dead or Game.state == "shop" or Game.state == "menu":
+		return
+	if driving:
 		return
 	if weapon != Game.cur:
 		equip(Game.cur)

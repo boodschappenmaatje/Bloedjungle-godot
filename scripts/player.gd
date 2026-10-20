@@ -12,6 +12,17 @@ var fire_t := 0.0
 var reload_t := 0.0
 var idle_t := 0.0
 var dead := false
+var elev := 0.0              # hoogte: 0 op de grond, TOWER_TOP op een wachttoren
+var tower: Node3D = null     # de toren waar hij op staat of die hij beklimt
+var climb := -1.0            # voortgang op de trap (0 = onderaan, 1 = boven), -1 = niet aan het klimmen
+var climb_dir := 1
+var climb_cd := 0.0
+var _mask0 := 0
+
+const STAIR_FOOT := 7.4      # trap staat op x = 7,7 .. 1,3 van de toren (zie bron/wachttoren)
+const STAIR_TOP := 1.3
+const DECK := 5.3
+const CLIMB_SPEED := 3.1
 
 
 func _ready() -> void:
@@ -21,6 +32,7 @@ func _ready() -> void:
 	weapon = Game.cur
 	ammo = Game.owned[weapon].ammo
 	rotation.y = face
+	_mask0 = collision_mask
 
 
 ## Kleur en hoofdband volgens de gekozen uitrusting; ook gebruikt als je in het menu iets anders kiest.
@@ -41,14 +53,22 @@ func _physics_process(delta: float) -> void:
 	var w: Dictionary = Game.wstat(weapon)
 	var mv := Game.move
 	var spd_mul: float = (1.0 + 0.07 * Game.upg.speed) * w.get("slow", 1.0) * Progress.bonus().speed
+	climb_cd -= delta
+	if climb >= 0.0:
+		_climb_step(delta)
+		return
 	velocity = Vector3(mv.x, 0.0, mv.y) * Data.PLAYER_SPEED * spd_mul
 	move_and_slide()
 	var flat := Vector2(position.x, position.z)
 	if flat.length() > Data.WORLD_R:
 		flat = flat.limit_length(Data.WORLD_R)
 		position = Vector3(flat.x, position.y, flat.y)
-	position.y = 0.0
-	var sunk: bool = Game.defs != null and Game.defs.in_trench(global_position)
+	if tower != null:
+		_on_deck(mv)
+	else:
+		position.y = 0.0
+		_find_stairs(mv)
+	var sunk: bool = tower == null and Game.defs != null and Game.defs.in_trench(global_position)
 	model.position.y = lerpf(model.position.y, -0.78 if sunk else 0.0, minf(1.0, delta * 8.0))
 
 	var moving := mv.length()
@@ -66,7 +86,7 @@ func _physics_process(delta: float) -> void:
 		if reload_t <= 0.0:
 			ammo = w.mag
 			Game.changed.emit()
-	if Game.fire:
+	if Game.fire and climb < 0.0:
 		idle_t = 0.0
 		_shoot(w)
 	else:
@@ -74,6 +94,74 @@ func _physics_process(delta: float) -> void:
 		if idle_t > 1.4 and ammo < w.mag:
 			_reload(w)  # geen herlaadknop: na even niet schieten vult hij zelf bij
 	_animate(mv, moving)
+
+
+## Onderaan de trap van een toren omhoog lopen begint de klim.
+func _find_stairs(mv: Vector2) -> void:
+	if climb_cd > 0.0 or mv.length() < 0.3:
+		return
+	for t: Node3D in get_tree().get_nodes_in_group("tower"):
+		var lp: Vector3 = t.to_local(global_position)
+		var ld: Vector3 = t.global_transform.basis.inverse() * Vector3(mv.x, 0.0, mv.y)
+		if lp.x > STAIR_FOOT - 0.5 and lp.x < STAIR_FOOT + 1.2 and absf(lp.z) < 0.7 and ld.x < -0.3:
+			tower = t
+			climb = 0.0
+			climb_dir = 1
+			collision_mask = 0
+			_roof(t, false)
+			return
+
+
+## Het dak gaat weg als je erop staat, anders zie je jezelf niet.
+func _roof(t: Node3D, vis: bool) -> void:
+	for n in ["Toren_dak", "Toren_dakrib"]:
+		var m := t.find_child(n, true, false)
+		if m:
+			m.visible = vis
+
+
+## Op het platform: vrij lopen binnen de reling; door de opening bij de trap naar beneden.
+func _on_deck(mv: Vector2) -> void:
+	var lp: Vector3 = tower.to_local(global_position)
+	var ld: Vector3 = tower.global_transform.basis.inverse() * Vector3(mv.x, 0.0, mv.y)
+	lp.z = clampf(lp.z, -1.0, 1.0)
+	var gap := absf(lp.z) < 0.5
+	lp.x = clampf(lp.x, -1.0, 1.35 if gap else 1.0)
+	if lp.x > 1.2 and gap and ld.x > 0.3 and climb_cd <= 0.0:
+		climb = 1.0
+		climb_dir = -1
+	var g := tower.to_global(lp)
+	global_position = Vector3(g.x, elev, g.z)
+
+
+func _climb_step(delta: float) -> void:
+	var len_ := Vector2(STAIR_FOOT - STAIR_TOP, DECK).length()
+	climb = clampf(climb + climb_dir * CLIMB_SPEED * delta / len_, 0.0, 1.0)
+	var lp := Vector3(lerpf(STAIR_FOOT, STAIR_TOP, climb), 0.0, 0.0)
+	elev = DECK * climb
+	var g := tower.to_global(lp)
+	global_position = Vector3(g.x, elev, g.z)
+	var dw: Vector3 = tower.global_transform.basis * Vector3(-climb_dir, 0.0, 0.0)
+	face = atan2(dw.x, dw.z)
+	rotation.y = face
+	model.position.y = 0.0
+	_animate(Vector2(dw.x, dw.z), 0.6)
+	if climb_dir > 0 and climb >= 1.0:
+		climb = -1.0
+		elev = DECK
+		climb_cd = 0.5
+		var l2: Vector3 = tower.to_local(global_position)
+		l2.x = 1.0
+		var g2 := tower.to_global(l2)
+		global_position = Vector3(g2.x, elev, g2.z)
+	elif climb_dir < 0 and climb <= 0.0:
+		climb = -1.0
+		elev = 0.0
+		climb_cd = 0.8
+		collision_mask = _mask0
+		_roof(tower, true)
+		tower = null
+		position.y = 0.0
 
 
 func _shoot(w: Dictionary) -> void:
@@ -89,7 +177,7 @@ func _shoot(w: Dictionary) -> void:
 	var over := _hugging_wall(fwd)
 	for i in w.pellets:
 		var a: float = face + (randf() - 0.5) * w.spread * 2.0
-		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0))
+		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0), 0.28 if elev > 1.0 else 0.0)
 	Fx.muzzle(get_parent(), muzzle)
 	Sfx.play(Data.WEAPON_SND[weapon])
 	Game.changed.emit()

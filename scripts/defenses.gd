@@ -11,7 +11,7 @@ const TOWER_MG_COST := 1000
 const TOWER_MG_AMMO := 260
 const GUARD_COST := 600
 const GUARD_HP := 220.0
-const TOWER_TOP := 5.36  # hoogte van het platform van een wachttoren
+const TOWER_TOP := 5.3  # hoogte van het platform van een wachttoren
 
 var items: Array = []  # neergezette dingen: {kind, node, ...}
 var towers: Array = []  # {node, pos, mg, ammo, fire_t, aim, gun, guard}
@@ -54,7 +54,7 @@ func buy_tower_mg() -> void:
 			t.ammo = tower_ammo()
 			var gun := Node3D.new()
 			_sentry_gun(gun)
-			gun.position = t.pos + Vector3(0, TOWER_TOP + 0.1, 0)
+			gun.position = t.node.to_global(Vector3(-0.8, TOWER_TOP + 0.1, 0.8))
 			add_child(gun)
 			t.gun = gun
 			return
@@ -67,7 +67,7 @@ func buy_guard() -> void:
 			add_child(m)
 			m.setup(Color("5a6a36"))
 			m.scale = Vector3.ONE * Data.SOLDIER_SCALE
-			m.position = t.pos + Vector3(0, TOWER_TOP, 0)
+			m.position = t.node.to_global(Vector3(-0.95, TOWER_TOP, 0.0))
 			t.guard = m
 			t.guard_hp = GUARD_HP
 			t.guard_t = randf_range(0.3, 1.0)

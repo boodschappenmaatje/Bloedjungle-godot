@@ -52,6 +52,9 @@ func _physics_process(delta: float) -> void:
 	if player and not player.dead:
 		to_player = _flat(player.global_position - global_position).length()
 	var at_player := to_player < (20.0 if melee else 16.0)
+	if melee and player and player.elev > 1.0:
+		at_player = false  # een mes reikt niet tot op een toren
+	_tgt_y = player.global_position.y if at_player else 0.0
 	var goal: Vector3 = player.global_position if at_player else Vector3.ZERO
 	var dist := to_player if at_player else _bunker_dist()
 
@@ -96,6 +99,9 @@ func _physics_process(delta: float) -> void:
 	_animate(vel.length(), want_move)
 
 
+var _tgt_y := 0.0
+
+
 func _shoot(a: float) -> void:
 	var burst: int = t.get("burst", 0)
 	if burst > 0:
@@ -109,7 +115,11 @@ func _shoot(a: float) -> void:
 	var fwd := Vector3(sin(a), 0.0, cos(a))
 	var muzzle: Vector3 = global_position + fwd * (0.6 * t.scale) + Vector3.UP * 1.33 * minf(t.scale, 1.2) * Data.SOLDIER_SCALE
 	Game.mark_attack(global_position)
-	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread * _aim_mult(), Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false)
+	var rise := 0.0
+	if _tgt_y > 1.0 and Game.player:
+		var dd := _flat(Game.player.global_position - muzzle).length()
+		rise = (_tgt_y + 1.0 - muzzle.y) / maxf(dd, 3.0)
+	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread * _aim_mult(), Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false, false, 0, 0.0, 0.0, rise)
 	Fx.muzzle(get_parent(), muzzle)
 	Sfx.play("ak" if type == "heavy" else "enemy", 1.0, global_position)
 

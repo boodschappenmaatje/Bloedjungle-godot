@@ -120,37 +120,13 @@ static func _bunker(root: Node3D) -> void:
 
 ## Houten wachttoren met platform, reling, ladder en golfplaten dak.
 static func _tower(root: Node3D, pos: Vector3) -> void:
-	var h := 5.2
-	var wood := Kit.wood()
 	var holder := Node3D.new()
 	holder.position = pos
+	holder.rotation.y = 0.0 if pos.x < 0.0 else PI  # de trap loopt naar het midden van de basis
 	root.add_child(holder)
 	holder.add_to_group("tower")
-	Kit.collider(holder, Vector3(0, h / 2.0, 0), Vector3(1.9, h, 1.9), Kit.LAYER_WALL)
-	for sx in [-0.85, 0.85]:
-		for sz in [-0.85, 0.85]:
-			Kit.box(holder, Vector3(sx, 0, sz), Vector3(0.2, h, 0.2), wood)
-	for y in [1.2, 2.8]:
-		for sx in [-1.0, 1.0]:
-			Kit.box(holder, Vector3(0, y, sx * 0.85), Vector3(1.8, 0.1, 0.1), wood)
-			Kit.box(holder, Vector3(sx * 0.85, y, 0), Vector3(0.1, 0.1, 1.8), wood)
-	# kruisverbanden op twee zijden
-	for sx in [-1.0, 1.0]:
-		var diag := Kit.box(holder, Vector3(0.0, 1.2, sx * 0.88), Vector3(2.4, 0.08, 0.08), wood)
-		diag.rotation = Vector3(0, 0, atan2(1.6, 1.8))
-	Kit.box(holder, Vector3(0, h, 0), Vector3(2.4, 0.16, 2.4), wood)
-	for sx in [-1.0, 1.0]:
-		Kit.box(holder, Vector3(0, h + 0.16, sx * 1.12), Vector3(2.3, 0.7, 0.07), wood)
-		Kit.box(holder, Vector3(sx * 1.12, h + 0.16, 0), Vector3(0.07, 0.7, 2.3), wood)
-	for sx in [-1.0, 1.0]:
-		for sz in [-1.0, 1.0]:
-			Kit.box(holder, Vector3(sx * 1.1, h + 0.16, sz * 1.1), Vector3(0.12, 1.9, 0.12), wood)
-	Kit.gable(holder, Vector3(0, h + 2.0, 0), Vector3(2.9, 0.9, 2.9), Kit.roof())
-	# ladder
-	Kit.box(holder, Vector3(1.15, 0, 0.3), Vector3(0.08, h, 0.08), wood)
-	Kit.box(holder, Vector3(1.15, 0, -0.3), Vector3(0.08, h, 0.08), wood)
-	for i in 9:
-		Kit.box(holder, Vector3(1.15, 0.45 + i * 0.52, 0), Vector3(0.08, 0.06, 0.64), wood)
+	Kit.collider(holder, Vector3(0, 2.5, 0), Vector3(1.9, 5.0, 1.9), Kit.LAYER_WALL)
+	holder.add_child((load("res://assets/wachttoren.glb") as PackedScene).instantiate())
 
 
 static func _hut(root: Node3D, pos: Vector3, yaw: float) -> void:

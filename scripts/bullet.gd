@@ -24,7 +24,7 @@ var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
 
 
 ## Maakt een kogel. over_wall: de schutter staat tegen de muur en schiet eroverheen.
-static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false, pierce_ := 0, explosive_ := 0.0, sink_ := 0.0) -> void:
+static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false, pierce_ := 0, explosive_ := 0.0, sink_ := 0.0, rise_ := 0.0) -> void:
 	if _mesh == null:
 		_mesh = BoxMesh.new()
 		_mesh.size = Vector3(0.05, 0.05, 0.9)
@@ -41,6 +41,7 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.pierce = pierce_
 	b.explosive = explosive_
 	b.sink = sink_
+	b.dir.y = rise_  # schiet omhoog naar iemand op een toren
 	b.mask = (MASK_ENEMY if by_player else MASK_PLAYER) | MASK_BUNKER | (0 if over_wall else MASK_WALL)
 	parent.add_child(b)
 	b.global_position = from

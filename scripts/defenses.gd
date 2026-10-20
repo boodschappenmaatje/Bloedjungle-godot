@@ -155,7 +155,7 @@ var _ghost_kind := ""
 func _update_ghost() -> void:
 	var k: String = Game.place_sel
 	var on: bool = (Game.state == "play" or Game.state == "prep") and Game.player != null \
-		and Game.inv.get(k, 0) > 0
+		and Game.inv.get(k, 0) > 0 and Game.place_armed
 	if not on:
 		if _ghost:
 			_ghost.visible = false

@@ -22,6 +22,7 @@ var upg := {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0}
 # spullen in je tas om neer te zetten (Defenses)
 var inv := {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
 var place_sel := "bags"
+var place_armed := false  # spookbeeld en neerzetten aan/uit
 
 # Aanvalsrichting (N/O/Z/W) -> seconden dat de rand nog oplicht; gevuld door vijanden die schieten of steken.
 var attack := {"N": 0.0, "O": 0.0, "Z": 0.0, "W": 0.0}
@@ -52,6 +53,7 @@ func reset() -> void:
 	upg = {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0}
 	inv = {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
 	place_sel = "bags"
+	place_armed = false
 
 
 func add_points(n: int) -> void:

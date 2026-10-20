@@ -9,6 +9,8 @@ const BIG := 74.0
 
 var _tiles := {}
 var _place: Button
+var _more: Button
+var _open := false
 
 
 class Tile:
@@ -16,6 +18,7 @@ class Tile:
 	var kind := ""
 	var count := 0
 	var picked := false
+	var armed := false
 
 	func _draw() -> void:
 		var c := Vector2(size.x / 2.0, size.y / 2.0 - 5.0)
@@ -50,12 +53,12 @@ class Tile:
 				draw_rect(Rect2(c + Vector2(6, -7), Vector2(16, 3.5)), Color("22221f"))
 		var f: Font = UI.body(700, 0)
 		var name: String = Defenses.NAMES[kind].to_upper()
-		draw_string(f, Vector2(0, size.y - 6.0), name, HORIZONTAL_ALIGNMENT_CENTER, size.x, 9, UI.BRASS if picked else UI.INK_DIM)
+		draw_string(f, Vector2(0, size.y - 6.0), name, HORIZONTAL_ALIGNMENT_CENTER, size.x, 9, UI.BRASS if picked and armed else UI.INK_DIM)
 		var tag := "×%d" % count
 		var w := f.get_string_size(tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x + 10.0
 		var r := Rect2(size.x - w - 3.0, 3.0, w, 17.0)
-		draw_rect(r, UI.BRASS if picked else Color(0, 0, 0, 0.65))
-		draw_string(f, r.position + Vector2(5, 13), tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("1a1405") if picked else UI.INK)
+		draw_rect(r, UI.BRASS if picked and armed else Color(0, 0, 0, 0.65))
+		draw_string(f, r.position + Vector2(5, 13), tag, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color("1a1405") if picked and armed else UI.INK)
 
 
 func _ready() -> void:
@@ -67,12 +70,18 @@ func _ready() -> void:
 		t.add_to_group("hud_button")
 		t.focus_mode = Control.FOCUS_NONE
 		t.size = Vector2(TILE, TILE)
-		t.button_down.connect(func():
-			Sfx.play("click")
-			Game.place_sel = k
-			Game.changed.emit())
+		t.button_down.connect(func(): _tap(k))
 		add_child(t)
 		_tiles[k] = t
+	_more = Button.new()
+	_more.add_to_group("hud_button")
+	_more.text = "▲"
+	UI.style_button(_more, "pause")
+	_more.add_theme_font_override("font", UI.display(0))
+	_more.pressed.connect(func():
+		_open = not _open
+		_sync())
+	add_child(_more)
 	_place = Button.new()
 	_place.add_to_group("hud_button")
 	_place.text = "ZET\nNEER"
@@ -97,28 +106,57 @@ func _ready() -> void:
 func _unhandled_key_input(e: InputEvent) -> void:
 	if e is InputEventKey and e.pressed and not e.echo and Game.defs:
 		if e.keycode == KEY_F:
-			Game.defs.place()
+			if Game.place_armed:
+				Game.defs.place()
+			else:
+				_tap(Game.place_sel)
 		elif e.keycode == KEY_V:
 			Game.defs.cycle()
+
+
+## Tik op het gekozen vakje zet neerzetten aan of uit; een ander vakje kiest dat ding en zet het aan.
+func _tap(k: String) -> void:
+	Sfx.play("click")
+	if k == Game.place_sel:
+		Game.place_armed = not Game.place_armed
+	else:
+		Game.place_sel = k
+		Game.place_armed = true
+	_open = false
+	Game.changed.emit()
 
 
 func _sync() -> void:
 	var total := 0
 	for k in Game.inv:
 		total += Game.inv[k]
+	if total <= 0:
+		Game.place_armed = false
+		_open = false
+	elif Game.inv[Game.place_sel] <= 0 and Game.defs != null:
+		Game.defs.cycle()
 	var show := total > 0 and (Game.state == "play" or Game.state == "prep")
-	_place.visible = show
+	var others := 0
+	for k in _tiles:
+		if k != Game.place_sel and Game.inv[k] > 0:
+			others += 1
+	_place.visible = show and Game.place_armed
+	_more.visible = show and others > 0
+	_more.text = "▼" if _open else "▲"
 	for k in _tiles:
 		var t: Tile = _tiles[k]
 		t.count = Game.inv[k]
 		t.picked = k == Game.place_sel
-		t.visible = show and t.count > 0
-		var edge := UI.BRASS if t.picked else UI.PANEL_LINE
-		var fill := Color(0.28, 0.21, 0.07, 0.92) if t.picked else Color(0.07, 0.09, 0.04, 0.82)
-		var sb := UI.bevel(UI.box(fill, edge, 2 if t.picked else 1, 8, 4), 3)
+		t.armed = Game.place_armed
+		t.visible = show and t.count > 0 and (t.picked or _open)
+		var on := t.picked and Game.place_armed
+		var edge := UI.BRASS if on else UI.PANEL_LINE
+		var fill := Color(0.28, 0.21, 0.07, 0.92) if on else Color(0.07, 0.09, 0.04, 0.82)
+		var sb := UI.bevel(UI.box(fill, edge, 2 if on else 1, 8, 4), 3)
 		t.add_theme_stylebox_override("normal", sb)
 		t.add_theme_stylebox_override("hover", sb)
 		t.add_theme_stylebox_override("pressed", UI.bevel(UI.box(fill, edge, 2, 8, 4), 3, true))
+		t.modulate.a = 1.0 if (on or not t.picked) else 0.8
 		t.queue_redraw()
 	if show:
 		_layout()
@@ -126,14 +164,24 @@ func _sync() -> void:
 
 func _layout() -> void:
 	var bottom := size.y - 64.0
-	_place.size = Vector2(BIG, BIG)
-	_place.position = Vector2(size.x - 16.0 - BIG, bottom - BIG)
-	var x := _place.position.x - 12.0
-	for i in range(Defenses.KINDS.size() - 1, -1, -1):
-		var t: Tile = _tiles[Defenses.KINDS[i]]
+	var x := size.x - 16.0
+	if _place.visible:
+		_place.size = Vector2(BIG, BIG)
+		_place.position = Vector2(x - BIG, bottom - BIG)
+		x -= BIG + 12.0
+	var base := Vector2(x - TILE, bottom - TILE)
+	var sel: Tile = _tiles[Game.place_sel]
+	sel.size = Vector2(TILE, TILE)
+	sel.position = base
+	_more.size = Vector2(34, TILE)
+	_more.position = Vector2(base.x - 6.0 - 34.0, base.y)
+	var y := base.y
+	for k in Defenses.KINDS:
+		if k == Game.place_sel:
+			continue
+		var t: Tile = _tiles[k]
 		if not t.visible:
 			continue
-		x -= TILE
+		y -= TILE + GAP
 		t.size = Vector2(TILE, TILE)
-		t.position = Vector2(x, bottom - TILE - (6.0 if t.picked else 0.0))
-		x -= GAP
+		t.position = Vector2(base.x, y)

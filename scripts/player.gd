@@ -17,6 +17,7 @@ var dead := false
 func _ready() -> void:
 	Game.player = self
 	model.setup(Data.PLAYER_COLOR)
+	model.scale = Vector3.ONE * Data.SOLDIER_SCALE
 	ammo = Data.WEAPONS[weapon].mag
 	rotation.y = face
 
@@ -68,7 +69,7 @@ func _shoot(w: Dictionary) -> void:
 	fire_t = w.rate
 	ammo -= 1
 	var fwd := Vector3(sin(face), 0.0, cos(face))
-	var muzzle := global_position + fwd * 0.6 + Vector3.UP * 1.33
+	var muzzle := global_position + fwd * 0.6 + Vector3.UP * 1.33 * Data.SOLDIER_SCALE
 	var over := _hugging_wall(fwd)
 	for i in w.pellets:
 		var a: float = face + (randf() - 0.5) * w.spread * 2.0

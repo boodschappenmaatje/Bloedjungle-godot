@@ -2,6 +2,9 @@ class_name Data
 ## Vaste spelwaarden, overgenomen uit de web-versie (src/js/01-data.js, 05-world.js, 12-state.js).
 ## Afstanden in meters, tijden in seconden, hoeken in radialen.
 
+## Soldaten zijn ietsje groter dan levensgroot zodat ze op de telefoon goed te zien zijn; hutten schalen mee.
+const SOLDIER_SCALE := 1.2
+
 # Wapens. rate = seconden tussen schoten, speed = kogelsnelheid (m/s), life = levensduur kogel.
 const WEAPONS := {
 	"m1911": {"name": "M1911 Pistool", "dmg": 26.0, "rate": 0.19, "mag": 8, "reload": 1.1, "spread": 0.035, "speed": 75.0, "pellets": 1, "life": 0.6},

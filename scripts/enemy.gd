@@ -31,7 +31,7 @@ func setup(kind: String, wave: int) -> void:
 
 func _ready() -> void:
 	model.setup(t.color)
-	model.scale = Vector3.ONE * t.scale
+	model.scale = Vector3.ONE * t.scale * Data.SOLDIER_SCALE
 	(shape.shape as CapsuleShape3D).radius = t.r
 	Game.enemies.append(self)
 
@@ -102,7 +102,7 @@ func _shoot(a: float) -> void:
 	else:
 		fire_t = t.rate
 	var fwd := Vector3(sin(a), 0.0, cos(a))
-	var muzzle: Vector3 = global_position + fwd * (0.6 * t.scale) + Vector3.UP * 1.33 * minf(t.scale, 1.2)
+	var muzzle: Vector3 = global_position + fwd * (0.6 * t.scale) + Vector3.UP * 1.33 * minf(t.scale, 1.2) * Data.SOLDIER_SCALE
 	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread, Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false)
 	Fx.muzzle(get_parent(), muzzle)
 

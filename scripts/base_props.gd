@@ -156,6 +156,7 @@ static func _hut(root: Node3D, pos: Vector3, yaw: float) -> void:
 	var holder := Node3D.new()
 	holder.position = pos
 	holder.rotation.y = yaw
+	holder.scale = Vector3.ONE * 1.15
 	root.add_child(holder)
 	Kit.box(holder, Vector3.ZERO, Vector3(3.6, 2.3, 2.8), Kit.photo("buildings/plywood", 2.0, Color(0.62, 0.64, 0.5)), 0.0, Kit.LAYER_WALL)
 	Kit.box(holder, Vector3(0, 0, 0), Vector3(3.7, 0.3, 2.9), Kit.concrete_dark())

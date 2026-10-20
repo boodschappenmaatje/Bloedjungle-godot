@@ -27,7 +27,7 @@ void fragment() {
 	vec3 base = pow(vcol, vec3(2.2));  // vertexkleuren zijn sRGB gekozen, de shader rekent lineair
 	vec4 t = use_tex ? texture(tex, UV) : vec4(1.0);
 	if (t.a < cut) discard;
-	ALBEDO = base * t.rgb;
+	ALBEDO = base * t.rgb * vec3(0.42, 0.5, 0.33);  // dieper, minder fel groen
 	ROUGHNESS = 0.75;
 	BACKLIGHT = ALBEDO * backlight;
 }

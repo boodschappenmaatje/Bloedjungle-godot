@@ -32,7 +32,7 @@ void fragment() {
 	vec3 g3 = texture(grass_tex, p * 0.071 + 0.11).rgb;
 	vec3 grass = mix(g1, g2, smoothstep(0.35, 0.65, n1 * 0.6 + n2 * 0.4));
 	grass = grass * (0.65 + 0.7 * g3.g) * (0.75 + 0.5 * n3);
-	grass *= vec3(0.62, 0.74, 0.5);  // donkerder en minder fel, past bij de jungle
+	grass *= vec3(0.46, 0.56, 0.38);  // donkerder en minder fel, past bij de jungle
 
 	vec3 d1 = texture(dirt_tex, p * 0.11).rgb;
 	vec3 d2 = texture(mud_tex, p * 0.09 + 0.5).rgb;

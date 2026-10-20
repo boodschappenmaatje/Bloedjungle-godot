@@ -1,4 +1,89 @@
 {
+  "assets/environment/hdri/kloppenheim_06_puresky_2k.hdr": {
+    "bytes": 4434394,
+    "creator": "Poly Haven",
+    "license": "CC0-1.0",
+    "sha256": "99451201586489ef3288c97bfac2a2ac232a5491c51a1faf0ec8ea39f3ccd533",
+    "source_sha256": "99451201586489ef3288c97bfac2a2ac232a5491c51a1faf0ec8ea39f3ccd533",
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/skyboxes/polyhaven-hdri/kloppenheim_06_puresky_2k.hdr"
+  },
+  "assets/models/nature/bush.glb": {
+    "bytes": 10172,
+    "creator": "Kenney",
+    "embedded_images": 0,
+    "license": "CC0-1.0",
+    "materials": 1,
+    "meshes": 1,
+    "sha256": "2e0487020d68ccf664435db9d829c78ae00e6d2785ee3ec10b9f89cc70a10406",
+    "source_sha256": "2e0487020d68ccf664435db9d829c78ae00e6d2785ee3ec10b9f89cc70a10406",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/plant_bushDetailed.glb"
+  },
+  "assets/models/nature/fern.glb": {
+    "bytes": 692724,
+    "creator": "Quaternius",
+    "embedded_images": 1,
+    "license": "CC0-1.0",
+    "materials": 1,
+    "meshes": 1,
+    "sha256": "800c02671b865fd3f524a58fa72b498185a8f43dfe627ef546092027ee73d468",
+    "source_sha256": "800c02671b865fd3f524a58fa72b498185a8f43dfe627ef546092027ee73d468",
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/vegetation/polypizza-stylized-nature-gltf/Fern.glb"
+  },
+  "assets/models/nature/log.glb": {
+    "bytes": 14288,
+    "creator": "Kenney",
+    "embedded_images": 0,
+    "license": "CC0-1.0",
+    "materials": 2,
+    "meshes": 1,
+    "sha256": "8c8fe8f6adfc03a3c0cd6cb24961ff74be96c2da284d70322f05797d049972d6",
+    "source_sha256": "8c8fe8f6adfc03a3c0cd6cb24961ff74be96c2da284d70322f05797d049972d6",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/log.glb"
+  },
+  "assets/models/nature/palm.glb": {
+    "bytes": 13616,
+    "creator": "Kenney",
+    "embedded_images": 0,
+    "license": "CC0-1.0",
+    "materials": 2,
+    "meshes": 1,
+    "sha256": "27bbb23d26ed788d84de6df2f7fab0acc3fe0ff16c7d08cdcfa1fffcb11de324",
+    "source_sha256": "27bbb23d26ed788d84de6df2f7fab0acc3fe0ff16c7d08cdcfa1fffcb11de324",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/tree_palm.glb"
+  },
+  "assets/models/nature/rock.glb": {
+    "bytes": 7552,
+    "creator": "Kenney",
+    "embedded_images": 0,
+    "license": "CC0-1.0",
+    "materials": 2,
+    "meshes": 1,
+    "sha256": "6dd15390fd96501dcd1454765a17ba61dbbd8d47705dfe5149c8dd92b353ce25",
+    "source_sha256": "6dd15390fd96501dcd1454765a17ba61dbbd8d47705dfe5149c8dd92b353ce25",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/rock_largeA.glb"
+  },
+  "assets/models/nature/stump.glb": {
+    "bytes": 5644,
+    "creator": "Kenney",
+    "embedded_images": 0,
+    "license": "CC0-1.0",
+    "materials": 2,
+    "meshes": 1,
+    "sha256": "e9b0f385f0ef98493ef716a055aa51e0b99efb8445279be7bb8bd83329a4c4af",
+    "source_sha256": "e9b0f385f0ef98493ef716a055aa51e0b99efb8445279be7bb8bd83329a4c4af",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/stump_round.glb"
+  },
+  "assets/models/nature/tropical_tree.glb": {
+    "bytes": 31412,
+    "creator": "Kenney",
+    "embedded_images": 0,
+    "license": "CC0-1.0",
+    "materials": 3,
+    "meshes": 1,
+    "sha256": "c041daf2f0fb1d49e4325227cbcd58667adbe51e9b55e8c1f0a94b74cc521b3b",
+    "source_sha256": "c041daf2f0fb1d49e4325227cbcd58667adbe51e9b55e8c1f0a94b74cc521b3b",
+    "source_url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/tree_detailed.glb"
+  },
   "assets/textures/buildings/concrete/base_color.jpg": {
     "bytes": 277768,
     "creator": "ambientCG",

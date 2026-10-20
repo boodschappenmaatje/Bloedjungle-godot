@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/corrugated_iron/base_color.jpg" id="1_pccel"]
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/corrugated_iron/normal_gl.jpg" id="2_h67ff"]
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/corrugated_iron/roughness.jpg" id="3_srt8m"]
+
+[resource]
+resource_name = "corrugated_iron"
+albedo_texture = ExtResource("1_pccel")
+roughness_texture = ExtResource("3_srt8m")
+normal_enabled = true
+normal_texture = ExtResource("2_h67ff")

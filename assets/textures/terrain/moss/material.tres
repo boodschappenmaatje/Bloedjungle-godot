@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/moss/base_color.jpg" id="1_bbety"]
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/moss/normal_gl.jpg" id="2_hnv30"]
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/moss/roughness.jpg" id="3_mywex"]
+
+[resource]
+resource_name = "moss"
+albedo_texture = ExtResource("1_bbety")
+roughness_texture = ExtResource("3_mywex")
+normal_enabled = true
+normal_texture = ExtResource("2_hnv30")

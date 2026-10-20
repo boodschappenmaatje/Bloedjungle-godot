@@ -50,36 +50,58 @@ static func surface(key: String, c0: Color, c1: Color, rough := 0.9, metal := 0.
 	return m
 
 
+## Foto-materiaal uit assets/textures: kleur, oneffenheden en glans, over de wereld heen gespannen.
+## tile = meters per herhaling; tint kleurt het materiaal bij (donker/warm), zodat het bij de jungle past.
+static func photo(dir: String, tile := 3.0, tint := Color.WHITE, rough := 1.0) -> StandardMaterial3D:
+	var key := "photo%s%s%s" % [dir, tile, tint.to_html()]
+	if _mats.has(key):
+		return _mats[key]
+	var base := "res://assets/textures/%s/" % dir
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load(base + "base_color.jpg")
+	m.albedo_color = tint
+	m.normal_enabled = true
+	m.normal_texture = load(base + "normal_gl.jpg")
+	m.normal_scale = 0.8
+	m.roughness_texture = load(base + "roughness.jpg")
+	m.roughness = rough
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3.ONE / tile
+	_mats[key] = m
+	return m
+
+
 static func concrete() -> StandardMaterial3D:
-	return surface("concrete", Color("6f6c61"), Color("a5a294"), 0.95)
+	return photo("buildings/concrete", 3.0, Color(0.82, 0.8, 0.74))
 
 
 static func concrete_dark() -> StandardMaterial3D:
-	return surface("concrete_dark", Color("4c4a42"), Color("77746a"), 0.95)
+	return photo("buildings/concrete", 3.0, Color(0.5, 0.5, 0.46))
 
 
 static func wood() -> StandardMaterial3D:
-	return surface("wood", Color("4a3220"), Color("7a5636"), 0.85, 0.0, 0.09, 0.6)
+	return photo("buildings/weathered_wood", 2.2, Color(0.66, 0.58, 0.5))
 
 
 static func olive() -> StandardMaterial3D:
-	return surface("olive", Color("3b4527"), Color("5a6a38"), 0.8, 0.1)
+	return photo("buildings/army_green_paint", 2.5, Color(0.8, 0.85, 0.7))
 
 
 static func rust() -> StandardMaterial3D:
-	return surface("rust", Color("5a3a24"), Color("8a5a35"), 0.65, 0.6, 0.07, 0.5)
+	return photo("buildings/rusted_metal", 1.6, Color(0.62, 0.5, 0.42))
 
 
 static func roof() -> StandardMaterial3D:
-	return surface("roof", Color("5c6258"), Color("858b7e"), 0.55, 0.7, 0.2, 1.0)
+	return photo("buildings/painted_metal", 3.0, Color(0.42, 0.46, 0.4))
 
 
 static func canvas() -> StandardMaterial3D:
-	return surface("canvas", Color("7d7452"), Color("a39a72"), 1.0, 0.0, 0.12, 1.2)
+	return photo("buildings/jute", 1.2, Color(0.78, 0.74, 0.6))
 
 
 static func rock() -> StandardMaterial3D:
-	return surface("rock", Color("4e4d47"), Color("86847a"), 0.95, 0.0, 0.06, 0.5)
+	return photo("nature/rock_material", 2.0, Color(0.7, 0.7, 0.66))
 
 
 static func flat(color: Color, rough := 0.9, metal := 0.0) -> StandardMaterial3D:

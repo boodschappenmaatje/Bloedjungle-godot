@@ -156,7 +156,7 @@ static func _hut(root: Node3D, pos: Vector3, yaw: float) -> void:
 	holder.position = pos
 	holder.rotation.y = yaw
 	root.add_child(holder)
-	Kit.box(holder, Vector3.ZERO, Vector3(3.6, 2.3, 2.8), Kit.surface("hutwall", Color("6b6a58"), Color("8d8b74"), 0.95), 0.0, Kit.LAYER_WALL)
+	Kit.box(holder, Vector3.ZERO, Vector3(3.6, 2.3, 2.8), Kit.photo("buildings/plywood", 2.0, Color(0.62, 0.64, 0.5)), 0.0, Kit.LAYER_WALL)
 	Kit.box(holder, Vector3(0, 0, 0), Vector3(3.7, 0.3, 2.9), Kit.concrete_dark())
 	Kit.gable(holder, Vector3(0, 2.3, 0), Vector3(4.4, 1.0, 3.6), Kit.roof())
 	Kit.box(holder, Vector3(-0.6, 0, 1.41), Vector3(0.9, 1.7, 0.1), Kit.wood())

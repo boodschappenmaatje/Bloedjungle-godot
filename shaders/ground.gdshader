@@ -5,6 +5,11 @@ render_mode specular_disabled;
 
 uniform sampler2D noise_a : repeat_enable, filter_linear_mipmap;
 uniform sampler2D noise_b : repeat_enable, filter_linear_mipmap;
+uniform sampler2D grass_tex : source_color, repeat_enable, filter_linear_mipmap;
+uniform sampler2D jungle_tex : source_color, repeat_enable, filter_linear_mipmap;
+uniform sampler2D dirt_tex : source_color, repeat_enable, filter_linear_mipmap;
+uniform sampler2D mud_tex : source_color, repeat_enable, filter_linear_mipmap;
+uniform sampler2D dirt_normal : hint_normal, repeat_enable, filter_linear_mipmap;
 uniform float compound = 14.0;
 uniform float gate_gap = 2.4;
 
@@ -21,14 +26,18 @@ void fragment() {
 	float n3 = texture(noise_b, p * 0.55).r;
 	float n4 = texture(noise_a, p * 1.7).r;
 
-	vec3 grass_dark = vec3(0.07, 0.17, 0.045);
-	vec3 grass_light = vec3(0.24, 0.38, 0.10);
-	vec3 grass = mix(grass_dark, grass_light, smoothstep(0.3, 0.7, n1 * 0.6 + n2 * 0.4));
-	grass *= 0.8 + 0.4 * n3;
-	grass = mix(grass, grass * vec3(1.3, 1.2, 0.7), smoothstep(0.6, 0.8, n2) * 0.5);
+	// foto-texturen, op twee maten door elkaar zodat je de herhaling niet ziet
+	vec3 g1 = texture(grass_tex, p * 0.30).rgb;
+	vec3 g2 = texture(jungle_tex, p * 0.21 + 0.37).rgb;
+	vec3 g3 = texture(grass_tex, p * 0.071 + 0.11).rgb;
+	vec3 grass = mix(g1, g2, smoothstep(0.35, 0.65, n1 * 0.6 + n2 * 0.4));
+	grass = grass * (0.65 + 0.7 * g3.g) * (0.75 + 0.5 * n3);
+	grass *= vec3(0.62, 0.74, 0.5);  // donkerder en minder fel, past bij de jungle
 
-	vec3 dirt = mix(vec3(0.21, 0.135, 0.075), vec3(0.38, 0.27, 0.15), n2);
-	dirt *= 0.8 + 0.35 * n3 + 0.15 * n4;
+	vec3 d1 = texture(dirt_tex, p * 0.11).rgb;
+	vec3 d2 = texture(mud_tex, p * 0.09 + 0.5).rgb;
+	vec3 dirt = mix(d1, d2, smoothstep(0.3, 0.7, n2));
+	dirt *= (0.85 + 0.2 * n3) * vec3(0.7, 0.62, 0.55);
 
 	float box = max(abs(p.x), abs(p.y));
 	float inside = 1.0 - smoothstep(compound - 0.5, compound + 3.0, box);
@@ -39,6 +48,8 @@ void fragment() {
 	float dm = clamp(max(max(inside, path), patches * 0.8), 0.0, 1.0);
 	dm = smoothstep(0.35, 0.65, dm + (n3 - 0.5) * 0.4);
 
-	ALBEDO = pow(mix(grass, dirt, dm), vec3(2.2));  // kleuren hierboven zijn sRGB gekozen
-	ROUGHNESS = mix(0.95, 1.0, dm);
+	ALBEDO = mix(grass, dirt, dm);  // texturen zijn al lineair ingelezen (source_color)
+	ROUGHNESS = 1.0;
+	NORMAL_MAP = texture(dirt_normal, p * 0.11).rgb;
+	NORMAL_MAP_DEPTH = dm * 0.5;
 }

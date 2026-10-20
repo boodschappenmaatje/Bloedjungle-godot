@@ -256,6 +256,7 @@ func _bag_wall(root: Node3D) -> void:
 
 func _trench(root: Node3D) -> void:
 	var model: Node3D = (load("res://assets/loopgraaf.glb") as PackedScene).instantiate()
+	Kit.skin(model, "loopgraaf")
 	root.add_child(model)
 	call_deferred("_cut_ground")
 

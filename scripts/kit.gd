@@ -84,6 +84,45 @@ static func wood() -> StandardMaterial3D:
 	return photo("buildings/weathered_wood", 2.2, Color(0.66, 0.58, 0.5))
 
 
+## Zet foto-materialen op een Blender-model: de naam van het materiaal in het .glb bepaalt de textuur.
+static func skin(root: Node, kind: String) -> void:
+	var map: Dictionary = SKINS[kind]
+	for n in root.find_children("*", "MeshInstance3D", true, false):
+		var mi := n as MeshInstance3D
+		for i in mi.mesh.get_surface_count():
+			var old := mi.mesh.surface_get_material(i)
+			if old and map.has(old.resource_name):
+				mi.set_surface_override_material(i, map[old.resource_name].call())
+
+
+static var SKINS := {
+	"toren": {
+		"Paal": func(): return photo("buildings/weathered_wood", 1.6, Color(0.5, 0.42, 0.34)),
+		"Plank1": func(): return photo("buildings/weathered_wood", 1.4, Color(0.72, 0.62, 0.5)),
+		"Plank2": func(): return photo("buildings/weathered_wood", 1.4, Color(0.6, 0.52, 0.42)),
+		"Plank3": func(): return photo("buildings/weathered_wood", 1.4, Color(0.8, 0.7, 0.56)),
+		"Dak": func(): return photo("buildings/corrugated_iron", 1.5, Color(0.85, 0.6, 0.5)),
+		"Dakrib": func(): return photo("buildings/rusted_metal", 1.0, Color(0.75, 0.5, 0.4)),
+		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.55, 0.55, 0.55)),
+		"Zak": func(): return canvas(),
+		"Kist": func(): return photo("buildings/army_green_paint", 0.9, Color(0.7, 0.75, 0.6)),
+	},
+	"loopgraaf": {
+		"Hout1": func(): return photo("buildings/weathered_wood", 1.4, Color(0.72, 0.62, 0.5)),
+		"Hout2": func(): return photo("buildings/weathered_wood", 1.4, Color(0.58, 0.5, 0.4)),
+		"Hout3": func(): return photo("buildings/weathered_wood", 1.4, Color(0.8, 0.7, 0.56)),
+		"Balk": func(): return photo("buildings/weathered_wood", 1.6, Color(0.45, 0.38, 0.3)),
+		"Zak1": func(): return canvas(),
+		"Zak2": func(): return photo("buildings/jute", 1.2, Color(0.66, 0.62, 0.5)),
+		"Aarde": func(): return photo("terrain/dry_earth", 1.5, Color(0.75, 0.65, 0.55)),
+		"AardeDonker": func(): return photo("terrain/dry_earth", 1.5, Color(0.5, 0.42, 0.34)),
+		"Modder": func(): return photo("terrain/mud", 1.5, Color(0.45, 0.4, 0.35)),
+		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.55, 0.55, 0.55)),
+		"Kist": func(): return photo("buildings/army_green_paint", 0.9, Color(0.7, 0.75, 0.6)),
+	},
+}
+
+
 static func olive() -> StandardMaterial3D:
 	return photo("buildings/army_green_paint", 2.5, Color(0.8, 0.85, 0.7))
 

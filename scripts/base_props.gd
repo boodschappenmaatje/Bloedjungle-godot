@@ -126,7 +126,9 @@ static func _tower(root: Node3D, pos: Vector3) -> void:
 	root.add_child(holder)
 	holder.add_to_group("tower")
 	Kit.collider(holder, Vector3(0, 2.5, 0), Vector3(1.9, 5.0, 1.9), Kit.LAYER_WALL)
-	holder.add_child((load("res://assets/wachttoren.glb") as PackedScene).instantiate())
+	var model: Node = (load("res://assets/wachttoren.glb") as PackedScene).instantiate()
+	Kit.skin(model, "toren")
+	holder.add_child(model)
 
 
 static func _hut(root: Node3D, pos: Vector3, yaw: float) -> void:

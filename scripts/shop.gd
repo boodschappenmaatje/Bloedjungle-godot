@@ -124,8 +124,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 
 func _sync() -> void:
-	_open_btn.visible = Game.state == "prep"
-	_swap_btn.visible = Game.state == "play" or Game.state == "prep"
+	_open_btn.visible = Game.state == "prep" and not Game.build_mode
+	_swap_btn.visible = (Game.state == "play" or Game.state == "prep") and not Game.build_mode
 	_swap_btn.disabled = Game.owned.size() < 2
 
 

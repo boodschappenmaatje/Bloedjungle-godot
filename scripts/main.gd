@@ -54,7 +54,7 @@ func start_wave() -> void:
 
 
 func _process(delta: float) -> void:
-	if Game.state == "prep":
+	if Game.state == "prep" and not Game.build_mode:
 		Game.prep_t -= delta
 		if Game.prep_t <= 0.0:
 			start_wave()

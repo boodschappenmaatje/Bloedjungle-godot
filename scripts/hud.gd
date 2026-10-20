@@ -2,7 +2,7 @@ extends CanvasLayer
 ## Meldingen en knoppen midden op het scherm (golf-titel, "Start nu", gesneuveld). De balken, punten
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
-const VERSION := "v28"
+const VERSION := "v29"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -25,7 +25,7 @@ func _ready() -> void:
 	add_child(HudExtra.new())
 	add_child(Shop.new())
 	add_child(PlaceHud.new())
-	add_child(BuildHud.new())
+	add_child(BuildMode.new())
 	_style()
 	# schermtekst en sticks schalen mee met de schermgrootte: op een telefoon staat 1 punt = meerdere pixels
 	get_window().size_changed.connect(_rescale)
@@ -101,10 +101,10 @@ func _process(delta: float) -> void:
 	if Game.state == "prep" and _banner_t <= 0.0:
 		big.text = "GOLF %d" % Game.wave
 		small.text = ("Begint over %d · koop wapens en upgrades" % ceili(Game.prep_t)).to_upper()
-	var shown: bool = Game.state != "shop" and Game.state != "menu"
+	var shown: bool = Game.state != "shop" and Game.state != "menu" and not Game.build_mode
 	big.visible = shown
 	small.visible = shown
-	start_btn.visible = Game.state == "prep"
+	start_btn.visible = Game.state == "prep" and not Game.build_mode
 
 
 func _on_banner(b: String, s: String, t: float) -> void:

@@ -12,6 +12,8 @@ var _mouse_down := false
 
 
 func _input(event: InputEvent) -> void:
+	if Game.build_mode:
+		return
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			if _on_button(event.position):
@@ -48,6 +50,13 @@ func _on_button(p: Vector2) -> bool:
 
 
 func _process(_delta: float) -> void:
+	if Game.build_mode:
+		_sticks.clear()
+		Game.move = Vector2.ZERO
+		Game.aim = NAN
+		Game.fire = false
+		queue_redraw()
+		return
 	var mv := Vector2(
 		float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT)),
 		float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP)))

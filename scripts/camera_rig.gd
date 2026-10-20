@@ -3,6 +3,9 @@ extends Camera3D
 ## en een stukje vooruit in de kijkrichting, verder als je richt.
 
 var _lead := Vector3.ZERO
+var _blook := Vector3.ZERO
+var _nlook := Vector3.ZERO
+var _fog0 := -1.0
 var _snap := true  # eerste beeld meteen op de speler, niet ernaartoe vliegen
 
 
@@ -52,12 +55,41 @@ func _dust() -> void:
 	add_child(pa)
 
 
+## Bouwmodus (placeBuildCam in 22-camera.js): hoog boven de basis, verschuiven en zoomen met Game.bcam.
+func _build_cam(delta: float, portrait: bool) -> void:
+	var k := Data.COMPOUND / 14.0 * 1.1 * Game.bcam.z
+	var goal := Vector3(Game.bcam.x, (83.0 if portrait else 47.0) * k, Game.bcam.y + (16.0 if portrait else 15.0) * k)
+	var look := Vector3(Game.bcam.x, 0.0, Game.bcam.y + 3.4 * k)
+	if _blook == Vector3.ZERO:
+		_blook = _nlook
+	var f := minf(1.0, delta * 6.0)
+	global_position = global_position.lerp(goal, f)
+	_blook = _blook.lerp(look, f)
+	look_at(_blook, Vector3.UP)
+	far = maxf(220.0, global_position.y * 1.5 + 40.0)
+
+
 func _process(delta: float) -> void:
 	var p = Game.player
 	if p == null:
 		return
 	var size := get_viewport().get_visible_rect().size
 	var portrait := size.x < size.y
+	var env := get_world_3d().environment
+	if Game.build_mode:
+		if env and _fog0 < 0.0:
+			_fog0 = env.fog_density
+		if env:
+			env.fog_density = _fog0 * 0.3
+		attributes.dof_blur_far_enabled = false
+		_build_cam(delta, portrait)
+		return
+	if _fog0 >= 0.0 and env:
+		env.fog_density = _fog0
+		_fog0 = -1.0
+	attributes.dof_blur_far_enabled = true
+	_blook = Vector3.ZERO
+	far = 220.0
 	var h := 27.0 if portrait else 21.0
 	var back := 19.5 if portrait else 17.0
 	var aiming := not is_nan(Game.aim)
@@ -67,4 +99,5 @@ func _process(delta: float) -> void:
 	var goal := target + Vector3(0, h, back)
 	global_position = goal if _snap else global_position.lerp(goal, minf(1.0, delta * 8.0))
 	_snap = false
-	look_at(global_position - Vector3(0, h, back), Vector3.UP)
+	_nlook = global_position - Vector3(0, h, back)
+	look_at(_nlook, Vector3.UP)

@@ -27,7 +27,8 @@ var place_armed := false  # spookbeeld en neerzetten aan/uit
 const BUILD_CREDIT := 1000
 var build_credit := BUILD_CREDIT
 var builds: Buildings
-var build_arm := ""  # gebouw dat je aan het neerzetten bent ("" = niets)
+var build_mode := false  # bouwscherm open: camera hoog boven de basis
+var bcam := Vector3(0.0, 0.0, 1.0)  # bouwcamera: x, z en zoom
 var buildings: Array = []
 var allies: Array = []
 var troop_mode := "follow"  # follow of hold
@@ -63,7 +64,8 @@ func reset() -> void:
 	place_sel = "bags"
 	place_armed = false
 	build_credit = BUILD_CREDIT
-	build_arm = ""
+	build_mode = false
+	bcam = Vector3(0.0, 0.0, 1.0)
 	buildings.clear()
 	allies.clear()
 	troop_mode = "follow"

@@ -123,7 +123,6 @@ func _tap(k: String) -> void:
 		Game.place_sel = k
 		Game.place_armed = true
 	_open = false
-	Game.build_arm = ""
 	Game.changed.emit()
 
 
@@ -136,7 +135,7 @@ func _sync() -> void:
 		_open = false
 	elif Game.inv[Game.place_sel] <= 0 and Game.defs != null:
 		Game.defs.cycle()
-	var show := total > 0 and Game.build_arm == "" and (Game.state == "play" or Game.state == "prep")
+	var show := total > 0 and not Game.build_mode and (Game.state == "play" or Game.state == "prep")
 	var others := 0
 	for k in _tiles:
 		if k != Game.place_sel and Game.inv[k] > 0:

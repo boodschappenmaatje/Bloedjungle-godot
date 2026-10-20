@@ -1,10 +1,19 @@
 class_name Buildings
 extends Node3D
-## Gebouwen die je neerzet (nu de kazerne, zoals BUILD_DEFS in 16d-base.js): spookbeeld, plaatsen en de kazerne
-## die rekruten opleidt. De rekruten zelf zijn Ally (ally.gd).
+## Gebouwen en bouwstukken die je in de bouwmodus neerzet (BUILD_DEFS in 16d-base.js): de kazerne die
+## rekruten opleidt, betonmuren en zandzakken. Verplaatsen, draaien, repareren en verkopen kan ook.
+## De rekruten zelf zijn Ally (ally.gd); het bouwscherm staat in build_mode.gd.
 
 const DEFS := {
-	"kazerne": {"name": "Kazerne", "cost": 1000, "size": Vector3(4.4, 2.2, 3.2), "max": 3},
+	"kazerne": {"name": "Kazerne", "cost": 1000, "size": Vector3(4.4, 2.2, 3.2), "max": 1, "hp": 600.0},
+	"zandzak": {"name": "Zandzakken", "cost": 150, "size": Vector3(3.1, 0.95, 0.8), "max": 40, "hp": 380.0, "piece": true},
+	"muur": {"name": "Betonmuur", "cost": 300, "size": Vector3(3.0, 1.55, 0.7), "max": 30, "hp": 1100.0, "piece": true},
+}
+# kaartjes die in de lijst staan maar nog geen model hebben (komen later)
+const SOON := ["Garage", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost"]
+const INFO := {
+	"zandzak": "Lage dekking: kogels stoppen erop, jij schiet eroverheen.",
+	"muur": "Hoge betonblokken: niemand schiet of loopt erdoorheen.",
 }
 # per niveau: soldaten tegelijk, seconden per rekruut, gezondheid, schade en wat het niveau kost
 const LEVELS := [null,
@@ -13,9 +22,7 @@ const LEVELS := [null,
 	{"max": 6, "time": 5.0, "hp": 130.0, "dmg": 21.0, "cost": 1800}]
 const TRAIN_COST := 250
 const DOOR := 2.5  # afstand van het midden tot het punt voor de deur
-
-var _ghost: MeshInstance3D
-var _ghost_kind := ""
+const C := Data.COMPOUND
 
 
 func _ready() -> void:
@@ -30,78 +37,228 @@ func count(kind: String) -> int:
 	return n
 
 
-## Plek en draaiing van het gebouw: een paar meter voor de speler, met de deur naar hem toe.
-func spot(kind: String) -> Dictionary:
-	var a: float = Game.player.face
-	var at: Vector3 = Game.player.global_position + Vector3(sin(a), 0, cos(a)) * 4.0
-	at.y = 0.0
-	return {"at": at, "yaw": a + PI}
+func is_piece(kind: String) -> bool:
+	return DEFS[kind].get("piece", false)
 
 
-func can_place(kind: String, at: Vector3, yaw: float) -> bool:
-	if Vector2(at.x, at.z).length() > Data.WORLD_R - 4.0:
+func full(kind: String) -> bool:
+	return count(kind) >= DEFS[kind].max
+
+
+# ---------------------------------------------------------------- neerzetten
+
+## Wereldpunt van een plek (u, v) in het bouwstuk dat op `at` staat met draaiing `yaw`.
+static func _pt(at: Vector3, yaw: float, u: float, v: float) -> Vector3:
+	return at + Vector3(cos(yaw), 0, -sin(yaw)) * u + Vector3(sin(yaw), 0, cos(yaw)) * v
+
+
+func _tower_feet() -> Array:
+	var out: Array = []
+	for t: Node3D in get_tree().get_nodes_in_group("tower"):
+		out.append([t.to_global(Vector3(1.8, 0, 0)), t.global_position])
+	return out
+
+
+## Kan dit hier staan? Gebouwen binnen de muur, stukken overal behalve op de muur en in de poorten.
+func can_place(kind: String, at: Vector3, yaw: float, me: Variant = null) -> bool:
+	var d: Dictionary = DEFS[kind]
+	var sz: Vector3 = d.size
+	var piece := is_piece(kind)
+	if Vector2(at.x, at.z).length() > Data.WORLD_R - 3.0:
 		return false
-	if count(kind) >= DEFS[kind].max:
+	var feet := _tower_feet()
+	for iu in 3:
+		for iv in 3:
+			var p := _pt(at, yaw, (iu - 1) * sz.x * 0.5, (iv - 1) * sz.z * 0.5)
+			if piece:
+				if absf(maxf(absf(p.x), absf(p.z)) - C) < 0.7:
+					return false
+				if absf(p.x) < Data.GATE_GAP + 1.0 and absf(absf(p.z) - C) < 3.4:
+					return false
+				for f in feet:
+					if p.distance_to(f[0]) < 1.2 or p.distance_to(f[1]) < 1.7:
+						return false
+			else:
+				if maxf(absf(p.x), absf(p.z)) > C - 0.5:
+					return false
+				if Vector2(p.x, p.z).distance_to(Vector2(0, signf(p.z) * C)) < 4.0:
+					return false
+				for f in feet:
+					if p.distance_to(f[0]) < 1.4 or p.distance_to(f[1]) < 1.9:
+						return false
+	var ex: Array[RID] = []
+	if me != null:
+		ex.append(me.node.get_rid())
+	if _hits(Vector3(sz.x - 0.2, 1.0, sz.z - 0.2) if piece else Vector3(sz.x + 0.4, 1.0, sz.z + 0.4), at, yaw, ex):
 		return false
-	# de poortwegen blijven vrij
-	if absf(at.x) < Data.GATE_GAP + 3.0 and absf(absf(at.z) - Data.COMPOUND) < 4.0:
-		return false
-	var sz: Vector3 = DEFS[kind].size
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(sz.x + 0.4, 1.0, sz.z + 0.4)
-	var q := PhysicsShapeQueryParameters3D.new()
-	q.shape = shape
-	q.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER
-	q.transform = Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0, 0.8, 0))
-	if not get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty():
-		return false
+	if piece:
+		return true
 	# de deur moet op vrij terrein uitkomen
-	var door := at + Vector3(sin(yaw), 0, cos(yaw)) * (sz.z / 2.0 + 1.0)
+	var door := _pt(at, yaw, 0.0, sz.z / 2.0 + 0.9)
+	if maxf(absf(door.x), absf(door.z)) > C - 0.6:
+		return false
 	var q2 := PhysicsShapeQueryParameters3D.new()
 	var s2 := SphereShape3D.new()
 	s2.radius = 0.5
 	q2.shape = s2
 	q2.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER
+	q2.exclude = ex
 	q2.transform = Transform3D(Basis.IDENTITY, door + Vector3(0, 0.8, 0))
 	return get_world_3d().direct_space_state.intersect_shape(q2, 1).is_empty()
 
 
-func place() -> void:
-	var kind: String = Game.build_arm
-	if kind == "" or Game.player == null or (Game.state != "play" and Game.state != "prep"):
-		return
-	var sp := spot(kind)
-	if not can_place(kind, sp.at, sp.yaw) or not Game.can_afford_build(DEFS[kind].cost):
-		Sfx.play("ping")
-		return
-	Game.pay_build(DEFS[kind].cost)
-	var node := Node3D.new()
-	node.position = sp.at
-	node.rotation.y = sp.yaw
-	add_child(node)
-	var model: Node = (load("res://assets/kazerne.glb") as PackedScene).instantiate()
-	Kit.skin(model, kind)
-	node.add_child(model)
+func _hits(size: Vector3, at: Vector3, yaw: float, ex: Array[RID]) -> bool:
+	var shape := BoxShape3D.new()
+	shape.size = size
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = shape
+	q.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER
+	q.exclude = ex
+	q.transform = Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0, 0.8, 0))
+	return not get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
+
+
+## Het gebouw zelf: een StaticBody die kogels en mensen tegenhoudt, met het model eronder.
+func make_node(kind: String) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.collision_layer = Kit.LAYER_WALL
+	body.collision_mask = 0
 	var sz: Vector3 = DEFS[kind].size
-	Kit.collider(node, Vector3(0, sz.y / 2.0, 0), Vector3(sz.x, sz.y, sz.z), Kit.LAYER_WALL)
-	Game.buildings.append({"kind": kind, "node": node, "at": sp.at, "yaw": sp.yaw, "lv": 1, "queue": 0, "train_t": 0.0})
+	var cs := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = sz
+	cs.shape = bs
+	cs.position = Vector3(0, sz.y / 2.0, 0)
+	body.add_child(cs)
+	match kind:
+		"kazerne":
+			var model: Node = (load("res://assets/kazerne.glb") as PackedScene).instantiate()
+			Kit.skin(model, "kazerne")
+			body.add_child(model)
+		"muur":
+			Kit.box(body, Vector3.ZERO, Vector3(sz.x, sz.y, sz.z), Kit.concrete())
+			Kit.box(body, Vector3(0, sz.y, 0), Vector3(sz.x + 0.1, 0.14, sz.z + 0.14), Kit.concrete_dark())
+			Kit.box(body, Vector3.ZERO, Vector3(sz.x + 0.06, 0.28, sz.z + 0.2), Kit.concrete_dark())
+		"zandzak":
+			_bags(body, sz)
+	return body
+
+
+func _bags(root: Node3D, sz: Vector3) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(root.position.x * 13.0 + root.position.z * 7.0) + 11
+	var mat: StandardMaterial3D = Kit.canvas()
+	var bag := SphereMesh.new()
+	bag.radius = 0.5
+	bag.height = 1.0
+	bag.radial_segments = 8
+	bag.rings = 4
+	for layer in 3:
+		for i in 4 - (layer % 2):
+			var mi := MeshInstance3D.new()
+			mi.mesh = bag
+			mi.material_override = mat
+			mi.position = Vector3(-1.2 + i * 0.82 + (layer % 2) * 0.41, 0.17 + layer * 0.27, rng.randf_range(-0.04, 0.04))
+			mi.scale = Vector3(0.88, 0.34, 0.52)
+			mi.rotation.y = rng.randf_range(-0.1, 0.1)
+			root.add_child(mi)
+
+
+func place(kind: String, at: Vector3, yaw: float) -> Variant:
+	if full(kind) or not can_place(kind, at, yaw) or not Game.pay_build(DEFS[kind].cost):
+		return null
+	var node := make_node(kind)
+	node.position = at
+	node.rotation.y = yaw
+	add_child(node)
+	var b := {"kind": kind, "node": node, "at": at, "yaw": yaw, "lv": 1, "queue": 0, "train_t": 0.0,
+		"hp": DEFS[kind].hp, "max_hp": DEFS[kind].hp}
+	Game.buildings.append(b)
+	_push_out(b)
 	Sfx.play("thud")
-	Game.build_arm = ""
+	Game.changed.emit()
+	return b
+
+
+func move_to(b: Dictionary, at: Vector3, yaw: float) -> void:
+	b.at = at
+	b.yaw = yaw
+	b.node.position = at
+	b.node.rotation.y = yaw
+	_push_out(b)
+	Sfx.play("thud", 0.6)
+
+
+## Wie in het nieuwe bouwstuk staat, wordt er netjes naast gezet.
+func _push_out(b: Dictionary) -> void:
+	var sz: Vector3 = DEFS[b.kind].size
+	var who: Array = [Game.player]
+	who.append_array(Game.allies)
+	for w in who:
+		if w == null or not is_instance_valid(w):
+			continue
+		var rel: Vector3 = w.global_position - b.at
+		var u := rel.dot(Vector3(cos(b.yaw), 0, -sin(b.yaw)))
+		var v := rel.dot(Vector3(sin(b.yaw), 0, cos(b.yaw)))
+		var hu := sz.x / 2.0 + 0.7
+		var hv := sz.z / 2.0 + 0.7
+		if absf(u) < hu and absf(v) < hv:
+			if hu - absf(u) < hv - absf(v):
+				u = signf(u if u != 0.0 else 1.0) * hu
+			else:
+				v = signf(v if v != 0.0 else 1.0) * hv
+			var p := _pt(b.at, b.yaw, u, v)
+			w.global_position = Vector3(p.x, w.global_position.y, p.z)
+
+
+func remove(b: Dictionary) -> void:
+	b.node.queue_free()
+	Game.buildings.erase(b)
 	Game.changed.emit()
 
 
+# ---------------------------------------------------------------- waarde en herstel
+
+func fix_cost(b: Dictionary) -> int:
+	if b.hp >= b.max_hp:
+		return 0
+	return roundi(DEFS[b.kind].cost * 0.4) if is_piece(b.kind) else 100
+
+
+func repair(b: Dictionary) -> void:
+	var c := fix_cost(b)
+	if c > 0 and Game.pay_build(c):
+		b.hp = b.max_hp
+		Sfx.play("reload")
+
+
+## Verkopen geeft de helft van wat erin zit terug als bouwtegoed.
+func sell_value(b: Dictionary) -> int:
+	var spent: int = DEFS[b.kind].cost
+	if b.kind == "kazerne":
+		for l in range(2, b.lv + 1):
+			spent += LEVELS[l].cost
+	return roundi(spent * 0.5) + b.queue * TRAIN_COST
+
+
+func sell(b: Dictionary) -> void:
+	Game.build_credit += sell_value(b)
+	remove(b)
+	Sfx.play("buy")
+
+
+func turn(b: Dictionary) -> bool:
+	var ny: float = fposmod(b.yaw + PI / 2.0, TAU)
+	if not can_place(b.kind, b.at, ny, b):
+		return false
+	move_to(b, b.at, ny)
+	return true
+
+
+# ---------------------------------------------------------------- kazerne
+
 func door_of(b: Dictionary) -> Vector3:
 	return b.at + Vector3(sin(b.yaw), 0, cos(b.yaw)) * DOOR
-
-
-## De kazerne bij wiens deur de speler staat (of null).
-func near_barracks() -> Variant:
-	if Game.player == null:
-		return null
-	for b in Game.buildings:
-		if b.kind == "kazerne" and (Game.player.global_position - door_of(b)).length() < 3.2:
-			return b
-	return null
 
 
 func soldiers_alive() -> int:
@@ -158,41 +315,13 @@ func _spawn(b: Dictionary) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	_update_ghost()
-	if Game.state != "play" and Game.state != "prep":
+	# tijdens het bouwen staat de opleiding stil (updateStructures in 16d-base.js)
+	if (Game.state != "play" and Game.state != "prep") or Game.build_mode:
 		return
 	for b in Game.buildings:
-		if b.queue > 0:
+		if b.kind == "kazerne" and b.queue > 0:
 			b.train_t -= delta
 			if b.train_t <= 0.0:
 				b.queue -= 1
 				_spawn(b)
 				b.train_t = LEVELS[b.lv].time
-
-
-func _update_ghost() -> void:
-	var k: String = Game.build_arm
-	if k == "" or Game.player == null or (Game.state != "play" and Game.state != "prep"):
-		if _ghost:
-			_ghost.visible = false
-		return
-	if _ghost == null:
-		_ghost = MeshInstance3D.new()
-		_ghost.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		var m := StandardMaterial3D.new()
-		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		_ghost.material_override = m
-		add_child(_ghost)
-	if _ghost_kind != k:
-		var bm := BoxMesh.new()
-		bm.size = DEFS[k].size
-		_ghost.mesh = bm
-		_ghost_kind = k
-	var sp := spot(k)
-	var sz: Vector3 = DEFS[k].size
-	_ghost.visible = true
-	_ghost.global_position = sp.at + Vector3(0, sz.y * 0.5, 0)
-	_ghost.rotation.y = sp.yaw
-	var ok := can_place(k, sp.at, sp.yaw) and Game.can_afford_build(DEFS[k].cost)
-	(_ghost.material_override as StandardMaterial3D).albedo_color = Color(0.25, 0.95, 0.35, 0.3) if ok else Color(0.95, 0.2, 0.15, 0.35)

@@ -33,7 +33,7 @@ void fragment() {
 	vec3 g3 = texture(grass_tex, p * 0.071 + 0.11).rgb;
 	vec3 grass = mix(g1, g2, smoothstep(0.35, 0.65, n1 * 0.6 + n2 * 0.4));
 	grass = grass * (0.65 + 0.7 * g3.g) * (0.75 + 0.5 * n3);
-	grass *= vec3(0.46, 0.56, 0.38);  // donkerder en minder fel, past bij de jungle
+	grass *= vec3(0.4, 0.48, 0.32);  // donkerder en minder fel, past bij de jungle
 
 	// diepte in de aarde: de kijkhoek verschuift het beeld per hoogte, zodat kiezels boven de modder uitsteken
 	vec3 vw = normalize((INV_VIEW_MATRIX * vec4(VIEW, 0.0)).xyz);
@@ -42,7 +42,7 @@ void fragment() {
 	vec3 d1 = texture(dirt_tex, pp * 0.11).rgb;
 	vec3 d2 = texture(mud_tex, pp * 0.09 + 0.5).rgb;
 	vec3 dirt = mix(d1, d2, smoothstep(0.3, 0.7, n2));
-	dirt *= (0.85 + 0.2 * n3) * vec3(0.7, 0.62, 0.55);
+	dirt *= (0.85 + 0.2 * n3) * vec3(0.58, 0.54, 0.5);
 
 	float box = max(abs(p.x), abs(p.y));
 	float inside = 1.0 - smoothstep(compound - 0.5, compound + 3.0, box);
@@ -51,7 +51,7 @@ void fragment() {
 		* (1.0 - smoothstep(30.0, 52.0, abs(p.y)));
 	float patches = smoothstep(0.66, 0.8, n1 + 0.2 * n2);
 	float dm = clamp(max(max(inside, path), patches * 0.8), 0.0, 1.0);
-	dm = smoothstep(0.35, 0.65, dm + (n3 - 0.5) * 0.4);
+	dm = smoothstep(0.2, 0.8, dm + (n3 - 0.5) * 0.3 + (hgt - 0.5) * 0.5);  // zachte rand, kiezels steken door het gras
 
 	ALBEDO = mix(grass, dirt, dm);  // texturen zijn al lineair ingelezen (source_color)
 	ROUGHNESS = 1.0;

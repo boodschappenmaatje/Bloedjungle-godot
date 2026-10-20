@@ -73,7 +73,7 @@ static func photo(dir: String, tile := 3.0, tint := Color.WHITE, rough := 1.0) -
 
 
 static func concrete() -> StandardMaterial3D:
-	return photo("buildings/concrete", 3.0, Color(0.82, 0.8, 0.74))
+	return photo("buildings/concrete", 3.0, Color(0.74, 0.74, 0.71))
 
 
 static func concrete_dark() -> StandardMaterial3D:
@@ -93,7 +93,7 @@ static func rust() -> StandardMaterial3D:
 
 
 static func roof() -> StandardMaterial3D:
-	return photo("buildings/painted_metal", 3.0, Color(0.42, 0.46, 0.4))
+	return photo("buildings/rusted_metal", 3.5, Color(0.36, 0.3, 0.27))
 
 
 static func canvas() -> StandardMaterial3D:

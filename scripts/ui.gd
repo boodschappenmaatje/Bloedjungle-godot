@@ -85,6 +85,7 @@ static func label(text: String, font: Font, size: int, color: Color) -> Label:
 ## Zet de web-stijl op een knop. kind: "buy", "primary", "gold", "tab", "round", "pause".
 static func style_button(b: Button, kind: String) -> void:
 	b.focus_mode = Control.FOCUS_NONE
+	b.pressed.connect(func(): Sfx.play("click"))
 	var normal: StyleBoxFlat
 	var pressed: StyleBoxFlat
 	var disabled: StyleBoxFlat

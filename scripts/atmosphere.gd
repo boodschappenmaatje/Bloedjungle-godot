@@ -113,6 +113,7 @@ func apply_settings() -> void:
 	_env.adjustment_saturation = 1.1 if weather == "clear" else 0.85
 	_apply_quality(quality)
 	_set_rain(weather == "rain")
+	Sfx.rain(weather == "rain")
 
 
 func _set_rain(on: bool) -> void:

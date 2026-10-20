@@ -89,6 +89,7 @@ func _shoot(w: Dictionary) -> void:
 		var a: float = face + (randf() - 0.5) * w.spread * 2.0
 		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0))
 	Fx.muzzle(get_parent(), muzzle)
+	Sfx.play(Data.WEAPON_SND[weapon])
 	Game.changed.emit()
 	if ammo <= 0:
 		_reload(w)
@@ -112,6 +113,7 @@ func _reload(w: Dictionary) -> void:
 	if reload_t > 0.0 or ammo >= w.mag:
 		return
 	reload_t = w.reload * Progress.bonus().reload
+	Sfx.play("reload")
 	Game.changed.emit()
 
 
@@ -162,6 +164,7 @@ func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 		return
 	hp -= dmg * (1.0 - 0.08 * Game.upg.armor) * Progress.bonus().taken
 	model.flash()
+	Sfx.play("hurt", 0.7)
 	Fx.blood(get_parent(), global_position + Vector3.UP * 1.3, dir, 8)
 	Game.changed.emit()
 	if hp <= 0.0:

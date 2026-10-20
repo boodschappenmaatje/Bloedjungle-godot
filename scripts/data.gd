@@ -7,6 +7,8 @@ const SOLDIER_SCALE := 1.2
 
 # Wapens (01-data.js). rate = seconden tussen schoten, speed = kogelsnelheid (m/s), life = levensduur kogel,
 # pierce = extra mensen waar de kogel doorheen gaat, slow = loopsnelheid met dit wapen, explosive = ontploffingsstraal.
+# welk schotgeluid bij welk wapen hoort (Sfx)
+const WEAPON_SND := {"m1911": "pistol", "thompson": "smg", "garand": "rifle", "trench": "shotgun", "mg42": "mg", "bazooka": "rocket"}
 const WEAPONS := {
 	"m1911": {"short": "Pistool", "name": "M1911 Pistool", "price": 0, "dmg": 26.0, "rate": 0.19, "mag": 8, "reload": 1.1, "spread": 0.035, "speed": 75.0, "pellets": 1, "pierce": 0, "life": 0.6, "desc": "Betrouwbaar zijwapen. Altijd bij je."},
 	"thompson": {"short": "Thompson", "name": "Thompson M1928", "price": 700, "dmg": 18.0, "rate": 0.075, "mag": 30, "reload": 2.0, "spread": 0.08, "speed": 75.0, "pellets": 1, "pierce": 0, "life": 0.55, "desc": "De Tommy gun. Snel, luid en hongerig."},

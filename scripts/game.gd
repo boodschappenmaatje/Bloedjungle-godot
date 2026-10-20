@@ -93,6 +93,7 @@ func buy(cost: int) -> bool:
 	if points < cost:
 		return false
 	points -= cost
+	Sfx.play("buy")
 	changed.emit()
 	return true
 

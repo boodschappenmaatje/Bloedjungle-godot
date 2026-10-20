@@ -215,6 +215,7 @@ static func _ramp(cols: Array, offs: Array) -> Gradient:
 
 ## Explosie: vuurbal, rook, vonken, een lichtflits en een zwarte vlek op de grond.
 static func explosion(parent: Node, pos: Vector3, scale := 1.0) -> void:
+	Sfx.play("boom", clampf(scale, 0.6, 1.2), pos)
 	var fire := _puff(18, 0.8, 3.6 * scale, true, _ramp([Color(1, 0.9, 0.5, 0.0), Color(1, 0.7, 0.2, 1.0), Color(0.8, 0.25, 0.05, 0.8), Color(0.2, 0.05, 0.02, 0.0)], [0.0, 0.12, 0.55, 1.0]), Vector2(1.5, 5.0) * scale, 0.9)
 	var smoke := _puff(14, 3.2, 3.2 * scale, false, _ramp([Color(0.15, 0.13, 0.12, 0.0), Color(0.2, 0.18, 0.16, 0.85), Color(0.28, 0.27, 0.26, 0.5), Color(0.35, 0.35, 0.35, 0.0)], [0.0, 0.1, 0.55, 1.0]), Vector2(1.0, 3.0) * scale, 2.2)
 	var sparks := CPUParticles3D.new()

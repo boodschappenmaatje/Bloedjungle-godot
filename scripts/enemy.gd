@@ -63,6 +63,7 @@ func _physics_process(delta: float) -> void:
 			if fire_t <= 0.0:
 				fire_t = t.rate
 				model.play("steken", 0.08, 1.7)
+				Sfx.play("knife", 1.0, global_position)
 				Game.mark_attack(global_position)
 				if at_player:
 					player.hit(t.dmg, Vector3(sin(look), 0, cos(look)), false)
@@ -107,6 +108,7 @@ func _shoot(a: float) -> void:
 	Game.mark_attack(global_position)
 	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread * _aim_mult(), Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false)
 	Fx.muzzle(get_parent(), muzzle)
+	Sfx.play("ak" if type == "heavy" else "enemy", 1.0, global_position)
 
 
 ## Vrij schootsveld: geen muur (of bunker, als hij op de speler mikt) ertussen.
@@ -146,6 +148,7 @@ func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 		return
 	hp -= dmg
 	model.flash()
+	Sfx.play("splat", 1.0, global_position)
 	Fx.blood(get_parent(), global_position + Vector3.UP * 1.2, dir)
 	if randf() < 0.5:
 		Fx.ground_blood(get_parent(), global_position + dir * 0.6, 0.5)
@@ -162,6 +165,7 @@ func _die(dir: Vector3) -> void:
 	dead = true
 	Game.enemies.erase(self)
 	Game.kills += 1
+	Sfx.play("thud", 1.0, global_position)
 	Progress.stats.kills += 1
 	if Progress.stats.kills % 25 == 0:
 		Progress.save()

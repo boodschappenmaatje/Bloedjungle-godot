@@ -18,6 +18,9 @@ var _head_eyebrow: Label
 var _head_points: Label
 var _tab_btns: Array = []
 var _items: Control
+var _compact := false  # liggende telefoon: alles kleiner zodat kopen zonder scrollen kan
+var _sheet_sb: StyleBoxFlat
+var _title: Label
 var _foot_stats: Label
 
 
@@ -129,6 +132,7 @@ func _build_overlay() -> void:
 	margin.add_child(center)
 	_sheet = PanelContainer.new()
 	var sb := UI.box(UI.PANEL, UI.PANEL_LINE, 1, 6, 20)
+	_sheet_sb = sb
 	sb.shadow_color = Color(0, 0, 0, 0.6)
 	sb.shadow_size = 30
 	_sheet.add_theme_stylebox_override("panel", sb)
@@ -146,7 +150,8 @@ func _build_overlay() -> void:
 	head.add_child(left)
 	_head_eyebrow = UI.label("", UI.body(700, 2), 12, UI.BRASS)
 	left.add_child(_head_eyebrow)
-	left.add_child(UI.label("WAPENKAMER", UI.display(1), 34, UI.INK))
+	_title = UI.label("WAPENKAMER", UI.display(1), 34, UI.INK)
+	left.add_child(_title)
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 0)
 	head.add_child(right)
@@ -165,7 +170,7 @@ func _build_overlay() -> void:
 		var tb := Button.new()
 		tb.text = TABS[i].to_upper()
 		tb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		tb.custom_minimum_size.y = 40
+		tb.custom_minimum_size.y = 36
 		UI.style_button(tb, "tab")
 		tb.pressed.connect(func():
 			_tab = i
@@ -181,6 +186,12 @@ func _build_overlay() -> void:
 	_scroll = ScrollContainer.new()
 	_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	_body.add_child(_scroll)
+	# brede balk die je met je duim kunt pakken
+	var vb := _scroll.get_v_scroll_bar()
+	vb.custom_minimum_size.x = 20
+	for st in ["grabber", "grabber_highlight", "grabber_pressed"]:
+		vb.add_theme_stylebox_override(st, UI.box(UI.OLIVE_HI, Color(0, 0, 0, 0), 0, 6, 0))
+	vb.add_theme_stylebox_override("scroll", UI.box(Color(0, 0, 0, 0.3), Color(0, 0, 0, 0), 0, 6, 0))
 	_items = Control.new()  # wordt bij elke render vervangen
 	_scroll.add_child(_items)
 	_spacer(14)
@@ -214,6 +225,9 @@ func _sheet_width() -> float:
 
 
 func _render() -> void:
+	_compact = size.y < 520.0
+	_sheet_sb.set_content_margin_all(12.0 if _compact else 20.0)
+	_title.add_theme_font_size_override("font_size", 24 if _compact else 34)
 	var w := _sheet_width()
 	_head_eyebrow.text = ("Golf %d overleefd · bonus +%d" % [Game.wave - 1, Game.bonus] if Game.bonus > 0 and Game.wave > 1 else "Voor de eerste golf").to_upper()
 	_head_points.text = UI.nl(Game.points)
@@ -229,7 +243,8 @@ func _render() -> void:
 		for cn in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 			tb.add_theme_color_override(cn, c)
 	_items.queue_free()
-	var cols := maxi(1, int(floor((w - 40.0 + 10.0) / 230.0)))
+	var pad := (24.0 if _compact else 40.0) + 22.0  # plus de scrollbalk
+	var cols := 1 if (_compact and _tab == 1) else maxi(1, int(floor((w - pad + 10.0) / 230.0)))
 	var grid := GridContainer.new()
 	grid.columns = cols
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -250,7 +265,7 @@ func _render() -> void:
 		3:
 			_soldier_cards()
 	# de kolommen delen de ruimte; het blad is hoogstens zo hoog als het scherm
-	var col_w := (w - 40.0 - 10.0 * (cols - 1)) / cols
+	var col_w := (w - pad - 10.0 * (cols - 1)) / cols
 	for c in grid.get_children():
 		c.custom_minimum_size.x = col_w
 	_sheet.custom_minimum_size.x = w
@@ -289,7 +304,7 @@ func _tier(id: String) -> int:
 
 func _wimg(id: String, tier: int) -> Control:
 	var holder := Control.new()
-	holder.custom_minimum_size.y = 84
+	holder.custom_minimum_size = Vector2(112, 56) if _compact else Vector2(0, 84)
 	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var glow := TextureRect.new()
 	var g := Gradient.new()
@@ -398,10 +413,23 @@ func _weapon_card(id: String) -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
 	pc.add_child(v)
-	v.add_child(_wimg(id, tier))
-	v.add_child(_head(w.name, "In bezit" if own else ""))
-	v.add_child(_desc(w.desc))
-	v.add_child(_spec_label(_spec_pairs(id)))
+	if _compact:
+		var top := HBoxContainer.new()
+		top.add_theme_constant_override("separation", 8)
+		top.add_child(_wimg(id, tier))
+		var info := VBoxContainer.new()
+		info.add_theme_constant_override("separation", 2)
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info.add_child(_head(w.name, "In bezit" if own else ""))
+		info.add_child(_spec_label(_spec_pairs(id, true)))
+		top.add_child(info)
+		v.add_child(top)
+		v.add_child(_desc(w.desc))
+	else:
+		v.add_child(_wimg(id, tier))
+		v.add_child(_head(w.name, "In bezit" if own else ""))
+		v.add_child(_desc(w.desc))
+		v.add_child(_spec_label(_spec_pairs(id)))
 	var sp := Control.new()
 	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(sp)
@@ -422,14 +450,34 @@ func _upgrade_card(id: String) -> void:
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 6)
 	pc.add_child(v)
-	v.add_child(_wimg(id, tier))
-	v.add_child(_head(w.name))
-	v.add_child(_spec_label(_spec_pairs(id, true)))
+	var rows: Container = v
+	if _compact:
+		var top := HBoxContainer.new()
+		top.add_theme_constant_override("separation", 8)
+		top.add_child(_wimg(id, tier))
+		var info := VBoxContainer.new()
+		info.add_theme_constant_override("separation", 2)
+		info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		info.add_child(_head(w.name))
+		info.add_child(_spec_label(_spec_pairs(id, true)))
+		top.add_child(info)
+		v.add_child(top)
+		var g := GridContainer.new()
+		g.columns = 2
+		g.add_theme_constant_override("h_separation", 14)
+		g.add_theme_constant_override("v_separation", 6)
+		v.add_child(g)
+		rows = g
+	else:
+		v.add_child(_wimg(id, tier))
+		v.add_child(_head(w.name))
+		v.add_child(_spec_label(_spec_pairs(id, true)))
 	for u in Data.UPGS:
 		var lvl: int = Game.owned[id].up[u[0]]
 		var row := HBoxContainer.new()
 		row.add_theme_constant_override("separation", 8)
-		v.add_child(row)
+		row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		rows.add_child(row)
 		var txt := VBoxContainer.new()
 		txt.add_theme_constant_override("separation", 0)
 		txt.size_flags_horizontal = Control.SIZE_EXPAND_FILL

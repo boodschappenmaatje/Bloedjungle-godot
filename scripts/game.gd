@@ -23,6 +23,14 @@ var upg := {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0}
 var inv := {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
 var place_sel := "bags"
 var place_armed := false  # spookbeeld en neerzetten aan/uit
+# bouwen (Buildings): het bouwtegoed ga je eerst uitgeven, daarna je punten
+const BUILD_CREDIT := 1000
+var build_credit := BUILD_CREDIT
+var builds: Buildings
+var build_arm := ""  # gebouw dat je aan het neerzetten bent ("" = niets)
+var buildings: Array = []
+var allies: Array = []
+var troop_mode := "follow"  # follow of hold
 
 # Aanvalsrichting (N/O/Z/W) -> seconden dat de rand nog oplicht; gevuld door vijanden die schieten of steken.
 var attack := {"N": 0.0, "O": 0.0, "Z": 0.0, "W": 0.0}
@@ -54,6 +62,36 @@ func reset() -> void:
 	inv = {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
 	place_sel = "bags"
 	place_armed = false
+	build_credit = BUILD_CREDIT
+	build_arm = ""
+	buildings.clear()
+	allies.clear()
+	troop_mode = "follow"
+
+
+func can_afford_build(c: int) -> bool:
+	return build_credit + points >= c
+
+
+## Betaalt een gebouw: eerst van het bouwtegoed, de rest van je punten.
+func pay_build(c: int) -> bool:
+	if not can_afford_build(c):
+		return false
+	var k := mini(build_credit, c)
+	build_credit -= k
+	points -= c - k
+	Sfx.play("buy")
+	changed.emit()
+	return true
+
+
+func pay_points(c: int) -> bool:
+	if points < c:
+		return false
+	points -= c
+	Sfx.play("buy")
+	changed.emit()
+	return true
 
 
 func add_points(n: int) -> void:

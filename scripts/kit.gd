@@ -107,6 +107,18 @@ static var SKINS := {
 		"Zak": func(): return canvas(),
 		"Kist": func(): return photo("buildings/army_green_paint", 0.9, Color(0.7, 0.75, 0.6)),
 	},
+	"kazerne": {
+		"Wand1": func(): return photo("buildings/army_green_paint", 1.8, Color(0.82, 0.86, 0.7)),
+		"Wand2": func(): return photo("buildings/army_green_paint", 1.8, Color(0.68, 0.72, 0.58)),
+		"Wand3": func(): return photo("buildings/army_green_paint", 1.8, Color(0.92, 0.95, 0.78)),
+		"Plank1": func(): return photo("buildings/weathered_wood", 1.4, Color(0.72, 0.62, 0.5)),
+		"Paal": func(): return photo("buildings/weathered_wood", 1.6, Color(0.5, 0.42, 0.34)),
+		"Dak": func(): return photo("buildings/corrugated_iron", 1.5, Color(0.6, 0.7, 0.55)),
+		"Dakrib": func(): return photo("buildings/corrugated_iron", 1.5, Color(0.5, 0.58, 0.46)),
+		"Beton": func(): return concrete(),
+		"Zak": func(): return canvas(),
+		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.55, 0.55, 0.55)),
+	},
 	"loopgraaf": {
 		"Hout1": func(): return photo("buildings/weathered_wood", 1.4, Color(0.72, 0.62, 0.5)),
 		"Hout2": func(): return photo("buildings/weathered_wood", 1.4, Color(0.58, 0.5, 0.4)),

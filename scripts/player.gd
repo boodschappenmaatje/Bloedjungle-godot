@@ -145,7 +145,7 @@ func _climb_step(delta: float) -> void:
 	face = atan2(dw.x, dw.z)
 	rotation.y = face
 	model.position.y = 0.0
-	_animate(Vector2(dw.x, dw.z), 0.6)
+	model.play("klimmen", 0.15, 1.6)
 	if climb_dir > 0 and climb >= 1.0:
 		climb = -1.0
 		elev = DECK

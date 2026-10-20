@@ -11,6 +11,8 @@ var current := ""
 var _mats: Array[StandardMaterial3D] = []
 var _base_cols: Array[Color] = []
 var _flash := 0.0
+var _model: Node
+var _band: MeshInstance3D
 
 
 func setup(uniform: Color) -> void:
@@ -30,7 +32,38 @@ func setup(uniform: Color) -> void:
 			_mats.append(m)
 			_base_cols.append(m.albedo_color)
 	_attach_gun(model)
+	_model = model
 	play("stil")
+
+
+## Ander uniform (camouflage) voor het mannetje, zonder het model opnieuw te laden.
+func set_uniform(c: Color) -> void:
+	var i := 0
+	for m in _mats:
+		m.albedo_color = c if m.resource_name != "M_Joints" else c.darkened(0.45)
+		_base_cols[i] = m.albedo_color
+		i += 1
+
+
+## Hoofdband om het voorhoofd, in de kleur van de gekozen band.
+func set_band(c: Color) -> void:
+	if _band == null:
+		var skel: Skeleton3D = _model.find_children("*", "Skeleton3D", true, false)[0]
+		var bone := skel.find_bone("DEF-head")
+		if bone < 0:
+			return
+		var att := BoneAttachment3D.new()
+		att.bone_name = "DEF-head"
+		skel.add_child(att)
+		_band = MeshInstance3D.new()
+		var t := TorusMesh.new()
+		t.inner_radius = 0.105
+		t.outer_radius = 0.13
+		_band.mesh = t
+		_band.material_override = StandardMaterial3D.new()
+		_band.position = Vector3(0, 0.1, 0)
+		att.add_child(_band)
+	(_band.material_override as StandardMaterial3D).albedo_color = c
 
 
 func _attach_gun(model: Node) -> void:

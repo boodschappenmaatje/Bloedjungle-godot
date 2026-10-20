@@ -105,7 +105,7 @@ func _shoot(a: float) -> void:
 	var fwd := Vector3(sin(a), 0.0, cos(a))
 	var muzzle: Vector3 = global_position + fwd * (0.6 * t.scale) + Vector3.UP * 1.33 * minf(t.scale, 1.2) * Data.SOLDIER_SCALE
 	Game.mark_attack(global_position)
-	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread, Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false)
+	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread * _aim_mult(), Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false)
 	Fx.muzzle(get_parent(), muzzle)
 
 
@@ -153,10 +153,18 @@ func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 		_die(dir)
 
 
+func _aim_mult() -> float:
+	var b: Dictionary = Progress.bonus()
+	return b.enemySpread * (b.nightSpread if GameSettings.get_value("time") == "night" else 1.0)
+
+
 func _die(dir: Vector3) -> void:
 	dead = true
 	Game.enemies.erase(self)
 	Game.kills += 1
+	Progress.stats.kills += 1
+	if Progress.stats.kills % 25 == 0:
+		Progress.save()
 	Game.add_points(t.pts)
 	collision_layer = 0
 	collision_mask = 0

@@ -49,6 +49,7 @@ func reset() -> void:
 
 
 func add_points(n: int) -> void:
+	n = roundi(n * Progress.bonus().points)
 	points += n
 	score += n
 	changed.emit()
@@ -67,6 +68,8 @@ func end_game(reason: String) -> void:
 	if state == "over":
 		return
 	state = "over"
+	Progress.stats.games += 1
+	Progress.save()
 	over.emit(reason)
 	changed.emit()
 
@@ -83,7 +86,7 @@ func wstat(id: String) -> Dictionary:
 
 
 func max_hp() -> float:
-	return Data.PLAYER_HP + 25.0 * upg.maxhp
+	return Data.PLAYER_HP + 25.0 * upg.maxhp + Progress.bonus().hp
 
 
 func buy(cost: int) -> bool:

@@ -2,7 +2,7 @@ extends CanvasLayer
 ## Meldingen en knoppen midden op het scherm (golf-titel, "Start nu", gesneuveld). De balken, punten
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
-const VERSION := "v15"
+const VERSION := "v16"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -99,7 +99,7 @@ func _process(delta: float) -> void:
 	if Game.state == "prep" and _banner_t <= 0.0:
 		big.text = "GOLF %d" % Game.wave
 		small.text = ("Begint over %d · koop wapens en upgrades" % ceili(Game.prep_t)).to_upper()
-	var shown: bool = Game.state != "shop"
+	var shown: bool = Game.state != "shop" and Game.state != "menu"
 	big.visible = shown
 	small.visible = shown
 	start_btn.visible = Game.state == "prep"
@@ -111,6 +111,5 @@ func _on_banner(b: String, s: String, t: float) -> void:
 	_banner_t = t
 
 
-func _on_over(reason: String) -> void:
-	over_text.text = "%s\nScore %s   Kills %d" % [reason, UI.nl(Game.score), Game.kills]
-	over_box.show()
+func _on_over(_reason: String) -> void:
+	pass  # het gesneuveld-scherm staat in pause_menu.gd

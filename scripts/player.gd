@@ -16,21 +16,31 @@ var dead := false
 
 func _ready() -> void:
 	Game.player = self
-	model.setup(Data.PLAYER_COLOR)
+	refresh_look()
 	model.scale = Vector3.ONE * Data.SOLDIER_SCALE
 	weapon = Game.cur
 	ammo = Game.owned[weapon].ammo
 	rotation.y = face
 
 
+## Kleur en hoofdband volgens de gekozen uitrusting; ook gebruikt als je in het menu iets anders kiest.
+func refresh_look() -> void:
+	if model.anim == null:
+		model.setup(Progress.item("camo").col)
+	else:
+		model.set_uniform(Progress.item("camo").col)
+	model.set_band(Progress.item("band").color)
+	hp = Game.max_hp()
+
+
 func _physics_process(delta: float) -> void:
-	if dead or Game.state == "shop":
+	if dead or Game.state == "shop" or Game.state == "menu":
 		return
 	if weapon != Game.cur:
 		equip(Game.cur)
 	var w: Dictionary = Game.wstat(weapon)
 	var mv := Game.move
-	var spd_mul: float = (1.0 + 0.07 * Game.upg.speed) * w.get("slow", 1.0)
+	var spd_mul: float = (1.0 + 0.07 * Game.upg.speed) * w.get("slow", 1.0) * Progress.bonus().speed
 	velocity = Vector3(mv.x, 0.0, mv.y) * Data.PLAYER_SPEED * spd_mul
 	move_and_slide()
 	var flat := Vector2(position.x, position.z)
@@ -77,7 +87,7 @@ func _shoot(w: Dictionary) -> void:
 	var over := _hugging_wall(fwd)
 	for i in w.pellets:
 		var a: float = face + (randf() - 0.5) * w.spread * 2.0
-		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0))
+		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0))
 	Fx.muzzle(get_parent(), muzzle)
 	Game.changed.emit()
 	if ammo <= 0:
@@ -101,7 +111,7 @@ func equip(id: String) -> void:
 func _reload(w: Dictionary) -> void:
 	if reload_t > 0.0 or ammo >= w.mag:
 		return
-	reload_t = w.reload
+	reload_t = w.reload * Progress.bonus().reload
 	Game.changed.emit()
 
 
@@ -150,7 +160,7 @@ func _animate(mv: Vector2, moving: float) -> void:
 func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	if from_player or dead or Game.state == "over":
 		return
-	hp -= dmg * (1.0 - 0.08 * Game.upg.armor)
+	hp -= dmg * (1.0 - 0.08 * Game.upg.armor) * Progress.bonus().taken
 	model.flash()
 	Fx.blood(get_parent(), global_position + Vector3.UP * 1.3, dir, 8)
 	Game.changed.emit()

@@ -174,7 +174,8 @@ static func plant(parent: Node3D, seed_ := 11) -> void:
 			rm.vertex_color_use_as_albedo = true
 			Kit.scatter(parent, meshes[kind], rm, xf, cols)
 		else:
-			Kit.scatter(parent, meshes[kind], null, xf, cols, kind != "grass")
+			var inst := Kit.scatter(parent, meshes[kind], null, xf, cols, kind != "grass")
+			inst.add_to_group("foliage_" + kind)  # de grafiekinstelling dunt gras en struiken uit
 
 
 static func _scatter(rng: RandomNumberGenerator, count: int, r_min: float, r_max: float, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:

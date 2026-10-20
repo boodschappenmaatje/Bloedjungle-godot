@@ -44,7 +44,9 @@ func _ready() -> void:
 	_swap_btn.add_theme_color_override("icon_pressed_color", UI.INK)
 	_swap_btn.custom_minimum_size = Vector2(46, 46)
 	_swap_btn.size = Vector2(46, 46)
-	_swap_btn.pressed.connect(cycle_weapon)
+	_swap_btn.pressed.connect(func():
+		for m in get_tree().get_nodes_in_group("menus"):
+			m.open_wheel())
 	add_child(_swap_btn)
 	_build_overlay()
 	resized.connect(_layout)

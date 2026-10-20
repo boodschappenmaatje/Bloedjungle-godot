@@ -178,6 +178,7 @@ void fragment() {
 
 
 func _process(delta: float) -> void:
+	visible = Game.state != "menu"
 	_fps.visible = GameSettings.get_value("fps") == "on"
 	if _fps.visible:
 		_fps.text = "%d FPS" % Engine.get_frames_per_second()

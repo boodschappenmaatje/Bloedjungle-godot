@@ -72,6 +72,7 @@ func _ready() -> void:
 	_env = env
 	_sun = sun
 	apply_settings()
+	apply_settings.call_deferred()  # nog eens als de camera en de jungle er staan
 
 	# donkere randen en een warme tint over alles, zoals een filmbeeld
 	var layer := CanvasLayer.new()
@@ -110,10 +111,7 @@ func apply_settings() -> void:
 	_env.fog_density = {"clear": 0.005, "rain": 0.013, "mist": 0.017}[weather]
 	_env.tonemap_exposure = t["exp"]
 	_env.adjustment_saturation = 1.1 if weather == "clear" else 0.85
-	_sun.shadow_enabled = quality != "low"
-	_sun.directional_shadow_max_distance = 55.0 if quality == "high" else 80.0
-	_env.glow_enabled = quality != "low"
-	get_viewport().scaling_3d_scale = 0.75 if quality == "low" else 1.0
+	_apply_quality(quality)
 	_set_rain(weather == "rain")
 
 
@@ -151,3 +149,36 @@ func _set_rain(on: bool) -> void:
 func _process(_d: float) -> void:
 	if _rain and Game.player:
 		_rain.global_position = Game.player.global_position + Vector3(0, 15, 0)
+
+
+# Grafiekniveaus. Hoog is gemaakt om op 60 beeld per seconde te blijven: lichtere schaduwen, geen gloed en
+# geen onscherpe verte, minder gras en iets minder pixels. Ultra is het volledige beeld.
+const QUALITY := {
+	"low": {"shadow": false, "dist": 40.0, "atlas": 1024, "glow": false, "dof": false, "scale": 0.6, "grass": 0.2, "fern": 0.5, "bush_shadow": false, "ssao": false},
+	"high": {"shadow": true, "dist": 40.0, "atlas": 1024, "glow": false, "dof": false, "scale": 0.8, "grass": 0.45, "fern": 0.7, "bush_shadow": false, "ssao": false},
+	"ultra": {"shadow": true, "dist": 80.0, "atlas": 4096, "glow": true, "dof": true, "scale": 1.0, "grass": 1.0, "fern": 1.0, "bush_shadow": true, "ssao": true},
+}
+
+
+func _apply_quality(q: String) -> void:
+	var c: Dictionary = QUALITY[q]
+	_sun.shadow_enabled = c.shadow
+	_sun.directional_shadow_max_distance = c.dist
+	_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS if q == "ultra" else DirectionalLight3D.SHADOW_ORTHOGONAL
+	RenderingServer.directional_shadow_atlas_set_size(c.atlas, true)
+	_env.glow_enabled = c.glow
+	_env.ssao_enabled = c.ssao
+	var vp := get_viewport()
+	vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR  # FSR kan alleen in de zwaarste renderer
+	vp.scaling_3d_scale = c.scale
+	var cam := vp.get_camera_3d()
+	if cam and cam.attributes is CameraAttributesPractical:
+		(cam.attributes as CameraAttributesPractical).dof_blur_far_enabled = c.dof
+	for kind in ["grass", "fern"]:
+		for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("foliage_" + kind):
+			if not n.has_meta("full"):
+				n.set_meta("full", n.multimesh.instance_count)
+			n.multimesh.visible_instance_count = roundi(n.get_meta("full") * c[kind])
+	for kind in ["bush", "fern"]:
+		for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("foliage_" + kind):
+			n.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if c.bush_shadow else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

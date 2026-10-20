@@ -62,12 +62,12 @@ static func bevel(sb: StyleBoxFlat, depth := 4, pressed := false) -> StyleBoxFla
 
 
 static func seg_state(b: Button, on: bool) -> void:
-	var n := box(BRASS if on else Color(0, 0, 0, 0.35), BRASS if on else PANEL_LINE, 1, 6, 6)
-	n.content_margin_left = 12
-	n.content_margin_right = 12
+	var n := box(OLIVE if on else Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0, 0, 6)
+	n.content_margin_left = 8
+	n.content_margin_right = 8
 	for st in ["normal", "hover", "pressed", "focus"]:
-		b.add_theme_stylebox_override(st, bevel(n.duplicate(), 3) if on else n.duplicate())
-	var c := Color("1a1608") if on else INK_DIM
+		b.add_theme_stylebox_override(st, n)
+	var c := INK if on else INK_DIM
 	for cn in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 		b.add_theme_color_override(cn, c)
 

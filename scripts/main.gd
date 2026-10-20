@@ -10,7 +10,23 @@ var clear_t := -1.0
 
 
 func _ready() -> void:
+	Progress.load_all()
 	Game.reset()
+	if Progress.autostart:
+		Progress.autostart = false
+		_start_prep()
+	else:
+		Game.state = "menu"
+		Game.changed.emit()
+		for m in get_tree().get_nodes_in_group("menus"):
+			m.show_menu()
+
+
+## Start een missie vanuit het hoofdmenu.
+func begin() -> void:
+	Game.reset()
+	if Game.player:
+		Game.player.refresh_look()
 	_start_prep()
 
 
@@ -65,5 +81,7 @@ func _wave_cleared() -> void:
 	Game.add_points(bonus)
 	Game.bonus = bonus
 	var w := Game.wave
+	Progress.stats.bestWave = maxi(Progress.stats.bestWave, w)
+	Progress.save()
 	_start_prep()
 	Game.banner.emit("GOLF %d OVERLEEFD" % w, "Bonus +%d" % bonus, 3.0)

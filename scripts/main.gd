@@ -17,7 +17,7 @@ func _ready() -> void:
 func _start_prep() -> void:
 	Game.wave += 1
 	Game.state = "prep"
-	Game.prep_t = Data.PREP_TIME
+	Game.prep_t = GameSettings.prep_time()
 	Game.changed.emit()
 
 

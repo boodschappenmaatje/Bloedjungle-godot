@@ -20,7 +20,8 @@ var _last_hp := -1.0
 var _arrows: Control
 var _bars: VBoxContainer
 var _top_right: HBoxContainer
-var _pause: Control
+var _menu: PauseMenu
+var _fps: Label
 
 
 func _ready() -> void:
@@ -40,7 +41,11 @@ func _ready() -> void:
 	_build_bars()
 	_build_top_right()
 	_build_ammo()
-	_build_pause()
+	_menu = PauseMenu.new()
+	add_child(_menu)
+	_fps = _shadowed(UI.label("", UI.body(700, 0), 13, UI.GOOD))
+	_fps.position = Vector2(12, 84)
+	add_child(_fps)
 	resized.connect(_layout)
 	_layout()
 
@@ -147,46 +152,8 @@ func _build_ammo() -> void:
 	box.add_child(_ammo)
 
 
-func _build_pause() -> void:
-	_pause = ColorRect.new()
-	(_pause as ColorRect).color = Color(6.0 / 255.0, 8.0 / 255.0, 4.0 / 255.0, 0.72)
-	_pause.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_pause.add_to_group("hud_button")
-	_pause.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(_pause)
-	_pause.hide()
-	var center := CenterContainer.new()
-	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_pause.add_child(center)
-	var sheet := PanelContainer.new()
-	sheet.custom_minimum_size.x = 380
-	var sb := UI.box(UI.PANEL, UI.PANEL_LINE, 1, 6, 20)
-	sb.shadow_color = Color(0, 0, 0, 0.6)
-	sb.shadow_size = 30
-	sheet.add_theme_stylebox_override("panel", sb)
-	center.add_child(sheet)
-	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 12)
-	sheet.add_child(v)
-	v.add_child(UI.label("PAUZE", UI.display(1), 34, UI.INK))
-	var resume := Button.new()
-	resume.text = "VERDER"
-	UI.style_button(resume, "primary")
-	resume.pressed.connect(func(): _set_paused(false))
-	v.add_child(resume)
-	var again := Button.new()
-	again.text = "OPNIEUW BEGINNEN"
-	UI.style_button(again, "secondary")
-	again.pressed.connect(func():
-		get_tree().paused = false
-		get_tree().reload_current_scene())
-	v.add_child(again)
-
-
 func _set_paused(on: bool) -> void:
-	get_tree().paused = on
-	_pause.visible = on
+	_menu.set_paused(on)
 
 
 func _layout() -> void:
@@ -211,6 +178,9 @@ void fragment() {
 
 
 func _process(delta: float) -> void:
+	_fps.visible = GameSettings.get_value("fps") == "on"
+	if _fps.visible:
+		_fps.text = "%d FPS" % Engine.get_frames_per_second()
 	var main := get_parent().get_parent()
 	var left: int = Game.enemies.size() + (main.queue.size() if "queue" in main else 0)
 	_wave.text = "GOLF %d" % maxi(Game.wave, 1)

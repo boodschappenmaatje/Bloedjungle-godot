@@ -47,6 +47,31 @@ static func box(bg: Color, border := Color(0, 0, 0, 0), border_w := 0, radius :=
 	return sb
 
 
+## Geeft een knop diepte: een donkere rand eronder (de "dikte"), een lichte rand bovenin;
+## ingedrukt zakt de knop erin.
+static func bevel(sb: StyleBoxFlat, depth := 4, pressed := false) -> StyleBoxFlat:
+	sb.shadow_color = Color(0, 0, 0, 0.55)
+	sb.shadow_size = 0
+	sb.shadow_offset = Vector2(0, 1 if pressed else depth)
+	sb.set_corner_radius_all(maxi(sb.corner_radius_top_left, 8))
+	sb.anti_aliasing = true
+	sb.expand_margin_bottom = 0
+	if pressed:
+		sb.content_margin_top = maxf(sb.content_margin_top, 0.0) + depth - 1
+	return sb
+
+
+static func seg_state(b: Button, on: bool) -> void:
+	var n := box(BRASS if on else Color(0, 0, 0, 0.35), BRASS if on else PANEL_LINE, 1, 6, 6)
+	n.content_margin_left = 12
+	n.content_margin_right = 12
+	for st in ["normal", "hover", "pressed", "focus"]:
+		b.add_theme_stylebox_override(st, bevel(n.duplicate(), 3) if on else n.duplicate())
+	var c := Color("1a1608") if on else INK_DIM
+	for cn in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+		b.add_theme_color_override(cn, c)
+
+
 static func label(text: String, font: Font, size: int, color: Color) -> Label:
 	var l := Label.new()
 	l.text = text
@@ -102,6 +127,12 @@ static func style_button(b: Button, kind: String) -> void:
 			pressed = box(Color(163.0 / 255.0, 16.0 / 255.0, 15.0 / 255.0, 0.6), Color(INK, 0.3), 1, 4, 0)
 			disabled = normal
 			size = 13
+		"seg":
+			normal = box(Color(0, 0, 0, 0.35), PANEL_LINE, 1, 6, 6)
+			pressed = normal
+			disabled = normal
+			size = 15
+			font = body(700, 1)
 		"tab":
 			normal = box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0, 0, 4)
 			normal.border_width_bottom = 3
@@ -110,6 +141,14 @@ static func style_button(b: Button, kind: String) -> void:
 			size = 15
 			col = INK_DIM
 			font = body(700, 2)
+	# 3D-look: hogere kleuren en een dikke onderrand voor de knoppen die je indrukt
+	if kind in ["buy", "primary", "gold", "round", "secondary", "pause"]:
+		var depth := 5 if kind == "primary" else 4
+		bevel(normal, depth)
+		bevel(pressed, depth, true)
+		if kind != "round":
+			normal.bg_color = normal.bg_color.lightened(0.07)
+			normal.border_width_top = maxi(normal.border_width_top, 2)
 	b.add_theme_stylebox_override("normal", normal)
 	b.add_theme_stylebox_override("hover", normal)
 	b.add_theme_stylebox_override("pressed", pressed)

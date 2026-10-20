@@ -13,7 +13,11 @@ De web-versie in `src/` blijft zoals hij is; dit is een losse map.
 
 ## Stijl
 
-De bedoelde look staat in `referentie-stijl.png` (donkere, dichte jungle, schuine camera, echte 3D-gebouwen, zon met lange schaduwen). Alles wat we bouwen houdt dat als richting aan. Dit is nu gedaan: de zwaardere (mobiele) renderer met schaduwen, mist, gloed en filmkleuren, een bodem met gras, modder en paden, zelfgemaakte palmen, struiken en varens die in de wind bewegen, en een basis met muur, poortposten, bunker met zandzakken en antenne, vier wachttorens, hutten en kratten. De webversie gebruikt automatisch de lichtere renderer.
+De bedoelde richting staat in `referentie-stijl.png`: een schuine militaire speelwereld, donkere tropische jungle, verweerde zandwegen, een herkenbare basis en warme zon met duidelijke schaduwen. De huidige wereld wordt volledig in Godot opgebouwd; er zijn geen externe foliage- of basisprops-texturen nodig.
+
+Visual upgrade 1 houdt de bestaande mobiele renderer en gameplay aan. De grond gebruikt meerdere kleurschalen voor gras, aarde en zand, rafelige randen rond de poortwegen en subtiele wielsporen. Palm-, struik- en varen-silhouetten hebben varianten en gedempte kleuren; herhaalde planten blijven per variant ge-instanced. De bunker kreeg kleine deur-, ventilatie- en camouflagedetails. SSAO en glow staan uit voor de lichte Mobile/GL Compatibility-route; zon, schaduwen en zachte mist blijven aan.
+
+De scene is nog steeds een compacte, gestileerde prototypewereld. De referentie bevat onder meer fotorealistische gebouwen, voertuigen, bruggen, gevechten en een grotere kaart; die onderdelen zitten niet in deze gameplayfase.
 
 Nog niet: winkel, andere wapens kopen, granaten, gebouwen, jeep, gore, geluid. Dat komt stap voor stap.
 
@@ -43,12 +47,33 @@ Scènes en scripts samen zijn ongeveer 40 KB, ruim onder de 200 KB van Xogot gra
 
 Een nieuwe versie haal je op door het project weg te halen en opnieuw te downloaden.
 
+### Visual upgrade 1 testen vanaf de PR-branch
+
+De normale GitHub-download hierboven pakt `main`. Voor deze visuele versie:
+
+1. Download de branch als ZIP: <https://github.com/boodschappenmaatje/Bloedjungle-godot/archive/refs/heads/visual/generals-style-phase-1.zip>.
+2. Pak de ZIP uit in Bestanden en kopieer de map `Bloedjungle-godot-visual-generals-style-phase-1` naar **Op mijn iPhone/iPad → Xogot**.
+3. Herstart Xogot als het project nog niet in de projectlijst verschijnt, open het en tik op **Afspelen**.
+4. Controleer de twee sticks, de bewegende vijanden, de poortopeningen, muur en bunker. Vergelijk het beeld met `referentie-stijl.png`.
+
+Met Working Copy kun je ook de repository clonen en daar de branch `visual/generals-style-phase-1` uitchecken. De gecheckte projectmap moet in de Xogot-projectmap staan.
+
 ## Openen op je Windows-laptop
 
 1. Download Godot 4.4 of nieuwer (de gewone versie, niet .NET) van https://godotengine.org/download/windows en pak het uit.
 2. Haal de code op met GitHub Desktop (Clone repository) of `git clone https://github.com/boodschappenmaatje/bloedjungle-godot`.
 3. Start Godot, klik op **Importeren** en kies `project.godot` in die map.
 4. Druk op F5 om te spelen. Met WASD en de muis kun je het daar ook testen.
+
+Voor visual upgrade 1 haal je de PR-branch op in plaats van `main`:
+
+```bash
+git clone https://github.com/boodschappenmaatje/Bloedjungle-godot.git
+cd Bloedjungle-godot
+git switch --track origin/visual/generals-style-phase-1
+```
+
+Open daarna `project.godot` in Godot 4.4 of nieuwer, open `scenes/main.tscn` en druk op F6 (of F5 voor de projectstartscene). Controleer vijandbeweging, de poortpaden, muur en bunker; vergelijk de grond- en junglerand met `referentie-stijl.png`.
 
 ## Webversie maken (optioneel)
 
@@ -58,8 +83,10 @@ Een nieuwe versie haal je op door het project weg te halen en opnieuw te downloa
 
 ## Automatische test
 
+Speelt golf 1 en 2 met een bot die naar de dichtstbijzijnde vijand richt en schiet, en print elke 5 seconden de stand.
+
 ```bash
 godot --headless --path . -s tests/smoke_test.gd --fixed-fps 60
 ```
 
-Speelt golf 1 en 2 met een bot die naar de dichtstbijzijnde vijand richt en schiet, en print elke 5 seconden de stand.
+De test doorloopt golven 1 en 2 met een bot en controleert zo de bestaande vijandbeweging, basisroutes en schietbare bunker. Voor een visuele vergelijking: open `scenes/main.tscn`, start de scene en vergelijk de basis, de poortwegen en de junglezoom met `referentie-stijl.png`. De automatische smoketest is geen beeld- of FPS-meting.

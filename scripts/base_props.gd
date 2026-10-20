@@ -79,16 +79,33 @@ static func _bunker(root: Node3D) -> void:
 	b.set_script(preload("res://scripts/bunker.gd"))
 	Kit.box(root, Vector3(0, 2.0, 0), Vector3(5.2, 0.4, 5.2), Kit.concrete_dark())
 	Kit.box(root, Vector3(0, 2.4, 0), Vector3(4.2, 0.18, 4.2), Kit.concrete())
-	# schietgleuven rondom en een stalen deur
+	# schietgleuven rondom en een verweerde stalen deur
 	var dark := Kit.flat(Color("0b0b0a"), 1.0)
 	for yaw in [0.0, PI / 2.0, PI, -PI / 2.0]:
 		var d := Vector3(sin(yaw), 0, cos(yaw))
 		Kit.box(root, d * 2.3 + Vector3(0, 1.3, 0), Vector3(2.2, 0.3, 0.12), dark, yaw)
-	Kit.box(root, Vector3(1.1, 0, 2.31), Vector3(1.0, 1.55, 0.14), Kit.flat(Color("1b1812"), 0.6, 0.5))
+	var steel := Kit.surface("bunker_steel", Color("202521"), Color("55564d"), 0.58, 0.62, 0.1, 0.55)
+	Kit.box(root, Vector3(1.1, 0, 2.31), Vector3(1.0, 1.55, 0.14), steel)
 	Kit.box(root, Vector3(1.1, 1.55, 2.33), Vector3(1.2, 0.14, 0.3), Kit.concrete_dark())
+	# Hinges and a latch make the door read as a fitted metal panel at the same scale.
+	for x in [0.67, 1.53]:
+		Kit.cylinder(root, Vector3(x, 0.22, 2.43), 0.045, 0.2, Kit.flat(Color("777263"), 0.52, 0.72), 8)
+		Kit.cylinder(root, Vector3(x, 1.26, 2.43), 0.045, 0.2, Kit.flat(Color("777263"), 0.52, 0.72), 8)
+	Kit.box(root, Vector3(1.43, 0.78, 2.43), Vector3(0.09, 0.28, 0.06), Kit.flat(Color("8a8064"), 0.5, 0.6))
+	# Narrow louvres and a low concrete seam add scale cues without changing bunker collision.
+	for x in [-1.65, -0.95]:
+		Kit.box(root, Vector3(x, 0.78, 2.33), Vector3(0.42, 0.07, 0.045), Kit.flat(Color("252824"), 0.9, 0.05))
+		Kit.box(root, Vector3(x, 0.63, 2.33), Vector3(0.42, 0.07, 0.045), Kit.flat(Color("252824"), 0.9, 0.05))
 	# camouflagenet over de rand van het dak
 	var net := Kit.box(root, Vector3(-1.2, 2.62, -1.0), Vector3(2.8, 0.06, 2.6), Kit.olive(), 0.15)
 	net.rotation.z = 0.06
+	# Low-profile fabric patches break the single flat olive colour into a subdued field pattern.
+	var camo := [Kit.flat(Color("303a25")), Kit.flat(Color("56603a")), Kit.flat(Color("756447"))]
+	for i in 11:
+		var x := -2.35 + fmod(float(i) * 0.73, 2.4)
+		var z := -2.03 + fmod(float(i) * 1.17, 2.1)
+		var patch := Kit.box(root, Vector3(x, 2.69, z), Vector3(0.48 + fmod(float(i) * 0.13, 0.28), 0.035, 0.3 + fmod(float(i) * 0.11, 0.22)), camo[i % camo.size()], float(i % 4) * 0.12)
+		patch.rotation.z = 0.06
 	# machinegeweernest op het dak: zandzakken en een geweer
 	Kit.sandbags(root, Vector3(0.4, 2.6, 1.9), Vector3(2.0, 2.6, 1.9), 2, 7)
 	Kit.cylinder(root, Vector3(1.2, 2.6, 1.5), 0.05, 0.6, Kit.flat(Color("1a1a1a"), 0.5, 0.6), 6)

@@ -19,7 +19,7 @@ Deze bibliotheek staat los van de bestaande gameplay. De nieuwe modellen zijn no
 | Batch | Inhoud | Status |
 | --- | --- | --- |
 | 1 Terrein | Junglegrond en gras, elk base color, Normal GL en roughness op 1K | Gedownload |
-| 2 Gebouwen | Beton en metaal | In behandeling |
+| 2 Gebouwen | Beton en metaal, elk base color, Normal GL en roughness op 1K | Gedownload |
 | 3 Natuur en HDRI | Palmen, boom, varen, struik, rots, stronk, boomstam en HDRI | In behandeling |
 | 4 Militaire objecten | Tent, torenbasis, brug, kist, vat, hek en brandstoftank | In behandeling |
 | 5 Voertuigen | Basis voor een vrachtwagen; bestaande tank, Apache en jeep hergebruikt | In behandeling |

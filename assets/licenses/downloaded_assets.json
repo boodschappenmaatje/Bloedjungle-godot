@@ -1,4 +1,88 @@
 {
+  "assets/textures/buildings/concrete/base_color.jpg": {
+    "bytes": 277768,
+    "creator": "ambientCG",
+    "height": 1024,
+    "license": "CC0-1.0",
+    "sha256": "f1d9abd06e52641f419a3f8209a2831271f2339c811ac1c0407a771fbbf75669",
+    "source_sha256": "c6eb8d79df1d62268582f9696027f20803b8f172e607fa45a06f9629311594b3",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Concrete012_2K-JPG/Concrete012_2K-JPG_Color.jpg",
+    "width": 1024
+  },
+  "assets/textures/buildings/concrete/normal_gl.jpg": {
+    "bytes": 382774,
+    "creator": "ambientCG",
+    "height": 1024,
+    "license": "CC0-1.0",
+    "sha256": "0006882f5381c6307855e3ad267863f979daf8f4645f7f1f07aa4a86ecd121f7",
+    "source_sha256": "90eb7c080b4886709acdef834ef1bee17d44ae2a38d0055be1df957982dac0e5",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Concrete012_2K-JPG/Concrete012_2K-JPG_NormalGL.jpg",
+    "width": 1024
+  },
+  "assets/textures/buildings/concrete/roughness.jpg": {
+    "bytes": 373727,
+    "creator": "ambientCG",
+    "height": 1024,
+    "license": "CC0-1.0",
+    "sha256": "2f9ab53a5b841bde9eac1b77589e0d476b31ec4eacb33c7e69ee581a50a89ad8",
+    "source_sha256": "414cb64851f573155893d982f7cebc204bb37b5027d983b168ea03b4dc20ce67",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Concrete012_2K-JPG/Concrete012_2K-JPG_Roughness.jpg",
+    "width": 1024
+  },
+  "assets/textures/buildings/metal/base_color.jpg": {
+    "bytes": 268907,
+    "creator": "ambientCG",
+    "height": 1024,
+    "license": "CC0-1.0",
+    "sha256": "099aa0f6f1915d59b491c75b475760271defffe910eccb3c466acdaa5ca12b0b",
+    "source_sha256": "c6c93446af0620f65594fc9472d9f347983a7686b6e4509b084b0ecc10d7c2ac",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Metal063_2K-JPG/Metal063_2K-JPG_Color.jpg",
+    "width": 1024
+  },
+  "assets/textures/buildings/metal/normal_gl.jpg": {
+    "bytes": 6475,
+    "creator": "ambientCG",
+    "height": 1024,
+    "license": "CC0-1.0",
+    "sha256": "1e6e5b80772636a65e332a0941b71c1773c51b190184fb0c3b4ce5c692908ded",
+    "source_sha256": "f1eabb5d3eec9d3247ed76bcb34336f62d17ccbfe316b0dfb563a30f139af7fe",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Metal063_2K-JPG/Metal063_2K-JPG_NormalGL.jpg",
+    "width": 1024
+  },
+  "assets/textures/buildings/metal/roughness.jpg": {
+    "bytes": 323411,
+    "creator": "ambientCG",
+    "height": 1024,
+    "license": "CC0-1.0",
+    "sha256": "a6785fb99c45172567cc93aa815b2cdd52e60a6668926d9d7b7eb47b807d0d76",
+    "source_sha256": "32ce62d9bf51cc2690211a57856650b169400409e73c9cb31ebd0d7a2f7bdd2b",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Metal063_2K-JPG/Metal063_2K-JPG_Roughness.jpg",
+    "width": 1024
+  },
   "assets/textures/terrain/grass/base_color.jpg": {
     "bytes": 457917,
     "creator": "ambientCG",

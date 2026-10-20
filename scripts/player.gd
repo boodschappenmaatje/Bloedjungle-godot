@@ -22,7 +22,7 @@ var _mask0 := 0
 const STAIR_FOOT := 1.8      # de klimladder staat aan de +X zijde van de toren (zie bron/wachttoren)
 const STAIR_TOP := 1.3
 const DECK := 5.3
-const CLIMB_SPEED := 2.2
+const CLIMB_SPEED := 1.8
 
 
 func _ready() -> void:
@@ -141,13 +141,15 @@ func _climb_step(delta: float) -> void:
 	elev = DECK * climb
 	var g := tower.to_global(lp)
 	global_position = Vector3(g.x, elev, g.z)
-	var dw: Vector3 = tower.global_transform.basis * Vector3(-climb_dir, 0.0, 0.0)
+	# altijd met het gezicht naar de ladder, ook naar beneden (dan loopt de animatie achteruit)
+	var dw: Vector3 = tower.global_transform.basis * Vector3(-1.0, 0.0, 0.0)
 	face = atan2(dw.x, dw.z)
 	rotation.y = face
-	model.position.y = 0.0
-	model.play("klimmen", 0.15, 1.6)
+	model.position = Vector3(0.0, 0.0, -0.32)  # iets voor de ladder, zodat handen en voeten de sporten raken
+	model.play("klimmen", 0.15, 2.0 * climb_dir)
 	if climb_dir > 0 and climb >= 1.0:
 		climb = -1.0
+		model.position = Vector3.ZERO
 		elev = DECK
 		climb_cd = 0.5
 		var l2: Vector3 = tower.to_local(global_position)
@@ -156,6 +158,7 @@ func _climb_step(delta: float) -> void:
 		global_position = Vector3(g2.x, elev, g2.z)
 	elif climb_dir < 0 and climb <= 0.0:
 		climb = -1.0
+		model.position = Vector3.ZERO
 		elev = 0.0
 		climb_cd = 0.8
 		collision_mask = _mask0

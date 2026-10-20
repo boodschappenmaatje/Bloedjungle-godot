@@ -1,29 +1,29 @@
 # Assetbronnen en licenties
 
-Alle downloads staan met commit-gefixeerde URL, licentie, maker, bron-SHA-256 en geplaatste SHA-256 in `assets/asset_manifest.json` en `assets/licenses/downloaded_assets.json`.
+De commit-gefixeerde download-URL's, licenties, makers, verwachte bron-hashes en outputbestanden staan in `assets/asset_manifest.json`. Gecontroleerde bron- en output-SHA-256, bestandsgroottes en importmetadata staan in `assets/licenses/downloaded_assets.json`.
 
-| Maker | Controleerbare bron | Licentie | Gebruik |
-| --- | --- | --- | --- |
-| Poly Haven | [CC0-spiegel met bronlinks](https://github.com/Papyszoo/CC0-Public-Domain-Textures/tree/fcc4ff97a5a843dc2e242ec9e195389bc46ed7d2/packs/polyhaven-textures) | CC0 volgens de spiegel | 14 materiaalsets; de spiegel heeft maximaal 512px KTX2-maps |
-| Poly Haven | [HDRI-spiegel](https://github.com/petroulacl/fps-buildings-env-kit/tree/1dd8e932402deb82422920df2e7fd079391e55d3/environment/skyboxes/polyhaven-hdri) | CC0 volgens de broncollectie | `kloppenheim_06_puresky_2k` |
-| ambientCG | [CC0-collectie](https://github.com/petroulacl/fps-buildings-env-kit/tree/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg) | CC0 volgens de broncollectie | `Ground037`, `Grass004`, `Concrete012`, `Metal063` |
-| Kenney | [Kenney-collectie](https://github.com/shorepine/kenney/tree/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d) en [licentietekst](https://github.com/shorepine/kenney/blob/3694c6879e487c108f55677be7dd2ca75b07cc3b/LICENSE.txt) | CC0 | 14 GLB's |
-| Quaternius | [Stylized Nature MegaKit-spiegel](https://github.com/petroulacl/fps-buildings-env-kit/tree/1dd8e932402deb82422920df2e7fd079391e55d3/environment/vegetation) | CC0 volgens de broncollectie | Varen-GLB |
+| Bron | Licentie | Gebruik en beperking |
+| --- | --- | --- |
+| [Poly Haven CC0-mirror](https://github.com/Papyszoo/CC0-Public-Domain-Textures/tree/fcc4ff97a5a843dc2e242ec9e195389bc46ed7d2/packs/polyhaven-textures) | CC0 volgens mirror | 14 materiaalsets. Originele mirror-maps zijn maximaal 512px (jute 512×509); 1K-bestanden zijn opgeschaald. |
+| [ambientCG-collectie](https://github.com/petroulacl/fps-buildings-env-kit/tree/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg) | CC0 volgens broncollectie | `Ground037`, `Grass004`, `Concrete012`, `Metal063`; alle bronmaps 2048×2048, omgezet naar 1024×1024. |
+| [Poly Haven HDRI-mirror](https://github.com/petroulacl/fps-buildings-env-kit/tree/1dd8e932402deb82422920df2e7fd079391e55d3/environment/skyboxes/polyhaven-hdri) | CC0 volgens broncollectie | `kloppenheim_06_puresky_2k`, 2048×1024; diffuse bewolkte buitenlucht zonder stedelijke bebouwing. |
+| [Kenney 3D-collectie](https://github.com/shorepine/kenney/tree/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d) | CC0 | De bestaande 14 GLB-modellen. Licentietekst staat in de broncollectie. |
+| [Quaternius Stylized Nature MegaKit-mirror](https://github.com/petroulacl/fps-buildings-env-kit/tree/1dd8e932402deb82422920df2e7fd079391e55d3/environment/vegetation) | CC0 volgens broncollectie | Varen-GLB. |
+| [D A York / medmatix H-Hut](https://github.com/medmatix/WW2_Building_Models/tree/d9583dee0864b4519541ee3dea6172eb200a72d1/Blender_Sources) | MIT | Eén H-hut uit `H-hut.blend`, omgezet naar GLB. Volledige licentie staat in `assets/licenses/MIT_H-hut.txt`. |
 
-De [importcode van de Poly Haven-spiegel](https://github.com/Papyszoo/CC0-Public-Domain-Textures/blob/fcc4ff97a5a843dc2e242ec9e195389bc46ed7d2/scripts/fetch-polyhaven-textures.mjs) vraagt eerst `nor_gl` bij de officiële API op. De oorspronkelijke Poly Haven-assetpagina staat per materiaal als `upstream_url` in het manifest. De ambientCG-broncollectie bewaart afzonderlijke `NormalGL`-bestanden.
+De Poly Haven-mirror fetchcode vraagt `nor_gl` aan bij de officiële API; de bijbehorende oorspronkelijke Poly Haven-assetpagina's staan in het manifest. De geselecteerde HDRI is `kloppenheim_06_puresky_2k`: de wolkenhemel is bruikbaar als tropische buitenlucht en bevat geen zichtbare bebouwing die afleidt van de jungleomgeving.
 
-Het script verkleint ambientCG's 2K-kaarten tot 1K. De Poly Haven KTX2-spiegel bevat hoogstens 512px-kaarten; het script decodeert deze met de open `basisu`-tool en maakt er 1K-JPEG's van. Het effectieve brondetail blijft maximaal 512px. De ruwe KTX2-bestanden worden niet mee gecommit.
+## Niet bereikbare bronnen
 
-Directe verzoeken aan `api.polyhaven.com`, `polyhaven.com`, `dl.polyhaven.org`, Poly Pizza en Sketchfab leverden hier HTTP 403 van de netwerkproxy. De GitHub-spiegels waren via de toegestane route bereikbaar. Er is geen toegangscontrole omzeild.
-
-Er zijn geen CC-BY-bestanden toegevoegd. Makers en bronlinks blijven wel vermeld.
+Op 2026-10-20 gaven `api.polyhaven.com`, `polyhaven.com`, `dl.polyhaven.org`, `poly.pizza` en `sketchfab.com` HTTP 403 van de netwerkproxy. Er is geen toegangscontrole omzeild. Daardoor zijn geen hoogwaardige directe Poly Haven-texturen of modellen van die catalogi toegevoegd. Bestaande werkende texturen zijn behouden. De enige nieuwe militaire modelbron in deze fase is het gecontroleerde MIT H-Hut-model.
 
 ## Opnieuw downloaden
 
-Installeer Python 3 en Pillow. Voor ontbrekende Poly Haven KTX2-bronnen is ook de [Basis Universal `basisu`-decoder](https://github.com/BinomialLLC/basis_universal) nodig; zet hem in `PATH` of wijs hem met `BASISU_BIN` aan. Het script haalt uitsluitend URL's uit het manifest op, controleert hashes en behoudt bestaande bestanden:
+Installeer Python 3 en Pillow. Voor bestaande Poly Haven-KTX2-bronnen is ook Basis Universal `basisu` nodig (`BASISU_BIN` mag het uitvoerpad aanwijzen). Voor `.blend`-bronnen is Blender CLI nodig (`BLENDER_BIN` mag het uitvoerpad aanwijzen). Het script leest alleen URL's uit het goedgekeurde manifest, controleert bron- en outputhashes en laat bestaande bestanden staan. Onderbroken downloads blijven in de genegeerde cachemap `.asset-download-cache/` staan; een herhaling gebruikt HTTP Range als de host dit ondersteunt. Een host zonder Range wordt veilig vanaf byte nul opnieuw opgehaald.
 
 ```bash
+python3 tools/download_assets.py --batch military
 python3 tools/download_assets.py --batch all
 ```
 
-Op Windows kan dezelfde opdracht met `py -3` worden gestart. Beschikbare batches: `terrain`, `buildings`, `nature`, `military`, `vehicles`. Na een netwerkfout kan dezelfde opdracht veilig opnieuw worden gedraaid. Voor de Poly Haven-bestanden is de decoder alleen nodig als die bestanden ontbreken.
+Windows: gebruik `py -3 tools/download_assets.py --batch all`.

@@ -1,21 +1,22 @@
 # Assetprestaties en Godot 4
 
-## Bestandsgrootte
+## Bestandsgrootte en detail
 
-- 70 nieuwe binaire assets: 54 textuurmaps, 15 GLB-modellen en één HDRI. Samen 17.223.044 bytes (16,43 MiB).
-- Vijf bestaande binaire assets op de branch: 3.472.976 bytes. Bestaand plus nieuw: 20.696.020 bytes (19,74 MiB), exclusief metadata, Blender-bronnen en Godot-caches.
-- 18 Godot `StandardMaterial3D`-bestanden koppelen de drie PBR-maps per set. De 14 Poly Haven-sets hebben maximaal 512px effectief brondetail, ondanks 1024 × 1024 output.
-- De HDRI is 2048 × 1024 en 4.434.394 bytes. Hij wordt nog niet als actieve belichting gebruikt.
-- Git LFS is beschikbaar, maar geen van de nieuwe bestanden vereist LFS. Zo blijven gewone GitHub- en Xogot-downloads eenvoudig.
+- 71 nieuwe binaire bestanden: 54 texturemaps, 16 GLB-modellen en één HDRI. Samen 17.322.936 bytes (16,52 MiB).
+- Vijf bestaande binaire bestanden op deze branch: 3.472.976 bytes. Samen met de assetbibliotheek: 20.795.912 bytes (19,83 MiB), exclusief metadata, Blender-bronnen en Godot-caches.
+- 18 PBR-materiaalsets gebruiken drie maps per set. Van die 54 maps hebben er 12 echte 2048×2048-brondetail (4 sets, output 1024×1024); 42 maps uit de andere 14 sets hebben maximaal 512px brondetail, ondanks 1024×1024-output.
+- Geen nieuwe 1K- of 2K-textuurbron kon worden opgehaald: Poly Haven API/downloadhosts antwoordden met proxy-403. De bestaande texturen blijven intact.
+- De HDRI is 2048×1024 en 4.434.394 bytes en wordt niet automatisch als actieve belichting gebruikt.
+- Git LFS is beschikbaar; geen bestand vereist LFS.
 
-## Godot-import en plaatsing
+## Modellen
 
-Godot 4.6.3 importeerde JPEG-, GLB- en HDR-bestanden headless zonder fouten. Het downloadscript controleert de bron-SHA-256, de geplaatste SHA-256, bestandstype en afmetingen. Alle GLB's zijn glTF 2.0 zonder ontbrekende externe buffers of afbeeldingen; losse Kenney-kleurkaarten zijn bij het downloaden in de GLB ingepakt.
+De nieuwe H-Hut GLB is 98 KiB, 1.627 driehoeken, één mesh, één materiaal, geen afbeeldingen of externe dependencies. Blender-bronmaat is ongeveer 38×28×6 m; Y-up is toegepast en een scene kan de maat schalen. De overige objecten zijn herbruikbare losse GLB's. Bestaande Apache, tank, soldaat en Jeep-verwijzing zijn niet vervangen of gedupliceerd.
 
-De eindcontrole vergeleek alle 70 bestanden met het manifest en de hashregistratie: nul ontbrekende, corrupte of dubbele bestanden. Godot laadde alle 18 `StandardMaterial3D`-bestanden met base color, normalmap en roughnessmap. De headless-import eindigde met code 0 en zonder fout- of waarschuwingsregels.
+Er zijn geen nieuwe vegetatiemodellen met transparantie of extra foliage-overdraw toegevoegd. De H-Hut heeft geen transparante texturen. GLB-assets bevatten hun gebruikte materialen/afbeeldingen intern; er zijn geen ontbrekende externe afhankelijkheden.
 
-Godot maakt lokaal enkele PNG's uit ingepakte GLB-afbeeldingen. Die worden opnieuw gegenereerd en staan daarom in `.gitignore`. De `.glb`-bestanden en de `material.tres`-bestanden staan in Git.
+## Import en projectintegriteit
 
-De modellen volgen de glTF-conventie met Y omhoog. Schaal blijft per scene te kiezen. De palm is circa 1,5 m hoog en kan voor een grote palm 4–6× worden geschaald. De varen beslaat circa 9 × 2,7 × 8,5 broneenheden en vraagt voor een losse plant circa 0,1×. De vrachtwagenbasis is circa 2 × 2,15 × 2,75 broneenheden en vraagt mogelijk 1,5–2×. Deze maten komen van statische meshgrenzen; visuele plaatsing op Windows en iPhone is nog niet getest.
+Godot 4.6.3 headless importeert de JPEG-, GLB- en HDR-assets. De volledige assetbatch is via de manifest- en lock-hashes gecontroleerd; alle 18 `StandardMaterial3D`-sets moeten elk base color, `normal_gl` en roughness behouden. De H-Hut is eveneens headless geïmporteerd. Statische controles verifiëren GLB 2.0-headers, meshes en afwezigheid van losse URI-dependencies.
 
-De modellen worden niet automatisch in het level geplaatst. Bestaande scenes, gameplay, shaders, projectinstellingen en exportinstellingen zijn niet gewijzigd. iPhone-geheugen- en frameratemetingen vereisen plaatsing in een scene en een echte Xogot-run.
+Bestaande scenes, gameplay, shaders, renderer, projectinstellingen en exportinstellingen zijn niet aangepast. Import bewijst geen artistieke plaatsing of iPhone-framerate; daarvoor is een Xogot-run op toestel nodig. De huidige bibliotheek is geschikt als input voor Visual Upgrade 4, met de genoemde ontbrekende militaire modellen en beperkt brondetail als resterende kwaliteitsgaten.

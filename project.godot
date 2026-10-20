@@ -28,7 +28,11 @@ Game="*res://scripts/game.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+window/size/mode=3
 window/handheld/orientation=4
+window/ios/hide_home_indicator=true
+window/ios/hide_status_bar=true
+window/ios/suppress_ui_gesture=true
 window/vsync/vsync_mode=1
 
 [layer_names]
@@ -41,6 +45,8 @@ window/vsync/vsync_mode=1
 3d_physics/layer_6="tank"
 
 [rendering]
+
+environment/defaults/default_clear_color=Color(0, 0, 0, 1)
 
 textures/default_filters/anisotropic_filtering_level=3
 

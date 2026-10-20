@@ -8,6 +8,7 @@ const TABS := ["Wapens", "Upgrades", "Basis", "Soldaat"]
 const TIER_COLORS := [Color(0, 0, 0, 0), Color8(111, 174, 74), Color8(74, 143, 214), Color8(154, 95, 208), Color8(224, 180, 58)]
 
 var _tab := 0
+var _sel := ""  # wapen dat in het rek is aangeklikt
 var _open_btn: Button
 var _swap_btn: Button
 var _overlay: ColorRect
@@ -21,6 +22,8 @@ var _items: Control
 var _drag_id := -2  # vinger of muis die de lijst versleept; -2 = geen
 var _drag_acc := 0.0
 var _drag_end := 0
+var _spacers: Array = []
+var _back: Button
 var _compact := false  # liggende telefoon: alles kleiner zodat kopen zonder scrollen kan
 var _sheet_sb: StyleBoxFlat
 var _title: Label
@@ -137,6 +140,7 @@ func cycle_weapon() -> void:
 func open() -> void:
 	if Game.state != "prep":
 		return
+	_sel = Game.cur
 	Game.state = "shop"
 	_overlay.show()
 	_scroll.scroll_vertical = 0
@@ -249,6 +253,7 @@ func _build_overlay() -> void:
 	pad.content_margin_right = 22
 	back.add_theme_stylebox_override("normal", pad)
 	back.add_theme_stylebox_override("hover", pad)
+	_back = back
 	back.pressed.connect(close)
 	foot.add_child(back)
 
@@ -257,6 +262,8 @@ func _spacer(h: float) -> void:
 	var c := Control.new()
 	c.custom_minimum_size.y = h
 	c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	c.set_meta("h", h)
+	_spacers.append(c)
 	_body.add_child(c)
 
 
@@ -267,7 +274,14 @@ func _sheet_width() -> float:
 func _render() -> void:
 	_compact = size.y < 520.0
 	_sheet_sb.set_content_margin_all(12.0 if _compact else 20.0)
-	_title.add_theme_font_size_override("font_size", 24 if _compact else 34)
+	_title.add_theme_font_size_override("font_size", 22 if _compact else 34)
+	_head_eyebrow.visible = not _compact
+	for sp: Control in _spacers:
+		sp.custom_minimum_size.y = sp.get_meta("h") * (0.5 if _compact else 1.0)
+	_back.custom_minimum_size.y = 40.0 if _compact else 52.0
+	_back.add_theme_font_size_override("font_size", 17 if _compact else 22)
+	for tb: Button in _tab_btns:
+		tb.custom_minimum_size.y = 30.0 if _compact else 36.0
 	var w := _sheet_width()
 	_head_eyebrow.text = ("Golf %d overleefd · bonus +%d" % [Game.wave - 1, Game.bonus] if Game.bonus > 0 and Game.wave > 1 else "Voor de eerste golf").to_upper()
 	_head_points.text = UI.nl(Game.points)
@@ -284,7 +298,7 @@ func _render() -> void:
 			tb.add_theme_color_override(cn, c)
 	_items.queue_free()
 	var pad := (24.0 if _compact else 40.0) + 10.0  # plus de scrollbalk
-	var cols := 1 if (_compact and _tab == 1) else maxi(1, int(floor((w - pad + 10.0) / 230.0)))
+	var cols := 1 if (_tab == 0 or (_compact and _tab == 1)) else maxi(1, int(floor((w - pad + 10.0) / 230.0)))
 	var grid := GridContainer.new()
 	grid.columns = cols
 	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -294,8 +308,7 @@ func _render() -> void:
 	_items = grid
 	match _tab:
 		0:
-			for id in Data.WEAPON_ORDER:
-				_weapon_card(id)
+			_rack()
 		1:
 			for id in Data.WEAPON_ORDER:
 				if Game.owned.has(id):
@@ -445,6 +458,158 @@ func _spec_pairs(id: String, short := false) -> Array:
 	if short:
 		pairs.append(["Herladen", "%.1fs" % w.reload])
 	return pairs
+
+
+# ---------------------------------------------------------------- wapenrek
+
+## Alle wapens als kleine tegels links, rechts het gekozen wapen groot met balkjes en verschil met je huidige wapen.
+func _rack() -> void:
+	if _sel == "" or not Data.WEAPONS.has(_sel):
+		_sel = Game.cur
+	var pc := _card_box()
+	pc.add_theme_stylebox_override("panel", UI.box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0, 0, 0))
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	pc.add_child(row)
+	var tiles := GridContainer.new()
+	tiles.columns = 2
+	tiles.add_theme_constant_override("h_separation", 6)
+	tiles.add_theme_constant_override("v_separation", 6)
+	row.add_child(tiles)
+	for id in Data.WEAPON_ORDER:
+		tiles.add_child(_tile(id))
+	row.add_child(_detail(_sel))
+
+
+func _tile(id: String) -> Button:
+	var own: bool = Game.owned.has(id)
+	var on: bool = id == _sel
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(112, 66 if _compact else 84)
+	var tier := _tier(id)
+	var edge: Color = UI.BRASS if on else (Color(TIER_COLORS[tier], 0.7) if tier > 0 else UI.PANEL_LINE)
+	var n := UI.box(Color(UI.BRASS, 0.14) if on else Color(0, 0, 0, 0.3), edge, 2 if on else 1, 4, 4)
+	for st in ["normal", "hover", "pressed", "focus", "disabled"]:
+		b.add_theme_stylebox_override(st, n)
+	var v := VBoxContainer.new()
+	v.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	v.alignment = BoxContainer.ALIGNMENT_CENTER
+	v.add_theme_constant_override("separation", 0)
+	v.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	b.add_child(v)
+	var tr := TextureRect.new()
+	tr.texture = load("res://assets/ui/weapons/weapon_%s.png" % id)
+	tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	tr.custom_minimum_size = Vector2(90, 30 if _compact else 40)
+	tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	tr.modulate = Color.WHITE if own else Color(1, 1, 1, 0.55)
+	v.add_child(tr)
+	var nm := UI.label(Data.WEAPONS[id].short, UI.body(700, 0), 13, UI.INK)
+	nm.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(nm)
+	var sub: String = ("Uitgerust" if id == Game.cur else "In bezit") if own else UI.nl(Data.WEAPONS[id].price)
+	var sc: Color = UI.GOOD if own else (UI.BRASS if Game.points >= Data.WEAPONS[id].price else Color(UI.INK_DIM, 0.8))
+	var sl := UI.label(sub, UI.body(600, 0), 11, sc)
+	sl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	v.add_child(sl)
+	b.pressed.connect(func():
+		if Time.get_ticks_msec() - _drag_end < 200:
+			return
+		_sel = id
+		_render())
+	return b
+
+
+func _detail(id: String) -> Control:
+	var w: Dictionary = Game.wstat(id)
+	var base: Dictionary = Data.WEAPONS[id]
+	var own: bool = Game.owned.has(id)
+	var cur: Dictionary = Game.wstat(Game.cur)
+	var tier := _tier(id)
+	var pc := PanelContainer.new()
+	pc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var sb := UI.box(Color(0, 0, 0, 0.25), UI.PANEL_LINE, 1, 4, 10)
+	if tier > 0:
+		sb.border_color = Color(TIER_COLORS[tier], 0.7)
+	pc.add_theme_stylebox_override("panel", sb)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 5)
+	pc.add_child(v)
+	var top := HBoxContainer.new()
+	top.add_theme_constant_override("separation", 8)
+	top.add_child(_wimg(id, tier))
+	var info := VBoxContainer.new()
+	info.add_theme_constant_override("separation", 0)
+	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	info.add_child(_head(base.name, "In bezit" if own else ""))
+	info.add_child(_desc(base.desc))
+	top.add_child(info)
+	v.add_child(top)
+	# balkjes: lengte is het deel van het beste wapen; rechts het verschil met wat je nu draagt
+	var dmg: float = w.dmg * w.pellets
+	var rpm: float = 60.0 / w.rate
+	var stats := [
+		["Schade", dmg / 240.0, str(roundi(dmg)), dmg - cur.dmg * cur.pellets, false],
+		["Tempo", rpm / 1200.0, str(roundi(rpm)), rpm - 60.0 / cur.rate, false],
+		["Magazijn", float(w.mag) / 100.0, str(w.mag), float(w.mag - cur.mag), false],
+		["Herladen", clampf(1.0 - (w.reload - 1.0) / 3.0, 0.1, 1.0), "%.1fs" % w.reload, w.reload - cur.reload, true],
+	]
+	for s in stats:
+		v.add_child(_stat_row(s[0], s[1], s[2], s[3] if id != Game.cur else 0.0, s[4]))
+	var tags := []
+	if base.pierce > 0:
+		tags.append("Doorboort %d" % base.pierce)
+	if base.has("explosive"):
+		tags.append("Explosief")
+	if base.has("slow"):
+		tags.append("Loopt trager")
+	if base.pellets > 1:
+		tags.append("%d kogels per schot" % base.pellets)
+	if not tags.is_empty():
+		v.add_child(UI.label(" · ".join(tags).to_upper(), UI.body(700, 1), 11, UI.BRASS))
+	if own:
+		var equipped: bool = Game.cur == id
+		v.add_child(_buy_button("Uitgerust" if equipped else "Uitrusten", not equipped, func(): Game.cur = id))
+	else:
+		v.add_child(_buy_button("Koop · %s" % UI.nl(base.price), Game.points >= base.price, func():
+			if Game.buy(base.price):
+				Game.owned[id] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": base.mag}
+				Game.cur = id))
+	return pc
+
+
+## Een regel met naam, balk, waarde en verschil. better_low: lager is beter (herladen).
+func _stat_row(label: String, frac: float, value: String, delta: float, better_low: bool) -> HBoxContainer:
+	var h := HBoxContainer.new()
+	h.add_theme_constant_override("separation", 8)
+	var l := UI.label(label, UI.body(600, 0), 14, UI.INK_DIM)
+	l.custom_minimum_size.x = 66
+	h.add_child(l)
+	var bar := ProgressBar.new()
+	bar.show_percentage = false
+	bar.max_value = 1.0
+	bar.value = clampf(frac, 0.02, 1.0)
+	bar.custom_minimum_size = Vector2(70, 8)
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	bar.add_theme_stylebox_override("background", UI.box(Color(UI.INK, 0.12), Color(0, 0, 0, 0), 0, 2, 0))
+	bar.add_theme_stylebox_override("fill", UI.box(UI.BRASS, Color(0, 0, 0, 0), 0, 2, 0))
+	h.add_child(bar)
+	var val := UI.label(value, UI.body(700, 0), 14, UI.INK)
+	val.custom_minimum_size.x = 44
+	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	h.add_child(val)
+	var d := UI.label("", UI.body(700, 0), 13, UI.INK_DIM)
+	d.custom_minimum_size.x = 48
+	if absf(delta) > 0.05:
+		var good := delta < 0.0 if better_low else delta > 0.0
+		d.text = ("+" if delta > 0.0 else "-") + (("%.1f" % absf(delta)) if better_low else str(roundi(absf(delta))))
+		d.add_theme_color_override("font_color", UI.GOOD if good else Color8(224, 71, 58))
+	d.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	h.add_child(d)
+	return h
 
 
 func _weapon_card(id: String) -> void:

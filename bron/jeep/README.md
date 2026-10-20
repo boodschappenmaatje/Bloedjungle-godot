@@ -5,7 +5,7 @@
     python3 maak_jeep.py uit/      # maakt jeep.glb, jeep.blend en jeep_olijf.png
 
 Willys-achtige legerjeep met een .50 MG op een paal, een staande schutter en een bestuurder. Ongeveer 5.300 driehoeken.
-Voorkant is -Z in Godot, 1 meter = 1 eenheid. Staat nog niet in het spel.
+Voorkant is -Z in Godot, 1 meter = 1 eenheid. In het spel: `scenes/jeep.tscn` + `scripts/jeep.gd` (geparkeerd in de basis, instappen met de knop, rechter stick richt het MG).
 
 ## Onderdelen
 

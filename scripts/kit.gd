@@ -120,9 +120,9 @@ static var SKINS := {
 		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.55, 0.55, 0.55)),
 	},
 	"poort": {
-		"Staal": func(): return photo("buildings/army_green_paint", 1.6, Color(0.8, 0.85, 0.65)),
-		"StaalDonker": func(): return photo("buildings/army_green_paint", 1.6, Color(0.5, 0.55, 0.42)),
-		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.55, 0.55, 0.55)),
+		"Staal": func(): return photo("buildings/metal", 1.4, Color(0.84, 0.88, 0.93)),
+		"StaalDonker": func(): return photo("buildings/metal", 1.4, Color(0.5, 0.53, 0.58)),
+		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.6, 0.61, 0.63)),
 	},
 	"loopgraaf": {
 		"Hout1": func(): return photo("buildings/weathered_wood", 1.4, Color(0.72, 0.62, 0.5)),

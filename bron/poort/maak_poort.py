@@ -27,11 +27,11 @@ def mat(name, color, rough=0.9, metal=0.0):
     return m
 
 M = {
-    "staal": mat("Staal", (0.29, 0.32, 0.19), 0.55, 0.45),
-    "donker": mat("StaalDonker", (0.17, 0.19, 0.12), 0.6, 0.4),
+    "staal": mat("Staal", (0.52, 0.55, 0.58), 0.38, 0.9),
+    "donker": mat("StaalDonker", (0.30, 0.32, 0.35), 0.45, 0.85),
     "geel": mat("Geel", (0.80, 0.62, 0.10), 0.6),
     "zwart": mat("Zwart", (0.05, 0.05, 0.05), 0.7),
-    "metaal": mat("Metaal", (0.20, 0.20, 0.19), 0.45, 0.7),
+    "metaal": mat("Metaal", (0.38, 0.39, 0.40), 0.4, 0.9),
 }
 
 def boxmesh(bm, loc, size, rot=(0, 0, 0)):

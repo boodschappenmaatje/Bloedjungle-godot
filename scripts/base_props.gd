@@ -6,8 +6,6 @@ class_name BaseProps
 const C := Data.COMPOUND
 const G := Data.GATE_GAP
 
-static var GATE_LAMP: StandardMaterial3D  # kleur wisselt in gates.gd (rood dicht, groen open)
-
 
 static func build(root: Node3D) -> void:
 	_wall(root)
@@ -50,26 +48,13 @@ static func _wall(root: Node3D) -> void:
 			Kit.box(root, pp, Vector3(0.55 if along_x else t + 0.25, h + 0.3, t + 0.25 if along_x else 0.55), Kit.concrete_dark())
 
 
-## Poortposten met een lampje; de stalen schuifpoorten zelf staan in gates.gd.
+## Poortposten; de stalen schuifpoorten en de zwaailichten erop staan in gates.gd.
 static func _gates(root: Node3D) -> void:
-	var lamp := Kit.flat(Color(1.0, 0.15, 0.08), 0.4)
-	GATE_LAMP = lamp
-	lamp.emission_enabled = true
-	lamp.emission = Color(1.0, 0.1, 0.05)
-	lamp.emission_energy_multiplier = 2.5
 	for sz in [-1.0, 1.0]:
 		for sx in [-1.0, 1.0]:
 			var p := Vector3(sx * (G + 0.3), 0, sz * C)
 			Kit.box(root, p, Vector3(0.7, 2.1, 0.7), Kit.concrete_dark(), 0.0, Kit.LAYER_WALL)
 			Kit.box(root, p + Vector3.UP * 2.1, Vector3(0.9, 0.16, 0.9), Kit.concrete())
-			var l := MeshInstance3D.new()
-			var sm := SphereMesh.new()
-			sm.radius = 0.1
-			sm.height = 0.2
-			l.mesh = sm
-			l.material_override = lamp
-			l.position = p + Vector3(0, 2.4, 0)
-			root.add_child(l)
 		# stalen bovenbalk met geel-zwarte rand
 		Kit.box(root, Vector3(0, 2.0, sz * C), Vector3(G * 2.0 + 1.0, 0.18, 0.4), Kit.olive())
 		for i in 10:

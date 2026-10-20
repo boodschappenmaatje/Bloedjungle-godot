@@ -53,8 +53,61 @@ func _ready() -> void:
 		g.body = body
 		g.shape = cs
 		g.wreck = _wreck(root)
+		g.beacons = [_beacon(Vector3(-(G + 0.3), 2.26, sz * C)), _beacon(Vector3(G + 0.3, 2.26, sz * C))]
 		list.append(g)
 	_apply_all()
+
+
+## Zwaailamp uit assets/zwaailamp.glb op een poortpost: de reflector draait en een SpotLight3D zwaait mee.
+func _beacon(at: Vector3) -> Dictionary:
+	var root: Node3D = (load("res://assets/zwaailamp.glb") as PackedScene).instantiate()
+	root.position = at
+	add_child(root)
+	var ap: AnimationPlayer = root.find_child("AnimationPlayer", true, false)
+	ap.get_animation("draaien").loop_mode = Animation.LOOP_LINEAR
+	var light := SpotLight3D.new()
+	light.spot_angle = 28.0
+	light.spot_range = 18.0
+	light.light_energy = 7.0
+	light.light_color = Color(1.0, 0.55, 0.12)
+	light.rotation_degrees.x = -5.0
+	light.visible = false
+	root.find_child("Draaier", true, false).add_child(light)
+	var b := {"root": root, "anim": ap, "light": light, "state": "", "kap": null, "bol": null}
+	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		var m := mi.mesh.surface_get_material(0)
+		if m and m.resource_name == "Lampkap":
+			b.kap = m.duplicate()
+			mi.set_surface_override_material(0, b.kap)
+		elif m and m.resource_name == "Lampje":
+			b.bol = m.duplicate()
+			mi.set_surface_override_material(0, b.bol)
+	_beacon_state(b, "dicht")
+	return b
+
+
+## dicht: rood en stil, schuift: oranje met draaiende bundel, open: groen en stil.
+func _beacon_state(b: Dictionary, st: String) -> void:
+	if b.state == st:
+		return
+	b.state = st
+	var c: Color = {"dicht": Color(1.0, 0.1, 0.05), "schuift": Color(1.0, 0.45, 0.05), "open": Color(0.15, 1.0, 0.3)}[st]
+	var e: float = {"dicht": 0.7, "schuift": 3.5, "open": 0.9}[st]
+	if b.kap:
+		b.kap.albedo_color = Color(c.r, c.g, c.b, 0.6)
+		b.kap.emission_enabled = true
+		b.kap.emission = c
+		b.kap.emission_energy_multiplier = e
+	if b.bol:
+		b.bol.emission_enabled = true
+		b.bol.emission = c.lerp(Color.WHITE, 0.4)
+		b.bol.emission_energy_multiplier = e * 1.5
+	b.light.light_color = c.lerp(Color(1.0, 0.7, 0.3), 0.3)
+	b.light.visible = st == "schuift"
+	if st == "schuift":
+		b.anim.play("draaien")
+	else:
+		b.anim.pause()
 
 
 func _wreck(root: Node3D) -> Node3D:
@@ -131,6 +184,8 @@ func _break(g: Dictionary) -> void:
 	g.panel.visible = false
 	g.wreck.visible = true
 	g.shape.disabled = true
+	for b in g.beacons:
+		_beacon_state(b, "dicht")
 	Fx.explosion(self, pos_of(g) + Vector3(0, 0.8, 0), 0.6)
 	Sfx.play("boom", 0.8, pos_of(g))
 	Game.banner.emit("POORT KAPOT", "De %spoort staat open. Repareer hem in de wapenkamer." % g.name, 2.4)
@@ -192,9 +247,6 @@ func _apply(g: Dictionary) -> void:
 
 func _physics_process(delta: float) -> void:
 	var live := Game.state == "play" or Game.state == "prep"
-	var lamp: StandardMaterial3D = BaseProps.GATE_LAMP
-	var any_moving := false
-	var any_open := false
 	for g in list:
 		if g.broken:
 			continue
@@ -213,18 +265,9 @@ func _physics_process(delta: float) -> void:
 		var moving: bool = g.open != prev
 		if moving:
 			_apply(g)
-			any_moving = true
 			if not g.moving:
 				Sfx.play("gate", 0.8, pos_of(g))
 		g.moving = moving
-		any_open = any_open or g.open > 0.99
-	# lampjes op de poortposten: knipperend oranje tijdens het schuiven, groen als open, rood als dicht
-	if lamp:
-		var t := Time.get_ticks_msec() / 1000.0
-		var c := Color(2.0, 0.2, 0.1)
-		if any_moving:
-			c = Color(3.0, 1.6, 0.05) if sin(t * 14.0) > 0.0 else Color(0.4, 0.2, 0.05)
-		elif any_open:
-			c = Color(0.2, 2.4, 0.3)
-		lamp.albedo_color = Color(c.r, c.g, c.b).clamp()
-		lamp.emission = Color(c.r, c.g, c.b).clamp()
+		var st := "schuift" if moving else ("open" if g.open > 0.99 else "dicht")
+		for b in g.beacons:
+			_beacon_state(b, st)

@@ -1,0 +1,282 @@
+{
+  "schema_version": 1,
+  "description": "Approved pinned CC0 downloads; terrain/building maps resized to 1K. Poly Haven direct downloads blocked in this environment.",
+  "assets": [
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/jungle_ground/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Ground037_2K-JPG/Ground037_2K-JPG_Color.jpg",
+      "kind": "texture",
+      "resize_1k": true,
+      "license": "CC0-1.0",
+      "creator": "ambientCG",
+      "source_asset": "Ground037",
+      "role": "base_color"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/jungle_ground/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Ground037_2K-JPG/Ground037_2K-JPG_NormalGL.jpg",
+      "kind": "texture",
+      "resize_1k": true,
+      "license": "CC0-1.0",
+      "creator": "ambientCG",
+      "source_asset": "Ground037",
+      "role": "normal_gl"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/jungle_ground/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Ground037_2K-JPG/Ground037_2K-JPG_Roughness.jpg",
+      "kind": "texture",
+      "resize_1k": true,
+      "license": "CC0-1.0",
+      "creator": "ambientCG",
+      "source_asset": "Ground037",
+      "role": "roughness"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/grass/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Grass004_2K-JPG/Grass004_2K-JPG_Color.jpg",
+      "kind": "texture",
+      "resize_1k": true,
+      "license": "CC0-1.0",
+      "creator": "ambientCG",
+      "source_asset": "Grass004",
+      "role": "base_color"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/grass/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Grass004_2K-JPG/Grass004_2K-JPG_NormalGL.jpg",
+      "kind": "texture",
+      "resize_1k": true,
+      "license": "CC0-1.0",
+      "creator": "ambientCG",
+      "source_asset": "Grass004",
+      "role": "normal_gl"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/grass/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Grass004_2K-JPG/Grass004_2K-JPG_Roughness.jpg",
+      "kind": "texture",
+      "resize_1k": true,
+      "license": "CC0-1.0",
+      "creator": "ambientCG",
+      "source_asset": "Grass004",
+      "role": "roughness"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/concrete/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Concrete012_2K-JPG/Concrete012_2K-JPG_Color.jpg",
+      "kind": "texture",
+      "resize_1k": true,
+      "license": "CC0-1.0",
+      "creator": "ambientCG",
+      "source_asset": "Concrete012",
+      "role": "base_color"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/concrete/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Concrete012_2K-JPG/Concrete012_2K-JPG_NormalGL.jpg",
+      "kind": "texture",
+      "resize_1k": true,
+      "license": "CC0-1.0",
+      "creator": "ambientCG",
+      "source_asset": "Concrete012",
+      "role": "normal_gl"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/concrete/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Concrete012_2K-JPG/Concrete012_2K-JPG_Roughness.jpg",
+      "kind": "texture",
+      "resize_1k": true,
+      "license": "CC0-1.0",
+      "creator": "ambientCG",
+      "source_asset": "Concrete012",
+      "role": "roughness"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/metal/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Metal063_2K-JPG/Metal063_2K-JPG_Color.jpg",
+      "kind": "texture",
+      "resize_1k": true,
+      "license": "CC0-1.0",
+      "creator": "ambientCG",
+      "source_asset": "Metal063",
+      "role": "base_color"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/metal/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Metal063_2K-JPG/Metal063_2K-JPG_NormalGL.jpg",
+      "kind": "texture",
+      "resize_1k": true,
+      "license": "CC0-1.0",
+      "creator": "ambientCG",
+      "source_asset": "Metal063",
+      "role": "normal_gl"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/metal/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Metal063_2K-JPG/Metal063_2K-JPG_Roughness.jpg",
+      "kind": "texture",
+      "resize_1k": true,
+      "license": "CC0-1.0",
+      "creator": "ambientCG",
+      "source_asset": "Metal063",
+      "role": "roughness"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/models/nature/palm.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/tree_palm.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/nature/tree_palm.glb"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/models/nature/tropical_tree.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/tree_detailed.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/nature/tree_detailed.glb"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/models/nature/bush.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/plant_bushDetailed.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/nature/plant_bushDetailed.glb"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/models/nature/rock.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/rock_largeA.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/nature/rock_largeA.glb"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/models/nature/stump.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/stump_round.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/nature/stump_round.glb"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/models/nature/log.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/log.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/nature/log.glb"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/models/nature/fern.glb",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/vegetation/polypizza-stylized-nature-gltf/Fern.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Quaternius",
+      "source_asset": "environment/vegetation/polypizza-stylized-nature-gltf/Fern.glb"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/environment/hdri/kloppenheim_06_puresky_2k.hdr",
+      "url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/skyboxes/polyhaven-hdri/kloppenheim_06_puresky_2k.hdr",
+      "kind": "hdri",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "kloppenheim_06_puresky"
+    },
+    {
+      "batch": "military",
+      "path": "assets/models/military/tent.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/tent_detailedClosed.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/nature/tent_detailedClosed.glb"
+    },
+    {
+      "batch": "military",
+      "path": "assets/models/military/tower.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/modular-buildings/building-sample-tower-a.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/modular-buildings/building-sample-tower-a.glb"
+    },
+    {
+      "batch": "military",
+      "path": "assets/models/military/bridge.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/bridge_wood.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/nature/bridge_wood.glb"
+    },
+    {
+      "batch": "military",
+      "path": "assets/models/military/crate.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/crate-medium.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/blaster/crate-medium.glb"
+    },
+    {
+      "batch": "military",
+      "path": "assets/models/military/barrel.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/mini-dungeon/barrel.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/mini-dungeon/barrel.glb"
+    },
+    {
+      "batch": "military",
+      "path": "assets/models/military/fence.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/nature/fence_simpleHigh.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/nature/fence_simpleHigh.glb"
+    },
+    {
+      "batch": "military",
+      "path": "assets/models/military/fuel_tank.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/city-industrial/detail-tank.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/city-industrial/detail-tank.glb"
+    },
+    {
+      "batch": "vehicles",
+      "path": "assets/models/military/truck_base.glb",
+      "url": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/car/truck-flat.glb",
+      "kind": "model",
+      "license": "CC0-1.0",
+      "creator": "Kenney",
+      "source_asset": "3d/car/truck-flat.glb"
+    }
+  ]
+}

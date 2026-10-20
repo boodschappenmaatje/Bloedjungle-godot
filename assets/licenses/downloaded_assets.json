@@ -1,0 +1,86 @@
+{
+  "assets/textures/terrain/grass/base_color.jpg": {
+    "bytes": 457917,
+    "creator": "ambientCG",
+    "height": 1024,
+    "license": "CC0-1.0",
+    "sha256": "ea9a4394868e1343b968bdb72ca11f6c9d93507ca59b2d775b55f454a9b13716",
+    "source_sha256": "735b141c8f1972e70a45879424f1238fea9f887324173097785f4ac36e67e9a3",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Grass004_2K-JPG/Grass004_2K-JPG_Color.jpg",
+    "width": 1024
+  },
+  "assets/textures/terrain/grass/normal_gl.jpg": {
+    "bytes": 544129,
+    "creator": "ambientCG",
+    "height": 1024,
+    "license": "CC0-1.0",
+    "sha256": "e12fa2ce2cb12fb2e6c499402190ac2a65add0591956c256813eeca4a56e29af",
+    "source_sha256": "15ccad231764049d6581a52076d02bb6b627df77895cb0508e4017d8a4877fef",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Grass004_2K-JPG/Grass004_2K-JPG_NormalGL.jpg",
+    "width": 1024
+  },
+  "assets/textures/terrain/grass/roughness.jpg": {
+    "bytes": 454901,
+    "creator": "ambientCG",
+    "height": 1024,
+    "license": "CC0-1.0",
+    "sha256": "c4d957a21a29f9a68ee567f02d2d65fbe32443105484a0befcb5e3398eb2d3cc",
+    "source_sha256": "c449fdf1e779eb7be5a19c1d58ee28cc155ed0523a141b151f3cbc843c4ae2e3",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Grass004_2K-JPG/Grass004_2K-JPG_Roughness.jpg",
+    "width": 1024
+  },
+  "assets/textures/terrain/jungle_ground/base_color.jpg": {
+    "bytes": 546185,
+    "creator": "ambientCG",
+    "height": 1024,
+    "license": "CC0-1.0",
+    "sha256": "892578ac6cbe6e6b514b3946c3c1da6093ed63d3bdc660a8051e23115660ac10",
+    "source_sha256": "86af35a54593548543a291a54bddfd3568fd90268f8f65d0f8e743b37d714782",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Ground037_2K-JPG/Ground037_2K-JPG_Color.jpg",
+    "width": 1024
+  },
+  "assets/textures/terrain/jungle_ground/normal_gl.jpg": {
+    "bytes": 556982,
+    "creator": "ambientCG",
+    "height": 1024,
+    "license": "CC0-1.0",
+    "sha256": "bea9ebb2dedba14923910dd60b8d3b4112d7c96a287d5cc9e14bd76e86a0a939",
+    "source_sha256": "99743f03f5f818d4a0ee3dca289d5c6f125b1e05f1e624a541455e2f7fb29eec",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Ground037_2K-JPG/Ground037_2K-JPG_NormalGL.jpg",
+    "width": 1024
+  },
+  "assets/textures/terrain/jungle_ground/roughness.jpg": {
+    "bytes": 317633,
+    "creator": "ambientCG",
+    "height": 1024,
+    "license": "CC0-1.0",
+    "sha256": "3d47037a780fda55072e3ba66b3033c50624c590b97809a030c96d4873dd5ef4",
+    "source_sha256": "5484c117706e5937afa103c82795cbacb6c3b76d1a056b47942ca91d00efbbb9",
+    "source_size": [
+      2048,
+      2048
+    ],
+    "source_url": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Ground037_2K-JPG/Ground037_2K-JPG_Roughness.jpg",
+    "width": 1024
+  }
+}

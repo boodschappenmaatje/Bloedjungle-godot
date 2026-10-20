@@ -18,6 +18,9 @@ var _head_eyebrow: Label
 var _head_points: Label
 var _tab_btns: Array = []
 var _items: Control
+var _drag_id := -2  # vinger of muis die de lijst versleept; -2 = geen
+var _drag_acc := 0.0
+var _drag_end := 0
 var _compact := false  # liggende telefoon: alles kleiner zodat kopen zonder scrollen kan
 var _sheet_sb: StyleBoxFlat
 var _title: Label
@@ -64,6 +67,43 @@ func _layout() -> void:
 	_open_btn.size = Vector2(maxf(112.0, _open_btn.get_minimum_size().x), 40)
 	_open_btn.position = Vector2(s.x * 0.5 + 2.0, 132)
 	_swap_btn.position = Vector2(s.x - 64.0 - 68.0 - 23.0, s.y - 150.0 - 38.0 - 23.0)
+
+
+## Met je vinger (of muis) de lijst met kaarten verslepen; de scrollbalk hoeft niet.
+func _input(event: InputEvent) -> void:
+	if not _overlay.visible:
+		return
+	var pos := Vector2.ZERO
+	var kind := ""
+	var idx := -1
+	if event is InputEventScreenTouch:
+		pos = event.position
+		kind = "down" if event.pressed else "up"
+		idx = event.index
+	elif event is InputEventScreenDrag:
+		pos = event.position
+		kind = "move"
+		idx = event.index
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.device != InputEvent.DEVICE_ID_EMULATION:
+		pos = event.position
+		kind = "down" if event.pressed else "up"
+		idx = -1
+	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+		pos = event.position
+		kind = "move"
+		idx = -1
+	if kind == "down" and _scroll.get_global_rect().has_point(pos):
+		_drag_id = idx
+		_drag_acc = 0.0
+	elif kind == "move" and idx == _drag_id:
+		var rel: float = event.relative.y
+		_drag_acc += absf(rel)
+		if _drag_acc > 12.0:
+			_scroll.scroll_vertical -= int(rel)
+	elif kind == "up" and idx == _drag_id:
+		if _drag_acc > 12.0:
+			_drag_end = Time.get_ticks_msec()
+		_drag_id = -2
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -188,9 +228,9 @@ func _build_overlay() -> void:
 	_body.add_child(_scroll)
 	# brede balk die je met je duim kunt pakken
 	var vb := _scroll.get_v_scroll_bar()
-	vb.custom_minimum_size.x = 20
+	vb.custom_minimum_size.x = 6
 	for st in ["grabber", "grabber_highlight", "grabber_pressed"]:
-		vb.add_theme_stylebox_override(st, UI.box(UI.OLIVE_HI, Color(0, 0, 0, 0), 0, 6, 0))
+		vb.add_theme_stylebox_override(st, UI.box(Color(UI.OLIVE_HI, 0.8), Color(0, 0, 0, 0), 0, 3, 0))
 	vb.add_theme_stylebox_override("scroll", UI.box(Color(0, 0, 0, 0.3), Color(0, 0, 0, 0), 0, 6, 0))
 	_items = Control.new()  # wordt bij elke render vervangen
 	_scroll.add_child(_items)
@@ -243,7 +283,7 @@ func _render() -> void:
 		for cn in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 			tb.add_theme_color_override(cn, c)
 	_items.queue_free()
-	var pad := (24.0 if _compact else 40.0) + 22.0  # plus de scrollbalk
+	var pad := (24.0 if _compact else 40.0) + 10.0  # plus de scrollbalk
 	var cols := 1 if (_compact and _tab == 1) else maxi(1, int(floor((w - pad + 10.0) / 230.0)))
 	var grid := GridContainer.new()
 	grid.columns = cols
@@ -390,6 +430,8 @@ func _buy_button(text: String, enabled: bool, action: Callable, height := 40.0, 
 	UI.style_button(b, "buy")
 	b.add_theme_font_size_override("font_size", font_size)
 	b.pressed.connect(func():
+		if Time.get_ticks_msec() - _drag_end < 200:
+			return  # los laten na het slepen telt niet als koop
 		action.call()
 		_render()
 		Game.changed.emit())

@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/nature/tree_bark/base_color.jpg" id="1_87yjf"]
+[ext_resource type="Texture2D" path="res://assets/textures/nature/tree_bark/normal_gl.jpg" id="2_mfwfl"]
+[ext_resource type="Texture2D" path="res://assets/textures/nature/tree_bark/roughness.jpg" id="3_xgudw"]
+
+[resource]
+resource_name = "tree_bark"
+albedo_texture = ExtResource("1_87yjf")
+roughness_texture = ExtResource("3_xgudw")
+normal_enabled = true
+normal_texture = ExtResource("2_mfwfl")

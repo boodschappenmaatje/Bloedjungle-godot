@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/weathered_wood/base_color.jpg" id="1_pb3g4"]
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/weathered_wood/normal_gl.jpg" id="2_j4n7u"]
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/weathered_wood/roughness.jpg" id="3_fcamc"]
+
+[resource]
+resource_name = "weathered_wood"
+albedo_texture = ExtResource("1_pb3g4")
+roughness_texture = ExtResource("3_fcamc")
+normal_enabled = true
+normal_texture = ExtResource("2_j4n7u")

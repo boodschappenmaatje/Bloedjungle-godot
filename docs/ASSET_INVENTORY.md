@@ -1,31 +1,47 @@
 # Bloedjungle assetinventaris
 
-Deze bibliotheek staat los van de bestaande gameplay. De nieuwe modellen zijn nog niet in scenes geplaatst.
+De bibliotheek staat los van de bestaande gameplay. De nieuwe modellen zijn niet in bestaande scenes geplaatst.
 
 ## Bestaand en hergebruikt
 
-| Asset | Locatie | Status |
+| Asset | Locatie | Besluit |
 | --- | --- | --- |
-| Tank | `assets/tank.glb` | Bestaand; geen vervanging gedownload |
-| Apache | `assets/apache.glb` | Bestaand; geen vervanging gedownload |
-| Soldaat met Mixamo-animaties | `assets/soldaat.glb` | Bestaand; geen extra personage gedownload |
-| Legerjeep | PR #4, `assets/jeep.glb` | Bestaand in de open PR; PR niet gewijzigd |
-| Palmen, struiken, varens, rotsen | `scripts/foliage.gd` en `scripts/leaf_tex.gd` | Procedureel aanwezig; nieuwe GLB's zijn optionele losse varianten |
-| Bunker, wachttorens, hutten, kratten, zandzakken | `scripts/base_props.gd` | Procedureel aanwezig; niet vervangen |
-| Hout, rots en overige basismaterialen | `scripts/kit.gd` | Procedureel aanwezig; geen eerder gedownloade Poly Haven-bestanden gevonden |
+| Tank plus kleurtextuur | `assets/tank.glb`, `assets/tank_tank_camo.png` | Behouden; geen tweede tank |
+| Apache plus kleurtextuur | `assets/apache.glb`, `assets/apache_apache_olijf.png` | Behouden; geen tweede Apache |
+| Geanimeerde soldaat | `assets/soldaat.glb` | Behouden; geen extra Mixamo-kopie |
+| Legerjeep | [PR #4](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/4), `assets/jeep.glb` | Niet gekopieerd of gewijzigd; na samenvoegen beschikbaar |
+| Palmen, struiken, varens, rotsen | `scripts/foliage.gd`, `scripts/leaf_tex.gd` | Procedurele level-assets blijven bestaan |
+| Bunker, wachttorens, hutten, kratten, zandzakken | `scripts/base_props.gd` | Procedurele level-assets blijven bestaan |
+| Hout- en rotsmaterialen | `scripts/kit.gd` | Procedurele materialen blijven bestaan |
 
-## Nieuwe bibliotheek
+Op deze branch stonden geen eerder gedownloade Poly Haven-texturen of losse junglemodellen. De vijf bestaande binaire assetbestanden zijn niet gedupliceerd.
 
-| Batch | Inhoud | Status |
+## Nieuwe materialen
+
+Elke set bevat `base_color.jpg`, `normal_gl.jpg`, `roughness.jpg` en een Godot-materiaal `material.tres`.
+
+| Groep | Materiaalsets | Bron |
 | --- | --- | --- |
-| 1 Terrein | Junglegrond en gras, elk base color, Normal GL en roughness op 1K | Gedownload |
-| 2 Gebouwen | Beton en metaal, elk base color, Normal GL en roughness op 1K | Gedownload |
-| 3 Natuur en HDRI | Palm, tropische boom, varen, struik, rots, stronk, boomstam en 2K-HDRI | Gedownload |
-| 4 Militaire objecten | Tent, torenbasis, brug, kist, vat, hek en brandstoftank | Gedownload |
-| 5 Voertuigen | Basis voor een vrachtwagen; bestaande tank, Apache en jeep hergebruikt | In behandeling |
+| Terrein | `mud`, `dry_earth`, `jungle_ground`, `moss`, `grass`, `river_sand`, `gravel_rock` | Poly Haven-spiegel; `jungle_ground` en `grass` van ambientCG |
+| Gebouwen | `concrete`, `weathered_wood`, `corrugated_iron`, `rusted_metal`, `plywood`, `painted_metal`, `jute`, `army_green_paint` | Poly Haven-spiegel; `concrete` van ambientCG |
+| Natuur | `tree_bark`, `rock_material` | Poly Haven-spiegel |
+| Extra | `metal` | ambientCG; generieke metaalset |
 
-Het volledige goedgekeurde downloadmanifest staat in `assets/asset_manifest.json`. De hash en grootte van elk daadwerkelijk opgehaald bestand staan in `assets/licenses/downloaded_assets.json`.
+De Poly Haven-spiegel bevat maximaal 512px detail per map. De bestanden zijn tot 1024 × 1024 omgezet voor uniform gebruik in Godot. Dit voegt geen detail toe. `moss` is mos op rots; `river_sand` is vochtig zand; `jute` is hessian-doek; `army_green_paint` is verweerd groen metaal.
 
-## Nog ontbrekend
+## Nieuwe modellen en HDRI
 
-Poly Haven is vanuit de huidige omgeving direct geblokkeerd. Het manifest gebruikt daarom CC0-materiaalsets van ambientCG voor de eerste terreincategorieën. Modder, droge aarde, mos, rivierzand, grind en rotsgrond, en meerdere bouwmaterialen hebben nog geen geverifieerde eigen 1K-set. Losse Huey-helikopter, militair ingerichte vrachtwagen, bunker, controlepost, jerrycan en zandzakken zijn nog niet gevonden met zowel downloadmogelijkheid als controleerbare licentie. De procedurele bunker en zandzakken bestaan al in het project.
+| Groep | Inhoud | Aantal |
+| --- | --- | ---: |
+| Natuur | Palm, tropische boom, varen, struik, rots, stronk, boomstam | 7 GLB |
+| Gebouwen en objecten | Tent, torenmodule, brug, kist, vat, hek, brandstoftank | 7 GLB |
+| Voertuigen | Vrachtwagenbasis, nog zonder militaire details | 1 GLB |
+| Omgeving | Poly Haven `kloppenheim_06_puresky_2k.hdr` | 1 HDRI |
+
+De HDRI is gekozen als diffuse, bewolkte buitenlucht zonder stedelijke bebouwing. Het bestand is 2048 × 1024 pixels. De bestaande belichting blijft actief tot de HDRI bewust in een scene wordt gebruikt.
+
+## Nog ontbrekend als los model
+
+Een Huey-achtige helikopter, bunker, specifiek militaire hut, controlepost, jerrycan en zandzakken zijn niet gevonden met zowel controleerbare licentie als toegankelijke download. De vrachtwagen is een ongepantserde basis. De Jeep uit PR #4 moet nog via die PR worden samengevoegd. Bunker, hut en zandzakken zijn al procedureel aanwezig.
+
+Het downloadmanifest staat in `assets/asset_manifest.json`. De SHA-256 en grootte van ieder nieuw bestand staan in `assets/licenses/downloaded_assets.json`.

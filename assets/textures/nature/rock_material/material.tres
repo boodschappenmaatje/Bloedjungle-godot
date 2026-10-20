@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/nature/rock_material/base_color.jpg" id="1_gko4r"]
+[ext_resource type="Texture2D" path="res://assets/textures/nature/rock_material/normal_gl.jpg" id="2_5ylpr"]
+[ext_resource type="Texture2D" path="res://assets/textures/nature/rock_material/roughness.jpg" id="3_tfxhx"]
+
+[resource]
+resource_name = "rock_material"
+albedo_texture = ExtResource("1_gko4r")
+roughness_texture = ExtResource("3_tfxhx")
+normal_enabled = true
+normal_texture = ExtResource("2_5ylpr")

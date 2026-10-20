@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Approved pinned CC0 downloads; terrain/building maps resized to 1K. Poly Haven direct downloads blocked in this environment.",
+  "description": "Approved pinned CC0 downloads. 2K ambientCG maps resized to 1K; Poly Haven 512px mirror maps resampled to 1K with effective 512px detail.",
   "assets": [
     {
       "batch": "terrain",
@@ -11,7 +11,8 @@
       "license": "CC0-1.0",
       "creator": "ambientCG",
       "source_asset": "Ground037",
-      "role": "base_color"
+      "role": "base_color",
+      "source_sha256": "86af35a54593548543a291a54bddfd3568fd90268f8f65d0f8e743b37d714782"
     },
     {
       "batch": "terrain",
@@ -22,7 +23,8 @@
       "license": "CC0-1.0",
       "creator": "ambientCG",
       "source_asset": "Ground037",
-      "role": "normal_gl"
+      "role": "normal_gl",
+      "source_sha256": "99743f03f5f818d4a0ee3dca289d5c6f125b1e05f1e624a541455e2f7fb29eec"
     },
     {
       "batch": "terrain",
@@ -33,7 +35,8 @@
       "license": "CC0-1.0",
       "creator": "ambientCG",
       "source_asset": "Ground037",
-      "role": "roughness"
+      "role": "roughness",
+      "source_sha256": "5484c117706e5937afa103c82795cbacb6c3b76d1a056b47942ca91d00efbbb9"
     },
     {
       "batch": "terrain",
@@ -44,7 +47,8 @@
       "license": "CC0-1.0",
       "creator": "ambientCG",
       "source_asset": "Grass004",
-      "role": "base_color"
+      "role": "base_color",
+      "source_sha256": "735b141c8f1972e70a45879424f1238fea9f887324173097785f4ac36e67e9a3"
     },
     {
       "batch": "terrain",
@@ -55,7 +59,8 @@
       "license": "CC0-1.0",
       "creator": "ambientCG",
       "source_asset": "Grass004",
-      "role": "normal_gl"
+      "role": "normal_gl",
+      "source_sha256": "15ccad231764049d6581a52076d02bb6b627df77895cb0508e4017d8a4877fef"
     },
     {
       "batch": "terrain",
@@ -66,7 +71,8 @@
       "license": "CC0-1.0",
       "creator": "ambientCG",
       "source_asset": "Grass004",
-      "role": "roughness"
+      "role": "roughness",
+      "source_sha256": "c449fdf1e779eb7be5a19c1d58ee28cc155ed0523a141b151f3cbc843c4ae2e3"
     },
     {
       "batch": "buildings",
@@ -77,7 +83,8 @@
       "license": "CC0-1.0",
       "creator": "ambientCG",
       "source_asset": "Concrete012",
-      "role": "base_color"
+      "role": "base_color",
+      "source_sha256": "c6eb8d79df1d62268582f9696027f20803b8f172e607fa45a06f9629311594b3"
     },
     {
       "batch": "buildings",
@@ -88,7 +95,8 @@
       "license": "CC0-1.0",
       "creator": "ambientCG",
       "source_asset": "Concrete012",
-      "role": "normal_gl"
+      "role": "normal_gl",
+      "source_sha256": "90eb7c080b4886709acdef834ef1bee17d44ae2a38d0055be1df957982dac0e5"
     },
     {
       "batch": "buildings",
@@ -99,7 +107,8 @@
       "license": "CC0-1.0",
       "creator": "ambientCG",
       "source_asset": "Concrete012",
-      "role": "roughness"
+      "role": "roughness",
+      "source_sha256": "414cb64851f573155893d982f7cebc204bb37b5027d983b168ea03b4dc20ce67"
     },
     {
       "batch": "buildings",
@@ -110,7 +119,8 @@
       "license": "CC0-1.0",
       "creator": "ambientCG",
       "source_asset": "Metal063",
-      "role": "base_color"
+      "role": "base_color",
+      "source_sha256": "c6c93446af0620f65594fc9472d9f347983a7686b6e4509b084b0ecc10d7c2ac"
     },
     {
       "batch": "buildings",
@@ -121,7 +131,8 @@
       "license": "CC0-1.0",
       "creator": "ambientCG",
       "source_asset": "Metal063",
-      "role": "normal_gl"
+      "role": "normal_gl",
+      "source_sha256": "f1eabb5d3eec9d3247ed76bcb34336f62d17ccbfe316b0dfb563a30f139af7fe"
     },
     {
       "batch": "buildings",
@@ -132,7 +143,8 @@
       "license": "CC0-1.0",
       "creator": "ambientCG",
       "source_asset": "Metal063",
-      "role": "roughness"
+      "role": "roughness",
+      "source_sha256": "32ce62d9bf51cc2690211a57856650b169400409e73c9cb31ebd0d7a2f7bdd2b"
     },
     {
       "batch": "nature",
@@ -141,7 +153,8 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/nature/tree_palm.glb"
+      "source_asset": "3d/nature/tree_palm.glb",
+      "source_sha256": "27bbb23d26ed788d84de6df2f7fab0acc3fe0ff16c7d08cdcfa1fffcb11de324"
     },
     {
       "batch": "nature",
@@ -150,7 +163,8 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/nature/tree_detailed.glb"
+      "source_asset": "3d/nature/tree_detailed.glb",
+      "source_sha256": "c041daf2f0fb1d49e4325227cbcd58667adbe51e9b55e8c1f0a94b74cc521b3b"
     },
     {
       "batch": "nature",
@@ -159,7 +173,8 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/nature/plant_bushDetailed.glb"
+      "source_asset": "3d/nature/plant_bushDetailed.glb",
+      "source_sha256": "2e0487020d68ccf664435db9d829c78ae00e6d2785ee3ec10b9f89cc70a10406"
     },
     {
       "batch": "nature",
@@ -168,7 +183,8 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/nature/rock_largeA.glb"
+      "source_asset": "3d/nature/rock_largeA.glb",
+      "source_sha256": "6dd15390fd96501dcd1454765a17ba61dbbd8d47705dfe5149c8dd92b353ce25"
     },
     {
       "batch": "nature",
@@ -177,7 +193,8 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/nature/stump_round.glb"
+      "source_asset": "3d/nature/stump_round.glb",
+      "source_sha256": "e9b0f385f0ef98493ef716a055aa51e0b99efb8445279be7bb8bd83329a4c4af"
     },
     {
       "batch": "nature",
@@ -186,7 +203,8 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/nature/log.glb"
+      "source_asset": "3d/nature/log.glb",
+      "source_sha256": "8c8fe8f6adfc03a3c0cd6cb24961ff74be96c2da284d70322f05797d049972d6"
     },
     {
       "batch": "nature",
@@ -195,7 +213,8 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Quaternius",
-      "source_asset": "environment/vegetation/polypizza-stylized-nature-gltf/Fern.glb"
+      "source_asset": "environment/vegetation/polypizza-stylized-nature-gltf/Fern.glb",
+      "source_sha256": "800c02671b865fd3f524a58fa72b498185a8f43dfe627ef546092027ee73d468"
     },
     {
       "batch": "nature",
@@ -204,7 +223,8 @@
       "kind": "hdri",
       "license": "CC0-1.0",
       "creator": "Poly Haven",
-      "source_asset": "kloppenheim_06_puresky"
+      "source_asset": "kloppenheim_06_puresky",
+      "source_sha256": "99451201586489ef3288c97bfac2a2ac232a5491c51a1faf0ec8ea39f3ccd533"
     },
     {
       "batch": "military",
@@ -213,7 +233,8 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/nature/tent_detailedClosed.glb"
+      "source_asset": "3d/nature/tent_detailedClosed.glb",
+      "source_sha256": "fe8a2f9033cc87f1ec01b6c18bae7c57b84e787b4b210328ed708a4a3f9bb994"
     },
     {
       "batch": "military",
@@ -225,6 +246,10 @@
       "source_asset": "3d/modular-buildings/building-sample-tower-a.glb",
       "dependencies": {
         "Textures/colormap.png": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/modular-buildings/Textures/colormap.png"
+      },
+      "source_sha256": "e44adf48cbde19f84d579fbd492664e4b39e39f96cad234bbd6d5758f83f89a6",
+      "dependency_sha256": {
+        "Textures/colormap.png": "66fd49be148f32e88f6c8cace67120250d1943a7856601158ad0ff24651db0b0"
       }
     },
     {
@@ -234,7 +259,8 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/nature/bridge_wood.glb"
+      "source_asset": "3d/nature/bridge_wood.glb",
+      "source_sha256": "3da4c208b0f72b7f2ba42db521b62ec4b0278050c75256a6982c40d21aab5701"
     },
     {
       "batch": "military",
@@ -246,6 +272,10 @@
       "source_asset": "3d/blaster/crate-medium.glb",
       "dependencies": {
         "Textures/colormap.png": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/blaster/Textures/colormap.png"
+      },
+      "source_sha256": "187c32592fedaecbbb84152102bbf536f733cbc0c2cfee60828fb18a4803619c",
+      "dependency_sha256": {
+        "Textures/colormap.png": "4d0867c3c3c8c539106f91fbc0987d0e1b7d2811362d1daed593169c7d3b0fdc"
       }
     },
     {
@@ -258,6 +288,10 @@
       "source_asset": "3d/mini-dungeon/barrel.glb",
       "dependencies": {
         "Textures/colormap.png": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/mini-dungeon/Textures/colormap.png"
+      },
+      "source_sha256": "ca735e8eb8f9170b3d9413ee9e30a51cb275e9597b87e0b70dd5c02f404cea4d",
+      "dependency_sha256": {
+        "Textures/colormap.png": "2acae7ff27edbb52417c92beb6a741628b18c2052ca4a77741d70bc84b5bd5e9"
       }
     },
     {
@@ -267,7 +301,8 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/nature/fence_simpleHigh.glb"
+      "source_asset": "3d/nature/fence_simpleHigh.glb",
+      "source_sha256": "12fec55c302bdcfc7d67946e8c4bed8d96bcb2a8d42817c3021cc94b7272891e"
     },
     {
       "batch": "military",
@@ -279,6 +314,10 @@
       "source_asset": "3d/city-industrial/detail-tank.glb",
       "dependencies": {
         "Textures/colormap.png": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/city-industrial/Textures/colormap.png"
+      },
+      "source_sha256": "b1edc2953c590c16f1d8280dfeb9073af6c710ac3d587f3dba144f69363d799b",
+      "dependency_sha256": {
+        "Textures/colormap.png": "4a912ef8e95fbec4ac0cacc295b9221a4b66c482d4f90bec4e2277689c21a623"
       }
     },
     {
@@ -288,7 +327,560 @@
       "kind": "model",
       "license": "CC0-1.0",
       "creator": "Kenney",
-      "source_asset": "3d/car/truck-flat.glb"
+      "source_asset": "3d/car/truck-flat.glb",
+      "dependencies": {
+        "Textures/colormap.png": "https://raw.githubusercontent.com/shorepine/kenney/3694c6879e487c108f55677be7dd2ca75b07cc3b/3d/car/Textures/colormap.png"
+      },
+      "source_sha256": "4279862f2442e96c6603c514edf50bfb932707545695d8c4747611cd3796cf3b",
+      "dependency_sha256": {
+        "Textures/colormap.png": "f3622a03a20c6696065cae9cbe391351be873508af190c2ebd1d420c055787a5"
+      }
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/mud/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/aerial_mud_1/aerial_mud_1_albedo.ktx2",
+      "source_sha256": "e57385712e43816b87096419ab0a88f58223426ad9cbd3d743bb3728b1aabfc9",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "aerial_mud_1",
+      "upstream_url": "https://polyhaven.com/a/aerial_mud_1",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/mud/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/aerial_mud_1/aerial_mud_1_normal.ktx2",
+      "source_sha256": "9ec6ae49624283aef80c0e872aaa3dd7c3514763d69f39a7fff9dacdd8b9a013",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "aerial_mud_1",
+      "upstream_url": "https://polyhaven.com/a/aerial_mud_1",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/mud/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/aerial_mud_1/aerial_mud_1_roughness.ktx2",
+      "source_sha256": "3ef0545fe732f220c6ec03c069e656e2e7f312bd638c304900b53d75b2ce9722",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "aerial_mud_1",
+      "upstream_url": "https://polyhaven.com/a/aerial_mud_1",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/dry_earth/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/brown_mud_dry/brown_mud_dry_albedo.ktx2",
+      "source_sha256": "decc914f5190ce78c8cc40cb970f29b9b9097b4f46f9bc9e36ccface43de1321",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "brown_mud_dry",
+      "upstream_url": "https://polyhaven.com/a/brown_mud_dry",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/dry_earth/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/brown_mud_dry/brown_mud_dry_normal.ktx2",
+      "source_sha256": "d8958102e86b91471b177879c2b31104cfb77cb5ed082c564ed5b3f5de7e33d0",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "brown_mud_dry",
+      "upstream_url": "https://polyhaven.com/a/brown_mud_dry",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/dry_earth/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/brown_mud_dry/brown_mud_dry_roughness.ktx2",
+      "source_sha256": "1be1d860f198a24a5e3e223d9f349062f8415d3369d734511a464450a7107d91",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "brown_mud_dry",
+      "upstream_url": "https://polyhaven.com/a/brown_mud_dry",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/moss/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/mossy_rock/mossy_rock_albedo.ktx2",
+      "source_sha256": "bedb64b90fa7ddd9b3c1a18f114c2636eeecd86bc5f8e8d2eb9032f88abbb4d3",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "mossy_rock",
+      "upstream_url": "https://polyhaven.com/a/mossy_rock",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/moss/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/mossy_rock/mossy_rock_normal.ktx2",
+      "source_sha256": "3fafaef491008c6c3f069ee400926ed132a70883f84a365b55d46c66b3d9d425",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "mossy_rock",
+      "upstream_url": "https://polyhaven.com/a/mossy_rock",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/moss/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/mossy_rock/mossy_rock_roughness.ktx2",
+      "source_sha256": "404109f623787c7e4642fe2511cac610c2f6a2ab658664d2eb1909cc94245721",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "mossy_rock",
+      "upstream_url": "https://polyhaven.com/a/mossy_rock",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/river_sand/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/damp_sand/damp_sand_albedo.ktx2",
+      "source_sha256": "c479bfe3c9e32f3f770ac3a14272079c9bac03e682dd81d9dd1baead725c384a",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "damp_sand",
+      "upstream_url": "https://polyhaven.com/a/damp_sand",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/river_sand/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/damp_sand/damp_sand_normal.ktx2",
+      "source_sha256": "bc86cd3b6f0b692ef53d9e222af4ee390872b240b0a1e618136a87d5b689d00c",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "damp_sand",
+      "upstream_url": "https://polyhaven.com/a/damp_sand",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/river_sand/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/damp_sand/damp_sand_roughness.ktx2",
+      "source_sha256": "0cd573db91914743ceaaebd4ecc0e11956772c32d44345f27467a6851102c479",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "damp_sand",
+      "upstream_url": "https://polyhaven.com/a/damp_sand",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/gravel_rock/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/rocky_gravel/rocky_gravel_albedo.ktx2",
+      "source_sha256": "7d1d945919216966199a010b64f37f97241fa5b5b0fc6fa26cd7c7114fe8f190",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "rocky_gravel",
+      "upstream_url": "https://polyhaven.com/a/rocky_gravel",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/gravel_rock/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/rocky_gravel/rocky_gravel_normal.ktx2",
+      "source_sha256": "f53e5661be1b792d98b7b9ee2c41f64d4d38ad6c56fec8cffa3613469ffba011",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "rocky_gravel",
+      "upstream_url": "https://polyhaven.com/a/rocky_gravel",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "terrain",
+      "path": "assets/textures/terrain/gravel_rock/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/rocky_gravel/rocky_gravel_roughness.ktx2",
+      "source_sha256": "07bfee609720dc6a2e034f2e469ffe8db16416a3cb987d4473db1381cec03fb3",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "rocky_gravel",
+      "upstream_url": "https://polyhaven.com/a/rocky_gravel",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/weathered_wood/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/wood_peeling_paint_weathered/wood_peeling_paint_weathered_albedo.ktx2",
+      "source_sha256": "c7081f24cb06b33fe965d44f49aa63844a8ffe66e436d4b0b4c1b22b2c9c9a5f",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "wood_peeling_paint_weathered",
+      "upstream_url": "https://polyhaven.com/a/wood_peeling_paint_weathered",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/weathered_wood/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/wood_peeling_paint_weathered/wood_peeling_paint_weathered_normal.ktx2",
+      "source_sha256": "11210436de68c3ee7404e7f41d41df5d12d8cd700b5288f6a49933240b05de36",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "wood_peeling_paint_weathered",
+      "upstream_url": "https://polyhaven.com/a/wood_peeling_paint_weathered",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/weathered_wood/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/wood_peeling_paint_weathered/wood_peeling_paint_weathered_roughness.ktx2",
+      "source_sha256": "63ab3f821311d23f48865d4deed6ffb1d8fdae659c8de9109847197d23744da7",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "wood_peeling_paint_weathered",
+      "upstream_url": "https://polyhaven.com/a/wood_peeling_paint_weathered",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/corrugated_iron/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/corrugated_iron/corrugated_iron_albedo.ktx2",
+      "source_sha256": "d7f2a49d759b221126628391320246f55e14245a5b42902a7c9f983fff8e1952",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "corrugated_iron",
+      "upstream_url": "https://polyhaven.com/a/corrugated_iron",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/corrugated_iron/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/corrugated_iron/corrugated_iron_normal.ktx2",
+      "source_sha256": "6edac4b5805b39e37abb81c377b5599a51e03f0a5f5cde2c7737e2b985984670",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "corrugated_iron",
+      "upstream_url": "https://polyhaven.com/a/corrugated_iron",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/corrugated_iron/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/corrugated_iron/corrugated_iron_roughness.ktx2",
+      "source_sha256": "3581da88e9f27bf6e570ff1d7751e3e64dc7bc0286717060288b782725eabe0a",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "corrugated_iron",
+      "upstream_url": "https://polyhaven.com/a/corrugated_iron",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/rusted_metal/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/rusty_metal_02/rusty_metal_02_albedo.ktx2",
+      "source_sha256": "c52c35cdc023e29758d5c28aa2a7028c3e6e0a84c7f8328574c623f1e23df531",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "rusty_metal_02",
+      "upstream_url": "https://polyhaven.com/a/rusty_metal_02",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/rusted_metal/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/rusty_metal_02/rusty_metal_02_normal.ktx2",
+      "source_sha256": "6158dace7fc4bd7f2c980748bf7f7d2b962be90058f154749ac4862c76bb54c0",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "rusty_metal_02",
+      "upstream_url": "https://polyhaven.com/a/rusty_metal_02",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/rusted_metal/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/rusty_metal_02/rusty_metal_02_roughness.ktx2",
+      "source_sha256": "16bfba949201cf511008c3dc0247210bf256eebefc45fe1847d676966f5c1982",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "rusty_metal_02",
+      "upstream_url": "https://polyhaven.com/a/rusty_metal_02",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/plywood/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/plywood/plywood_albedo.ktx2",
+      "source_sha256": "38008fb9e26b4cfaef295aa2b09173cc517a76040af38c475829c24633e8ffc0",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "plywood",
+      "upstream_url": "https://polyhaven.com/a/plywood",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/plywood/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/plywood/plywood_normal.ktx2",
+      "source_sha256": "7cc4d19a36ca3e98c43a118f99ea97d0654b85bc9a20a4d873669efa67074ea7",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "plywood",
+      "upstream_url": "https://polyhaven.com/a/plywood",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/plywood/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/plywood/plywood_roughness.ktx2",
+      "source_sha256": "bc1356f9512d0dfc35beceb27bdbf54cebb1ba2e9fa98f5f2261260a91c9e572",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "plywood",
+      "upstream_url": "https://polyhaven.com/a/plywood",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/painted_metal/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/painted_metal_shutter/painted_metal_shutter_albedo.ktx2",
+      "source_sha256": "df1b94a5a1115f584c70fd3adbcba0026e9084daed14b12cecd99b1b5e20ca29",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "painted_metal_shutter",
+      "upstream_url": "https://polyhaven.com/a/painted_metal_shutter",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/painted_metal/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/painted_metal_shutter/painted_metal_shutter_normal.ktx2",
+      "source_sha256": "9ef6ec9c61b7577490af7b2c3bc053457355d866ba5ef348e0bb1359c4390cf6",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "painted_metal_shutter",
+      "upstream_url": "https://polyhaven.com/a/painted_metal_shutter",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/painted_metal/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/painted_metal_shutter/painted_metal_shutter_roughness.ktx2",
+      "source_sha256": "ae7ad658f83df55711fd65d1a75d7218b060d52236de8072305c9bb666393f6f",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "painted_metal_shutter",
+      "upstream_url": "https://polyhaven.com/a/painted_metal_shutter",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/jute/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/hessian_230/hessian_230_albedo.ktx2",
+      "source_sha256": "ae3b4c7a1eea318e0396a4b0f453df51e1afb5f2338e13198185986b46279ed6",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "hessian_230",
+      "upstream_url": "https://polyhaven.com/a/hessian_230",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/jute/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/hessian_230/hessian_230_normal.ktx2",
+      "source_sha256": "a935925822e7bca58748e98996df609df6d0ea34b770bce56a1ab75366746cb6",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "hessian_230",
+      "upstream_url": "https://polyhaven.com/a/hessian_230",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/jute/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/hessian_230/hessian_230_roughness.ktx2",
+      "source_sha256": "83e398e92eb5bbeb885ab27c3721f48e1685dc21a174cc8c774f26d7bd0f2b81",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "hessian_230",
+      "upstream_url": "https://polyhaven.com/a/hessian_230",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/army_green_paint/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/green_metal_rust/green_metal_rust_albedo.ktx2",
+      "source_sha256": "3cc33ba61a991692b56a622a3b168485eed7990e9040f5d88038dbf0ada728a4",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "green_metal_rust",
+      "upstream_url": "https://polyhaven.com/a/green_metal_rust",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/army_green_paint/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/green_metal_rust/green_metal_rust_normal.ktx2",
+      "source_sha256": "d56540623da39ea77974b0ab24a03369ba006be44a7feb9aa564a1c0415901d0",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "green_metal_rust",
+      "upstream_url": "https://polyhaven.com/a/green_metal_rust",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "buildings",
+      "path": "assets/textures/buildings/army_green_paint/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/green_metal_rust/green_metal_rust_roughness.ktx2",
+      "source_sha256": "6ba7f352827565e20d728702b67e85901c353f689dcc85253c52855246b2dfd8",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "green_metal_rust",
+      "upstream_url": "https://polyhaven.com/a/green_metal_rust",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/textures/nature/tree_bark/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/tree_bark_03/tree_bark_03_albedo.ktx2",
+      "source_sha256": "2ca61df6e6cf74e0b5965d404669cc580fa92b640a12d7082ce3c75c699298f5",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "tree_bark_03",
+      "upstream_url": "https://polyhaven.com/a/tree_bark_03",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/textures/nature/tree_bark/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/tree_bark_03/tree_bark_03_normal.ktx2",
+      "source_sha256": "757ff62b85b9acad43c2d199adaf5cbb0101f3dbca60493330c8d88933d444d0",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "tree_bark_03",
+      "upstream_url": "https://polyhaven.com/a/tree_bark_03",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/textures/nature/tree_bark/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/tree_bark_03/tree_bark_03_roughness.ktx2",
+      "source_sha256": "8e9033fe5959d98e32b7597591ac34b57e59a69d058a583b05926b588233499e",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "tree_bark_03",
+      "upstream_url": "https://polyhaven.com/a/tree_bark_03",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/textures/nature/rock_material/base_color.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/worn_rock_natural_01/worn_rock_natural_01_albedo.ktx2",
+      "source_sha256": "56339d3dedfd29d4081d45ccbb1c23da0663ba098ba99ace1f7d7a68626cd3c0",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "worn_rock_natural_01",
+      "upstream_url": "https://polyhaven.com/a/worn_rock_natural_01",
+      "role": "base_color",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/textures/nature/rock_material/normal_gl.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/worn_rock_natural_01/worn_rock_natural_01_normal.ktx2",
+      "source_sha256": "c3b20aaff9db2eb2248c660286de6a9366098a303dcd01151e89d2a128192adf",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "worn_rock_natural_01",
+      "upstream_url": "https://polyhaven.com/a/worn_rock_natural_01",
+      "role": "normal_gl",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
+    },
+    {
+      "batch": "nature",
+      "path": "assets/textures/nature/rock_material/roughness.jpg",
+      "url": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/worn_rock_natural_01/worn_rock_natural_01_roughness.ktx2",
+      "source_sha256": "754e91b53507181219e44e2059ad03afb508a06ed14a10372f8b0b0d6fe1c2a9",
+      "kind": "ktx2_texture",
+      "license": "CC0-1.0",
+      "creator": "Poly Haven",
+      "source_asset": "worn_rock_natural_01",
+      "upstream_url": "https://polyhaven.com/a/worn_rock_natural_01",
+      "role": "roughness",
+      "source_resolution": "512x512 KTX2; resampled to 1024x1024"
     }
   ]
 }

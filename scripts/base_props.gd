@@ -125,6 +125,7 @@ static func _tower(root: Node3D, pos: Vector3) -> void:
 	var holder := Node3D.new()
 	holder.position = pos
 	root.add_child(holder)
+	holder.add_to_group("tower")
 	Kit.collider(holder, Vector3(0, h / 2.0, 0), Vector3(1.9, h, 1.9), Kit.LAYER_WALL)
 	for sx in [-0.85, 0.85]:
 		for sz in [-0.85, 0.85]:

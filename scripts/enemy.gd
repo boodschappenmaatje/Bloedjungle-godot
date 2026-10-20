@@ -15,6 +15,8 @@ var face := 0.0
 var fire_t := 1.0
 var burst_n := 0
 var speed_mul := 1.0
+var slow_t := 0.0  # prikkeldraad: zolang dit loopt is hij 60% trager
+var wire_dmg := 0.0
 var strafe := 1.0
 var dead := false
 
@@ -37,6 +39,7 @@ func _ready() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	slow_t -= delta
 	if dead or Game.state == "over":
 		if not dead:
 			model.play("stil")
@@ -80,7 +83,7 @@ func _physics_process(delta: float) -> void:
 		var wp := Route.waypoint(global_position, goal)
 		var d := _flat(wp - global_position)
 		if d.length() > 0.05:
-			vel = Vector3(d.x, 0.0, d.y).normalized() * t.speed * speed_mul
+			vel = Vector3(d.x, 0.0, d.y).normalized() * t.speed * speed_mul * (0.4 if slow_t > 0.0 else 1.0)
 			look = atan2(d.x, d.y)
 	elif not melee and dist < range_ * 0.6:
 		# te dichtbij: zijwaarts uitwijken terwijl hij schiet

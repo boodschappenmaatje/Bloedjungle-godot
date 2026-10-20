@@ -18,12 +18,16 @@ var bonus := 0  # bonus van de laatste overleefde golf, getoond in de wapenkamer
 # Wat je bezit: per wapen de upgradeniveaus en de kogels in het magazijn, en de uitrusting-upgrades.
 var owned := _fresh_owned()
 var cur := "m1911"
-var upg := {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0}
+var upg := {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0}
+# spullen in je tas om neer te zetten (Defenses)
+var inv := {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
+var place_sel := "bags"
 
 # Aanvalsrichting (N/O/Z/W) -> seconden dat de rand nog oplicht; gevuld door vijanden die schieten of steken.
 var attack := {"N": 0.0, "O": 0.0, "Z": 0.0, "W": 0.0}
 
 var player  # de speler (player.gd)
+var defs  # verdediging die je neerzet (defenses.gd)
 var enemies: Array = []
 
 # Besturing, ingevuld door touch_sticks.gd (of toetsenbord en muis):
@@ -45,7 +49,9 @@ func reset() -> void:
 	enemies.clear()
 	owned = _fresh_owned()
 	cur = "m1911"
-	upg = {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0}
+	upg = {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0}
+	inv = {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
+	place_sel = "bags"
 
 
 func add_points(n: int) -> void:

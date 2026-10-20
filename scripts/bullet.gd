@@ -20,10 +20,11 @@ var mask := 0
 var from_player := true
 var pierce := 0
 var explosive := 0.0
+var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
 
 
 ## Maakt een kogel. over_wall: de schutter staat tegen de muur en schiet eroverheen.
-static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false, pierce_ := 0, explosive_ := 0.0) -> void:
+static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false, pierce_ := 0, explosive_ := 0.0, sink_ := 0.0) -> void:
 	if _mesh == null:
 		_mesh = BoxMesh.new()
 		_mesh.size = Vector3(0.05, 0.05, 0.9)
@@ -39,6 +40,7 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.from_player = by_player
 	b.pierce = pierce_
 	b.explosive = explosive_
+	b.sink = sink_
 	b.mask = (MASK_ENEMY if by_player else MASK_PLAYER) | MASK_BUNKER | (0 if over_wall else MASK_WALL)
 	parent.add_child(b)
 	b.global_position = from
@@ -57,6 +59,8 @@ func _physics_process(delta: float) -> void:
 	if life <= 0.0:
 		queue_free()
 		return
+	if sink > 0.0:
+		dir.y = -sink if global_position.y > 1.3 else 0.0
 	var step := dir * speed * delta
 	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + step, mask)
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)

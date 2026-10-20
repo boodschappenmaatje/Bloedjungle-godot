@@ -735,7 +735,31 @@ func _tiered(title: String, desc: String, key: String, max_lvl: int, base_cost: 
 				extra.call())
 
 
+func _bag_card(title: String, desc: String, kind: String) -> void:
+	var cost: int = Defenses.COSTS[kind]
+	var left := true
+	if kind == "sentry":
+		left = Game.defs.sentry_total() < Defenses.SENTRY_MAX
+	var tag := "%d / %d" % [Game.defs.sentry_total(), Defenses.SENTRY_MAX] if kind == "sentry" else "%d in tas" % Game.inv[kind]
+	_plain_card(title, desc, tag, 0, 0, "Koop · %s" % UI.nl(cost), Game.points >= cost and left, func():
+		if Game.buy(cost):
+			Game.inv[kind] += 1
+			if Game.place_sel == kind or Game.inv[Game.place_sel] <= 0:
+				Game.place_sel = kind)
+
+
 func _base_cards() -> void:
+	var d: Defenses = Game.defs
+	_bag_card("Loopgraaf graven", "Je zakt tot je borst weg: vijanden missen ruim de helft van hun schoten.", "trench")
+	_bag_card("Zandzakmuur", "Lage dekking. Vijandelijke kogels stoppen erop, jij schiet eroverheen.", "bags")
+	var mg := d.towers_with_mg()
+	_plain_card("Toren-MG", "Automatisch machinegeweer op een wachttoren. Schiet over de muur heen, %d kogels per golf." % d.tower_ammo(), "%d / %d" % [mg, d.towers.size()], 0, 0, "Koop · %s" % UI.nl(Defenses.TOWER_MG_COST), Game.points >= Defenses.TOWER_MG_COST and mg < d.towers.size(), func():
+		if Game.buy(Defenses.TOWER_MG_COST):
+			d.buy_tower_mg())
+	var tg := d.towers_with_guard()
+	_plain_card("Torenwacht", "Een commando die vast op een wachttoren staat en alles in de buurt neerschiet, ook over de muur. Hij geneest elke golf.", "%d / %d" % [tg, d.towers.size()], 0, 0, "Koop · %s" % UI.nl(Defenses.GUARD_COST), Game.points >= Defenses.GUARD_COST and tg < d.towers.size(), func():
+		if Game.buy(Defenses.GUARD_COST):
+			d.buy_guard())
 	var missing := Game.base_max - Game.base_hp
 	_plain_card("Bunker repareren", "Herstelt 350 punten structuur.", "%d / %d" % [ceili(Game.base_hp), roundi(Game.base_max)], 0, 0, "Repareer · 250", Game.points >= 250 and missing > 0.0, func():
 		if Game.buy(250):
@@ -743,6 +767,11 @@ func _base_cards() -> void:
 	_tiered("Beton versterken", "+300 maximale structuur en direct hersteld.", "fort", 5, 400, "Versterk", func():
 		Game.base_max += 300.0
 		Game.base_hp = Game.base_max)
+	_bag_card("MG-nest", "Automatisch machinegeweer achter zandzakken. %d kogels per golf." % d.sentry_ammo(), "sentry")
+	_tiered("MG-nest upgrade", "+25% schade, meer bereik en +70 kogels voor alle nesten.", "sentry", 5, 600, "Upgrade", func():
+		d.refill())
+	_bag_card("Landmijn", "Ontploft als een vijand erop stapt. Eenmalig.", "mine")
+	_bag_card("Prikkeldraad", "Vijanden lopen vast, bloeden en worden 60% trager.", "wire")
 
 
 func _soldier_cards() -> void:

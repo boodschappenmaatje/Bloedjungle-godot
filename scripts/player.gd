@@ -48,6 +48,8 @@ func _physics_process(delta: float) -> void:
 		flat = flat.limit_length(Data.WORLD_R)
 		position = Vector3(flat.x, position.y, flat.y)
 	position.y = 0.0
+	var sunk: bool = Game.defs != null and Game.defs.in_trench(global_position)
+	model.position.y = lerpf(model.position.y, -0.55 if sunk else 0.0, minf(1.0, delta * 10.0))
 
 	var moving := mv.length()
 	var aim := face
@@ -162,7 +164,8 @@ func _animate(mv: Vector2, moving: float) -> void:
 func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	if from_player or dead or Game.state == "over":
 		return
-	hp -= dmg * (1.0 - 0.08 * Game.upg.armor) * Progress.bonus().taken
+	var cover := 0.45 if Game.defs and Game.defs.in_trench(global_position) else 1.0  # in een loopgraaf mis je ruim de helft
+	hp -= dmg * (1.0 - 0.08 * Game.upg.armor) * Progress.bonus().taken * cover
 	model.flash()
 	Sfx.play("hurt", 0.7)
 	Fx.blood(get_parent(), global_position + Vector3.UP * 1.3, dir, 8)

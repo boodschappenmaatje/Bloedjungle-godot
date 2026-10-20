@@ -12,6 +12,8 @@ var clear_t := -1.0
 func _ready() -> void:
 	Progress.load_all()
 	Game.reset()
+	Game.defs = Defenses.new()
+	add_child(Game.defs)
 	if Progress.autostart:
 		Progress.autostart = false
 		_start_prep()
@@ -41,6 +43,7 @@ func start_wave() -> void:
 	if Game.state != "prep":
 		return
 	Game.state = "play"
+	Game.defs.refill()
 	queue = Data.build_wave(Game.wave)
 	spawn_t = 0.5
 	clear_t = -1.0

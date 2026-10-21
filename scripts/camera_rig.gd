@@ -90,8 +90,8 @@ func _process(delta: float) -> void:
 	attributes.dof_blur_far_enabled = GameSettings.get_value("quality") == "ultra"  # scherptediepte kost veel op mobiel
 	_blook = Vector3.ZERO
 	far = 220.0
-	var h := 27.0 if portrait else 21.0
-	var back := 19.5 if portrait else 17.0
+	var h := 19.0 if portrait else 14.5  # dichter op het mannetje (was 27 en 21)
+	var back := 13.5 if portrait else 11.5  # (was 19,5 en 17)
 	var aiming := not is_nan(Game.aim)
 	var want := Vector3(sin(p.face), 0, cos(p.face)) * ((2.5 if portrait else 4.0) if aiming else 1.2)
 	_lead = _lead.lerp(want, 1.0 - exp(-3.0 * delta))

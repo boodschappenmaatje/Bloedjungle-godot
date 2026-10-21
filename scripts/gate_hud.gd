@@ -3,8 +3,8 @@ extends Control
 ## Knop om de poort te openen en sluiten zodra je erbij staat (toets E), en bij een beschadigde poort een
 ## knop die je ingedrukt houdt om hem te repareren (updateGateRepair in 05b-gates.js).
 
-var _btn: Button
-var _fix: Button
+var _btn: ActionBtn
+var _fix: ActionBtn
 var _holding := false
 var _snd := 0.0
 
@@ -12,21 +12,15 @@ var _snd := 0.0
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_btn = _mk("OPEN POORT", "gold")
+	_btn = _mk("poort", "POORT")
 	_btn.pressed.connect(_toggle)
-	_fix = _mk("REPAREER", "buy")
+	_fix = _mk("repair", "REPAREER")
 	_fix.button_down.connect(func(): _holding = true)
 	_fix.button_up.connect(func(): _holding = false)
 
 
-func _mk(text: String, kind: String) -> Button:
-	var b := Button.new()
-	b.add_to_group("hud_button")
-	b.text = text
-	UI.style_button(b, kind)
-	b.add_theme_font_override("font", UI.display(1))
-	b.add_theme_font_size_override("font_size", 15)
-	b.visible = false
+func _mk(kind: String, cap: String) -> ActionBtn:
+	var b := ActionBtn.make(kind, cap)
 	add_child(b)
 	return b
 
@@ -52,16 +46,15 @@ func _process(delta: float) -> void:
 			if not x.broken and x.hp < x.max_hp and Game.player.global_position.distance_to(Game.gates.pos_of(x)) < 3.6:
 				fixable = x
 	_fix.visible = fixable != null
-	var bottom := size.y - 64.0
 	if g != null:
 		var open: bool = g.user_open or g.open > 0.5
-		var hp_line := "" if g.hp >= g.max_hp else "\nsterkte %d%%" % roundi(g.hp / g.max_hp * 100.0)
-		_btn.text = ("SLUIT POORT" if open else "OPEN POORT") + hp_line
-		_btn.size = Vector2(150, 46)
-		_btn.position = Vector2(size.x * 0.5 - 75.0, bottom - 56.0)
+		_btn.open_state = open
+		_btn.set_caption("SLUIT" if open else "OPEN")
+		_btn.bar = -1.0 if g.hp >= g.max_hp else g.hp / g.max_hp
+		_btn.place(1, size)
+		_btn.queue_redraw()
 	if fixable != null:
-		_fix.size = Vector2(120, 46)
-		_fix.position = Vector2(size.x * 0.5 - 75.0 - 128.0, bottom - 56.0)
+		_fix.place(0, size)
 		if _holding:
 			fixable.hp = minf(fixable.max_hp, fixable.hp + 140.0 * delta)
 			_snd -= delta

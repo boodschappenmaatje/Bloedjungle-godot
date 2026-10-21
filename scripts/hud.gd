@@ -2,7 +2,7 @@ extends CanvasLayer
 ## Meldingen en knoppen midden op het scherm (golf-titel, "Start nu", gesneuveld). De balken, punten
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
-const VERSION := "v31"
+const VERSION := "v32"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -58,10 +58,12 @@ func _style() -> void:
 	# "Start nu" staat links naast "Wapenkamer"
 	start_btn.text = "START NU"
 	UI.style_button(start_btn, "gold")
+	start_btn.add_theme_font_size_override("font_size", 12)
+	start_btn.custom_minimum_size = Vector2(0, 32)
 	start_btn.offset_top = 132.0
-	start_btn.offset_bottom = 172.0
+	start_btn.offset_bottom = 164.0
 	start_btn.offset_right = -2.0
-	start_btn.offset_left = -2.0 - maxf(112.0, start_btn.get_minimum_size().x)
+	start_btn.offset_left = -2.0 - 88.0
 	# versiemarkering (zodat je kunt zien welke versie draait)
 	info.text = VERSION
 	info.add_theme_font_override("font", UI.body(600, 1))

@@ -109,7 +109,7 @@ func _ready() -> void:
 	_btn.text = "BOUWEN"
 	UI.style_button(_btn, "pause")
 	_btn.add_theme_font_override("font", UI.display(1))
-	_btn.add_theme_font_size_override("font_size", 16)
+	_btn.add_theme_font_size_override("font_size", 12)
 	_btn.pressed.connect(_enter)
 	add_child(_btn)
 	_ui = Control.new()
@@ -221,7 +221,7 @@ func _exit() -> void:
 
 func _process(delta: float) -> void:
 	_btn.visible = Game.state == "prep" and not Game.build_mode and Game.player != null
-	_btn.size = Vector2(110, 40)
+	_btn.size = Vector2(88, 32)
 	_btn.position = Vector2(12, 128)
 	if Game.build_mode and Game.state != "prep":
 		_exit()

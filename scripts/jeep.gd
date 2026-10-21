@@ -39,7 +39,7 @@ var _tail_mat: StandardMaterial3D
 var _body_base: Transform3D
 var _mg_base: Transform3D
 var _lijf_base: Transform3D
-var _btn: Button
+var _btn: ActionBtn
 
 @onready var _anim: AnimationPlayer = $Model/AnimationPlayer
 @onready var _body: Node3D = $Model/Jeep/Body
@@ -103,15 +103,12 @@ func _build_button() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 5
 	add_child(layer)
-	_btn = Button.new()
-	_btn.text = "INSTAPPEN"
-	_btn.custom_minimum_size = Vector2(150, 44)
-	_btn.add_to_group("hud_button")
-	UI.style_button(_btn, "gold")
+	_btn = ActionBtn.make("enter", "IN")
 	_btn.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	_btn.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	_btn.grow_vertical = Control.GROW_DIRECTION_BEGIN
-	_btn.offset_bottom = -110
+	_btn.offset_left = ActionBtn.slot_x(2)
+	_btn.offset_right = ActionBtn.slot_x(2) + ActionBtn.SIZE.x
+	_btn.offset_top = -126.0
+	_btn.offset_bottom = -126.0 + ActionBtn.SIZE.y
 	_btn.pressed.connect(_toggle)
 	_btn.hide()
 	layer.add_child(_btn)
@@ -129,14 +126,18 @@ func _toggle() -> void:
 		p.global_position = global_position - side * 1.9
 		p.global_position.y = 0.0
 		p.collision_mask = p.get("_mask0")
-		_btn.text = "INSTAPPEN"
+		_btn.kind = "enter"
+		_btn.set_caption("IN")
+		_btn.queue_redraw()
 	else:
 		driven = true
 		p.driving = true
 		p.visible = false
 		p.collision_mask = 0
 		p.velocity = Vector3.ZERO
-		_btn.text = "UITSTAPPEN"
+		_btn.kind = "exit"
+		_btn.set_caption("UIT")
+		_btn.queue_redraw()
 
 
 func _physics_process(delta: float) -> void:

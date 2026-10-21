@@ -37,6 +37,8 @@ func _ready() -> void:
 	_open_btn.text = "WAPENKAMER"
 	_open_btn.add_to_group("hud_button")
 	UI.style_button(_open_btn, "gold")
+	_open_btn.add_theme_font_size_override("font_size", 12)
+	_open_btn.custom_minimum_size = Vector2(0, 32)
 	_open_btn.pressed.connect(open)
 	add_child(_open_btn)
 	_swap_btn = Button.new()
@@ -67,7 +69,7 @@ func _ready() -> void:
 ## Plek van de knoppen: "Wapenkamer" naast "Start nu" onder de golf-titel, "Wissel" in de boog rechts.
 func _layout() -> void:
 	var s := size
-	_open_btn.size = Vector2(maxf(112.0, _open_btn.get_minimum_size().x), 40)
+	_open_btn.size = Vector2(110, 32)
 	_open_btn.position = Vector2(s.x * 0.5 + 2.0, 132)
 	_swap_btn.position = Vector2(s.x - 64.0 - 68.0 - 23.0, s.y - 150.0 - 38.0 - 23.0)
 

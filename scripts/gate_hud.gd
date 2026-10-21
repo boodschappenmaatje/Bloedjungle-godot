@@ -56,11 +56,13 @@ func _process(delta: float) -> void:
 	_btn.visible = g != null
 	var near_bridge: bool = live and _bridge_ok() and Game.bridge.near_player()
 	_brug.visible = near_bridge
+	# in een voertuig staan in- en uitstappen en de truckknoppen op plek 0..2: dan schuiven deze knoppen rechts ernaast
+	var driving: bool = Game.player != null and Game.player.driving
 	if near_bridge:
 		var up: bool = Game.bridge.state != Bridge.DOWN
 		_brug.open_state = up
 		_brug.set_caption("OMLAAG" if up else "OMHOOG")
-		_brug.place(2, size)
+		_brug.place(4 if driving else 2, size)
 		_brug.queue_redraw()
 	var fixable: Variant = null
 	if live and Game.player:
@@ -73,7 +75,7 @@ func _process(delta: float) -> void:
 		_btn.open_state = open
 		_btn.set_caption("SLUIT" if open else "OPEN")
 		_btn.bar = -1.0 if g.hp >= g.max_hp else g.hp / g.max_hp
-		_btn.place(1, size)
+		_btn.place(3 if driving else 1, size)
 		_btn.queue_redraw()
 	if fixable != null:
 		_fix.place(0, size)

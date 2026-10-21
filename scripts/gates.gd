@@ -151,8 +151,10 @@ func near_player() -> Variant:
 	var pl = Game.player
 	if pl == null or pl.elev > 1.0:
 		return null
+	# in een voertuig zit je verder van de poort (een truck is 8 m lang): dan mag het wat verder weg
+	var reach := REACH * (2.2 if pl.driving else 1.0)
 	for g in list:
-		if not g.broken and pl.global_position.distance_to(pos_of(g)) < REACH:
+		if not g.broken and pl.global_position.distance_to(pos_of(g)) < reach:
 			return g
 	return null
 
@@ -254,7 +256,8 @@ func _physics_process(delta: float) -> void:
 		g.bar.set_value(g.hp / g.max_hp, not g.broken and (g.hp < g.max_hp or Game.build_mode))
 		if g.broken:
 			continue
-		if g.user_open and (not live or Game.player == null or Game.player.global_position.distance_to(pos_of(g)) > REACH + 2.0):
+		var keep := REACH * (2.2 if Game.player != null and Game.player.driving else 1.0) + 2.0
+		if g.user_open and (not live or Game.player == null or Game.player.global_position.distance_to(pos_of(g)) > keep):
 			g.user_open = false  # sluit vanzelf zodra jij en je soldaten er niet meer doorheen gaan
 		var friend: bool = live and g.user_open
 		if live and not friend:

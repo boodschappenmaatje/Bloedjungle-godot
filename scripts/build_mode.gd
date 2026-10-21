@@ -7,7 +7,7 @@ extends Control
 
 const CARD_H := 78.0
 const GAP := 8.0
-const ORDER := ["kazerne", "garage", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "muur"]
+const ORDER := ["kazerne", "garage", "helipad", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "muur"]
 const ORDERS := {"follow": "Volgen", "hold": "Posten"}
 
 var _ui: Control
@@ -83,6 +83,14 @@ class Card:
 				_rc(r, 6, 12, 52, 28, Color("7a786c"))
 				_rc(r, 4, 9, 56, 4, Color("4a4a42"))
 				_rc(r, 15, 18, 34, 22, Color("5a5f48"))
+			"helipad":
+				_rc(r, 6, 3, 52, 38, Color("6a6a60"))
+				_rc(r, 11, 7, 42, 30, Color("2e2e28"))
+				_ell(r, 32, 22, 11, 11, Color("c9c2a8"))
+				_ell(r, 32, 22, 9, 9, Color("2e2e28"))
+				_rc(r, 26, 15, 3, 14, Color("c9c2a8"))
+				_rc(r, 35, 15, 3, 14, Color("c9c2a8"))
+				_rc(r, 26, 21, 12, 2.5, Color("c9c2a8"))
 			"Ziekenboeg":
 				draw_colored_polygon(PackedVector2Array([_p(r, 6, 40), _p(r, 32, 8), _p(r, 58, 40)]), Color("c9c2a8"))
 				_rc(r, 28, 14, 8, 2.6, Color("c0140f"))
@@ -362,6 +370,10 @@ func _fill_panel() -> void:
 			var v: Dictionary = Buildings.VEHICLES[k]
 			_act(row, v.name, "gekocht" if b.has[k] else "%d pt" % v.cost, Game.builds.can_buy_vehicle(b, k), func(): Game.builds.buy_vehicle(b, k))
 		tip = "Een gekochte wagen rijdt meteen de garage uit. Jeep en tank bestuur je zelf: loop erheen en tik INSTAPPEN. Stuur je ze niet, dan bewaakt de tank de basis."
+	elif b.kind == "helipad":
+		info.text = "In dienst: %s · sterkte %d" % ["Apache" if b.has_heli else "nog niets", ceili(b.hp)]
+		_act(row, "Apache", "gekocht" if b.has_heli else "%d pt" % Buildings.HELI_COST, Game.builds.can_buy_heli(b), func(): Game.builds.buy_heli(b))
+		tip = "De luiken klappen open en de lift tilt de Apache uit de grond. Tik IN om te vliegen: linker stick vliegt, rechter stick richt en schiet. LANDEN brengt hem terug op het platform."
 	else:
 		info.text = "Sterkte %d / %d" % [ceili(b.hp), b.max_hp]
 		tip = Buildings.INFO.get(b.kind, "")

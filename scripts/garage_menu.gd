@@ -74,7 +74,7 @@ func _tap(pos: Vector2) -> void:
 	var found: Variant = null
 	if hit != null:
 		for b in Game.buildings:
-			if b.kind != "garage":
+			if b.kind != "garage" and b.kind != "helipad":
 				continue
 			var sz: Vector3 = Buildings.DEFS[b.kind].size
 			var rel: Vector3 = hit - b.at
@@ -107,7 +107,7 @@ func _refresh() -> void:
 	var b: Dictionary = _sel
 	var head := HBoxContainer.new()
 	_box.add_child(head)
-	head.add_child(UI.label("GARAGE", UI.display(1), 18, UI.INK))
+	head.add_child(UI.label("GARAGE" if b.kind == "garage" else "HELIPLATFORM", UI.display(1), 18, UI.INK))
 	var sp := Control.new()
 	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(sp)
@@ -122,19 +122,40 @@ func _refresh() -> void:
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", 6)
 	_box.add_child(row)
-	for k in ["jeep", "tank"]:
-		var v: Dictionary = Buildings.VEHICLES[k]
-		var btn := Button.new()
-		btn.add_to_group("hud_button")
-		btn.text = v.name + "\n" + ("gekocht" if b.has[k] else "%d pt" % v.cost)
-		UI.style_button(btn, "buy")
-		btn.add_theme_font_size_override("font_size", 13)
-		btn.custom_minimum_size = Vector2(110, 44)
-		btn.disabled = not Game.builds.can_buy_vehicle(b, k)
-		btn.pressed.connect(func(): Game.builds.buy_vehicle(b, k))
-		row.add_child(btn)
+	if b.kind == "helipad":
+		var apache := Button.new()
+		apache.add_to_group("hud_button")
+		apache.text = "Apache\n" + ("gekocht" if b.has_heli else "%d pt" % Buildings.HELI_COST)
+		UI.style_button(apache, "buy")
+		apache.add_theme_font_size_override("font_size", 13)
+		apache.custom_minimum_size = Vector2(110, 44)
+		apache.disabled = not Game.builds.can_buy_heli(b)
+		apache.pressed.connect(func(): Game.builds.buy_heli(b))
+		row.add_child(apache)
+		if b.has_heli:
+			var call := Button.new()
+			call.add_to_group("hud_button")
+			call.text = "Oproepen\n" + ("klaar" if b.hs == "open" else "omhoog")
+			UI.style_button(call, "buy")
+			call.add_theme_font_size_override("font_size", 13)
+			call.custom_minimum_size = Vector2(110, 44)
+			call.disabled = b.hs == "open" or b.hs == "opening" or (b.heli != null and b.heli.mode != Apache.Mode.LIFT)
+			call.pressed.connect(func(): Game.builds.call_heli(b))
+			row.add_child(call)
+	else:
+		for k in ["jeep", "tank"]:
+			var v: Dictionary = Buildings.VEHICLES[k]
+			var btn := Button.new()
+			btn.add_to_group("hud_button")
+			btn.text = v.name + "\n" + ("gekocht" if b.has[k] else "%d pt" % v.cost)
+			UI.style_button(btn, "buy")
+			btn.add_theme_font_size_override("font_size", 13)
+			btn.custom_minimum_size = Vector2(110, 44)
+			btn.disabled = not Game.builds.can_buy_vehicle(b, k)
+			btn.pressed.connect(func(): Game.builds.buy_vehicle(b, k))
+			row.add_child(btn)
 	var tip := Label.new()
-	tip.text = "De wagen rijdt meteen de garage uit."
+	tip.text = "De wagen rijdt meteen de garage uit." if b.kind == "garage" else "De lift tilt de Apache uit de grond. Loop erheen en tik IN."
 	tip.add_theme_font_override("font", UI.body(600, 0))
 	tip.add_theme_font_size_override("font_size", 12)
 	tip.add_theme_color_override("font_color", UI.INK_DIM)

@@ -38,7 +38,7 @@ const PLAYER_SPEED := 6.2
 const PLAYER_HP := 100.0
 const PLAYER_COLOR := Color("4b5a2c")
 const BASE_HP := 1000.0
-const START_POINTS := 300
+const START_POINTS := 2000
 
 const COMPOUND := 28.0   # halve breedte van de betonmuur rond de basis
 const GATE_GAP := 2.4    # halve breedte van de twee poortopeningen (noord en zuid)

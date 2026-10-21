@@ -12,6 +12,7 @@ var fire_t := 0.0
 var reload_t := 0.0
 var idle_t := 0.0
 var dead := false
+var airborne := false        # vliegt in de helikopter: onkwetsbaar voor kogels van beneden
 var driving := false         # zit in de jeep: dan rijdt jeep.gd en loopt hij niet zelf
 var elev := 0.0              # hoogte: 0 op de grond, TOWER_TOP op een wachttoren
 var tower: Node3D = null     # de toren waar hij op staat of die hij beklimt
@@ -256,7 +257,7 @@ func _animate(mv: Vector2, moving: float) -> void:
 
 
 func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
-	if from_player or dead or Game.state == "over":
+	if from_player or dead or airborne or Game.state == "over":
 		return
 	var cover := 0.45 if Game.defs and Game.defs.in_trench(global_position) else 1.0  # in een loopgraaf mis je ruim de helft
 	hp -= dmg * (1.0 - 0.08 * Game.upg.armor) * Progress.bonus().taken * cover

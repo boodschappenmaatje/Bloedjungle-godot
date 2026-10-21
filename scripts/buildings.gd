@@ -7,6 +7,7 @@ extends Node3D
 const DEFS := {
 	"kazerne": {"name": "Kazerne", "cost": 1000, "size": Vector3(4.4, 2.2, 3.2), "max": 1, "hp": 600.0},
 	"garage": {"name": "Garage", "cost": 800, "size": Vector3(5.15, 3.1, 5.7), "max": 1, "hp": 900.0},
+	"helipad": {"name": "Heliplatform", "cost": 1000, "size": Vector3(12.8, 2.0, 12.8), "max": 1, "hp": 1200.0},
 	"zandzak": {"name": "Zandzakken", "cost": 150, "size": Vector3(3.1, 0.95, 0.8), "max": 40, "hp": 380.0, "piece": true},
 	"muur": {"name": "Betonmuur", "cost": 300, "size": Vector3(3.0, 1.55, 0.7), "max": 30, "hp": 1100.0, "piece": true},
 }
@@ -16,6 +17,8 @@ const VEHICLES := {
 	"jeep": {"name": "Jeep", "cost": 400, "scene": "res://scenes/jeep.tscn"},
 	"tank": {"name": "Tank", "cost": 1200, "scene": "res://scenes/tank.tscn"},
 }
+const HELI_COST := 500
+const PAD_T := 4.5  # seconden dat de luiken en de lift nodig hebben (de clips Open en Dicht)
 const INFO := {
 	"zandzak": "Lage dekking: kogels stoppen erop, jij schiet eroverheen.",
 	"muur": "Hoge betonblokken: niemand schiet of loopt erdoorheen.",
@@ -101,7 +104,7 @@ func can_place(kind: String, at: Vector3, yaw: float, me: Variant = null) -> boo
 		ex.append(me.node.get_rid())
 	if _hits(Vector3(sz.x - 0.2, 1.0, sz.z - 0.2) if piece else Vector3(sz.x + 0.4, 1.0, sz.z + 0.4), at, yaw, ex):
 		return false
-	if piece:
+	if piece or kind == "helipad":
 		return true
 	# de deur moet op vrij terrein uitkomen
 	var door := _pt(at, yaw, 0.0, sz.z / 2.0 + 0.9)
@@ -134,7 +137,7 @@ func make_node(kind: String) -> StaticBody3D:
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
 	var sz: Vector3 = DEFS[kind].size
-	if kind != "garage":
+	if kind != "garage" and kind != "helipad":
 		var cs := CollisionShape3D.new()
 		var bs := BoxShape3D.new()
 		bs.size = sz
@@ -144,6 +147,8 @@ func make_node(kind: String) -> StaticBody3D:
 	match kind:
 		"garage":
 			_garage_node(body)
+		"helipad":
+			_pad_node(body)
 		"kazerne":
 			var model: Node = (load("res://assets/kazerne.glb") as PackedScene).instantiate()
 			Kit.skin(model, "kazerne")
@@ -189,8 +194,12 @@ func place(kind: String, at: Vector3, yaw: float) -> Variant:
 	if kind == "garage":
 		b.merge({"has": {"jeep": false, "tank": false}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
 		_garage_init(b)
+	elif kind == "helipad":
+		b.merge({"has_heli": false, "hs": "closed", "t": 0.0, "want": false, "heli": null, "spin": 0.0})
+		_pad_init(b)
 	Game.buildings.append(b)
 	_push_out(b)
+	_cut_pad()
 	Sfx.play("thud")
 	Game.changed.emit()
 	return b
@@ -202,6 +211,7 @@ func move_to(b: Dictionary, at: Vector3, yaw: float) -> void:
 	b.node.position = at
 	b.node.rotation.y = yaw
 	_push_out(b)
+	_cut_pad()
 	Sfx.play("thud", 0.6)
 
 
@@ -228,8 +238,15 @@ func _push_out(b: Dictionary) -> void:
 
 
 func remove(b: Dictionary) -> void:
+	if b.kind == "helipad":
+		var player = Game.player
+		if b.heli != null and is_instance_valid(b.heli):
+			if b.heli.driven and player != null:
+				b.heli._leave(player)
+			b.heli.queue_free()
 	b.node.queue_free()
 	Game.buildings.erase(b)
+	_cut_pad()
 	Game.changed.emit()
 
 
@@ -336,6 +353,8 @@ func _physics_process(delta: float) -> void:
 	for b in Game.buildings:
 		if b.kind == "garage":
 			_garage_step(b, delta)
+		elif b.kind == "helipad":
+			_pad_step(b, delta)
 	# tijdens het bouwen staat de opleiding stil (updateStructures in 16d-base.js)
 	if Game.build_mode:
 		return
@@ -517,3 +536,119 @@ func _garage_step(b: Dictionary, delta: float) -> void:
 	b.arm.rotation.y = deg_to_rad(14.0) * sin(b.sway * TAU / 8.0)
 	b.haak.rotation.x = deg_to_rad(4.0) * sin(b.sway * TAU / 2.0 + 1.0)
 	b.haak.rotation.z = deg_to_rad(3.0) * sin(b.sway * TAU / 3.0)
+
+
+# ---------------------------------------------------------------- helikopterplatform
+
+## Platform uit assets/helipad.glb: betonplaat met een schacht van 9 x 9 m, twee luiken en een lift. De schacht
+## is een kast (niemand loopt erin); Open en Dicht bewegen luiken, zuigers en lift, de zwaailampen doet de code.
+func _pad_node(body: StaticBody3D) -> void:
+	var model: Node = (load("res://assets/helipad.glb") as PackedScene).instantiate()
+	model.position.y = 0.03  # net boven de grond, anders knippert de plaat
+	body.add_child(model)
+	body.set_meta("model", model)
+	body.add_child(_box_shape(Vector3(0, 1.0, 0), Vector3(9.0, 2.0, 9.0)))
+	var ap: AnimationPlayer = model.find_child("AnimationPlayer", true, false)
+	for clip in ["Open", "Dicht"]:
+		var a := ap.get_animation(clip)
+		for i in range(a.get_track_count() - 1, -1, -1):
+			if String(a.track_get_path(i)).contains("Zwaai"):
+				a.remove_track(i)
+	var night := GameSettings.get_value("time") != "day"
+	for n in ["SchachtLicht0", "SchachtLicht1", "MastSchijnwerper"]:
+		var l := model.find_child(n, true, false)
+		if l:
+			l.visible = night
+	for n in ["ZwaaiALicht", "ZwaaiBLicht"]:
+		var l := model.find_child(n, true, false)
+		if l:
+			l.visible = false
+
+
+func _pad_init(b: Dictionary) -> void:
+	var model: Node = b.node.get_meta("model")
+	b.anim = model.find_child("AnimationPlayer", true, false)
+	b.lift = model.find_child("Lift", true, false)
+	b.zwa = model.find_child("ZwaaiA", true, false)
+	b.zwb = model.find_child("ZwaaiB", true, false)
+	b.lamps = [model.find_child("ZwaaiALicht", true, false), model.find_child("ZwaaiBLicht", true, false)]
+
+
+## De schacht is echt uitgegraven: de grondschil krijgt een gat van 9 x 9 m op de plek van het platform.
+func _cut_pad() -> void:
+	var g := get_tree().get_first_node_in_group("ground")
+	if g == null or not g.has_meta("mat"):
+		return
+	var mat: ShaderMaterial = g.get_meta("mat")
+	mat.set_shader_parameter("pad_half", 0.0)
+	for b in Game.buildings:
+		if b.kind == "helipad":
+			mat.set_shader_parameter("pad", Vector4(b.at.x, b.at.z, cos(b.yaw), sin(b.yaw)))
+			mat.set_shader_parameter("pad_half", 4.5)
+
+
+func can_buy_heli(b: Dictionary) -> bool:
+	return b.kind == "helipad" and not b.has_heli and Game.points >= HELI_COST
+
+
+## Koop de Apache: de luiken gaan open en de lift tilt hem omhoog.
+func buy_heli(b: Dictionary) -> void:
+	if not can_buy_heli(b) or not Game.pay_points(HELI_COST):
+		return
+	b.has_heli = true
+	var h := Apache.new()
+	h.setup(b)
+	add_child(h)
+	b.heli = h
+	b.want = true
+	Sfx.play("buy")
+	Game.changed.emit()
+
+
+## Zet de helikopter weer klaar als hij beneden staat.
+func call_heli(b: Dictionary) -> void:
+	if b.kind == "helipad" and b.has_heli and b.hs != "open":
+		b.want = true
+		Sfx.play("click")
+		Game.changed.emit()
+
+
+func _pad_play(b: Dictionary, clip: String, state: String) -> void:
+	b.hs = state
+	b.t = PAD_T
+	b.anim.speed_scale = 1.0
+	b.anim.play(clip)
+	Sfx.play("gate", 0.9, b.node.global_position)
+
+
+func _pad_step(b: Dictionary, delta: float) -> void:
+	var heli = b.heli
+	var player = Game.player
+	match b.hs:
+		"closed":
+			if b.want and b.has_heli:
+				b.want = false
+				_pad_play(b, "Open", "opening")
+		"opening":
+			b.t -= delta
+			if b.t <= 0.0:
+				b.hs = "open"
+		"open":
+			if heli != null and is_instance_valid(heli):
+				var d: float = Vector2(b.at.x - player.global_position.x, b.at.z - player.global_position.z).length() if player else 0.0
+				var away: bool = heli.mode == Apache.Mode.LIFT and not heli.driven and d > 14.0
+				var gone: bool = heli.mode == Apache.Mode.FLY and Vector2(heli.global_position.x - b.at.x, heli.global_position.z - b.at.z).length() > 16.0
+				if (away or gone) and not b.want:
+					_pad_play(b, "Dicht", "closing")
+		"closing":
+			b.t -= delta
+			if b.t <= 0.0:
+				b.hs = "closed"
+	var moving: bool = b.hs == "opening" or b.hs == "closing"
+	if moving:
+		b.spin += delta * 5.0
+		b.zwa.rotation.y = b.spin
+		b.zwb.rotation.y = -b.spin + 1.0
+	for l in b.lamps:
+		if l:
+			l.visible = moving

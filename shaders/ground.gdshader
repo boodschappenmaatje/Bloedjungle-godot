@@ -15,6 +15,8 @@ uniform float compound = 14.0;
 uniform float gate_gap = 2.4;
 uniform vec4 pits[8];  // loopgraven: x, z, cos, sin
 uniform int pit_n = 0;
+uniform vec4 pad = vec4(0.0, 0.0, 1.0, 0.0);  // schacht van het helikopterplatform: x, z, cos, sin
+uniform float pad_half = 0.0;
 
 varying vec3 wpos;
 
@@ -29,6 +31,14 @@ void fragment() {
 		float lx = r.x * pits[i].z - r.y * pits[i].w;
 		float lz = r.x * pits[i].w + r.y * pits[i].z;
 		if (abs(lx) < 2.36 && abs(lz) < 0.66) {
+			discard;
+		}
+	}
+	if (pad_half > 0.0) {
+		vec2 q = p - pad.xy;
+		float qx = q.x * pad.z - q.y * pad.w;
+		float qz = q.x * pad.w + q.y * pad.z;
+		if (abs(qx) < pad_half && abs(qz) < pad_half) {
 			discard;
 		}
 	}

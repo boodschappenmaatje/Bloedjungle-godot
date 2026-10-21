@@ -182,6 +182,8 @@ func _process(delta: float) -> void:
 	_fps.visible = GameSettings.get_value("fps") == "on"
 	if _fps.visible:
 		_fps.text = "%d FPS · %d%%" % [Engine.get_frames_per_second(), roundi(get_viewport().scaling_3d_scale * 100.0)]
+		var screen_hz := DisplayServer.screen_get_refresh_rate()
+		_fps.text += "\nKeuze %s Hz · limiet %d · scherm %.0f Hz" % [GameSettings.get_value("hz"), Engine.max_fps, screen_hz]
 		_fps.text += "\n" + TouchSticks.info + " · st " + Game.state + (" · pauze" if get_tree().paused else "")
 	var main := get_parent().get_parent()
 	var left: int = Game.enemies.size() + (main.queue.size() if "queue" in main else 0)

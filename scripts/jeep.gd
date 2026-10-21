@@ -2,7 +2,7 @@ extends CharacterBody3D
 ## Eigen jeep met een schutter op een .50 MG. Hij staat geparkeerd in de basis; kom je dichtbij, dan
 ## verschijnt de knop INSTAPPEN. Bestuurd: linker stick = rijden (de jeep draait naar waar je duwt),
 ## rechter stick = het MG richten, tot de rand duwen = schieten. Aanrijden doet schade aan vijanden.
-## Geparkeerd schiet de schutter niet; schieten doe je zelf als je in de jeep zit.
+## Uit de garage rijdt hij zelf naar zijn plek (`goals`). Geparkeerd schiet de schutter niet; schieten doe je zelf als je in de jeep zit.
 ## Model: assets/jeep.glb (Blender), voorkant is -Z. Wielen, sturen en vering doet deze code; van de
 ## Blender-clips gebruiken we alleen Vuren (terugslag, vlam, hulzen, schutter).
 
@@ -21,6 +21,7 @@ const BOARD_DIST := 4.5     # m: dichterbij dan dit toont de knop INSTAPPEN
 const RAM_DAMAGE := 40.0
 
 var driven := false
+var goals: Array = []  # Vector3-punten waar hij zelf naartoe rijdt (uit de garage); leeg = geparkeerd
 var _speed := 0.0
 var _steer := 0.0
 var _yaw_rate := 0.0
@@ -127,6 +128,7 @@ func _toggle() -> void:
 		_btn.queue_redraw()
 	else:
 		driven = true
+		goals.clear()
 		p.driving = true
 		p.visible = false
 		p.collision_mask = 0
@@ -162,7 +164,21 @@ func _drive(delta: float, live: bool) -> void:
 	var want_steer := 0.0
 	var pivot := 0.0
 	var mv := Game.move
-	if driven and live and mv.length() > 0.15:
+	collision_mask = 0 if not goals.is_empty() else 50
+	if not driven and not goals.is_empty():
+		# uit de garage naar zijn parkeerplek: sturen naar het volgende punt
+		var to: Vector3 = goals[0] - global_position
+		to.y = 0.0
+		if to.length() < 1.3:
+			goals.pop_front()
+		else:
+			var fwd := -global_transform.basis.z
+			var alpha := atan2(fwd.cross(to).y, fwd.dot(to))
+			want_steer = clampf(atan(2.0 * WHEELBASE * sin(alpha) / maxf(to.length(), 2.5)), -MAX_STEER, MAX_STEER)
+			want_speed = clampf(to.length() * 0.8 + 0.8, 1.5, 4.5)
+			if goals.size() == 1:
+				want_speed = clampf(to.length() * 0.8, 0.8, 4.5)
+	elif driven and live and mv.length() > 0.15:
 		# de jeep draait naar de kant waar je de stick duwt; ligt die achter hem, dan rijdt hij achteruit
 		var want := atan2(-mv.x, -mv.y)
 		var diff := wrapf(want - rotation.y, -PI, PI)

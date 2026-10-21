@@ -6,11 +6,16 @@ extends Node3D
 
 const DEFS := {
 	"kazerne": {"name": "Kazerne", "cost": 1000, "size": Vector3(4.4, 2.2, 3.2), "max": 1, "hp": 600.0},
+	"garage": {"name": "Garage", "cost": 800, "size": Vector3(7.8, 3.4, 8.6), "max": 1, "hp": 900.0},
 	"zandzak": {"name": "Zandzakken", "cost": 150, "size": Vector3(3.1, 0.95, 0.8), "max": 40, "hp": 380.0, "piece": true},
 	"muur": {"name": "Betonmuur", "cost": 300, "size": Vector3(3.0, 1.55, 0.7), "max": 30, "hp": 1100.0, "piece": true},
 }
 # kaartjes die in de lijst staan maar nog geen model hebben (komen later)
-const SOON := ["Garage", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost"]
+const SOON := ["Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost"]
+const VEHICLES := {
+	"jeep": {"name": "Jeep", "cost": 400, "scene": "res://scenes/jeep.tscn"},
+	"tank": {"name": "Tank", "cost": 1200, "scene": "res://scenes/tank.tscn"},
+}
 const INFO := {
 	"zandzak": "Lage dekking: kogels stoppen erop, jij schiet eroverheen.",
 	"muur": "Hoge betonblokken: niemand schiet of loopt erdoorheen.",
@@ -22,6 +27,7 @@ const LEVELS := [null,
 	{"max": 6, "time": 5.0, "hp": 130.0, "dmg": 21.0, "cost": 1800}]
 const TRAIN_COST := 250
 const DOOR := 2.5  # afstand van het midden tot het punt voor de deur
+const DOOR_U := -0.7  # de garagedeur zit niet in het midden maar 0,7 m naar links
 const C := Data.COMPOUND
 
 
@@ -124,13 +130,16 @@ func make_node(kind: String) -> StaticBody3D:
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
 	var sz: Vector3 = DEFS[kind].size
-	var cs := CollisionShape3D.new()
-	var bs := BoxShape3D.new()
-	bs.size = sz
-	cs.shape = bs
-	cs.position = Vector3(0, sz.y / 2.0, 0)
-	body.add_child(cs)
+	if kind != "garage":
+		var cs := CollisionShape3D.new()
+		var bs := BoxShape3D.new()
+		bs.size = sz
+		cs.shape = bs
+		cs.position = Vector3(0, sz.y / 2.0, 0)
+		body.add_child(cs)
 	match kind:
+		"garage":
+			_garage_node(body)
 		"kazerne":
 			var model: Node = (load("res://assets/kazerne.glb") as PackedScene).instantiate()
 			Kit.skin(model, "kazerne")
@@ -173,6 +182,9 @@ func place(kind: String, at: Vector3, yaw: float) -> Variant:
 	add_child(node)
 	var b := {"kind": kind, "node": node, "at": at, "yaw": yaw, "lv": 1, "queue": 0, "train_t": 0.0,
 		"hp": DEFS[kind].hp, "max_hp": DEFS[kind].hp}
+	if kind == "garage":
+		b.merge({"has": {"jeep": false, "tank": false}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
+		_garage_init(b)
 	Game.buildings.append(b)
 	_push_out(b)
 	Sfx.play("thud")
@@ -319,9 +331,177 @@ func _physics_process(delta: float) -> void:
 	if (Game.state != "play" and Game.state != "prep") or Game.build_mode:
 		return
 	for b in Game.buildings:
+		if b.kind == "garage":
+			_garage_step(b, delta)
 		if b.kind == "kazerne" and b.queue > 0:
 			b.train_t -= delta
 			if b.train_t <= 0.0:
 				b.queue -= 1
 				_spawn(b)
 				b.train_t = LEVELS[b.lv].time
+
+
+# ---------------------------------------------------------------- garage
+
+## Gebouw van assets/garage.glb. Muren zijn losse kasten, zodat de ingang open blijft; de poort is een kast die uitgaat als hij open is.
+func _garage_node(body: StaticBody3D) -> void:
+	var model: Node = (load("res://assets/garage.glb") as PackedScene).instantiate()
+	body.add_child(model)
+	body.set_meta("model", model)
+	var parts := [
+		[Vector3(-3.85, 1.6, 0.0), Vector3(0.2, 3.2, 8.6)],    # linkerwand
+		[Vector3(2.45, 1.6, 0.0), Vector3(0.2, 3.2, 8.6)],     # rechterwand
+		[Vector3(-0.7, 1.6, -4.15), Vector3(6.4, 3.2, 0.2)],   # achterwand
+		[Vector3(-3.45, 1.6, 4.15), Vector3(0.9, 3.2, 0.2)],   # pilaar links van de deur
+		[Vector3(2.05, 1.6, 4.15), Vector3(0.9, 3.2, 0.2)],    # pilaar rechts van de deur
+		[Vector3(-0.7, 2.95, 4.15), Vector3(4.6, 0.5, 0.2)],   # latei
+		[Vector3(-0.7, 3.3, 0.0), Vector3(6.6, 0.2, 8.6)],     # dak
+	]
+	for pt in parts:
+		body.add_child(_box_shape(pt[0], pt[1]))
+	var door := _box_shape(Vector3(-0.7, 1.35, 4.1), Vector3(4.6, 2.7, 0.3))
+	door.name = "Poortkast"
+	body.add_child(door)
+	var ap: AnimationPlayer = model.find_child("AnimationPlayer", true, false)
+	# Open en Dicht bewegen alleen de poort; de rest (zwaailicht, takel) doet de code
+	for clip in ["Open", "Dicht"]:
+		var a := ap.get_animation(clip)
+		for i in range(a.get_track_count() - 1, -1, -1):
+			if not String(a.track_get_path(i)).get_slice(":", 0).ends_with("Deur"):
+				a.remove_track(i)
+	var night := GameSettings.get_value("time") != "day"
+	for n in ["DeurLampL", "DeurLampR", "BinnenLamp"]:
+		var l := model.find_child(n, true, false)
+		if l:
+			l.visible = night
+	var z := model.find_child("ZwaaiLicht", true, false)
+	if z:
+		z.visible = false
+
+
+func _box_shape(pos: Vector3, size: Vector3) -> CollisionShape3D:
+	var cs := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = size
+	cs.shape = bs
+	cs.position = pos
+	return cs
+
+
+func _garage_init(b: Dictionary) -> void:
+	var model: Node = b.node.get_meta("model")
+	b.anim = model.find_child("AnimationPlayer", true, false)
+	b.zwaai = model.find_child("Zwaai", true, false)
+	b.light = model.find_child("ZwaaiLicht", true, false)
+	b.arm = model.find_child("Arm", true, false)
+	b.haak = model.find_child("Haak", true, false)
+	b.door_shape = b.node.get_node("Poortkast")
+
+
+func vehicle_cost(kind: String) -> int:
+	return VEHICLES[kind].cost
+
+
+func can_buy_vehicle(b: Dictionary, kind: String) -> bool:
+	return b.kind == "garage" and not b.has[kind] and Game.points >= VEHICLES[kind].cost
+
+
+## Koop een jeep of tank; hij rijdt uit zodra je het bouwscherm verlaat.
+func buy_vehicle(b: Dictionary, kind: String) -> void:
+	if not can_buy_vehicle(b, kind) or not Game.pay_points(VEHICLES[kind].cost):
+		return
+	b.has[kind] = true
+	b.order.append(kind)
+	Sfx.play("buy")
+	Game.changed.emit()
+
+
+func _front(b: Dictionary) -> Vector3:
+	return Vector3(sin(b.yaw), 0, cos(b.yaw))
+
+
+## Hoeveel vrije meters er vóór de deur zijn (binnen de muur, zonder bunker of gebouwen).
+func _free_run(b: Dictionary) -> float:
+	var shape := SphereShape3D.new()
+	shape.radius = 1.0
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = shape
+	q.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER
+	var ex: Array[RID] = [b.node.get_rid()]
+	q.exclude = ex
+	var run := 0.0
+	for i in range(1, 25):
+		var d := i * 0.5
+		var p := _pt(b.at, b.yaw, DOOR_U, 4.2 + d)
+		if maxf(absf(p.x), absf(p.z)) > C - 1.2:
+			break
+		q.transform = Transform3D(Basis.IDENTITY, p + Vector3(0, 1.0, 0))
+		if not get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty():
+			break
+		run = d
+	return run
+
+
+func _spawn_vehicle(b: Dictionary, kind: String) -> void:
+	var v: Node3D = (load(VEHICLES[kind].scene) as PackedScene).instantiate()
+	add_child(v)
+	var inside := _pt(b.at, b.yaw, DOOR_U, 0.8)
+	v.global_position = Vector3(inside.x, 0.0, inside.z)
+	v.rotation.y = b.yaw + PI
+	var run := _free_run(b)
+	var goals: Array = []
+	if kind == "jeep":
+		goals.append(_pt(b.at, b.yaw, DOOR_U, 4.2 + minf(3.0, run * 0.5)))
+		goals.append(_pt(b.at, b.yaw, DOOR_U - 3.3, 4.2 + maxf(2.5, run * 0.75)))
+	else:
+		goals.append(_pt(b.at, b.yaw, DOOR_U, 4.2 + minf(4.0, run * 0.5)))
+		goals.append(_pt(b.at, b.yaw, DOOR_U + 2.2, 4.2 + maxf(3.5, run * 0.85)))
+	v.goals = goals
+	b.veh = v
+	Sfx.play("thud", 0.8, v.global_position)
+
+
+func _garage_step(b: Dictionary, delta: float) -> void:
+	match b.phase:
+		"idle":
+			if not b.order.is_empty():
+				b.phase = "opening"
+				b.t = 2.0
+				b.anim.play("Open")
+				b.light.visible = true
+				Sfx.play("thud", 0.5, b.node.global_position)
+		"opening":
+			b.t -= delta
+			if b.t <= 0.0:
+				b.door_shape.disabled = true
+				_spawn_vehicle(b, b.order.pop_front())
+				b.phase = "rolling"
+		"rolling":
+			var v: Node3D = b.veh
+			# de poort gaat dicht zodra de wagen er helemaal uit is
+			var out: Vector3 = v.global_position - b.at
+			if not is_instance_valid(v) or out.dot(_front(b)) > 4.2 + 2.6 or v.goals.is_empty():
+				b.phase = "closing"
+				b.t = 2.0
+				b.anim.play("Dicht")
+		"closing":
+			b.t -= delta
+			if b.t <= 0.0:
+				b.door_shape.disabled = false
+				b.light.visible = false
+				b.phase = "wait"
+				b.t = 1.5
+		"wait":
+			# de volgende wagen pas als de vorige is aangekomen
+			b.t -= delta
+			if b.t <= 0.0 and (b.veh == null or not is_instance_valid(b.veh) or b.veh.goals.is_empty()):
+				b.phase = "idle"
+	# zwaailicht draait zolang de poort in beweging is; de takel wiegt altijd een beetje
+	var moving: bool = b.phase == "opening" or b.phase == "closing" or b.phase == "rolling"
+	if moving:
+		b.spin += delta * 6.0
+		b.zwaai.rotation.y = b.spin
+	b.sway += delta
+	b.arm.rotation.y = deg_to_rad(14.0) * sin(b.sway * TAU / 8.0)
+	b.haak.rotation.x = deg_to_rad(4.0) * sin(b.sway * TAU / 2.0 + 1.0)
+	b.haak.rotation.z = deg_to_rad(3.0) * sin(b.sway * TAU / 3.0)

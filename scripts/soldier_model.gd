@@ -109,12 +109,14 @@ func set_gun(kind: String) -> void:
 	node.get_parent().remove_child(node)
 	holder.queue_free()
 	# het model heeft de loop langs -Z, het mannetje kijkt langs +Z
-	node.transform = Transform3D(_grip_basis * Basis(Vector3.UP, PI), _grip_basis * Vector3(0.0, 0.0, GUN_FWD.get(kind, 0.0)))
+	node.transform = Transform3D(_grip_basis * Basis(Vector3.UP, PI) * Basis.from_scale(Vector3.ONE * GUN_SCALE.get(kind, 1.5)), _grip_basis * Vector3(0.0, 0.0, GUN_FWD.get(kind, 0.0)))
 	_hand.add_child(node)
 	_gun = node
 
 
 const GUN_FWD := {"bazooka": 0.0}
+# vanaf de speelcamera zijn echte maten veel te klein: wapens iets groter dan echt, het pistool het meest
+const GUN_SCALE := {"m1911": 2.2, "thompson": 1.6, "rifle": 1.5, "garand": 1.5, "trench": 1.5, "mg42": 1.5, "heavy": 1.5, "bazooka": 1.4, "rocket": 1.4}
 
 
 ## Speelt een animatie met een zachte overgang; doet niets als hij al speelt.

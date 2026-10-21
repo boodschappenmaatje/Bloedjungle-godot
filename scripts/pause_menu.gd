@@ -10,11 +10,13 @@ const ROWS := [
 	["weather", "Weer", [["clear", "Helder"], ["rain", "Regen"], ["mist", "Mist"]]],
 	["wind", "Bomen bewegen", [["off", "Uit"], ["on", "Aan"]]],
 	["treeshadow", "Boomschaduw", [["fake", "Vast"], ["real", "Echt"], ["off", "Uit"]]],
+	["hz", "Beeldsnelheid", [["60", "60 fps"], ["120", "120 fps"]]],
 	["fps", "FPS-teller", [["off", "Uit"], ["on", "Aan"]]],
 ]
 const NOTES := {
 	"low": "Laag: geen schaduwen en een lichtere afbeelding, voor oudere telefoons.",
 	"high": "Hoog: schaduwen dichtbij en minder gras, blijft vloeiend op 60 beeld per seconde.",
+	"120": "120 fps: voor ProMotion-schermen (iPhone Pro, iPad Pro). Kost meer batterij; op een gewoon scherm blijft het 60.",
 	"ultra": "Ultra gebruikt de volle kracht van nieuwe iPhones: scherpere pixels, alle schaduwen en dubbel zoveel gras.",
 }
 
@@ -372,9 +374,12 @@ func _refresh() -> void:
 		for b in _segs[key]:
 			UI.seg_state(b, GameSettings.get_value(key) == b.get_meta("v"))
 	_note.text = NOTES[GameSettings.get_value("quality")]
+	if GameSettings.get_value("hz") == "120":
+		_note.text += "\n" + NOTES["120"]
 
 
 func _apply() -> void:
+	GameSettings.apply_hz()
 	for n in get_tree().get_nodes_in_group("atmosphere"):
 		n.apply_settings()
 

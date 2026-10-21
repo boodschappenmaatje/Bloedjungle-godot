@@ -2,7 +2,7 @@ class_name GameSettings
 ## Instellingen uit het web-menu (grafiek, tijd, bouwtijd, weer, fps-teller); blijven bewaard op het apparaat.
 
 const PATH := "user://instellingen.cfg"
-const DEFAULTS := {"quality": "high", "time": "day", "prep": "60", "weather": "clear", "fps": "off", "sound": "on", "wind": "off", "treeshadow": "fake"}
+const DEFAULTS := {"quality": "high", "time": "day", "prep": "60", "weather": "clear", "fps": "off", "hz": "60", "sound": "on", "wind": "off", "treeshadow": "fake"}
 
 static var values := {}
 static var _loaded := false
@@ -20,6 +20,19 @@ static func set_value(key: String, v: String) -> void:
 	for k in values:
 		cf.set_value("instellingen", k, values[k])
 	cf.save(PATH)
+
+
+## Beelden per seconde waar het spel naartoe werkt: 60, of 120 als dat gekozen is en het scherm het kan.
+static func target_fps() -> float:
+	if get_value("hz") != "120":
+		return 60.0
+	var r := DisplayServer.screen_get_refresh_rate()
+	return clampf(r, 60.0, 120.0) if r > 0.0 else 120.0
+
+
+static func apply_hz() -> void:
+	# 60: begrenzen op 60; 120: geen eigen grens, het scherm (vsync) bepaalt het tempo
+	Engine.max_fps = 0 if get_value("hz") == "120" else 60
 
 
 static func prep_time() -> float:

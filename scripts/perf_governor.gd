@@ -1,14 +1,14 @@
 class_name PerfGovernor
 extends Node
-## Houdt het beeld op 60 fps: zakt het onder de ~56 fps, dan rendert het spel de 3D-wereld met minder pixels
+## Houdt het beeld op het doel (60 of 120 fps, zie GameSettings.target_fps): zakt het onder de ~93% daarvan, dan rendert het spel de 3D-wereld met minder pixels
 ## (HUD blijft scherp); is het weer vlot, dan gaat de resolutie stapje voor stapje terug omhoog tot de
 ## ingestelde grafiek-stand. Zo blijft het spelen soepel op elk toestel en tijdens drukke golven.
 
 static var grace_until := 0  # ms; na het laden tellen de eerste paar seconden niet mee
 
 const MIN_SCALE := 0.5
-const DOWN_FPS := 56.0
-const UP_FPS := 59.0
+const DOWN_RATIO := 0.93  # van het doel; 56 bij 60 fps, 112 bij 120
+const UP_RATIO := 0.98
 
 var _cap := 0.8
 var _quality := ""
@@ -38,11 +38,12 @@ func _process(delta: float) -> void:
 	_acc = 0.0
 	_frames = 0
 	var s := vp.scaling_3d_scale
-	if fps < DOWN_FPS:
+	var target := GameSettings.target_fps()
+	if fps < target * DOWN_RATIO:
 		_good = 0.0
-		vp.scaling_3d_scale = maxf(MIN_SCALE, s - (0.08 if fps < 45.0 else 0.04))
+		vp.scaling_3d_scale = maxf(MIN_SCALE, s - (0.08 if fps < target * 0.75 else 0.04))
 		_hold = 8.0
-	elif fps >= UP_FPS and s < _cap and _hold <= 0.0:
+	elif fps >= target * UP_RATIO and s < _cap and _hold <= 0.0:
 		_good += 0.5
 		if _good >= 4.0:
 			_good = 0.0

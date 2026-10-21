@@ -16,6 +16,7 @@ var model: Node3D
 var anim: AnimationPlayer
 var _leaf_rails: StaticBody3D
 var _water: StaticBody3D
+var _upright: StaticBody3D
 var _lamp_r: Node3D
 var _lamp_g: Node3D
 var _box: Node3D
@@ -50,7 +51,32 @@ func _ready() -> void:
 	cs.position = Vector3(0, 1.5, 0)
 	_water.add_child(cs)
 	add_child(_water)
+	# de omhoog staande klep is een muur; de palen van het poortframe en het kastje zijn altijd vast
+	_upright = _solid(Vector3(0, 2.0, 5.4), Vector3(6.0, 4.0, 2.0))
+	var fixed := _solid(Vector3(0, 0, 0), Vector3.ZERO)
+	for sx in [-1.0, 1.0]:
+		_add_box(fixed, Vector3(sx * (RAIL_X + 0.55), 1.5, 7.1), Vector3(0.7, 3.0, 0.7))
+	_add_box(fixed, Vector3(box_pos().x - global_position.x, 0.5, box_pos().z - global_position.z), Vector3(0.9, 1.0, 0.9))
 	_apply()
+
+
+func _solid(pos: Vector3, size: Vector3) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	body.collision_layer = Kit.LAYER_WALL
+	body.collision_mask = 0
+	add_child(body)
+	if size != Vector3.ZERO:
+		_add_box(body, pos, size)
+	return body
+
+
+func _add_box(body: StaticBody3D, pos: Vector3, size: Vector3) -> void:
+	var cs := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = size
+	cs.shape = bs
+	cs.position = pos
+	body.add_child(cs)
 
 
 func _rail_body(pos: Vector3, length: float) -> StaticBody3D:
@@ -131,6 +157,8 @@ func _apply() -> void:
 	_leaf_rails.process_mode = Node.PROCESS_MODE_INHERIT if down else Node.PROCESS_MODE_DISABLED
 	for c in _leaf_rails.get_children():
 		(c as CollisionShape3D).disabled = not down
+	for c in _upright.get_children():
+		(c as CollisionShape3D).disabled = down
 	for c in _water.get_children():
 		(c as CollisionShape3D).disabled = down
 	if _lamp_g:

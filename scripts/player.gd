@@ -32,6 +32,7 @@ func _ready() -> void:
 	refresh_look()
 	model.scale = Vector3.ONE * Data.SOLDIER_SCALE
 	weapon = Game.cur
+	model.set_gun(weapon)
 	ammo = Game.owned[weapon].ammo
 	rotation.y = face
 	_mask0 = collision_mask
@@ -40,7 +41,7 @@ func _ready() -> void:
 ## Kleur en hoofdband volgens de gekozen uitrusting; ook gebruikt als je in het menu iets anders kiest.
 func refresh_look() -> void:
 	if model.anim == null:
-		model.setup(Progress.item("camo").col)
+		model.setup(Progress.item("camo").col, weapon)
 	else:
 		model.set_uniform(Progress.item("camo").col)
 	model.set_band(Progress.item("band").color)
@@ -202,6 +203,7 @@ func equip(id: String) -> void:
 		Game.owned[weapon].ammo = ammo
 	weapon = id
 	Game.cur = id
+	model.set_gun(id)
 	ammo = Game.owned[id].ammo
 	reload_t = 0.0
 	fire_t = 0.3

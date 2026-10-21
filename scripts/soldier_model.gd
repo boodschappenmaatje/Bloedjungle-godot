@@ -72,36 +72,49 @@ func set_band(c: Color) -> void:
 	(_band.material_override as StandardMaterial3D).albedo_color = c
 
 
+const GUNS := preload("res://assets/wapens.glb")  # bron/wapens: M1911, Thompson, Garand, Trench, MG42, Bazooka
+const GUN_OF := {"rifle": "Garand", "rocket": "Bazooka", "heavy": "MG42", "m1911": "M1911", "thompson": "Thompson",
+	"garand": "Garand", "trench": "Trench", "mg42": "MG42", "bazooka": "Bazooka"}
+
+var _hand: BoneAttachment3D
+var _gun: Node3D
+var _grip_basis := Basis.IDENTITY  # zet het wapen recht vooruit in de stilstaande houding
+
+
 func _attach_gun(model: Node, gun_kind := "rifle") -> void:
 	var skel: Skeleton3D = model.find_children("*", "Skeleton3D", true, false)[0]
-	var hand := BoneAttachment3D.new()
-	hand.bone_name = "DEF-handR"
-	skel.add_child(hand)
-	var gun := MeshInstance3D.new()
-	if gun_kind == "rocket":
-		# RPG-buis op de schouder
-		var tube := CylinderMesh.new()
-		tube.top_radius = 0.075
-		tube.bottom_radius = 0.075
-		tube.height = 1.1
-		gun.mesh = tube
-	else:
-		var box := BoxMesh.new()
-		box.size = Vector3(0.05, 0.09, 0.55)
-		gun.mesh = box
-	var m := StandardMaterial3D.new()
-	m.albedo_color = Color(0.12, 0.11, 0.1)
-	m.metallic = 0.5
-	m.roughness = 0.5
-	gun.material_override = m
+	_hand = BoneAttachment3D.new()
+	_hand.bone_name = "DEF-handR"
+	skel.add_child(_hand)
 	# zoals gunMountMatrix() in de web-versie: in de stilstaande houding wijst het wapen recht vooruit
 	anim.play("stil")
 	anim.seek(0.05, true)
 	var pose := skel.get_bone_global_pose(skel.find_bone("DEF-handR"))
-	var inv := pose.basis.orthonormalized().inverse()
-	var tube_fix := Basis(Vector3.RIGHT, PI / 2.0) if gun_kind == "rocket" else Basis.IDENTITY
-	gun.transform = Transform3D(inv * tube_fix, inv * Vector3(0.0, 0.0, 0.3 if gun_kind == "rocket" else 0.18))
-	hand.add_child(gun)
+	_grip_basis = pose.basis.orthonormalized().inverse()
+	set_gun(gun_kind)
+
+
+## Hangt een ander wapen in de hand ("" = niets). Namen als in Data.WEAPONS, of het type vijand.
+func set_gun(kind: String) -> void:
+	if _gun:
+		_gun.queue_free()
+		_gun = null
+	if not GUN_OF.has(kind) or _hand == null:
+		return
+	var holder := GUNS.instantiate()
+	var node := holder.find_child(GUN_OF[kind], true, false) as Node3D
+	if node == null:
+		holder.queue_free()
+		return
+	node.get_parent().remove_child(node)
+	holder.queue_free()
+	# het model heeft de loop langs -Z, het mannetje kijkt langs +Z
+	node.transform = Transform3D(_grip_basis * Basis(Vector3.UP, PI), _grip_basis * Vector3(0.0, 0.0, GUN_FWD.get(kind, 0.0)))
+	_hand.add_child(node)
+	_gun = node
+
+
+const GUN_FWD := {"bazooka": 0.0}
 
 
 ## Speelt een animatie met een zachte overgang; doet niets als hij al speelt.

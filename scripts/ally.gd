@@ -32,7 +32,7 @@ func setup(hp_: float, dmg_: float, index: int) -> void:
 	add_child(col)
 	model = SoldierModel.new()
 	add_child(model)
-	model.setup(Color("5a6a36"))
+	model.setup(Color("5a6a36"), "thompson")
 	model.scale = Vector3.ONE * Data.SOLDIER_SCALE
 	rotation.y = face
 

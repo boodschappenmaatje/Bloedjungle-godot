@@ -143,7 +143,7 @@ static func _flash_quad(parent: Node, pos: Vector3, size: float, life: float, co
 
 
 ## Uitgeworpen huls: vliegt in een boogje weg, stuitert niet maar blijft even liggen.
-static var _casing_mesh: BoxMesh
+static var _casing_mesh: Mesh
 static var _casings := 0
 
 
@@ -151,15 +151,24 @@ static func casing(parent: Node, pos: Vector3) -> void:
 	if _casings >= 36:
 		return
 	if _casing_mesh == null:
-		_casing_mesh = BoxMesh.new()
-		_casing_mesh.size = Vector3(0.025, 0.025, 0.075)
+		# het echte hulsmodel uit bron/wapens; terugval op een blokje
+		var holder: Node = (load("res://assets/wapens.glb") as PackedScene).instantiate()
+		var mi := holder.find_child("Huls_Messing", true, false) as MeshInstance3D
+		if mi:
+			_casing_mesh = mi.mesh
+		holder.free()
+	if _casing_mesh == null:
+		var bx := BoxMesh.new()
+		bx.size = Vector3(0.025, 0.025, 0.075)
 		var mat := StandardMaterial3D.new()
 		mat.albedo_color = Color(0.85, 0.62, 0.22)
 		mat.metallic = 0.7
 		mat.roughness = 0.35
-		_casing_mesh.material = mat
+		bx.material = mat
+		_casing_mesh = bx
 	var c := MeshInstance3D.new()
 	c.mesh = _casing_mesh
+	c.scale = Vector3.ONE * 1.8  # iets groter dan echt, anders zie je ze niet
 	c.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(c)
 	c.global_position = pos

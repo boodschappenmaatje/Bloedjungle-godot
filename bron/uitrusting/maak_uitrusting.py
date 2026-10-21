@@ -155,12 +155,12 @@ def gsphere(name, r, loc, material, parent, scale=(1, 1, 1), half=False):
 
 HELM = mat("Helm", (0.24, 0.27, 0.16), 0.55, 0.1)
 HELMBAND = mat("Helmband", (0.14, 0.15, 0.09), 0.8)
-CANVAS = mat("Canvas", (0.30, 0.28, 0.17), 0.95)
-ROL = mat("Slaaprol", (0.45, 0.40, 0.26), 0.95)
+CANVAS = mat("Canvas", (0.21, 0.23, 0.13), 0.95)
+ROL = mat("Slaaprol", (0.33, 0.30, 0.19), 0.95)
 LEER = mat("Leer", (0.22, 0.14, 0.07), 0.7)
 LAARS = mat("Laars", (0.12, 0.085, 0.06), 0.65)
 STAALG = mat("Metaal", (0.28, 0.28, 0.27), 0.4, 0.8)
-KHAKI = mat("Khaki", (0.34, 0.31, 0.2), 0.9)
+KHAKI = mat("Khaki", (0.25, 0.25, 0.15), 0.9)
 OLIJFD = mat("Olijf", (0.20, 0.23, 0.13), 0.8)
 
 
@@ -217,11 +217,11 @@ def helm():
 
 def rugzak():
     r = empty("Rugzak")   # hangt aan DEF-spine003
-    gbox("Zak", (0.32, 0.36, 0.13), (CX, 1.22, -0.285), CANVAS, r)
-    gbox("Klep", (0.30, 0.12, 0.15), (CX, 1.40, -0.285), KHAKI, r)
-    gbox("Zijzak", (0.08, 0.18, 0.1), (CX - 0.2, 1.17, -0.27), KHAKI, r)
-    gbox("Zijzak", (0.08, 0.18, 0.1), (CX + 0.2, 1.17, -0.27), KHAKI, r)
-    gcyl("Slaaprol", 0.065, 0.38, (CX, 1.5, -0.3), ROL, r, "x", 14)
+    gbox("Zak", (0.28, 0.31, 0.12), (CX, 1.23, -0.28), CANVAS, r)
+    gbox("Klep", (0.26, 0.10, 0.14), (CX, 1.38, -0.28), KHAKI, r)
+    gbox("Zijzak", (0.08, 0.18, 0.1), (CX - 0.17, 1.17, -0.27), KHAKI, r)
+    gbox("Zijzak", (0.08, 0.18, 0.1), (CX + 0.17, 1.17, -0.27), KHAKI, r)
+    gcyl("Slaaprol", 0.052, 0.32, (CX, 1.46, -0.29), ROL, r, "x", 14)
     for sx in (-0.11, 0.11):
         gbox("Schouderband", (0.045, 0.40, 0.02), (CX + sx, 1.25, 0.045), KHAKI, r)
         gbox("Bandboven", (0.045, 0.02, 0.36), (CX + sx, 1.44, -0.12), KHAKI, r)

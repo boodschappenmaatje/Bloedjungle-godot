@@ -33,7 +33,10 @@ func setup(uniform: Color, gun_kind := "rifle") -> void:
 		for s in mi.mesh.get_surface_count():
 			var src := mi.get_active_material(s)
 			var m: StandardMaterial3D = src.duplicate() if src is StandardMaterial3D else StandardMaterial3D.new()
-			m.albedo_color = uniform if m.resource_name != "M_Joints" else uniform.darkened(0.45)
+			if m.resource_name != "M_Joints":
+				m.vertex_color_use_as_albedo = true  # legercamouflage in de hoekkleuren; de uniformkleur kleurt het patroon
+				mi.mesh = _camo_mesh(mi.mesh)
+			m.albedo_color = _tint(uniform, m.resource_name == "M_Joints")
 			mi.set_surface_override_material(s, m)
 			_mats.append(m)
 			_base_cols.append(m.albedo_color)
@@ -43,10 +46,56 @@ func setup(uniform: Color, gun_kind := "rifle") -> void:
 
 
 ## Ander uniform (camouflage) voor het mannetje, zonder het model opnieuw te laden.
+static var _camo: ArrayMesh
+
+
+## Zet woodland-camouflage in de hoekkleuren van het mannetje: vlekken uit 3D-ruis op de plek van elk hoekpunt in rust, dus ze
+## zitten vast aan de ledematen en schuiven niet. Basis neutraal grijs (0,8), vlekken relatief daaraan (donkergroen, bruin, zand, zwart).
+## Eén keer gemaakt en door alle mannetjes gedeeld.
+static func _camo_mesh(src: Mesh) -> Mesh:
+	if _camo != null:
+		return _camo
+	var arr: Array = src.surface_get_arrays(0)
+	var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	var ns: Array[FastNoiseLite] = []
+	for seed_ in [3, 11, 29, 47]:
+		var n := FastNoiseLite.new()
+		n.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
+		n.seed = seed_
+		n.frequency = 5.0 if seed_ != 47 else 8.0
+		ns.append(n)
+	var cols := PackedColorArray()
+	cols.resize(verts.size())
+	for i in verts.size():
+		var v := verts[i]
+		var c := Color(0.8, 0.8, 0.8)
+		if ns[0].get_noise_3dv(v) > 0.18:
+			c = Color(0.95, 0.85, 0.55)     # zand
+		if ns[1].get_noise_3dv(v) > 0.12:
+			c = Color(0.38, 0.52, 0.30)     # donkergroen
+		if ns[2].get_noise_3dv(v) > 0.22:
+			c = Color(0.72, 0.46, 0.28)     # bruin
+		if ns[3].get_noise_3dv(v) > 0.3:
+			c = Color(0.12, 0.13, 0.11)     # zwart
+		cols[i] = c
+	arr[Mesh.ARRAY_COLOR] = cols
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	_camo = mesh
+	return mesh
+
+
+## Het camouflagepatroon is neutraal grijs (0,8), dus de uniformkleur wordt iets donkerder; gewrichten blijven donker en effen.
+func _tint(c: Color, joints: bool) -> Color:
+	if joints:
+		return c.darkened(0.45)
+	return Color(minf(c.r * 1.0, 1.0), minf(c.g * 1.0, 1.0), minf(c.b * 1.0, 1.0))
+
+
 func set_uniform(c: Color) -> void:
 	var i := 0
 	for m in _mats:
-		m.albedo_color = c if m.resource_name != "M_Joints" else c.darkened(0.45)
+		m.albedo_color = _tint(c, m.resource_name == "M_Joints")
 		_base_cols[i] = m.albedo_color
 		i += 1
 
@@ -114,6 +163,17 @@ func _attach_gear(skel: Skeleton3D) -> void:
 		skel.add_child(att)
 		node.transform = skel.get_bone_global_pose(bone).affine_inverse()
 		att.add_child(node)
+		# eigen materiaal: de hoekkleuren moeten als albedo gelden, ook als de import dat niet voor ons doet (Xogot)
+		for mi: MeshInstance3D in node.find_children("*", "MeshInstance3D", true, false):
+			var gm := StandardMaterial3D.new()
+			gm.vertex_color_use_as_albedo = true
+			gm.roughness = 0.75
+			mi.material_override = gm
+		if node is MeshInstance3D:
+			var gm2 := StandardMaterial3D.new()
+			gm2.vertex_color_use_as_albedo = true
+			gm2.roughness = 0.75
+			(node as MeshInstance3D).material_override = gm2
 	holder.queue_free()
 
 

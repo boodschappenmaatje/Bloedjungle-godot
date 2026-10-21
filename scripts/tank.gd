@@ -1,6 +1,6 @@
 extends AnimatableBody3D
-## Eigen tank die buiten de oostmuur heen en weer patrouilleert. De koepel draait naar de
-## dichtstbijzijnde vijand. Model: assets/tank.glb (gemaakt in Blender), voorkant is -Z,
+## Eigen tank, gekocht bij de garage. Hij rijdt de lijst `goals` af (uit de garage naar zijn plek) en blijft
+## dan staan; de koepel draait naar de dichtstbijzijnde vijand. Model: assets/tank.glb (gemaakt in Blender), voorkant is -Z,
 ## met de delen Toren (draait om Y) en Loop (kantelt om X). De animaties uit Blender (Stationair,
 ## Rijden, Achteruit, Draaien, Schieten) laten wielen, rupsschakels en de vering bewegen.
 
@@ -11,9 +11,8 @@ const SIGHT := 34.0        # m, vanaf hier volgt de koepel een vijand
 const SHELL_DAMAGE := 70.0   # schade van de granaat; zet op 0 voor alleen het effect
 const SHELL_RADIUS := 3.2    # m
 const RELOAD := 4.0          # s tussen twee schoten
-const ROUTE := [Vector3(20.5, 0, 17.0), Vector3(20.5, 0, -17.0)]
 
-var _next := 0
+var goals: Array = []  # Vector3-punten die hij afrijdt; leeg = blijft staan en bewaakt
 var _reload := 2.0
 var _turning := false
 const ANIM_SPEED := 3.12   # m/s waarmee de rups in de clip Rijden loopt
@@ -24,13 +23,18 @@ var _clip := ""
 
 
 func _physics_process(delta: float) -> void:
-	var goal: Vector3 = ROUTE[_next]
+	if goals.is_empty():
+		_turning = false
+		_play("Stationair", 1.0)
+		_aim(delta)
+		return
+	var goal: Vector3 = goals[0]
 	var to := goal - global_position
 	to.y = 0.0
 	var want := atan2(-to.x, -to.z)
 	var diff := wrapf(want - rotation.y, -PI, PI)
 	if to.length() < 0.3:
-		_next = (_next + 1) % ROUTE.size()
+		goals.pop_front()
 		_turning = true
 	elif _turning:
 		rotation.y += clampf(diff, -TURN * delta, TURN * delta)

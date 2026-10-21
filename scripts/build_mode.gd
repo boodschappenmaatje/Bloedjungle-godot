@@ -7,7 +7,7 @@ extends Control
 
 const CARD_H := 78.0
 const GAP := 8.0
-const ORDER := ["kazerne", "Garage", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "muur"]
+const ORDER := ["kazerne", "garage", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "muur"]
 const ORDERS := {"follow": "Volgen", "hold": "Posten"}
 
 var _ui: Control
@@ -79,7 +79,7 @@ class Card:
 				for x in [6, 24, 42]:
 					_rc(r, x, 14, 16, 26, Color("9a978c"))
 				_rc(r, 6, 30, 52, 2, Color("c9a227"))
-			"Garage":
+			"garage":
 				_rc(r, 6, 12, 52, 28, Color("7a786c"))
 				_rc(r, 4, 9, 56, 4, Color("4a4a42"))
 				_rc(r, 15, 18, 34, 22, Color("5a5f48"))
@@ -352,6 +352,16 @@ func _fill_panel() -> void:
 			Game.troop_mode = "hold" if Game.troop_mode == "follow" else "follow"
 			Game.changed.emit())
 		tip = ("Niveau %d: %d soldaten, %ds training, sterker." % [b.lv + 1, nx.max, nx.time] if nx else "Volledig opgewaardeerd.") + (" Je soldaten bewaken de muur." if Game.troop_mode == "hold" else " Je soldaten lopen met je mee.")
+	elif b.kind == "garage":
+		var have: Array = []
+		for k in ["jeep", "tank"]:
+			if b.has[k]:
+				have.append(Buildings.VEHICLES[k].name)
+		info.text = "In dienst: %s · sterkte %d" % [", ".join(have) if have else "nog niets", ceili(b.hp)]
+		for k in ["jeep", "tank"]:
+			var v: Dictionary = Buildings.VEHICLES[k]
+			_act(row, v.name, "gekocht" if b.has[k] else "%d pt" % v.cost, Game.builds.can_buy_vehicle(b, k), func(): Game.builds.buy_vehicle(b, k))
+		tip = "Gekochte wagens rijden de garage uit zodra je het bouwscherm sluit. De jeep bestuur je zelf, de tank bewaakt de basis."
 	else:
 		info.text = "Sterkte %d / %d" % [ceili(b.hp), b.max_hp]
 		tip = Buildings.INFO.get(b.kind, "")

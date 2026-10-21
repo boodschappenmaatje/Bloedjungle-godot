@@ -21,23 +21,41 @@ scene = bpy.context.scene
 
 
 # ---------- materialen ----------
-def od_image(size=256):
-    rng = np.random.default_rng(5)
-    def noise(scale):
-        g = rng.random((size // scale + 2, size // scale + 2))
+def od_image(size=512):
+    """Naadloos herhalende camouflage-textuur (1 tegel = 1,6 m): olijf met donkergroene, zwarte en zandkleurige
+    vlekken, modder en afgebladderde verf."""
+    def noise(scale, seed):
+        n = size // scale
+        g = np.random.default_rng(seed).random((n, n))
         y, x = np.mgrid[0:size, 0:size] / scale
         x0, y0 = x.astype(int), y.astype(int)
         fx, fy = x - x0, y - y0
         fx, fy = fx * fx * (3 - 2 * fx), fy * fy * (3 - 2 * fy)
-        a = g[y0, x0] * (1 - fx) + g[y0, x0 + 1] * fx
-        b = g[y0 + 1, x0] * (1 - fx) + g[y0 + 1, x0 + 1] * fx
-        return a * (1 - fy) + b * fy
-    base = np.array([0.29, 0.31, 0.19])  # olive drab
-    n = noise(40) * 0.55 + noise(14) * 0.3 + noise(4) * 0.15
-    img = base[None, None, :] * (0.84 + 0.3 * n[..., None])
-    modder = np.clip((noise(24) - 0.62) * 3.0, 0, 1)[..., None]
-    img = img * (1 - 0.35 * modder) + np.array([0.33, 0.27, 0.18]) * 0.35 * modder
-    img = np.clip(img + (noise(2)[..., None] - 0.5) * 0.04, 0, 1)
+        xa, xb, ya, yb = x0 % n, (x0 + 1) % n, y0 % n, (y0 + 1) % n
+        top = g[ya, xa] * (1 - fx) + g[ya, xb] * fx
+        bot = g[yb, xa] * (1 - fx) + g[yb, xb] * fx
+        return top * (1 - fy) + bot * fy
+
+    def sm(v, e0, e1):
+        return np.clip((v - e0) / (e1 - e0), 0, 1)[..., None]
+
+    olive = np.array([0.29, 0.31, 0.19])
+    donker = np.array([0.15, 0.185, 0.10])
+    zwart = np.array([0.065, 0.08, 0.055])
+    zand = np.array([0.47, 0.42, 0.27])
+    modder = np.array([0.30, 0.235, 0.15])
+    metaal = np.array([0.34, 0.33, 0.30])
+    a = noise(128, 1) * 0.65 + noise(64, 2) * 0.35
+    b = noise(128, 3) * 0.65 + noise(32, 4) * 0.35
+    img = olive * (0.9 + 0.2 * noise(8, 9)[..., None])
+    img = img * (1 - sm(b, 0.60, 0.625)) + zand * sm(b, 0.60, 0.625)
+    img = img * (1 - sm(a, 0.55, 0.57)) + donker * sm(a, 0.55, 0.57)
+    img = img * (1 - sm(a, 0.68, 0.70)) + zwart * sm(a, 0.68, 0.70)
+    m = sm(noise(32, 6) * 0.7 + noise(8, 10) * 0.3, 0.62, 0.78) * 0.5
+    img = img * (1 - m) + modder * m
+    c = sm(noise(4, 7) + (noise(2, 8) - 0.5) * 0.3, 0.80, 0.84) * 0.6
+    img = img * (1 - c) + metaal * c
+    img = np.clip(img + (noise(2, 11)[..., None] - 0.5) * 0.03, 0, 1)
     im = bpy.data.images.new("jeep_olijf", size, size)
     rgba = np.concatenate([img, np.ones((size, size, 1))], axis=2)[::-1]
     im.pixels.foreach_set(rgba.astype(np.float32).ravel())
@@ -79,6 +97,9 @@ HELM = mat("Helm", (0.25, 0.27, 0.17), 0.6, 0.1)
 KOPPEL = mat("Koppel", (0.36, 0.32, 0.20), 0.9)
 LAARS = mat("Laars", (0.12, 0.09, 0.07), 0.7)
 VLAM = mat("Vlam", (1.0, 0.8, 0.4), 0.5, emit=(1.0, 0.7, 0.25), strength=12.0)
+WIT = mat("Wit", (0.82, 0.82, 0.76), 0.7)
+HOUT = mat("Hout", (0.33, 0.21, 0.11), 0.8)
+RIEM = mat("Riem", (0.19, 0.16, 0.09), 0.9)
 MESSING = mat("Messing", (0.8, 0.6, 0.25), 0.3, 1.0)
 
 
@@ -239,9 +260,6 @@ for c in stuurwiel.users_collection:
     c.objects.unlink(stuurwiel)
 link(stuurwiel, body)
 stuurwiel.data.materials.append(ZWART)
-# munitiekisten in de bak
-for i, y in enumerate((-1.35, -1.35)):
-    box(f"Munitiekist{i}", (0.18, 0.3, 0.2), OLIJF, body, (-0.42 + i * 0.84, y, 0.6))
 # assen
 cyl("Vooras", 0.05, 0.05, 1.3, DONKER, "X", 8, body, (0, 1.12, 0.37))
 cyl("Achteras", 0.05, 0.05, 1.3, DONKER, "X", 8, body, (0, -0.92, 0.37))
@@ -426,16 +444,143 @@ boven = join(sbd[0], sbd[1:])
 boven.name = "BovenlijfMesh"
 LOS.add("BovenlijfMesh")
 
+# ---------- extra details: vooral te zien vanaf de spelcamera (van boven) ----------
+def torus(name, major, minor, material, parent, loc, rot=(0, 0, 0), segs=14):
+    bpy.ops.mesh.primitive_torus_add(major_radius=major, minor_radius=minor, major_segments=segs, minor_segments=5,
+                                     location=loc, rotation=rot)
+    o = bpy.context.active_object
+    o.name = name
+    for c in o.users_collection:
+        c.objects.unlink(o)
+    link(o, parent)
+    o.data.materials.append(material)
+    return o
+
+
+def ster(name, r, material, parent, loc, rot=(0, 0, 0)):
+    """Vlakke vijfpuntige ster in het XY-vlak, zichtkant naar +Z."""
+    bm = bmesh.new()
+    vs = []
+    for i in range(10):
+        a = math.pi / 2 + i * math.pi / 5
+        rr = r if i % 2 == 0 else r * 0.40
+        vs.append(bm.verts.new((math.cos(a) * rr, math.sin(a) * rr, 0)))
+    bm.faces.new(vs)
+    o = mesh_obj(name, bm, material, parent, loc)
+    o.rotation_euler = rot
+    return o
+
+
+HOOD_HELLING = -math.atan2(0.05, 1.0)  # de motorkap loopt 5 cm af over 1 m
+
+
+def kap_z(y):
+    return 0.98 - 0.05 * (y - 0.62)
+
+
+# bagage in de bak: gestapelde munitiekisten links achter, tentzeil rechts achter
+box("KistA", (0.32, 0.42, 0.24), OLIJF, body, (-0.43, -1.40, 0.615))
+box("KistAdeksel", (0.30, 0.40, 0.012), DONKER, body, (-0.43, -1.40, 0.741))
+for sx in (-1, 1):
+    box(f"KistAgrendel{sx}", (0.04, 0.012, 0.05), METAAL, body, (-0.43 + sx * 0.09, -1.40 + 0.215, 0.65))
+    box(f"KistAgreep{sx}", (0.012, 0.10, 0.02), METAAL, body, (-0.43 + sx * 0.165, -1.40, 0.68))
+box("KistB", (0.26, 0.34, 0.20), OLIJF, body, (-0.42, -1.40, 0.85), (0, 0, 0.12))
+box("KistBdeksel", (0.24, 0.32, 0.012), DONKER, body, (-0.42, -1.40, 0.956), (0, 0, 0.12))
+box("KistBstempel", (0.13, 0.05, 0.004), WIT, body, (-0.42, -1.43, 0.964), (0, 0, 0.12))
+cyl("Tentzeil", 0.11, 0.11, 0.40, CANVAS, "X", 12, body, (0.40, -1.50, 0.64))
+cyl("Tentzeilkleiner", 0.07, 0.07, 0.34, CANVAS, "X", 10, body, (0.42, -1.40, 0.78), rot=(0, 0, 0.1))
+for dx in (-0.12, 0.12):
+    cyl(f"Tentzeilriem{dx}", 0.117, 0.117, 0.035, RIEM, "X", 12, body, (0.40 + dx, -1.50, 0.64))
+# radio en munitieblikken achter de stoelen
+box("Radio", (0.34, 0.30, 0.20), DONKER, body, (-0.43, -0.50, 0.60))
+box("Radiopaneel", (0.30, 0.22, 0.006), METAAL, body, (-0.43, -0.50, 0.703))
+for k in range(3):
+    cyl(f"Radioknop{k}", 0.02, 0.02, 0.02, ZWART, "Z", 8, body, (-0.52 + k * 0.09, -0.56, 0.715))
+cyl("Radioantennevoet", 0.025, 0.025, 0.05, METAAL, "Z", 8, body, (-0.34, -0.43, 0.725))
+for i, y in enumerate((-0.45, -0.62)):
+    box(f"Blik{i}", (0.24, 0.14, 0.18), OLIJF, body, (0.43, y, 0.59))
+    box(f"Blikgreep{i}", (0.10, 0.02, 0.02), METAAL, body, (0.43, y, 0.69))
+    box(f"Bliksluiting{i}", (0.05, 0.012, 0.04), METAAL, body, (0.43, y + 0.075, 0.62))
+# bodem met ribbels
+for x in (-0.22, 0.0, 0.22):
+    box(f"Bodemrib{x}", (0.04, 2.1, 0.012), DONKER, body, (x, -0.5, 0.50))
+# rand van de bak: rolrand langs de bovenkant, zodat je de omtrek van boven goed ziet
+for sx in (-1, 1):
+    cyl(f"Rolrand{sx}", 0.022, 0.022, 1.72, DONKER, "Y", 8, body, (sx * 0.64, -0.76, 0.99))
+cyl("RolrandAchter", 0.022, 0.022, 1.3, DONKER, "X", 8, body, (0, YA, 0.99))
+# jerrycans in een houder buiten langs de bak (achter de achterwielen)
+for sx in (-1, 1):
+    cx = sx * 0.72
+    box(f"Zijcan{sx}", (0.10, 0.32, 0.36), OLIJF if sx < 0 else DONKER, body, (cx, -1.47, 0.68))
+    cyl(f"Zijcandop{sx}", 0.03, 0.03, 0.04, METAAL, "Z", 8, body, (cx, -1.40, 0.88))
+    box(f"Zijcangreep{sx}", (0.03, 0.14, 0.03), ZWART, body, (cx, -1.53, 0.88))
+    for dy in (-0.09, 0.09):
+        box(f"Zijcanriem{sx}{dy}", (0.125, 0.03, 0.40), RIEM, body, (cx, -1.47 + dy, 0.68))
+        box(f"Zijcangesp{sx}{dy}", (0.03, 0.03, 0.05), METAAL, body, (cx + sx * 0.055, -1.47 + dy, 0.72))
+    box(f"Zijcankruis{sx}a", (0.006, 0.26, 0.018), ZWART if sx < 0 else WIT, body, (cx + sx * 0.052, -1.47, 0.68), (0.8, 0, 0))
+    box(f"Zijcankruis{sx}b", (0.006, 0.26, 0.018), ZWART if sx < 0 else WIT, body, (cx + sx * 0.052, -1.47, 0.68), (-0.8, 0, 0))
+# achterste jerrycan krijgt dop, greep en riemen
+cyl("Achtercandop", 0.03, 0.03, 0.04, METAAL, "Z", 8, body, (-0.34, YA - 0.08, 1.0))
+box("Achtercangreep", (0.10, 0.03, 0.03), ZWART, body, (-0.40, YA - 0.08, 1.0))
+for dz in (-0.09, 0.09):
+    box(f"Achtercanriem{dz}", (0.19, 0.14, 0.03), RIEM, body, (-0.38, YA - 0.08, 0.78 + dz))
+# motorkap: klinknagels, sluithaken, reservecan en schep met riemen
+for sx in (-1, 1):
+    for i in range(9):
+        y = 0.72 + i * 0.1
+        cyl(f"Klinknagel{sx}_{i}", 0.012, 0.012, 0.008, METAAL, "Z", 6, body, (sx * 0.47, y, kap_z(y) + 0.003))
+    y = 1.55
+    box(f"Kapslot{sx}", (0.05, 0.06, 0.014), METAAL, body, (sx * 0.28, y, kap_z(y) + 0.008))
+    box(f"Kaphaak{sx}", (0.012, 0.03, 0.04), METAAL, body, (sx * 0.28, y + 0.05, kap_z(y) - 0.01))
+box("Kapcan", (0.17, 0.40, 0.12), OLIJF, body, (0.30, 1.28, kap_z(1.28) + 0.06), (HOOD_HELLING, 0, 0))
+cyl("Kapcandop", 0.028, 0.028, 0.03, METAAL, "Z", 8, body, (0.30, 1.40, kap_z(1.40) + 0.135))
+box("Kapcangreep", (0.09, 0.03, 0.03), ZWART, body, (0.30, 1.18, kap_z(1.18) + 0.13))
+for y in (1.14, 1.42):
+    box(f"Kapcanriem{y}", (0.215, 0.04, 0.14), RIEM, body, (0.30, y, kap_z(y) + 0.062), (HOOD_HELLING, 0, 0))
+    box(f"Kapcangesp{y}", (0.04, 0.045, 0.012), METAAL, body, (0.30, y, kap_z(y) + 0.135))
+cyl("Schepsteel", 0.014, 0.014, 0.62, HOUT, "Y", 6, body, (-0.30, 1.06, kap_z(1.06) + 0.025), smooth=False)
+box("Schepblad", (0.17, 0.22, 0.012), METAAL, body, (-0.30, 1.48, kap_z(1.48) + 0.012), (HOOD_HELLING, 0, 0))
+box("Schepgreep", (0.07, 0.02, 0.02), HOUT, body, (-0.30, 0.76, kap_z(0.76) + 0.028))
+for y in (1.12, 1.38):
+    box(f"Schepriem{y}", (0.12, 0.035, 0.05), RIEM, body, (-0.30, y, kap_z(y) + 0.03))
+# witte ster op de kap en herkenningsstrepen op de bumpers
+ster("Kapster", 0.17, WIT, body, (0.0, 1.30, kap_z(1.30) + 0.0045), (HOOD_HELLING, 0, 0))
+for sx in (-1, 1):
+    box(f"Bumpernummer{sx}a", (0.16, 0.055, 0.004), WIT, body, (sx * 0.5, 1.82, 0.537))
+    box(f"Bumpernummer{sx}b", (0.05, 0.055, 0.004), WIT, body, (sx * 0.32, 1.82, 0.537))
+box("Achterbumpernr", (0.3, 0.05, 0.004), WIT, body, (0.35, YA - 0.06, 0.495))
+# koplampbeschermers
+for sx in (-1, 1):
+    torus(f"Lampbeugel{sx}", 0.115, 0.01, METAAL, body, (sx * 0.36, 1.725, 0.77), (math.pi / 2, 0, 0))
+    box(f"Lampbeugelhoriz{sx}", (0.23, 0.012, 0.012), METAAL, body, (sx * 0.36, 1.725, 0.77))
+    box(f"Lampbeugelvert{sx}", (0.012, 0.012, 0.23), METAAL, body, (sx * 0.36, 1.725, 0.77))
+# dashboard, versnellingspook, wijzers en een karabijn op de passagiersstoel
+box("Dashboard", (1.14, 0.12, 0.10), DONKER, body, (0, 0.60, 0.93))
+for k, x in enumerate((-0.38, -0.22, 0.12, 0.28)):
+    cyl(f"Wijzer{k}", 0.032, 0.032, 0.01, METAAL, "Z", 10, body, (x, 0.60, 0.985))
+cyl("Pook", 0.012, 0.012, 0.28, ZWART, "Z", 6, body, (-0.08, 0.18, 0.78))
+sphere("Pookknop", 0.026, ZWART, body, (-0.08, 0.18, 0.93))
+cyl("Handrem", 0.012, 0.012, 0.28, ZWART, "Y", 6, body, (0.06, 0.12, 0.72))
+karabijn = empty("Karabijn", body, (0.30, 0.02, 0.715), )
+karabijn.rotation_euler = (0, 0, 0.18)
+box("Kolf", (0.05, 0.5, 0.045), HOUT, karabijn, (0, -0.1, 0))
+box("Loop", (0.02, 0.45, 0.02), METAAL, karabijn, (0, 0.36, 0.008))
+box("Riem", (0.012, 0.3, 0.012), RIEM, karabijn, (0.03, 0.0, 0.03))
+
 # ---------- UV's, modifiers, samenvoegen ----------
+bpy.context.view_layer.update()
 for o in list(scene.objects):
     if o.type == "MESH":
-        bpy.context.view_layer.objects.active = o
-        for s in scene.objects:
-            s.select_set(s == o)
-        bpy.ops.object.mode_set(mode="EDIT")
-        bpy.ops.mesh.select_all(action="SELECT")
-        bpy.ops.uv.cube_project(cube_size=1.5)
-        bpy.ops.object.mode_set(mode="OBJECT")
+        me = o.data
+        mw = o.matrix_world
+        uvl = me.uv_layers.new(name="UVMap") if not me.uv_layers else me.uv_layers[0]
+        for poly in me.polygons:
+            n = mw.to_3x3() @ poly.normal
+            ax = max(range(3), key=lambda i: abs(n[i]))
+            for li in poly.loop_indices:
+                c = mw @ me.vertices[me.loops[li].vertex_index].co
+                u, v = ((c.x, c.y), (c.x, c.z), (c.y, c.z))[2 - ax] if False else ((c.y, c.z) if ax == 0 else ((c.x, c.z) if ax == 1 else (c.x, c.y)))
+                uvl.data[li].uv = (u / 1.6, v / 1.6)
 for o in scene.objects:
     o.select_set(o.type == "MESH")
 romp = bpy.data.objects["Bodem"]

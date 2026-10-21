@@ -2,7 +2,7 @@ extends CharacterBody3D
 ## Eigen jeep met een schutter op een .50 MG. Hij staat geparkeerd in de basis; kom je dichtbij, dan
 ## verschijnt de knop INSTAPPEN. Bestuurd: linker stick = rijden (de jeep draait naar waar je duwt),
 ## rechter stick = het MG richten, tot de rand duwen = schieten. Aanrijden doet schade aan vijanden.
-## Geparkeerd richt en schiet de schutter zelf op vijanden in de buurt.
+## Uit de garage rijdt hij zelf naar zijn plek (`goals`). Geparkeerd schiet de schutter niet; schieten doe je zelf als je in de jeep zit.
 ## Model: assets/jeep.glb (Blender), voorkant is -Z. Wielen, sturen en vering doet deze code; van de
 ## Blender-clips gebruiken we alleen Vuren (terugslag, vlam, hulzen, schutter).
 
@@ -15,22 +15,19 @@ const WHEEL_R := 0.37
 const MAX_STEER := 0.5      # rad
 const GUN_TURN := 3.0       # rad/s draaien van het MG als de schutter zelf richt
 const GUN_TURN_DRIVEN := 7.0
-const SIGHT := 30.0         # m, bereik van de schutter als je geparkeerd staat
 const FIRE_RATE := 0.1      # s tussen kogels
 const DAMAGE := 9.0
-const BURST := 1.6          # s vuren door de schutter, daarna even pauze
-const PAUSE := 0.7
 const BOARD_DIST := 4.5     # m: dichterbij dan dit toont de knop INSTAPPEN
 const RAM_DAMAGE := 40.0
 
 var driven := false
+var goals: Array = []  # Vector3-punten waar hij zelf naartoe rijdt (uit de garage); leeg = geparkeerd
 var _speed := 0.0
 var _steer := 0.0
 var _yaw_rate := 0.0
 var _accel := 0.0
 var _t := 0.0
 var _cool := 0.0
-var _burst := BURST
 var _ram_cd := 0.0
 var _firing := false
 var _night := false
@@ -131,6 +128,7 @@ func _toggle() -> void:
 		_btn.queue_redraw()
 	else:
 		driven = true
+		goals.clear()
 		p.driving = true
 		p.visible = false
 		p.collision_mask = 0
@@ -166,7 +164,21 @@ func _drive(delta: float, live: bool) -> void:
 	var want_steer := 0.0
 	var pivot := 0.0
 	var mv := Game.move
-	if driven and live and mv.length() > 0.15:
+	collision_mask = 0 if not goals.is_empty() else 50
+	if not driven and not goals.is_empty():
+		# uit de garage naar zijn parkeerplek: sturen naar het volgende punt
+		var to: Vector3 = goals[0] - global_position
+		to.y = 0.0
+		if to.length() < 1.3:
+			goals.pop_front()
+		else:
+			var fwd := -global_transform.basis.z
+			var alpha := atan2(fwd.cross(to).y, fwd.dot(to))
+			want_steer = clampf(atan(2.0 * WHEELBASE * sin(alpha) / maxf(to.length(), 2.5)), -MAX_STEER, MAX_STEER)
+			want_speed = clampf(to.length() * 0.8 + 0.8, 1.5, 4.5)
+			if goals.size() == 1:
+				want_speed = clampf(to.length() * 0.8, 0.8, 4.5)
+	elif driven and live and mv.length() > 0.15:
 		# de jeep draait naar de kant waar je de stick duwt; ligt die achter hem, dan rijdt hij achteruit
 		var want := atan2(-mv.x, -mv.y)
 		var diff := wrapf(want - rotation.y, -PI, PI)
@@ -243,30 +255,11 @@ func _aim_driven(delta: float, live: bool) -> void:
 	_set_firing(shoot)
 
 
+## Geparkeerd of zonder bestuurder schiet de schutter niet: schieten doe je zelf vanuit de jeep.
 func _aim_auto(delta: float) -> void:
-	var target = null
-	var best := SIGHT
-	for e in Game.enemies:
-		var d: float = e.global_position.distance_to(global_position)
-		if d < best:
-			best = d
-			target = e
-	var local := 0.0
-	if target:
-		var v: Vector3 = target.global_position - global_position
-		local = wrapf(atan2(-v.x, -v.z) - rotation.y, -PI, PI)
-	var d := wrapf(local - _gun.rotation.y, -PI, PI)
+	var d := wrapf(0.0 - _gun.rotation.y, -PI, PI)
 	_gun.rotation.y += clampf(d, -GUN_TURN * delta, GUN_TURN * delta)
-	var shoot: bool = target != null and absf(d) < 0.1 and _burst > 0.0
-	_burst -= delta
-	if _burst < -PAUSE:
-		_burst = BURST
-	_cool -= delta
-	if shoot and _cool <= 0.0:
-		_cool = FIRE_RATE + 0.025
-		var v: Vector3 = target.global_position - _monding.global_position
-		_shoot(atan2(v.x, v.z) + randf_range(-0.04, 0.04))
-	_set_firing(shoot)
+	_set_firing(false)
 
 
 func _shoot(angle: float) -> void:

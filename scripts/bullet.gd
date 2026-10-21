@@ -33,8 +33,8 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 		_mesh.size = Vector3(0.05, 0.05, 0.9)
 		_mat_p = _tracer(Color(1.0, 0.85, 0.4))
 		_mat_e = _tracer(Color(1.0, 0.45, 0.25))
-		_glow_p = _glow(Color(1.0, 0.95, 0.7, 1.0), Color(1.0, 0.65, 0.15, 0.3))
-		_glow_e = _glow(Color(1.0, 0.75, 0.55, 1.0), Color(1.0, 0.25, 0.1, 0.3))
+		_glow_p = _glow(Color(1.0, 0.85, 0.3, 1.0), Color(1.0, 0.35, 0.0, 0.0))
+		_glow_e = _glow(Color(1.0, 0.45, 0.25, 1.0), Color(0.9, 0.05, 0.0, 0.0))
 	var b := Bullet.new()
 	b.mesh = _glow_p if by_player else _glow_e
 	b.dir = Vector3(sin(angle), 0.0, cos(angle))
@@ -76,20 +76,44 @@ static func fire_rocket(parent: Node, from: Vector3, angle: float, damage: float
 	b.rotation.y = angle
 
 
-## Lichtspoor: een felle kern met een bredere, langere gloed eromheen (twee vlakken, beide optellend belicht).
-static func _glow(core: Color, halo: Color) -> ArrayMesh:
+## Lichtspoor: een felle kop met een staart die uitdooft (twee kruislings gezette vlakken met een kleurverloop)
+## en een kleine gloeiende bol als kop. Beide tellen op bij wat erachter ligt, dus het straalt zonder te vullen.
+static func _glow(head: Color, tail: Color) -> ArrayMesh:
 	var m := ArrayMesh.new()
-	for part in [[Vector3(0.05, 0.05, 1.1), core], [Vector3(0.12, 0.12, 2.4), halo]]:
-		var b := BoxMesh.new()
-		b.size = part[0]
-		m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, b.get_mesh_arrays())
-		var mat := StandardMaterial3D.new()
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-		mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-		mat.albedo_color = part[1]
-		mat.no_depth_test = false
-		m.surface_set_material(m.get_surface_count() - 1, mat)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var z0 := -2.0   # staart
+	var z1 := 0.35   # kop
+	for ang in [0.0, PI * 0.5]:
+		var side := Vector3(cos(ang), sin(ang), 0.0) * 0.07
+		var pts := [Vector3(0, 0, z0) - side * 0.2, Vector3(0, 0, z0) + side * 0.2, Vector3(0, 0, z1) + side, Vector3(0, 0, z1) - side]
+		var cols := [tail, tail, head, head]
+		for i in [0, 1, 2, 0, 2, 3]:
+			st.set_color(cols[i])
+			st.add_vertex(pts[i])
+	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, st.commit_to_arrays())
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.vertex_color_use_as_albedo = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.surface_set_material(0, mat)
+	var ball := SphereMesh.new()
+	ball.radius = 0.09
+	ball.height = 0.18
+	ball.radial_segments = 8
+	ball.rings = 4
+	var bm := StandardMaterial3D.new()
+	bm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	bm.albedo_color = Color(1.0, 0.95, 0.75)
+	var arr := ball.get_mesh_arrays()
+	var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+	for i in verts.size():
+		verts[i] += Vector3(0, 0, z1)
+	arr[Mesh.ARRAY_VERTEX] = verts
+	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	m.surface_set_material(1, bm)
 	return m
 
 

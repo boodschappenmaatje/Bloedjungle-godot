@@ -250,8 +250,8 @@ func _physics_process(delta: float) -> void:
 	for g in list:
 		if g.broken:
 			continue
-		if g.user_open and (not live or Game.player == null or Game.player.global_position.distance_to(pos_of(g)) > 10.0):
-			g.user_open = false  # een poort die je open liet gaat dicht als je ver weg bent
+		if g.user_open and (not live or Game.player == null or Game.player.global_position.distance_to(pos_of(g)) > REACH + 2.0):
+			g.user_open = false  # sluit vanzelf zodra jij en je soldaten er niet meer doorheen gaan
 		var friend: bool = live and g.user_open
 		if live and not friend:
 			for a in Game.allies:

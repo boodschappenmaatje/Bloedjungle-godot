@@ -40,13 +40,13 @@ const PLAYER_COLOR := Color("4b5a2c")
 const BASE_HP := 1000.0
 const START_POINTS := 300
 
-const COMPOUND := 14.0   # halve breedte van de betonmuur rond de basis
+const COMPOUND := 28.0   # halve breedte van de betonmuur rond de basis
 const GATE_GAP := 2.4    # halve breedte van de twee poortopeningen (noord en zuid)
 const WALL_H := 1.55
 const WALL_T := 0.4
 const BUNKER_HALF := 2.3
-const WORLD_R := 60.0    # in deze proef een kleinere kaart dan de 108 m van de web-versie
-const SPAWN_R := 46.0
+const WORLD_R := 80.0    # in deze proef een kleinere kaart dan de 108 m van de web-versie
+const SPAWN_R := 58.0
 
 const ENEMY_BULLET_SPEED := 34.0
 const ENEMY_BULLET_LIFE := 1.1

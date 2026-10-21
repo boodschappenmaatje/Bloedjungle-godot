@@ -82,7 +82,7 @@ func _physics_process(delta: float) -> void:
 
 func _goal() -> Vector3:
 	if Game.troop_mode == "hold":
-		var p: Vector2 = POSTS[idx % POSTS.size()]
+		var p: Vector2 = POSTS[idx % POSTS.size()] * (Data.COMPOUND / 14.0)
 		return Vector3(p.x, 0, p.y)
 	var a := float(idx) * 2.4 + 0.6
 	var base: Vector3 = Game.player.global_position

@@ -191,7 +191,7 @@ static func rock() -> Mesh:
 static func plant(parent: Node3D, seed_ := 11) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
-	var sets := {"palm": [150, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
+	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
 	var meshes := {"palm": palm(), "bush": bush(), "fern": fern(), "grass": grass(), "rock": rock()}
 	for kind in sets:
 		var c: Array = sets[kind]
@@ -239,9 +239,9 @@ static func _scatter(rng: RandomNumberGenerator, count: int, r_min: float, r_max
 		var p := Vector3(cos(a) * r, 0, sin(a) * r)
 		if maxf(absf(p.x), absf(p.z)) < Data.COMPOUND + 1.8:
 			continue
-		if absf(p.x) < 4.6 and absf(p.z) > Data.COMPOUND and absf(p.z) < 50.0:
+		if absf(p.x) < 4.6 and absf(p.z) > Data.COMPOUND and absf(p.z) < 70.0:
 			continue  # pad vanaf de poorten
-		if p.x > Data.COMPOUND and p.x < 25.5 and absf(p.z) < 23.0:
+		if p.x > Data.COMPOUND and p.x < Data.COMPOUND + 11.5 and absf(p.z) < 23.0:
 			continue  # tankbaan langs de oostmuur
 		var s := rng.randf_range(s_min, s_max)
 		var b := Basis.from_euler(Vector3(rng.randf_range(-tilt, tilt), rng.randf() * TAU, rng.randf_range(-tilt, tilt))).scaled(Vector3(s, s * rng.randf_range(0.85, 1.2), s))

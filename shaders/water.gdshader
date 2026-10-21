@@ -12,7 +12,7 @@ uniform float speed = 1.6;
 varying vec3 wpos;
 
 float river_z(float x) {
-	return -45.0 + 5.0 * sin(0.06 * x) + 2.0 * sin(0.15 * x + 1.0);
+	return -92.0 + 5.0 * sin(0.06 * x) + 2.0 * sin(0.15 * x + 1.0);
 }
 
 void vertex() {

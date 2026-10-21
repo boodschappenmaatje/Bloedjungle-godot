@@ -201,8 +201,9 @@ func _fly(delta: float, live: bool) -> void:
 	vel = vel.lerp(want, minf(1.0, ACCEL * delta * 0.5))
 	global_position += vel * delta
 	var flat := Vector2(global_position.x, global_position.z)
-	if flat.length() > Data.WORLD_R:
-		flat = flat.limit_length(Data.WORLD_R)
+	var clamped := Data.clamp_world(flat)
+	if clamped != flat:
+		flat = clamped
 		global_position = Vector3(flat.x, global_position.y, flat.y)
 	# neus: naar waar je richt, anders naar waar je heen vliegt
 	var face := rotation.y

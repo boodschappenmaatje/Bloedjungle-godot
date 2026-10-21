@@ -82,12 +82,13 @@ func _spawn(kind: String) -> void:
 	if kind == "rocket" and not Game.rocket_seen:
 		Game.rocket_seen = true
 		Game.banner.emit("RAKETWERPERS", "Ze schieten je gebouwen kapot", 2.5)
-	var a := randf() * TAU
-	for _i in 12:  # niet in de rivier beginnen
-		if Data.river_off(cos(a) * Data.SPAWN_R, sin(a) * Data.SPAWN_R) > Data.RIVER_HALF + 3.5:
-			break
-		a = randf() * TAU
-	e.position = Vector3(cos(a), 0, sin(a)) * Data.SPAWN_R
+	if randf() < 0.4:
+		# ruim een derde komt van voorbij de rivier en moet door het bos en over de brug of door de ondiepte
+		var x := randf_range(-60.0, 60.0)
+		e.position = Vector3(x, 0, Data.river_z(x) - 14.0)
+	else:
+		var a := randf() * TAU
+		e.position = Vector3(cos(a), 0, sin(a)) * Data.SPAWN_R
 	add_child(e)
 
 

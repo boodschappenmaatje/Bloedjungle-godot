@@ -64,8 +64,9 @@ func _physics_process(delta: float) -> void:
 	velocity = Vector3(mv.x, 0.0, mv.y) * Data.PLAYER_SPEED * spd_mul
 	move_and_slide()
 	var flat := Vector2(position.x, position.z)
-	if flat.length() > Data.WORLD_R:
-		flat = flat.limit_length(Data.WORLD_R)
+	var clamped := Data.clamp_world(flat)
+	if clamped != flat:
+		flat = clamped
 		position = Vector3(flat.x, position.y, flat.y)
 	if tower != null:
 		_on_deck(mv)

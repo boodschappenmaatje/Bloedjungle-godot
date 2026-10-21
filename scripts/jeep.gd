@@ -206,8 +206,9 @@ func _drive(delta: float, live: bool) -> void:
 	if get_slide_collision_count() > 0:
 		_speed *= 0.6
 	var flat := Vector2(global_position.x, global_position.z)
-	if flat.length() > Data.WORLD_R:
-		flat = flat.limit_length(Data.WORLD_R)
+	var clamped := Data.clamp_world(flat)
+	if clamped != flat:
+		flat = clamped
 		global_position = Vector3(flat.x, 0.0, flat.y)
 
 

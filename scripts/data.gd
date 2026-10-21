@@ -64,8 +64,27 @@ static func strip_zone(x: float) -> String:
 	return "dicht"
 
 
+## Midden van de rivier op afstand x: ongeveer 90 m achter de basis, met een bos ertussen.
+const RIVER_Z0 := -92.0
+const FOREST_Z0 := -30.0   # het bos begint bij de noordmuur
+const WORLD_X := 88.0      # kaartrand west/oost, zuid, en noord (voorbij de rivier)
+const WORLD_Z_S := 80.0
+const WORLD_Z_N := 128.0
+
+
 static func river_z(x: float) -> float:
-	return -45.0 + 5.0 * sin(x * 0.06) + 2.0 * sin(x * 0.15 + 1.0)
+	return RIVER_Z0 + 5.0 * sin(x * 0.06) + 2.0 * sin(x * 0.15 + 1.0)
+
+
+## Kronkelpad van de noordpoort door het bos naar de brug (zelfde formule in ground.gdshader).
+static func path_x(z: float) -> float:
+	var t := clampf((FOREST_Z0 - z) / (-(RIVER_Z0 + 1.8) + FOREST_Z0), 0.0, 1.0)
+	return 12.0 * sin(t * 9.6) * sin(t * PI)
+
+
+## Houdt iets binnen de kaart: een rechthoek die in het noorden voorbij de rivier doorloopt.
+static func clamp_world(p: Vector2) -> Vector2:
+	return Vector2(clampf(p.x, -WORLD_X, WORLD_X), clampf(p.y, -WORLD_Z_N, WORLD_Z_S))
 
 
 static func river_off(x: float, z: float) -> float:

@@ -3,7 +3,7 @@ extends Node3D
 ## Bouwt de wereld: de jungle-bodem, de basis (base_props.gd) en de jungle eromheen (foliage.gd).
 ## @tool: je ziet het ook in de editor. Maten uit 05-world.js van de web-versie.
 
-const SIZE := 240.0
+const SIZE := 320.0
 
 
 func _ready() -> void:

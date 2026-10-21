@@ -4,7 +4,7 @@ class_name Foliage
 
 static var _mats := {}
 static var _shadow_mats := {}  # soort -> nepschaduw-materiaal
-const STRIP_EXTRA := {"palm": 190, "bush": 520, "fern": 560, "grass": 2200, "rock": 14}  # extra stuks in de strook tussen muur en rivier
+const STRIP_EXTRA := {"palm": 70, "bush": 230, "fern": 330, "grass": 1300, "rock": 26}  # extra stuks in de strook tussen muur en rivier
 ## Hoeveel van de extra planten per gebied blijft staan: moeras = varens en gras, open plek = bijna kaal met rotsen, dicht = alles.
 const STRIP_KEEP := {
 	"dicht": {"palm": 1.0, "bush": 1.0, "fern": 1.0, "grass": 1.0, "rock": 0.5},
@@ -263,6 +263,8 @@ static func _in_river(p: Vector3) -> bool:
 	var d := absf(p.z - Data.river_z(p.x))
 	if d < Data.RIVER_HALF + 1.0:
 		return true
+	if p.z < Data.FOREST_Z0 and p.z > Data.river_z(0.0) and absf(p.x - Data.path_x(p.z)) < 3.4:
+		return true  # het pad door het bos blijft open
 	if d < 12.0 and (absf(p.x - Data.BRIDGE_X) < 4.2 or absf(p.x - Data.FORD_X) < 3.6):
 		return true
 	return false
@@ -276,16 +278,26 @@ static func _add(rng: RandomNumberGenerator, out: Array, cols: Array, p: Vector3
 	cols.append(Color(v, v * rng.randf_range(0.94, 1.08), v * 0.92))
 
 
-## Dichte jungle in de strook tussen de basismuur en de rivier; het pad vanaf de poort naar de brug blijft vrij.
+## Bos tussen de basismuur en de rivier en daarachter: bosjes en open plekken wisselen elkaar af (rustige sinus-ruis),
+## dus je kunt tussen de bomen door lopen en kijken. Het pad van de poort naar de brug blijft vrij.
+static func _grove(x: float, z: float) -> float:
+	return 0.5 + 0.5 * sin(x * 0.075 + 1.3) * sin(z * 0.095 + 0.4)
+
+
 static func _strip(rng: RandomNumberGenerator, kind: String, count: int, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
 	var tries := 0
-	while out.size() < count and tries < count * 20:
+	while out.size() < count and tries < count * 30:
 		tries += 1
-		var x := rng.randf_range(-Data.WORLD_R * 0.8, Data.WORLD_R * 0.8)
+		var x := rng.randf_range(-Data.WORLD_X + 2.0, Data.WORLD_X - 2.0)
+		var north := rng.randf() < 0.3
 		var zr := Data.river_z(x)
-		var z := rng.randf_range(zr + Data.RIVER_HALF + 1.2, -Data.COMPOUND - 2.0)
+		var z := rng.randf_range(-Data.WORLD_Z_N + 3.0, zr - Data.RIVER_HALF - 1.2) if north else rng.randf_range(zr + Data.RIVER_HALF + 1.2, -Data.COMPOUND - 2.0)
 		var p := Vector3(x, 0, z)
-		if absf(x) < 4.6 or _in_river(p) or Vector2(x, z).length() > Data.WORLD_R:
+		if _in_river(p):
+			continue
+		if kind == "palm" and p.z < Data.FOREST_Z0 and absf(x - Data.path_x(z)) < 7.5:
+			continue  # langs het pad geen kruinen die het zicht afsluiten
+		if kind != "grass" and rng.randf() > 0.25 + 0.75 * _grove(x, z):
 			continue
 		if rng.randf() > STRIP_KEEP[Data.strip_zone(x)][kind]:
 			continue
@@ -309,9 +321,9 @@ static func logs(parent: Node3D, seed_ := 41) -> void:
 	body.collision_mask = 0
 	parent.add_child(body)
 	var tries := 0
-	while xf.size() < 26 and tries < 600:
+	while xf.size() < 30 and tries < 800:
 		tries += 1
-		var x := rng.randf_range(-Data.WORLD_R * 0.75, Data.WORLD_R * 0.75)
+		var x := rng.randf_range(-Data.WORLD_X + 3.0, Data.WORLD_X - 3.0)
 		var p := Vector3(x, 0.32, rng.randf_range(Data.river_z(x) + 5.0, -Data.COMPOUND - 3.0))
 		if absf(x) < 6.0 or _in_river(p) or Data.strip_zone(x) == "moeras" and rng.randf() < 0.5:
 			continue

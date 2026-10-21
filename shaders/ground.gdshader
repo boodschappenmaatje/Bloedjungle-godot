@@ -27,7 +27,7 @@ void vertex() {
 void fragment() {
 	vec2 p = wpos.xz;
 	// de rivier is uit de grond gesneden (scripts/river.gd legt de bedding eronder; zelfde formule als Data.river_z)
-	float river_off = abs(p.y - (-45.0 + 5.0 * sin(p.x * 0.06) + 2.0 * sin(p.x * 0.15 + 1.0)));
+	float river_off = abs(p.y - (-92.0 + 5.0 * sin(p.x * 0.06) + 2.0 * sin(p.x * 0.15 + 1.0)));
 	if (river_off < 2.6) {
 		discard;
 	}
@@ -77,9 +77,14 @@ void fragment() {
 	float patches = smoothstep(0.66, 0.8, n1 + 0.2 * n2);
 	float dm = clamp(max(max(inside, path), patches * 0.8), 0.0, 1.0);
 	dm = max(dm, 1.0 - smoothstep(2.9, 5.0 + n2 * 1.6, river_off));  // modderige oevers
-	// moeras: in de strook tussen muur en rivier, ten westen van x = -22, natte donkere bodem
-	float swamp = (1.0 - smoothstep(-38.0, -22.0, p.x + n2 * 6.0)) * (1.0 - smoothstep(-35.0, -31.0, p.y)) * (1.0 - smoothstep(0.0, 2.0, river_off - 3.0));
-	dm = max(dm, swamp * 0.9);
+	// moeras: in het bos ten westen van x = -22, natte donkere bodem
+	float swamp = (1.0 - smoothstep(-38.0, -22.0, p.x + n2 * 6.0)) * (1.0 - smoothstep(-70.0, -40.0, p.y)) * smoothstep(-84.0, -70.0, p.y);
+	swamp *= 1.0 - smoothstep(0.0, 2.0, river_off - 3.0);
+	// kronkelpad van de noordpoort door het bos naar de brug (zelfde formule als Data.path_x)
+	float pt = clamp((-30.0 - p.y) / 60.2, 0.0, 1.0);
+	float ptx = 12.0 * sin(pt * 9.6) * sin(pt * 3.14159265);
+	float trail = (1.0 - smoothstep(1.4, 3.0 + n2 * 1.4, abs(p.x - ptx))) * step(0.001, pt) * step(pt, 0.999);
+	dm = max(dm, max(swamp * 0.9, trail * 0.9));
 	dm = smoothstep(0.2, 0.8, dm + (n3 - 0.5) * 0.3 + (hgt - 0.5) * 0.5);  // zachte rand, kiezels steken door het gras
 
 	dirt *= 1.0 - 0.45 * swamp;

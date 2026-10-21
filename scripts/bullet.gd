@@ -11,6 +11,8 @@ const MASK_BUNKER := 16
 static var _mesh: BoxMesh
 static var _mat_p: StandardMaterial3D
 static var _mat_e: StandardMaterial3D
+static var _glow_p: ArrayMesh
+static var _glow_e: ArrayMesh
 
 var dir := Vector3.FORWARD
 var speed := 75.0
@@ -31,9 +33,10 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 		_mesh.size = Vector3(0.05, 0.05, 0.9)
 		_mat_p = _tracer(Color(1.0, 0.85, 0.4))
 		_mat_e = _tracer(Color(1.0, 0.45, 0.25))
+		_glow_p = _glow(Color(1.0, 0.95, 0.7, 1.0), Color(1.0, 0.65, 0.15, 0.3))
+		_glow_e = _glow(Color(1.0, 0.75, 0.55, 1.0), Color(1.0, 0.25, 0.1, 0.3))
 	var b := Bullet.new()
-	b.mesh = _mesh
-	b.material_override = _mat_p if by_player else _mat_e
+	b.mesh = _glow_p if by_player else _glow_e
 	b.dir = Vector3(sin(angle), 0.0, cos(angle))
 	b.speed = spd
 	b.dmg = damage
@@ -73,6 +76,23 @@ static func fire_rocket(parent: Node, from: Vector3, angle: float, damage: float
 	b.rotation.y = angle
 
 
+## Lichtspoor: een felle kern met een bredere, langere gloed eromheen (twee vlakken, beide optellend belicht).
+static func _glow(core: Color, halo: Color) -> ArrayMesh:
+	var m := ArrayMesh.new()
+	for part in [[Vector3(0.05, 0.05, 1.1), core], [Vector3(0.12, 0.12, 2.4), halo]]:
+		var b := BoxMesh.new()
+		b.size = part[0]
+		m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, b.get_mesh_arrays())
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		mat.albedo_color = part[1]
+		mat.no_depth_test = false
+		m.surface_set_material(m.get_surface_count() - 1, mat)
+	return m
+
+
 static func _tracer(c: Color) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -85,6 +105,8 @@ func _physics_process(delta: float) -> void:
 	if life <= 0.0:
 		if rocket:
 			_boom_enemy(global_position)
+		elif dir.y < -0.05 and randf() < 0.35:
+			Fx.dust(get_parent(), Vector3(global_position.x, 0.1, global_position.z))  # schuine kogel (heli) slaat in de grond
 		queue_free()
 		return
 	if rocket and randf() < 0.5:
@@ -105,6 +127,8 @@ func _physics_process(delta: float) -> void:
 			queue_free()
 			return
 		if c.has_method("hit"):
+			if not (c is BuildingBody):
+				Fx.spark(get_parent(), hit.position, -dir)
 			c.hit(dmg, dir, from_player)
 			if c is BuildingBody:
 				Fx.impact(get_parent(), hit.position, hit.normal)

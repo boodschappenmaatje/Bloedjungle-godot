@@ -114,4 +114,5 @@ func _shoot() -> void:
 	var muzzle := global_position + fwd * 0.6 + Vector3.UP * 1.33 * Data.SOLDIER_SCALE
 	Bullet.fire(get_parent(), muzzle, face + randf_range(-0.05, 0.05), 70.0, dmg, 0.6, true)
 	Fx.muzzle(get_parent(), muzzle)
+	Fx.casing(get_parent(), muzzle - Vector3(0, 0.15, 0))
 	Sfx.play("ak", 0.45, global_position)

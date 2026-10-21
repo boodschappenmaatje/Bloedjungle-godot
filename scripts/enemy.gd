@@ -212,6 +212,8 @@ func _shoot(a: float) -> void:
 		rise = (_tgt_y + 1.0 - muzzle.y) / maxf(dd, 3.0)
 	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread * _aim_mult(), Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false, false, 0, 0.0, 0.0, rise)
 	Fx.muzzle(get_parent(), muzzle)
+	if Game.player and _flat(Game.player.global_position - global_position).length() < 30.0:
+		Fx.casing(get_parent(), muzzle - Vector3(0, 0.15, 0))
 	Sfx.play("ak" if type == "heavy" else "enemy", 1.0, global_position)
 
 

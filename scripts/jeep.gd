@@ -2,7 +2,7 @@ extends CharacterBody3D
 ## Eigen jeep met een schutter op een .50 MG. Hij staat geparkeerd in de basis; kom je dichtbij, dan
 ## verschijnt de knop INSTAPPEN. Bestuurd: linker stick = rijden (de jeep draait naar waar je duwt),
 ## rechter stick = het MG richten, tot de rand duwen = schieten. Aanrijden doet schade aan vijanden.
-## Geparkeerd richt en schiet de schutter zelf op vijanden in de buurt.
+## Geparkeerd schiet de schutter niet; schieten doe je zelf als je in de jeep zit.
 ## Model: assets/jeep.glb (Blender), voorkant is -Z. Wielen, sturen en vering doet deze code; van de
 ## Blender-clips gebruiken we alleen Vuren (terugslag, vlam, hulzen, schutter).
 
@@ -15,11 +15,8 @@ const WHEEL_R := 0.37
 const MAX_STEER := 0.5      # rad
 const GUN_TURN := 3.0       # rad/s draaien van het MG als de schutter zelf richt
 const GUN_TURN_DRIVEN := 7.0
-const SIGHT := 30.0         # m, bereik van de schutter als je geparkeerd staat
 const FIRE_RATE := 0.1      # s tussen kogels
 const DAMAGE := 9.0
-const BURST := 1.6          # s vuren door de schutter, daarna even pauze
-const PAUSE := 0.7
 const BOARD_DIST := 4.5     # m: dichterbij dan dit toont de knop INSTAPPEN
 const RAM_DAMAGE := 40.0
 
@@ -30,7 +27,6 @@ var _yaw_rate := 0.0
 var _accel := 0.0
 var _t := 0.0
 var _cool := 0.0
-var _burst := BURST
 var _ram_cd := 0.0
 var _firing := false
 var _night := false
@@ -243,30 +239,11 @@ func _aim_driven(delta: float, live: bool) -> void:
 	_set_firing(shoot)
 
 
+## Geparkeerd of zonder bestuurder schiet de schutter niet: schieten doe je zelf vanuit de jeep.
 func _aim_auto(delta: float) -> void:
-	var target = null
-	var best := SIGHT
-	for e in Game.enemies:
-		var d: float = e.global_position.distance_to(global_position)
-		if d < best:
-			best = d
-			target = e
-	var local := 0.0
-	if target:
-		var v: Vector3 = target.global_position - global_position
-		local = wrapf(atan2(-v.x, -v.z) - rotation.y, -PI, PI)
-	var d := wrapf(local - _gun.rotation.y, -PI, PI)
+	var d := wrapf(0.0 - _gun.rotation.y, -PI, PI)
 	_gun.rotation.y += clampf(d, -GUN_TURN * delta, GUN_TURN * delta)
-	var shoot: bool = target != null and absf(d) < 0.1 and _burst > 0.0
-	_burst -= delta
-	if _burst < -PAUSE:
-		_burst = BURST
-	_cool -= delta
-	if shoot and _cool <= 0.0:
-		_cool = FIRE_RATE + 0.025
-		var v: Vector3 = target.global_position - _monding.global_position
-		_shoot(atan2(v.x, v.z) + randf_range(-0.04, 0.04))
-	_set_firing(shoot)
+	_set_firing(false)
 
 
 func _shoot(angle: float) -> void:

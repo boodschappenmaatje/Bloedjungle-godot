@@ -108,7 +108,76 @@ static func dust(parent: Node, pos: Vector3) -> void:
 ## Inslag in een muur of bunker: stof en een kogelgat.
 static func impact(parent: Node, pos: Vector3, normal: Vector3) -> void:
 	dust(parent, pos)
+	spark(parent, pos, normal)
 	decal(parent, pos, normal, "hole", 0.35, 60.0)
+
+
+## Felle vonkjes met een korte flits: inslag in muur of bunker, en bij een raak op een mens.
+static func spark(parent: Node, pos: Vector3, normal: Vector3) -> void:
+	_flash_quad(parent, pos, randf_range(0.35, 0.55), 0.06, Color(1.0, 0.85, 0.5, 0.9))
+	_burst(parent, pos, normal, 5, Color(1.0, 0.8, 0.4), 0.035, 7.0)
+
+
+static func _flash_quad(parent: Node, pos: Vector3, size: float, life: float, col: Color) -> void:
+	if not _mats.has("flash"):
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+		m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		m.albedo_texture = soft()
+		m.albedo_color = Color(1.0, 0.72, 0.3, 0.8)
+		m.no_depth_test = true
+		_mats["flash"] = m
+		var q := QuadMesh.new()
+		q.size = Vector2.ONE
+		q.material = m
+		_mats["flash_mesh"] = q
+	var f := MeshInstance3D.new()
+	f.mesh = _mats["flash_mesh"]
+	f.scale = Vector3.ONE * size
+	f.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(f)
+	f.global_position = pos
+	parent.get_tree().create_timer(life).timeout.connect(f.queue_free)
+
+
+## Uitgeworpen huls: vliegt in een boogje weg, stuitert niet maar blijft even liggen.
+static var _casing_mesh: BoxMesh
+static var _casings := 0
+
+
+static func casing(parent: Node, pos: Vector3) -> void:
+	if _casings >= 36:
+		return
+	if _casing_mesh == null:
+		_casing_mesh = BoxMesh.new()
+		_casing_mesh.size = Vector3(0.025, 0.025, 0.075)
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.85, 0.62, 0.22)
+		mat.metallic = 0.7
+		mat.roughness = 0.35
+		_casing_mesh.material = mat
+	var c := MeshInstance3D.new()
+	c.mesh = _casing_mesh
+	c.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(c)
+	c.global_position = pos
+	_casings += 1
+	c.tree_exited.connect(func(): _casings -= 1)
+	var a := randf() * TAU
+	var v := Vector3(cos(a), 0.0, sin(a)) * randf_range(1.2, 2.6) + Vector3.UP * randf_range(2.0, 3.2)
+	var g := 9.8
+	var y0 := maxf(pos.y - 0.03, 0.0)
+	var d := (v.y + sqrt(v.y * v.y + 2.0 * g * y0)) / g
+	var spin := Vector3(randf_range(-25.0, 25.0), randf_range(-25.0, 25.0), randf_range(-25.0, 25.0))
+	var tw := c.create_tween()
+	tw.tween_method(func(t: float):
+		c.global_position = pos + Vector3(v.x * t, v.y * t - 0.5 * g * t * t, v.z * t)
+		c.rotation = spin * t, 0.0, d, d)
+	tw.tween_interval(9.0)
+	tw.tween_property(c, "scale", Vector3.ZERO, 1.0)
+	tw.tween_callback(c.queue_free)
 
 
 static func _burst(parent: Node, pos: Vector3, dir: Vector3, amount: int, col: Color, size: float, spd: float) -> void:
@@ -143,8 +212,8 @@ static var _flash_lights := 0
 static func muzzle(parent: Node, pos: Vector3) -> void:
 	if _flash_mesh == null:
 		_flash_mesh = SphereMesh.new()
-		_flash_mesh.radius = 0.16
-		_flash_mesh.height = 0.32
+		_flash_mesh.radius = 0.09
+		_flash_mesh.height = 0.18
 		var mat := StandardMaterial3D.new()
 		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		mat.albedo_color = Color(1.0, 0.8, 0.35)
@@ -154,6 +223,8 @@ static func muzzle(parent: Node, pos: Vector3) -> void:
 	parent.add_child(f)
 	f.global_position = pos
 	parent.get_tree().create_timer(0.05).timeout.connect(f.queue_free)
+	_flash_quad(parent, pos, randf_range(0.45, 0.65), 0.05, Color.WHITE)
+	_burst(parent, pos, Vector3.UP * 0.2, 4, Color(1.0, 0.8, 0.4), 0.03, 6.0)
 	# hooguit twee flitslichten tegelijk: elk licht kost op de telefoon beeldkracht en vertraagt drukke gevechten
 	if _flash_lights < 2:
 		_flash_lights += 1

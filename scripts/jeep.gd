@@ -267,6 +267,7 @@ func _shoot(angle: float) -> void:
 	var from := _monding.global_position
 	Bullet.fire(get_parent(), from, angle, 90.0, DAMAGE, 0.45, true, true)
 	Fx.muzzle(get_parent(), from)
+	Fx.casing(get_parent(), from)
 	Sfx.play("mg", 0.4, global_position)
 
 

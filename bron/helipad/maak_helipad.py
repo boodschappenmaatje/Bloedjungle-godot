@@ -584,6 +584,8 @@ if len(sys.argv) > 2:
         o.animation_data_clear()
         scene.collection.objects.link(o)
     ap, body, rump, rotor, rotm, staart = (bpy.data.objects[n] for n in ("Apache", "Body", "RompMesh", "Rotor", "RotorMesh", "Staartrotor"))
+    body.rotation_euler = (0, 0, 0)   # apache_anim.blend bewaart de stand van de laatste clip (scheef)
+    bpy.context.view_layer.update()
     zmin = min((rump.matrix_world @ Vector(c)).z for c in rump.bound_box) - body.location.z
     body.location.z = -zmin
     ap.parent = lift

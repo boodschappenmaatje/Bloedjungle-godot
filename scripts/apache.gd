@@ -49,6 +49,10 @@ func _ready() -> void:
 	if ap:
 		ap.stop()
 		ap.queue_free()
+	# het model is bewaard in de stand van de laatste Blender-clip (scheef overhellend): eerst recht zetten
+	var body := inst.find_child("Body", true, false) as Node3D
+	if body:
+		body.rotation = Vector3.ZERO
 	_rotor = inst.find_child("Rotor", true, false)
 	_tail = inst.find_child("Staartrotor", true, false)
 	# de skids net op de grond zetten

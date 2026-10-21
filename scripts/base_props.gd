@@ -1,6 +1,6 @@
 class_name BaseProps
 ## De basis: betonnen muur met palen, de bunker met zandzakken en antenne, vier wachttorens,
-## twee hutten en kratten. Muren, bunker, torens en hutten houden kogels en mensen tegen.
+## (hutten en kratten zijn weg). Muren, bunker en torens houden kogels en mensen tegen.
 ## Maten van muur, poorten en bunker komen uit data.gd (zoals in de web-versie).
 
 const C := Data.COMPOUND
@@ -14,10 +14,6 @@ static func build(root: Node3D) -> void:
 	for sx in [-1.0, 1.0]:
 		for sz in [-1.0, 1.0]:
 			_tower(root, Vector3(sx * (C - 1.8), 0, sz * (C - 1.8)))
-	_hut(root, Vector3(-9.6, 0, 7.5), 0.12)
-	_hut(root, Vector3(9.4, 0, -8.0), PI + 0.1)
-	_crates(root, Vector3(-6.2, 0, 9.2))
-	_crates(root, Vector3(6.4, 0, -9.6))
 	Kit.sandbags(root, Vector3(-C + 0.7, 0, 3.0), Vector3(-C + 0.7, 0, 8.0), 2, 3)
 	Kit.sandbags(root, Vector3(C - 0.7, 0, -3.0), Vector3(C - 0.7, 0, -8.0), 2, 4)
 

@@ -91,7 +91,30 @@ func _attach_gun(model: Node, gun_kind := "rifle") -> void:
 	anim.seek(0.05, true)
 	var pose := skel.get_bone_global_pose(skel.find_bone("DEF-handR"))
 	_grip_basis = pose.basis.orthonormalized().inverse()
+	_attach_gear(skel)
 	set_gun(gun_kind)
+
+
+const GEAR := preload("res://assets/uitrusting.glb")  # bron/uitrusting: helm, rugzak, koppel, laarzen
+const GEAR_BONE := {"Helm": "DEF-head", "Rugzak": "DEF-spine003", "Koppel": "DEF-hips", "LaarsL": "DEF-footL", "LaarsR": "DEF-footR"}
+
+
+## Hangt de uitrusting aan de botten. De delen zijn gemodelleerd in de ruimte van het mannetje in de stilstaande houding;
+## de omgekeerde botpose zet ze in de ruimte van het bot.
+func _attach_gear(skel: Skeleton3D) -> void:
+	var holder := GEAR.instantiate()
+	for part in GEAR_BONE:
+		var node := holder.find_child(part, true, false) as Node3D
+		var bone := skel.find_bone(GEAR_BONE[part])
+		if node == null or bone < 0:
+			continue
+		node.get_parent().remove_child(node)
+		var att := BoneAttachment3D.new()
+		att.bone_name = GEAR_BONE[part]
+		skel.add_child(att)
+		node.transform = skel.get_bone_global_pose(bone).affine_inverse()
+		att.add_child(node)
+	holder.queue_free()
 
 
 ## Hangt een ander wapen in de hand ("" = niets). Namen als in Data.WEAPONS, of het type vijand.

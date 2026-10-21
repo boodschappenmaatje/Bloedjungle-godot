@@ -19,6 +19,7 @@ config/description="Top-down shooter: verdedig je jungle-bunker tegen golven vij
 run/main_scene="res://scenes/main.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 config/icon="res://icon.svg"
+run/max_fps=120
 
 [autoload]
 
@@ -31,6 +32,7 @@ window/size/viewport_width=1280
 window/size/viewport_height=720
 window/size/mode=3
 window/handheld/orientation=4
+window/ios/allow_high_refresh_rate=true
 window/ios/hide_home_indicator=true
 window/ios/hide_status_bar=true
 window/ios/suppress_ui_gesture=true

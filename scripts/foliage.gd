@@ -174,8 +174,18 @@ static func plant(parent: Node3D, seed_ := 11) -> void:
 			rm.vertex_color_use_as_albedo = true
 			Kit.scatter(parent, meshes[kind], rm, xf, cols)
 		else:
-			var inst := Kit.scatter(parent, meshes[kind], null, xf, cols, kind != "grass")
-			inst.add_to_group("foliage_" + kind)  # de grafiekinstelling dunt gras en struiken uit
+			# in vakken van 36 m, zodat de camera alleen tekent en laat schaduwen wat in beeld is
+			var cells := {}
+			for i in xf.size():
+				var o: Vector3 = xf[i].origin
+				var key := Vector2i(floori(o.x / 36.0), floori(o.z / 36.0))
+				if not cells.has(key):
+					cells[key] = [[], []]
+				cells[key][0].append(xf[i])
+				cells[key][1].append(cols[i])
+			for key in cells:
+				var inst := Kit.scatter(parent, meshes[kind], null, cells[key][0], cells[key][1], kind != "grass")
+				inst.add_to_group("foliage_" + kind)  # de grafiekinstelling dunt gras en struiken uit
 
 
 static func _scatter(rng: RandomNumberGenerator, count: int, r_min: float, r_max: float, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:

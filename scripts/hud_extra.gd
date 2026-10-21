@@ -181,7 +181,7 @@ func _process(delta: float) -> void:
 	visible = Game.state != "menu"
 	_fps.visible = GameSettings.get_value("fps") == "on"
 	if _fps.visible:
-		_fps.text = "%d FPS" % Engine.get_frames_per_second()
+		_fps.text = "%d FPS · %d%%" % [Engine.get_frames_per_second(), roundi(get_viewport().scaling_3d_scale * 100.0)]
 	var main := get_parent().get_parent()
 	var left: int = Game.enemies.size() + (main.queue.size() if "queue" in main else 0)
 	_wave.text = "GOLF %d" % maxi(Game.wave, 1)

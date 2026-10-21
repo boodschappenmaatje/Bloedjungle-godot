@@ -87,7 +87,7 @@ func _process(delta: float) -> void:
 	if _fog0 >= 0.0 and env:
 		env.fog_density = _fog0
 		_fog0 = -1.0
-	attributes.dof_blur_far_enabled = true
+	attributes.dof_blur_far_enabled = GameSettings.get_value("quality") == "ultra"  # scherptediepte kost veel op mobiel
 	_blook = Vector3.ZERO
 	far = 220.0
 	var h := 27.0 if portrait else 21.0

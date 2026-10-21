@@ -18,6 +18,7 @@ func _ready() -> void:
 	add_child(Game.builds)
 	Game.gates = Gates.new()
 	add_child(Game.gates)
+	add_child(PerfGovernor.new())
 	if Progress.autostart:
 		Progress.autostart = false
 		_start_prep()

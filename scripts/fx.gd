@@ -137,6 +137,9 @@ static func _burst(parent: Node, pos: Vector3, dir: Vector3, amount: int, col: C
 
 
 ## Mondingsflits: een felgele bol die na een paar honderdsten verdwijnt.
+static var _flash_lights := 0
+
+
 static func muzzle(parent: Node, pos: Vector3) -> void:
 	if _flash_mesh == null:
 		_flash_mesh = SphereMesh.new()
@@ -151,12 +154,16 @@ static func muzzle(parent: Node, pos: Vector3) -> void:
 	parent.add_child(f)
 	f.global_position = pos
 	parent.get_tree().create_timer(0.05).timeout.connect(f.queue_free)
-	var l := OmniLight3D.new()
-	l.light_color = Color(1.0, 0.75, 0.4)
-	l.light_energy = 3.0
-	l.omni_range = 7.0
-	l.shadow_enabled = false
-	f.add_child(l)
+	# hooguit twee flitslichten tegelijk: elk licht kost op de telefoon beeldkracht en vertraagt drukke gevechten
+	if _flash_lights < 2:
+		_flash_lights += 1
+		var l := OmniLight3D.new()
+		l.light_color = Color(1.0, 0.75, 0.4)
+		l.light_energy = 3.0
+		l.omni_range = 7.0
+		l.shadow_enabled = false
+		f.add_child(l)
+		l.tree_exited.connect(func(): _flash_lights -= 1)
 
 
 static func _particle_mat(col: Color, additive: bool) -> StandardMaterial3D:

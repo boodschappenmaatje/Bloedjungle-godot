@@ -4,6 +4,8 @@ extends Node
 ## (HUD blijft scherp); is het weer vlot, dan gaat de resolutie stapje voor stapje terug omhoog tot de
 ## ingestelde grafiek-stand. Zo blijft het spelen soepel op elk toestel en tijdens drukke golven.
 
+static var grace_until := 0  # ms; na het laden tellen de eerste paar seconden niet mee
+
 const MIN_SCALE := 0.5
 const DOWN_FPS := 56.0
 const UP_FPS := 59.0
@@ -25,7 +27,7 @@ func _process(delta: float) -> void:
 		_cap = table[q].scale
 		vp.scaling_3d_scale = _cap
 	# de eerste seconden (laden, shaders) tellen niet mee
-	if Time.get_ticks_msec() < 4000 or Game.state == "menu":
+	if Time.get_ticks_msec() < maxi(4000, grace_until) or Game.state == "menu":
 		return
 	_acc += delta
 	_frames += 1

@@ -19,22 +19,90 @@ func _ready() -> void:
 	Game.gates = Gates.new()
 	add_child(Game.gates)
 	add_child(PerfGovernor.new())
+	Game.state = "menu"
 	if Progress.autostart:
 		Progress.autostart = false
+		await _load_world()
 		_start_prep()
 	else:
-		Game.state = "menu"
 		Game.changed.emit()
 		for m in get_tree().get_nodes_in_group("menus"):
 			m.show_menu()
 
 
-## Start een missie vanuit het hoofdmenu.
+## Start een missie vanuit het hoofdmenu. De wereld wordt pas nu gebouwd, achter het laadscherm.
 func begin() -> void:
+	await _load_world()
 	Game.reset()
 	if Game.player:
 		Game.player.refresh_look()
 	_start_prep()
+
+
+## Bouwt de wereld (eenmalig) achter een laadscherm en tekent daarna alles één keer, zodat vuur, explosies en
+## de eerste vijanden niet midden in een golf hapering geven.
+func _load_world() -> void:
+	var lvl: Node3D = $Level
+	if lvl.get("built"):
+		return
+	var instant := DisplayServer.get_name() == "headless" or OS.has_environment("BJ_INSTANT")
+	var screen := Loading.new()
+	if not instant:
+		add_child(screen)
+		await get_tree().process_frame
+	var progress := func(frac: float, text: String) -> void:
+		screen.set_progress(frac, text)
+	if instant:
+		lvl.build_now()
+	else:
+		await lvl.build_stepped(progress)
+		progress.call(0.82, "Alles klaarzetten...")
+		await get_tree().process_frame
+		await _warm_up()
+		progress.call(1.0, "Klaar")
+		await get_tree().process_frame
+	PerfGovernor.grace_until = Time.get_ticks_msec() + 3000
+	screen.queue_free()
+
+
+## Zet één van alles kort in beeld (onder het laadscherm): modellen, vijandtypes, kogels en effecten.
+func _warm_up() -> void:
+	var warm := Node3D.new()
+	add_child(warm)
+	var base: Vector3 = Game.player.global_position if Game.player else Vector3(0, 0, 4)
+	var n := 0
+	for path in ["res://assets/soldaat.glb", "res://assets/klimmen.glb", "res://assets/kazerne.glb", "res://assets/garage.glb", "res://assets/helipad.glb", "res://assets/zwaailamp.glb", "res://assets/apache.glb", "res://assets/loopgraaf.glb", "res://assets/poort.glb", "res://assets/wachttoren.glb"]:
+		if not ResourceLoader.exists(path):
+			continue
+		var m: Node3D = (load(path) as PackedScene).instantiate()
+		m.position = base + Vector3(-4.0 + n * 1.2, 0, -5.0)
+		warm.add_child(m)
+		var kind: String = path.get_file().get_basename()
+		Kit.skin(m, kind)
+		n += 1
+	var i := 0
+	for kind in Data.ETYPES:
+		var e := ENEMY.instantiate()
+		e.setup(kind, 1)
+		e.position = base + Vector3(-3.0 + i * 2.0, 0, -9.0)
+		warm.add_child(e)
+		e.process_mode = Node.PROCESS_MODE_DISABLED
+		Game.enemies.erase(e)
+		i += 1
+	var at: Vector3 = base + Vector3(0, 0, -7.0)
+	Fx.explosion(warm, at, 1.0)
+	Fx.muzzle(warm, at + Vector3.UP)
+	Fx.blood(warm, at, Vector3.UP)
+	Fx.dust(warm, at)
+	Fx.impact(warm, at, Vector3.UP)
+	Fx.ground_blood(warm, at)
+	Fx.burning(warm, at + Vector3(2, 0, 0), true)
+	Bullet.fire(warm, at + Vector3.UP, 0.0, 10.0, 0.0, 0.5, true)
+	Bullet.fire_rocket(warm, at + Vector3(0, 1, 2), 0.0, 0.0, 0.4)
+	for _f in 8:
+		await get_tree().process_frame
+	warm.queue_free()
+	Game.enemies.clear()
 
 
 func _start_prep() -> void:

@@ -195,13 +195,15 @@ static func rock() -> Mesh:
 
 
 ## Zet de hele jungle neer: buiten de muur, met het pad vanaf de poorten vrij.
-static func plant(parent: Node3D, seed_ := 11) -> void:
+static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 	logs(parent)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
 	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
 	var meshes := {"palm": palm(), "bush": bush(), "fern": fern(), "grass": grass(), "rock": rock()}
 	for kind in sets:
+		if step.is_valid():
+			await step.call(kind)
 		var c: Array = sets[kind]
 		var xf: Array = []
 		var cols: Array = []

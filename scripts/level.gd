@@ -6,13 +6,45 @@ extends Node3D
 const SIZE := 320.0
 
 
+var built := false
+
+
 func _ready() -> void:
+	# in de editor, bij tests en met BJ_INSTANT meteen bouwen; in het spel doet main dat achter het laadscherm
+	if Engine.is_editor_hint() or DisplayServer.get_name() == "headless" or OS.has_environment("BJ_INSTANT"):
+		build_now()
+
+
+func build_now() -> void:
 	for c in get_children():
 		c.free()
 	_ground()
 	BaseProps.build(self)
 	River.build(self)
 	Foliage.plant(self)
+	built = true
+
+
+## Bouwt de wereld in stappen, met een beeld tussen elke stap, zodat het laadscherm blijft bewegen.
+## progress(fractie, tekst) wordt na elke stap aangeroepen.
+func build_stepped(progress: Callable) -> void:
+	for c in get_children():
+		c.free()
+	var tick := func(frac: float, text: String) -> void:
+		progress.call(frac, text)
+		await get_tree().process_frame
+	await tick.call(0.02, "Grond leggen...")
+	_ground()
+	await tick.call(0.1, "Basis bouwen...")
+	BaseProps.build(self)
+	await tick.call(0.2, "Rivier en brug...")
+	River.build(self)
+	var names := {"palm": "Palmen planten...", "bush": "Struiken planten...", "fern": "Varens planten...", "grass": "Gras laten groeien...", "rock": "Rotsen neerleggen..."}
+	var order := ["palm", "bush", "fern", "grass", "rock"]
+	var step := func(kind: String) -> void:
+		await tick.call(0.3 + 0.12 * order.find(kind), names[kind])
+	await Foliage.plant(self, 11, step)
+	built = true
 
 
 func _ground() -> void:

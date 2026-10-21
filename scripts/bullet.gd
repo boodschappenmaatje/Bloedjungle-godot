@@ -20,6 +20,7 @@ var mask := 0
 var from_player := true
 var pierce := 0
 var explosive := 0.0
+var rocket := false  # vijandelijke raket: ontploft op de plek waar hij gemikt was
 var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
 
 
@@ -48,6 +49,30 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.rotation.y = angle
 
 
+## Vijandelijke raket (18-enemies.js): traag, vliegt over de muur en ontploft waar hij gemikt was of tegen de eerste speler of bunker.
+static func fire_rocket(parent: Node, from: Vector3, angle: float, damage: float, lifetime: float) -> void:
+	if _mesh == null:
+		fire(parent, from, angle, 0.0, 0.0, 0.0, false)  # maakt de gedeelde mesh en materialen klaar
+		for c in parent.get_children():
+			if c is Bullet and c.speed == 0.0:
+				c.queue_free()
+	var b := Bullet.new()
+	b.mesh = _mesh
+	b.material_override = _mat_e
+	b.scale = Vector3(3.0, 3.0, 0.8)
+	b.dir = Vector3(sin(angle), 0.0, cos(angle))
+	b.speed = 17.0
+	b.dmg = damage
+	b.life = lifetime
+	b.from_player = false
+	b.rocket = true
+	b.explosive = 3.2
+	b.mask = MASK_PLAYER | MASK_BUNKER
+	parent.add_child(b)
+	b.global_position = from
+	b.rotation.y = angle
+
+
 static func _tracer(c: Color) -> StandardMaterial3D:
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -58,8 +83,12 @@ static func _tracer(c: Color) -> StandardMaterial3D:
 func _physics_process(delta: float) -> void:
 	life -= delta
 	if life <= 0.0:
+		if rocket:
+			_boom_enemy(global_position)
 		queue_free()
 		return
+	if rocket and randf() < 0.5:
+		Fx.dust(get_parent(), global_position - dir * 0.6)
 	if sink > 0.0:
 		dir.y = -sink if global_position.y > 1.3 else 0.0
 	var step := dir * speed * delta
@@ -67,6 +96,10 @@ func _physics_process(delta: float) -> void:
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	if hit:
 		var c: Object = hit.collider
+		if rocket:
+			_boom_enemy(hit.position)
+			queue_free()
+			return
 		if explosive > 0.0:
 			_explode(hit.position)
 			queue_free()
@@ -91,9 +124,33 @@ func _physics_process(delta: float) -> void:
 func _explode(at: Vector3) -> void:
 	Fx.explosion(get_parent(), at, 1.4)
 	if Game.builds:
-		Game.builds.blast(at, explosive, dmg, 0.25)  # eigen raketten doen een beetje schade aan je eigen bouwwerk
+		Game.builds.blast(at, explosive, dmg, true)  # eigen raketten doen een beetje schade aan je eigen bouwwerk
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e):
 			var d: float = e.global_position.distance_to(at)
 			if d < explosive:
 				e.hit(dmg * (1.0 - d / explosive * 0.7), (e.global_position - at).normalized(), true)
+
+
+## Ontploffing van een vijandelijke raket (explode() in 15-combat.js met fromPlayer = false).
+func _boom_enemy(at: Vector3) -> void:
+	var r := explosive
+	Fx.explosion(get_parent(), at, 0.9)
+	if Game.builds:
+		Game.builds.blast(at, r, dmg, false)
+	if Game.gates:
+		for i in Game.gates.list.size():
+			var g: Dictionary = Game.gates.list[i]
+			var gd: float = maxf(0.0, Vector2(Game.gates.pos_of(g).x - at.x, Game.gates.pos_of(g).z - at.z).length() - Data.GATE_GAP)
+			if not g.broken and gd < r:
+				Game.gates.damage(i, dmg * 1.2 * (1.0 - gd / r), "bullet")
+	var p = Game.player
+	if p != null and not p.dead:
+		var pd: float = Vector2(p.global_position.x - at.x, p.global_position.z - at.z).length()
+		if pd < r:
+			p.hit(dmg * 0.6 * (0.5 if p.elev > 1.0 else 1.0) * (1.0 - pd / r), (p.global_position - at).normalized(), false)
+	var bx := maxf(absf(at.x) - Data.BUNKER_HALF, 0.0)
+	var bz := maxf(absf(at.z) - Data.BUNKER_HALF, 0.0)
+	var bd := Vector2(bx, bz).length()
+	if bd < r:
+		Game.damage_base(dmg * 0.5 * (1.0 - bd / r))

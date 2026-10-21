@@ -54,6 +54,9 @@ func _ready() -> void:
 		g.shape = cs
 		g.wreck = _wreck(root)
 		g.beacons = [_beacon(Vector3(-(G + 0.3), 2.26, sz * C)), _beacon(Vector3(G + 0.3, 2.26, sz * C))]
+		g.bar = HpBar.new()
+		add_child(g.bar)
+		g.bar.position = Vector3(0, 3.4, sz * C)
 		list.append(g)
 	_apply_all()
 
@@ -248,6 +251,7 @@ func _apply(g: Dictionary) -> void:
 func _physics_process(delta: float) -> void:
 	var live := Game.state == "play" or Game.state == "prep"
 	for g in list:
+		g.bar.set_value(g.hp / g.max_hp, not g.broken and (g.hp < g.max_hp or Game.build_mode))
 		if g.broken:
 			continue
 		if g.user_open and (not live or Game.player == null or Game.player.global_position.distance_to(pos_of(g)) > REACH + 2.0):

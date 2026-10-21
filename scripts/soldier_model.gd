@@ -16,7 +16,7 @@ var _model: Node
 var _band: MeshInstance3D
 
 
-func setup(uniform: Color) -> void:
+func setup(uniform: Color, gun_kind := "rifle") -> void:
 	var model := SCENE.instantiate()
 	add_child(model)
 	anim = model.find_child("AnimationPlayer", true, false)
@@ -37,7 +37,7 @@ func setup(uniform: Color) -> void:
 			mi.set_surface_override_material(s, m)
 			_mats.append(m)
 			_base_cols.append(m.albedo_color)
-	_attach_gun(model)
+	_attach_gun(model, gun_kind)
 	_model = model
 	play("stil")
 
@@ -72,15 +72,23 @@ func set_band(c: Color) -> void:
 	(_band.material_override as StandardMaterial3D).albedo_color = c
 
 
-func _attach_gun(model: Node) -> void:
+func _attach_gun(model: Node, gun_kind := "rifle") -> void:
 	var skel: Skeleton3D = model.find_children("*", "Skeleton3D", true, false)[0]
 	var hand := BoneAttachment3D.new()
 	hand.bone_name = "DEF-handR"
 	skel.add_child(hand)
 	var gun := MeshInstance3D.new()
-	var box := BoxMesh.new()
-	box.size = Vector3(0.05, 0.09, 0.55)
-	gun.mesh = box
+	if gun_kind == "rocket":
+		# RPG-buis op de schouder
+		var tube := CylinderMesh.new()
+		tube.top_radius = 0.075
+		tube.bottom_radius = 0.075
+		tube.height = 1.1
+		gun.mesh = tube
+	else:
+		var box := BoxMesh.new()
+		box.size = Vector3(0.05, 0.09, 0.55)
+		gun.mesh = box
 	var m := StandardMaterial3D.new()
 	m.albedo_color = Color(0.12, 0.11, 0.1)
 	m.metallic = 0.5
@@ -91,7 +99,8 @@ func _attach_gun(model: Node) -> void:
 	anim.seek(0.05, true)
 	var pose := skel.get_bone_global_pose(skel.find_bone("DEF-handR"))
 	var inv := pose.basis.orthonormalized().inverse()
-	gun.transform = Transform3D(inv, inv * Vector3(0.0, 0.0, 0.18))
+	var tube_fix := Basis(Vector3.RIGHT, PI / 2.0) if gun_kind == "rocket" else Basis.IDENTITY
+	gun.transform = Transform3D(inv * tube_fix, inv * Vector3(0.0, 0.0, 0.3 if gun_kind == "rocket" else 0.18))
 	hand.add_child(gun)
 
 

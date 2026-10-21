@@ -190,8 +190,10 @@ func place(kind: String, at: Vector3, yaw: float) -> Variant:
 	node.rotation.y = yaw
 	add_child(node)
 	var b := {"kind": kind, "node": node, "at": at, "yaw": yaw, "lv": 1, "queue": 0, "train_t": 0.0,
-		"hp": DEFS[kind].hp, "max_hp": DEFS[kind].hp, "down": false, "cracked": false, "fx": null}
+		"hp": DEFS[kind].hp, "max_hp": DEFS[kind].hp, "down": false, "cracked": false, "fx": null, "bar": null}
 	node.ref = b
+	b.bar = HpBar.new()
+	add_child(b.bar)
 	if kind == "garage":
 		b.merge({"has": {"jeep": false, "tank": false}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
 		_garage_init(b)
@@ -240,6 +242,8 @@ func _push_out(b: Dictionary) -> void:
 
 func remove(b: Dictionary) -> void:
 	_clear_fx(b)
+	if b.bar != null:
+		b.bar.queue_free()
 	if b.kind == "helipad":
 		var player = Game.player
 		if b.heli != null and is_instance_valid(b.heli):
@@ -297,13 +301,14 @@ func _clear_fx(b: Dictionary) -> void:
 	b.fx = null
 
 
-## Ontploffing: bouwstukken in de buurt krijgen schade (factor: eigen granaten tellen minder mee).
-func blast(at: Vector3, radius: float, dmg: float, factor := 1.0) -> void:
+## Ontploffing (explode() in 15-combat.js): muren en zandzakken de helft, een gebouw van een vijand de volle schade en van jezelf 15%.
+func blast(at: Vector3, radius: float, dmg: float, own := false) -> void:
 	for b in Game.buildings.duplicate():
 		var sz: Vector3 = DEFS[b.kind].size
 		var d: float = maxf(0.0, Vector2(b.at.x - at.x, b.at.z - at.z).length() - maxf(sz.x, sz.z) * 0.5)
 		if d < radius:
-			damage(b, dmg * factor * (1.0 - d / radius * 0.7) * (1.0 if is_piece(b.kind) else 0.2))
+			var mult := 0.5 if is_piece(b.kind) else (0.15 if own else 1.0)
+			damage(b, dmg * mult * (1.0 - d / radius))
 
 
 # ---------------------------------------------------------------- waarde en herstel
@@ -416,6 +421,13 @@ func _spawn(b: Dictionary) -> void:
 func _physics_process(delta: float) -> void:
 	if Game.state != "play" and Game.state != "prep":
 		return
+	for b in Game.buildings:
+		var bar: HpBar = b.bar
+		if bar == null:
+			continue
+		var hurt: bool = b.hp < b.max_hp
+		bar.set_value(b.hp / b.max_hp, (hurt or Game.build_mode) and not b.down)
+		bar.global_position = b.at + Vector3(0, DEFS[b.kind].size.y + 1.0, 0)
 	for b in Game.buildings:
 		if b.down:
 			continue  # een wrak doet niets

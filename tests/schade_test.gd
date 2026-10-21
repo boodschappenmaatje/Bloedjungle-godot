@@ -37,7 +37,7 @@ func _process(_d: float) -> bool:
 		print("fix ", game.builds.fix_cost(kaz))
 		game.builds.repair(kaz)
 		print("na herbouw: down=", kaz.down, " hp=", kaz.hp, " scale=", kaz.node.scale)
-		game.builds.blast(Vector3(-8, 0, 22), 6.0, 300.0, 1.0)
+		game.builds.blast(Vector3(-8, 0, 22), 6.0, 300.0, false)
 		print("zak na blast ", zak.hp if game.buildings.has(zak) else "weg")
 		print("KLAAR")
 		quit()

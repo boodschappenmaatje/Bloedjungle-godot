@@ -79,6 +79,9 @@ func _process(delta: float) -> void:
 func _spawn(kind: String) -> void:
 	var e := ENEMY.instantiate()
 	e.setup(kind, Game.wave)
+	if kind == "rocket" and not Game.rocket_seen:
+		Game.rocket_seen = true
+		Game.banner.emit("RAKETWERPERS", "Ze schieten je gebouwen kapot", 2.5)
 	var a := randf() * TAU
 	e.position = Vector3(cos(a), 0, sin(a)) * Data.SPAWN_R
 	add_child(e)

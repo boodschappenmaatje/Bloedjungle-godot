@@ -31,6 +31,7 @@ static func upg_cost(id: String, lvl: int) -> int:
 const ETYPES := {
 	"knife": {"hp": 45.0, "speed": 4.9, "r": 0.42, "scale": 1.0, "melee": true, "dmg": 10.0, "rate": 0.85, "pts": 50, "color": Color("4c5056")},
 	"rifle": {"hp": 65.0, "speed": 3.2, "r": 0.44, "scale": 1.0, "range": 12.0, "dmg": 7.0, "rate": 1.6, "spread": 0.08, "pts": 60, "color": Color("8c7b52")},
+	"rocket": {"hp": 85.0, "speed": 2.7, "r": 0.46, "scale": 1.0, "range": 19.0, "dmg": 55.0, "rate": 4.2, "spread": 0.035, "pts": 160, "color": Color("5a4a3a"), "rocket": true, "gun": "rocket"},
 	"heavy": {"hp": 280.0, "speed": 2.2, "r": 0.58, "scale": 1.28, "range": 11.0, "dmg": 6.0, "rate": 0.11, "burst": 9, "pause": 1.9, "spread": 0.13, "pts": 180, "color": Color("3e4a2b")},
 }
 
@@ -52,9 +53,10 @@ const ENEMY_BULLET_SPEED := 34.0
 const ENEMY_BULLET_LIFE := 1.1
 const PREP_TIME := 20.0
 
-## Samenstelling van golf n, zoals buildWave() in 13-waves.js (zonder raketwerpers).
+## Samenstelling van golf n, zoals buildWave() in 13-waves.js .
 static func build_wave(n: int) -> Array:
 	var q := []
+	var rockets := 0
 	var total := 5 + int(n * 3.2)
 	var rifle_share := 0.0 if n < 2 else (0.34 if n < 4 else 0.48)
 	for i in total:
@@ -64,5 +66,8 @@ static func build_wave(n: int) -> Array:
 			t = "rifle"
 		if n >= 4 and r < 0.1 + n * 0.012:
 			t = "heavy"
+		if n >= 3 and r > 0.94 - n * 0.007 and rockets < 1 + n / 3.0:
+			t = "rocket"
+			rockets += 1
 		q.append(t)
 	return q

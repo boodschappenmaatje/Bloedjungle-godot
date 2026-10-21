@@ -11,6 +11,7 @@ var points := 0
 var score := 0
 var kills := 0
 var base_hp := Data.BASE_HP
+var rocket_seen := false
 var base_max := Data.BASE_HP
 var prep_t := 0.0
 var bonus := 0  # bonus van de laatste overleefde golf, getoond in de wapenkamer
@@ -51,6 +52,7 @@ var fire := false
 func reset() -> void:
 	state = "prep"
 	wave = 0
+	rocket_seen = false
 	points = Data.START_POINTS
 	score = 0
 	kills = 0

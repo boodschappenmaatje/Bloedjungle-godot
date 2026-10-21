@@ -32,7 +32,7 @@ func setup(kind: String, wave: int) -> void:
 
 
 func _ready() -> void:
-	model.setup(t.color)
+	model.setup(t.color, t.get("gun", "rifle"))
 	model.scale = Vector3.ONE * t.scale * Data.SOLDIER_SCALE
 	(shape.shape as CapsuleShape3D).radius = t.r
 	Game.enemies.append(self)
@@ -52,11 +52,18 @@ func _physics_process(delta: float) -> void:
 	if player and not player.dead:
 		to_player = _flat(player.global_position - global_position).length()
 	var at_player := to_player < (20.0 if melee else 16.0)
+	# raketwerpers gaan eerst achter een gebouw aan (rocketTower in 18-enemies.js)
+	var rb: Variant = _rocket_target() if t.get("rocket", false) else null
 	if melee and player and player.elev > 1.0:
 		at_player = false  # een mes reikt niet tot op een toren
 	_tgt_y = player.global_position.y if at_player else 0.0
 	var goal: Vector3 = player.global_position if at_player else Vector3.ZERO
 	var dist := to_player if at_player else _bunker_dist()
+	if rb != null:
+		at_player = false
+		_tgt_y = 0.0
+		goal = rb.at
+		dist = _flat(rb.at - global_position).length() - 2.0
 
 	fire_t -= delta
 	var want_move := true
@@ -75,7 +82,7 @@ func _physics_process(delta: float) -> void:
 					player.hit(t.dmg, Vector3(sin(look), 0, cos(look)), false)
 				else:
 					Game.damage_base(t.dmg)
-	elif dist < range_ and _clear_shot(aim_at, not at_player):
+	elif dist < range_ and (rb != null or _clear_shot(aim_at, not at_player)):
 		want_move = false
 		look = _angle_to(goal)
 		if fire_t <= 0.0:
@@ -117,7 +124,24 @@ func _physics_process(delta: float) -> void:
 var _tgt_y := 0.0
 
 
+## Dichtstbijzijnde bouwwerk (geen muur of zandzak) binnen 26 m dat nog heel is.
+func _rocket_target() -> Variant:
+	var best: Variant = null
+	var bd := 26.0
+	for b in Game.buildings:
+		if b.down or Game.builds.is_piece(b.kind):
+			continue
+		var d := _flat(b.at - global_position).length()
+		if d < bd:
+			bd = d
+			best = b
+	return best
+
+
 func _shoot(a: float) -> void:
+	if t.get("rocket", false):
+		_shoot_rocket(a)
+		return
 	var burst: int = t.get("burst", 0)
 	if burst > 0:
 		burst_n += 1
@@ -137,6 +161,24 @@ func _shoot(a: float) -> void:
 	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread * _aim_mult(), Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false, false, 0, 0.0, 0.0, rise)
 	Fx.muzzle(get_parent(), muzzle)
 	Sfx.play("ak" if type == "heavy" else "enemy", 1.0, global_position)
+
+
+## Een trage raket die afgaat waar hij gemikt was (of tegen het eerste dat in de weg staat).
+func _shoot_rocket(a: float) -> void:
+	fire_t = t.rate
+	var fwd := Vector3(sin(a), 0.0, cos(a))
+	var muzzle: Vector3 = global_position + fwd * 1.1 + Vector3.UP * 1.55
+	Game.mark_attack(global_position)
+	var rb: Variant = _rocket_target()
+	var d := 20.0
+	var dm: float = t.dmg
+	if rb != null:
+		d = _flat(rb.at - global_position).length()
+	elif Game.player:
+		d = _flat(Game.player.global_position - global_position).length()
+		dm *= 0.7
+	Bullet.fire_rocket(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread, dm, minf(1.6, (d + 1.5) / 17.0))
+	Sfx.play("rocket", 0.8, global_position)
 
 
 ## Vrij schootsveld: geen muur (of bunker, als hij op de speler mikt) ertussen.

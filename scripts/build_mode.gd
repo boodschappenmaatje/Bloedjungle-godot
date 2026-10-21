@@ -325,6 +325,8 @@ func _fill_panel() -> void:
 	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(sp)
 	var status := "niveau %d" % b.lv if b.kind == "kazerne" else "%d%%" % roundi(b.hp / b.max_hp * 100.0)
+	if b.down:
+		status = "verwoest"
 	head.add_child(UI.label(status.to_upper(), UI.body(700, 0), 13, UI.BRASS))
 	var x := Button.new()
 	x.add_to_group("hud_button")
@@ -379,7 +381,7 @@ func _fill_panel() -> void:
 		tip = Buildings.INFO.get(b.kind, "")
 	var fix: int = Game.builds.fix_cost(b)
 	if fix > 0:
-		_act(row, "Repareer", "%d pt" % fix, Game.can_afford_build(fix), func():
+		_act(row, "Herbouw" if b.down else "Repareer", "%d pt" % fix, Game.can_afford_build(fix), func():
 			Game.builds.repair(b)
 			Game.changed.emit())
 	_act(row, "Draai", "", true, func():

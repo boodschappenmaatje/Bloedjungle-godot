@@ -133,7 +133,7 @@ func _hits(size: Vector3, at: Vector3, yaw: float, ex: Array[RID]) -> bool:
 
 ## Het gebouw zelf: een StaticBody die kogels en mensen tegenhoudt, met het model eronder.
 func make_node(kind: String) -> StaticBody3D:
-	var body := StaticBody3D.new()
+	var body := BuildingBody.new()
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
 	var sz: Vector3 = DEFS[kind].size
@@ -190,7 +190,8 @@ func place(kind: String, at: Vector3, yaw: float) -> Variant:
 	node.rotation.y = yaw
 	add_child(node)
 	var b := {"kind": kind, "node": node, "at": at, "yaw": yaw, "lv": 1, "queue": 0, "train_t": 0.0,
-		"hp": DEFS[kind].hp, "max_hp": DEFS[kind].hp}
+		"hp": DEFS[kind].hp, "max_hp": DEFS[kind].hp, "down": false, "cracked": false, "fx": null}
+	node.ref = b
 	if kind == "garage":
 		b.merge({"has": {"jeep": false, "tank": false}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
 		_garage_init(b)
@@ -238,6 +239,7 @@ func _push_out(b: Dictionary) -> void:
 
 
 func remove(b: Dictionary) -> void:
+	_clear_fx(b)
 	if b.kind == "helipad":
 		var player = Game.player
 		if b.heli != null and is_instance_valid(b.heli):
@@ -250,9 +252,65 @@ func remove(b: Dictionary) -> void:
 	Game.changed.emit()
 
 
+# ---------------------------------------------------------------- schade (damageStructure in 16f-buildings.js)
+
+## Schade aan een bouwstuk. Muren en zandzakken vallen uit elkaar, een gebouw wordt een rokend wrak dat je herbouwt.
+func damage(b: Dictionary, dmg: float) -> void:
+	if b.down or dmg <= 0.0 or (Game.state != "play" and Game.state != "prep") or not Game.buildings.has(b):
+		return
+	b.hp -= dmg
+	var node: Node3D = b.node
+	if randf() < 0.5:
+		Fx.dust(self, node.global_position + Vector3(randf_range(-1, 1), 0.8, randf_range(-1, 1)))
+	if not b.cracked and b.hp > 0.0 and b.hp < b.max_hp * 0.5:
+		b.cracked = true
+		if is_piece(b.kind):
+			node.scale.y = 0.75
+		else:
+			b.fx = Fx.burning(self, node.global_position, false)
+			Game.banner.emit("%s BESCHADIGD" % DEFS[b.kind].name.to_upper(), "", 1.2)
+	if b.hp <= 0.0:
+		_break(b)
+	Game.changed.emit()
+
+
+func _break(b: Dictionary) -> void:
+	var at: Vector3 = b.node.global_position
+	if is_piece(b.kind):
+		Fx.explosion(self, at + Vector3.UP * 0.4, 0.5)
+		remove(b)
+		return
+	b.down = true
+	b.hp = 0.0
+	b.queue = 0
+	b.node.scale = Vector3(1, 0.32, 1)
+	b.node.collision_layer = 0
+	_clear_fx(b)
+	b.fx = Fx.burning(self, at, true)
+	Fx.explosion(self, at + Vector3.UP * 1.0, 1.2)
+	Game.banner.emit("%s VERWOEST" % DEFS[b.kind].name.to_upper(), "Herbouw hem in de bouwmodus.", 2.2)
+
+
+func _clear_fx(b: Dictionary) -> void:
+	if b.fx != null and is_instance_valid(b.fx):
+		b.fx.queue_free()
+	b.fx = null
+
+
+## Ontploffing: bouwstukken in de buurt krijgen schade (factor: eigen granaten tellen minder mee).
+func blast(at: Vector3, radius: float, dmg: float, factor := 1.0) -> void:
+	for b in Game.buildings.duplicate():
+		var sz: Vector3 = DEFS[b.kind].size
+		var d: float = maxf(0.0, Vector2(b.at.x - at.x, b.at.z - at.z).length() - maxf(sz.x, sz.z) * 0.5)
+		if d < radius:
+			damage(b, dmg * factor * (1.0 - d / radius * 0.7) * (1.0 if is_piece(b.kind) else 0.2))
+
+
 # ---------------------------------------------------------------- waarde en herstel
 
 func fix_cost(b: Dictionary) -> int:
+	if b.down:
+		return roundi(DEFS[b.kind].cost / 2.0)
 	if b.hp >= b.max_hp:
 		return 0
 	return roundi(DEFS[b.kind].cost * 0.4) if is_piece(b.kind) else 100
@@ -262,6 +320,12 @@ func repair(b: Dictionary) -> void:
 	var c := fix_cost(b)
 	if c > 0 and Game.pay_build(c):
 		b.hp = b.max_hp
+		b.cracked = false
+		if b.down:
+			b.down = false
+			b.node.scale = Vector3.ONE
+			b.node.collision_layer = Kit.LAYER_WALL
+		_clear_fx(b)
 		Sfx.play("reload")
 
 
@@ -271,7 +335,7 @@ func sell_value(b: Dictionary) -> int:
 	if b.kind == "kazerne":
 		for l in range(2, b.lv + 1):
 			spent += LEVELS[l].cost
-	return roundi(spent * 0.5) + b.queue * TRAIN_COST
+	return roundi(spent * (0.25 if b.down else 0.5)) + b.queue * TRAIN_COST
 
 
 func sell(b: Dictionary) -> void:
@@ -314,7 +378,7 @@ func room(b: Dictionary) -> int:
 
 
 func recruit(b: Dictionary) -> void:
-	if room(b) <= 0 or not Game.pay_points(TRAIN_COST):
+	if b.down or room(b) <= 0 or not Game.pay_points(TRAIN_COST):
 		return
 	if b.queue == 0:
 		b.train_t = LEVELS[b.lv].time
@@ -323,6 +387,8 @@ func recruit(b: Dictionary) -> void:
 
 
 func upgrade(b: Dictionary) -> void:
+	if b.down:
+		return
 	var nx: Variant = LEVELS[b.lv + 1] if b.lv + 1 < LEVELS.size() else null
 	if nx == null or not Game.pay_build(nx.cost):
 		return
@@ -351,6 +417,8 @@ func _physics_process(delta: float) -> void:
 	if Game.state != "play" and Game.state != "prep":
 		return
 	for b in Game.buildings:
+		if b.down:
+			continue  # een wrak doet niets
 		if b.kind == "garage":
 			_garage_step(b, delta)
 		elif b.kind == "helipad":
@@ -359,7 +427,7 @@ func _physics_process(delta: float) -> void:
 	if Game.build_mode:
 		return
 	for b in Game.buildings:
-		if b.kind == "kazerne" and b.queue > 0:
+		if b.kind == "kazerne" and not b.down and b.queue > 0:
 			b.train_t -= delta
 			if b.train_t <= 0.0:
 				b.queue -= 1

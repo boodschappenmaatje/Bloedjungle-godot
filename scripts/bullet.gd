@@ -73,6 +73,8 @@ func _physics_process(delta: float) -> void:
 			return
 		if c.has_method("hit"):
 			c.hit(dmg, dir, from_player)
+			if c is BuildingBody:
+				Fx.impact(get_parent(), hit.position, hit.normal)
 			if pierce > 0 and c.collision_layer == MASK_ENEMY:
 				pierce -= 1
 				dmg *= 0.85
@@ -88,6 +90,8 @@ func _physics_process(delta: float) -> void:
 ## Raket: grote ontploffing, schade neemt af met de afstand (alleen vijanden).
 func _explode(at: Vector3) -> void:
 	Fx.explosion(get_parent(), at, 1.4)
+	if Game.builds:
+		Game.builds.blast(at, explosive, dmg, 0.25)  # eigen raketten doen een beetje schade aan je eigen bouwwerk
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e):
 			var d: float = e.global_position.distance_to(at)

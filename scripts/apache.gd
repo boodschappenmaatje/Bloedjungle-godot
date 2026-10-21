@@ -2,10 +2,11 @@ class_name Apache
 extends Node3D
 ## Eigen Apache, gekocht bij het helikopterplatform. Hij staat op de lift (het platform tilt hem uit de grond),
 ## je stapt in met INSTAPPEN en vliegt: linker stick = vliegen, rechter stick = richten, tot de rand duwen = schieten
-## met het kanon onder de neus. LANDEN brengt hem terug op het platform, waar de lift hem weer de grond in zakt.
+## met het kanon onder de neus. LANDEN brengt hem terug op het platform (als je er dichtbij bent), waar de lift hem weer de grond in zakt;
+## elders landt hij waar je boven bent (niet boven water) en blijft daar staan tot je weer instapt.
 ## Model: assets/apache.glb (Blender), voorkant is -Z; de rotors draaien in de code, de Blender-clips gebruiken we niet.
 
-enum Mode { LIFT, FLY, LAND }
+enum Mode { LIFT, FLY, LAND, FREE, GROUND }  # FREE = landt ergens, GROUND = staat geparkeerd op de grond
 
 const SCALE := 0.45          # het model is 17 m lang; zo past hij op het platform
 const SPEED := 15.0          # m/s
@@ -16,6 +17,7 @@ const FIRE_RATE := 0.07
 const DAMAGE := 14.0
 const BOARD_DIST := 9.0      # m van het midden van het platform: dichterbij dan dit toont de knop
 const LAND_DIST := 24.0
+const GROUND_BOARD := 6.0     # m: bij een geparkeerde heli op de grond toont de knop IN
 const ROTOR_RPS := 3.0
 const TAIL_RPS := 9.0
 
@@ -114,6 +116,14 @@ func _press() -> void:
 			mode = Mode.LAND
 			pad.want = true
 			Sfx.play("click")
+		"landhier":
+			var why := _no_landing()
+			if why != "":
+				Game.banner.emit("HELI", why, 1.6)
+				return
+			mode = Mode.FREE
+			vel = Vector3.ZERO
+			Sfx.play("click")
 
 
 func _board(p) -> void:
@@ -147,7 +157,7 @@ func _physics_process(delta: float) -> void:
 	var p = Game.player
 	if p != null and p.dead and driven:
 		_leave(p)
-	_rot_target = 1.0 if mode != Mode.LIFT else (0.3 if (pad.hs == "open" or pad.hs == "opening") else 0.0)
+	_rot_target = 0.0 if mode == Mode.GROUND else 1.0 if mode != Mode.LIFT else (0.3 if (pad.hs == "open" or pad.hs == "opening") else 0.0)
 	_rot_speed = move_toward(_rot_speed, _rot_target, delta / 2.5)
 	if _rotor:
 		_rotor.rotation.y -= _rot_speed * ROTOR_RPS * TAU * delta
@@ -161,6 +171,10 @@ func _physics_process(delta: float) -> void:
 			_fly(delta, live)
 		Mode.LAND:
 			_land(delta)
+		Mode.FREE:
+			_land_free(delta)
+		Mode.GROUND:
+			_wrap.rotation = _wrap.rotation.lerp(Vector3.ZERO, minf(1.0, delta * 4.0))
 	_update_button(p, live)
 
 
@@ -170,8 +184,10 @@ func _update_button(p, live: bool) -> void:
 		var d := _flat_dist(p.global_position, pad.at)
 		if mode == Mode.LIFT and not driven and d < BOARD_DIST:
 			what = "in" if pad.hs == "open" else ("roep" if pad.hs == "closed" and not pad.want else "")
-		elif mode == Mode.FLY and driven and _flat_dist(global_position, pad.at) < LAND_DIST:
-			what = "land"
+		elif mode == Mode.FLY and driven and _spool <= 0.0:
+			what = "land" if _flat_dist(global_position, pad.at) < LAND_DIST else "landhier"
+		elif mode == Mode.GROUND and not driven and _flat_dist(p.global_position, global_position) < GROUND_BOARD:
+			what = "in"
 	_btn_what = what
 	_btn.visible = what != ""
 	if what == "in":
@@ -180,7 +196,7 @@ func _update_button(p, live: bool) -> void:
 	elif what == "roep":
 		_btn.kind = "poort"
 		_btn.set_caption("HELI")
-	elif what == "land":
+	elif what == "land" or what == "landhier":
 		_btn.kind = "exit"
 		_btn.set_caption("LANDEN")
 	_btn.queue_redraw()
@@ -231,6 +247,46 @@ func _fly(delta: float, live: bool) -> void:
 	if p != null:
 		p.global_position = Vector3(global_position.x, 0.0, global_position.z)
 		p.face = rotation.y + PI
+
+
+## Waarom hij hier niet kan landen ("" = het kan): water, bomen of rotsen, muren/gebouwen.
+func _no_landing() -> String:
+	var gp := global_position
+	if absf(gp.z - Data.river_z(gp.x)) < Data.RIVER_HALF + 3.0:
+		return "Boven water kun je niet landen"
+	if Foliage.has_tree_near(gp.x, gp.z, 5.0):
+		return "Te veel bomen, zoek een open plek"
+	var q := PhysicsShapeQueryParameters3D.new()
+	var sh := SphereShape3D.new()
+	sh.radius = 4.5
+	q.shape = sh
+	q.transform = Transform3D(Basis.IDENTITY, Vector3(gp.x, 1.5, gp.z))
+	q.collision_mask = 2 | 16 | 32  # muren, bunkers, voertuigen
+	q.collide_with_areas = false
+	if not get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty():
+		return "Hier is geen ruimte om te landen"
+	return ""
+
+
+## Zakt recht naar beneden op de plek waar je bent; bij de grond stap je uit en blijft hij staan.
+func _land_free(delta: float) -> void:
+	var p = Game.player
+	vel = vel.lerp(Vector3.ZERO, minf(1.0, delta * 2.0))
+	global_position += vel * delta
+	global_position.y = move_toward(global_position.y, 0.0, 2.6 * delta)
+	_wrap.rotation = _wrap.rotation.lerp(Vector3.ZERO, minf(1.0, delta * 3.0))
+	if p != null and driven:
+		p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+	if global_position.y <= 0.02:
+		mode = Mode.GROUND
+		if p != null and driven:
+			driven = false
+			p.driving = false
+			p.airborne = false
+			p.visible = true
+			var side := global_transform.basis.x * 4.2
+			p.global_position = Vector3(global_position.x + side.x, 0.0, global_position.z + side.z)
+			p.collision_mask = p.get("_mask0")
 
 
 func _land(delta: float) -> void:

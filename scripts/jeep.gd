@@ -6,9 +6,9 @@ extends CharacterBody3D
 ## Model: assets/jeep.glb (Blender), voorkant is -Z. Wielen, sturen en vering doet deze code; van de
 ## Blender-clips gebruiken we alleen Vuren (terugslag, vlam, hulzen, schutter).
 
-const SPEED := 9.0          # m/s vooruit
+const SPEED := 16.7         # m/s vooruit (60 km/u)
 const REVERSE := 3.5        # m/s achteruit
-const ACCEL := 6.0          # m/s² gas geven
+const ACCEL := 8.0          # m/s² gas geven
 const BRAKE := 9.0          # m/s² remmen
 const WHEELBASE := 2.04     # m tussen voor- en achteras
 const WHEEL_R := 0.37

@@ -719,7 +719,7 @@ func _pad_step(b: Dictionary, delta: float) -> void:
 			if heli != null and is_instance_valid(heli):
 				var d: float = Vector2(b.at.x - player.global_position.x, b.at.z - player.global_position.z).length() if player else 0.0
 				var away: bool = heli.mode == Apache.Mode.LIFT and not heli.driven and d > 14.0
-				var gone: bool = heli.mode == Apache.Mode.FLY and Vector2(heli.global_position.x - b.at.x, heli.global_position.z - b.at.z).length() > 16.0
+				var gone: bool = (heli.mode == Apache.Mode.FLY or heli.mode == Apache.Mode.GROUND) and Vector2(heli.global_position.x - b.at.x, heli.global_position.z - b.at.z).length() > 16.0
 				if (away or gone) and not b.want:
 					_pad_play(b, "Dicht", "closing")
 		"closing":

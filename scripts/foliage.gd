@@ -200,7 +200,19 @@ static func rock() -> Mesh:
 
 
 ## Zet de hele jungle neer: buiten de muur, met het pad vanaf de poorten vrij.
+static var trees := PackedVector2Array()  # plekken van palmen en rotsen, voor de landing van de heli
+
+
+static func has_tree_near(x: float, z: float, r: float) -> bool:
+	var r2 := r * r
+	for t in trees:
+		if (t.x - x) * (t.x - x) + (t.y - z) * (t.y - z) < r2:
+			return true
+	return false
+
+
 static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
+	trees.clear()
 	logs(parent)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
@@ -214,6 +226,9 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 		var cols: Array = []
 		_scatter(rng, c[0], c[1], c[2], xf, cols, c[3], c[4], c[5])
 		_strip(rng, kind, xf.size() + STRIP_EXTRA[kind], xf, cols, c[3], c[4], c[5])
+		if kind == "palm" or kind == "rock":
+			for t in xf:
+				trees.append(Vector2(t.origin.x, t.origin.z))
 		if kind == "rock":
 			var rm := Kit.rock().duplicate() as StandardMaterial3D
 			rm.vertex_color_use_as_albedo = true

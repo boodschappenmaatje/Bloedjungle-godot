@@ -19,6 +19,10 @@ const NOTES := {
 }
 
 var _root: ColorRect
+var _drag_sc: ScrollContainer
+var _drag_id := -2
+var _drag_acc := 0.0
+var _drag_end := -1000
 var _sheets := {}  # naam -> Control
 var _pcs := {}  # naam -> het paneel zelf
 var _cur := ""
@@ -109,8 +113,56 @@ func _button(text: String, kind: String, cb: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
 	UI.style_button(b, kind)
-	b.pressed.connect(cb)
+	# een veeg om te scrollen telt niet als druk op de knop waar je vinger begon of eindigde
+	b.pressed.connect(func():
+		if Time.get_ticks_msec() - _drag_end > 200:
+			cb.call())
 	return b
+
+
+## Met je vinger (of muis) een blad verslepen om te scrollen; de scrollbalk hoeft niet.
+func _input(event: InputEvent) -> void:
+	if _root == null or not _root.visible:
+		return
+	var pos := Vector2.ZERO
+	var kind := ""
+	var idx := -1
+	if event is InputEventScreenTouch:
+		pos = event.position
+		kind = "down" if event.pressed else "up"
+		idx = event.index
+	elif event is InputEventScreenDrag:
+		pos = event.position
+		kind = "move"
+		idx = event.index
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.device != InputEvent.DEVICE_ID_EMULATION:
+		pos = event.position
+		kind = "down" if event.pressed else "up"
+	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+		pos = event.position
+		kind = "move"
+	if kind == "down":
+		_drag_sc = null
+		for name in _pcs:
+			var pc: PanelContainer = _pcs[name]
+			if not pc.is_visible_in_tree():
+				continue
+			for c in pc.get_children():
+				if c is ScrollContainer and c.get_global_rect().has_point(pos):
+					_drag_sc = c
+		_drag_id = idx
+		_drag_acc = 0.0
+	elif kind == "move" and idx == _drag_id and _drag_sc != null:
+		var rel: float = event.relative.y
+		_drag_acc += absf(rel)
+		if _drag_acc > 12.0:
+			_drag_sc.scroll_vertical -= int(rel)
+			_drag_end = Time.get_ticks_msec()
+	elif kind == "up" and idx == _drag_id:
+		if _drag_acc > 12.0:
+			_drag_end = Time.get_ticks_msec()
+		_drag_id = -2
+		_drag_sc = null
 
 
 func _eyebrow(t: String) -> Label:

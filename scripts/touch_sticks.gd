@@ -11,6 +11,26 @@ var _mouse_used := false
 var _mouse_down := false
 
 
+func _ready() -> void:
+	# ook tijdens pauze of een menu loslaten van je vinger zien, anders blijft er een "spook-stick" hangen
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
+
+func _notification(what: int) -> void:
+	# app naar de achtergrond, meldingscentrum, schermopname-knop: de vinger kan weg zijn zonder dat wij het horen
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT or what == NOTIFICATION_APPLICATION_PAUSED:
+		_clear()
+
+
+func _clear() -> void:
+	_sticks.clear()
+	_mouse_down = false
+	Game.move = Vector2.ZERO
+	Game.aim = NAN
+	Game.fire = false
+	queue_redraw()
+
+
 func _input(event: InputEvent) -> void:
 	if Game.build_mode:
 		return
@@ -19,9 +39,11 @@ func _input(event: InputEvent) -> void:
 			if _on_button(event.position):
 				return
 			var aim: bool = event.position.x > get_viewport_rect().size.x * 0.5
-			for s in _sticks.values():
-				if s.aim == aim:
-					return  # deze kant heeft al een stick
+			# een nieuwe vinger op deze kant wint: de oude is waarschijnlijk al weg (loslaten gemist), anders
+			# blijft de stick "vast" en doet de nieuwe aanraking niets
+			for k in _sticks.keys():
+				if _sticks[k].aim == aim:
+					_sticks.erase(k)
 			_sticks[event.index] = {"aim": aim, "origin": event.position, "d": Vector2.ZERO}
 			_mouse_used = false
 		else:
@@ -50,6 +72,10 @@ func _on_button(p: Vector2) -> bool:
 
 
 func _process(_delta: float) -> void:
+	if get_tree().paused or Game.state == "menu" or Game.state == "shop":
+		if not _sticks.is_empty():
+			_clear()  # menu of pauze open: sticks weg, de volgende aanraking begint schoon
+		return
 	if Game.build_mode:
 		_sticks.clear()
 		Game.move = Vector2.ZERO

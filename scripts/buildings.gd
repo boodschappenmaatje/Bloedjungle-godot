@@ -565,9 +565,8 @@ func _spawn_vehicle(b: Dictionary, kind: String) -> void:
 	var goals: Array = []
 	# eerst kaarsrecht de poort uit tot de hele wagen buiten staat, dan pas opzij naar de parkeerplek
 	if kind == "truck":
-		# lange wagen: eerst helemaal naar buiten, dan opzij
-		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + minf(9.5, run * 0.85)))
-		goals.append(_pt(b.at, b.yaw, DOOR_U - 3.0, FRONT + minf(12.0, run)))
+		# lange wagen: kaarsrecht naar buiten tot hij helemaal uit de poort is en dan stilstaan
+		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + clampf(run * 0.9, 5.0, 9.5)))
 	elif kind == "jeep":
 		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + minf(6.0, run * 0.7)))
 		goals.append(_pt(b.at, b.yaw, DOOR_U - 3.3, FRONT + minf(8.0, run * 0.9)))
@@ -601,7 +600,9 @@ func _garage_step(b: Dictionary, delta: float) -> void:
 		"rolling":
 			# zodra de wagen buiten is en opzij draait, volgt de volgende of gaat de poort dicht
 			var v: Node3D = b.veh
-			if not is_instance_valid(v) or v.goals.size() <= 1:
+			# de truck rijdt maar één stuk recht vooruit: de poort gaat pas dicht als hij stilstaat
+			var left := 0 if is_instance_valid(v) and v.has_method("ride_step") else 1
+			if not is_instance_valid(v) or v.goals.size() <= left:
 				if not b.order.is_empty():
 					_spawn_vehicle(b, b.order.pop_front())
 				else:

@@ -524,12 +524,6 @@ func _physics_process(delta: float) -> void:
 	var live: bool = Game.state == "play" or Game.state == "prep"
 	if p != null and p.dead and driven:
 		_toggle()
-	if not goals.is_empty() and _engine == "uit":
-		# uit de garage rijdt hij zelf: motor meteen aan
-		_engine = "aan"
-		_engine_t = 1.0
-		_eng_player.stream = _snd.engine
-		_eng_player.play()
 	for a in _riders.keys():
 		if not is_instance_valid(a):
 			_riders.erase(a)
@@ -570,15 +564,15 @@ func _drive(delta: float, live: bool) -> void:
 		# uit de garage naar zijn parkeerplek: sturen naar het volgende punt
 		var to: Vector3 = goals[0] - global_position
 		to.y = 0.0
-		if to.length() < 1.6:
+		var fwd := -global_transform.basis.z
+		var alpha := atan2(fwd.cross(to).y, fwd.dot(to))
+		# aangekomen, of het punt ligt al naast/achter hem: stoppen in plaats van een rondje te rijden
+		if to.length() < 1.6 or absf(alpha) > 1.0:
 			goals.pop_front()
 		else:
-			var fwd := -global_transform.basis.z
-			var alpha := atan2(fwd.cross(to).y, fwd.dot(to))
 			want_steer = clampf(atan(2.0 * WHEELBASE * sin(alpha) / maxf(to.length(), 3.0)), -MAX_STEER, MAX_STEER)
-			want_speed = clampf(to.length() * 0.6 + 0.8, 1.5, 4.0)
-			if goals.size() == 1:
-				want_speed = clampf(to.length() * 0.6, 0.8, 4.0)
+			# de motor staat uit: hij rolt rustig de garage uit en komt recht tot stilstand
+			want_speed = clampf(to.length() * 0.5, 0.6, 2.5)
 	elif driven and live and can_go and mv.length() > 0.15:
 		# hij draait naar waar je de stick duwt; ligt dat achter hem, dan rijdt hij achteruit
 		var want := atan2(-mv.x, -mv.y)
@@ -707,7 +701,7 @@ func _engine_step(delta: float) -> void:
 	if _engine_t < 1.0:
 		want_rpm = maxf(want_rpm, 0.9 * (1.0 - _engine_t))  # na het aanslaan zakt hij terug naar stationair
 	_rpm = lerpf(_rpm, want_rpm, minf(1.0, delta * 5.0))
-	_eng_player.pitch_scale = 1.0 + _rpm * 1.25
+	_eng_player.pitch_scale = 1.0 + _rpm * 0.85
 	_engine_vol = lerpf(_engine_vol, 0.45 + 0.35 * load + 0.2 * _rpm, minf(1.0, delta * 6.0))
 	_eng_player.volume_db = linear_to_db(maxf(0.001, _engine_vol * _vol()))
 	_smoke.emitting = true
@@ -760,28 +754,34 @@ static func _make_sounds() -> void:
 		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
-	# zware diesel: 30 ontstekingen per seconde (stationair), elk een doffe dreun met een tik van ruis;
-	# de lus is precies 1 s, dus 30 hele slagen en geen klik bij de naad
+	# zware diesel: 22 ontstekingen per seconde (stationair), elk een lage, ronde dreun (grondtoon 44 Hz met
+	# boventonen, zodat je de brom ook op een telefoonspeaker hoort) en een zachte doffe plof in plaats van
+	# geratel; alles gaat door een laagdoorlaatfilter. De lus is precies 1 s: 22 hele slagen, geen klik.
 	var n := RATE
 	var s := PackedFloat32Array()
 	s.resize(n)
 	var amps: Array[float] = []
-	for k in 30:
-		amps.append(rng.randf_range(0.75, 1.2))
+	for k in 22:
+		amps.append(rng.randf_range(0.85, 1.12))
 	var lp := 0.0
-	var hp := 0.0
+	var lp2 := 0.0
+	var out := 0.0
 	for i in n:
 		var t := float(i) / RATE
-		var k := int(t * 30.0)
-		var dt := t - float(k) / 30.0
-		var a := amps[k % 30]
+		var k := int(t * 22.0)
+		var dt := t - float(k) / 22.0
+		var a := amps[k % 22]
 		var noise := rng.randf_range(-1.0, 1.0)
-		hp += 0.25 * (noise - hp)
-		lp += 0.04 * (noise - lp)
-		var thump := exp(-dt * 38.0) * (sin(TAU * 62.0 * dt) * 0.9 + sin(TAU * 124.0 * dt + 1.0) * 0.45 + sin(TAU * 190.0 * dt + 2.0) * 0.2)
-		var clatter := (noise - hp) * exp(-dt * 260.0) * 0.5
-		var rumble := sin(TAU * 15.0 * t) * 0.18 + lp * 0.6
-		s[i] = (thump * a + clatter * a + rumble) * 0.9
+		lp += 0.08 * (noise - lp)
+		lp2 += 0.012 * (noise - lp2)
+		var env := exp(-dt * 22.0)
+		var thump := env * (sin(TAU * 44.0 * dt) + 0.7 * sin(TAU * 88.0 * dt + 0.5) + 0.45 * sin(TAU * 132.0 * dt + 1.0)
+			+ 0.3 * sin(TAU * 176.0 * dt + 1.5) + 0.15 * sin(TAU * 220.0 * dt + 2.0))
+		var chug := lp * exp(-dt * 60.0) * 0.6
+		var rumble := sin(TAU * 11.0 * t) * 0.25 + lp2 * 2.2
+		var v := (thump * a + chug * a) * 0.8 + rumble
+		out += 0.35 * (v - out)
+		s[i] = out * 1.1
 	_snd.engine = _wav(s, true)
 	# startmotor: zeurende elektromotor met de compressieslagen van het ronddraaien
 	n = RATE

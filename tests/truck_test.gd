@@ -47,7 +47,7 @@ func _process(_d: float) -> bool:
 		for n in game.builds.get_children():
 			if n.get_script() and String(n.get_script().resource_path).ends_with("vrachtwagen.gd"):
 				truck = n
-		print("truck: ", truck != null, " goals ", truck.goals.size() if truck else -1, " pos ", truck.global_position if truck else Vector3.ZERO)
+		print("truck: ", truck != null, " goals ", truck.goals.size() if truck else -1, " pos ", truck.global_position if truck else Vector3.ZERO, " draai ", truck.rotation.y if truck else 0.0, " snelheid ", truck._speed if truck else 0.0, " motor ", truck._engine if truck else "")
 		game.player.global_position = truck.global_position + Vector3(2, 0, 0)
 		truck._toggle()
 		print("bestuurd: ", truck.driven, " motor ", truck._engine, " riders ", truck._riders.size())

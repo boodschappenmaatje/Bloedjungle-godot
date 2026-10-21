@@ -11,7 +11,7 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
 scene.render.fps = 30
 
-G = 2.4            # halve opening
+G = 3.4            # halve opening (breed genoeg voor de legertruck)
 W = 2 * G + 0.2    # paneelbreedte
 Y = 0.55           # afstand voor de muur
 TRAVEL = 2 * G

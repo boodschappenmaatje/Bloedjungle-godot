@@ -86,7 +86,10 @@ static func wood() -> StandardMaterial3D:
 
 ## Zet foto-materialen op een Blender-model: de naam van het materiaal in het .glb bepaalt de textuur.
 static func skin(root: Node, kind: String) -> void:
-	var map: Dictionary = SKINS[kind]
+	var all := _skins()
+	if not all.has(kind):
+		return
+	var map: Dictionary = all[kind]
 	for n in root.find_children("*", "MeshInstance3D", true, false):
 		var mi := n as MeshInstance3D
 		for i in mi.mesh.get_surface_count():
@@ -95,7 +98,18 @@ static func skin(root: Node, kind: String) -> void:
 				mi.set_surface_override_material(i, map[old.resource_name].call())
 
 
-static var SKINS := {
+static var _skin_cache := {}
+
+
+## Pas bij het eerste gebruik gebouwd: in de editor (@tool) bestaat een static var nog niet tijdens het laden.
+static func _skins() -> Dictionary:
+	if _skin_cache.is_empty():
+		_skin_cache = _build_skins()
+	return _skin_cache
+
+
+static func _build_skins() -> Dictionary:
+	return {
 	"toren": {
 		"Paal": func(): return photo("buildings/weathered_wood", 1.6, Color(0.5, 0.42, 0.34)),
 		"Plank1": func(): return photo("buildings/weathered_wood", 1.4, Color(0.72, 0.62, 0.5)),

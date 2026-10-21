@@ -36,6 +36,7 @@ const C := Data.COMPOUND
 
 func _ready() -> void:
 	add_to_group("buildings")
+	add_child(GarageMenu.new())
 
 
 func count(kind: String) -> int:
@@ -330,12 +331,15 @@ func _spawn(b: Dictionary) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	# tijdens het bouwen staat de opleiding stil (updateStructures in 16d-base.js)
-	if (Game.state != "play" and Game.state != "prep") or Game.build_mode:
+	if Game.state != "play" and Game.state != "prep":
 		return
 	for b in Game.buildings:
 		if b.kind == "garage":
 			_garage_step(b, delta)
+	# tijdens het bouwen staat de opleiding stil (updateStructures in 16d-base.js)
+	if Game.build_mode:
+		return
+	for b in Game.buildings:
 		if b.kind == "kazerne" and b.queue > 0:
 			b.train_t -= delta
 			if b.train_t <= 0.0:
@@ -454,19 +458,22 @@ func _spawn_vehicle(b: Dictionary, kind: String) -> void:
 	var v: Node3D = (load(VEHICLES[kind].scene) as PackedScene).instantiate()
 	add_child(v)
 	var inside := _pt(b.at, b.yaw, DOOR_U, 0.5)
-	v.global_position = Vector3(inside.x, 0.0, inside.z)
-	v.rotation.y = b.yaw + PI
+	v.global_transform = Transform3D(Basis(Vector3.UP, b.yaw + PI), Vector3(inside.x, 0.0, inside.z))
 	var run := _free_run(b)
 	var goals: Array = []
+	# eerst kaarsrecht de poort uit tot de hele wagen buiten staat, dan pas opzij naar de parkeerplek
 	if kind == "jeep":
-		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + minf(3.0, run * 0.5)))
-		goals.append(_pt(b.at, b.yaw, DOOR_U - 3.3, FRONT + maxf(2.5, run * 0.75)))
+		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + minf(6.0, run * 0.7)))
+		goals.append(_pt(b.at, b.yaw, DOOR_U - 3.3, FRONT + minf(8.0, run * 0.9)))
 	else:
-		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + minf(4.0, run * 0.5)))
-		goals.append(_pt(b.at, b.yaw, DOOR_U + 2.2, FRONT + maxf(3.5, run * 0.85)))
+		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + minf(7.5, run * 0.8)))
+		goals.append(_pt(b.at, b.yaw, DOOR_U + 2.2, FRONT + minf(9.0, run * 0.95)))
 	v.goals = goals
 	b.veh = v
 	Sfx.play("thud", 0.8, v.global_position)
+
+
+const DOOR_T := 0.7  # seconden dat de poort open of dicht gaat (de clip duurt 2 s en wordt sneller afgespeeld)
 
 
 func _garage_step(b: Dictionary, delta: float) -> void:
@@ -474,7 +481,8 @@ func _garage_step(b: Dictionary, delta: float) -> void:
 		"idle":
 			if not b.order.is_empty():
 				b.phase = "opening"
-				b.t = 2.0
+				b.t = DOOR_T
+				b.anim.speed_scale = 2.0 / DOOR_T
 				b.anim.play("Open")
 				b.light.visible = true
 				Sfx.play("thud", 0.5, b.node.global_position)
@@ -485,24 +493,20 @@ func _garage_step(b: Dictionary, delta: float) -> void:
 				_spawn_vehicle(b, b.order.pop_front())
 				b.phase = "rolling"
 		"rolling":
+			# zodra de wagen buiten is en opzij draait, volgt de volgende of gaat de poort dicht
 			var v: Node3D = b.veh
-			# de poort gaat dicht zodra de wagen er helemaal uit is
-			var out: Vector3 = v.global_position - b.at
-			if not is_instance_valid(v) or out.dot(_front(b)) > FRONT + 2.6 or v.goals.is_empty():
-				b.phase = "closing"
-				b.t = 2.0
-				b.anim.play("Dicht")
+			if not is_instance_valid(v) or v.goals.size() <= 1:
+				if not b.order.is_empty():
+					_spawn_vehicle(b, b.order.pop_front())
+				else:
+					b.phase = "closing"
+					b.t = DOOR_T
+					b.anim.play("Dicht")
 		"closing":
 			b.t -= delta
 			if b.t <= 0.0:
 				b.door_shape.disabled = false
 				b.light.visible = false
-				b.phase = "wait"
-				b.t = 1.5
-		"wait":
-			# de volgende wagen pas als de vorige is aangekomen
-			b.t -= delta
-			if b.t <= 0.0 and (b.veh == null or not is_instance_valid(b.veh) or b.veh.goals.is_empty()):
 				b.phase = "idle"
 	# zwaailicht draait zolang de poort in beweging is; de takel wiegt altijd een beetje
 	var moving: bool = b.phase == "opening" or b.phase == "closing" or b.phase == "rolling"

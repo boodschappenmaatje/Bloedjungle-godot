@@ -361,7 +361,7 @@ func _fill_panel() -> void:
 		for k in ["jeep", "tank"]:
 			var v: Dictionary = Buildings.VEHICLES[k]
 			_act(row, v.name, "gekocht" if b.has[k] else "%d pt" % v.cost, Game.builds.can_buy_vehicle(b, k), func(): Game.builds.buy_vehicle(b, k))
-		tip = "Gekochte wagens rijden de garage uit zodra je het bouwscherm sluit. De jeep bestuur je zelf, de tank bewaakt de basis."
+		tip = "Een gekochte wagen rijdt meteen de garage uit. De jeep bestuur je zelf, de tank bewaakt de basis."
 	else:
 		info.text = "Sterkte %d / %d" % [ceili(b.hp), b.max_hp]
 		tip = Buildings.INFO.get(b.kind, "")

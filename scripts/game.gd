@@ -29,6 +29,7 @@ const BUILD_CREDIT := 1000
 var build_credit := BUILD_CREDIT
 var builds: Buildings
 var gates: Gates
+var bridge  # de ophaalbrug (bridge.gd)
 var build_mode := false  # bouwscherm open: camera hoog boven de basis
 var bcam := Vector3(0.0, 0.0, 1.0)  # bouwcamera: x, z en zoom
 var buildings: Array = []

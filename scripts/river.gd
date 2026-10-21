@@ -8,7 +8,6 @@ const W := Data.RIVER_HALF
 const BEDDING := [[-1.0, 0.0, 0.0], [-0.73, -0.5, 0.45], [-0.5, -0.85, 0.85], [0.5, -0.85, 0.85], [0.73, -0.5, 0.45], [1.0, 0.0, 0.0]]  # dwarsprofiel: factor van W, hoogte, modder -> bodem
 const WATER_Y := -0.2
 const X_MAX := 118.0
-const BRIDGE_LEN := 12.0
 const BRIDGE_HALF := 2.5
 
 
@@ -118,24 +117,12 @@ static func _banks(root: Node3D) -> void:
 # ---------------------------------------------------------------- brug
 
 static func _bridge(root: Node3D) -> void:
-	var z0 := Data.river_z(Data.BRIDGE_X)
-	var model: Node3D = (load("res://assets/brug.glb") as PackedScene).instantiate()
-	Kit.skin(model, "brug")
-	model.position = Vector3(Data.BRIDGE_X, 0, z0)
-	root.add_child(model)
-	# leuningen houden mensen en voertuigen op de brug; het dek (5 m breed) is open voor tank en jeep
-	var body := StaticBody3D.new()
-	body.collision_layer = Kit.LAYER_WALL
-	body.collision_mask = 0
-	body.position = Vector3(Data.BRIDGE_X, 0, z0)
-	root.add_child(body)
-	for sx in [-1.0, 1.0]:
-		var cs := CollisionShape3D.new()
-		var bs := BoxShape3D.new()
-		bs.size = Vector3(0.2, 1.2, BRIDGE_LEN)
-		cs.shape = bs
-		cs.position = Vector3(sx * 2.72, 0.6, 0)
-		body.add_child(cs)
+	var br := Bridge.new()
+	br.name = "Brug"
+	br.position = Vector3(Data.BRIDGE_X, 0, Data.river_z(Data.BRIDGE_X))
+	root.add_child(br)
+	if not Engine.is_editor_hint():
+		Game.bridge = br
 
 
 # ---------------------------------------------------------------- ford en riet

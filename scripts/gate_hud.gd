@@ -5,6 +5,7 @@ extends Control
 
 var _btn: ActionBtn
 var _fix: ActionBtn
+var _brug: ActionBtn
 var _holding := false
 var _snd := 0.0
 
@@ -14,6 +15,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_btn = _mk("poort", "POORT")
 	_btn.pressed.connect(_toggle)
+	_brug = _mk("brug", "BRUG")
+	_brug.pressed.connect(_toggle_bridge)
 	_fix = _mk("repair", "REPAREER")
 	_fix.button_down.connect(func(): _holding = true)
 	_fix.button_up.connect(func(): _holding = false)
@@ -29,6 +32,17 @@ func _toggle() -> void:
 	var g: Variant = Game.gates.near_player() if Game.gates else null
 	if g != null:
 		Game.gates.toggle(g)
+	else:
+		_toggle_bridge()
+
+
+func _toggle_bridge() -> void:
+	if _bridge_ok() and Game.bridge.near_player():
+		Game.bridge.toggle()
+
+
+func _bridge_ok() -> bool:
+	return Game.bridge != null and is_instance_valid(Game.bridge)
 
 
 func _unhandled_key_input(e: InputEvent) -> void:
@@ -40,6 +54,14 @@ func _process(delta: float) -> void:
 	var live := (Game.state == "play" or Game.state == "prep") and not Game.build_mode and Game.gates != null
 	var g: Variant = Game.gates.near_player() if live else null
 	_btn.visible = g != null
+	var near_bridge: bool = live and _bridge_ok() and Game.bridge.near_player()
+	_brug.visible = near_bridge
+	if near_bridge:
+		var up: bool = Game.bridge.state != Bridge.DOWN
+		_brug.open_state = up
+		_brug.set_caption("OMLAAG" if up else "OMHOOG")
+		_brug.place(2, size)
+		_brug.queue_redraw()
 	var fixable: Variant = null
 	if live and Game.player:
 		for x in Game.gates.list:

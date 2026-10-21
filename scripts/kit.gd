@@ -145,6 +145,8 @@ static func _build_skins() -> Dictionary:
 		"Hout3": func(): return photo("buildings/weathered_wood", 1.4, Color(1.4, 1.22, 1.0)),
 		"Balk": func(): return photo("buildings/weathered_wood", 1.6, Color(0.8, 0.68, 0.54)),
 		"Paal": func(): return photo("nature/tree_bark", 1.2, Color(0.55, 0.47, 0.38)),
+		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.6, 0.62, 0.64)),
+		"Touw": func(): return photo("buildings/jute", 1.2, Color(0.8, 0.72, 0.55)),
 	},
 	"loopgraaf": {
 		"Hout1": func(): return photo("buildings/weathered_wood", 1.4, Color(0.72, 0.62, 0.5)),

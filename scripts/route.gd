@@ -109,6 +109,8 @@ static func _river(from: Vector3, goal: Vector3) -> Variant:
 	else:
 		var best := INF
 		for x in [Data.BRIDGE_X, Data.FORD_X]:
+			if x == Data.BRIDGE_X and Game.bridge != null and is_instance_valid(Game.bridge) and not Game.bridge.is_down():
+				continue  # de brug staat omhoog: dan alleen de ondiepte
 			var rz := Data.river_z(x)
 			var cost := Vector2(from.x - x, from.z - rz).length() + Vector2(goal.x - x, goal.z - rz).length()
 			if cost < best:

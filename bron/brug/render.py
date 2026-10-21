@@ -2,8 +2,11 @@
 import sys, os, math, bpy
 from mathutils import Vector
 blend, out = sys.argv[1], sys.argv[2]
+frame = int(sys.argv[3]) if len(sys.argv) > 3 else 108
+suffix = sys.argv[4] if len(sys.argv) > 4 else ""
 bpy.ops.wm.open_mainfile(filepath=blend)
 sc = bpy.context.scene
+sc.frame_set(frame)
 sc.render.engine = 'CYCLES'
 sc.cycles.device = 'CPU'
 sc.cycles.samples = 32
@@ -30,9 +33,9 @@ cam = bpy.data.objects.new("cam", bpy.data.cameras.new("cam"))
 sc.collection.objects.link(cam)
 sc.camera = cam
 cam.data.lens = 35
-for name, loc in (("schuin", (9, -11, 6)), ("boven", (0.5, -3, 16))):
-    tgt = Vector((0, 0, 0.5))
+for name, loc, tg in (("schuin", (11, -13, 7), (0, -1, 1.5)), ("boven", (0.5, -3, 18), (0, 0, 0.5)), ("kastje", (-1.2, -13.8, 2.6), (3.8, -8.6, 1.1))):
+    tgt = Vector(tg)
     cam.location = Vector(loc)
     cam.rotation_euler = (tgt - cam.location).to_track_quat('-Z', 'Y').to_euler()
-    sc.render.filepath = os.path.join(out, f"b_{name}.png")
+    sc.render.filepath = os.path.join(out, f"b_{name}{suffix}.png")
     bpy.ops.render.render(write_still=True)

@@ -54,6 +54,14 @@ func _draw() -> void:
 			else:
 				for y in [-5.0, 2.0, 9.0]:
 					draw_line(c + Vector2(-11, y), c + Vector2(11, y), col, w)
+		"brug":
+			draw_rect(Rect2(c + Vector2(-15, -3), Vector2(4, 14)), col)
+			draw_rect(Rect2(c + Vector2(11, -3), Vector2(4, 14)), col)
+			if open_state:  # klep omhoog
+				draw_line(c + Vector2(-11, 9), c + Vector2(-9, -13), col, 3.5)
+			else:
+				draw_line(c + Vector2(-11, 6), c + Vector2(11, 6), col, 3.5)
+			draw_line(c + Vector2(-15, 11), c + Vector2(15, 11), col, 2.0)
 		"repair":
 			draw_line(c + Vector2(-9, 10), c + Vector2(6, -5), col, 4.0)
 			draw_circle(c + Vector2(8, -8), 6.5, col)

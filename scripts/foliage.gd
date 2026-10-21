@@ -3,6 +3,8 @@ class_name Foliage
 ## Kleuren zitten in de vertexkleuren; de alfa is hoe sterk iets in de wind beweegt (foliage.gdshader).
 
 static var _mats := {}
+static var _shadow_mats := {}  # soort -> nepschaduw-materiaal
+const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.8], "bush": [1.1, 1.8, 0.7], "rock": [0.5, 1.2, 0.6]}  # hoogte, breedte, sterkte
 
 
 ## Wind-materiaal; met een bladtextuur (kind) of zonder (stam, rotsen).
@@ -17,8 +19,35 @@ static func material(kind := "") -> ShaderMaterial:
 		if kind == "grass":
 			m.set_shader_parameter("sway", 0.08)
 			m.set_shader_parameter("cut", 0.35)
+		m.set_shader_parameter("wind", 1.0 if GameSettings.get_value("wind") == "on" else 0.0)
 		_mats[kind] = m
 	return _mats[kind]
+
+
+## Zet de wind in alle bladeren aan of uit.
+static func set_wind(on: bool) -> void:
+	for k in _mats:
+		_mats[k].set_shader_parameter("wind", 1.0 if on else 0.0)
+
+
+## Richting en lengte van de nepschaduwen volgen de zon (dir = waarheen de schaduw valt, elev = zonhoogte in graden).
+static func set_sun(dir: Vector2, elev: float) -> void:
+	var reach := 1.0 / tan(deg_to_rad(clampf(elev, 8.0, 80.0)))
+	for k in _shadow_mats:
+		_shadow_mats[k].set_shader_parameter("sun_dir", dir)
+		_shadow_mats[k].set_shader_parameter("reach", reach)
+
+
+static func _shadow_mat(kind: String) -> ShaderMaterial:
+	if not _shadow_mats.has(kind):
+		var c: Array = SHADOW_KINDS[kind]
+		var m := ShaderMaterial.new()
+		m.shader = preload("res://shaders/treeshadow.gdshader")
+		m.set_shader_parameter("height", c[0])
+		m.set_shader_parameter("width", c[1])
+		m.set_shader_parameter("strength", c[2])
+		_shadow_mats[kind] = m
+	return _shadow_mats[kind]
 
 
 ## Eén blad of palmtak: een gebogen strook met een licht gevouwen middenrib. De textuur loopt
@@ -172,7 +201,9 @@ static func plant(parent: Node3D, seed_ := 11) -> void:
 		if kind == "rock":
 			var rm := Kit.rock().duplicate() as StandardMaterial3D
 			rm.vertex_color_use_as_albedo = true
-			Kit.scatter(parent, meshes[kind], rm, xf, cols)
+			var ri := Kit.scatter(parent, meshes[kind], rm, xf, cols)
+			ri.add_to_group("foliage_rock")
+			_blobs(parent, kind, [xf])
 		else:
 			# in vakken van 36 m, zodat de camera alleen tekent en laat schaduwen wat in beeld is
 			var cells := {}
@@ -186,6 +217,17 @@ static func plant(parent: Node3D, seed_ := 11) -> void:
 			for key in cells:
 				var inst := Kit.scatter(parent, meshes[kind], null, cells[key][0], cells[key][1], kind != "grass")
 				inst.add_to_group("foliage_" + kind)  # de grafiekinstelling dunt gras en struiken uit
+				if SHADOW_KINDS.has(kind):
+					_blobs(parent, kind, [cells[key][0]])
+
+
+## Vaste nepschaduwen (platte ovalen) voor één vak bomen.
+static func _blobs(parent: Node3D, kind: String, lists: Array) -> void:
+	var q := PlaneMesh.new()
+	q.size = Vector2.ONE
+	var inst := Kit.scatter(parent, q, _shadow_mat(kind), lists[0], [], false)
+	inst.add_to_group("treeshadow")
+	inst.extra_cull_margin = 30.0  # de schaduw valt tot ver buiten de boom
 
 
 static func _scatter(rng: RandomNumberGenerator, count: int, r_min: float, r_max: float, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:

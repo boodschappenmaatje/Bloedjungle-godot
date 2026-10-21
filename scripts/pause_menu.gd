@@ -8,6 +8,8 @@ const ROWS := [
 	["time", "Tijd", [["day", "Dag"], ["dusk", "Avond"], ["night", "Nacht"]]],
 	["prep", "Bouwtijd tussen golven", [["60", "1 min"], ["120", "2 min"], ["300", "5 min"], ["600", "10 min"]]],
 	["weather", "Weer", [["clear", "Helder"], ["rain", "Regen"], ["mist", "Mist"]]],
+	["wind", "Bomen bewegen", [["off", "Uit"], ["on", "Aan"]]],
+	["treeshadow", "Boomschaduw", [["fake", "Vast"], ["real", "Echt"], ["off", "Uit"]]],
 	["fps", "FPS-teller", [["off", "Uit"], ["on", "Aan"]]],
 ]
 const NOTES := {

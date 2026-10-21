@@ -112,6 +112,7 @@ func apply_settings() -> void:
 	_env.tonemap_exposure = t["exp"]
 	_env.adjustment_saturation = 1.1 if weather == "clear" else 0.85
 	_apply_quality(quality)
+	_apply_trees()
 	_set_rain(weather == "rain")
 	Sfx.rain(weather == "rain")
 
@@ -183,3 +184,18 @@ func _apply_quality(q: String) -> void:
 	for kind in ["bush", "fern"]:
 		for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("foliage_" + kind):
 			n.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if c.bush_shadow else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+
+
+## Bomen: wind aan/uit en schaduw (Vast = nepschaduw onder elke boom, Echt = schaduwkaart, Uit).
+func _apply_trees() -> void:
+	Foliage.set_wind(GameSettings.get_value("wind") == "on")
+	var fwd := -_sun.global_transform.basis.z
+	Foliage.set_sun(Vector2(fwd.x, fwd.z), -_sun.rotation_degrees.x)
+	var mode := GameSettings.get_value("treeshadow")
+	var c: Dictionary = QUALITY[GameSettings.get_value("quality")]
+	for n in get_tree().get_nodes_in_group("treeshadow"):
+		n.visible = mode == "fake" and c.shadow
+	for kind in ["palm", "bush", "fern", "rock"]:
+		var on: bool = mode == "real" and c.shadow and (kind == "palm" or kind == "rock" or c.bush_shadow)
+		for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("foliage_" + kind):
+			n.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if on else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

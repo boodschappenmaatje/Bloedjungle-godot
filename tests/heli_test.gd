@@ -6,6 +6,7 @@ var game: Node
 var frames := 0
 var heli: Apache
 var pad: Dictionary
+var hp0 := 0.0
 
 
 func _initialize() -> void:
@@ -58,5 +59,31 @@ func _process(_d: float) -> bool:
 		print("weer in de lucht (1 = FLY): ", heli.mode)
 	if frames == 3 + 60 * 24:
 		print("hoogte ", heli.global_position.y)
+		# een vijand in de richtcirkel
+		heli.global_position.y = 7.0
+		heli.rotation.y = 0.0
+		main._spawn("rifle")
+		var e = game.enemies[0] if game.enemies.size() > 0 else null
+		print("vijand: ", e != null)
+		if e:
+			e.global_position = heli._ring_center()
+			hp0 = e.hp
+			heli.driven = true
+			heli.mode = Apache.Mode.FLY
+			heli._spool = 0.0
+			game.player.driving = true
+			for n in main.find_children("*", "", true, false):
+				if n is TouchSticks:
+					n.set_process(false)
+					n.set_physics_process(false)
+	if frames > 3 + 60 * 24 and frames < 3 + 60 * 27:
+		game.aim = PI
+		game.fire = true
+		game.move = Vector2.ZERO
+		if game.enemies.size() > 0:
+			game.enemies[0].global_position = heli._ring_center()
+			game.enemies[0].velocity = Vector3.ZERO
+	if frames == 3 + 60 * 27:
+		print("hp nu: ", game.enemies[0].hp if game.enemies.size() > 0 else -1, " ring zichtbaar: ", heli._ring.visible, " vijanden over: ", game.enemies.size(), " kills ", game.kills, " hp0 ", hp0)
 		quit()
 	return false

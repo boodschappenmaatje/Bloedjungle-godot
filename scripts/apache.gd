@@ -17,6 +17,8 @@ const FIRE_RATE := 0.07
 const DAMAGE := 14.0
 const BOARD_DIST := 9.0      # m van het midden van het platform: dichterbij dan dit toont de knop
 const LAND_DIST := 24.0
+const RING_DIST := 9.0       # m vanaf de heli: waar de richtcirkel op de grond ligt
+const RING_R := 3.0
 const GROUND_BOARD := 6.0     # m: bij een geparkeerde heli op de grond toont de knop IN
 const ROTOR_RPS := 3.0
 const TAIL_RPS := 9.0
@@ -35,6 +37,8 @@ var _spool := 0.0           # na het instappen eerst de rotor op toeren, dan pas
 var _t := 0.0
 var _btn: ActionBtn
 var _btn_what := ""
+var _ring: MeshInstance3D
+var _ring_mat: StandardMaterial3D
 
 
 func setup(p: Dictionary) -> void:
@@ -78,7 +82,49 @@ func _ready() -> void:
 	_btn.pressed.connect(_press)
 	layer.add_child(_btn)
 	_btn.hide()
+	_make_ring()
 	_follow_lift()
+
+
+## Richtcirkel op de grond voor de heli: het kanon schiet schuin omlaag naar die cirkel. Rood als er een vijand in staat.
+func _make_ring() -> void:
+	var t := TorusMesh.new()
+	t.inner_radius = RING_R - 0.12
+	t.outer_radius = RING_R
+	t.rings = 24
+	t.ring_segments = 4
+	_ring = MeshInstance3D.new()
+	_ring.mesh = t
+	_ring_mat = StandardMaterial3D.new()
+	_ring_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	_ring_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	_ring_mat.albedo_color = Color(1.0, 0.85, 0.3, 0.75)
+	_ring_mat.no_depth_test = true
+	_ring.material_override = _ring_mat
+	_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_ring.top_level = true
+	_ring.visible = false
+	add_child(_ring)
+
+
+func _ring_center() -> Vector3:
+	var fwd := -global_transform.basis.z
+	return Vector3(global_position.x + fwd.x * RING_DIST, 0.0, global_position.z + fwd.z * RING_DIST)
+
+
+func _update_ring() -> void:
+	var on := mode == Mode.FLY and driven and _spool <= 0.0 and global_position.y > 3.0
+	_ring.visible = on
+	if not on:
+		return
+	var c := _ring_center()
+	_ring.global_position = Vector3(c.x, 0.08, c.z)
+	var hot := false
+	for e in Game.enemies:
+		if is_instance_valid(e) and Vector2(e.global_position.x - c.x, e.global_position.z - c.z).length() < RING_R + 0.4:
+			hot = true
+			break
+	_ring_mat.albedo_color = Color(1.0, 0.25, 0.2, 0.85) if hot else Color(1.0, 0.85, 0.3, 0.7)
 
 
 func _pad_center() -> Vector3:
@@ -175,6 +221,7 @@ func _physics_process(delta: float) -> void:
 			_land_free(delta)
 		Mode.GROUND:
 			_wrap.rotation = _wrap.rotation.lerp(Vector3.ZERO, minf(1.0, delta * 4.0))
+	_update_ring()
 	_update_button(p, live)
 
 
@@ -239,9 +286,14 @@ func _fly(delta: float, live: bool) -> void:
 	_cool -= delta
 	if live and Game.fire and aiming and absf(diff) < 0.3 and _cool <= 0.0 and global_position.y > 3.0:
 		_cool = FIRE_RATE
-		var ang := atan2(fwd.x, fwd.z) + randf_range(-0.04, 0.04)
-		var from := Vector3(global_position.x, 1.3, global_position.z) + fwd * 3.0
-		Bullet.fire(get_parent(), from, ang, 95.0, DAMAGE, 0.55, true, true)
+		# schuin omlaag naar een willekeurig punt in de richtcirkel
+		var from := Vector3(global_position.x, global_position.y - 0.6, global_position.z) + fwd * 3.0
+		var c := _ring_center()
+		var spot := Vector3(c.x, 1.0, c.z) + Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0)).limit_length(1.0) * RING_R * sqrt(randf())
+		var to := spot - from
+		var hd := Vector2(to.x, to.z).length()
+		var spd := 95.0
+		Bullet.fire(get_parent(), from, atan2(to.x, to.z), spd, DAMAGE, hd / spd * 1.3, true, true, 0, 0.0, 0.0, to.y / maxf(hd, 0.1))
 		Fx.muzzle(get_parent(), global_position + fwd * 3.4 + Vector3(0, -0.6, 0))
 		Sfx.play("mg", 0.4, global_position)
 	if p != null:

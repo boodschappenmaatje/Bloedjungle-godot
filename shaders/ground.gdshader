@@ -88,6 +88,24 @@ void fragment() {
 	dm = smoothstep(0.2, 0.8, dm + (n3 - 0.5) * 0.3 + (hgt - 0.5) * 0.5);  // zachte rand, kiezels steken door het gras
 
 	dirt *= 1.0 - 0.45 * swamp;
+	// meer variatie in het gras: droge gele plekken, diepgroene weelderige plekken, bladstrooisel en wat wilde bloempjes
+	float big = texture(noise_a, p * 0.011 + 0.31).r;
+	float lush = smoothstep(0.55, 0.8, big);
+	float dry = smoothstep(0.55, 0.78, 1.0 - big) * (1.0 - lush);
+	grass = mix(grass, grass * vec3(0.75, 0.95, 0.65), lush * 0.6);
+	grass = mix(grass, grass * vec3(1.55, 1.3, 0.7) + vec3(0.03, 0.025, 0.0), dry * 0.6);
+	float litter = smoothstep(0.62, 0.75, texture(noise_b, p * 0.33 + 0.7).r) * smoothstep(0.35, 0.6, n4);
+	grass = mix(grass, vec3(0.2, 0.12, 0.05) * (0.8 + 0.6 * n3), litter * 0.55);
+	vec2 cell = floor(p * 3.2);
+	float fr = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
+	vec2 fc = fract(p * 3.2) - vec2(0.5 + 0.3 * (fr - 0.5), 0.5 + 0.3 * (fract(fr * 7.0) - 0.5));
+	float bloom = step(0.965, fr) * (1.0 - smoothstep(0.03, 0.07, length(fc))) * (1.0 - dm) * step(0.45, lush + dry);
+	vec3 petal = mix(vec3(0.85, 0.8, 0.25), mix(vec3(0.85, 0.85, 0.8), vec3(0.8, 0.25, 0.2), step(0.5, fract(fr * 13.0))), step(0.33, fract(fr * 5.0)));
+	grass = mix(grass, petal, bloom * 0.9);
+	// mos op de overgang van gras naar aarde, natte donkere modder in de lage stukken
+	float edge = clamp(4.0 * dm * (1.0 - dm), 0.0, 1.0);
+	dirt = mix(dirt, vec3(0.14, 0.2, 0.08) * (0.8 + 0.5 * n3), edge * 0.5);
+	dirt *= 1.0 - 0.25 * smoothstep(0.5, 0.2, n2) * dm;
 	ALBEDO = mix(grass, dirt, dm);  // texturen zijn al lineair ingelezen (source_color)
 	ROUGHNESS = 1.0;
 	NORMAL_MAP = texture(dirt_normal, pp * 0.11).rgb;

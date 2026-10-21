@@ -14,7 +14,7 @@ const STRIP_KEEP := {
 ## Afstand (m, vanaf de camera, gemeten tot het midden van een vak van 36 m) waarboven een soort niet meer getekend wordt.
 const VIS_END := {"palm": 140.0, "bush": 95.0, "fern": 85.0, "grass": 55.0}
 const PALM_NEAR := 62.0  # dichterbij: volledige palm; verder: de simpele palm
-const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.8], "bush": [1.1, 1.8, 0.7], "rock": [0.5, 1.2, 0.6]}  # hoogte, breedte, sterkte
+const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.5], "bush": [1.1, 1.8, 0.45], "rock": [0.5, 1.2, 0.4]}  # hoogte, breedte, sterkte
 
 
 ## Wind-materiaal; met een bladtextuur (kind) of zonder (stam, rotsen).

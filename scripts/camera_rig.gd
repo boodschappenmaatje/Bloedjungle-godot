@@ -11,7 +11,7 @@ var _snap := true  # eerste beeld meteen op de speler, niet ernaartoe vliegen
 
 func _ready() -> void:
 	# lange lens en onscherpe verte: kijkt als een filmbeeld, niet als een kaart
-	fov = 38.0
+	fov = 40.0
 	far = 220.0
 	var cam := CameraAttributesPractical.new()
 	cam.dof_blur_far_enabled = true
@@ -90,9 +90,9 @@ func _process(delta: float) -> void:
 	attributes.dof_blur_far_enabled = GameSettings.get_value("quality") == "ultra"  # scherptediepte kost veel op mobiel
 	_blook = Vector3.ZERO
 	far = 220.0
-	# lagere, filmische hoek: ongeveer 40 graden boven de grond (was 52), iets langere lens
-	var h := 15.0 if portrait else 10.6
-	var back := 17.5 if portrait else 12.6
+	# ruim overzicht, iets lager dan de oude stand: ongeveer 45 graden (oud 52), zelfde afstand als eerst
+	var h := 24.0 if portrait else 19.0
+	var back := 23.0 if portrait else 19.5
 	var aiming := not is_nan(Game.aim)
 	var want := Vector3(sin(p.face), 0, cos(p.face)) * ((2.5 if portrait else 4.0) if aiming else 1.2)
 	_lead = _lead.lerp(want, 1.0 - exp(-3.0 * delta))

@@ -32,7 +32,7 @@ func _ready() -> void:
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.38
+	env.ambient_light_energy = 0.58
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.tonemap_exposure = 1.0
@@ -63,7 +63,8 @@ func _ready() -> void:
 	sun.light_color = Color("ffe2b0")
 	sun.light_energy = 2.2
 	sun.shadow_enabled = true
-	sun.shadow_blur = 0.8
+	sun.shadow_blur = 1.8  # zachtere randen
+	sun.shadow_opacity = 0.72  # schaduw wordt niet meer pikzwart
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	sun.directional_shadow_max_distance = 80.0
 	sun.shadow_normal_bias = 1.2

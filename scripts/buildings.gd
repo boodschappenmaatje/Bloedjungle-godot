@@ -16,6 +16,7 @@ const SOON := ["Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost"]
 const VEHICLES := {
 	"jeep": {"name": "Jeep", "cost": 400, "scene": "res://scenes/jeep.tscn"},
 	"tank": {"name": "Tank", "cost": 1200, "scene": "res://scenes/tank.tscn"},
+	"truck": {"name": "Truck", "cost": 700, "scene": "res://scenes/vrachtwagen.tscn"},
 }
 const HELI_COST := 500
 const PAD_T := 4.5  # seconden dat de luiken en de lift nodig hebben (de clips Open en Dicht)
@@ -197,7 +198,7 @@ func place(kind: String, at: Vector3, yaw: float) -> Variant:
 	b.bar = HpBar.new()
 	add_child(b.bar)
 	if kind == "garage":
-		b.merge({"has": {"jeep": false, "tank": false}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
+		b.merge({"has": {"jeep": false, "tank": false, "truck": false}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
 		_garage_init(b)
 	elif kind == "helipad":
 		b.merge({"has_heli": false, "hs": "closed", "t": 0.0, "want": false, "heli": null, "spin": 0.0})
@@ -563,7 +564,11 @@ func _spawn_vehicle(b: Dictionary, kind: String) -> void:
 	var run := _free_run(b)
 	var goals: Array = []
 	# eerst kaarsrecht de poort uit tot de hele wagen buiten staat, dan pas opzij naar de parkeerplek
-	if kind == "jeep":
+	if kind == "truck":
+		# lange wagen: eerst helemaal naar buiten, dan opzij
+		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + minf(9.5, run * 0.85)))
+		goals.append(_pt(b.at, b.yaw, DOOR_U - 3.0, FRONT + minf(12.0, run)))
+	elif kind == "jeep":
 		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + minf(6.0, run * 0.7)))
 		goals.append(_pt(b.at, b.yaw, DOOR_U - 3.3, FRONT + minf(8.0, run * 0.9)))
 	else:

@@ -66,6 +66,22 @@ func _draw() -> void:
 			draw_line(c + Vector2(-9, 10), c + Vector2(6, -5), col, 4.0)
 			draw_circle(c + Vector2(8, -8), 6.5, col)
 			draw_circle(c + Vector2(11, -11), 3.0, Color(0.05, 0.06, 0.04, 0.9))
+		"troepen":
+			# drie helmpjes naast elkaar
+			for i in 3:
+				var hc := c + Vector2(-10 + i * 10, 2 - (4 if i == 1 else 0))
+				draw_arc(hc, 5.5, PI, TAU, 10, col, 2.4)
+				draw_line(hc + Vector2(-7.5, 0), hc + Vector2(7.5, 0), col, 2.0)
+			draw_line(c + Vector2(-14, 9), c + Vector2(14, 9), col, 2.0)
+		"zeil":
+			# laadbak met zeil: dicht = boog vol, open = alleen spanten
+			draw_rect(Rect2(c + Vector2(-15, 4), Vector2(30, 7)), col, false, 2.2)
+			if open_state:
+				draw_arc(c + Vector2(0, 4), 13.0, PI, TAU, 14, col, 4.0)
+			else:
+				for x in [-10.0, 0.0, 10.0]:
+					draw_line(c + Vector2(x, 4), c + Vector2(x, -7), col, 1.6)
+				draw_circle(c + Vector2(0, -10), 3.5, col)
 		"exit", "enter":
 			draw_rect(Rect2(c + Vector2(-13, -11), Vector2(13, 22)), col, false, 2.2)
 			var d := 1.0 if kind == "exit" else -1.0

@@ -4,8 +4,9 @@ extends Node3D
 ## gebruikt door de speler en de vijanden. Kleurt het uniform en hangt een wapen in de rechterhand.
 
 const SCENE := preload("res://assets/soldaat.glb")
-const LOOPS := ["stil", "lopen", "rennen", "achteruit", "schieten", "herladen", "klimmen"]
+const LOOPS := ["stil", "lopen", "rennen", "achteruit", "schieten", "herladen", "klimmen", "zitten"]
 const CLIMB := preload("res://assets/klimmen.glb")  # klim-animatie uit bron/klimmen
+const SIT := preload("res://assets/zitten.glb")  # zitten in de vrachtwagen, uit bron/zitten
 
 var anim: AnimationPlayer
 var current := ""
@@ -25,6 +26,9 @@ func setup(uniform: Color, gun_kind := "rifle") -> void:
 	var lib := anim.get_animation_library("")
 	if not lib.has_animation("klimmen"):
 		lib.add_animation("klimmen", cp.get_animation("klimmen"))
+	if not lib.has_animation("zitten"):
+		var sp: AnimationPlayer = SIT.instantiate().find_child("AnimationPlayer", true, false)
+		lib.add_animation("zitten", sp.get_animation("zitten"))
 	for n in LOOPS:
 		if anim.has_animation(n):
 			anim.get_animation(n).loop_mode = Animation.LOOP_LINEAR

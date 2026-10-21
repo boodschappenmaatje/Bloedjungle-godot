@@ -364,14 +364,14 @@ func _fill_panel() -> void:
 		tip = ("Niveau %d: %d soldaten, %ds training, sterker." % [b.lv + 1, nx.max, nx.time] if nx else "Volledig opgewaardeerd.") + (" Je soldaten bewaken de muur." if Game.troop_mode == "hold" else " Je soldaten lopen met je mee.")
 	elif b.kind == "garage":
 		var have: Array = []
-		for k in ["jeep", "tank"]:
+		for k in Buildings.VEHICLES:
 			if b.has[k]:
 				have.append(Buildings.VEHICLES[k].name)
 		info.text = "In dienst: %s · sterkte %d" % [", ".join(have) if have else "nog niets", ceili(b.hp)]
-		for k in ["jeep", "tank"]:
+		for k in Buildings.VEHICLES:
 			var v: Dictionary = Buildings.VEHICLES[k]
 			_act(row, v.name, "gekocht" if b.has[k] else "%d pt" % v.cost, Game.builds.can_buy_vehicle(b, k), func(): Game.builds.buy_vehicle(b, k))
-		tip = "Een gekochte wagen rijdt meteen de garage uit. Jeep en tank bestuur je zelf: loop erheen en tik INSTAPPEN. Stuur je ze niet, dan bewaakt de tank de basis."
+		tip = "Een gekochte wagen rijdt meteen de garage uit. Jeep, tank en truck bestuur je zelf: loop erheen en tik INSTAPPEN. Stuur je ze niet, dan bewaakt de tank de basis. De truck neemt tot 10 soldaten mee."
 	elif b.kind == "helipad":
 		info.text = "In dienst: %s · sterkte %d" % ["Apache" if b.has_heli else "nog niets", ceili(b.hp)]
 		_act(row, "Apache", "gekocht" if b.has_heli else "%d pt" % Buildings.HELI_COST, Game.builds.can_buy_heli(b), func(): Game.builds.buy_heli(b))

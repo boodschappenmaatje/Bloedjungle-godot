@@ -1,6 +1,6 @@
 class_name GarageMenu
 extends CanvasLayer
-## Tijdens het spel op de garage tikken opent een bestelpaneel (jeep en tank), zoals in het bouwscherm.
+## Tijdens het spel op de garage tikken opent een bestelpaneel (jeep, tank en truck), zoals in het bouwscherm.
 ## Een tik is: vinger kort neer en weer op, zonder te schuiven. Tik ergens anders om het paneel te sluiten.
 
 const TAP_MAX_MOVE := 22.0
@@ -143,7 +143,7 @@ func _refresh() -> void:
 			call.pressed.connect(func(): Game.builds.call_heli(b))
 			row.add_child(call)
 	else:
-		for k in ["jeep", "tank"]:
+		for k in Buildings.VEHICLES:
 			var v: Dictionary = Buildings.VEHICLES[k]
 			var btn := Button.new()
 			btn.add_to_group("hud_button")

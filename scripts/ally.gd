@@ -15,6 +15,7 @@ var dmg := 16.0
 var idx := 0
 var fire_t := 0.5
 var _shooting := false
+var truck: Node = null  # vrachtwagen die hem vervoert; die bepaalt dan waar hij is en wat hij doet
 
 
 func setup(hp_: float, dmg_: float, index: int) -> void:
@@ -43,6 +44,12 @@ func set_level(hp_: float, dmg_: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if truck != null:
+		if is_instance_valid(truck):
+			truck.ride_step(self, delta)
+			rotation.y = face
+			return
+		truck = null
 	if Game.state != "play" and Game.state != "prep":
 		velocity = Vector3.ZERO
 		return

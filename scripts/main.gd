@@ -72,7 +72,7 @@ func _warm_up() -> void:
 	add_child(warm)
 	var base: Vector3 = Game.player.global_position if Game.player else Vector3(0, 0, 4)
 	var n := 0
-	for path in ["res://assets/soldaat.glb", "res://assets/klimmen.glb", "res://assets/kazerne.glb", "res://assets/garage.glb", "res://assets/helipad.glb", "res://assets/zwaailamp.glb", "res://assets/apache.glb", "res://assets/loopgraaf.glb", "res://assets/poort.glb", "res://assets/wachttoren.glb"]:
+	for path in ["res://assets/soldaat.glb", "res://assets/klimmen.glb", "res://assets/kazerne.glb", "res://assets/garage.glb", "res://assets/helipad.glb", "res://assets/zwaailamp.glb", "res://assets/apache.glb", "res://assets/loopgraaf.glb", "res://assets/poort.glb", "res://assets/wachttoren.glb", "res://assets/vrachtwagen.glb"]:
 		if not ResourceLoader.exists(path):
 			continue
 		var m: Node3D = (load(path) as PackedScene).instantiate()

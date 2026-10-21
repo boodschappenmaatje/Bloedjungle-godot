@@ -93,7 +93,9 @@ func _physics_process(delta: float) -> void:
 	if gate != null:
 		want_move = false
 		look = _angle_to(Game.gates.pos_of(gate))
-		if fire_t <= 0.0:
+		if fire_t <= 0.0 and t.get("rocket", false):
+			_shoot_rocket(look, Game.gates.pos_of(gate))  # een raket tegen de poort
+		elif fire_t <= 0.0:
 			fire_t = t.rate if melee else maxf(t.rate, 0.45)
 			if melee:
 				model.play("steken", 0.08, 1.7)
@@ -124,7 +126,7 @@ func _physics_process(delta: float) -> void:
 var _tgt_y := 0.0
 
 
-## Dichtstbijzijnde bouwwerk (geen muur of zandzak) binnen 26 m dat nog heel is.
+## Dichtstbijzijnde bouwwerk (geen muur of zandzak) binnen 26 m dat nog heel is en waar hij vrij zicht op heeft.
 func _rocket_target() -> Variant:
 	var best: Variant = null
 	var bd := 26.0
@@ -132,10 +134,17 @@ func _rocket_target() -> Variant:
 		if b.down or Game.builds.is_piece(b.kind):
 			continue
 		var d := _flat(b.at - global_position).length()
-		if d < bd:
+		if d < bd and _rocket_clear(b):
 			bd = d
 			best = b
 	return best
+
+
+## Geen muur tussen hem en het gebouw (raketten gaan niet over de muur).
+func _rocket_clear(b: Dictionary) -> bool:
+	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 1.3, 0), Vector3(b.at.x, 1.3, b.at.z), Bullet.MASK_WALL)
+	var r := get_world_3d().direct_space_state.intersect_ray(q)
+	return r.is_empty() or r.collider == b.node
 
 
 func _shoot(a: float) -> void:
@@ -164,15 +173,17 @@ func _shoot(a: float) -> void:
 
 
 ## Een trage raket die afgaat waar hij gemikt was (of tegen het eerste dat in de weg staat).
-func _shoot_rocket(a: float) -> void:
+func _shoot_rocket(a: float, aim: Variant = null) -> void:
 	fire_t = t.rate
 	var fwd := Vector3(sin(a), 0.0, cos(a))
-	var muzzle: Vector3 = global_position + fwd * 1.1 + Vector3.UP * 1.55
+	var muzzle: Vector3 = global_position + fwd * 1.1 + Vector3.UP * 1.3
 	Game.mark_attack(global_position)
 	var rb: Variant = _rocket_target()
 	var d := 20.0
 	var dm: float = t.dmg
-	if rb != null:
+	if aim != null:
+		d = _flat(aim - global_position).length()
+	elif rb != null:
 		d = _flat(rb.at - global_position).length()
 	elif Game.player:
 		d = _flat(Game.player.global_position - global_position).length()

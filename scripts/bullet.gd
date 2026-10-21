@@ -49,7 +49,7 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.rotation.y = angle
 
 
-## Vijandelijke raket (18-enemies.js): traag, vliegt over de muur en ontploft waar hij gemikt was of tegen de eerste speler of bunker.
+## Vijandelijke raket (18-enemies.js): traag; ontploft waar hij gemikt was of tegen de eerste muur, speler of bunker.
 static func fire_rocket(parent: Node, from: Vector3, angle: float, damage: float, lifetime: float) -> void:
 	if _mesh == null:
 		fire(parent, from, angle, 0.0, 0.0, 0.0, false)  # maakt de gedeelde mesh en materialen klaar
@@ -67,7 +67,7 @@ static func fire_rocket(parent: Node, from: Vector3, angle: float, damage: float
 	b.from_player = false
 	b.rocket = true
 	b.explosive = 3.2
-	b.mask = MASK_PLAYER | MASK_BUNKER
+	b.mask = MASK_PLAYER | MASK_BUNKER | MASK_WALL
 	parent.add_child(b)
 	b.global_position = from
 	b.rotation.y = angle
@@ -143,7 +143,7 @@ func _boom_enemy(at: Vector3) -> void:
 			var g: Dictionary = Game.gates.list[i]
 			var gd: float = maxf(0.0, Vector2(Game.gates.pos_of(g).x - at.x, Game.gates.pos_of(g).z - at.z).length() - Data.GATE_GAP)
 			if not g.broken and gd < r:
-				Game.gates.damage(i, dmg * 1.2 * (1.0 - gd / r), "bullet")
+				Game.gates.damage(i, dmg * 1.2 * (1.0 - gd / r), "explosive")
 	var p = Game.player
 	if p != null and not p.dead:
 		var pd: float = Vector2(p.global_position.x - at.x, p.global_position.z - at.z).length()

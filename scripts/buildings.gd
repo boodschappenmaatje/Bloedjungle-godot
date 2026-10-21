@@ -6,7 +6,7 @@ extends Node3D
 
 const DEFS := {
 	"kazerne": {"name": "Kazerne", "cost": 1000, "size": Vector3(4.4, 2.2, 3.2), "max": 1, "hp": 600.0},
-	"garage": {"name": "Garage", "cost": 800, "size": Vector3(7.8, 3.4, 8.6), "max": 1, "hp": 900.0},
+	"garage": {"name": "Garage", "cost": 800, "size": Vector3(5.15, 3.1, 5.7), "max": 1, "hp": 900.0},
 	"zandzak": {"name": "Zandzakken", "cost": 150, "size": Vector3(3.1, 0.95, 0.8), "max": 40, "hp": 380.0, "piece": true},
 	"muur": {"name": "Betonmuur", "cost": 300, "size": Vector3(3.0, 1.55, 0.7), "max": 30, "hp": 1100.0, "piece": true},
 }
@@ -27,7 +27,10 @@ const LEVELS := [null,
 	{"max": 6, "time": 5.0, "hp": 130.0, "dmg": 21.0, "cost": 1800}]
 const TRAIN_COST := 250
 const DOOR := 2.5  # afstand van het midden tot het punt voor de deur
-const DOOR_U := -0.7  # de garagedeur zit niet in het midden maar 0,7 m naar links
+const GS := 0.66      # schaal van het garagemodel (breedte en diepte); in de hoogte GSH
+const GSH := 0.92
+const DOOR_U := -0.7 * GS  # de garagedeur zit niet in het midden maar iets naar links
+const FRONT := 4.2 * GS    # afstand van het midden tot de deur
 const C := Data.COMPOUND
 
 
@@ -349,17 +352,17 @@ func _garage_node(body: StaticBody3D) -> void:
 	body.add_child(model)
 	body.set_meta("model", model)
 	var parts := [
-		[Vector3(-3.85, 1.6, 0.0), Vector3(0.2, 3.2, 8.6)],    # linkerwand
-		[Vector3(2.45, 1.6, 0.0), Vector3(0.2, 3.2, 8.6)],     # rechterwand
-		[Vector3(-0.7, 1.6, -4.15), Vector3(6.4, 3.2, 0.2)],   # achterwand
-		[Vector3(-3.45, 1.6, 4.15), Vector3(0.9, 3.2, 0.2)],   # pilaar links van de deur
-		[Vector3(2.05, 1.6, 4.15), Vector3(0.9, 3.2, 0.2)],    # pilaar rechts van de deur
-		[Vector3(-0.7, 2.95, 4.15), Vector3(4.6, 0.5, 0.2)],   # latei
-		[Vector3(-0.7, 3.3, 0.0), Vector3(6.6, 0.2, 8.6)],     # dak
+		[Vector3(-3.85, 1.6, 0.0), Vector3(0.2, 3.2, 8.6)],      # linkerwand
+		[Vector3(2.45, 1.6, 0.0), Vector3(0.2, 3.2, 8.6)],       # rechterwand
+		[Vector3(-0.7, 1.6, -4.15), Vector3(6.4, 3.2, 0.2)],     # achterwand
+		[Vector3(-3.775, 1.6, 4.15), Vector3(0.25, 3.2, 0.2)],   # pilaar links van de deur
+		[Vector3(2.375, 1.6, 4.15), Vector3(0.25, 3.2, 0.2)],    # pilaar rechts van de deur
+		[Vector3(-0.7, 2.95, 4.15), Vector3(5.9, 0.5, 0.2)],     # latei
+		[Vector3(-0.7, 3.3, 0.0), Vector3(6.6, 0.2, 8.6)],       # dak
 	]
 	for pt in parts:
-		body.add_child(_box_shape(pt[0], pt[1]))
-	var door := _box_shape(Vector3(-0.7, 1.35, 4.1), Vector3(4.6, 2.7, 0.3))
+		body.add_child(_box_shape(_gs(pt[0]), _gs(pt[1])))
+	var door := _box_shape(_gs(Vector3(-0.7, 1.35, 4.1)), _gs(Vector3(5.9, 2.7, 0.3)))
 	door.name = "Poortkast"
 	body.add_child(door)
 	var ap: AnimationPlayer = model.find_child("AnimationPlayer", true, false)
@@ -377,6 +380,11 @@ func _garage_node(body: StaticBody3D) -> void:
 	var z := model.find_child("ZwaaiLicht", true, false)
 	if z:
 		z.visible = false
+
+
+## Maten van het model (Blender-meters) omzetten naar het kleinere model in het spel.
+func _gs(v: Vector3) -> Vector3:
+	return Vector3(v.x * GS, v.y * GSH, v.z * GS)
 
 
 func _box_shape(pos: Vector3, size: Vector3) -> CollisionShape3D:
@@ -432,7 +440,7 @@ func _free_run(b: Dictionary) -> float:
 	var run := 0.0
 	for i in range(1, 25):
 		var d := i * 0.5
-		var p := _pt(b.at, b.yaw, DOOR_U, 4.2 + d)
+		var p := _pt(b.at, b.yaw, DOOR_U, FRONT + d)
 		if maxf(absf(p.x), absf(p.z)) > C - 1.2:
 			break
 		q.transform = Transform3D(Basis.IDENTITY, p + Vector3(0, 1.0, 0))
@@ -445,17 +453,17 @@ func _free_run(b: Dictionary) -> float:
 func _spawn_vehicle(b: Dictionary, kind: String) -> void:
 	var v: Node3D = (load(VEHICLES[kind].scene) as PackedScene).instantiate()
 	add_child(v)
-	var inside := _pt(b.at, b.yaw, DOOR_U, 0.8)
+	var inside := _pt(b.at, b.yaw, DOOR_U, 0.5)
 	v.global_position = Vector3(inside.x, 0.0, inside.z)
 	v.rotation.y = b.yaw + PI
 	var run := _free_run(b)
 	var goals: Array = []
 	if kind == "jeep":
-		goals.append(_pt(b.at, b.yaw, DOOR_U, 4.2 + minf(3.0, run * 0.5)))
-		goals.append(_pt(b.at, b.yaw, DOOR_U - 3.3, 4.2 + maxf(2.5, run * 0.75)))
+		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + minf(3.0, run * 0.5)))
+		goals.append(_pt(b.at, b.yaw, DOOR_U - 3.3, FRONT + maxf(2.5, run * 0.75)))
 	else:
-		goals.append(_pt(b.at, b.yaw, DOOR_U, 4.2 + minf(4.0, run * 0.5)))
-		goals.append(_pt(b.at, b.yaw, DOOR_U + 2.2, 4.2 + maxf(3.5, run * 0.85)))
+		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + minf(4.0, run * 0.5)))
+		goals.append(_pt(b.at, b.yaw, DOOR_U + 2.2, FRONT + maxf(3.5, run * 0.85)))
 	v.goals = goals
 	b.veh = v
 	Sfx.play("thud", 0.8, v.global_position)
@@ -480,7 +488,7 @@ func _garage_step(b: Dictionary, delta: float) -> void:
 			var v: Node3D = b.veh
 			# de poort gaat dicht zodra de wagen er helemaal uit is
 			var out: Vector3 = v.global_position - b.at
-			if not is_instance_valid(v) or out.dot(_front(b)) > 4.2 + 2.6 or v.goals.is_empty():
+			if not is_instance_valid(v) or out.dot(_front(b)) > FRONT + 2.6 or v.goals.is_empty():
 				b.phase = "closing"
 				b.t = 2.0
 				b.anim.play("Dicht")

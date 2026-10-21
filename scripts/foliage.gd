@@ -4,6 +4,7 @@ class_name Foliage
 
 static var _mats := {}
 static var _shadow_mats := {}  # soort -> nepschaduw-materiaal
+const STRIP_EXTRA := {"palm": 70, "bush": 160, "fern": 170, "grass": 600, "rock": 8}  # extra stuks in de strook tussen muur en rivier
 const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.8], "bush": [1.1, 1.8, 0.7], "rock": [0.5, 1.2, 0.6]}  # hoogte, breedte, sterkte
 
 
@@ -243,8 +244,39 @@ static func _scatter(rng: RandomNumberGenerator, count: int, r_min: float, r_max
 			continue  # pad vanaf de poorten
 		if p.x > Data.COMPOUND and p.x < Data.COMPOUND + 11.5 and absf(p.z) < 23.0:
 			continue  # tankbaan langs de oostmuur
-		var s := rng.randf_range(s_min, s_max)
-		var b := Basis.from_euler(Vector3(rng.randf_range(-tilt, tilt), rng.randf() * TAU, rng.randf_range(-tilt, tilt))).scaled(Vector3(s, s * rng.randf_range(0.85, 1.2), s))
-		out.append(Transform3D(b, p))
-		var v := rng.randf_range(0.78, 1.12)
-		cols.append(Color(v, v * rng.randf_range(0.94, 1.08), v * 0.92))
+		if _in_river(p):
+			continue
+		_add(rng, out, cols, p, s_min, s_max, tilt)
+
+
+
+## In de rivier, op de oevers en op de open paden naar brug en ondiepte.
+static func _in_river(p: Vector3) -> bool:
+	var d := absf(p.z - Data.river_z(p.x))
+	if d < Data.RIVER_HALF + 1.0:
+		return true
+	if d < 12.0 and (absf(p.x - Data.BRIDGE_X) < 4.2 or absf(p.x - Data.FORD_X) < 3.6):
+		return true
+	return false
+
+
+static func _add(rng: RandomNumberGenerator, out: Array, cols: Array, p: Vector3, s_min: float, s_max: float, tilt: float) -> void:
+	var s := rng.randf_range(s_min, s_max)
+	var b := Basis.from_euler(Vector3(rng.randf_range(-tilt, tilt), rng.randf() * TAU, rng.randf_range(-tilt, tilt))).scaled(Vector3(s, s * rng.randf_range(0.85, 1.2), s))
+	out.append(Transform3D(b, p))
+	var v := rng.randf_range(0.78, 1.12)
+	cols.append(Color(v, v * rng.randf_range(0.94, 1.08), v * 0.92))
+
+
+## Dichte jungle in de strook tussen de basismuur en de rivier; het pad vanaf de poort naar de brug blijft vrij.
+static func _strip(rng: RandomNumberGenerator, count: int, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
+	var tries := 0
+	while out.size() < count and tries < count * 20:
+		tries += 1
+		var x := rng.randf_range(-Data.WORLD_R * 0.8, Data.WORLD_R * 0.8)
+		var zr := Data.river_z(x)
+		var z := rng.randf_range(zr + Data.RIVER_HALF + 1.2, -Data.COMPOUND - 2.0)
+		var p := Vector3(x, 0, z)
+		if absf(x) < 4.6 or _in_river(p) or Vector2(x, z).length() > Data.WORLD_R:
+			continue
+		_add(rng, out, cols, p, s_min, s_max, tilt)

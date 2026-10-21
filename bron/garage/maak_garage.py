@@ -236,9 +236,12 @@ X0, X1 = -3.9, 2.5      # gebouw links/rechts
 YF, YB = -4.2, 4.2      # voorkant (deur) / achterkant
 H = 3.2                 # wandhoogte
 DC = (X0 + X1) / 2      # midden van de deur (x)
-DW = 4.6                # deurbreedte
+DW = 5.9                # deurbreedte (breed genoeg voor de tank)
+GS = 0.66               # het gebouw wordt in de breedte en diepte hierop geschaald (kleiner in het spel)
+GSH = 0.92              # in de hoogte minder, zodat tank en jeep er nog onderdoor passen
 DH = 2.7                # deurhoogte
 root = empty("Garage")
+root.scale = (GS, GS, GSH)
 LOS = set()
 stat = []  # delen van de romp
 
@@ -252,8 +255,8 @@ def S(o):
 for nm, size, loc in (("FundL", (0.3, 8.9, 0.34), (X0 - 0.1, 0, 0.17)), ("FundR", (0.3, 8.9, 0.34), (X1 + 0.1, 0, 0.17)),
                       ("FundA", (6.8, 0.3, 0.34), (DC, YB + 0.1, 0.17))):
     S(box(nm, size, BETON, root, loc))
-S(box("FundVL", (0.9, 0.3, 0.34), BETON, root, (X0 + 0.3, YF - 0.1, 0.17)))
-S(box("FundVR", (0.9, 0.3, 0.34), BETON, root, (X1 - 0.3, YF - 0.1, 0.17)))
+S(box("FundVL", (0.3, 0.3, 0.34), BETON, root, (X0 + 0.1, YF - 0.1, 0.17)))
+S(box("FundVR", (0.3, 0.3, 0.34), BETON, root, (X1 - 0.1, YF - 0.1, 0.17)))
 S(box("Vloer", (X1 - X0, YB - YF, 0.12), BETONDONKER, root, (DC, 0, 0.06)))
 S(box("Drempel", (DW, 0.5, 0.14), BETON, root, (DC, YF - 0.2, 0.07)))
 S(box("Erf", (1.4, 8.6, 0.08), BETONDONKER, root, (3.2, 0, 0.04)))
@@ -351,14 +354,14 @@ bm.faces.new(vs)
 S(mesh_obj("DakSter", bm, WIT, root, (X1 - 0.75, -1.5, H + 0.226)))
 # lampen boven de deur: gele kooilampen links en rechts, plus waarschuwingslicht rechts
 for sx, nm in ((-1, "L"), (1, "R")):
-    lx = DC + sx * (DW / 2 + 0.55)
+    lx = DC + sx * (DW / 2 + 0.12)
     S(box(f"Lampsteun{nm}", (0.06, 0.4, 0.06), STAAL, root, (lx, YF - 0.2, H - 0.25)))
     S(cyl(f"Lampkop{nm}", 0.11, 0.11, 0.2, STAAL, "Y", 10, root, (lx, YF - 0.5, H - 0.25)))
     lamp = cyl(f"DeurlampMesh{nm}", 0.09, 0.09, 0.05, DEURLAMP, "Y", 10, root, (lx, YF - 0.63, H - 0.25))
     S(lamp)
     S(torus(f"Lampkooi{nm}", 0.13, 0.01, STAAL, root, (lx, YF - 0.65, H - 0.25), (math.pi / 2, 0, 0), 10, 4))
 # kooi/beugel van het waarschuwingslicht
-bx = DC + DW / 2 + 0.55
+bx = DC + DW / 2 + 0.12
 S(box("ZwaaiSteun", (0.06, 0.5, 0.06), STAAL, root, (bx, YF - 0.25, H + 0.35)))
 S(cyl("ZwaaiVoet", 0.14, 0.14, 0.08, ZWART, "Z", 10, root, (bx, YF - 0.5, H + 0.4)))
 S(cyl("ZwaaiLens", 0.1, 0.1, 0.2, ZWAAILENS, "Z", 12, root, (bx, YF - 0.5, H + 0.54)))
@@ -372,15 +375,11 @@ bmesh.ops.delete(bm, geom=kill, context="FACES")
 kap = mesh_obj("ZwaaiKap", bm, ZWART, zwaai, smooth=True)
 LOS.update({"Zwaai", "ZwaaiKap"})
 # brandblusser en elektrakast naast de deur
-S(cyl("Blusser", 0.07, 0.07, 0.36, RODE, "Z", 10, root, (DC - DW / 2 - 0.5, YF - 0.12, 1.1)))
-S(box("Blusserbeugel", (0.16, 0.05, 0.06), STAAL, root, (DC - DW / 2 - 0.5, YF - 0.12, 1.2)))
-S(box("Elektrakast", (0.4, 0.14, 0.55), STAAL, root, (DC + DW / 2 + 0.55, YF - 0.1, 1.3)))
-S(box("ElektrakastDeur", (0.34, 0.02, 0.48), OLIJF, root, (DC + DW / 2 + 0.55, YF - 0.185, 1.3)))
+S(cyl("Blusser", 0.06, 0.06, 0.32, RODE, "Z", 10, root, (DC - DW / 2 - 0.12, YF - 0.12, 1.1)))
+S(box("Blusserbeugel", (0.14, 0.05, 0.06), STAAL, root, (DC - DW / 2 - 0.12, YF - 0.12, 1.2)))
+S(box("Elektrakast", (0.2, 0.14, 0.45), STAAL, root, (DC + DW / 2 + 0.12, YF - 0.1, 1.3)))
+S(box("ElektrakastDeur", (0.16, 0.02, 0.4), OLIJF, root, (DC + DW / 2 + 0.12, YF - 0.185, 1.3)))
 # zandzakken: een smalle stapel voor elke deurpost (de opening blijft vrij voor tank en jeep) en rijen langs de linkerwand
-for sx, px in ((-1, X0 + 0.45), (1, X1 - 0.45)):
-    for layer in range(3):
-        S(sphere(f"Zak{sx}{layer}", 0.5, ZAND, root, (px, YF - 0.85, 0.2 + layer * 0.28), (0.9, 0.55, 0.36)))
-        S(sphere(f"Zakb{sx}{layer}", 0.5, ZAND, root, (px + sx * 0.0, YF - 1.55, 0.2 + layer * 0.28), (0.9, 0.55, 0.36)))
 for layer in range(2):
     for i in range(3):
         S(sphere(f"Zakzij{layer}{i}", 0.5, ZAND, root, (X0 - 0.55 - layer * 0.1, -3.2 + i * 0.85 + (layer % 2) * 0.4, 0.2 + layer * 0.28), (0.36, 0.9, 0.36)))
@@ -488,7 +487,7 @@ for sx, nm in ((-1, "L"), (1, "R")):
     sp.spot_blend = 0.6
     sp.color = (1.0, 0.82, 0.5)
     o = link(bpy.data.objects.new(sp.name, sp), root)
-    o.location = (DC + sx * (DW / 2 + 0.55), YF - 0.7, H - 0.3)
+    o.location = (DC + sx * (DW / 2 + 0.12), YF - 0.7, H - 0.3)
     o.rotation_euler = (-math.radians(70), 0, 0)
     LOS.add(o.name)
 zl = bpy.data.lights.new("ZwaaiLicht", "POINT")

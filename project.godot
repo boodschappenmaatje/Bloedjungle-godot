@@ -36,7 +36,7 @@ window/ios/allow_high_refresh_rate=true
 window/ios/hide_home_indicator=true
 window/ios/hide_status_bar=true
 window/ios/suppress_ui_gesture=true
-window/vsync/vsync_mode=0
+window/vsync/vsync_mode=1
 
 [layer_names]
 

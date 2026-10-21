@@ -20,6 +20,7 @@ func _process(_d: float) -> bool:
 	if frames == 3:
 		main.begin()
 		print("brug: ", game.bridge != null, " anim: ", game.bridge.anim != null, " klep-lampen ", game.bridge._lamp_g != null, game.bridge._lamp_r != null, " kastje ", game.bridge.box_pos())
+		print("Klep rotatie bij start: ", game.bridge.model.find_child("Klep", true, false).rotation, " (verwacht x=0)")
 		game.player.global_position = game.bridge.box_pos() + Vector3(0, 0, 1.0)
 		print("dichtbij kastje: ", game.bridge.near_player())
 		game.bridge.toggle()

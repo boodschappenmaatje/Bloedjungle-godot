@@ -235,15 +235,17 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 				inst.add_to_group("foliage_" + kind)  # de grafiekinstelling dunt gras en struiken uit
 				# vakken die ver weg liggen worden niet meer getekend; ver weg staan palmen als simpeler model
 				inst.visibility_range_end = VIS_END[kind]
-				inst.visibility_range_end_margin = 6.0
+				inst.visibility_range_end_margin = 16.0
+				inst.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF  # zacht in- en uitdoven i.p.v. ploffen
 				if kind == "palm":
 					inst.visibility_range_end = PALM_NEAR
 					var far := Kit.scatter(parent, meshes["palm_far"], null, cells[key][0], cells[key][1], false)
 					far.add_to_group("foliage_palm")
 					far.visibility_range_begin = PALM_NEAR
-					far.visibility_range_begin_margin = 6.0
+					far.visibility_range_begin_margin = 16.0
 					far.visibility_range_end = VIS_END["palm"]
-					far.visibility_range_end_margin = 6.0
+					far.visibility_range_end_margin = 16.0
+					far.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 				if SHADOW_KINDS.has(kind):
 					_blobs(parent, kind, [cells[key][0]])
 

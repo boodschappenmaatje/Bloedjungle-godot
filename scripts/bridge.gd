@@ -31,6 +31,10 @@ func _ready() -> void:
 	_box = model.find_child("KastjePunt", true, false) as Node3D
 	if anim:
 		anim.animation_finished.connect(_on_done)
+		# de glb rust omhoog; begin met de klep omlaag (einde van Omlaag), want de staat is DOWN
+		anim.play("Omlaag")
+		anim.seek(anim.current_animation_length, true)
+		anim.stop(true)
 	# leuningen van de vaste delen (altijd) en van de klep (alleen als hij omlaag ligt)
 	_rail_body(Vector3(0, 0, 6.8), 1.2)    # zuidoprit
 	_rail_body(Vector3(0, 0, -4.8), 2.8)   # noordoprit

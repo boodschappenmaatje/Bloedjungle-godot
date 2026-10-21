@@ -49,6 +49,20 @@ const BUNKER_HALF := 2.3
 const WORLD_R := 80.0    # in deze proef een kleinere kaart dan de 108 m van de web-versie
 const SPAWN_R := 58.0
 
+# Rivier over het noorden van de kaart (05-world.js), 14 m verder naar het noorden dan in de web-versie omdat de basis hier groter is.
+const RIVER_HALF := 2.6
+const BRIDGE_X := 0.0
+const FORD_X := 38.0
+
+
+static func river_z(x: float) -> float:
+	return -45.0 + 5.0 * sin(x * 0.06) + 2.0 * sin(x * 0.15 + 1.0)
+
+
+static func river_off(x: float, z: float) -> float:
+	return absf(z - river_z(x))
+
+
 const ENEMY_BULLET_SPEED := 34.0
 const ENEMY_BULLET_LIFE := 1.1
 const PREP_TIME := 20.0

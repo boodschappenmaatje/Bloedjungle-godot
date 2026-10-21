@@ -79,6 +79,8 @@ func can_place(kind: String, at: Vector3, yaw: float, me: Variant = null) -> boo
 	var piece := is_piece(kind)
 	if Vector2(at.x, at.z).length() > Data.WORLD_R - 3.0:
 		return false
+	if Data.river_off(at.x, at.z) < Data.RIVER_HALF + 3.0:
+		return false  # niet in de rivier
 	var feet := _tower_feet()
 	for iu in 3:
 		for iv in 3:

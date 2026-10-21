@@ -26,6 +26,11 @@ void vertex() {
 
 void fragment() {
 	vec2 p = wpos.xz;
+	// de rivier is uit de grond gesneden (scripts/river.gd legt de bedding eronder; zelfde formule als Data.river_z)
+	float river_off = abs(p.y - (-45.0 + 5.0 * sin(p.x * 0.06) + 2.0 * sin(p.x * 0.15 + 1.0)));
+	if (river_off < 2.6) {
+		discard;
+	}
 	for (int i = 0; i < pit_n; i++) {
 		vec2 r = p - pits[i].xy;
 		float lx = r.x * pits[i].z - r.y * pits[i].w;
@@ -71,6 +76,7 @@ void fragment() {
 		* (1.0 - smoothstep(30.0, 52.0, abs(p.y)));
 	float patches = smoothstep(0.66, 0.8, n1 + 0.2 * n2);
 	float dm = clamp(max(max(inside, path), patches * 0.8), 0.0, 1.0);
+	dm = max(dm, 1.0 - smoothstep(2.9, 5.0 + n2 * 1.6, river_off));  // modderige oevers
 	dm = smoothstep(0.2, 0.8, dm + (n3 - 0.5) * 0.3 + (hgt - 0.5) * 0.5);  // zachte rand, kiezels steken door het gras
 
 	ALBEDO = mix(grass, dirt, dm);  // texturen zijn al lineair ingelezen (source_color)

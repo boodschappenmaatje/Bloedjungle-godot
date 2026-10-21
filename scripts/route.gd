@@ -10,6 +10,9 @@ const IN := Data.COMPOUND - 2.5
 
 
 static func waypoint(from: Vector3, goal: Vector3) -> Vector3:
+	var cross: Variant = _river(from, goal)
+	if cross != null:
+		return cross
 	var me_in := _inside(from)
 	var goal_in := _inside(goal)
 	if _in_gate(from):
@@ -84,3 +87,38 @@ static func _corner(from: Vector3, goal: Vector3) -> Vector3:
 				bd = d
 				best = c
 	return best
+
+
+## Kant van de rivier: -1 noord, +1 zuid, 0 in de rivierstrook (op de brug of de doorwaadbare plek).
+static func _side(p: Vector3) -> int:
+	var off := p.z - Data.river_z(p.x)
+	if absf(off) < Data.RIVER_HALF + 0.6:
+		return 0
+	return 1 if off > 0.0 else -1
+
+
+## Staan soldaat en doel aan verschillende kanten van de rivier, dan eerst naar de brug of de doorwaadbare plek en erover.
+static func _river(from: Vector3, goal: Vector3) -> Variant:
+	var sf := _side(from)
+	var sg := _side(goal)
+	if sf == sg and sf != 0:
+		return null
+	var cx := Data.BRIDGE_X
+	if sf == 0:
+		cx = Data.FORD_X if absf(from.x - Data.FORD_X) < absf(from.x - Data.BRIDGE_X) else Data.BRIDGE_X
+	else:
+		var best := INF
+		for x in [Data.BRIDGE_X, Data.FORD_X]:
+			var rz := Data.river_z(x)
+			var cost := Vector2(from.x - x, from.z - rz).length() + Vector2(goal.x - x, goal.z - rz).length()
+			if cost < best:
+				best = cost
+				cx = x
+	var rz := Data.river_z(cx)
+	var far := 1 if sg == 0 else sg
+	if sf == 0:
+		return Vector3(cx, 0, rz + far * (Data.RIVER_HALF + 3.5))
+	var entry := Vector3(cx, 0, rz + sf * (Data.RIVER_HALF + 3.5))
+	if Vector2(from.x - entry.x, from.z - entry.z).length() > 1.4:
+		return entry
+	return Vector3(cx, 0, rz)

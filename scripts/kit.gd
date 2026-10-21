@@ -5,6 +5,7 @@ class_name Kit
 const LAYER_GROUND := 1
 const LAYER_WALL := 2
 const LAYER_BUNKER := 16
+const LAYER_WATER := 64  # onzichtbare oever van de rivier: houdt mensen tegen, kogels vliegen erover
 
 static var _mats := {}
 
@@ -137,6 +138,13 @@ static func _build_skins() -> Dictionary:
 		"Staal": func(): return photo("buildings/metal", 1.4, Color(0.84, 0.88, 0.93)),
 		"StaalDonker": func(): return photo("buildings/metal", 1.4, Color(0.5, 0.53, 0.58)),
 		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.6, 0.61, 0.63)),
+	},
+	"brug": {
+		"Hout1": func(): return photo("buildings/weathered_wood", 1.4, Color(1.25, 1.1, 0.9)),
+		"Hout2": func(): return photo("buildings/weathered_wood", 1.4, Color(1.05, 0.92, 0.75)),
+		"Hout3": func(): return photo("buildings/weathered_wood", 1.4, Color(1.4, 1.22, 1.0)),
+		"Balk": func(): return photo("buildings/weathered_wood", 1.6, Color(0.8, 0.68, 0.54)),
+		"Paal": func(): return photo("nature/tree_bark", 1.2, Color(0.55, 0.47, 0.38)),
 	},
 	"loopgraaf": {
 		"Hout1": func(): return photo("buildings/weathered_wood", 1.4, Color(0.72, 0.62, 0.5)),

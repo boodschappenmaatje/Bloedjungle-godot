@@ -22,7 +22,7 @@ func setup(hp_: float, dmg_: float, index: int) -> void:
 	dmg = dmg_
 	idx = index
 	collision_layer = 0
-	collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER
+	collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_WATER
 	var col := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()
 	cap.radius = 0.4

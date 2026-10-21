@@ -11,6 +11,7 @@ func _ready() -> void:
 		c.free()
 	_ground()
 	BaseProps.build(self)
+	River.build(self)
 	Foliage.plant(self)
 
 

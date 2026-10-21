@@ -45,6 +45,10 @@ func _physics_process(delta: float) -> void:
 			model.play("stil")
 		return
 	var player = Game.player
+	if _is_far(player):
+		_far_step(delta)
+		return
+	_set_far(false)
 	var melee: bool = t.get("melee", false)
 	var range_: float = 0.0 if melee else t.range
 	# doelwit: de speler als hij dichtbij genoeg is, anders de bunker
@@ -124,6 +128,45 @@ func _physics_process(delta: float) -> void:
 
 
 var _tgt_y := 0.0
+var _far := false
+var _far_acc := 0.0
+var _far_n := 0
+
+
+## Ver van de speler en ver van de basis: niemand ziet hem, dus hij rekent maar af en toe en loopt rechtstreeks.
+func _is_far(player: Variant) -> bool:
+	if player == null or player.dead or slow_t > 0.0:
+		return false
+	var d2: float = _flat(player.global_position - global_position).length_squared()
+	var from_base := maxf(absf(global_position.x), absf(global_position.z))
+	var lim := 55.0 if _far else 62.0  # kleine marge tegen heen en weer schakelen
+	return d2 > lim * lim and from_base > 48.0
+
+
+func _set_far(on: bool) -> void:
+	if _far == on:
+		return
+	_far = on
+	model.visible = not on
+	model.process_mode = Node.PROCESS_MODE_DISABLED if on else Node.PROCESS_MODE_INHERIT
+
+
+## Elke vierde natuurkundige stap: een stap richting het volgende punt van de route, zonder botsingen of animatie.
+func _far_step(delta: float) -> void:
+	_set_far(true)
+	_far_acc += delta
+	_far_n += 1
+	if _far_n % 4 != 0:
+		return
+	var wp := Route.waypoint(global_position, Vector3.ZERO)
+	var d := _flat(wp - global_position)
+	if d.length() > 0.05:
+		var v: Vector2 = d.normalized() * float(t.speed) * speed_mul * _far_acc
+		position += Vector3(v.x, 0.0, v.y)
+		face = atan2(d.x, d.y)
+		rotation.y = face
+	position.y = 0.0
+	_far_acc = 0.0
 
 
 ## Dichtstbijzijnde bouwwerk (geen muur of zandzak) binnen 26 m dat nog heel is en waar hij vrij zicht op heeft.

@@ -11,6 +11,9 @@ const STRIP_KEEP := {
 	"moeras": {"palm": 0.3, "bush": 0.35, "fern": 0.9, "grass": 1.0, "rock": 0.2},
 	"open": {"palm": 0.06, "bush": 0.12, "fern": 0.3, "grass": 0.45, "rock": 1.0},
 }
+## Afstand (m, vanaf de camera, gemeten tot het midden van een vak van 36 m) waarboven een soort niet meer getekend wordt.
+const VIS_END := {"palm": 140.0, "bush": 95.0, "fern": 85.0, "grass": 55.0}
+const PALM_NEAR := 62.0  # dichterbij: volledige palm; verder: de simpele palm
 const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.8], "bush": [1.1, 1.8, 0.7], "rock": [0.5, 1.2, 0.6]}  # hoogte, breedte, sterkte
 
 
@@ -87,12 +90,13 @@ static func _frond(st: SurfaceTool, origin: Vector3, yaw: float, length: float, 
 					st.add_vertex(v[0])
 
 
-static func palm() -> ArrayMesh:
+## Verre palm (afstand-niveau): dezelfde vorm met veel minder driehoeken.
+static func palm(far := false) -> ArrayMesh:
 	var mesh := ArrayMesh.new()
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var segs := 10
-	var sides := 7
+	var segs := 4 if far else 10
+	var sides := 4 if far else 7
 	var rings: Array = []
 	var top := Vector3.ZERO
 	for i in segs + 1:
@@ -127,10 +131,11 @@ static func palm() -> ArrayMesh:
 	rng.seed = 5
 	var white := Color(0.78, 0.9, 0.7)
 	var dark := Color(0.5, 0.64, 0.42)
-	for k in 12:
-		var yaw := TAU * k / 12.0 + rng.randf_range(-0.2, 0.2)
-		_frond(crown, top + Vector3.UP * 0.05, yaw, rng.randf_range(2.6, 3.4), rng.randf_range(0.65, 0.85), rng.randf_range(0.9, 1.5), rng.randf_range(1.1, 1.9), dark, white, 7)
-	for k in 6:
+	var n_fronds := 8 if far else 12
+	for k in n_fronds:
+		var yaw := TAU * k / float(n_fronds) + rng.randf_range(-0.2, 0.2)
+		_frond(crown, top + Vector3.UP * 0.05, yaw, rng.randf_range(2.6, 3.4), rng.randf_range(0.65, 0.85), rng.randf_range(0.9, 1.5), rng.randf_range(1.1, 1.9), dark, white, 3 if far else 7)
+	for k in (0 if far else 6):
 		_frond(crown, top + Vector3.UP * 0.1, TAU * k / 6.0 + 0.3, 1.5, 0.45, 1.3, 0.3, dark, white, 4)
 	crown.commit(mesh)
 	mesh.surface_set_material(1, material("palm"))
@@ -200,7 +205,7 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
 	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
-	var meshes := {"palm": palm(), "bush": bush(), "fern": fern(), "grass": grass(), "rock": rock()}
+	var meshes := {"palm": palm(), "bush": bush(), "fern": fern(), "grass": grass(), "rock": rock(), "palm_far": palm(true)}
 	for kind in sets:
 		if step.is_valid():
 			await step.call(kind)
@@ -228,6 +233,17 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 			for key in cells:
 				var inst := Kit.scatter(parent, meshes[kind], null, cells[key][0], cells[key][1], kind != "grass")
 				inst.add_to_group("foliage_" + kind)  # de grafiekinstelling dunt gras en struiken uit
+				# vakken die ver weg liggen worden niet meer getekend; ver weg staan palmen als simpeler model
+				inst.visibility_range_end = VIS_END[kind]
+				inst.visibility_range_end_margin = 6.0
+				if kind == "palm":
+					inst.visibility_range_end = PALM_NEAR
+					var far := Kit.scatter(parent, meshes["palm_far"], null, cells[key][0], cells[key][1], false)
+					far.add_to_group("foliage_palm")
+					far.visibility_range_begin = PALM_NEAR
+					far.visibility_range_begin_margin = 6.0
+					far.visibility_range_end = VIS_END["palm"]
+					far.visibility_range_end_margin = 6.0
 				if SHADOW_KINDS.has(kind):
 					_blobs(parent, kind, [cells[key][0]])
 
@@ -238,6 +254,7 @@ static func _blobs(parent: Node3D, kind: String, lists: Array) -> void:
 	q.size = Vector2.ONE
 	var inst := Kit.scatter(parent, q, _shadow_mat(kind), lists[0], [], false)
 	inst.add_to_group("treeshadow")
+	inst.visibility_range_end = 100.0
 	inst.extra_cull_margin = 30.0  # de schaduw valt tot ver buiten de boom
 
 

@@ -22,7 +22,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 4)
 [node name="Camera" type="Camera3D" parent="." unique_id=300563584]
 transform = Transform3D(1, 0, 0, 0, 0.5, 0.866, 0, -0.866, 0.5, 0, 20, 15.5)
 fov = 40.0
-far = 220.0
+far = 170.0
 script = ExtResource("4")
 
 [node name="Hud" parent="." unique_id=594747085 instance=ExtResource("5")]

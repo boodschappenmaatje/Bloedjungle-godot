@@ -39,7 +39,7 @@ func _ready() -> void:
 	env.tonemap_white = 8.0
 	env.fog_enabled = true
 	env.fog_light_color = Color("7f9078")
-	env.fog_density = 0.005
+	env.fog_density = 0.0075
 	env.fog_aerial_perspective = 0.1
 	env.fog_sky_affect = 0.3
 	env.glow_enabled = true
@@ -108,7 +108,7 @@ func apply_settings() -> void:
 	_sky_mat.sky_horizon_color = Color(t["hor"])
 	_sky_mat.ground_horizon_color = Color(t["gnd"])
 	_env.fog_light_color = Color(t["fog"]).lerp(Color("9aa59a"), 0.0 if weather == "clear" else 0.35)
-	_env.fog_density = {"clear": 0.005, "rain": 0.013, "mist": 0.017}[weather]
+	_env.fog_density = {"clear": 0.0075, "rain": 0.014, "mist": 0.018}[weather]
 	_env.tonemap_exposure = t["exp"]
 	_env.adjustment_saturation = 1.1 if weather == "clear" else 0.85
 	_apply_quality(quality)

@@ -119,6 +119,6 @@ static func _river(from: Vector3, goal: Vector3) -> Variant:
 	if sf == 0:
 		return Vector3(cx, 0, rz + far * (Data.RIVER_HALF + 3.5))
 	var entry := Vector3(cx, 0, rz + sf * (Data.RIVER_HALF + 3.5))
-	if Vector2(from.x - entry.x, from.z - entry.z).length() > 1.4:
-		return entry
+	if absf(from.x - cx) > 1.2:
+		return entry  # eerst op de lijn van de brug komen; daarna rechtdoor, zonder heen en weer te schakelen
 	return Vector3(cx, 0, rz)

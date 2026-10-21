@@ -77,8 +77,12 @@ void fragment() {
 	float patches = smoothstep(0.66, 0.8, n1 + 0.2 * n2);
 	float dm = clamp(max(max(inside, path), patches * 0.8), 0.0, 1.0);
 	dm = max(dm, 1.0 - smoothstep(2.9, 5.0 + n2 * 1.6, river_off));  // modderige oevers
+	// moeras: in de strook tussen muur en rivier, ten westen van x = -22, natte donkere bodem
+	float swamp = (1.0 - smoothstep(-38.0, -22.0, p.x + n2 * 6.0)) * (1.0 - smoothstep(-35.0, -31.0, p.y)) * (1.0 - smoothstep(0.0, 2.0, river_off - 3.0));
+	dm = max(dm, swamp * 0.9);
 	dm = smoothstep(0.2, 0.8, dm + (n3 - 0.5) * 0.3 + (hgt - 0.5) * 0.5);  // zachte rand, kiezels steken door het gras
 
+	dirt *= 1.0 - 0.45 * swamp;
 	ALBEDO = mix(grass, dirt, dm);  // texturen zijn al lineair ingelezen (source_color)
 	ROUGHNESS = 1.0;
 	NORMAL_MAP = texture(dirt_normal, pp * 0.11).rgb;

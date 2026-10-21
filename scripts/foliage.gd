@@ -4,7 +4,13 @@ class_name Foliage
 
 static var _mats := {}
 static var _shadow_mats := {}  # soort -> nepschaduw-materiaal
-const STRIP_EXTRA := {"palm": 70, "bush": 160, "fern": 170, "grass": 600, "rock": 8}  # extra stuks in de strook tussen muur en rivier
+const STRIP_EXTRA := {"palm": 190, "bush": 520, "fern": 560, "grass": 2200, "rock": 14}  # extra stuks in de strook tussen muur en rivier
+## Hoeveel van de extra planten per gebied blijft staan: moeras = varens en gras, open plek = bijna kaal met rotsen, dicht = alles.
+const STRIP_KEEP := {
+	"dicht": {"palm": 1.0, "bush": 1.0, "fern": 1.0, "grass": 1.0, "rock": 0.5},
+	"moeras": {"palm": 0.3, "bush": 0.35, "fern": 0.9, "grass": 1.0, "rock": 0.2},
+	"open": {"palm": 0.06, "bush": 0.12, "fern": 0.3, "grass": 0.45, "rock": 1.0},
+}
 const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.8], "bush": [1.1, 1.8, 0.7], "rock": [0.5, 1.2, 0.6]}  # hoogte, breedte, sterkte
 
 
@@ -190,6 +196,7 @@ static func rock() -> Mesh:
 
 ## Zet de hele jungle neer: buiten de muur, met het pad vanaf de poorten vrij.
 static func plant(parent: Node3D, seed_ := 11) -> void:
+	logs(parent)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
 	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
@@ -199,6 +206,7 @@ static func plant(parent: Node3D, seed_ := 11) -> void:
 		var xf: Array = []
 		var cols: Array = []
 		_scatter(rng, c[0], c[1], c[2], xf, cols, c[3], c[4], c[5])
+		_strip(rng, kind, xf.size() + STRIP_EXTRA[kind], xf, cols, c[3], c[4], c[5])
 		if kind == "rock":
 			var rm := Kit.rock().duplicate() as StandardMaterial3D
 			rm.vertex_color_use_as_albedo = true
@@ -269,7 +277,7 @@ static func _add(rng: RandomNumberGenerator, out: Array, cols: Array, p: Vector3
 
 
 ## Dichte jungle in de strook tussen de basismuur en de rivier; het pad vanaf de poort naar de brug blijft vrij.
-static func _strip(rng: RandomNumberGenerator, count: int, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
+static func _strip(rng: RandomNumberGenerator, kind: String, count: int, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
 	var tries := 0
 	while out.size() < count and tries < count * 20:
 		tries += 1
@@ -279,4 +287,42 @@ static func _strip(rng: RandomNumberGenerator, count: int, out: Array, cols: Arr
 		var p := Vector3(x, 0, z)
 		if absf(x) < 4.6 or _in_river(p) or Vector2(x, z).length() > Data.WORLD_R:
 			continue
+		if rng.randf() > STRIP_KEEP[Data.strip_zone(x)][kind]:
+			continue
 		_add(rng, out, cols, p, s_min, s_max, tilt)
+
+
+## Omgevallen stammen in de strook tussen muur en rivier: dekking voor jou en de vijand.
+static func logs(parent: Node3D, seed_ := 41) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = 0.34
+	cyl.bottom_radius = 0.4
+	cyl.height = 1.0
+	cyl.radial_segments = 8
+	cyl.rings = 1
+	var mat := Kit.photo("nature/tree_bark", 1.5, Color(0.7, 0.62, 0.52))
+	var xf: Array = []
+	var body := StaticBody3D.new()
+	body.collision_layer = Kit.LAYER_WALL
+	body.collision_mask = 0
+	parent.add_child(body)
+	var tries := 0
+	while xf.size() < 26 and tries < 600:
+		tries += 1
+		var x := rng.randf_range(-Data.WORLD_R * 0.75, Data.WORLD_R * 0.75)
+		var p := Vector3(x, 0.32, rng.randf_range(Data.river_z(x) + 5.0, -Data.COMPOUND - 3.0))
+		if absf(x) < 6.0 or _in_river(p) or Data.strip_zone(x) == "moeras" and rng.randf() < 0.5:
+			continue
+		var len_ := rng.randf_range(3.5, 7.0)
+		var yaw := rng.randf() * PI
+		var b: Basis = Basis.from_euler(Vector3(0, yaw, 0)) * Basis.from_euler(Vector3(PI / 2.0, 0, 0)) * Basis.from_scale(Vector3(1, len_, 1))
+		xf.append(Transform3D(b, p))
+		var cs := CollisionShape3D.new()
+		var bs := BoxShape3D.new()
+		bs.size = Vector3(0.7, 0.64, len_)
+		cs.shape = bs
+		cs.transform = Transform3D(Basis.from_euler(Vector3(0, yaw, 0)), p)
+		body.add_child(cs)
+	Kit.scatter(parent, cyl, mat, xf, [], true)

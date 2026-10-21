@@ -55,6 +55,15 @@ const BRIDGE_X := 0.0
 const FORD_X := 38.0
 
 
+## Gebieden in de jungle-strook tussen basismuur en rivier: "moeras" (west), "open" (oost, met rotsen en stammen), anders "dicht".
+static func strip_zone(x: float) -> String:
+	if x < -22.0:
+		return "moeras"
+	if x > 16.0 and x < 46.0:
+		return "open"
+	return "dicht"
+
+
 static func river_z(x: float) -> float:
 	return -45.0 + 5.0 * sin(x * 0.06) + 2.0 * sin(x * 0.15 + 1.0)
 

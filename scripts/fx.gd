@@ -306,6 +306,7 @@ static func explosion(parent: Node, pos: Vector3, scale := 1.0, chunks: Array = 
 	PerfMonitor.note("explosie")
 	_fireball(parent, pos, scale)
 	_debris(parent, pos, scale, chunks)
+	crater(parent, pos, scale)
 	# vonkenregen: lichtstrepen die langs hun vliegrichting wijzen, en aarde die wegspat
 	var sparks := _spray(48, 1.2, Vector3(0.025, 0.24, 0.025), Color(1.0, 0.8, 0.35), 6.0 * scale, 15.0 * scale, 72.0, 16.0, true)
 	var dirt := _spray(30, 1.3, Vector3(0.11, 0.11, 0.11), Color(0.2, 0.14, 0.09), 3.0 * scale, 8.0 * scale, 80.0, 18.0, false)
@@ -318,13 +319,13 @@ static func explosion(parent: Node, pos: Vector3, scale := 1.0, chunks: Array = 
 		parent.get_tree().create_timer(4.5).timeout.connect(p.queue_free)
 	var l := OmniLight3D.new()
 	l.light_color = Color(1.0, 0.6, 0.25)
-	l.light_energy = 14.0
-	l.omni_range = 20.0 * scale
+	l.light_energy = 9.0
+	l.omni_range = 15.0 * scale
 	l.shadow_enabled = false
 	parent.add_child(l)
 	l.global_position = pos + Vector3.UP * 1.2
 	var tw := l.create_tween()
-	tw.tween_property(l, "light_energy", 5.0, 0.12)
+	tw.tween_property(l, "light_energy", 3.5, 0.12)
 	tw.tween_property(l, "light_energy", 0.0, 0.9)
 	tw.tween_callback(l.queue_free)
 	decal(parent, Vector3(pos.x, 0.0, pos.z), Vector3.UP, "scorch", 3.6 * scale, 80.0)
@@ -606,3 +607,116 @@ static func _smoke_trail() -> CPUParticles3D:
 	p.local_coords = false
 	p.emitting = true
 	return p
+
+
+const CRATER_MODELS := preload("res://assets/fx/krater.glb")  # bron/explosie/maak_krater.py: drie kraters met opgeworpen rand
+const MAX_CRATERS := 40  # daarboven verdwijnt de oudste, zodat het terrein niet eindeloos vol raakt
+static var _crater_mesh := {}
+static var _crater_mat: ShaderMaterial
+
+
+## Een explosie op de grond laat een blijvende krater achter: zwartgeblakerde bodem, opgeworpen rand, wat aardkluiten en kort wat nagloeiende hitte.
+## Niet in de rivier, op een bouwwerk, de muur of de bunker.
+static func crater(parent: Node, pos: Vector3, scale: float) -> void:
+	if scale < 0.5 or not _crater_ok(pos):
+		return
+	var n := 1 + randi() % 3
+	if not _crater_mesh.has(n):
+		var holder := CRATER_MODELS.instantiate()
+		var mi0 := holder.find_child("Krater%d" % n, true, false) as MeshInstance3D
+		_crater_mesh[n] = mi0.mesh if mi0 != null else null
+		holder.queue_free()
+	if _crater_mesh[n] == null:
+		return
+	if _crater_mat == null:
+		_crater_mat = ShaderMaterial.new()
+		_crater_mat.shader = load("res://shaders/crater.gdshader")
+	var k := scale * randf_range(0.95, 1.1)
+	var mi := MeshInstance3D.new()
+	mi.mesh = _crater_mesh[n]
+	mi.material_override = _crater_mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.rotation.y = randf() * TAU
+	mi.add_to_group("craters")
+	parent.add_child(mi)
+	mi.global_position = Vector3(pos.x, 0.004, pos.z)
+	mi.scale = Vector3(k * 0.6, k, k * 0.6)
+	var tw := mi.create_tween()
+	tw.tween_property(mi, "scale", Vector3(k, k, k), 0.25).set_ease(Tween.EASE_OUT)
+	# een paar aardkluiten die op de berm zijn blijven liggen
+	for i in 4:
+		var cm := _chunk("Kluit1" if i % 2 == 0 else "Kluit2")
+		if cm == null:
+			continue
+		var c := MeshInstance3D.new()
+		c.mesh = cm
+		c.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var a := randf() * TAU
+		var rr := randf_range(0.7, 1.25)
+		c.position = Vector3(cos(a) * rr, 0.08, sin(a) * rr)
+		c.rotation = Vector3(randf() * TAU, randf() * TAU, randf() * TAU)
+		c.scale = Vector3.ONE * randf_range(0.7, 1.3) / maxf(k, 0.1)
+		mi.add_child(c)
+	_crater_glow(mi, k)
+	# te veel kraters: de oudste weg
+	var all := parent.get_tree().get_nodes_in_group("craters")
+	if all.size() > MAX_CRATERS:
+		var old: Node = all[0]
+		var ot := old.create_tween()
+		ot.tween_property(old, "scale", Vector3(0.01, 0.01, 0.01), 0.8)
+		ot.tween_callback(old.queue_free)
+		old.remove_from_group("craters")
+
+
+## Nagloeiende hitte in de krater: een zwakke oranje gloed en een heel klein schijnsel, beide doven in enkele seconden. Bewust niet fel.
+static func _crater_glow(crater_node: Node3D, k: float) -> void:
+	var disc := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.62
+	cm.bottom_radius = 0.62
+	cm.height = 0.01
+	cm.radial_segments = 20
+	cm.rings = 1
+	disc.mesh = cm
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	m.albedo_color = Color(1.0, 0.35, 0.08, 0.0)
+	disc.material_override = m
+	disc.position.y = 0.02
+	disc.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	crater_node.add_child(disc)
+	var tw := disc.create_tween()
+	tw.tween_property(m, "albedo_color:a", 0.32, 0.3)
+	tw.tween_property(m, "albedo_color:a", 0.0, 9.0)
+	tw.tween_callback(disc.queue_free)
+	var l := OmniLight3D.new()
+	l.light_color = Color(1.0, 0.45, 0.15)
+	l.light_energy = 0.0
+	l.omni_range = 4.5
+	l.shadow_enabled = false
+	l.position.y = 0.4
+	crater_node.add_child(l)
+	var lt := l.create_tween()
+	lt.tween_property(l, "light_energy", 0.9, 0.4)
+	lt.tween_property(l, "light_energy", 0.0, 7.0)
+	lt.tween_callback(l.queue_free)
+
+
+static func _crater_ok(pos: Vector3) -> bool:
+	if pos.y > 1.2:
+		return false
+	if absf(pos.z - Data.river_z(pos.x)) < Data.RIVER_HALF + 2.5:
+		return false  # rivier en brug
+	var c := Data.COMPOUND
+	if maxf(absf(pos.x), absf(pos.z)) < Data.BUNKER_HALF + 1.5:
+		return false  # de bunker
+	if absf(maxf(absf(pos.x), absf(pos.z)) - c) < 2.0 and minf(absf(pos.x), absf(pos.z)) < c + 1.0:
+		return false  # tegen de muur
+	if Game.builds != null:
+		for b in Game.buildings:
+			var sz: Vector3 = Game.builds.DEFS[b.kind].size
+			if Vector2(b.at.x - pos.x, b.at.z - pos.z).length() < maxf(sz.x, sz.z) * 0.5 + 1.0:
+				return false
+	return true

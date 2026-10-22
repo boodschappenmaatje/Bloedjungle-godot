@@ -103,6 +103,9 @@ func reset() -> void:
 	base_max = Data.BASE_HP
 	enemies.clear()
 	barrels.clear()
+	if is_inside_tree():
+		for c in get_tree().get_nodes_in_group("craters"):
+			c.queue_free()  # een nieuw spel begint met een heel terrein
 	_slot_n = 0
 	owned = _fresh_owned()
 	loadout = ["m1911"]

@@ -11,6 +11,7 @@ var v1: Node
 var v2: Node
 var start1 := Vector3.ZERO
 var wrecks_before := 0
+var reset_frame := 0
 
 
 func _check(ok: bool, msg: String) -> void:
@@ -114,7 +115,21 @@ func _process(_dt: float) -> bool:
 		for i in 8:
 			fx.call("explosion", main, Vector3(0, 0, 70 + i), 1.0)
 		_check(int(fx.get("_fireballs_live")) <= int(fx.get("MAX_FIREBALLS")), "meer dan het maximum aan vuurballen tegelijk (%d)" % int(fx.get("_fireballs_live")))
+		# 7. blijvende kraters: een explosie op de grond laat er een achter, niet in de rivier, en er blijven er maximaal 40
+		var before: int = get_nodes_in_group("craters").size()
+		fx.call("explosion", main, Vector3(-30, 0, 70), 0.85)
+		_check(get_nodes_in_group("craters").size() == before + 1, "explosie op de grond laat geen krater achter")
+		fx.call("explosion", main, Vector3(0, 0, float(load("res://scripts/data.gd").call("river_z", 0.0))), 0.85)
+		_check(get_nodes_in_group("craters").size() == before + 1, "er komt een krater in de rivier")
+		for i in 45:
+			fx.call("_fireball", main, Vector3(-45 + i, 0, 75), 0.1)  # (geen kraters)
+			fx.call("crater", main, Vector3(-45 + i * 2.0, 0, 76 + (i % 3) * 3.0), 0.85)
+		_check(get_nodes_in_group("craters").size() <= int(fx.get("MAX_CRATERS")) + 1, "meer dan het maximum aan kraters (%d)" % get_nodes_in_group("craters").size())
+		root.get_node("Game").call("reset")
+		reset_frame = frames
+	if reset_frame > 0 and frames == reset_frame + 4:
+		_check(get_nodes_in_group("craters").size() == 0, "kraters blijven staan na een nieuw spel")
 		if fails == 0:
-			print("EXPLOSIE TEST PASS: wegvliegen, brandend vat met lont, wrak, ketting en vuurballimiet")
+			print("EXPLOSIE TEST PASS: wegvliegen, brandend vat met lont, wrak, ketting, vuurballimiet en blijvende kraters")
 		quit(1 if fails > 0 else 0)
 	return false

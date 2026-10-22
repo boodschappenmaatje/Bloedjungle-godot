@@ -8,6 +8,7 @@ var _nlook := Vector3.ZERO
 var _fog0 := -1.0
 var combat_view := false
 var zoom_step := 0
+var focus := Vector3.ZERO  # het punt waar de camera naar kijkt (speler + look-ahead, iets naar achteren geschoven)
 var _snap := true  # eerste beeld meteen op de speler, niet ernaartoe vliegen
 
 
@@ -79,7 +80,8 @@ func _dust() -> void:
 ## Bouwmodus (placeBuildCam in 22-camera.js): hoog boven de basis, verschuiven en zoomen met Game.bcam.
 func _build_cam(delta: float, portrait: bool) -> void:
 	var k := Data.COMPOUND / 14.0 * 1.1 * Game.bcam.z
-	var goal := Vector3(Game.bcam.x, (83.0 if portrait else 47.0) * k, Game.bcam.y + (16.0 if portrait else 15.0) * k)
+	# liggend ~71 graden neerwaarts op ~48 m (richtwaarde 70); staand blijft steiler zodat de smalle breedte past
+	var goal := Vector3(Game.bcam.x, (83.0 if portrait else 46.0) * k, Game.bcam.y + (16.0 if portrait else 19.2) * k)
 	var look := Vector3(Game.bcam.x, 0.0, Game.bcam.y + 3.4 * k)
 	if _blook == Vector3.ZERO:
 		_blook = _nlook
@@ -101,16 +103,21 @@ func _process(delta: float) -> void:
 		if env and _fog0 < 0.0:
 			_fog0 = env.fog_density
 		if env:
-			env.fog_density = _fog0 * 0.3
+			env.fog_density = lerpf(env.fog_density, _fog0 * 0.3, minf(1.0, delta * 4.0))
 		attributes.dof_blur_far_enabled = false
 		_build_cam(delta, portrait)
+		# geen bladdithering in het overzicht: de fade loopt rustig naar 0
+		Foliage.update_visibility_focus(p.global_position, global_position, delta, false)
 		return
 	if _fog0 >= 0.0 and env:
-		env.fog_density = _fog0
-		_fog0 = -1.0
+		# mist en zichtafstand keren zacht terug i.p.v. in één frame te springen
+		env.fog_density = lerpf(env.fog_density, _fog0, minf(1.0, delta * 4.0))
+		if absf(env.fog_density - _fog0) < _fog0 * 0.02:
+			env.fog_density = _fog0
+			_fog0 = -1.0
 	attributes.dof_blur_far_enabled = GameSettings.get_value("quality") == "ultra"  # scherptediepte kost veel op mobiel
 	_blook = Vector3.ZERO
-	far = 220.0
+	far = lerpf(far, 220.0, minf(1.0, delta * 3.0))
 	# Generals-first camera, Dead Nation gevechtsstand, met begrensde zoom.
 	var dist: float = clampf((16.0 if combat_view else 28.0) + float(zoom_step) * 2.5, 8.5, 38.0)
 	if portrait:
@@ -123,14 +130,36 @@ func _process(delta: float) -> void:
 	var want: Vector3 = Vector3(sin(p.face), 0.0, cos(p.face)) * lead_dist
 	_lead = _lead.lerp(want, 1.0 - exp(-3.0 * delta))
 	var target: Vector3 = p.global_position + _lead
-	var goal: Vector3 = target + Vector3(0.0, h, back)
+	# De speler staat iets onder het midden van het beeld: de camera kijkt een stukje voorbij hem
+	# (kijkhoek en afstand tot dat punt blijven 58°/28 m en 48°/16 m).
+	focus = target + Vector3(0.0, 0.0, -dist * (0.05 if portrait else 0.07))
+	var goal: Vector3 = focus + Vector3(0.0, h, back)
 	goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)
 	global_position = goal if _snap else global_position.lerp(goal, 1.0 - exp(-5.0 * delta))
 	_snap = false
-	_nlook = target
-	look_at(target, Vector3.UP)
-	# Alleen vlak bij het personage worden bladers uit de kijklijn gehouden.
-	Foliage.update_visibility_focus(p.global_position, global_position)
+	_nlook = focus
+	look_at(focus, Vector3.UP)
+	# Alleen de zichtlijn naar de speler en naar de dichtstbijzijnde vijanden wordt uit de bladeren gehouden.
+	Foliage.update_visibility_focus(p.global_position, global_position, delta, true, _nearby_enemies(p))
+
+
+## De (hoogstens) drie vijanden het dichtst bij de speler, voor de jungle-zichtlijn.
+func _nearby_enemies(p: Node3D) -> Array:
+	var best: Array = []  # [afstand², positie]
+	for e in Game.enemies:
+		if not is_instance_valid(e) or not e is Node3D or bool(e.get("dead")):
+			continue
+		var d2: float = (e as Node3D).global_position.distance_squared_to(p.global_position)
+		if d2 > 256.0:  # verder dan 16 m heeft de speler er niets aan
+			continue
+		best.append([d2, (e as Node3D).global_position])
+		best.sort_custom(func(a, b): return a[0] < b[0])
+		if best.size() > 3:
+			best.resize(3)
+	var out: Array = []
+	for b in best:
+		out.append(b[1])
+	return out
 
 
 func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vector3:

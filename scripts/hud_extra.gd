@@ -28,6 +28,13 @@ var _zoom_in_button: Button
 var _zoom_out_button: Button
 var _radar: Control
 var _radar_refresh := 0.0
+## Contacten op de radar: alleen vijanden die je zelf, je torens, je soldaten of de basis kunnen zien.
+## Een gezien contact blijft nog even (vervagend) staan.
+const RADAR_SIGHT := 38.0  # m rond de speler
+const RADAR_POST_SIGHT := 26.0  # m rond torens, soldaten en gebouwen
+const RADAR_BASE_MARGIN := 8.0  # m buiten de muur die de basis overziet
+const RADAR_MEMORY := 2.5  # s
+var _seen := {}  # instance-id -> laatste keer gezien (s)
 
 
 func _ready() -> void:
@@ -241,11 +248,11 @@ func _draw_radar() -> void:
 	_radar.draw_rect(bounds, Color(0.58, 0.66, 0.43, 0.85), false, 1.5)
 	_radar.draw_string(UI.body(700, 0), Vector2(7, 13), "RADAR  ·  CONTACTEN", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK_DIM)
 	var map := Rect2(5.0, 18.0, _radar.size.x - 10.0, _radar.size.y - 23.0)
-	for i in 1: # kruislijnen als schaalreferentie, geen extra scene of viewport
-		var x: float = map.position.x + map.size.x * 0.5
-		var y: float = map.position.y + map.size.y * 0.5
-		_radar.draw_line(Vector2(x, map.position.y), Vector2(x, map.end.y), Color(0.42, 0.52, 0.38, 0.2), 1.0)
-		_radar.draw_line(Vector2(map.position.x, y), Vector2(map.end.x, y), Color(0.42, 0.52, 0.38, 0.2), 1.0)
+	# kruislijnen als schaalreferentie, geen extra scene of viewport
+	var mid_x: float = map.position.x + map.size.x * 0.5
+	var mid_y: float = map.position.y + map.size.y * 0.5
+	_radar.draw_line(Vector2(mid_x, map.position.y), Vector2(mid_x, map.end.y), Color(0.42, 0.52, 0.38, 0.2), 1.0)
+	_radar.draw_line(Vector2(map.position.x, mid_y), Vector2(map.end.x, mid_y), Color(0.42, 0.52, 0.38, 0.2), 1.0)
 	var wall_color := Color(0.56, 0.64, 0.42, 0.8)
 	for side in [-1.0, 1.0]:
 		_radar.draw_line(_radar_point(Vector3(side * Data.COMPOUND, 0, -Data.COMPOUND), map), _radar_point(Vector3(side * Data.COMPOUND, 0, Data.COMPOUND), map), wall_color, 1.4)
@@ -282,8 +289,19 @@ func _draw_radar() -> void:
 	for enemy in Game.enemies:
 		if not is_instance_valid(enemy) or not enemy is Node3D or bool(enemy.get("dead")):
 			continue
+		var vis := _enemy_vis(enemy)
+		if vis <= 0.0:
+			continue
 		var point := _radar_point(enemy.global_position, map)
-		_radar.draw_circle(point, 2.2, Color(1.0, 0.24, 0.16, 0.95))
+		_radar.draw_circle(point, 2.2, Color(1.0, 0.24, 0.16, 0.95 * vis))
+	if _seen.size() > 64:  # oude contacten opruimen
+		var alive := {}
+		for e in Game.enemies:
+			if is_instance_valid(e):
+				alive[e.get_instance_id()] = true
+		for id in _seen.keys():
+			if not alive.has(id):
+				_seen.erase(id)
 	var player: Node3D = Game.player
 	if player != null and is_instance_valid(player):
 		var center := _radar_point(player.global_position, map)
@@ -291,6 +309,39 @@ func _draw_radar() -> void:
 		var side := Vector2(direction.y, -direction.x) * 3.2
 		_radar.draw_colored_polygon(PackedVector2Array([center + direction * 5.0, center - direction * 3.0 + side, center - direction * 3.0 - side]), Color(0.27, 0.86, 1.0))
 	_draw_radar_attacks(map)
+
+
+## Wie ziet dit punt: de speler, de basis, een toren, een soldaat of een eigen gebouw.
+func _in_friendly_sight(pos: Vector3) -> bool:
+	var player: Node3D = Game.player
+	if player != null and is_instance_valid(player) and Vector2(pos.x - player.global_position.x, pos.z - player.global_position.z).length() <= RADAR_SIGHT:
+		return true
+	var edge := Data.COMPOUND + RADAR_BASE_MARGIN
+	if absf(pos.x) <= edge and absf(pos.z) <= edge:
+		return true
+	for tower in get_tree().get_nodes_in_group("tower"):
+		if is_instance_valid(tower) and tower is Node3D and Vector2(pos.x - tower.global_position.x, pos.z - tower.global_position.z).length() <= RADAR_POST_SIGHT:
+			return true
+	for ally in Game.allies:
+		if is_instance_valid(ally) and ally is Node3D and Vector2(pos.x - ally.global_position.x, pos.z - ally.global_position.z).length() <= RADAR_POST_SIGHT:
+			return true
+	for building in Game.buildings:
+		if building is Dictionary:
+			var at: Vector3 = building.get("at", Vector3.ZERO)
+			if Vector2(pos.x - at.x, pos.z - at.z).length() <= RADAR_POST_SIGHT:
+				return true
+	return false
+
+
+## 1 = nu in zicht, tussen 0 en 1 = kort geleden gezien (vervagend), 0 = onbekend.
+func _enemy_vis(enemy: Node3D) -> float:
+	var now := Time.get_ticks_msec() / 1000.0
+	var id := enemy.get_instance_id()
+	if _in_friendly_sight(enemy.global_position):
+		_seen[id] = now
+		return 1.0
+	var last: float = _seen.get(id, -999.0)
+	return clampf(1.0 - (now - last) / RADAR_MEMORY, 0.0, 1.0)
 
 
 func _draw_radar_attacks(map: Rect2) -> void:

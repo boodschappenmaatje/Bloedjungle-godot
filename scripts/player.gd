@@ -30,6 +30,8 @@ var dodge_dir := Vector2.ZERO
 var grenade_cd := 0.0
 var _stam_wait := 0.0
 var _exhausted := false     # leeg geraakt: pas weer sprinten als er wat bij is
+var _reload_dur := 1.0      # hoe lang het lopende herladen duurt (de herlaadbeweging past zich daaraan aan)
+var _dust_t := 0.0
 
 const STAIR_FOOT := 1.8      # de klimladder staat aan de +X zijde van de toren (zie bron/wachttoren)
 const STAIR_TOP := 1.3
@@ -170,6 +172,7 @@ func request_dodge() -> void:
 	sprint_on = false
 	rotation.y = atan2(dodge_dir.x, dodge_dir.y)
 	face = rotation.y
+	model.play("rollen", 0.04, maxf(0.5, model.clip_length("rollen")) / DODGE_TIME)  # de koprol komt uit bron/acties
 	Fx.dust(get_parent(), global_position)
 	Sfx.play("thud", 0.6)
 
@@ -184,10 +187,8 @@ func _dodge_step(delta: float) -> void:
 	if clamped != flat:
 		position = Vector3(clamped.x, position.y, clamped.y)
 	position.y = 0.0
-	model.rotation.x = TAU * p  # een koprol vooruit, om zijn eigen as
-	model.position.y = 0.55 * sin(p * PI)
+	model.play("rollen", 0.04, maxf(0.5, model.clip_length("rollen")) / DODGE_TIME)
 	if dodge_t <= 0.0:
-		model.rotation.x = 0.0
 		model.position = Vector3.ZERO
 		Fx.dust(get_parent(), global_position)
 
@@ -326,6 +327,7 @@ func _reload(w: Dictionary) -> void:
 	if reload_t > 0.0 or ammo >= w.mag:
 		return
 	reload_t = w.reload * Progress.bonus().reload
+	_reload_dur = maxf(reload_t, 0.1)
 	Sfx.play("reload")
 	Game.changed.emit()
 
@@ -356,7 +358,8 @@ func _aim_assist(a: float) -> float:
 func _animate(mv: Vector2, moving: float) -> void:
 	var run_mul := SPRINT_MUL if sprinting else 1.0
 	if reload_t > 0.0 and moving < 0.15:
-		model.play("herladen")
+		# de herlaadbeweging duurt precies zolang als het herladen van dit wapen
+		model.play("herladen", 0.12, maxf(0.5, model.clip_length("herladen")) / _reload_dur)
 	elif Game.fire and moving < 0.15:
 		model.play("schieten", 0.1)
 	elif moving < 0.15:
@@ -367,6 +370,12 @@ func _animate(mv: Vector2, moving: float) -> void:
 		var spd := moving * Data.PLAYER_SPEED * run_mul
 		if back:
 			model.play("achteruit", 0.2, spd / 2.0)
+		elif sprinting and model.anim.has_animation("sprinten"):
+			model.play("sprinten", 0.15, clampf(spd / (Data.PLAYER_SPEED * SPRINT_MUL), 0.7, 1.3))
+			_dust_t -= get_physics_process_delta_time()
+			if _dust_t <= 0.0:
+				_dust_t = 0.22
+				Fx.dust(get_parent(), global_position + Vector3(0, 0.05, 0))  # stofwolkjes bij elke stap
 		elif spd > 4.0:
 			model.play("rennen", 0.2, spd / 6.0)
 		else:

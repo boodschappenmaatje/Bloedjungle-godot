@@ -91,7 +91,7 @@ func _run() -> void:
 	_check(float(player.get("hp")) == hp0, "hij is niet onkwetsbaar tijdens de rol")
 	await _frames(10)
 	_check(player.global_position.x - x0 > 1.0, "de rol verplaatst hem niet")
-	_check(absf(player.get("model").rotation.x) > 0.01, "de rolanimatie draait het model niet")
+	_check(str(player.get("model").get("current")) == "rollen", "de rolanimatie (Blender-clip) speelt niet")
 	var cd: float = player.get("dodge_cd")
 	player.call("request_dodge")
 	_check(float(player.get("dodge_cd")) <= cd, "tweede rol kan meteen weer (cooldown werkt niet)")

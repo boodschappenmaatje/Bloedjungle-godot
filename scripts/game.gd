@@ -46,6 +46,7 @@ var attack := {"N": 0.0, "O": 0.0, "Z": 0.0, "W": 0.0}
 var player  # de speler (player.gd)
 var defs  # verdediging die je neerzet (defenses.gd)
 var enemies: Array = []
+var barrels: Array = []  # explosieve vaten (barrel.gd)
 var _slot_n := 0
 
 
@@ -79,6 +80,7 @@ func reset() -> void:
 	base_hp = Data.BASE_HP
 	base_max = Data.BASE_HP
 	enemies.clear()
+	barrels.clear()
 	_slot_n = 0
 	owned = _fresh_owned()
 	loadout = ["m1911"]

@@ -107,6 +107,7 @@ func _warm_up() -> void:
 
 
 func _start_prep() -> void:
+	Barrel.populate(self)  # opgeblazen vaten komen elke golf terug
 	Game.wave += 1
 	Game.state = "prep"
 	Game.prep_t = GameSettings.prep_time()

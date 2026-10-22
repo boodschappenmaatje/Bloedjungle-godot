@@ -171,6 +171,7 @@ func _physics_process(delta: float) -> void:
 ## Raket: grote ontploffing, schade neemt af met de afstand (alleen vijanden).
 func _explode(at: Vector3) -> void:
 	Fx.explosion(get_parent(), at, 1.4)
+	Barrel.catch_blast(at, explosive)
 	if Game.builds:
 		Game.builds.blast(at, explosive, dmg, true)  # eigen raketten doen een beetje schade aan je eigen bouwwerk
 	for e in Game.enemies.duplicate():
@@ -184,6 +185,7 @@ func _explode(at: Vector3) -> void:
 func _boom_enemy(at: Vector3) -> void:
 	var r := explosive
 	Fx.explosion(get_parent(), at, 0.9)
+	Barrel.catch_blast(at, r)
 	if Game.builds:
 		Game.builds.blast(at, r, dmg, false)
 	if Game.gates:

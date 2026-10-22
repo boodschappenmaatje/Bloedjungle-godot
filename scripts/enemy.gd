@@ -20,6 +20,20 @@ var wire_dmg := 0.0
 var strafe := 1.0
 var dead := false
 
+# Gedrag in groepsverband (zie ook Game.alert en Game.next_slot):
+# dekking zoeken als hij geraakt wordt, flankeren, terugtrekken met hulp van de buren en gespreid op de bunker aanvallen.
+var slot := 0
+var role := "assault"  # assault of flank
+var mode := "attack"  # attack, cover of retreat
+var mode_t := 0.0
+var cover_cd := 3.0
+var cover_pt := Vector3.ZERO
+var hurt_t := 99.0
+var alert_t := 0.0
+var flank_left := 7.0
+var gate_z := 0.0  # voorkeurspoort (z) om de bunker van twee kanten te nemen; 0 = klaar of niet van toepassing
+var retreated := false
+
 
 func setup(kind: String, wave: int) -> void:
 	type = kind
@@ -29,6 +43,11 @@ func setup(kind: String, wave: int) -> void:
 	fire_t = randf_range(0.8, 1.8)
 	speed_mul = randf_range(0.9, 1.12)
 	strafe = 1.0 if randf() < 0.5 else -1.0
+	slot = Game.next_slot()
+	if kind == "rifle" and slot % 3 == 1:
+		role = "flank"
+	if not t.get("melee", false):
+		gate_z = Route.OUT if slot % 2 == 0 else -Route.OUT
 
 
 func _ready() -> void:
@@ -55,7 +74,12 @@ func _physics_process(delta: float) -> void:
 	var to_player := INF
 	if player and not player.dead:
 		to_player = _flat(player.global_position - global_position).length()
-	var at_player := to_player < (20.0 if melee else 16.0)
+	hurt_t += delta
+	alert_t -= delta
+	mode_t -= delta
+	cover_cd -= delta
+	var at_player := to_player < (20.0 if melee else 16.0) + (10.0 if alert_t > 0.0 else 0.0)
+	var tactical := not melee and type != "heavy"
 	# raketwerpers gaan eerst achter een gebouw aan (rocketTower in 18-enemies.js)
 	var rb: Variant = _rocket_target() if t.get("rocket", false) else null
 	if melee and player and player.elev > 1.0:
@@ -69,11 +93,55 @@ func _physics_process(delta: float) -> void:
 		goal = rb.at
 		dist = _flat(rb.at - global_position).length() - 2.0
 
+	# vanaf hier: waar hij naartoe loopt (move_goal) kan anders zijn dan waarop hij mikt (goal)
+	var move_goal := goal
+	var flanking := false
+	if at_player and role == "flank" and flank_left > 0.0 and to_player > 9.0 and mode == "attack":
+		# om de speler heen lopen en van opzij aanvallen, in plaats van recht erop af
+		var away := _flat(global_position - player.global_position).normalized()
+		var side := Vector2(-away.y, away.x) * strafe
+		move_goal = player.global_position + Vector3(side.x + away.x * 0.3, 0.0, side.y + away.y * 0.3) * 9.0
+		flank_left -= delta
+		flanking = true
+	elif not at_player and rb == null and gate_z != 0.0:
+		# om beurten de noord- en zuidpoort nemen, zodat niet iedereen door dezelfde opening komt
+		var gp := Vector3(0.0, 0.0, gate_z)
+		if _flat(gp - global_position).length() < 4.0 or _inside_wall(global_position):
+			gate_z = 0.0
+		else:
+			move_goal = gp
+	var hold := 1.0 if melee else 0.65 + 0.1 * float(slot % 4)  # schutters houden verschillende afstanden aan (gelaagd, niet in een kluitje)
+	var cover_look := 0.0
+	if tactical:
+		if mode == "attack" and cover_cd <= 0.0 and hurt_t < 1.5 and hp < max_hp * 0.75 and (at_player or dist < range_ * 1.2):
+			cover_cd = 6.0
+			var c: Variant = _find_cover(goal)
+			if c != null:
+				mode = "cover"
+				mode_t = randf_range(1.4, 2.4)
+				cover_pt = c
+		if mode == "attack" and not retreated and hp < max_hp * 0.3 and hurt_t < 3.0:
+			retreated = true
+			mode = "retreat"
+			mode_t = 3.0
+			Game.alert(global_position, 18.0, 6.0)  # de buren komen helpen
+		if mode != "attack" and mode_t <= 0.0:
+			mode = "attack"
+		cover_look = _angle_to(goal)
+
 	fire_t -= delta
 	var want_move := true
 	var look := face
 	var aim_at := goal + Vector3.UP * 1.2
-	if melee:
+	if mode == "cover":
+		var cd := _flat(cover_pt - global_position)
+		want_move = cd.length() > 0.6
+		look = cover_look
+		move_goal = cover_pt
+	elif mode == "retreat":
+		want_move = false
+		look = cover_look
+	elif melee:
 		if dist < t.r + 0.8:
 			want_move = false
 			look = _angle_to(goal)
@@ -86,14 +154,14 @@ func _physics_process(delta: float) -> void:
 					player.hit(t.dmg, Vector3(sin(look), 0, cos(look)), false)
 				else:
 					Game.damage_base(t.dmg)
-	elif dist < range_ and (rb != null or _clear_shot(aim_at, not at_player)):
+	elif not flanking and dist < range_ * hold and (rb != null or _clear_shot(aim_at, not at_player)):
 		want_move = false
 		look = _angle_to(goal)
 		if fire_t <= 0.0:
 			_shoot(look)
 
 	# een dichte poort in de weg: erop slaan of schieten tot hij kapot is
-	var gate: Variant = Game.gates.blocking(global_position, goal) if want_move and Game.gates else null
+	var gate: Variant = Game.gates.blocking(global_position, move_goal) if want_move and Game.gates else null
 	if gate != null:
 		want_move = false
 		look = _angle_to(Game.gates.pos_of(gate))
@@ -111,12 +179,16 @@ func _physics_process(delta: float) -> void:
 
 	var vel := Vector3.ZERO
 	if want_move:
-		var wp := Route.waypoint(global_position, goal)
+		var wp := Route.waypoint(global_position, move_goal)
 		var d := _flat(wp - global_position)
 		if d.length() > 0.05:
-			vel = Vector3(d.x, 0.0, d.y).normalized() * t.speed * speed_mul * (0.4 if slow_t > 0.0 else 1.0)
-			look = atan2(d.x, d.y)
-	elif not melee and dist < range_ * 0.6:
+			vel = Vector3(d.x, 0.0, d.y).normalized() * t.speed * speed_mul * (0.4 if slow_t > 0.0 else 1.0) * (1.25 if mode == "cover" else 1.0)
+			look = atan2(d.x, d.y) if mode != "cover" else cover_look
+	elif mode == "retreat":
+		var away2 := _flat(global_position - goal).normalized()
+		vel = Vector3(away2.x, 0.0, away2.y) * t.speed * speed_mul * 0.9
+		look = cover_look  # terugtrekken met het gezicht naar de vijand
+	elif not melee and mode == "attack" and dist < range_ * 0.6:
 		# te dichtbij: zijwaarts uitwijken terwijl hij schiet
 		vel = Vector3(cos(look), 0.0, -sin(look)) * strafe * t.speed * 0.4
 	velocity = vel
@@ -245,6 +317,30 @@ func _clear_shot(target: Vector3, at_bunker: bool) -> bool:
 	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 
+## Een plek achter het dichtstbijzijnde gebouw (of zandzak, muur) vanaf waar de dreiging komt, binnen 14 m; null als er niets is.
+func _find_cover(threat: Vector3) -> Variant:
+	var best: Variant = null
+	var bd := 14.0
+	for b in Game.buildings:
+		if b.down:
+			continue
+		var d := _flat(b.at - global_position).length()
+		if d >= bd:
+			continue
+		var sz: Vector3 = Game.builds.DEFS[b.kind].size
+		var out := _flat(b.at - threat).normalized()
+		var pt: Vector3 = b.at + Vector3(out.x, 0.0, out.y) * (maxf(sz.x, sz.z) * 0.5 + 1.0)
+		if _flat(pt - threat).length() < _flat(b.at - threat).length():
+			continue  # dat zou voor het gebouw zijn
+		bd = d
+		best = pt
+	return best
+
+
+static func _inside_wall(p: Vector3) -> bool:
+	return absf(p.x) < Data.COMPOUND and absf(p.z) < Data.COMPOUND
+
+
 func _bunker_dist() -> float:
 	var p := global_position
 	return maxf(absf(p.x), absf(p.z)) - Data.BUNKER_HALF
@@ -273,6 +369,7 @@ func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	if not from_player or dead:
 		return
 	hp -= dmg
+	hurt_t = 0.0
 	model.flash()
 	Sfx.play("splat", 1.0, global_position)
 	Fx.blood(get_parent(), global_position + Vector3.UP * 1.2, dir)
@@ -290,6 +387,7 @@ func _aim_mult() -> float:
 func _die(dir: Vector3) -> void:
 	dead = true
 	Game.enemies.erase(self)
+	Game.alert(global_position, 12.0, 5.0)  # de buren in de buurt zijn gewaarschuwd en zoeken de speler
 	Game.kills += 1
 	Sfx.play("thud", 1.0, global_position)
 	Progress.stats.kills += 1

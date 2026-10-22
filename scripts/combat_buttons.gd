@@ -1,8 +1,7 @@
 class_name CombatButtons
 extends Control
-## Ronde knoppen voor herladen, sprint en granaat (links boven de wapenstrip, onder de duim die loopt)
-## en de ontwijkrol (rechts, binnen bereik van de duim die richt). Vaste plekken, zodat ze de sticks,
-## de wapenstrip, de radar en de verdedigingsknoppen niet raken.
+## Ronde knoppen voor herladen, sprint, granaat en ontwijkrol, rechtsonder binnen bereik van de duim die richt.
+## Vaste plekken, zodat ze de sticks, de wapenstrip, de radar en de verdedigingsknoppen niet raken.
 
 var _reload: ActionBtn
 var _sprint: ActionBtn
@@ -37,17 +36,20 @@ func _player_call(method: String) -> void:
 		p.call(method)
 
 
-## Links: rij boven de wapenstrip. Rechts: rol-knop boven de "zet neer"-knop (onder de radar).
+## Alles rechts, binnen bereik van de duim die richt: 2x2 raster in de rechteronderhoek.
+## Onder: sprint + rol, boven: granaat + herlaad. De wisselknop (shop.gd) staat links van het raster.
 func _layout() -> void:
-	var portrait := size.x < size.y
-	var strip_y := size.y - (222.0 if portrait else 140.0)  # zelfde plek als de wapenstrip (weapon_strip.gd)
-	var row_y := strip_y - ActionBtn.SIZE.y - 14.0
-	var step := ActionBtn.SIZE.x + 8.0
-	_reload.position = Vector2(16.0, row_y)
-	_sprint.position = Vector2(16.0 + step, row_y)
-	_grenade.position = Vector2(16.0 + step * 2.0, row_y)
-	# liggend onder de radar en boven de zet-neer-knop; staand in de rij boven de wapenstrip
-	_roll.position = Vector2(size.x - 16.0 - ActionBtn.SIZE.x, row_y if portrait else size.y - 198.0)
+	var g := ActionBtn.SIZE.x + 8.0
+	var x1 := size.x - 16.0 - ActionBtn.SIZE.x
+	var x0 := x1 - g
+	var y1 := size.y - 16.0 - ActionBtn.SIZE.y
+	if size.x < size.y:
+		y1 = size.y - 222.0 - 8.0 - ActionBtn.SIZE.y  # staand: boven de wapenstrip (weapon_strip.gd)
+	var y0 := y1 - g
+	_sprint.position = Vector2(x0, y1)
+	_roll.position = Vector2(x1, y1)
+	_grenade.position = Vector2(x0, y0)
+	_reload.position = Vector2(x1, y0)
 	for b in [_reload, _sprint, _grenade, _roll]:
 		b.size = ActionBtn.SIZE
 

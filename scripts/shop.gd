@@ -71,10 +71,7 @@ func _layout() -> void:
 	var s := size
 	_open_btn.size = Vector2(110, 32)
 	_open_btn.position = Vector2(s.x * 0.5 + 2.0, 132)
-	if s.x < s.y:
-		_swap_btn.position = Vector2(s.x - 16.0 - 54.0 - 8.0 - 50.0, s.y - 222.0 - 68.0 + 4.0)  # staand: in de rij naast de rolknop
-	else:
-		_swap_btn.position = Vector2(s.x - 64.0 - 68.0 - 23.0, s.y - 150.0 - 38.0 - 23.0)
+	_swap_btn.position = Vector2(s.x - 16.0 - 54.0 + 4.0, s.y - (230.0 if s.x < s.y else 16.0) - 54.0 - 62.0 - 54.0)  # boven het knoppenraster (combat_buttons.gd)
 
 
 ## Met je vinger (of muis) de lijst met kaarten verslepen; de scrollbalk hoeft niet.

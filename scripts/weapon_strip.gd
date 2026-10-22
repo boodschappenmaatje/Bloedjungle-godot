@@ -1,152 +1,292 @@
 extends Control
-## V66: compacte Dead Nation-geinspireerde wapenstrip.
+## Compacte wapenkaart in de stijl van Dead Nation: alleen het wapen dat je vast hebt (met munitie), met
+## ◀ ▶ om te wisselen. Tik op de kaart en de andere wapens klappen 3 seconden open. De plaatjes zijn
+## foto's van de echte 3D-wapenmodellen (assets/wapens.glb), eenmalig gerenderd bij het opstarten.
 ## Het spel bezit de wapens; de HUD is uitsluitend een selectie- en informatielaag.
 
-class WeaponGlyph:
-	extends Control
-	var kind: String = ""
-	var tone: Color = Color.WHITE
-	func _draw() -> void:
-		var c := tone
-		var y := size.y * 0.5
-		var left := 3.0
-		var right := size.x - 3.0
-		# Herkenbaar zijprofiel per wapentype; geen externe assetdownloads.
-		match kind:
-			"m1911":
-				draw_line(Vector2(5,y-5),Vector2(right-7,y-5),c,4)
-				draw_line(Vector2(right-7,y-5),Vector2(right-7,y-1),c,3)
-				draw_colored_polygon(PackedVector2Array([Vector2(10,y-2),Vector2(21,y-2),Vector2(17,y+11),Vector2(12,y+11)]),c)
-			"bazooka":
-				draw_line(Vector2(left,y-3),Vector2(right,y-3),c,7)
-				draw_line(Vector2(left+4,y-9),Vector2(left+4,y+3),c,2)
-				draw_line(Vector2(right-3,y-9),Vector2(right-3,y+3),c,2)
-				draw_line(Vector2(22,y+1),Vector2(20,y+10),c,3)
-			_:
-				draw_line(Vector2(left,y-4),Vector2(right,y-4),c,4)
-				draw_line(Vector2(right-13,y-8),Vector2(right-13,y-1),c,2)
-				draw_line(Vector2(19,y-1),Vector2(14,y+9),c,4)
-				draw_line(Vector2(left+4,y-1),Vector2(left,y+6),c,3)
-				if kind == "thompson" or kind == "mg42":
-					draw_line(Vector2(26,y-2),Vector2(27,y+10),c,5)
-				if kind == "trench":
-					draw_line(Vector2(12,y+1),Vector2(33,y+1),c,3)
-				if kind == "mg42":
-					draw_line(Vector2(right-11,y),Vector2(right-14,y+10),c,2)
-					draw_line(Vector2(right-11,y),Vector2(right-4,y+10),c,2)
-
-var _slots: Array[Button] = []
-var _glyphs: Array[WeaponGlyph] = []
-var _counts: Array[Label] = []
-var _names: Array[Label] = []
-var _last_state := ""
 const IDS := ["m1911", "thompson", "garand", "trench", "mg42", "bazooka"]
+const GUNS := preload("res://assets/wapens.glb")
+const OPEN_TIME := 3.0
+const ICON_SIZE := Vector2i(256, 96)
+
+var _icons := {}  # wapen-id -> ImageTexture
+var _card: Button
+var _prev: Button
+var _next: Button
+var _pic: TextureRect
+var _name: Label
+var _ammo: Label
+var _list: Array[Button] = []  # uitgeklapt: de andere wapens
+var _list_pics: Array[TextureRect] = []
+var _list_names: Array[Label] = []
+var _open_t := 0.0
+var _last_state := ""
+
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_card = _button(_toggle_list)
+	_pic = _picture(_card)
+	_name = _label(_card, 11, HORIZONTAL_ALIGNMENT_LEFT)
+	_ammo = _label(_card, 22, HORIZONTAL_ALIGNMENT_RIGHT)
+	_prev = _button(_cycle.bind(-1))
+	_prev.text = "◀"
+	_next = _button(_cycle.bind(1))
+	_next.text = "▶"
 	for i in IDS.size():
-		var b := Button.new()
-		b.text = ""
-		b.focus_mode = Control.FOCUS_NONE
-		b.add_to_group("hud_button")
-		b.pressed.connect(_select.bind(i))
-		add_child(b)
-		_slots.append(b)
-		var glyph := WeaponGlyph.new()
-		glyph.kind = IDS[i]
-		glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		b.add_child(glyph)
-		_glyphs.append(glyph)
-		var count := Label.new()
-		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		count.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		count.add_theme_font_size_override("font_size", 12)
-		b.add_child(count)
-		_counts.append(count)
-		var label := Label.new()
-		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		label.add_theme_font_size_override("font_size", 9)
-		b.add_child(label)
-		_names.append(label)
+		var b := _button(_select.bind(i))
+		_list.append(b)
+		_list_pics.append(_picture(b))
+		_list_names.append(_label(b, 10, HORIZONTAL_ALIGNMENT_CENTER))
 	resized.connect(_layout)
 	_layout()
 	_refresh()
+	_render_icons()
+
+
+func _button(on_press: Callable) -> Button:
+	var b := Button.new()
+	b.focus_mode = Control.FOCUS_NONE
+	b.add_to_group("hud_button")
+	b.button_down.connect(on_press)
+	add_child(b)
+	return b
+
+
+func _picture(parent: Control) -> TextureRect:
+	var r := TextureRect.new()
+	r.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	r.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	r.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	parent.add_child(r)
+	return r
+
+
+func _label(parent: Control, font_size: int, align: HorizontalAlignment) -> Label:
+	var l := Label.new()
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.horizontal_alignment = align
+	l.add_theme_font_size_override("font_size", font_size)
+	parent.add_child(l)
+	return l
+
+
+## Elk wapenmodel zijdelings in een eigen kleine wereld fotograferen (loop naar rechts) en als texture bewaren.
+func _render_icons() -> void:
+	if DisplayServer.get_name() == "headless":
+		return  # zonder beeldscherm is er niets te fotograferen
+	var vp := SubViewport.new()
+	vp.size = ICON_SIZE
+	vp.transparent_bg = true
+	vp.own_world_3d = true
+	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	add_child(vp)
+	var env := Environment.new()
+	env.background_mode = Environment.BG_CLEAR_COLOR
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	env.ambient_light_color = Color(0.85, 0.88, 0.9)
+	env.ambient_light_energy = 1.4
+	var we := WorldEnvironment.new()
+	we.environment = env
+	vp.add_child(we)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-35.0, 55.0, 0.0)
+	sun.light_energy = 1.6
+	vp.add_child(sun)
+	var cam := Camera3D.new()
+	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
+	vp.add_child(cam)
+	var holder := GUNS.instantiate()
+	vp.add_child(holder)
+	for i in IDS.size():
+		var id: String = IDS[i]
+		var node := holder.find_child(SoldierModel.GUN_OF[id], true, false) as Node3D
+		if node == null:
+			continue
+		for other in holder.get_children():
+			(other as Node3D).visible = false
+		node.visible = true
+		var p := node.get_parent()
+		while p != null and p != holder:
+			(p as Node3D).visible = true
+			p = p.get_parent()
+		var box := _box(node)
+		var center := box.get_center()
+		# de loop wijst langs -Z; een camera op +X die naar -X kijkt heeft -Z rechts in beeld
+		cam.size = maxf(box.size.y, box.size.z / (float(ICON_SIZE.x) / float(ICON_SIZE.y))) * 1.12
+		cam.position = center + Vector3(6.0, 0.0, 0.0)
+		cam.look_at(center, Vector3.UP)
+		await get_tree().process_frame
+		await get_tree().process_frame
+		var img := vp.get_texture().get_image()
+		if img != null and not img.is_empty():
+			_icons[id] = ImageTexture.create_from_image(img)
+	vp.queue_free()
+	_last_state = ""
+	_refresh()
+
+
+static func _box(root: Node3D) -> AABB:
+	var box := AABB()
+	var first := true
+	for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		var b: AABB = mi.global_transform * mi.get_aabb()
+		box = b if first else box.merge(b)
+		first = false
+	if root is MeshInstance3D:
+		var b2: AABB = root.global_transform * (root as MeshInstance3D).get_aabb()
+		box = b2 if first else box.merge(b2)
+	return box
+
 
 func _layout() -> void:
 	var portrait := size.x < size.y
-	var ctx_left := size.x * 0.5 - 89.0 - 8.0  # contextknoppen (action_btn.gd) beginnen hier
-	var slot_w := minf(67.0, ((size.x * 0.94 - 18.0) if portrait else (ctx_left - 16.0 - 15.0)) / 6.0)
-	var slot_h := 64.0
-	var x0 := 16.0
-	# Op iPhone landschap boven de linker bewegingszone, zodat de sticks vrij blijven.
 	var y0 := size.y - (140.0 if not portrait else 222.0)  # staand boven de zet-neer-knoppen (place_hud.gd)
-	for i in _slots.size():
-		var b := _slots[i]
-		b.position = Vector2(x0 + i * (slot_w + 3.0), y0)
-		b.size = Vector2(slot_w, slot_h)
-		_glyphs[i].position = Vector2(5, 5)
-		_glyphs[i].size = Vector2(slot_w - 10, 29)
-		_names[i].position = Vector2(1, 34)
-		_names[i].size = Vector2(slot_w - 2, 13)
-		_counts[i].position = Vector2(1, 46)
-		_counts[i].size = Vector2(slot_w - 2, 16)
+	var arrow := Vector2(34.0, 64.0)
+	var card := Vector2(150.0, 64.0)
+	var x := 16.0
+	_prev.position = Vector2(x, y0)
+	_prev.size = arrow
+	_card.position = Vector2(x + arrow.x + 3.0, y0)
+	_card.size = card
+	_next.position = Vector2(x + arrow.x + 3.0 + card.x + 3.0, y0)
+	_next.size = arrow
+	_pic.position = Vector2(4, 4)
+	_pic.size = Vector2(card.x - 8.0, 40.0)
+	_name.position = Vector2(8, 45)
+	_name.size = Vector2(card.x - 70.0, 16)
+	_ammo.position = Vector2(card.x - 74.0, 40.0)
+	_ammo.size = Vector2(66.0, 24.0)
+	# uitgeklapt: de andere wapens in een rij boven de kaart
+	var lw := 74.0
+	for i in _list.size():
+		_list[i].size = Vector2(lw, 54.0)
+		_list[i].position = Vector2(x + i * (lw + 3.0), y0 - 54.0 - 6.0)
+		_list_pics[i].position = Vector2(3, 3)
+		_list_pics[i].size = Vector2(lw - 6.0, 32.0)
+		_list_names[i].position = Vector2(0, 37)
+		_list_names[i].size = Vector2(lw, 14)
+
+
+func _owned_ids() -> Array:
+	var out := []
+	for id in IDS:
+		if Game.owned.has(id):
+			out.append(id)
+	return out
+
+
+func _ready_to_switch() -> bool:
+	return Game.state == "play" or Game.state == "prep"
+
+
+func _toggle_list() -> void:
+	if not _ready_to_switch():
+		return
+	_open_t = 0.0 if _open_t > 0.0 else OPEN_TIME
+	_last_state = ""
+	_refresh()
+
+
+## ◀ ▶: het vorige of volgende wapen dat je hebt.
+func _cycle(dir: int) -> void:
+	if not _ready_to_switch():
+		return
+	var ids := _owned_ids()
+	if ids.size() < 2:
+		return
+	var i := ids.find(Game.cur)
+	_set_weapon(ids[posmod(i + dir, ids.size())])
+
 
 func _select(index: int) -> void:
-	if Game.state != "play" and Game.state != "prep":
+	if not _ready_to_switch():
 		return
 	var id: String = IDS[index]
 	if not Game.owned.has(id):
 		return
-	if id == Game.cur and Game.player != null:
-		Game.player.request_reload()  # nog eens op het actieve wapen tikken = herladen
+	_set_weapon(id)
+	_open_t = 0.0
+
+
+func _set_weapon(id: String) -> void:
+	if id == Game.cur:
 		return
 	Game.cur = id
 	Game.changed.emit()
 	_last_state = ""
 	_refresh()
 
-func _process(_delta: float) -> void:
+
+func _process(delta: float) -> void:
 	visible = (Game.state == "play" or Game.state == "prep") and not Game.build_mode
-	if visible:
-		_refresh()
+	if not visible:
+		return
+	if _open_t > 0.0:
+		_open_t -= delta
+		if _open_t <= 0.0:
+			_last_state = ""
+	_refresh()
+
+
+func _style(active: bool) -> StyleBoxFlat:
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color(0.12, 0.17, 0.13, 0.92) if active else Color(0.035, 0.06, 0.05, 0.79)
+	sb.border_color = Color(1, 0.73, 0.32) if active else Color(0.35, 0.45, 0.35, 0.45)
+	sb.set_border_width_all(2 if active else 1)
+	sb.set_corner_radius_all(5)
+	return sb
+
+
+func _skin(b: Button, active: bool) -> void:
+	var sb := _style(active)
+	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+		b.add_theme_stylebox_override(state, sb)
+
 
 func _refresh() -> void:
-	var fingerprint := Game.cur
+	var fingerprint := Game.cur + "|" + str(_open_t > 0.0) + "|" + str(_icons.size())
 	for id in IDS:
-		fingerprint += "|" + id + ":" + (str(Game.owned[id].ammo) if Game.owned.has(id) else "-")
+		fingerprint += id + ("+" if Game.owned.has(id) else "-")
 	if Game.player != null:
 		fingerprint += ":" + str(Game.player.weapon) + ":" + str(Game.player.ammo) + ":" + str(Game.player.reload_t > 0.0)
 	if fingerprint == _last_state:
 		return
 	_last_state = fingerprint
+	var cur: String = Game.cur
+	var gold := Color(1.0, 0.88, 0.63)
+	_skin(_card, true)
+	_skin(_prev, false)
+	_skin(_next, false)
+	for b in [_prev, _next]:
+		b.add_theme_color_override("font_color", gold)
+	var multi := _owned_ids().size() > 1
+	_prev.disabled = not multi
+	_next.disabled = not multi
+	_pic.texture = _icons.get(cur)
+	_name.text = str(Data.WEAPONS[cur].short)
+	_name.add_theme_color_override("font_color", gold)
+	# munitie alleen van het wapen in je hand
+	var live: bool = Game.player != null
+	var ammo := str(Game.owned[cur].ammo) if Game.owned.has(cur) else "--"
+	var empty := false
+	if live:
+		if Game.player.weapon == cur:
+			ammo = str(Game.player.ammo)
+		empty = Game.player.reload_t <= 0.0 and Game.player.ammo <= int(Game.wstat(cur).mag * 0.25)
+		if Game.player.reload_t > 0.0:
+			ammo = "…"
+	_ammo.text = ammo
+	_ammo.add_theme_color_override("font_color", Color8(255, 90, 58) if empty else gold)
+	var open := _open_t > 0.0
 	for i in IDS.size():
 		var id: String = IDS[i]
-		var owned: bool = Game.owned.has(id)
-		var active: bool = owned and Game.cur == id
-		var color := Color(1.0, 0.88, 0.63) if active else (Color(0.79, 0.84, 0.78) if owned else Color(0.43, 0.47, 0.43))
-		_slots[i].disabled = not owned
-		_glyphs[i].tone = color
-		_glyphs[i].queue_redraw()
-		_names[i].text = str(Data.WEAPONS[id].short).substr(0, 9)
-		_names[i].add_theme_color_override("font_color",color)
-		var ammo := "--"
-		if owned:
-			ammo = str(Game.owned[id].ammo)
-			if Game.player != null and Game.player.weapon == id:
-				ammo = str(Game.player.ammo)
-		var live: bool = active and Game.player != null
-		var empty: bool = live and Game.player.reload_t <= 0.0 and Game.player.ammo <= int(Game.wstat(id).mag * 0.25)
-		if live and Game.player.reload_t > 0.0:
-			ammo = "…"
-		_counts[i].text = ammo
-		_counts[i].add_theme_font_size_override("font_size", 15 if active else 12)  # de enige munitieweergave: direct onder het actieve wapen
-		_counts[i].add_theme_color_override("font_color", Color8(255, 90, 58) if empty else color)
-		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0.12,0.17,0.13,0.92) if active else Color(0.035,0.06,0.05,0.79)
-		sb.border_color = Color(1,0.73,0.32) if active else Color(0.35,0.45,0.35,0.35)
-		sb.set_border_width_all(2 if active else 1)
-		sb.set_corner_radius_all(5)
-		for state in ["normal","hover","pressed","disabled","focus"]:
-			_slots[i].add_theme_stylebox_override(state,sb)
+		var shown := open and Game.owned.has(id) and id != cur
+		_list[i].visible = shown
+		if not shown:
+			continue
+		_skin(_list[i], false)
+		_list_pics[i].texture = _icons.get(id)
+		_list_names[i].text = str(Data.WEAPONS[id].short).substr(0, 9)
+		_list_names[i].add_theme_color_override("font_color", Color(0.79, 0.84, 0.78))

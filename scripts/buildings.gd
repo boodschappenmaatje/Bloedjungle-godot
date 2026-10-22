@@ -312,6 +312,7 @@ func blast(at: Vector3, radius: float, dmg: float, own := false) -> void:
 		if d < radius:
 			var mult := 0.5 if is_piece(b.kind) else (0.15 if own else 1.0)
 			damage(b, dmg * mult * (1.0 - d / radius))
+	Woonhuis.blast_all(at, radius, dmg)  # huizen in de stad gaan altijd stuk, ook door je eigen raketten
 
 
 # ---------------------------------------------------------------- waarde en herstel

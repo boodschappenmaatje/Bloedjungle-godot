@@ -151,10 +151,10 @@ func _physics_process(delta: float) -> void:
 			queue_free()
 			return
 		if c.has_method("hit"):
-			if not (c is BuildingBody):
+			if not (c is BuildingBody or c is HouseBody):
 				Fx.spark(get_parent(), hit.position, -dir)
 			c.hit(dmg, dir, from_player)
-			if c is BuildingBody:
+			if c is BuildingBody or c is HouseBody:
 				Fx.impact(get_parent(), hit.position, hit.normal)
 			if pierce > 0 and c.collision_layer == MASK_ENEMY:
 				pierce -= 1

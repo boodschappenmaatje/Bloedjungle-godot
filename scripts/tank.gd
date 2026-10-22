@@ -149,6 +149,7 @@ func _shoot(at: Vector3) -> void:
 	var boom := Vector3(at.x, 0.0, at.z)
 	get_tree().create_timer(0.5).timeout.connect(func() -> void:
 		Fx.explosion(get_parent(), boom, 1.0)
+		Woonhuis.blast_all(boom, SHELL_RADIUS, 140.0)
 		for e in Game.enemies.duplicate():
 			if is_instance_valid(e) and e.global_position.distance_to(boom) < SHELL_RADIUS and SHELL_DAMAGE > 0.0:
 				e.hit(SHELL_DAMAGE, (e.global_position - boom).normalized(), true))

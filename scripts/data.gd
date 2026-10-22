@@ -64,6 +64,9 @@ static func strip_zone(x: float) -> String:
 	return "dicht"
 
 
+## Eerste huis van de stad achter de brug (woonhuis.gd): voordeur naar het zuiden, naar de brug toe.
+const HUIS_POS := Vector3(9.0, 0.0, -110.0)
+
 ## Midden van de rivier op afstand x: ongeveer 90 m achter de basis, met een bos ertussen.
 const RIVER_Z0 := -92.0
 const FOREST_Z0 := -30.0   # het bos begint bij de noordmuur

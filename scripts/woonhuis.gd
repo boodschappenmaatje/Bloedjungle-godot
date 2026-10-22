@@ -287,6 +287,15 @@ func _set_state(s: Dictionary, st: int) -> void:
 		_roof_state(2 if gone >= 4 else 1)
 
 
+## Voor het mikken van de tank: midden en buitenrichting van een muurstuk.
+func seg_center(s: Dictionary) -> Vector3:
+	return _center(s)
+
+
+func seg_outward(s: Dictionary) -> Vector3:
+	return _outward(s)
+
+
 func _center(s: Dictionary) -> Vector3:
 	var mi: MeshInstance3D = s.heel
 	return (mi.global_transform * mi.get_aabb()).get_center()

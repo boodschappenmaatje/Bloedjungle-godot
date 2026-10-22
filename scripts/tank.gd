@@ -25,7 +25,18 @@ const DRIVE_RELOAD := 1.6
 const BOARD_DIST := 6.5
 const RAM_DAMAGE := 60.0
 
+const LOCK_FWD_MIN := 3.0   # m, muurstukken dichterbij dan dit worden niet gekozen
+const LOCK_FWD_MAX := 38.0
+const LOCK_SIDE := 2.1      # m, zo ver mag een muurstuk naast de lijn van je stick liggen
+const LOCK_STICKY := 3.0    # m, het gekozen stuk blijft gekozen tot het zo ver van de lijn ligt
+
 var driven := false
+var _lock: Dictionary = {}     # het muurstuk waarop de koepel nu vastzit (leeg = geen)
+var _lock_house: Node3D
+var _mark: Node3D
+var _line: MeshInstance3D
+var _line_mesh := ImmediateMesh.new()
+var _mark_t := 0.0
 var _speed := 0.0
 var _btn: ActionBtn
 var _ram_cd := 0.0
@@ -48,6 +59,7 @@ func _ready() -> void:
 	_btn.pressed.connect(_toggle)
 	_btn.hide()
 	layer.add_child(_btn)
+	_build_sight()
 
 
 func _toggle() -> void:
@@ -58,6 +70,7 @@ func _toggle() -> void:
 		driven = false
 		p.driving = false
 		p.visible = true
+		_clear_sight()
 		p.global_position = global_position - global_transform.basis.x * 3.2
 		p.global_position.y = 0.0
 		p.collision_mask = p.get("_mask0")
@@ -146,10 +159,10 @@ func _shoot(at: Vector3) -> void:
 	var tip := _loop.global_position - _loop.global_transform.basis.z * 3.4
 	Fx.muzzle(get_parent(), tip)
 	Fx.dust(get_parent(), tip)
-	var boom := Vector3(at.x, 0.0, at.z)
+	var boom := at
 	get_tree().create_timer(0.5).timeout.connect(func() -> void:
 		Fx.explosion(get_parent(), boom, 1.0)
-		Woonhuis.blast_all(boom, 2.0, 140.0)  # kleiner dan de straal tegen vijanden: alleen de muur waar hij op mikt
+		Woonhuis.blast_all(boom, 1.4, 140.0)  # kleiner dan de straal tegen vijanden: alleen de muur waar hij op mikt
 		for e in Game.enemies.duplicate():
 			if is_instance_valid(e) and e.global_position.distance_to(boom) < SHELL_RADIUS and SHELL_DAMAGE > 0.0:
 				e.hit(SHELL_DAMAGE, (e.global_position - boom).normalized(), true))
@@ -195,9 +208,17 @@ func _drive_driven(delta: float, live: bool) -> void:
 	# koepel
 	var local := 0.0
 	if live and not is_nan(Game.aim):
-		local = wrapf(atan2(-sin(Game.aim), -cos(Game.aim)) - rotation.y, -PI, PI)
+		var want_world := atan2(-sin(Game.aim), -cos(Game.aim))
+		_pick_lock(Vector2(sin(Game.aim), cos(Game.aim)))
+		if not _lock.is_empty():
+			var c: Vector3 = _lock_point()
+			want_world = atan2(-(c.x - global_position.x), -(c.z - global_position.z))  # koepel draait naar het gekozen muurstuk
+		local = wrapf(want_world - rotation.y, -PI, PI)
+	else:
+		_lock = {}
 	var d := wrapf(local - _toren.rotation.y, -PI, PI)
 	_toren.rotation.y += clampf(d, -DRIVE_TURRET * delta, DRIVE_TURRET * delta)
+	_update_sight(delta)
 	_loop.rotation.x = lerpf(_loop.rotation.x, 0.0, delta * 2.0)
 	_reload -= delta
 	if live and Game.fire and _reload <= 0.0 and absf(d) < 0.15:
@@ -208,6 +229,8 @@ func _drive_driven(delta: float, live: bool) -> void:
 
 ## Waar de granaat landt: bij de eerste vijand vlak voor de loop, anders 22 m verderop.
 func _aim_point() -> Vector3:
+	if not _lock.is_empty():
+		return _lock_point()
 	var fwd := -_loop.global_transform.basis.z
 	fwd.y = 0.0
 	fwd = fwd.normalized()
@@ -241,3 +264,129 @@ func _ram() -> void:
 		if absf(lp.x) < 2.1 and lp.z < 0.8 and lp.z > -4.2:
 			_ram_cd = 0.2
 			e.hit(RAM_DAMAGE, -global_transform.basis.z, true)
+
+
+# ---------------------------------------------------------------- mikken op muurstukken van huizen
+
+## Kiest het muurstuk (buitenkant naar de tank toe) dat het dichtst bij de lijn van je stick ligt; blijft op dat stuk
+## zitten zolang het redelijk in de lijn ligt, zodat de koepel niet heen en weer springt.
+func _pick_lock(f: Vector2) -> void:
+	var here := Vector2(global_position.x, global_position.z)
+	if not _lock.is_empty():
+		var c: Vector3 = _lock_house.seg_center(_lock)
+		if _lock.staat >= 2 or not is_instance_valid(_lock_house) or _side(here, f, c) > LOCK_STICKY or _fwd(here, f, c) < LOCK_FWD_MIN:
+			_lock = {}
+	if not _lock.is_empty():
+		return
+	var best := LOCK_SIDE
+	for h: Woonhuis in Woonhuis.all:
+		if h.global_position.distance_to(global_position) > LOCK_FWD_MAX + 8.0:
+			continue
+		for s in h.segs:
+			if s.staat >= 2 or String(s.name).begins_with("P"):
+				continue
+			var c: Vector3 = h.seg_center(s)
+			var fw := _fwd(here, f, c)
+			if fw < LOCK_FWD_MIN or fw > LOCK_FWD_MAX:
+				continue
+			if h.seg_outward(s).dot(Vector3(here.x - c.x, 0.0, here.y - c.z)) <= 0.0:
+				continue  # de binnenkant of achterkant van het huis: de granaat zou er toch tegenaan klappen
+			var side := _side(here, f, c) + fw * 0.01
+			if side < best:
+				best = side
+				_lock = s
+				_lock_house = h
+
+
+func _fwd(here: Vector2, f: Vector2, c: Vector3) -> float:
+	return (Vector2(c.x, c.z) - here).dot(f)
+
+
+func _side(here: Vector2, f: Vector2, c: Vector3) -> float:
+	var v := Vector2(c.x, c.z) - here
+	return absf(v.x * f.y - v.y * f.x)
+
+
+## Het inslagpunt: het midden van het muurstuk, een tikje voor de buitenkant.
+func _lock_point() -> Vector3:
+	var c: Vector3 = _lock_house.seg_center(_lock)
+	return c + _lock_house.seg_outward(_lock) * 0.15
+
+
+func _build_sight() -> void:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(1.0, 0.2, 0.12, 0.85)
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.no_depth_test = true
+	mat.render_priority = 10
+	_line = MeshInstance3D.new()
+	_line.mesh = _line_mesh
+	_line.material_override = mat
+	_line.top_level = true
+	_line.visible = false
+	_line.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_line)
+	_mark = Node3D.new()
+	_mark.top_level = true
+	_mark.visible = false
+	var ring := MeshInstance3D.new()
+	var tm := TorusMesh.new()
+	tm.inner_radius = 0.55
+	tm.outer_radius = 0.7
+	tm.rings = 20
+	tm.ring_segments = 6
+	ring.mesh = tm
+	ring.rotation.x = PI / 2.0
+	ring.material_override = mat
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_mark.add_child(ring)
+	var dot := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 0.12
+	sm.height = 0.24
+	dot.mesh = sm
+	dot.material_override = mat
+	dot.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_mark.add_child(dot)
+	add_child(_mark)
+
+
+func _clear_sight() -> void:
+	_lock = {}
+	if _line:
+		_line.visible = false
+		_mark.visible = false
+
+
+## Stippellijn van de loop naar het inslagpunt en een rode ring daar: wat je ziet is wat je raakt.
+func _update_sight(delta: float) -> void:
+	var fwd := -_loop.global_transform.basis.z
+	fwd.y = 0.0
+	fwd = fwd.normalized()
+	var tip := _loop.global_position - _loop.global_transform.basis.z * 3.4
+	var target: Vector3 = _aim_point()
+	var out := fwd
+	if not _lock.is_empty():
+		out = _lock_house.seg_outward(_lock)
+	_line.visible = true
+	_mark.visible = true
+	_mark_t += delta
+	_mark.global_position = target
+	_mark.look_at(target + out, Vector3.UP)
+	_mark.scale = Vector3.ONE * (1.0 + 0.08 * sin(_mark_t * 8.0)) * (1.15 if _lock.is_empty() else 1.0)
+	_line_mesh.clear_surfaces()
+	_line_mesh.surface_begin(Mesh.PRIMITIVE_LINES)
+	var from := tip
+	var to := Vector3(target.x, maxf(target.y, 0.2), target.z)
+	var len_ := from.distance_to(to)
+	var n := int(len_ / 0.9)
+	for i in n:
+		var a := from.lerp(to, float(i) / n)
+		var b := from.lerp(to, minf((i + 0.55) / n, 1.0))
+		_line_mesh.surface_add_vertex(a)
+		_line_mesh.surface_add_vertex(b)
+	if n > 0:
+		_line_mesh.surface_end()
+	else:
+		_line_mesh.clear_surfaces()

@@ -4,9 +4,10 @@ extends Node3D
 ## gebruikt door de speler en de vijanden. Kleurt het uniform en hangt een wapen in de rechterhand.
 
 const SCENE := preload("res://assets/soldaat.glb")
-const LOOPS := ["stil", "lopen", "rennen", "achteruit", "schieten", "herladen", "klimmen", "zitten"]
+const LOOPS := ["stil", "lopen", "rennen", "achteruit", "schieten", "klimmen", "zitten", "sprinten"]  # herladen en rollen spelen één keer
 const CLIMB := preload("res://assets/klimmen.glb")  # klim-animatie uit bron/klimmen
 const SIT := preload("res://assets/zitten.glb")  # zitten in de vrachtwagen, uit bron/zitten
+const ACTIONS := preload("res://assets/acties.glb")  # rollen, sprinten en een nieuwe herlaadbeweging, uit bron/acties
 
 var anim: AnimationPlayer
 var current := ""
@@ -29,6 +30,16 @@ func setup(uniform: Color, gun_kind := "rifle") -> void:
 	if not lib.has_animation("zitten"):
 		var sp: AnimationPlayer = SIT.instantiate().find_child("AnimationPlayer", true, false)
 		lib.add_animation("zitten", sp.get_animation("zitten"))
+	# rollen, sprinten en de nieuwe herlaadbeweging (die de oude, trage lus vervangt) komen uit bron/acties
+	if not lib.has_animation("rollen"):
+		var ap: AnimationPlayer = ACTIONS.instantiate().find_child("AnimationPlayer", true, false)
+		for n in ["rollen", "sprinten", "herladen", "explosie_dood"]:
+			if lib.has_animation(n):
+				lib.remove_animation(n)
+			lib.add_animation(n, ap.get_animation(n))
+		lib.get_animation("herladen").loop_mode = Animation.LOOP_NONE
+		lib.get_animation("rollen").loop_mode = Animation.LOOP_NONE
+		lib.get_animation("explosie_dood").loop_mode = Animation.LOOP_NONE
 	for n in LOOPS:
 		if anim.has_animation(n):
 			anim.get_animation(n).loop_mode = Animation.LOOP_LINEAR
@@ -215,6 +226,11 @@ func play(clip: String, blend := 0.18, speed := 1.0) -> void:
 	current = clip
 	anim.play(clip, blend)
 	anim.speed_scale = speed
+
+
+## Lengte van een animatie in seconden (0 als hij niet bestaat); handig om een clip precies op een duur te laten passen.
+func clip_length(clip: String) -> float:
+	return anim.get_animation(clip).length if anim != null and anim.has_animation(clip) else 0.0
 
 
 ## Rode flits als hij geraakt wordt.

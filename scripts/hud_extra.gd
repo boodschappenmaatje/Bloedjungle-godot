@@ -22,6 +22,19 @@ var _bars: VBoxContainer
 var _top_right: HBoxContainer
 var _menu: PauseMenu
 var _fps: Label
+var _camera_controls: Control
+var _camera_button: Button
+var _zoom_in_button: Button
+var _zoom_out_button: Button
+var _radar: Control
+var _radar_refresh := 0.0
+## Contacten op de radar: alleen vijanden die je zelf, je torens, je soldaten of de basis kunnen zien.
+## Een gezien contact blijft nog even (vervagend) staan.
+const RADAR_SIGHT := 38.0  # m rond de speler
+const RADAR_POST_SIGHT := 26.0  # m rond torens, soldaten en gebouwen
+const RADAR_BASE_MARGIN := 8.0  # m buiten de muur die de basis overziet
+const RADAR_MEMORY := 2.5  # s
+var _seen := {}  # instance-id -> laatste keer gezien (s)
 
 
 func _ready() -> void:
@@ -41,6 +54,8 @@ func _ready() -> void:
 	_build_bars()
 	_build_top_right()
 	_build_ammo()
+	_build_camera_controls()
+	_build_radar()
 	_menu = PauseMenu.new()
 	add_child(_menu)
 	_fps = _shadowed(UI.label("", UI.body(700, 0), 13, UI.GOOD))
@@ -150,17 +165,226 @@ func _build_ammo() -> void:
 	_ammo = _shadowed(UI.label("8 | 8", UI.body(700, 0), 15, UI.BRASS))
 	_ammo.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	box.add_child(_ammo)
+	# De munitie staat nu alleen nog onder het actieve wapen in de wapenstrip (geen dubbele weergave);
+	# de naam van een nieuw wapen verschijnt kort als toast.
+	_ammo.visible = false
+
+
+func _build_camera_controls() -> void:
+	_camera_controls = Control.new()
+	_camera_controls.name = "CameraControls"
+	_camera_controls.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_camera_controls)
+	_camera_button = _camera_button_new("TACTISCH", Vector2(104, 30))
+	_camera_button.pressed.connect(_toggle_camera)
+	_camera_controls.add_child(_camera_button)
+	_zoom_out_button = _camera_button_new("−", Vector2(34, 30))
+	_zoom_out_button.position.x = 108.0
+	_zoom_out_button.pressed.connect(_zoom_camera.bind(1))
+	_camera_controls.add_child(_zoom_out_button)
+	_zoom_in_button = _camera_button_new("+", Vector2(34, 30))
+	_zoom_in_button.position.x = 146.0
+	_zoom_in_button.pressed.connect(_zoom_camera.bind(-1))
+	_camera_controls.add_child(_zoom_in_button)
+
+
+func _camera_button_new(text_: String, button_size: Vector2) -> Button:
+	var b := Button.new()
+	b.name = {"TACTISCH": "CameraViewButton", "−": "CameraZoomOutButton", "+": "CameraZoomInButton"}.get(text_, "CameraButton")
+	b.text = text_
+	b.size = button_size
+	b.add_to_group("hud_button")
+	b.focus_mode = Control.FOCUS_NONE
+	b.add_theme_font_size_override("font_size", 11 if text_ == "TACTISCH" else 18)
+	UI.style_button(b, "pause")
+	return b
+
+
+func _toggle_camera() -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam != null and cam.has_method("toggle_view"):
+		cam.call("toggle_view")
+		_update_camera_controls()
+
+
+func _zoom_camera(direction: int) -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam != null and cam.has_method("zoom"):
+		cam.call("zoom", direction)
+
+
+func _update_camera_controls() -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var combat: bool = bool(cam.get("combat_view"))
+	_camera_button.text = "GEVECHT" if combat else "TACTISCH"
+	_camera_button.tooltip_text = "Schakel tussen tactische en gevechtscamera"
+	_zoom_in_button.tooltip_text = "Camera dichterbij"
+	_zoom_out_button.tooltip_text = "Camera verder weg"
+	var step: int = int(cam.get("zoom_step"))
+	_zoom_out_button.disabled = step >= 4
+	_zoom_in_button.disabled = step <= -3
+
+
+func _build_radar() -> void:
+	_radar = Control.new()
+	_radar.name = "TacticalRadar"
+	_radar.custom_minimum_size = Vector2(132, 144)
+	_radar.size = _radar.custom_minimum_size
+	_radar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_radar.draw.connect(_draw_radar)
+	add_child(_radar)
+
+
+func _radar_point(world_pos: Vector3, area: Rect2) -> Vector2:
+	var fx := clampf((world_pos.x + Data.WORLD_X) / (2.0 * Data.WORLD_X), 0.0, 1.0)
+	var fz := clampf((world_pos.z + Data.WORLD_Z_N) / (Data.WORLD_Z_N + Data.WORLD_Z_S), 0.0, 1.0)
+	return area.position + Vector2(fx * area.size.x, fz * area.size.y)
+
+
+func _draw_radar() -> void:
+	if _radar == null or not _radar.visible:
+		return
+	var bounds := Rect2(Vector2.ZERO, _radar.size)
+	_radar.draw_rect(bounds, Color(0.025, 0.055, 0.045, 0.9), true)
+	_radar.draw_rect(bounds, Color(0.58, 0.66, 0.43, 0.85), false, 1.5)
+	var head := 18.0 if _radar.size.x >= 110.0 else 6.0
+	if head > 6.0:
+		_radar.draw_string(UI.body(700, 0), Vector2(7, 13), "RADAR  ·  CONTACTEN" if _radar.size.x >= 130.0 else "RADAR", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK_DIM)
+	var map := Rect2(5.0, head, _radar.size.x - 10.0, _radar.size.y - head - 5.0)
+	# kruislijnen als schaalreferentie, geen extra scene of viewport
+	var mid_x: float = map.position.x + map.size.x * 0.5
+	var mid_y: float = map.position.y + map.size.y * 0.5
+	_radar.draw_line(Vector2(mid_x, map.position.y), Vector2(mid_x, map.end.y), Color(0.42, 0.52, 0.38, 0.2), 1.0)
+	_radar.draw_line(Vector2(map.position.x, mid_y), Vector2(map.end.x, mid_y), Color(0.42, 0.52, 0.38, 0.2), 1.0)
+	var wall_color := Color(0.56, 0.64, 0.42, 0.8)
+	for side in [-1.0, 1.0]:
+		_radar.draw_line(_radar_point(Vector3(side * Data.COMPOUND, 0, -Data.COMPOUND), map), _radar_point(Vector3(side * Data.COMPOUND, 0, Data.COMPOUND), map), wall_color, 1.4)
+		for span in [[-Data.COMPOUND, -Data.GATE_GAP], [Data.GATE_GAP, Data.COMPOUND]]:
+			_radar.draw_line(_radar_point(Vector3(span[0], 0, side * Data.COMPOUND), map), _radar_point(Vector3(span[1], 0, side * Data.COMPOUND), map), wall_color, 1.4)
+	var river := PackedVector2Array()
+	for i in 33:
+		var xw: float = lerpf(-Data.WORLD_X, Data.WORLD_X, float(i) / 32.0)
+		river.append(_radar_point(Vector3(xw, 0.0, Data.river_z(xw)), map))
+	_radar.draw_polyline(river, Color(0.2, 0.55, 0.65, 0.65), 1.5, true)
+	# De bunker staat op het echte wereldnulpunt; overige markers volgen de huidige bouwdata.
+	var base := _radar_point(Vector3.ZERO, map)
+	_radar.draw_rect(Rect2(base - Vector2(3.5, 3.5), Vector2(7, 7)), Color(1.0, 0.74, 0.28), true)
+	for tower in get_tree().get_nodes_in_group("tower"):
+		if is_instance_valid(tower) and tower is Node3D:
+			_radar.draw_rect(Rect2(_radar_point(tower.global_position, map) - Vector2(2.5, 2.5), Vector2(5, 5)), Color(0.38, 0.75, 0.48), true)
+	if Game.gates != null and is_instance_valid(Game.gates):
+		for gate in Game.gates.list:
+			var root: Variant = gate.get("root")
+			if root != null and is_instance_valid(root):
+				var gate_color := Color(0.24, 0.82, 0.42) if float(gate.get("open", 0.0)) > 0.8 else Color(0.92, 0.25, 0.16)
+				_radar.draw_circle(_radar_point(root.global_position, map), 2.0, gate_color)
+	for building in Game.buildings:
+		if not building is Dictionary:
+			continue
+		var node: Variant = building.get("node")
+		if node != null and not is_instance_valid(node):
+			continue
+		var at: Vector3 = building.get("at", Vector3.ZERO)
+		var kind: String = str(building.get("kind", ""))
+		var point := _radar_point(at, map)
+		var col := Color(0.78, 0.84, 0.42) if kind in ["muur", "zandzak"] else Color(0.38, 0.75, 0.48)
+		_radar.draw_rect(Rect2(point - Vector2(2, 2), Vector2(4, 4)), col, true)
+	for enemy in Game.enemies:
+		if not is_instance_valid(enemy) or not enemy is Node3D or bool(enemy.get("dead")):
+			continue
+		var vis := _enemy_vis(enemy)
+		if vis <= 0.0:
+			continue
+		var point := _radar_point(enemy.global_position, map)
+		_radar.draw_circle(point, 2.2, Color(1.0, 0.24, 0.16, 0.95 * vis))
+	if _seen.size() > 64:  # oude contacten opruimen
+		var alive := {}
+		for e in Game.enemies:
+			if is_instance_valid(e):
+				alive[e.get_instance_id()] = true
+		for id in _seen.keys():
+			if not alive.has(id):
+				_seen.erase(id)
+	var player: Node3D = Game.player
+	if player != null and is_instance_valid(player):
+		var center := _radar_point(player.global_position, map)
+		var direction := Vector2(sin(player.face), cos(player.face)).normalized()
+		var side := Vector2(direction.y, -direction.x) * 3.2
+		_radar.draw_colored_polygon(PackedVector2Array([center + direction * 5.0, center - direction * 3.0 + side, center - direction * 3.0 - side]), Color(0.27, 0.86, 1.0))
+	_draw_radar_attacks(map)
+
+
+## Wie ziet dit punt: de speler, de basis, een toren, een soldaat of een eigen gebouw.
+func _in_friendly_sight(pos: Vector3) -> bool:
+	var player: Node3D = Game.player
+	if player != null and is_instance_valid(player) and Vector2(pos.x - player.global_position.x, pos.z - player.global_position.z).length() <= RADAR_SIGHT:
+		return true
+	var edge := Data.COMPOUND + RADAR_BASE_MARGIN
+	if absf(pos.x) <= edge and absf(pos.z) <= edge:
+		return true
+	for tower in get_tree().get_nodes_in_group("tower"):
+		if is_instance_valid(tower) and tower is Node3D and Vector2(pos.x - tower.global_position.x, pos.z - tower.global_position.z).length() <= RADAR_POST_SIGHT:
+			return true
+	for ally in Game.allies:
+		if is_instance_valid(ally) and ally is Node3D and Vector2(pos.x - ally.global_position.x, pos.z - ally.global_position.z).length() <= RADAR_POST_SIGHT:
+			return true
+	for building in Game.buildings:
+		if building is Dictionary:
+			var at: Vector3 = building.get("at", Vector3.ZERO)
+			if Vector2(pos.x - at.x, pos.z - at.z).length() <= RADAR_POST_SIGHT:
+				return true
+	return false
+
+
+## 1 = nu in zicht, tussen 0 en 1 = kort geleden gezien (vervagend), 0 = onbekend.
+func _enemy_vis(enemy: Node3D) -> float:
+	var now := Time.get_ticks_msec() / 1000.0
+	var id := enemy.get_instance_id()
+	if _in_friendly_sight(enemy.global_position):
+		_seen[id] = now
+		return 1.0
+	var last: float = _seen.get(id, -999.0)
+	return clampf(1.0 - (now - last) / RADAR_MEMORY, 0.0, 1.0)
+
+
+func _draw_radar_attacks(map: Rect2) -> void:
+	var cx := map.position.x + map.size.x * 0.5
+	var cy := map.position.y + map.size.y * 0.5
+	var pulse := 0.65 + 0.35 * sin(Time.get_ticks_msec() / 180.0)
+	var arrows := {
+		"N": [Vector2(cx, map.position.y + 2), Vector2(cx - 5, map.position.y + 9), Vector2(cx + 5, map.position.y + 9)],
+		"Z": [Vector2(cx, map.end.y - 2), Vector2(cx - 5, map.end.y - 9), Vector2(cx + 5, map.end.y - 9)],
+		"W": [Vector2(map.position.x + 2, cy), Vector2(map.position.x + 9, cy - 5), Vector2(map.position.x + 9, cy + 5)],
+		"O": [Vector2(map.end.x - 2, cy), Vector2(map.end.x - 9, cy - 5), Vector2(map.end.x - 9, cy + 5)],
+	}
+	for direction in arrows:
+		if Game.attack.get(direction, 0.0) > 0.0:
+			_radar.draw_colored_polygon(PackedVector2Array(arrows[direction]), Color(1.0, 0.25, 0.12, pulse))
 
 
 func _set_paused(on: bool) -> void:
 	_menu.set_paused(on)
 
 
+func _radar_size() -> Vector2:
+	if size.x < size.y:
+		return Vector2(88, 100)  # staand: smal, anders overlapt hij de knoppen onder de golf-titel
+	if size.y < 420.0:
+		return Vector2(112, 120)  # klein liggend scherm: blijft boven de wisselknop
+	return Vector2(132, 144)
+
+
 func _layout() -> void:
+	_radar.custom_minimum_size = _radar_size()
+	_radar.size = _radar.custom_minimum_size
 	_bars.position = Vector2(12, 10)
 	_bars.size = Vector2(minf(size.x * 0.3, 150.0), 0)
 	_top_right.reset_size()
 	_top_right.position = Vector2(size.x - 12.0 - _top_right.size.x, 10)
+	_camera_controls.position = Vector2(12.0, 48.0)
+	_radar.position = Vector2(size.x - _radar.size.x - 12.0, 48.0)
 	_arrows.queue_redraw()
 
 
@@ -179,6 +403,15 @@ void fragment() {
 
 func _process(delta: float) -> void:
 	visible = Game.state != "menu"
+	var play_hud := (Game.state == "play" or Game.state == "prep") and not Game.build_mode
+	_camera_controls.visible = play_hud
+	_radar.visible = play_hud
+	if play_hud:
+		_update_camera_controls()
+		_radar_refresh -= delta
+		if _radar_refresh <= 0.0:
+			_radar_refresh = 0.12
+			_radar.queue_redraw()
 	_fps.visible = GameSettings.get_value("fps") == "on"
 	if _fps.visible:
 		_fps.text = "%d FPS · %d%%" % [Engine.get_frames_per_second(), roundi(get_viewport().scaling_3d_scale * 100.0)]

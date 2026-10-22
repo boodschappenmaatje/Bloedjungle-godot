@@ -34,6 +34,35 @@ static func material(kind := "") -> ShaderMaterial:
 	return _mats[kind]
 
 
+static var _focus_mats: Array[ShaderMaterial] = []
+static var _fade := 0.0  # 0..1, loopt zacht mee zodat bladeren niet ploffen
+
+
+## Globale uniforms op gedeelde leaf-materialen, zonder per-palm drawcalls of raycasts.
+## active = false (bouwmodus, menu): de zichtlijn-fade loopt rustig terug naar 0.
+## extras = tot drie wereldposities (vijanden) die ook uit de bladeren moeten blijven.
+static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, delta := 1.0 / 60.0, active := true, extras: Array = []) -> void:
+	_fade = move_toward(_fade, 1.0 if active else 0.0, delta / 0.35)
+	if _focus_mats.is_empty():
+		for key in ["palm", "leaf", "fern"]:
+			_focus_mats.append(material(key))
+	var on := _fade > 0.001
+	var e: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO, Vector4.ZERO]
+	for i in mini(extras.size(), 3):
+		var pos: Vector3 = extras[i]
+		e[i] = Vector4(pos.x, pos.y + 1.0, pos.z, 1.0)
+	for mat in _focus_mats:
+		mat.set_shader_parameter("fade_sightline", on)
+		if not on:
+			continue
+		mat.set_shader_parameter("fade_amount", _fade)
+		mat.set_shader_parameter("view_player", player_pos + Vector3.UP * 1.2)
+		mat.set_shader_parameter("view_camera", camera_pos)
+		mat.set_shader_parameter("view_e0", e[0])
+		mat.set_shader_parameter("view_e1", e[1])
+		mat.set_shader_parameter("view_e2", e[2])
+
+
 ## Zet de wind in alle bladeren aan of uit.
 static func set_wind(on: bool) -> void:
 	for k in _mats:

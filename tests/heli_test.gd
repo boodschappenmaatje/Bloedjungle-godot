@@ -2,14 +2,23 @@ extends SceneTree
 ## Test: de heli landt buiten het platform alleen op open grond en kan daar weer opstijgen. Draaien: godot --headless --path . -s tests/heli_test.gd --fixed-fps 60
 
 var main: Node
+# Klassen met autoload-verwijzingen worden pas tijdens het draaien geladen: bij het compileren van een -s test bestaan de autoloads nog niet.
+var _apache: Script
+var _foliage: Script
+var _data: Script
+var _sticks: Script
 var game: Node
 var frames := 0
-var heli: Apache
+var heli
 var pad: Dictionary
 var hp0 := 0.0
 
 
 func _initialize() -> void:
+	_apache = load("res://scripts/apache.gd")
+	_foliage = load("res://scripts/foliage.gd")
+	_data = load("res://scripts/data.gd")
+	_sticks = load("res://scripts/touch_sticks.gd")
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 
@@ -30,13 +39,13 @@ func _process(_d: float) -> bool:
 		heli._board(game.player)
 		heli._spool = 0.0
 	if frames == 3 + 60 * 10:
-		print("vliegt: ", heli.mode == Apache.Mode.FLY)
+		print("vliegt: ", heli.mode == _apache.Mode.FLY)
 		# boven water
-		heli.global_position = Vector3(10, 7, Data.river_z(10.0))
+		heli.global_position = Vector3(10, 7, _data.river_z(10.0))
 		print("water: '", heli._no_landing(), "'")
-		var tr: Vector2 = Foliage.trees[0]
+		var tr: Vector2 = _foliage.trees[0]
 		heli.global_position = Vector3(tr.x, 7, tr.y)
-		print("boom: '", heli._no_landing(), "' bomen: ", Foliage.trees.size())
+		print("boom: '", heli._no_landing(), "' bomen: ", _foliage.trees.size())
 		# open plek zoeken
 		var found := false
 		for i in 400:
@@ -69,11 +78,11 @@ func _process(_d: float) -> bool:
 			e.global_position = heli._ring_center()
 			hp0 = e.hp
 			heli.driven = true
-			heli.mode = Apache.Mode.FLY
+			heli.mode = _apache.Mode.FLY
 			heli._spool = 0.0
 			game.player.driving = true
 			for n in main.find_children("*", "", true, false):
-				if n is TouchSticks:
+				if n.get_script() == _sticks:
 					n.set_process(false)
 					n.set_physics_process(false)
 	if frames > 3 + 60 * 24 and frames < 3 + 60 * 27:

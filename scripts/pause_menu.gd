@@ -12,6 +12,7 @@ const ROWS := [
 	["treeshadow", "Boomschaduw", [["fake", "Vast"], ["real", "Echt"], ["off", "Uit"]]],
 	["hz", "Beeldsnelheid", [["60", "60 fps"], ["120", "120 fps"]]],
 	["fps", "FPS-teller", [["off", "Uit"], ["on", "Aan"]]],
+	["perf", "Prestatiemodus", [["off", "Uit"], ["on", "Aan"]]],
 ]
 const NOTES := {
 	"low": "Laag: geen schaduwen en een lichtere afbeelding, voor oudere telefoons.",
@@ -513,7 +514,7 @@ func open_wheel() -> void:
 		return
 	for c in _wheel_area.get_children():
 		c.queue_free()
-	var owned: Array = Data.WEAPON_ORDER.filter(func(id): return Game.owned.has(id))
+	var owned: Array = Data.WEAPON_ORDER.filter(func(id): return Game.carries(id))
 	var r := minf(120.0, get_viewport().get_visible_rect().size.y * 0.3)
 	for i in owned.size():
 		var id: String = owned[i]

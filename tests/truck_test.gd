@@ -3,6 +3,8 @@ extends SceneTree
 ## Draaien: godot --headless --path . -s tests/truck_test.gd --fixed-fps 60
 
 var main: Node
+# Klassen met autoload-verwijzingen worden pas tijdens het draaien geladen: bij het compileren van een -s test bestaan de autoloads nog niet.
+var _sticks: Script
 var game: Node
 var frames := 0
 var truck: Node
@@ -10,6 +12,7 @@ const S := 60
 
 
 func _initialize() -> void:
+	_sticks = load("res://scripts/touch_sticks.gd")
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 
@@ -40,7 +43,7 @@ func _process(_d: float) -> bool:
 			a.setup(100.0, 16.0, game.allies.size())
 			game.allies.append(a)
 		for n in main.find_children("*", "", true, false):
-			if n is TouchSticks:
+			if n.get_script() == _sticks:
 				n.set_process(false)
 				n.set_physics_process(false)
 	if frames == 3 + S * 8:

@@ -26,6 +26,14 @@ var rocket := false  # vijandelijke raket: ontploft op de plek waar hij gemikt w
 var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
 
 
+func _enter_tree() -> void:
+	PerfMonitor.bullets_live += 1
+
+
+func _exit_tree() -> void:
+	PerfMonitor.bullets_live -= 1
+
+
 ## Maakt een kogel. over_wall: de schutter staat tegen de muur en schiet eroverheen.
 static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false, pierce_ := 0, explosive_ := 0.0, sink_ := 0.0, rise_ := 0.0) -> void:
 	if _mesh == null:
@@ -170,7 +178,9 @@ func _physics_process(delta: float) -> void:
 
 ## Raket: grote ontploffing, schade neemt af met de afstand (alleen vijanden).
 func _explode(at: Vector3) -> void:
+	Game.note_blast(at, explosive)
 	Fx.explosion(get_parent(), at, 1.4)
+	Barrel.catch_blast(at, explosive)
 	if Game.builds:
 		Game.builds.blast(at, explosive, dmg, true)  # eigen raketten doen een beetje schade aan je eigen bouwwerk
 	for e in Game.enemies.duplicate():
@@ -183,7 +193,9 @@ func _explode(at: Vector3) -> void:
 ## Ontploffing van een vijandelijke raket (explode() in 15-combat.js met fromPlayer = false).
 func _boom_enemy(at: Vector3) -> void:
 	var r := explosive
+	Game.note_blast(at, r)
 	Fx.explosion(get_parent(), at, 0.9)
+	Barrel.catch_blast(at, r)
 	if Game.builds:
 		Game.builds.blast(at, r, dmg, false)
 	if Game.gates:

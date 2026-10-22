@@ -20,6 +20,21 @@ var wire_dmg := 0.0
 var strafe := 1.0
 var dead := false
 
+# Gedrag in groepsverband (zie ook Game.alert en Game.next_slot):
+# dekking zoeken als hij geraakt wordt, flankeren, terugtrekken met hulp van de buren en gespreid op de bunker aanvallen.
+var slot := 0
+var role := "assault"  # assault of flank
+var mode := "attack"  # attack, cover of retreat
+var mode_t := 0.0
+var cover_cd := 3.0
+var cover_pt := Vector3.ZERO
+var hurt_t := 99.0
+var alert_t := 0.0
+var flank_left := 7.0
+var gate_z := 0.0  # voorkeurspoort (z) om de bunker van twee kanten te nemen; 0 = klaar of niet van toepassing
+var retreated := false
+var stun_t := 0.0  # geschrokken van een explosie: even stilstaan
+
 
 func setup(kind: String, wave: int) -> void:
 	type = kind
@@ -29,6 +44,11 @@ func setup(kind: String, wave: int) -> void:
 	fire_t = randf_range(0.8, 1.8)
 	speed_mul = randf_range(0.9, 1.12)
 	strafe = 1.0 if randf() < 0.5 else -1.0
+	slot = Game.next_slot()
+	if kind == "rifle" and slot % 3 == 1:
+		role = "flank"
+	if not t.get("melee", false):
+		gate_z = Route.OUT if slot % 2 == 0 else -Route.OUT
 
 
 func _ready() -> void:
@@ -44,6 +64,12 @@ func _physics_process(delta: float) -> void:
 		if not dead:
 			model.play("stil")
 		return
+	if stun_t > 0.0:
+		stun_t -= delta
+		velocity = Vector3.ZERO
+		if stun_t <= 0.0:
+			model.play("stil", 0.15)
+		return
 	var player = Game.player
 	if _is_far(player):
 		_far_step(delta)
@@ -55,7 +81,12 @@ func _physics_process(delta: float) -> void:
 	var to_player := INF
 	if player and not player.dead:
 		to_player = _flat(player.global_position - global_position).length()
-	var at_player := to_player < (20.0 if melee else 16.0)
+	hurt_t += delta
+	alert_t -= delta
+	mode_t -= delta
+	cover_cd -= delta
+	var at_player := to_player < (20.0 if melee else 16.0) + (10.0 if alert_t > 0.0 else 0.0)
+	var tactical := not melee and type != "heavy"
 	# raketwerpers gaan eerst achter een gebouw aan (rocketTower in 18-enemies.js)
 	var rb: Variant = _rocket_target() if t.get("rocket", false) else null
 	if melee and player and player.elev > 1.0:
@@ -69,11 +100,55 @@ func _physics_process(delta: float) -> void:
 		goal = rb.at
 		dist = _flat(rb.at - global_position).length() - 2.0
 
+	# vanaf hier: waar hij naartoe loopt (move_goal) kan anders zijn dan waarop hij mikt (goal)
+	var move_goal := goal
+	var flanking := false
+	if at_player and role == "flank" and flank_left > 0.0 and to_player > 9.0 and mode == "attack":
+		# om de speler heen lopen en van opzij aanvallen, in plaats van recht erop af
+		var away := _flat(global_position - player.global_position).normalized()
+		var side := Vector2(-away.y, away.x) * strafe
+		move_goal = player.global_position + Vector3(side.x + away.x * 0.3, 0.0, side.y + away.y * 0.3) * 9.0
+		flank_left -= delta
+		flanking = true
+	elif not at_player and rb == null and gate_z != 0.0:
+		# om beurten de noord- en zuidpoort nemen, zodat niet iedereen door dezelfde opening komt
+		var gp := Vector3(0.0, 0.0, gate_z)
+		if _flat(gp - global_position).length() < 4.0 or _inside_wall(global_position):
+			gate_z = 0.0
+		else:
+			move_goal = gp
+	var hold := 1.0 if melee else 0.65 + 0.1 * float(slot % 4)  # schutters houden verschillende afstanden aan (gelaagd, niet in een kluitje)
+	var cover_look := 0.0
+	if tactical:
+		if mode == "attack" and cover_cd <= 0.0 and hurt_t < 1.5 and hp < max_hp * 0.75 and (at_player or dist < range_ * 1.2):
+			cover_cd = 6.0
+			var c: Variant = _find_cover(goal)
+			if c != null:
+				mode = "cover"
+				mode_t = randf_range(1.4, 2.4)
+				cover_pt = c
+		if mode == "attack" and not retreated and hp < max_hp * 0.3 and hurt_t < 3.0:
+			retreated = true
+			mode = "retreat"
+			mode_t = 3.0
+			Game.alert(global_position, 18.0, 6.0)  # de buren komen helpen
+		if mode != "attack" and mode_t <= 0.0:
+			mode = "attack"
+		cover_look = _angle_to(goal)
+
 	fire_t -= delta
 	var want_move := true
 	var look := face
 	var aim_at := goal + Vector3.UP * 1.2
-	if melee:
+	if mode == "cover":
+		var cd := _flat(cover_pt - global_position)
+		want_move = cd.length() > 0.6
+		look = cover_look
+		move_goal = cover_pt
+	elif mode == "retreat":
+		want_move = false
+		look = cover_look
+	elif melee:
 		if dist < t.r + 0.8:
 			want_move = false
 			look = _angle_to(goal)
@@ -86,14 +161,14 @@ func _physics_process(delta: float) -> void:
 					player.hit(t.dmg, Vector3(sin(look), 0, cos(look)), false)
 				else:
 					Game.damage_base(t.dmg)
-	elif dist < range_ and (rb != null or _clear_shot(aim_at, not at_player)):
+	elif not flanking and dist < range_ * hold and (rb != null or _clear_shot(aim_at, not at_player)):
 		want_move = false
 		look = _angle_to(goal)
 		if fire_t <= 0.0:
 			_shoot(look)
 
 	# een dichte poort in de weg: erop slaan of schieten tot hij kapot is
-	var gate: Variant = Game.gates.blocking(global_position, goal) if want_move and Game.gates else null
+	var gate: Variant = Game.gates.blocking(global_position, move_goal) if want_move and Game.gates else null
 	if gate != null:
 		want_move = false
 		look = _angle_to(Game.gates.pos_of(gate))
@@ -111,12 +186,16 @@ func _physics_process(delta: float) -> void:
 
 	var vel := Vector3.ZERO
 	if want_move:
-		var wp := Route.waypoint(global_position, goal)
+		var wp := Route.waypoint(global_position, move_goal)
 		var d := _flat(wp - global_position)
 		if d.length() > 0.05:
-			vel = Vector3(d.x, 0.0, d.y).normalized() * t.speed * speed_mul * (0.4 if slow_t > 0.0 else 1.0)
-			look = atan2(d.x, d.y)
-	elif not melee and dist < range_ * 0.6:
+			vel = Vector3(d.x, 0.0, d.y).normalized() * t.speed * speed_mul * (0.4 if slow_t > 0.0 else 1.0) * (1.25 if mode == "cover" else 1.0)
+			look = atan2(d.x, d.y) if mode != "cover" else cover_look
+	elif mode == "retreat":
+		var away2 := _flat(global_position - goal).normalized()
+		vel = Vector3(away2.x, 0.0, away2.y) * t.speed * speed_mul * 0.9
+		look = cover_look  # terugtrekken met het gezicht naar de vijand
+	elif not melee and mode == "attack" and dist < range_ * 0.6:
 		# te dichtbij: zijwaarts uitwijken terwijl hij schiet
 		vel = Vector3(cos(look), 0.0, -sin(look)) * strafe * t.speed * 0.4
 	velocity = vel
@@ -245,6 +324,30 @@ func _clear_shot(target: Vector3, at_bunker: bool) -> bool:
 	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 
+## Een plek achter het dichtstbijzijnde gebouw (of zandzak, muur) vanaf waar de dreiging komt, binnen 14 m; null als er niets is.
+func _find_cover(threat: Vector3) -> Variant:
+	var best: Variant = null
+	var bd := 14.0
+	for b in Game.buildings:
+		if b.down:
+			continue
+		var d := _flat(b.at - global_position).length()
+		if d >= bd:
+			continue
+		var sz: Vector3 = Game.builds.DEFS[b.kind].size
+		var out := _flat(b.at - threat).normalized()
+		var pt: Vector3 = b.at + Vector3(out.x, 0.0, out.y) * (maxf(sz.x, sz.z) * 0.5 + 1.0)
+		if _flat(pt - threat).length() < _flat(b.at - threat).length():
+			continue  # dat zou voor het gebouw zijn
+		bd = d
+		best = pt
+	return best
+
+
+static func _inside_wall(p: Vector3) -> bool:
+	return absf(p.x) < Data.COMPOUND and absf(p.z) < Data.COMPOUND
+
+
 func _bunker_dist() -> float:
 	var p := global_position
 	return maxf(absf(p.x), absf(p.z)) - Data.BUNKER_HALF
@@ -273,6 +376,7 @@ func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	if not from_player or dead:
 		return
 	hp -= dmg
+	hurt_t = 0.0
 	model.flash()
 	Sfx.play("splat", 1.0, global_position)
 	Fx.blood(get_parent(), global_position + Vector3.UP * 1.2, dir)
@@ -290,6 +394,7 @@ func _aim_mult() -> float:
 func _die(dir: Vector3) -> void:
 	dead = true
 	Game.enemies.erase(self)
+	Game.alert(global_position, 12.0, 5.0)  # de buren in de buurt zijn gewaarschuwd en zoeken de speler
 	Game.kills += 1
 	Sfx.play("thud", 1.0, global_position)
 	Progress.stats.kills += 1
@@ -302,5 +407,72 @@ func _die(dir: Vector3) -> void:
 	Fx.ground_blood(get_parent(), global_position + dir * 0.4, 1.7)
 	if type == "heavy":
 		Fx.explosion(get_parent(), global_position, 0.8)
-	model.play("dood1" if randf() < 0.5 else "dood2", 0.08)
+	var blast: Dictionary = Game.blast_near(global_position)
+	if blast.is_empty():
+		model.play("dood1" if randf() < 0.5 else "dood2", 0.08)
+	else:
+		_fling(blast)
 	get_tree().create_timer(8.0).timeout.connect(queue_free)
+
+
+## Geschrokken van een explosie vlakbij: even bevriezen, daarna (schutters) achter het dichtstbijzijnde gebouw of muur duiken.
+func flinch(from: Vector3) -> void:
+	if dead or type == "heavy" or stun_t > 0.0:
+		return
+	stun_t = randf_range(0.45, 0.85)
+	var d := _flat(global_position - from)
+	if d.length() > 0.1:
+		rotation.y = atan2(-d.x, -d.y)  # draait naar de knal
+		face = rotation.y
+	model.play("geraakt", 0.05, 1.8)
+	if not t.get("melee", false) and cover_cd <= 0.0:
+		var c: Variant = _find_cover(from)
+		if c != null:
+			mode = "cover"
+			mode_t = stun_t + randf_range(1.2, 2.0)
+			cover_pt = c
+			cover_cd = 6.0
+
+
+const FLING_AIR := 0.55  # seconden in de lucht; de animatie explosie_dood landt rond dat moment (frame 16 van 30 per s)
+const FLING_SLIDE := 0.4
+
+
+## Weggeslingerd door een ontploffing: hij vliegt met het gezicht naar de knal een boog weg van het midden, landt op zijn rug en glijdt uit.
+## De animatie (Blender, bron/acties) doet de houding; hier loopt het mannetje zelf langs de boog.
+func _fling(blast: Dictionary) -> void:
+	var from: Vector2 = _flat(global_position - blast.at)
+	if from.length() < 0.2:
+		from = Vector2.from_angle(randf() * TAU)
+	var d := from.normalized()
+	var power := 1.0 - clampf(from.length() / float(blast.r), 0.0, 1.0)  # dichter bij de knal = verder weg
+	var dist := 2.6 + 3.8 * power  # meter in de lucht
+	var start := global_position
+	var land := Vector2(start.x, start.z) + d * dist
+	# niet door een muur of de bunker heen vliegen
+	var q := PhysicsRayQueryParameters3D.create(start + Vector3.UP * 1.0, Vector3(land.x, 1.0, land.y), Bullet.MASK_WALL | Bullet.MASK_BUNKER)
+	var r := get_world_3d().direct_space_state.intersect_ray(q)
+	if not r.is_empty():
+		var hit_pos: Vector3 = r.position
+		land = Vector2(hit_pos.x, hit_pos.z) - d * 0.6
+		dist = maxf(0.5, (land - Vector2(start.x, start.z)).length())
+	rotation.y = atan2(-d.x, -d.y)  # kijkt naar de knal terwijl hij achteruit vliegt
+	face = rotation.y
+	model.play("explosie_dood", 0.05)
+	var tw := create_tween()
+	tw.tween_method(_fling_step.bind(start, d, dist), 0.0, FLING_AIR + FLING_SLIDE, FLING_AIR + FLING_SLIDE)
+
+
+func _fling_step(t: float, start: Vector3, d: Vector2, dist: float) -> void:
+	if not is_inside_tree():
+		return
+	var along: float
+	var h := 0.0
+	if t <= FLING_AIR:
+		along = dist * 0.85 * (t / FLING_AIR)
+		var u := t / FLING_AIR
+		h = 4.0 * 0.68 * u * (1.0 - u)  # boog met een top van ~0,7 m
+	else:
+		var s := (t - FLING_AIR) / FLING_SLIDE
+		along = dist * (0.85 + 0.15 * (1.0 - (1.0 - s) * (1.0 - s)))  # uitglijden, steeds trager
+	global_position = Vector3(start.x + d.x * along, h, start.z + d.y * along)

@@ -3,11 +3,14 @@ extends SceneTree
 ## godot --headless --path . -s tests/bouw_test.gd --fixed-fps 60
 
 var main: Node
+# Klassen met autoload-verwijzingen worden pas tijdens het draaien geladen: bij het compileren van een -s test bestaan de autoloads nog niet.
+var _build_mode: Script
 var frames := 0
 var kz: Variant
 
 
 func _initialize() -> void:
+	_build_mode = load("res://scripts/build_mode.gd")
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 
@@ -21,7 +24,7 @@ func _process(_d: float) -> bool:
 		main.begin()
 		g.player.global_position = Vector3(-6, 0, -9)
 	if frames == 8:
-		var bm = main.get_node("Hud").get_children().filter(func(n): return n is BuildMode)[0]
+		var bm = main.get_node("Hud").get_children().filter(func(n): return n.get_script() == _build_mode)[0]
 		bm._enter()
 		print("bouwmodus: ", g.build_mode)
 		var b = g.builds

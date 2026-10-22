@@ -107,6 +107,7 @@ func _warm_up() -> void:
 
 
 func _start_prep() -> void:
+	Barrel.populate(self)  # opgeblazen vaten komen elke golf terug
 	Game.wave += 1
 	Game.state = "prep"
 	Game.prep_t = GameSettings.prep_time()
@@ -116,6 +117,7 @@ func _start_prep() -> void:
 func start_wave() -> void:
 	if Game.state != "prep":
 		return
+	PerfMonitor.note("golf %d begint" % Game.wave)
 	Game.state = "play"
 	Game.defs.refill()
 	queue = Data.build_wave(Game.wave)
@@ -146,6 +148,7 @@ func _process(delta: float) -> void:
 
 
 func _spawn(kind: String) -> void:
+	PerfMonitor.note("vijand gespawnd")
 	var e := ENEMY.instantiate()
 	e.setup(kind, Game.wave)
 	if kind == "rocket" and not Game.rocket_seen:

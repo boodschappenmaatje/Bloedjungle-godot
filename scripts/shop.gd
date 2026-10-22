@@ -71,7 +71,7 @@ func _layout() -> void:
 	var s := size
 	_open_btn.size = Vector2(110, 32)
 	_open_btn.position = Vector2(s.x * 0.5 + 2.0, 132)
-	_swap_btn.position = Vector2(s.x - 64.0 - 68.0 - 23.0, s.y - 150.0 - 38.0 - 23.0)
+	_swap_btn.position = Vector2(s.x - 16.0 - 54.0 + 4.0, s.y - (230.0 if s.x < s.y else 16.0) - 54.0 - 62.0 - 54.0)  # boven het knoppenraster (combat_buttons.gd)
 
 
 ## Met je vinger (of muis) de lijst met kaarten verslepen; de scrollbalk hoeft niet.
@@ -121,18 +121,18 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		cycle_weapon()
 	elif k >= KEY_1 and k <= KEY_6 and Game.state != "shop":
 		var id: String = Data.WEAPON_ORDER[k - KEY_1]
-		if Game.owned.has(id):
+		if Game.carries(id):
 			Game.cur = id
 
 
 func _sync() -> void:
 	_open_btn.visible = Game.state == "prep" and not Game.build_mode
 	_swap_btn.visible = (Game.state == "play" or Game.state == "prep") and not Game.build_mode
-	_swap_btn.disabled = Game.owned.size() < 2
+	_swap_btn.disabled = Game.loadout.size() < 2
 
 
 func cycle_weapon() -> void:
-	var order: Array = Data.WEAPON_ORDER.filter(func(id): return Game.owned.has(id))
+	var order: Array = Data.WEAPON_ORDER.filter(func(id): return Game.carries(id))
 	if order.size() < 2:
 		return
 	Game.cur = order[(order.find(Game.cur) + 1) % order.size()]
@@ -571,15 +571,28 @@ func _detail(id: String) -> Control:
 		tags.append("%d kogels per schot" % base.pellets)
 	if not tags.is_empty():
 		v.add_child(UI.label(" · ".join(tags).to_upper(), UI.body(700, 1), 11, UI.BRASS))
-	if own:
+	_weapon_buttons(v, id)
+	return pc
+
+
+## Uitrusten, meenemen, terugzetten of kopen. Gekochte wapens blijven van jou; in de loadout passen er Game.LOADOUT_MAX.
+func _weapon_buttons(v: VBoxContainer, id: String) -> void:
+	var base: Dictionary = Data.WEAPONS[id]
+	if Game.carries(id):
 		var equipped: bool = Game.cur == id
 		v.add_child(_buy_button("Uitgerust" if equipped else "Uitrusten", not equipped, func(): Game.cur = id))
+		v.add_child(_buy_button("Terug in wapenkamer", Game.loadout.size() > 1, func(): Game.leave_weapon(id), 30.0, 0.0, 13))
+	elif Game.owned.has(id):
+		var full := Game.loadout_full()
+		v.add_child(_buy_button("Loadout vol (%d/%d) · zet er eerst een terug" % [Game.loadout.size(), Game.LOADOUT_MAX] if full else "Neem mee (%d/%d)" % [Game.loadout.size(), Game.LOADOUT_MAX], not full, func():
+			if Game.take_weapon(id):
+				Game.cur = id))
 	else:
 		v.add_child(_buy_button("Koop · %s" % UI.nl(base.price), Game.points >= base.price, func():
 			if Game.buy(base.price):
 				Game.owned[id] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": base.mag}
-				Game.cur = id))
-	return pc
+				if Game.take_weapon(id):
+					Game.cur = id))
 
 
 ## Een regel met naam, balk, waarde en verschil. better_low: lager is beter (herladen).
@@ -642,14 +655,7 @@ func _weapon_card(id: String) -> void:
 	var sp := Control.new()
 	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(sp)
-	if own:
-		var equipped: bool = Game.cur == id
-		v.add_child(_buy_button("Uitgerust" if equipped else "Uitrusten", not equipped, func(): Game.cur = id))
-	else:
-		v.add_child(_buy_button("Koop · %s" % UI.nl(w.price), Game.points >= w.price, func():
-			if Game.buy(w.price):
-				Game.owned[id] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": Data.WEAPONS[id].mag}
-				Game.cur = id))
+	_weapon_buttons(v, id)
 
 
 func _upgrade_card(id: String) -> void:
@@ -797,3 +803,6 @@ func _soldier_cards() -> void:
 			Game.player.hp += 25.0)
 	_tiered("Kogelvrij vest", "8% minder schade per niveau.", "armor", 5, 350, "Koop", func(): pass)
 	_tiered("Conditie", "7% sneller lopen.", "speed", 4, 300, "Train", func(): pass)
+	_plain_card("Handgranaat", "Gooi 11 meter ver, grote ontploffing. Werp ze met de granaatknop (G).", "%d / %d" % [Game.grenades, Game.GRENADE_MAX], 0, 0, "Koop · 120", Game.points >= 120 and Game.grenades < Game.GRENADE_MAX, func():
+		if Game.grenades < Game.GRENADE_MAX and Game.buy(120):
+			Game.grenades += 1)

@@ -335,6 +335,9 @@ static func _in_river(p: Vector3) -> bool:
 	var hp := p - Data.HUIS_POS
 	if absf(hp.x) < 10.0 and hp.z > -14.0 and hp.z < 17.0:
 		return true  # het woonhuis met tuin en een open plek ervoor (ook geen kruinen tussen camera en huis)
+	var wp := p - Data.WINKEL_POS
+	if wp.x > -6.0 and wp.x < 8.0 and wp.z > -9.0 and wp.z < 16.0:
+		return true  # de winkel, het steegje naar het woonhuis en de straat ervoor
 	var front := Data.HUIS_POS.z + 3.5
 	if p.z < Data.river_z(Data.BRIDGE_X) and p.z > front:
 		var t := clampf((Data.river_z(Data.BRIDGE_X) - p.z) / (Data.river_z(Data.BRIDGE_X) - front), 0.0, 1.0)

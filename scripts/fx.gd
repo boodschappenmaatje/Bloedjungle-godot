@@ -306,39 +306,26 @@ static func explosion(parent: Node, pos: Vector3, scale := 1.0, chunks: Array = 
 	PerfMonitor.note("explosie")
 	_fireball(parent, pos, scale)
 	_debris(parent, pos, scale, chunks)
-	var sparks := CPUParticles3D.new()
-	sparks.amount = 22
-	sparks.lifetime = 0.9
-	sparks.local_coords = false
-	sparks.direction = Vector3.UP
-	sparks.spread = 70.0
-	sparks.initial_velocity_min = 4.0 * scale
-	sparks.initial_velocity_max = 10.0 * scale
-	sparks.gravity = Vector3(0, -16, 0)
-	sparks.color = Color(1.0, 0.7, 0.25)
-	var sm := BoxMesh.new()
-	sm.size = Vector3(0.06, 0.06, 0.06)
-	var smat := StandardMaterial3D.new()
-	smat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	smat.albedo_color = Color(1.0, 0.75, 0.3)
-	sm.material = smat
-	sparks.mesh = sm
-	for p in [sparks]:
+	# vonkenregen: lichtstrepen die langs hun vliegrichting wijzen, en aarde die wegspat
+	var sparks := _spray(48, 1.2, Vector3(0.025, 0.24, 0.025), Color(1.0, 0.8, 0.35), 6.0 * scale, 15.0 * scale, 72.0, 16.0, true)
+	var dirt := _spray(30, 1.3, Vector3(0.11, 0.11, 0.11), Color(0.2, 0.14, 0.09), 3.0 * scale, 8.0 * scale, 80.0, 18.0, false)
+	for p in [sparks, dirt]:
 		p.one_shot = true
-		p.explosiveness = 0.9
+		p.explosiveness = 0.95
 		parent.add_child(p)
-		p.global_position = pos + Vector3.UP * 0.4
+		p.global_position = pos + Vector3.UP * 0.3
 		p.emitting = true
 		parent.get_tree().create_timer(4.5).timeout.connect(p.queue_free)
 	var l := OmniLight3D.new()
 	l.light_color = Color(1.0, 0.6, 0.25)
-	l.light_energy = 8.0
-	l.omni_range = 14.0 * scale
+	l.light_energy = 14.0
+	l.omni_range = 20.0 * scale
 	l.shadow_enabled = false
 	parent.add_child(l)
 	l.global_position = pos + Vector3.UP * 1.2
 	var tw := l.create_tween()
-	tw.tween_property(l, "light_energy", 0.0, 0.5)
+	tw.tween_property(l, "light_energy", 5.0, 0.12)
+	tw.tween_property(l, "light_energy", 0.0, 0.9)
 	tw.tween_callback(l.queue_free)
 	decal(parent, Vector3(pos.x, 0.0, pos.z), Vector3.UP, "scorch", 3.6 * scale, 80.0)
 
@@ -396,6 +383,7 @@ static func _fireball(parent: Node, pos: Vector3, scale: float) -> void:
 	if not _fire_quad.has(v):
 		var q := QuadMesh.new()
 		q.size = def.size
+		q.center_offset = Vector3(0.0, def.size.y * 0.5, 0.0)  # draaipunt = de voet, zodat de vuurbal niet wegkantelt van de grond
 		_fire_quad[v] = q
 	var size := 1.2 * scale * randf_range(0.92, 1.1)  # in Blender is de vuurbal zo'n 4 m breed; bij schaal 1 wordt hij ~5 m
 	var m := ShaderMaterial.new()
@@ -411,7 +399,7 @@ static func _fireball(parent: Node, pos: Vector3, scale: float) -> void:
 	mi.scale = Vector3(size, size, size)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(mi)
-	mi.global_position = pos + Vector3(0.0, def.size.y * 0.5 * size - 0.05, 0.0)  # voet van het beeld = grond
+	mi.global_position = pos + Vector3(0.0, -0.05, 0.0)  # voet van het beeld = grond
 	_fireballs_live += 1
 	var tw := mi.create_tween()
 	tw.tween_method(func(t: float): m.set_shader_parameter("progress", t), 0.0, 1.0, FIREBALL_TIME * (0.6 + 0.4 * scale))
@@ -434,6 +422,7 @@ static func flame(parent: Node3D, local_pos: Vector3, height: float, light := tr
 	if _flame_quad == null:
 		_flame_quad = QuadMesh.new()
 		_flame_quad.size = Vector2(FLAME_FRAME, FLAME_FRAME)
+		_flame_quad.center_offset = Vector3(0.0, FLAME_FRAME * 0.5, 0.0)  # draaipunt = de voet van de vlam: hij blijft in het vat staan
 	var k := height / FLAME_HEIGHT
 	var root := Node3D.new()
 	parent.add_child(root)
@@ -450,7 +439,6 @@ static func flame(parent: Node3D, local_pos: Vector3, height: float, light := tr
 	mi.mesh = _flame_quad
 	mi.material_override = m
 	mi.scale = Vector3(k, k, k)
-	mi.position = Vector3(0.0, FLAME_FRAME * 0.5 * k, 0.0)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(mi)
 	var tw := root.create_tween().set_loops()
@@ -458,14 +446,14 @@ static func flame(parent: Node3D, local_pos: Vector3, height: float, light := tr
 	if light:
 		var l := OmniLight3D.new()
 		l.light_color = Color(1.0, 0.55, 0.2)
-		l.light_energy = 1.6
-		l.omni_range = 4.0 + height * 2.0
+		l.light_energy = 3.2
+		l.omni_range = 6.0 + height * 2.5
 		l.shadow_enabled = false
 		l.position = Vector3(0.0, height * 0.5, 0.0)
 		root.add_child(l)
 		var lt := l.create_tween().set_loops()
-		lt.tween_property(l, "light_energy", 0.9, 0.11)
-		lt.tween_property(l, "light_energy", 1.9, 0.15)
+		lt.tween_property(l, "light_energy", 1.9, 0.11)
+		lt.tween_property(l, "light_energy", 3.8, 0.15)
 	return root
 
 
@@ -518,7 +506,7 @@ static func _chunk(name: String) -> Mesh:
 
 ## Rondvliegende brokstukken uit Blender: elk stuk vliegt in een boog, tolt om alle assen en blijft even liggen.
 static func _debris(parent: Node, pos: Vector3, scale: float, names: Array) -> void:
-	var count := 6 + roundi(5.0 * scale)
+	var count := 8 + roundi(8.0 * scale)
 	for i in count:
 		var mesh := _chunk(names[i % names.size()])
 		if mesh == null:
@@ -538,8 +526,16 @@ static func _debris(parent: Node, pos: Vector3, scale: float, names: Array) -> v
 		var t_land := (v.y + sqrt(v.y * v.y + 2.0 * g * start.y)) / g
 		mi.global_position = start
 		var rest := Vector3(randf() * TAU, randf() * TAU, randf() * TAU)
+		var trail: CPUParticles3D = null
+		if sc > 1.0 and i % 2 == 0:
+			trail = _smoke_trail()  # grotere stukken trekken een rookspoor
+			mi.add_child(trail)
 		var tw := mi.create_tween()
 		tw.tween_method(_fly.bind(mi, start, v, spin, rest, g, t_land), 0.0, t_land, t_land)
+		if trail != null:
+			tw.tween_callback(func():
+				if is_instance_valid(trail):
+					trail.emitting = false)
 		tw.tween_interval(5.0)  # brokstukken blijven even liggen
 		tw.tween_property(mi, "scale", Vector3.ZERO, 0.5)
 		tw.tween_callback(mi.queue_free)
@@ -551,3 +547,62 @@ static func _fly(t: float, mi: MeshInstance3D, start: Vector3, v: Vector3, spin:
 	var p := start + Vector3(v.x * t, v.y * t - 0.5 * g * t * t, v.z * t)
 	mi.global_position = Vector3(p.x, maxf(p.y, 0.03), p.z)
 	mi.rotation = rest + spin * minf(t, t_land)
+
+
+## Opstijgende vonken (brandend vat): kleine lichtstrepen die omhoog vliegen en terugvallen. Geeft de knoop terug.
+static func embers(parent: Node3D, local_pos: Vector3) -> CPUParticles3D:
+	var p := CPUParticles3D.new()
+	p.amount = 14
+	p.lifetime = 1.1
+	p.local_coords = false
+	p.direction = Vector3.UP
+	p.spread = 40.0
+	p.initial_velocity_min = 1.5
+	p.initial_velocity_max = 4.2
+	p.gravity = Vector3(0.0, -6.0, 0.0)
+	p.particle_flag_align_y = true  # de streep wijst langs de vliegrichting
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.025, 0.14, 0.025)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = Color(1.0, 0.65, 0.2)
+	bm.material = mat
+	p.mesh = bm
+	p.color_ramp = _ramp([Color(1.0, 0.85, 0.4, 1.0), Color(1.0, 0.4, 0.08, 0.8), Color(0.5, 0.1, 0.02, 0.0)], [0.0, 0.5, 1.0])
+	parent.add_child(p)
+	p.position = local_pos
+	p.emitting = true
+	return p
+
+
+## Een uitbarsting van deeltjes uit één punt. streak = de deeltjes wijzen langs hun vliegrichting (vonken als lichtstreepjes).
+static func _spray(amount: int, life: float, box: Vector3, color: Color, vmin: float, vmax: float, spread: float, gravity: float, streak: bool) -> CPUParticles3D:
+	var p := CPUParticles3D.new()
+	p.amount = amount
+	p.lifetime = life
+	p.local_coords = false
+	p.direction = Vector3.UP
+	p.spread = spread
+	p.initial_velocity_min = vmin
+	p.initial_velocity_max = vmax
+	p.gravity = Vector3(0.0, -gravity, 0.0)
+	p.particle_flag_align_y = streak
+	var bm := BoxMesh.new()
+	bm.size = box
+	var mat := StandardMaterial3D.new()
+	if streak:
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.albedo_color = color
+	bm.material = mat
+	p.mesh = bm
+	if streak:
+		p.color_ramp = _ramp([Color(1.0, 0.9, 0.5, 1.0), Color(1.0, 0.5, 0.1, 1.0), Color(0.6, 0.15, 0.03, 0.0)], [0.0, 0.5, 1.0])
+	return p
+
+
+static func _smoke_trail() -> CPUParticles3D:
+	var p := _puff(10, 0.9, 0.5, false, _ramp([Color(0.12, 0.11, 0.1, 0.0), Color(0.18, 0.17, 0.16, 0.6), Color(0.3, 0.3, 0.3, 0.0)], [0.0, 0.15, 1.0]), Vector2(0.1, 0.3), 1.6)
+	p.one_shot = false
+	p.local_coords = false
+	p.emitting = true
+	return p

@@ -33,6 +33,7 @@ var alert_t := 0.0
 var flank_left := 7.0
 var gate_z := 0.0  # voorkeurspoort (z) om de bunker van twee kanten te nemen; 0 = klaar of niet van toepassing
 var retreated := false
+var stun_t := 0.0  # geschrokken van een explosie: even stilstaan
 
 
 func setup(kind: String, wave: int) -> void:
@@ -62,6 +63,12 @@ func _physics_process(delta: float) -> void:
 	if dead or Game.state == "over":
 		if not dead:
 			model.play("stil")
+		return
+	if stun_t > 0.0:
+		stun_t -= delta
+		velocity = Vector3.ZERO
+		if stun_t <= 0.0:
+			model.play("stil", 0.15)
 		return
 	var player = Game.player
 	if _is_far(player):
@@ -406,6 +413,25 @@ func _die(dir: Vector3) -> void:
 	else:
 		_fling(blast)
 	get_tree().create_timer(8.0).timeout.connect(queue_free)
+
+
+## Geschrokken van een explosie vlakbij: even bevriezen, daarna (schutters) achter het dichtstbijzijnde gebouw of muur duiken.
+func flinch(from: Vector3) -> void:
+	if dead or type == "heavy" or stun_t > 0.0:
+		return
+	stun_t = randf_range(0.45, 0.85)
+	var d := _flat(global_position - from)
+	if d.length() > 0.1:
+		rotation.y = atan2(-d.x, -d.y)  # draait naar de knal
+		face = rotation.y
+	model.play("geraakt", 0.05, 1.8)
+	if not t.get("melee", false) and cover_cd <= 0.0:
+		var c: Variant = _find_cover(from)
+		if c != null:
+			mode = "cover"
+			mode_t = stun_t + randf_range(1.2, 2.0)
+			cover_pt = c
+			cover_cd = 6.0
 
 
 const FLING_AIR := 0.55  # seconden in de lucht; de animatie explosie_dood landt rond dat moment (frame 16 van 30 per s)

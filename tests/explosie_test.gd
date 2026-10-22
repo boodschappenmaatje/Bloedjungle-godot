@@ -89,6 +89,19 @@ func _process(_dt: float) -> bool:
 	if frames == 300:
 		# 4. het brandende vat is door zijn lont ontploft (na 2,6 tot 3,6 s)
 		_check(not is_instance_valid(v1) or v1.is_queued_for_deletion() or v1.get("lit"), "brandend vat ontploft niet vanzelf")
+	if frames == 302:
+		# 4b. een vijand net buiten de straal schrikt (stilstaan) en zoekt dekking; een zware soldaat niet
+		var near: Node = _enemy(Vector3(60, 0, 60))
+		var heavy: Node = load("res://scenes/enemy.tscn").instantiate()
+		heavy.call("setup", "heavy", 1)
+		heavy.position = Vector3(60, 0, 62)
+		main.add_child(heavy)
+		var gm = root.get_node("Game")
+		near.set("cover_cd", 0.0)
+		gm.call("note_blast", Vector3(60, 0, 52), 5.5)  # 8 m en 10 m van de knal: buiten de straal, binnen het schrikbereik
+		_check(float(near.get("stun_t")) > 0.0, "vijand net buiten de straal schrikt niet")
+		_check(float(heavy.get("stun_t")) == 0.0, "zware soldaat laat zich toch storen")
+		_check(str(near.get("model").get("current")) == "geraakt", "geschrokken vijand speelt geen schrikanimatie")
 	if frames == 305:
 		# 5. kettingreactie: een vat dat door een ander wordt aangestoken is 'chained'
 		var a: Node = _barrel(Vector3(10, 0, 60))

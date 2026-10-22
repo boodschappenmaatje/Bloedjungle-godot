@@ -56,6 +56,12 @@ func note_blast(at: Vector3, radius: float) -> void:
 	blast_at = at
 	blast_r = radius
 	blast_t = Time.get_ticks_msec()
+	# wie er net buiten de straal bij staat schrikt en zoekt dekking
+	for e in enemies:
+		if is_instance_valid(e) and not e.dead:
+			var d: float = e.global_position.distance_to(at)
+			if d > radius + 0.5 and d < radius * 2.4 + 3.0:
+				e.flinch(at)
 
 
 ## Was er net (binnen een kwart seconde) een explosie waar iemand op deze plek binnen de straal viel? Geeft {at, r} of een leeg woordenboek.

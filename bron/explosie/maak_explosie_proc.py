@@ -111,7 +111,7 @@ P = geo.outputs["Position"]
 Tt = val("t", [(0, 0.0), (1, 1.0)])
 R_fire = val("fire_radius", [(0, 0.35), (0.08, 1.9 * WIDE), (0.3, 2.5 * WIDE), (1, 2.9 * WIDE)])
 Z_fire = val("fire_height", [(0, 1.0), (0.3, 1.0 + 0.9 * HIGH), (1, 1.0 + 2.2 * HIGH)])
-E_fire = val("fire_power", [(0, 0.0), (0.03, 1.0), (0.25, 0.7), (0.6, 0.12), (1, 0.0)])
+E_fire = val("fire_power", [(0, 0.0), (0.03, 1.0), (0.18, 0.6), (0.42, 0.1), (1, 0.0)])
 R_smoke = val("smoke_radius", [(0, 0.2), (0.1, 1.1), (0.4, 2.0), (1, 2.6)])
 Z_smoke = val("smoke_height", [(0, 1.0), (0.15, 1.0 + 1.0 * HIGH), (0.5, 1.0 + 2.8 * HIGH), (1, 1.0 + 4.3 * HIGH)])
 D_smoke = val("smoke_density", [(0, 0.0), (0.06, 0.9), (0.7, 0.8), (1, 0.0)])
@@ -188,12 +188,12 @@ ring = math('MULTIPLY', math('MULTIPLY', ring_r, ring_z), math('MULTIPLY', math(
 # --- samenstellen
 smoke_d = math('MULTIPLY', math('MULTIPLY', smoke, D_smoke), 9.0)
 fire_d = math('MULTIPLY', math('MULTIPLY', fire_dens, E_fire), 4.0)  # vuur dooft uit en geeft de rook de ruimte
-ring_d = math('MULTIPLY', math('MULTIPLY', ring, D_ring), 2.2)
+ring_d = math('MULTIPLY', math('MULTIPLY', ring, D_ring), 0.0)  # de stofring staat uit: geeft een harde lijn aan de grond; het spel tekent zelf stof
 dens = math('ADD', math('ADD', smoke_d, fire_d), ring_d)
 
 heat = math('MULTIPLY', core, E_fire)
 pocket = math('ADD', math('MULTIPLY', math('POWER', n_f, 2.0), 4.0), 0.25)
-emis = math('MULTIPLY', math('MULTIPLY', math('MULTIPLY', fire_dens, E_fire), pocket), 9.0)
+emis = math('MULTIPLY', math('MULTIPLY', math('MULTIPLY', fire_dens, E_fire), pocket), 6.5)
 ramp = new("ShaderNodeValToRGB")
 ramp.color_ramp.elements[0].position = 0.0
 ramp.color_ramp.elements[0].color = (0.55, 0.05, 0.005, 1)

@@ -11,9 +11,9 @@ const CLUSTERS := 9
 const LAYER := 2  # hetzelfde als muren: kogels en soldaten botsen ertegen, en kogels roepen hit() aan
 
 static var _spots: Array[Vector3] = []
-static var _body_mat: StandardMaterial3D
-static var _band_mat: StandardMaterial3D
-static var _sign_mat: StandardMaterial3D
+const VAT := preload("res://assets/fx/vat.glb")  # bron/explosie/maak_vat.py: drie vaten met deuken, roest en een waarschuwingsband
+static var _vat_mat: StandardMaterial3D
+static var _lid_mat: StandardMaterial3D
 
 const BURN_TIME := Vector2(2.6, 3.6)  # seconden tussen "gaat lekken en branden" en ontploffen
 
@@ -24,6 +24,8 @@ var chained := false  # door een ander vat aangestoken: kleinere vuurbal
 var burning := false  # onder de helft: vlam, gloed en een tikkende lont
 var burn_t := 0.0
 var _body: MeshInstance3D
+var _lid: MeshInstance3D
+var _own_lid: StandardMaterial3D
 var _own_mat: StandardMaterial3D
 var _flame: Node3D
 var _wobble: Tween
@@ -101,51 +103,25 @@ func _ready() -> void:
 
 
 func _build() -> void:
-	if _body_mat == null:
-		_body_mat = _mat(Color(0.62, 0.1, 0.07), 0.55, 0.45)
-		_band_mat = _mat(Color(0.14, 0.13, 0.12), 0.7, 0.5)
-		_sign_mat = _mat(Color(0.95, 0.78, 0.12), 0.8, 0.0)
-	var body := MeshInstance3D.new()
-	_body = body
-	var m := CylinderMesh.new()
-	m.top_radius = 0.38
-	m.bottom_radius = 0.38
-	m.height = 0.96
-	m.radial_segments = 14
-	m.rings = 1
-	body.mesh = m
-	body.material_override = _body_mat
-	body.position.y = 0.5
-	add_child(body)
-	for y in [0.17, 0.5, 0.83]:
-		var band := MeshInstance3D.new()
-		var bm := CylinderMesh.new()
-		bm.top_radius = 0.395
-		bm.bottom_radius = 0.395
-		bm.height = 0.05
-		bm.radial_segments = 14
-		bm.rings = 1
-		band.mesh = bm
-		band.material_override = _band_mat
-		band.position.y = y
-		add_child(band)
-	var top := MeshInstance3D.new()  # deksel met rand
-	var tm := CylinderMesh.new()
-	tm.top_radius = 0.34
-	tm.bottom_radius = 0.34
-	tm.height = 0.03
-	tm.radial_segments = 14
-	top.mesh = tm
-	top.material_override = _band_mat
-	top.position.y = 0.985
-	add_child(top)
-	var tag := MeshInstance3D.new()  # gele waarschuwingsstreep
-	var qm := QuadMesh.new()
-	qm.size = Vector2(0.34, 0.24)
-	tag.mesh = qm
-	tag.material_override = _sign_mat
-	tag.position = Vector3(0.0, 0.5, 0.385)
-	add_child(tag)
+	if _vat_mat == null:
+		# de hoekkleuren (rood, roest, geel-zwarte band) komen uit het model; het materiaal geeft alleen glans
+		_vat_mat = _mat(Color.WHITE, 0.55, 0.2)
+		_vat_mat.vertex_color_use_as_albedo = true
+		_lid_mat = _mat(Color.WHITE, 0.6, 0.1)
+		_lid_mat.vertex_color_use_as_albedo = true
+	var n := (absi(int(spot.x * 7.0 + spot.z * 13.0)) % 3) + 1  # drie varianten met andere deuken en roest
+	var holder := VAT.instantiate()
+	var body := holder.find_child("Vat%d" % n, true, false) as MeshInstance3D
+	var lid := holder.find_child("Deksel%d" % n, true, false) as MeshInstance3D
+	_body = MeshInstance3D.new()
+	_body.mesh = body.mesh
+	_body.material_override = _vat_mat
+	add_child(_body)
+	_lid = MeshInstance3D.new()
+	_lid.mesh = lid.mesh
+	_lid.material_override = _lid_mat
+	add_child(_lid)
+	holder.queue_free()
 
 
 static func _mat(c: Color, rough: float, metal: float) -> StandardMaterial3D:
@@ -187,23 +163,33 @@ func _shake(amount: float) -> void:
 	_wobble.parallel().tween_property(self, "rotation:z", 0.0, 0.1)
 
 
-## Gloed van binnenuit: eigen materiaal met een rode, steeds fellere gloed (0 = niets, 1 = wit-oranje).
+## Hitte: het vat wordt donkerder (verkoold) met een heel zachte rode gloed; de opening bovenop gloeit oranje (daar brandt het).
+## amount: 0 = niets, 1 = zwaar in brand.
 func _set_glow(amount: float) -> void:
 	if _body == null:
 		return
 	if _own_mat == null:
-		_own_mat = _body_mat.duplicate() as StandardMaterial3D
+		_own_mat = _vat_mat.duplicate() as StandardMaterial3D
 		_own_mat.emission_enabled = true
 		_body.material_override = _own_mat
-	_own_mat.emission = Color(1.0, 0.18 + 0.4 * amount, 0.04)
-	_own_mat.emission_energy_multiplier = 0.4 + 2.6 * amount
+		_own_lid = _lid_mat.duplicate() as StandardMaterial3D
+		_own_lid.emission_enabled = true
+		_lid.material_override = _own_lid
+	var a := clampf(amount, 0.0, 1.0)
+	_own_mat.albedo_color = Color.WHITE.lerp(Color(0.3, 0.22, 0.2), a)  # verkolen
+	_own_mat.emission = Color(1.0, 0.2, 0.04)
+	_own_mat.emission_energy_multiplier = 0.05 + 0.45 * a * a
+	_own_lid.emission = Color(1.0, 0.38, 0.06)
+	_own_lid.emission_energy_multiplier = 0.4 + 2.6 * a
 
 
 ## Onder de helft: het vat lekt een vlam en ontploft na enkele seconden vanzelf (ook als je niet meer schiet).
 func _start_burning() -> void:
 	burning = true
 	burn_t = randf_range(BURN_TIME.x, BURN_TIME.y)
-	_flame = Fx.flame(self, Vector3(0.0, 0.95, 0.0), 1.6)
+	_flame = Fx.flame(self, Vector3(0.0, 0.95, 0.0), 1.5)
+	Fx.burning(self, global_position + Vector3(0.0, 0.95, 0.0), false)  # zwarte rook
+	Fx.embers(self, Vector3(0.0, 0.98, 0.0))  # opstijgende vonken
 	PerfMonitor.note("vat brandt")
 
 
@@ -239,7 +225,7 @@ func _blow() -> void:
 	Game.barrels.erase(self)
 	var parent := get_parent()
 	Game.note_blast(at, RADIUS)
-	Fx.explosion(parent, at, 0.85 if chained else 1.15, Fx.CHUNKS_BARREL)
+	Fx.explosion(parent, at, 0.6 if chained else 0.85, Fx.CHUNKS_BARREL)  # kleiner dan een raket: een vat is geen bom
 	Game.alert(at, 30.0, 6.0)
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e):

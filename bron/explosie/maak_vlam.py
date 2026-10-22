@@ -95,8 +95,8 @@ n_f = rm.outputs[0]
 
 # kegelvorm: smal boven, breed onder; ruis verschuift de rand zijwaarts en vreet de top weg
 h = math_('DIVIDE', Z, 2.4)
-radius = math_('MULTIPLY', math_('MAXIMUM', math_('SUBTRACT', 1.0, math_('POWER', math_('MAXIMUM', h, 0.0), 1.3)), 0.0), 0.5)
-sway = math_('MULTIPLY', math_('SUBTRACT', n_f, 0.5), math_('MULTIPLY', math_('ADD', h, 0.25), 2.3))
+radius = math_('MULTIPLY', math_('MAXIMUM', math_('SUBTRACT', 1.0, math_('POWER', math_('MAXIMUM', h, 0.0), 0.8)), 0.0), 0.62)  # breed: de vlam vult de hele opening van het vat
+sway = math_('MULTIPLY', math_('SUBTRACT', n_f, 0.5), math_('MULTIPLY', math_('ADD', h, 0.2), 2.8))
 rr = math_('POWER', math_('ADD', math_('MULTIPLY', X, X), math_('MULTIPLY', Y, Y)), 0.5)
 d = math_('DIVIDE', rr, math_('MAXIMUM', radius, 0.02))
 body = math_('SUBTRACT', 1.0, math_('ADD', d, sway))
@@ -105,7 +105,7 @@ dens_raw = smooth(flick, 0.05, 0.5)
 above = smooth(math_('SUBTRACT', 1.0, h), 0.0, 0.35)  # boven de top uitlopen
 dens = math_('MULTIPLY', math_('MULTIPLY', dens_raw, above), 5.0)
 
-heat = math_('MULTIPLY', smooth(math_('SUBTRACT', 1.0, math_('ADD', d, math_('MULTIPLY', h, 1.0))), 0.0, 1.0), 0.75)
+heat = math_('MULTIPLY', smooth(math_('SUBTRACT', 1.0, math_('ADD', d, math_('MULTIPLY', h, 1.1))), 0.0, 1.0), 0.6)
 emis = math_('MULTIPLY', math_('MULTIPLY', dens_raw, above), 16.0)
 ramp = new("ShaderNodeValToRGB")
 ramp.color_ramp.elements[0].position = 0.0

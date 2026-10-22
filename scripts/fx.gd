@@ -379,8 +379,8 @@ static var _fire_quad: QuadMesh
 static func _fireball(parent: Node, pos: Vector3, scale: float) -> void:
 	if _fire_quad == null:
 		_fire_quad = QuadMesh.new()
-		_fire_quad.size = Vector2.ONE
-	var size := 8.0 * 0.62 * scale  # het beeld in Blender is 8 m breed; zo komt de vuurbal op ~5 m bij schaal 1
+		_fire_quad.size = Vector2(7.06, 7.92)  # het uitgesneden beeld, in meters zoals in Blender (voet = grond)
+	var size := 1.2 * scale  # in Blender is de vuurbal zo'n 4 m breed; bij schaal 1 wordt hij ~5 m
 	var m := ShaderMaterial.new()
 	m.shader = FLIPBOOK
 	m.set_shader_parameter("sheet", FIREBALL_SHEET)
@@ -393,7 +393,7 @@ static func _fireball(parent: Node, pos: Vector3, scale: float) -> void:
 	mi.scale = Vector3(size, size, size)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(mi)
-	mi.global_position = pos + Vector3(0.0, size * 0.5 - 0.05 * size, 0.0)  # voet van het beeld = grond
+	mi.global_position = pos + Vector3(0.0, 3.96 * size - 0.05, 0.0)  # voet van het beeld = grond
 	var tw := mi.create_tween()
 	tw.tween_method(func(v: float): m.set_shader_parameter("progress", v), 0.0, 1.0, FIREBALL_TIME * (0.6 + 0.4 * scale))
 	tw.tween_callback(mi.queue_free)

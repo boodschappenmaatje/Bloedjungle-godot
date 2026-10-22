@@ -39,6 +39,10 @@ void fragment() {
 	vec4 c = mix(cell(f0, UV), cell(f1, UV), fract(x));
 	float env = smoothstep(0.0, fade_in, progress) * (1.0 - smoothstep(1.0 - fade_out, 1.0, progress));
 	// Het vel is met rechte alpha opgeslagen: voor premultiplied blending eerst vermenigvuldigen
+	// de donkere stofring onderin (afgesneden door de grond in Blender) zacht laten uitlopen: geen harde rand
+	float low = smoothstep(0.78, 0.97, UV.y);
+	float dark = 1.0 - smoothstep(0.05, 0.3, dot(c.rgb, vec3(0.33)));
+	c.a *= 1.0 - low * (0.55 * dark + 0.45);
 	ALBEDO = c.rgb * c.a * bright * env;
 	ALPHA = c.a * env;
 }

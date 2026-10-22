@@ -164,7 +164,7 @@ func _sync() -> void:
 
 func _layout() -> void:
 	var bottom := size.y - (64.0 if size.x >= size.y else 8.0)  # staand onder de contextknoppen
-	var x := size.x - 16.0
+	var x := size.x - 16.0 - (128.0 if size.x >= size.y else 0.0)  # liggend: links van het knoppenraster (combat_buttons.gd)
 	if _place.visible:
 		_place.size = Vector2(BIG, BIG)
 		_place.position = Vector2(x - BIG, bottom - BIG)

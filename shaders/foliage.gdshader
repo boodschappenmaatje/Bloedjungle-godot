@@ -15,7 +15,11 @@ uniform float cut = 0.45;
 uniform float backlight = 0.5;
 uniform vec3 tint = vec3(0.82, 0.86, 0.74);
 
+uniform vec3 view_player = vec3(0.0);
+uniform vec3 view_camera = vec3(0.0);
+uniform bool fade_sightline = false;
 varying vec3 vcol;
+varying vec3 world_leaf;
 
 void vertex() {
 	vec3 wp = MODEL_MATRIX[3].xyz;
@@ -25,12 +29,23 @@ void vertex() {
 	VERTEX.z += cos(TIME * speed * 0.8 + ph * 1.3) * sway * 0.6 * m;
 	VERTEX.y += sin(TIME * speed * 1.7 + ph) * sway * 0.25 * m;
 	vcol = COLOR.rgb;
+	world_leaf = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }
 
 void fragment() {
 	vec3 base = pow(vcol, vec3(2.2));  // vertexkleuren zijn sRGB gekozen, de shader rekent lineair
 	vec4 t = use_tex ? texture(tex, UV) : vec4(1.0);
 	if (t.a < cut) discard;
+	if (fade_sightline) {
+		vec3 line = view_camera - view_player;
+		float param = clamp(dot(world_leaf - view_player, line) / max(dot(line,line), 0.01), 0.0, 1.0);
+		vec3 projected = view_player + line * param;
+		float dist = distance(world_leaf, projected);
+		if (param > 0.05 && param < 0.94 && dist < 2.6) {
+			float keep = mix(0.24, 1.0, smoothstep(0.8, 2.6, dist));
+			if (fract(sin(dot(FRAGCOORD.xy, vec2(12.9898,78.233))) * 43758.5453) > keep) discard;
+		}
+	}
 	if (use_tex) {
 		NORMAL_MAP = texture(nrm, UV).rgb;
 		NORMAL_MAP_DEPTH = nrm_depth;

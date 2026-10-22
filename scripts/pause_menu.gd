@@ -12,6 +12,7 @@ const ROWS := [
 	["treeshadow", "Boomschaduw", [["fake", "Vast"], ["real", "Echt"], ["off", "Uit"]]],
 	["hz", "Beeldsnelheid", [["60", "60 fps"], ["120", "120 fps"]]],
 	["fps", "FPS-teller", [["off", "Uit"], ["on", "Aan"]]],
+	["perf", "Prestatiemodus", [["off", "Uit"], ["on", "Aan"]]],
 ]
 const NOTES := {
 	"low": "Laag: geen schaduwen en een lichtere afbeelding, voor oudere telefoons.",

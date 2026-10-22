@@ -303,6 +303,7 @@ static func _ramp(cols: Array, offs: Array) -> Gradient:
 ## Explosie: vuurbal, rook, vonken, een lichtflits en een zwarte vlek op de grond.
 static func explosion(parent: Node, pos: Vector3, scale := 1.0, chunks: Array = CHUNKS_GROUND) -> void:
 	Sfx.play("boom", clampf(scale, 0.6, 1.2), pos)
+	PerfMonitor.note("explosie")
 	_fireball(parent, pos, scale)
 	_debris(parent, pos, scale, chunks)
 	var sparks := CPUParticles3D.new()

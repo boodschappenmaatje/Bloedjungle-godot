@@ -172,7 +172,7 @@ func _blow() -> void:
 	var at := global_position + Vector3.UP * 0.4
 	Game.barrels.erase(self)
 	var parent := get_parent()
-	Fx.explosion(parent, at, 1.15)
+	Fx.explosion(parent, at, 1.15, Fx.CHUNKS_BARREL)
 	Game.alert(at, 30.0, 6.0)
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e):

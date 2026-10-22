@@ -301,10 +301,10 @@ static func _ramp(cols: Array, offs: Array) -> Gradient:
 
 
 ## Explosie: vuurbal, rook, vonken, een lichtflits en een zwarte vlek op de grond.
-static func explosion(parent: Node, pos: Vector3, scale := 1.0) -> void:
+static func explosion(parent: Node, pos: Vector3, scale := 1.0, chunks: Array = CHUNKS_GROUND) -> void:
 	Sfx.play("boom", clampf(scale, 0.6, 1.2), pos)
-	var fire := _puff(18, 0.8, 3.6 * scale, true, _ramp([Color(1, 0.9, 0.5, 0.0), Color(1, 0.7, 0.2, 1.0), Color(0.8, 0.25, 0.05, 0.8), Color(0.2, 0.05, 0.02, 0.0)], [0.0, 0.12, 0.55, 1.0]), Vector2(1.5, 5.0) * scale, 0.9)
-	var smoke := _puff(14, 3.2, 3.2 * scale, false, _ramp([Color(0.15, 0.13, 0.12, 0.0), Color(0.2, 0.18, 0.16, 0.85), Color(0.28, 0.27, 0.26, 0.5), Color(0.35, 0.35, 0.35, 0.0)], [0.0, 0.1, 0.55, 1.0]), Vector2(1.0, 3.0) * scale, 2.2)
+	_fireball(parent, pos, scale)
+	_debris(parent, pos, scale, chunks)
 	var sparks := CPUParticles3D.new()
 	sparks.amount = 22
 	sparks.lifetime = 0.9
@@ -322,7 +322,7 @@ static func explosion(parent: Node, pos: Vector3, scale := 1.0) -> void:
 	smat.albedo_color = Color(1.0, 0.75, 0.3)
 	sm.material = smat
 	sparks.mesh = sm
-	for p in [fire, smoke, sparks]:
+	for p in [sparks]:
 		p.one_shot = true
 		p.explosiveness = 0.9
 		parent.add_child(p)
@@ -366,3 +366,86 @@ static func burning(parent: Node, pos: Vector3, flames: bool) -> Node3D:
 		tw.tween_property(l, "light_energy", 1.6, 0.13)
 		tw.tween_property(l, "light_energy", 3.0, 0.17)
 	return root
+
+
+const FIREBALL_SHEET := preload("res://assets/fx/explosie_vuur.png")  # bron/explosie: vuur en rook uit Blender, 6 x 6 beeldjes
+const FLIPBOOK := preload("res://shaders/flipbook.gdshader")
+const FIREBALL_FRAMES := 36
+const FIREBALL_TIME := 2.4  # seconden voor de hele beeldreeks
+static var _quad: QuadMesh
+
+
+## Vuurbal met rook: een beeldreeks uit Blender op een vlak dat naar de camera kijkt, met de voet op de grond.
+static func _fireball(parent: Node, pos: Vector3, scale: float) -> void:
+	if _quad == null:
+		_quad = QuadMesh.new()
+		_quad.size = Vector2.ONE
+	var size := 8.0 * 0.62 * scale  # het beeld in Blender is 8 m breed; zo komt de vuurbal op ~5 m bij schaal 1
+	var m := ShaderMaterial.new()
+	m.shader = FLIPBOOK
+	m.set_shader_parameter("sheet", FIREBALL_SHEET)
+	m.set_shader_parameter("cols", 6)
+	m.set_shader_parameter("rows", 6)
+	m.set_shader_parameter("frames", FIREBALL_FRAMES)
+	var mi := MeshInstance3D.new()
+	mi.mesh = _quad
+	mi.material_override = m
+	mi.scale = Vector3(size, size, size)
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
+	mi.global_position = pos + Vector3(0.0, size * 0.5 - 0.05 * size, 0.0)  # voet van het beeld = grond
+	var tw := mi.create_tween()
+	tw.tween_method(func(v: float): m.set_shader_parameter("progress", v), 0.0, 1.0, FIREBALL_TIME * (0.6 + 0.4 * scale))
+	tw.tween_callback(mi.queue_free)
+
+
+const DEBRIS_MODELS := preload("res://assets/fx/brokstukken.glb")  # bron/explosie: stukken vatblik, splinters, aardkluiten
+const CHUNKS_GROUND := ["Kluit1", "Kluit2", "Splinter1", "Splinter2"]
+const CHUNKS_BARREL := ["Plaat1", "Plaat2", "Plaat3", "Band", "Splinter1", "Kluit1"]
+static var _chunk_mesh := {}
+
+
+static func _chunk(name: String) -> Mesh:
+	if not _chunk_mesh.has(name):
+		var holder := DEBRIS_MODELS.instantiate()
+		var mi := holder.find_child(name, true, false) as MeshInstance3D
+		_chunk_mesh[name] = mi.mesh if mi != null else null
+		holder.queue_free()
+	return _chunk_mesh[name]
+
+
+## Rondvliegende brokstukken uit Blender: elk stuk vliegt in een boog, tolt om alle assen en blijft even liggen.
+static func _debris(parent: Node, pos: Vector3, scale: float, names: Array) -> void:
+	var count := 6 + roundi(5.0 * scale)
+	for i in count:
+		var mesh := _chunk(names[i % names.size()])
+		if mesh == null:
+			continue
+		var mi := MeshInstance3D.new()
+		mi.mesh = mesh
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var sc := randf_range(0.8, 1.5) * (0.7 + 0.4 * scale)
+		mi.scale = Vector3.ONE * sc
+		parent.add_child(mi)
+		var a := randf() * TAU
+		var out := randf_range(2.5, 7.0) * scale
+		var v := Vector3(cos(a) * out, randf_range(4.5, 9.0) * (0.6 + 0.4 * scale), sin(a) * out)
+		var spin := Vector3(randf_range(-9.0, 9.0), randf_range(-9.0, 9.0), randf_range(-9.0, 9.0))
+		var start := pos + Vector3(0.0, 0.5, 0.0)
+		var g := 18.0
+		var t_land := (v.y + sqrt(v.y * v.y + 2.0 * g * start.y)) / g
+		mi.global_position = start
+		var rest := Vector3(randf() * TAU, randf() * TAU, randf() * TAU)
+		var tw := mi.create_tween()
+		tw.tween_method(_fly.bind(mi, start, v, spin, rest, g, t_land), 0.0, t_land, t_land)
+		tw.tween_interval(2.5)
+		tw.tween_property(mi, "scale", Vector3.ZERO, 0.5)
+		tw.tween_callback(mi.queue_free)
+
+
+static func _fly(t: float, mi: MeshInstance3D, start: Vector3, v: Vector3, spin: Vector3, rest: Vector3, g: float, t_land: float) -> void:
+	if not is_instance_valid(mi):
+		return
+	var p := start + Vector3(v.x * t, v.y * t - 0.5 * g * t * t, v.z * t)
+	mi.global_position = Vector3(p.x, maxf(p.y, 0.03), p.z)
+	mi.rotation = rest + spin * minf(t, t_land)

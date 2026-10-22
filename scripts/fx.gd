@@ -372,14 +372,14 @@ const FIREBALL_SHEET := preload("res://assets/fx/explosie_vuur.png")  # bron/exp
 const FLIPBOOK := preload("res://shaders/flipbook.gdshader")
 const FIREBALL_FRAMES := 36
 const FIREBALL_TIME := 2.4  # seconden voor de hele beeldreeks
-static var _quad: QuadMesh
+static var _fire_quad: QuadMesh
 
 
 ## Vuurbal met rook: een beeldreeks uit Blender op een vlak dat naar de camera kijkt, met de voet op de grond.
 static func _fireball(parent: Node, pos: Vector3, scale: float) -> void:
-	if _quad == null:
-		_quad = QuadMesh.new()
-		_quad.size = Vector2.ONE
+	if _fire_quad == null:
+		_fire_quad = QuadMesh.new()
+		_fire_quad.size = Vector2.ONE
 	var size := 8.0 * 0.62 * scale  # het beeld in Blender is 8 m breed; zo komt de vuurbal op ~5 m bij schaal 1
 	var m := ShaderMaterial.new()
 	m.shader = FLIPBOOK
@@ -388,7 +388,7 @@ static func _fireball(parent: Node, pos: Vector3, scale: float) -> void:
 	m.set_shader_parameter("rows", 6)
 	m.set_shader_parameter("frames", FIREBALL_FRAMES)
 	var mi := MeshInstance3D.new()
-	mi.mesh = _quad
+	mi.mesh = _fire_quad
 	mi.material_override = m
 	mi.scale = Vector3(size, size, size)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF

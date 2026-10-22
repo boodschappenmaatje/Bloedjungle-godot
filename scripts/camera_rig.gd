@@ -11,7 +11,7 @@ var _snap := true  # eerste beeld meteen op de speler, niet ernaartoe vliegen
 
 func _ready() -> void:
 	# lange lens en onscherpe verte: kijkt als een filmbeeld, niet als een kaart
-	fov = 42.0
+	fov = 45.0
 	far = 220.0
 	var cam := CameraAttributesPractical.new()
 	cam.dof_blur_far_enabled = true
@@ -90,12 +90,12 @@ func _process(delta: float) -> void:
 	attributes.dof_blur_far_enabled = GameSettings.get_value("quality") == "ultra"  # scherptediepte kost veel op mobiel
 	_blook = Vector3.ZERO
 	far = 220.0
-	# Dead Nation-geïnspireerde helling: circa 55 graden omlaag; liggend circa 17 m afstand.
+	# V66: circa 48 graden neerwaartse helling en 14.5 m afstand in landscape.
 	# Staand iets verder voor overzicht; bouwcamera blijft onafhankelijk.
-	var h := 18.0 if portrait else 14.0
-	var back := 13.0 if portrait else 10.0
+	var h := 17.0 if portrait else 10.8
+	var back := 15.0 if portrait else 9.7
 	var aiming := not is_nan(Game.aim)
-	var want := Vector3(sin(p.face), 0, cos(p.face)) * (2.0 if aiming else 0.7)
+	var want := Vector3(sin(p.face), 0, cos(p.face)) * (2.5 if aiming else 0.7)
 	_lead = _lead.lerp(want, 1.0 - exp(-3.0 * delta))
 	var target: Vector3 = p.global_position + _lead
 	var goal := target + Vector3(0, h, back)

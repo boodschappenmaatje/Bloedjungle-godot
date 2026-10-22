@@ -178,6 +178,7 @@ func _physics_process(delta: float) -> void:
 
 ## Raket: grote ontploffing, schade neemt af met de afstand (alleen vijanden).
 func _explode(at: Vector3) -> void:
+	Game.note_blast(at, explosive)
 	Fx.explosion(get_parent(), at, 1.4)
 	Barrel.catch_blast(at, explosive)
 	if Game.builds:
@@ -192,6 +193,7 @@ func _explode(at: Vector3) -> void:
 ## Ontploffing van een vijandelijke raket (explode() in 15-combat.js met fromPlayer = false).
 func _boom_enemy(at: Vector3) -> void:
 	var r := explosive
+	Game.note_blast(at, r)
 	Fx.explosion(get_parent(), at, 0.9)
 	Barrel.catch_blast(at, r)
 	if Game.builds:

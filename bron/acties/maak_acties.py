@@ -316,7 +316,45 @@ for f in (0, 2, 4, 6, 9, 12, 15, 18, 20, 21, 24, 27, 29, 33, 36):
     key(f)
 finish(act)
 
-scene.frame_start, scene.frame_end = 0, 36
+# =====================================================================================================
+# EXPLOSIE_DOOD: weggeslingerd door een ontploffing (1,33 s). Het spel verplaatst het mannetje zelf langs een boog
+# (enemy.gd); deze animatie doet de houding: rug gekromd, armen en benen wild, op de rug landen en blijven liggen.
+# Frames: 0-16 in de lucht (landing rond frame 16), 16-24 neerploffen en glijden, 24-40 laatste uitrollen.
+# =====================================================================================================
+BLAST_FRAMES = 40
+b_pitch = {0: 0.0, 2: -18.0, 6: -58.0, 11: -84.0, 15: -96.0, 18: -91.0, 24: -88.0, 40: -88.0}   # hele lichaam naar achteren (om de heup)
+b_drop = {0: 0.0, 5: 0.02, 12: 0.0, 15: -0.30, 18: -0.74, 21: -0.80, 24: -0.78, 40: -0.78}       # heup zakt naar de grond bij de landing
+b_arm = {0: 0.0, 2: -45.0, 6: -150.0, 12: -168.0, 16: -150.0, 20: -112.0, 26: -85.0, 40: -75.0}  # armen zwaaien omhoog/naar achteren
+b_spread = {0: 0.0, 4: 28.0, 12: 42.0, 20: 32.0, 40: 18.0}
+b_thL = {0: 0.0, 4: 38.0, 10: 62.0, 16: 28.0, 22: 10.0, 40: 6.0}    # linkerbeen: knie omhoog
+b_thR = {0: 0.0, 4: -18.0, 10: -34.0, 16: 20.0, 22: 12.0, 40: 8.0}  # rechterbeen: schopt naar achteren
+b_shL = {0: 0.0, 4: 30.0, 10: 78.0, 16: 40.0, 22: 16.0, 40: 10.0}
+b_shR = {0: 0.0, 4: 18.0, 10: 52.0, 16: 36.0, 22: 14.0, 40: 10.0}
+b_neck = {0: 0.0, 3: -26.0, 8: -32.0, 16: -22.0, 24: -10.0, 40: -6.0}
+b_spine = {0: 0.0, 3: -12.0, 8: -15.0, 16: -9.0, 24: 0.0, 40: 0.0}   # gekromde rug
+
+act = new_action("explosie_dood", BLAST_FRAMES)
+for f in (0, 2, 4, 6, 8, 11, 13, 15, 16, 18, 20, 22, 24, 28, 34, 40):
+    apply(BASE_STIL)
+    for n in SPINE:
+        rot(n, X, keyed(b_spine, f))
+    rot("DEF-neck", X, keyed(b_neck, f))
+    rot("DEF-head", X, keyed(b_neck, f) * 0.6)
+    for s_, sign in (("L", 1.0), ("R", -1.0)):
+        ua = f"DEF-upper_arm{s_}"
+        rot(ua, X, keyed(b_arm, f), pivot=head_of(ua))
+        rot(ua, Z, sign * keyed(b_spread, f), pivot=head_of(ua))
+    rot("DEF-thighL", X, keyed(b_thL, f))
+    rot("DEF-thighR", X, keyed(b_thR, f))
+    rot("DEF-shinL", X, keyed(b_shL, f))
+    rot("DEF-shinR", X, keyed(b_shR, f))
+    pivot = head_of(HIPS) + Vector((0, 0, 0.05))
+    rot(HIPS, X, keyed(b_pitch, f), pivot=pivot)
+    shift(HIPS, (0, 0, keyed(b_drop, f)))
+    key(f)
+finish(act)
+
+scene.frame_start, scene.frame_end = 0, 40
 bpy.ops.object.mode_set(mode='OBJECT')
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(out, "acties.blend"))
 
@@ -325,7 +363,7 @@ for o in list(bpy.data.objects):
     if o.type == 'MESH':
         bpy.data.objects.remove(o)
 for a in list(bpy.data.actions):
-    if a.name not in ("rollen", "sprinten", "herladen"):
+    if a.name not in ("rollen", "sprinten", "herladen", "explosie_dood"):
         bpy.data.actions.remove(a)
 bpy.ops.export_scene.gltf(filepath=os.path.join(out, "acties.glb"), export_format='GLB', export_animation_mode='ACTIONS', export_force_sampling=True, export_apply=False)
 print("KLAAR", sorted(a.name for a in bpy.data.actions))

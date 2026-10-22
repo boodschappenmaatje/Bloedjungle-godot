@@ -400,5 +400,53 @@ func _die(dir: Vector3) -> void:
 	Fx.ground_blood(get_parent(), global_position + dir * 0.4, 1.7)
 	if type == "heavy":
 		Fx.explosion(get_parent(), global_position, 0.8)
-	model.play("dood1" if randf() < 0.5 else "dood2", 0.08)
+	var blast: Dictionary = Game.blast_near(global_position)
+	if blast.is_empty():
+		model.play("dood1" if randf() < 0.5 else "dood2", 0.08)
+	else:
+		_fling(blast)
 	get_tree().create_timer(8.0).timeout.connect(queue_free)
+
+
+const FLING_AIR := 0.55  # seconden in de lucht; de animatie explosie_dood landt rond dat moment (frame 16 van 30 per s)
+const FLING_SLIDE := 0.4
+
+
+## Weggeslingerd door een ontploffing: hij vliegt met het gezicht naar de knal een boog weg van het midden, landt op zijn rug en glijdt uit.
+## De animatie (Blender, bron/acties) doet de houding; hier loopt het mannetje zelf langs de boog.
+func _fling(blast: Dictionary) -> void:
+	var from: Vector2 = _flat(global_position - blast.at)
+	if from.length() < 0.2:
+		from = Vector2.from_angle(randf() * TAU)
+	var d := from.normalized()
+	var power := 1.0 - clampf(from.length() / float(blast.r), 0.0, 1.0)  # dichter bij de knal = verder weg
+	var dist := 2.6 + 3.8 * power  # meter in de lucht
+	var start := global_position
+	var land := Vector2(start.x, start.z) + d * dist
+	# niet door een muur of de bunker heen vliegen
+	var q := PhysicsRayQueryParameters3D.create(start + Vector3.UP * 1.0, Vector3(land.x, 1.0, land.y), Bullet.MASK_WALL | Bullet.MASK_BUNKER)
+	var r := get_world_3d().direct_space_state.intersect_ray(q)
+	if not r.is_empty():
+		var hit_pos: Vector3 = r.position
+		land = Vector2(hit_pos.x, hit_pos.z) - d * 0.6
+		dist = maxf(0.5, (land - Vector2(start.x, start.z)).length())
+	rotation.y = atan2(-d.x, -d.y)  # kijkt naar de knal terwijl hij achteruit vliegt
+	face = rotation.y
+	model.play("explosie_dood", 0.05)
+	var tw := create_tween()
+	tw.tween_method(_fling_step.bind(start, d, dist), 0.0, FLING_AIR + FLING_SLIDE, FLING_AIR + FLING_SLIDE)
+
+
+func _fling_step(t: float, start: Vector3, d: Vector2, dist: float) -> void:
+	if not is_inside_tree():
+		return
+	var along: float
+	var h := 0.0
+	if t <= FLING_AIR:
+		along = dist * 0.85 * (t / FLING_AIR)
+		var u := t / FLING_AIR
+		h = 4.0 * 0.68 * u * (1.0 - u)  # boog met een top van ~0,7 m
+	else:
+		var s := (t - FLING_AIR) / FLING_SLIDE
+		along = dist * (0.85 + 0.15 * (1.0 - (1.0 - s) * (1.0 - s)))  # uitglijden, steeds trager
+	global_position = Vector3(start.x + d.x * along, h, start.z + d.y * along)

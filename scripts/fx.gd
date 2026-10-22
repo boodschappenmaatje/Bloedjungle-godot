@@ -369,35 +369,134 @@ static func burning(parent: Node, pos: Vector3, flames: bool) -> Node3D:
 	return root
 
 
-const FIREBALL_SHEET := preload("res://assets/fx/explosie_vuur.png")  # bron/explosie: vuur en rook uit Blender, 6 x 6 beeldjes
 const FLIPBOOK := preload("res://shaders/flipbook.gdshader")
-const FIREBALL_FRAMES := 36
 const FIREBALL_TIME := 2.4  # seconden voor de hele beeldreeks
-static var _fire_quad: QuadMesh
+const MAX_FIREBALLS := 4  # meer tegelijk tekenen kost een telefoon te veel; extra explosies houden vonken, licht en puin
+# Elke variant komt uit een eigen Blender-render (bron/explosie, andere ruis en vorm); size = afmeting in meters van het uitgesneden beeld
+const FIREBALLS := [
+	{"sheet": preload("res://assets/fx/explosie_vuur.png"), "cols": 6, "rows": 6, "frames": 36, "size": Vector2(7.06, 7.92)},
+]
+static var _fire_quad := {}
+static var _fireballs_live := 0
+static var _last_variant := -1
 
 
 ## Vuurbal met rook: een beeldreeks uit Blender op een vlak dat naar de camera kijkt, met de voet op de grond.
+## Elke explosie kiest een andere variant (niet twee keer dezelfde achter elkaar), soms gespiegeld en iets groter of kleiner.
 static func _fireball(parent: Node, pos: Vector3, scale: float) -> void:
-	if _fire_quad == null:
-		_fire_quad = QuadMesh.new()
-		_fire_quad.size = Vector2(7.06, 7.92)  # het uitgesneden beeld, in meters zoals in Blender (voet = grond)
-	var size := 1.2 * scale  # in Blender is de vuurbal zo'n 4 m breed; bij schaal 1 wordt hij ~5 m
+	if _fireballs_live >= MAX_FIREBALLS:
+		return
+	var v := randi() % FIREBALLS.size()
+	if FIREBALLS.size() > 1 and v == _last_variant:
+		v = (v + 1 + randi() % (FIREBALLS.size() - 1)) % FIREBALLS.size()
+	_last_variant = v
+	var def: Dictionary = FIREBALLS[v]
+	if not _fire_quad.has(v):
+		var q := QuadMesh.new()
+		q.size = def.size
+		_fire_quad[v] = q
+	var size := 1.2 * scale * randf_range(0.92, 1.1)  # in Blender is de vuurbal zo'n 4 m breed; bij schaal 1 wordt hij ~5 m
 	var m := ShaderMaterial.new()
 	m.shader = FLIPBOOK
-	m.set_shader_parameter("sheet", FIREBALL_SHEET)
-	m.set_shader_parameter("cols", 6)
-	m.set_shader_parameter("rows", 6)
-	m.set_shader_parameter("frames", FIREBALL_FRAMES)
+	m.set_shader_parameter("sheet", def.sheet)
+	m.set_shader_parameter("cols", def.cols)
+	m.set_shader_parameter("rows", def.rows)
+	m.set_shader_parameter("frames", def.frames)
+	m.set_shader_parameter("flip_x", randf() < 0.5)
 	var mi := MeshInstance3D.new()
-	mi.mesh = _fire_quad
+	mi.mesh = _fire_quad[v]
 	mi.material_override = m
 	mi.scale = Vector3(size, size, size)
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(mi)
-	mi.global_position = pos + Vector3(0.0, 3.96 * size - 0.05, 0.0)  # voet van het beeld = grond
+	mi.global_position = pos + Vector3(0.0, def.size.y * 0.5 * size - 0.05, 0.0)  # voet van het beeld = grond
+	_fireballs_live += 1
 	var tw := mi.create_tween()
-	tw.tween_method(func(v: float): m.set_shader_parameter("progress", v), 0.0, 1.0, FIREBALL_TIME * (0.6 + 0.4 * scale))
-	tw.tween_callback(mi.queue_free)
+	tw.tween_method(func(t: float): m.set_shader_parameter("progress", t), 0.0, 1.0, FIREBALL_TIME * (0.6 + 0.4 * scale))
+	tw.tween_callback(func():
+		_fireballs_live -= 1
+		mi.queue_free())
+	mi.tree_exiting.connect(func():
+		if tw.is_valid():
+			_fireballs_live = maxi(0, _fireballs_live - 1))
+
+
+const FLAME_SHEET := preload("res://assets/fx/vlam.png")  # bron/explosie/maak_vlam.py: lus van 16 beeldjes
+const FLAME_FRAME := 3.2  # meter per beeld in Blender
+const FLAME_HEIGHT := 2.24  # zichtbare hoogte van de vlam in dat beeld
+static var _flame_quad: QuadMesh
+
+
+## Een flikkerende lus-vlam met schijnsel (brandend vat, wrak). height = zichtbare hoogte in meters. Geeft de knoop terug.
+static func flame(parent: Node3D, local_pos: Vector3, height: float, light := true) -> Node3D:
+	if _flame_quad == null:
+		_flame_quad = QuadMesh.new()
+		_flame_quad.size = Vector2(FLAME_FRAME, FLAME_FRAME)
+	var k := height / FLAME_HEIGHT
+	var root := Node3D.new()
+	parent.add_child(root)
+	root.position = local_pos
+	var m := ShaderMaterial.new()
+	m.shader = FLIPBOOK
+	m.set_shader_parameter("sheet", FLAME_SHEET)
+	m.set_shader_parameter("cols", 4)
+	m.set_shader_parameter("rows", 4)
+	m.set_shader_parameter("frames", 16)
+	m.set_shader_parameter("looping", true)
+	m.set_shader_parameter("flip_x", randf() < 0.5)
+	var mi := MeshInstance3D.new()
+	mi.mesh = _flame_quad
+	mi.material_override = m
+	mi.scale = Vector3(k, k, k)
+	mi.position = Vector3(0.0, FLAME_FRAME * 0.5 * k, 0.0)
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(mi)
+	var tw := root.create_tween().set_loops()
+	tw.tween_method(func(t: float): m.set_shader_parameter("progress", t), 0.0, 1.0, 0.6)
+	if light:
+		var l := OmniLight3D.new()
+		l.light_color = Color(1.0, 0.55, 0.2)
+		l.light_energy = 1.6
+		l.omni_range = 4.0 + height * 2.0
+		l.shadow_enabled = false
+		l.position = Vector3(0.0, height * 0.5, 0.0)
+		root.add_child(l)
+		var lt := l.create_tween().set_loops()
+		lt.tween_property(l, "light_energy", 0.9, 0.11)
+		lt.tween_property(l, "light_energy", 1.9, 0.15)
+	return root
+
+
+const WRECK_BURN_TIME := 9.0
+const WRECK_STAY := 4.0
+
+
+## Het uitgebrande vat blijft liggen: verkoold wrak met een vlam die langzaam dooft en rook; daarna verdwijnt het.
+static func wreck(parent: Node, pos: Vector3) -> void:
+	var mesh := _chunk("Wrak1" if randf() < 0.5 else "Wrak2")
+	if mesh == null:
+		return
+	var mi := MeshInstance3D.new()
+	mi.mesh = mesh
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.rotation.y = randf() * TAU
+	parent.add_child(mi)
+	mi.global_position = Vector3(pos.x, 0.0, pos.z)
+	var fire := flame(parent, Vector3(pos.x, 0.45, pos.z), 0.8)
+	var smoke := burning(parent, Vector3(pos.x, 0.0, pos.z), false)
+	var tw := mi.create_tween()
+	tw.tween_interval(WRECK_BURN_TIME)
+	tw.tween_callback(func():
+		if is_instance_valid(fire):
+			var ft := fire.create_tween()
+			ft.tween_property(fire, "scale", Vector3(1.0, 0.0, 1.0), 1.5)
+			ft.tween_callback(fire.queue_free))
+	tw.tween_interval(WRECK_STAY)
+	tw.tween_property(mi, "scale", Vector3.ZERO, 1.0)
+	tw.tween_callback(func():
+		if is_instance_valid(smoke):
+			smoke.queue_free()
+		mi.queue_free())
 
 
 const DEBRIS_MODELS := preload("res://assets/fx/brokstukken.glb")  # bron/explosie: stukken vatblik, splinters, aardkluiten
@@ -439,7 +538,7 @@ static func _debris(parent: Node, pos: Vector3, scale: float, names: Array) -> v
 		var rest := Vector3(randf() * TAU, randf() * TAU, randf() * TAU)
 		var tw := mi.create_tween()
 		tw.tween_method(_fly.bind(mi, start, v, spin, rest, g, t_land), 0.0, t_land, t_land)
-		tw.tween_interval(2.5)
+		tw.tween_interval(5.0)  # brokstukken blijven even liggen
 		tw.tween_property(mi, "scale", Vector3.ZERO, 0.5)
 		tw.tween_callback(mi.queue_free)
 

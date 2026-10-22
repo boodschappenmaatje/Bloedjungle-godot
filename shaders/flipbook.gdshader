@@ -11,6 +11,8 @@ uniform float progress : hint_range(0.0, 1.0) = 0.0;  // 0 = eerste beeldje, 1 =
 uniform float fade_in = 0.03;
 uniform float fade_out = 0.25;  // aandeel van de duur waarin hij uitdooft
 uniform float bright = 1.0;
+uniform bool flip_x = false;  // gespiegeld: dezelfde reeks ziet er dan anders uit
+uniform bool looping = false;  // herhalende reeks (vlam): wraparound en geen in- of uitfaden
 uniform bool ground = false;  // plat op de grond in plaats van naar de camera gedraaid (schokgolfring)
 
 void vertex() {
@@ -33,14 +35,15 @@ vec4 cell(int f, vec2 uv) {
 
 void fragment() {
 	float a = clamp(progress, 0.0, 1.0);
-	float x = a * float(frames - 1);
-	int f0 = int(floor(x));
-	int f1 = min(f0 + 1, frames - 1);
-	vec4 c = mix(cell(f0, UV), cell(f1, UV), fract(x));
-	float env = smoothstep(0.0, fade_in, progress) * (1.0 - smoothstep(1.0 - fade_out, 1.0, progress));
+	float x = looping ? fract(progress) * float(frames) : a * float(frames - 1);
+	int f0 = min(int(floor(x)), frames - 1);
+	int f1 = looping ? (f0 + 1) % frames : min(f0 + 1, frames - 1);
+	vec2 uv = flip_x ? vec2(1.0 - UV.x, UV.y) : UV;
+	vec4 c = mix(cell(f0, uv), cell(f1, uv), fract(x));
+	float env = looping ? 1.0 : smoothstep(0.0, fade_in, progress) * (1.0 - smoothstep(1.0 - fade_out, 1.0, progress));
 	// Het vel is met rechte alpha opgeslagen: voor premultiplied blending eerst vermenigvuldigen
 	// de donkere stofring onderin (afgesneden door de grond in Blender) zacht laten uitlopen: geen harde rand
-	float low = smoothstep(0.78, 0.97, UV.y);
+	float low = smoothstep(0.78, 0.97, uv.y);
 	float dark = 1.0 - smoothstep(0.05, 0.3, dot(c.rgb, vec3(0.33)));
 	c.a *= 1.0 - low * (0.55 * dark + 0.45);
 	ALBEDO = c.rgb * c.a * bright * env;

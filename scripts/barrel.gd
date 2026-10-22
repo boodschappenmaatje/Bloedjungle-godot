@@ -15,9 +15,18 @@ static var _body_mat: StandardMaterial3D
 static var _band_mat: StandardMaterial3D
 static var _sign_mat: StandardMaterial3D
 
+const BURN_TIME := Vector2(2.6, 3.6)  # seconden tussen "gaat lekken en branden" en ontploffen
+
 var hp := HP
 var spot := Vector3.ZERO
 var lit := false
+var chained := false  # door een ander vat aangestoken: kleinere vuurbal
+var burning := false  # onder de helft: vlam, gloed en een tikkende lont
+var burn_t := 0.0
+var _body: MeshInstance3D
+var _own_mat: StandardMaterial3D
+var _flame: Node3D
+var _wobble: Tween
 
 
 ## Zet vaten op alle plekken die nog leeg zijn (de eerste keer worden de plekken bepaald).
@@ -73,7 +82,7 @@ static func _make_spots() -> void:
 static func catch_blast(at: Vector3, radius: float) -> void:
 	for b in Game.barrels.duplicate():
 		if is_instance_valid(b) and b.global_position.distance_to(at) < radius + 0.5:
-			b.ignite(randf_range(0.08, 0.3))
+			b.ignite(randf_range(0.12, 0.45), true)  # na elkaar, niet allemaal tegelijk
 
 
 func _ready() -> void:
@@ -97,6 +106,7 @@ func _build() -> void:
 		_band_mat = _mat(Color(0.14, 0.13, 0.12), 0.7, 0.5)
 		_sign_mat = _mat(Color(0.95, 0.78, 0.12), 0.8, 0.0)
 	var body := MeshInstance3D.new()
+	_body = body
 	var m := CylinderMesh.new()
 	m.top_radius = 0.38
 	m.bottom_radius = 0.38
@@ -153,13 +163,69 @@ func hit(dmg: float, dir: Vector3, _from_player: bool) -> void:
 	Fx.spark(get_parent(), global_position + Vector3.UP * 0.6, -dir)
 	if hp <= 0.0:
 		ignite(0.0)
+		return
+	_shake(0.12 + 0.2 * (1.0 - hp / HP))
+	_set_glow(1.0 - hp / HP)
+	if hp <= HP * 0.5 and not burning:
+		_start_burning()
+
+
+## Een geraakt vat schudt even; hoe zwaarder beschadigd, hoe harder.
+func _shake(amount: float) -> void:
+	if _wobble != null and _wobble.is_valid():
+		_wobble.kill()
+	rotation.x = 0.0
+	rotation.z = 0.0
+	_wobble = create_tween()
+	var a := amount * randf_range(0.8, 1.2)
+	var dir := Vector2.from_angle(randf() * TAU)
+	_wobble.tween_property(self, "rotation:x", dir.x * a, 0.05)
+	_wobble.parallel().tween_property(self, "rotation:z", dir.y * a, 0.05)
+	_wobble.tween_property(self, "rotation:x", -dir.x * a * 0.5, 0.07)
+	_wobble.parallel().tween_property(self, "rotation:z", -dir.y * a * 0.5, 0.07)
+	_wobble.tween_property(self, "rotation:x", 0.0, 0.1)
+	_wobble.parallel().tween_property(self, "rotation:z", 0.0, 0.1)
+
+
+## Gloed van binnenuit: eigen materiaal met een rode, steeds fellere gloed (0 = niets, 1 = wit-oranje).
+func _set_glow(amount: float) -> void:
+	if _body == null:
+		return
+	if _own_mat == null:
+		_own_mat = _body_mat.duplicate() as StandardMaterial3D
+		_own_mat.emission_enabled = true
+		_body.material_override = _own_mat
+	_own_mat.emission = Color(1.0, 0.18 + 0.4 * amount, 0.04)
+	_own_mat.emission_energy_multiplier = 0.4 + 2.6 * amount
+
+
+## Onder de helft: het vat lekt een vlam en ontploft na enkele seconden vanzelf (ook als je niet meer schiet).
+func _start_burning() -> void:
+	burning = true
+	burn_t = randf_range(BURN_TIME.x, BURN_TIME.y)
+	_flame = Fx.flame(self, Vector3(0.0, 1.0, 0.0), 1.1)
+	PerfMonitor.note("vat brandt")
+
+
+func _process(delta: float) -> void:
+	if not burning or lit:
+		return
+	burn_t -= delta
+	# de gloed zwelt aan richting de knal, het vat trilt steeds vaker
+	var frac := clampf(1.0 - burn_t / BURN_TIME.y, 0.0, 1.0)
+	_set_glow(0.5 + 0.5 * frac + 0.15 * sin(Time.get_ticks_msec() * 0.03))
+	if randf() < delta * (2.0 + 8.0 * frac):
+		_shake(0.05 + 0.1 * frac)
+	if burn_t <= 0.0:
+		ignite(0.0)
 
 
 ## Laat het vat na een korte vertraging ontploffen (0 = meteen).
-func ignite(delay: float) -> void:
+func ignite(delay: float, from_chain := false) -> void:
 	if lit:
 		return
 	lit = true
+	chained = from_chain
 	if delay <= 0.0:
 		_blow()
 	else:
@@ -172,7 +238,8 @@ func _blow() -> void:
 	var at := global_position + Vector3.UP * 0.4
 	Game.barrels.erase(self)
 	var parent := get_parent()
-	Fx.explosion(parent, at, 1.15, Fx.CHUNKS_BARREL)
+	Game.note_blast(at, RADIUS)
+	Fx.explosion(parent, at, 0.85 if chained else 1.15, Fx.CHUNKS_BARREL)
 	Game.alert(at, 30.0, 6.0)
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e):
@@ -199,4 +266,5 @@ func _blow() -> void:
 	if bd < RADIUS:
 		Game.damage_base(DAMAGE * 0.3 * (1.0 - bd / RADIUS))
 	catch_blast(at, RADIUS)
+	Fx.wreck(parent, global_position)
 	queue_free()

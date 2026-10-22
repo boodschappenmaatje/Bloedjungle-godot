@@ -128,6 +128,52 @@ def band(name):
     return finish(o, name, [soot])
 
 
+def wreck(name, seed, tipped):
+    """Uitgebrand vat: horizontaal ingedeukt, bovenrand opengescheurd en naar buiten gebogen, roet en kale metaalplekken."""
+    random.seed(seed)
+    bpy.ops.mesh.primitive_cylinder_add(vertices=16, radius=0.38, depth=0.9, end_fill_type='NOTHING')
+    o = bpy.context.object
+    bm = bmesh.new()
+    bm.from_mesh(o.data)
+    bmesh.ops.subdivide_edges(bm, edges=bm.edges[:], cuts=3, use_grid_fill=True)
+    top = 0.45
+    for v in bm.verts:
+        h = (v.co.z + top) / (2 * top)                      # 0 onderaan, 1 bovenaan
+        a = math.atan2(v.co.y, v.co.x)
+        dent = random.uniform(-0.05, 0.05) * (0.4 + h)
+        v.co.x += math.cos(a) * dent
+        v.co.y += math.sin(a) * dent
+        if h > 0.82:                                      # bovenrand scheurt open en buigt naar buiten
+            flare = (h - 0.82) / 0.18
+            r = 1.0 + 0.35 * flare * random.uniform(0.4, 1.3)
+            v.co.x *= r
+            v.co.y *= r
+            v.co.z -= 0.08 * flare * random.uniform(0.0, 1.0)
+        if 0.35 < h < 0.6:                                # een flinke deuk in het midden
+            sq = 1.0 - 0.18 * math.sin((h - 0.35) / 0.25 * math.pi) * (1.0 if math.cos(a - 0.9) > 0.3 else 0.3)
+            v.co.x *= sq
+            v.co.y *= sq
+    # een paar flappen uit de rand scheuren
+    dead = [f for f in bm.faces if f.calc_center_median().z > 0.36 and random.random() < 0.28]
+    bmesh.ops.delete(bm, geom=dead, context='FACES')
+    bm.to_mesh(o.data)
+    bm.free()
+    sol = o.modifiers.new("Dikte", 'SOLIDIFY')
+    sol.thickness = 0.014
+    bpy.context.view_layer.objects.active = o
+    bpy.ops.object.modifier_apply(modifier=sol.name)
+    o.location.z = 0.45
+    bpy.ops.object.transform_apply(location=True)
+    if tipped:
+        o.rotation_euler = (math.radians(90), 0, math.radians(random.uniform(0, 360)))
+        o.location.z = 0.38
+        bpy.ops.object.transform_apply(location=True, rotation=True)
+    return finish(o, name, [burnt])
+
+
+burnt = material("Verkoold", (0.045, 0.035, 0.03, 1), 0.92, 0.25)
+wreck("Wrak1", 21, False)
+wreck("Wrak2", 22, True)
 jagged_plate("Plaat1", 0.55, 0.4, 1)
 jagged_plate("Plaat2", 0.4, 0.34, 2)
 jagged_plate("Plaat3", 0.3, 0.26, 3)

@@ -47,6 +47,22 @@ var player  # de speler (player.gd)
 var defs  # verdediging die je neerzet (defenses.gd)
 var enemies: Array = []
 var barrels: Array = []  # explosieve vaten (barrel.gd)
+var blast_at := Vector3.ZERO  # de laatste explosie: wie er kort daarna door sterft, wordt weggeslingerd
+var blast_t := -100000
+var blast_r := 0.0
+
+
+func note_blast(at: Vector3, radius: float) -> void:
+	blast_at = at
+	blast_r = radius
+	blast_t = Time.get_ticks_msec()
+
+
+## Was er net (binnen een kwart seconde) een explosie waar iemand op deze plek binnen de straal viel? Geeft {at, r} of een leeg woordenboek.
+func blast_near(pos: Vector3) -> Dictionary:
+	if Time.get_ticks_msec() - blast_t > 250 or pos.distance_to(blast_at) > blast_r + 1.0:
+		return {}
+	return {"at": blast_at, "r": blast_r}
 var _slot_n := 0
 
 

@@ -67,6 +67,7 @@ func _explode() -> void:
 	Sfx.play("rocket")
 	Game.alert(at, 30.0, 6.0)  # een knal trekt aandacht
 	PerfMonitor.note("granaat ontploft")
+	Game.note_blast(at, r)
 	Barrel.catch_blast(at, r)
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e):

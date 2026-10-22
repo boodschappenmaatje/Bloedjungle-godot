@@ -11,6 +11,10 @@ PX = int(A[1]) if len(A) > 1 else 512
 SAMPLES = int(A[2]) if len(A) > 2 else 48
 FIRST = int(A[3]) if len(A) > 3 else 0
 LAST = int(A[4]) if len(A) > 4 else N - 1
+VARIANT = int(A[5]) if len(A) > 5 else 0  # 0 = de eerste explosie; 1 = hoog en smal; 2 = laag en breed (grondexplosie)
+SEED = VARIANT * 13.7
+HIGH = {0: 1.0, 1: 1.25, 2: 0.7}[VARIANT]
+WIDE = {0: 1.0, 1: 0.85, 2: 1.3}[VARIANT]
 os.makedirs(out, exist_ok=True)
 
 bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -105,11 +109,11 @@ P = geo.outputs["Position"]
 
 # tijdgestuurde waarden (t = 0 begin, 1 einde van het beeldreeks)
 Tt = val("t", [(0, 0.0), (1, 1.0)])
-R_fire = val("fire_radius", [(0, 0.35), (0.08, 1.9), (0.3, 2.5), (1, 2.9)])
-Z_fire = val("fire_height", [(0, 1.0), (0.3, 1.9), (1, 3.2)])
+R_fire = val("fire_radius", [(0, 0.35), (0.08, 1.9 * WIDE), (0.3, 2.5 * WIDE), (1, 2.9 * WIDE)])
+Z_fire = val("fire_height", [(0, 1.0), (0.3, 1.0 + 0.9 * HIGH), (1, 1.0 + 2.2 * HIGH)])
 E_fire = val("fire_power", [(0, 0.0), (0.03, 1.0), (0.25, 0.7), (0.6, 0.12), (1, 0.0)])
 R_smoke = val("smoke_radius", [(0, 0.2), (0.1, 1.1), (0.4, 2.0), (1, 2.6)])
-Z_smoke = val("smoke_height", [(0, 1.0), (0.15, 2.0), (0.5, 3.8), (1, 5.3)])
+Z_smoke = val("smoke_height", [(0, 1.0), (0.15, 1.0 + 1.0 * HIGH), (0.5, 1.0 + 2.8 * HIGH), (1, 1.0 + 4.3 * HIGH)])
 D_smoke = val("smoke_density", [(0, 0.0), (0.06, 0.9), (0.7, 0.8), (1, 0.0)])
 R_ring = val("ring_radius", [(0, 0.4), (0.08, 2.0), (0.4, 2.7), (1, 3.0)])
 D_ring = val("ring_density", [(0, 0.0), (0.04, 1.0), (0.45, 0.5), (1, 0.0)])
@@ -147,21 +151,21 @@ def sphere_field(center_z, radius, warp_amp, noise_scale, w_scale, seed_off, har
 
 
 # --- vuurbal: dichtheid van binnen naar buiten afnemend, aan de rand weggevreten door fijne ruis
-d_f, n_f = sphere_field(Z_fire, R_fire, 1.25, 1.5, 2.5, 0.0, 0.5)
+d_f, n_f = sphere_field(Z_fire, R_fire, 1.25, 1.5, 2.5, SEED, 0.5)
 body = math('SUBTRACT', 1.0, d_f)
 eaten = math('ADD', body, math('MULTIPLY', math('SUBTRACT', n_f, 0.5), 1.1))
 fire_dens = _smooth(eaten, 0.12, 0.42)
 core = _smooth(math('SUBTRACT', 1.0, math('MULTIPLY', d_f, 1.25)), 0.0, 0.8)
 
 # --- rookpluim: opstijgende bollen, donkerder en traag
-d_s, n_s = sphere_field(Z_smoke, R_smoke, 1.2, 0.9, 1.2, 7.3, 0.4)
+d_s, n_s = sphere_field(Z_smoke, R_smoke, 1.2, 0.9, 1.2, 7.3 + SEED, 0.4)
 sm_body = math('SUBTRACT', 1.0, d_s)
 sm_eat = math('ADD', sm_body, math('MULTIPLY', math('SUBTRACT', n_s, 0.5), 1.3))
 smoke1 = _smooth(sm_eat, 0.05, 0.6)
 # een tweede, lagere bol als stam van de pluim
 Z_low = math('MULTIPLY', Z_smoke, 0.55)
 R_low = math('MULTIPLY', R_smoke, 0.7)
-d_l, n_l = sphere_field(Z_low, R_low, 1.1, 1.0, 1.4, 3.1, 0.4)
+d_l, n_l = sphere_field(Z_low, R_low, 1.1, 1.0, 1.4, 3.1 + SEED, 0.4)
 lo_body = math('SUBTRACT', 1.0, d_l)
 lo_eat = math('ADD', lo_body, math('MULTIPLY', math('SUBTRACT', n_l, 0.5), 1.3))
 smoke2 = _smooth(lo_eat, 0.05, 0.6)

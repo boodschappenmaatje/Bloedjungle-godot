@@ -65,6 +65,7 @@ func _explode() -> void:
 	var r: float = RADIUS * float(Progress.bonus().grenade)
 	Fx.explosion(get_parent(), at, 1.1)
 	Sfx.play("rocket")
+	Game.alert(at, 30.0, 6.0)  # een knal trekt aandacht
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e):
 			var d: float = e.global_position.distance_to(at)

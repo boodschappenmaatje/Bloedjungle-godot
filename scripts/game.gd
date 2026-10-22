@@ -44,6 +44,20 @@ var attack := {"N": 0.0, "O": 0.0, "Z": 0.0, "W": 0.0}
 var player  # de speler (player.gd)
 var defs  # verdediging die je neerzet (defenses.gd)
 var enemies: Array = []
+var _slot_n := 0
+
+
+## Volgnummer voor elke nieuwe vijand, zodat hun gedrag (poort, afstand, flankeren) netjes verdeeld wordt.
+func next_slot() -> int:
+	_slot_n += 1
+	return _slot_n
+
+
+## Een kreet, ontploffing of dode maat: vijanden binnen de straal letten even extra op de speler.
+func alert(pos: Vector3, radius: float, secs: float) -> void:
+	for e in enemies:
+		if is_instance_valid(e) and not e.dead and e.global_position.distance_to(pos) < radius:
+			e.alert_t = maxf(e.alert_t, secs)
 
 # Besturing, ingevuld door touch_sticks.gd (of toetsenbord en muis):
 # move = looprichting op de grond (x, z), aim = kijkhoek of NAN, fire = schieten
@@ -63,6 +77,7 @@ func reset() -> void:
 	base_hp = Data.BASE_HP
 	base_max = Data.BASE_HP
 	enemies.clear()
+	_slot_n = 0
 	owned = _fresh_owned()
 	cur = "m1911"
 	upg = {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0, "gate": 0}

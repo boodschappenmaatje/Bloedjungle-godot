@@ -76,11 +76,12 @@ func _ready() -> void:
 
 func _layout() -> void:
 	var portrait := size.x < size.y
-	var slot_w := minf(67.0, (size.x * (0.57 if not portrait else 0.94) - 18.0) / 6.0)
+	var ctx_left := size.x * 0.5 - 89.0 - 8.0  # contextknoppen (action_btn.gd) beginnen hier
+	var slot_w := minf(67.0, ((size.x * 0.94 - 18.0) if portrait else (ctx_left - 16.0 - 15.0)) / 6.0)
 	var slot_h := 64.0
 	var x0 := 16.0
 	# Op iPhone landschap boven de linker bewegingszone, zodat de sticks vrij blijven.
-	var y0 := size.y - (140.0 if not portrait else 188.0)
+	var y0 := size.y - (140.0 if not portrait else 222.0)  # staand boven de zet-neer-knoppen (place_hud.gd)
 	for i in _slots.size():
 		var b := _slots[i]
 		b.position = Vector2(x0 + i * (slot_w + 3.0), y0)
@@ -98,6 +99,9 @@ func _select(index: int) -> void:
 	var id: String = IDS[index]
 	if not Game.owned.has(id):
 		return
+	if id == Game.cur and Game.player != null:
+		Game.player.request_reload()  # nog eens op het actieve wapen tikken = herladen
+		return
 	Game.cur = id
 	Game.changed.emit()
 	_last_state = ""
@@ -113,7 +117,7 @@ func _refresh() -> void:
 	for id in IDS:
 		fingerprint += "|" + id + ":" + (str(Game.owned[id].ammo) if Game.owned.has(id) else "-")
 	if Game.player != null:
-		fingerprint += ":" + str(Game.player.weapon) + ":" + str(Game.player.ammo)
+		fingerprint += ":" + str(Game.player.weapon) + ":" + str(Game.player.ammo) + ":" + str(Game.player.reload_t > 0.0)
 	if fingerprint == _last_state:
 		return
 	_last_state = fingerprint
@@ -132,8 +136,13 @@ func _refresh() -> void:
 			ammo = str(Game.owned[id].ammo)
 			if Game.player != null and Game.player.weapon == id:
 				ammo = str(Game.player.ammo)
+		var live: bool = active and Game.player != null
+		var empty: bool = live and Game.player.reload_t <= 0.0 and Game.player.ammo <= int(Game.wstat(id).mag * 0.25)
+		if live and Game.player.reload_t > 0.0:
+			ammo = "…"
 		_counts[i].text = ammo
-		_counts[i].add_theme_color_override("font_color",color)
+		_counts[i].add_theme_font_size_override("font_size", 15 if active else 12)  # de enige munitieweergave: direct onder het actieve wapen
+		_counts[i].add_theme_color_override("font_color", Color8(255, 90, 58) if empty else color)
 		var sb := StyleBoxFlat.new()
 		sb.bg_color = Color(0.12,0.17,0.13,0.92) if active else Color(0.035,0.06,0.05,0.79)
 		sb.border_color = Color(1,0.73,0.32) if active else Color(0.35,0.45,0.35,0.35)

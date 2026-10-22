@@ -163,7 +163,7 @@ func _sync() -> void:
 
 
 func _layout() -> void:
-	var bottom := size.y - 64.0
+	var bottom := size.y - (64.0 if size.x >= size.y else 8.0)  # staand onder de contextknoppen
 	var x := size.x - 16.0
 	if _place.visible:
 		_place.size = Vector2(BIG, BIG)

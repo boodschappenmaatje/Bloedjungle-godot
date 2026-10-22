@@ -23,6 +23,8 @@ var upg := {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0, "gate": 
 # spullen in je tas om neer te zetten (Defenses)
 var inv := {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
 var place_sel := "bags"
+var grenades := 3  # handgranaten (werpknop); te koop in de wapenkamer, maximaal GRENADE_MAX
+const GRENADE_MAX := 9
 var place_armed := false  # spookbeeld en neerzetten aan/uit
 # bouwen (Buildings): het bouwtegoed ga je eerst uitgeven, daarna je punten
 const BUILD_CREDIT := 1000
@@ -66,6 +68,7 @@ func reset() -> void:
 	upg = {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0, "gate": 0}
 	inv = {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
 	place_sel = "bags"
+	grenades = 3
 	place_armed = false
 	build_credit = BUILD_CREDIT
 	build_mode = false

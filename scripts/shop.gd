@@ -71,7 +71,10 @@ func _layout() -> void:
 	var s := size
 	_open_btn.size = Vector2(110, 32)
 	_open_btn.position = Vector2(s.x * 0.5 + 2.0, 132)
-	_swap_btn.position = Vector2(s.x - 64.0 - 68.0 - 23.0, s.y - 150.0 - 38.0 - 23.0)
+	if s.x < s.y:
+		_swap_btn.position = Vector2(s.x - 16.0 - 54.0 - 8.0 - 50.0, s.y - 222.0 - 68.0 + 4.0)  # staand: in de rij naast de rolknop
+	else:
+		_swap_btn.position = Vector2(s.x - 64.0 - 68.0 - 23.0, s.y - 150.0 - 38.0 - 23.0)
 
 
 ## Met je vinger (of muis) de lijst met kaarten verslepen; de scrollbalk hoeft niet.
@@ -797,3 +800,6 @@ func _soldier_cards() -> void:
 			Game.player.hp += 25.0)
 	_tiered("Kogelvrij vest", "8% minder schade per niveau.", "armor", 5, 350, "Koop", func(): pass)
 	_tiered("Conditie", "7% sneller lopen.", "speed", 4, 300, "Train", func(): pass)
+	_plain_card("Handgranaat", "Gooi 11 meter ver, grote ontploffing. Werp ze met de granaatknop (G).", "%d / %d" % [Game.grenades, Game.GRENADE_MAX], 0, 0, "Koop · 120", Game.points >= 120 and Game.grenades < Game.GRENADE_MAX, func():
+		if Game.grenades < Game.GRENADE_MAX and Game.buy(120):
+			Game.grenades += 1)

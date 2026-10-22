@@ -19,6 +19,11 @@ func zoom(delta_step: int) -> void:
 	zoom_step = clampi(zoom_step + delta_step, -3, 4)
 
 
+func _unhandled_key_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_C and not Game.build_mode and (Game.state == "play" or Game.state == "prep"):
+		toggle_view()
+
+
 func _unhandled_input(event: InputEvent) -> void:
 	# Het muiswiel zoomt alleen in de speelcamera; bouwmodus behoudt zijn eigen zoombediening.
 	if Game.build_mode or (Game.state != "play" and Game.state != "prep"):

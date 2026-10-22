@@ -165,6 +165,9 @@ func _build_ammo() -> void:
 	_ammo = _shadowed(UI.label("8 | 8", UI.body(700, 0), 15, UI.BRASS))
 	_ammo.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	box.add_child(_ammo)
+	# De munitie staat nu alleen nog onder het actieve wapen in de wapenstrip (geen dubbele weergave);
+	# de naam van een nieuw wapen verschijnt kort als toast.
+	_ammo.visible = false
 
 
 func _build_camera_controls() -> void:
@@ -246,8 +249,10 @@ func _draw_radar() -> void:
 	var bounds := Rect2(Vector2.ZERO, _radar.size)
 	_radar.draw_rect(bounds, Color(0.025, 0.055, 0.045, 0.9), true)
 	_radar.draw_rect(bounds, Color(0.58, 0.66, 0.43, 0.85), false, 1.5)
-	_radar.draw_string(UI.body(700, 0), Vector2(7, 13), "RADAR  ·  CONTACTEN", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK_DIM)
-	var map := Rect2(5.0, 18.0, _radar.size.x - 10.0, _radar.size.y - 23.0)
+	var head := 18.0 if _radar.size.x >= 110.0 else 6.0
+	if head > 6.0:
+		_radar.draw_string(UI.body(700, 0), Vector2(7, 13), "RADAR  ·  CONTACTEN" if _radar.size.x >= 130.0 else "RADAR", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK_DIM)
+	var map := Rect2(5.0, head, _radar.size.x - 10.0, _radar.size.y - head - 5.0)
 	# kruislijnen als schaalreferentie, geen extra scene of viewport
 	var mid_x: float = map.position.x + map.size.x * 0.5
 	var mid_y: float = map.position.y + map.size.y * 0.5
@@ -363,7 +368,17 @@ func _set_paused(on: bool) -> void:
 	_menu.set_paused(on)
 
 
+func _radar_size() -> Vector2:
+	if size.x < size.y:
+		return Vector2(88, 100)  # staand: smal, anders overlapt hij de knoppen onder de golf-titel
+	if size.y < 420.0:
+		return Vector2(112, 120)  # klein liggend scherm: blijft boven de wisselknop
+	return Vector2(132, 144)
+
+
 func _layout() -> void:
+	_radar.custom_minimum_size = _radar_size()
+	_radar.size = _radar.custom_minimum_size
 	_bars.position = Vector2(12, 10)
 	_bars.size = Vector2(minf(size.x * 0.3, 150.0), 0)
 	_top_right.reset_size()

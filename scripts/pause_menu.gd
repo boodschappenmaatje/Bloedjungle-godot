@@ -513,7 +513,7 @@ func open_wheel() -> void:
 		return
 	for c in _wheel_area.get_children():
 		c.queue_free()
-	var owned: Array = Data.WEAPON_ORDER.filter(func(id): return Game.owned.has(id))
+	var owned: Array = Data.WEAPON_ORDER.filter(func(id): return Game.carries(id))
 	var r := minf(120.0, get_viewport().get_visible_rect().size.y * 0.3)
 	for i in owned.size():
 		var id: String = owned[i]

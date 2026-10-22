@@ -19,7 +19,8 @@ var bonus := 0  # bonus van de laatste overleefde golf, getoond in de wapenkamer
 # Wat je bezit: per wapen de upgradeniveaus en de kogels in het magazijn, en de uitrusting-upgrades.
 var owned := _fresh_owned()
 var cur := "m1911"
-const LOADOUT_MAX := 5  # meer wapens kun je niet dragen
+const LOADOUT_MAX := 5  # zoveel wapens neem je mee de strijd in; de rest blijft in de wapenkamer
+var loadout: Array = ["m1911"]
 var upg := {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0, "gate": 0}
 # spullen in je tas om neer te zetten (Defenses)
 var inv := {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
@@ -80,6 +81,7 @@ func reset() -> void:
 	enemies.clear()
 	_slot_n = 0
 	owned = _fresh_owned()
+	loadout = ["m1911"]
 	cur = "m1911"
 	upg = {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0, "gate": 0}
 	inv = {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
@@ -170,21 +172,29 @@ func buy(cost: int) -> bool:
 
 
 func loadout_full() -> bool:
-	return owned.size() >= LOADOUT_MAX
+	return loadout.size() >= LOADOUT_MAX
 
 
-## Wat een wapen opbrengt als je het inlevert: de helft van de prijs.
-func refund(id: String) -> int:
-	return int(Data.WEAPONS[id].price * 0.5)
+func carries(id: String) -> bool:
+	return loadout.has(id)
 
 
-func drop_weapon(id: String) -> void:
-	if not owned.has(id) or owned.size() < 2:
+## Een gekocht wapen in de loadout zetten (als er plek is). Gekochte wapens blijven altijd van jou.
+func take_weapon(id: String) -> bool:
+	if not owned.has(id) or loadout.has(id) or loadout_full():
+		return false
+	loadout.append(id)
+	changed.emit()
+	return true
+
+
+## Een wapen uit de loadout terug in de wapenkamer zetten; het blijft van jou, met al zijn upgrades.
+func leave_weapon(id: String) -> void:
+	if not loadout.has(id) or loadout.size() < 2:
 		return
-	owned.erase(id)
-	points += refund(id)
+	loadout.erase(id)
 	if cur == id:
-		cur = Data.WEAPON_ORDER.filter(func(w): return owned.has(w))[0]
+		cur = Data.WEAPON_ORDER.filter(func(w): return loadout.has(w))[0]
 	changed.emit()
 
 

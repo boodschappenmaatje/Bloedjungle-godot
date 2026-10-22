@@ -310,7 +310,7 @@ func _shoot(w: Dictionary) -> void:
 
 ## Wapenwissel: het magazijn van het oude wapen blijft bewaard.
 func equip(id: String) -> void:
-	if not Game.owned.has(id):
+	if not Game.owned.has(id) or not Game.carries(id):
 		return
 	if Game.owned.has(weapon):
 		Game.owned[weapon].ammo = ammo

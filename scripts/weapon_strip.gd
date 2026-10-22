@@ -172,7 +172,7 @@ func _layout() -> void:
 func _owned_ids() -> Array:
 	var out := []
 	for id in IDS:
-		if Game.owned.has(id):
+		if Game.carries(id):
 			out.append(id)
 	return out
 
@@ -204,7 +204,7 @@ func _select(index: int) -> void:
 	if not _ready_to_switch():
 		return
 	var id: String = IDS[index]
-	if not Game.owned.has(id):
+	if not Game.carries(id):
 		return
 	_set_weapon(id)
 	_open_t = 0.0
@@ -248,7 +248,7 @@ func _skin(b: Button, active: bool) -> void:
 func _refresh() -> void:
 	var fingerprint := Game.cur + "|" + str(_open_t > 0.0) + "|" + str(_icons.size())
 	for id in IDS:
-		fingerprint += id + ("+" if Game.owned.has(id) else "-")
+		fingerprint += id + ("+" if Game.carries(id) else "-")
 	if Game.player != null:
 		fingerprint += ":" + str(Game.player.weapon) + ":" + str(Game.player.ammo) + ":" + str(Game.player.reload_t > 0.0)
 	if fingerprint == _last_state:
@@ -282,7 +282,7 @@ func _refresh() -> void:
 	var open := _open_t > 0.0
 	for i in IDS.size():
 		var id: String = IDS[i]
-		var shown := open and Game.owned.has(id) and id != cur
+		var shown := open and Game.carries(id) and id != cur
 		_list[i].visible = shown
 		if not shown:
 			continue

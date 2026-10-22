@@ -121,18 +121,18 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		cycle_weapon()
 	elif k >= KEY_1 and k <= KEY_6 and Game.state != "shop":
 		var id: String = Data.WEAPON_ORDER[k - KEY_1]
-		if Game.owned.has(id):
+		if Game.carries(id):
 			Game.cur = id
 
 
 func _sync() -> void:
 	_open_btn.visible = Game.state == "prep" and not Game.build_mode
 	_swap_btn.visible = (Game.state == "play" or Game.state == "prep") and not Game.build_mode
-	_swap_btn.disabled = Game.owned.size() < 2
+	_swap_btn.disabled = Game.loadout.size() < 2
 
 
 func cycle_weapon() -> void:
-	var order: Array = Data.WEAPON_ORDER.filter(func(id): return Game.owned.has(id))
+	var order: Array = Data.WEAPON_ORDER.filter(func(id): return Game.carries(id))
 	if order.size() < 2:
 		return
 	Game.cur = order[(order.find(Game.cur) + 1) % order.size()]
@@ -575,22 +575,24 @@ func _detail(id: String) -> Control:
 	return pc
 
 
-## Uitrusten, kopen of inleveren. Je draagt maximaal Game.LOADOUT_MAX wapens; een vol pak betekent eerst iets inleveren.
+## Uitrusten, meenemen, terugzetten of kopen. Gekochte wapens blijven van jou; in de loadout passen er Game.LOADOUT_MAX.
 func _weapon_buttons(v: VBoxContainer, id: String) -> void:
 	var base: Dictionary = Data.WEAPONS[id]
-	if Game.owned.has(id):
+	if Game.carries(id):
 		var equipped: bool = Game.cur == id
 		v.add_child(_buy_button("Uitgerust" if equipped else "Uitrusten", not equipped, func(): Game.cur = id))
-		if Game.owned.size() > 1:
-			v.add_child(_buy_button("Inleveren · +%s" % UI.nl(Game.refund(id)), true, func(): Game.drop_weapon(id), 30.0, 0.0, 13))
-	elif Game.loadout_full():
-		v.add_child(_buy_button("Loadout vol (%d/%d) · lever er een in" % [Game.owned.size(), Game.LOADOUT_MAX], false, func(): pass))
+		v.add_child(_buy_button("Terug in wapenkamer", Game.loadout.size() > 1, func(): Game.leave_weapon(id), 30.0, 0.0, 13))
+	elif Game.owned.has(id):
+		var full := Game.loadout_full()
+		v.add_child(_buy_button("Loadout vol (%d/%d) · zet er eerst een terug" % [Game.loadout.size(), Game.LOADOUT_MAX] if full else "Neem mee (%d/%d)" % [Game.loadout.size(), Game.LOADOUT_MAX], not full, func():
+			if Game.take_weapon(id):
+				Game.cur = id))
 	else:
 		v.add_child(_buy_button("Koop · %s" % UI.nl(base.price), Game.points >= base.price, func():
 			if Game.buy(base.price):
 				Game.owned[id] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": base.mag}
-				Game.cur = id))
-
+				if Game.take_weapon(id):
+					Game.cur = id))
 
 
 ## Een regel met naam, balk, waarde en verschil. better_low: lager is beter (herladen).

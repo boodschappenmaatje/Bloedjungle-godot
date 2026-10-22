@@ -37,6 +37,8 @@ func _process(delta: float) -> void:
 	var fps := _frames / _acc
 	_acc = 0.0
 	_frames = 0
+	# onthoud het hoogste tempo dat echt gehaald wordt (zakt langzaam terug), voor schermen die hun snelheid niet melden
+	GameSettings.observed_peak = maxf(60.0, maxf(fps, GameSettings.observed_peak - 0.5))
 	var s := vp.scaling_3d_scale
 	var target := GameSettings.target_fps()
 	if fps < target * DOWN_RATIO:

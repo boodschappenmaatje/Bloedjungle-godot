@@ -22,12 +22,21 @@ static func set_value(key: String, v: String) -> void:
 	cf.save(PATH)
 
 
+## Het hoogste tempo dat het spel de laatste tijd echt haalde (PerfGovernor houdt dit bij). Nodig omdat sommige toestellen
+## hun schermsnelheid niet melden (iPhone via Xogot geeft -1): dan weten we alleen wat we meten.
+static var observed_peak := 60.0
+
+
 ## Beelden per seconde waar het spel naartoe werkt: 60, of 120 als dat gekozen is en het scherm het kan.
+## Meldt het scherm zijn snelheid niet, dan gaan we uit van 60 tot het spel echt boven de ~90 fps komt.
+## (Eerder gold dan 120 als doel; op een scherm dat 60 haalt zette de resolutieregelaar het beeld daardoor voor altijd op 50%.)
 static func target_fps() -> float:
 	if get_value("hz") != "120":
 		return 60.0
 	var r := DisplayServer.screen_get_refresh_rate()
-	return clampf(r, 60.0, 120.0) if r > 0.0 else 120.0
+	if r > 0.0:
+		return clampf(r, 60.0, 120.0)
+	return 120.0 if observed_peak > 90.0 else 60.0
 
 
 static func apply_hz() -> void:

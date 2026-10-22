@@ -48,6 +48,26 @@ func _run() -> void:
 	_check(spikes.size() == 1, "de piek is niet vastgelegd")
 	if spikes.size() == 1:
 		_check(absf(spikes[0].ms - 60.0) < 0.01 and str(spikes[0].after) == "golf 1 begint", "piek mist de gebeurtenis ervoor: '%s'" % str(spikes[0].after))
+	# 3b. pauzetijd telt niet mee: na een stilstand van 600 ms wordt het volgende beeld (delta 16 ms) als 16 ms gemeld
+	var gs: Script = load("res://scripts/game_settings.gd")
+	gs.call("get_value", "perf")
+	gs.get("values")["perf"] = "on"
+	var mon2: Control = script.new()
+	root.add_child(mon2)
+	mon2.call("_process", 0.016)
+	OS.delay_msec(600)
+	mon2.call("_process", 0.016)
+	var fr: PackedFloat32Array = mon2.get("frames")
+	_check(fr.size() == 2 and fr[1] < 20.0, "pauzetijd telt mee als beeldduur (%s)" % str(fr))
+	gs.get("values")["perf"] = "off"
+	# 3c. doel voor de resolutieregelaar: 120 gekozen maar het scherm meldt niets -> 60 tot het spel echt ~120 haalt
+	gs.get("values")["hz"] = "120"
+	gs.set("observed_peak", 60.0)
+	if DisplayServer.screen_get_refresh_rate() <= 0.0:
+		_check(float(gs.call("target_fps")) == 60.0, "onbekend scherm met 120 gekozen geeft een doel van %f" % float(gs.call("target_fps")))
+		gs.set("observed_peak", 118.0)
+		_check(float(gs.call("target_fps")) == 120.0, "echt 120 fps haalt het 120-doel niet")
+	gs.get("values")["hz"] = "60"
 	# 4. kogels worden geteld en weer afgetrokken
 	var b: Script = load("res://scripts/bullet.gd")
 	var before: int = script.get("bullets_live")

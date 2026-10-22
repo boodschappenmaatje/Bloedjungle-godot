@@ -18,7 +18,6 @@ var spikes: Array = []
 var avg := 0.0
 var p95 := 0.0
 var worst := 0.0
-var _last_us := 0
 var _stat_t := 0.0
 var _text: Label
 var _spike_text: Label
@@ -78,12 +77,9 @@ func _process(_delta: float) -> void:
 			frames.clear()
 			spikes.clear()
 	if not on:
-		_last_us = 0
 		return
-	var now := Time.get_ticks_usec()
-	if _last_us > 0:
-		record_frame(float(now - _last_us) / 1000.0)
-	_last_us = now
+	# de eigen duur van dit beeld (delta); niet het verschil in klokstanden, want dat telt de tijd van een pauze mee
+	record_frame(_delta * 1000.0 / maxf(Engine.time_scale, 0.001))
 	_stat_t -= _delta
 	if _stat_t <= 0.0:
 		_stat_t = 0.25
@@ -146,7 +142,7 @@ func _refresh_text() -> void:
 	var gpu := RenderingServer.viewport_get_measured_render_time_gpu(vp)
 	var cpu := RenderingServer.viewport_get_measured_render_time_cpu(vp)
 	var t := "beeld gem %.1f · p95 %.1f · slechtst %.1f ms (%.0f fps)\n" % [avg, p95, worst, 1000.0 / maxf(avg, 0.001)]
-	t += "GPU %.1f · render-CPU %.1f · scripts %.1f ms\n" % [gpu, cpu, Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0 + Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0]
+	t += "GPU %s · render-CPU %.1f · proces %.1f · fysica %.1f ms\n" % ["%.1f" % gpu if gpu > 0.0 else "n.b.", cpu, Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0]
 	t += "draw calls %d · objecten %d · driehoeken %dk · videogeh. %d MB\n" % [Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1000, Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0]
 	t += "vijanden %d · kogels %d · vaten %d · nodes %d · %s" % [Game.enemies.size(), bullets_live, Game.barrels.size(), Performance.get_monitor(Performance.OBJECT_NODE_COUNT), Game.state]
 	_text.text = t

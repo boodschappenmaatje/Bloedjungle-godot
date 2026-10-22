@@ -19,6 +19,7 @@ var bonus := 0  # bonus van de laatste overleefde golf, getoond in de wapenkamer
 # Wat je bezit: per wapen de upgradeniveaus en de kogels in het magazijn, en de uitrusting-upgrades.
 var owned := _fresh_owned()
 var cur := "m1911"
+const LOADOUT_MAX := 5  # meer wapens kun je niet dragen
 var upg := {"maxhp": 0, "armor": 0, "speed": 0, "fort": 0, "sentry": 0, "gate": 0}
 # spullen in je tas om neer te zetten (Defenses)
 var inv := {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
@@ -166,6 +167,25 @@ func buy(cost: int) -> bool:
 	Sfx.play("buy")
 	changed.emit()
 	return true
+
+
+func loadout_full() -> bool:
+	return owned.size() >= LOADOUT_MAX
+
+
+## Wat een wapen opbrengt als je het inlevert: de helft van de prijs.
+func refund(id: String) -> int:
+	return int(Data.WEAPONS[id].price * 0.5)
+
+
+func drop_weapon(id: String) -> void:
+	if not owned.has(id) or owned.size() < 2:
+		return
+	owned.erase(id)
+	points += refund(id)
+	if cur == id:
+		cur = Data.WEAPON_ORDER.filter(func(w): return owned.has(w))[0]
+	changed.emit()
 
 
 static func _fresh_owned() -> Dictionary:

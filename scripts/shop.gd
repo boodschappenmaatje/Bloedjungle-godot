@@ -571,15 +571,26 @@ func _detail(id: String) -> Control:
 		tags.append("%d kogels per schot" % base.pellets)
 	if not tags.is_empty():
 		v.add_child(UI.label(" · ".join(tags).to_upper(), UI.body(700, 1), 11, UI.BRASS))
-	if own:
+	_weapon_buttons(v, id)
+	return pc
+
+
+## Uitrusten, kopen of inleveren. Je draagt maximaal Game.LOADOUT_MAX wapens; een vol pak betekent eerst iets inleveren.
+func _weapon_buttons(v: VBoxContainer, id: String) -> void:
+	var base: Dictionary = Data.WEAPONS[id]
+	if Game.owned.has(id):
 		var equipped: bool = Game.cur == id
 		v.add_child(_buy_button("Uitgerust" if equipped else "Uitrusten", not equipped, func(): Game.cur = id))
+		if Game.owned.size() > 1:
+			v.add_child(_buy_button("Inleveren · +%s" % UI.nl(Game.refund(id)), true, func(): Game.drop_weapon(id), 30.0, 0.0, 13))
+	elif Game.loadout_full():
+		v.add_child(_buy_button("Loadout vol (%d/%d) · lever er een in" % [Game.owned.size(), Game.LOADOUT_MAX], false, func(): pass))
 	else:
 		v.add_child(_buy_button("Koop · %s" % UI.nl(base.price), Game.points >= base.price, func():
 			if Game.buy(base.price):
 				Game.owned[id] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": base.mag}
 				Game.cur = id))
-	return pc
+
 
 
 ## Een regel met naam, balk, waarde en verschil. better_low: lager is beter (herladen).
@@ -642,14 +653,7 @@ func _weapon_card(id: String) -> void:
 	var sp := Control.new()
 	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	v.add_child(sp)
-	if own:
-		var equipped: bool = Game.cur == id
-		v.add_child(_buy_button("Uitgerust" if equipped else "Uitrusten", not equipped, func(): Game.cur = id))
-	else:
-		v.add_child(_buy_button("Koop · %s" % UI.nl(w.price), Game.points >= w.price, func():
-			if Game.buy(w.price):
-				Game.owned[id] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": Data.WEAPONS[id].mag}
-				Game.cur = id))
+	_weapon_buttons(v, id)
 
 
 func _upgrade_card(id: String) -> void:

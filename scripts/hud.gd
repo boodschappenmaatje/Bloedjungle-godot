@@ -23,7 +23,7 @@ func _ready() -> void:
 	%Restart.pressed.connect(func(): get_tree().reload_current_scene())
 	over_box.hide()
 	add_child(HudExtra.new())
-	var weapon_strip := load("res://scripts/weapon_strip.gd").new()
+	var weapon_strip: Control = load("res://scripts/weapon_strip.gd").new()
 	add_child(weapon_strip)
 	add_child(Shop.new())
 	add_child(PlaceHud.new())

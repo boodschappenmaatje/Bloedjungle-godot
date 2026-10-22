@@ -113,7 +113,11 @@ func _physics_process(delta: float) -> void:
 	if tower != null:
 		_on_deck(mv)
 	else:
-		position.y = 0.0
+		# in een huis: vloerhoogte volgens de trap en de verdieping; vallen gaat geleidelijk
+		var hy := Woonhuis.floor_at(global_position, position.y)
+		hy = maxf(hy, 0.0)
+		position.y = hy if hy >= position.y else maxf(hy, position.y - 9.0 * delta)
+		elev = position.y
 		_find_stairs(mv)
 	var sunk: bool = tower == null and Game.defs != null and Game.defs.in_trench(global_position)
 	model.position.y = lerpf(model.position.y, -0.78 if sunk else 0.0, minf(1.0, delta * 8.0))

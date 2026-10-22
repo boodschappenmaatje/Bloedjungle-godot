@@ -9,6 +9,10 @@ const SPIKE_MS := 33.4  # een beeld dat langer duurt dan twee beelden bij 60 fps
 const GRAPH := Vector2(280, 46)
 const LOG_PATH := "user://prestatie.log"
 const MAX_LOG_LINES := 300
+static var report_dir := "res://prestatie"  # in de projectmap: Working Copy zet nieuwe bestanden zelf op GitHub
+const BIN_MS := 0.25  # een staafje in het histogram van beeldtijden
+const BINS := 400  # tot 100 ms
+const MAX_WAVE_SPIKES := 40
 
 static var notes: Array = []  # {t, text, n}: wat er net gebeurde (golf begon, vijanden gespawnd, explosie)
 static var bullets_live := 0
@@ -23,6 +27,13 @@ var _text: Label
 var _spike_text: Label
 var _log_lines := 0
 var _gpu_on := false
+
+# Per golf verzameld (van de eerste tot de laatste speelseconde), na afloop als rapport weggeschreven
+var _wave_active := false
+var _wave_no := 0
+var _w: Dictionary = {}
+var _report_file := ""
+var saved_to := ""  # waar het laatste rapport terecht kwam, of de reden dat het niet lukte
 
 
 static func note(text: String) -> void:
@@ -79,7 +90,9 @@ func _process(_delta: float) -> void:
 	if not on:
 		return
 	# de eigen duur van dit beeld (delta); niet het verschil in klokstanden, want dat telt de tijd van een pauze mee
-	record_frame(_delta * 1000.0 / maxf(Engine.time_scale, 0.001))
+	var ms := _delta * 1000.0 / maxf(Engine.time_scale, 0.001)
+	record_frame(ms)
+	_track_wave(ms)
 	_stat_t -= _delta
 	if _stat_t <= 0.0:
 		_stat_t = 0.25
@@ -108,6 +121,9 @@ func _add_spike(ms: float) -> void:
 	spikes.push_front(s)
 	if spikes.size() > 8:
 		spikes.pop_back()
+	if _wave_active and _w.spikes.size() < MAX_WAVE_SPIKES:
+		s.at = float(Time.get_ticks_msec() - int(_w.t0)) / 1000.0
+		_w.spikes.append(s)
 	_log(s)
 
 
@@ -149,7 +165,7 @@ func _refresh_text() -> void:
 	var lines := PackedStringArray()
 	for s in spikes:
 		lines.append("%.0f ms · %s · %d vijanden%s" % [s.ms, s.state, s.enemies, (" · na: %s (%.1f s)" % [s.after, s.ago]) if s.after != "" else ""])
-	_spike_text.text = "PIEKEN (>33 ms):\n" + ("\n".join(lines) if not lines.is_empty() else "geen")
+	_spike_text.text = ("rapport: %s\n" % saved_to if saved_to != "" else "") + "PIEKEN (>33 ms):\n" + ("\n".join(lines) if not lines.is_empty() else "geen")
 
 
 func _draw() -> void:
@@ -170,3 +186,120 @@ func _draw() -> void:
 		var h := GRAPH.y * v / top
 		var c := Color(0.5, 1.0, 0.5) if v < 16.7 * 1.2 else (Color(1.0, 0.85, 0.3) if v < SPIKE_MS else Color(1.0, 0.3, 0.2))
 		draw_rect(Rect2(x + (SAMPLES - n + i) * w, y + GRAPH.y - h, maxf(w, 1.0), h), c)
+
+
+# ------------------------------------------------------------------ rapport per golf
+
+func _new_wave() -> Dictionary:
+	var bins := PackedInt32Array()
+	bins.resize(BINS + 1)
+	return {"t0": Time.get_ticks_msec(), "n": 0, "sum": 0.0, "worst": 0.0, "over20": 0, "over33": 0, "bins": bins, "spikes": [],
+		"enemies_max": 0, "bullets_max": 0, "draw_sum": 0.0, "draw_max": 0, "objects_max": 0, "tris_max": 0, "vmem_max": 0.0,
+		"nodes_max": 0, "res_min": 9.0, "res_sum": 0.0, "base_hp": Game.base_hp, "points": Game.points, "kills": Game.kills}
+
+
+## Elk beeld van een golf optellen. Een golf = zolang Game.state "play" is; daarna wordt het rapport geschreven.
+func _track_wave(ms: float) -> void:
+	var playing := Game.state == "play"
+	if playing and not _wave_active:
+		_wave_active = true
+		_wave_no = Game.wave
+		_w = _new_wave()
+	elif not playing and _wave_active:
+		_wave_active = false
+		finish_wave()
+	if not _wave_active:
+		return
+	_w.n += 1
+	_w.sum += ms
+	_w.worst = maxf(_w.worst, ms)
+	if ms > 20.0:
+		_w.over20 += 1
+	if ms > SPIKE_MS:
+		_w.over33 += 1
+	_w.bins[mini(int(ms / BIN_MS), BINS)] += 1
+	var dc := int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
+	_w.draw_sum += dc
+	_w.draw_max = maxi(_w.draw_max, dc)
+	_w.objects_max = maxi(_w.objects_max, int(Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME)))
+	_w.tris_max = maxi(_w.tris_max, int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)))
+	_w.vmem_max = maxf(_w.vmem_max, Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0)
+	_w.nodes_max = maxi(_w.nodes_max, int(Performance.get_monitor(Performance.OBJECT_NODE_COUNT)))
+	_w.enemies_max = maxi(_w.enemies_max, Game.enemies.size())
+	_w.bullets_max = maxi(_w.bullets_max, bullets_live)
+	var rs := get_viewport().scaling_3d_scale
+	_w.res_min = minf(_w.res_min, rs)
+	_w.res_sum += rs
+
+
+static func _percentile(bins: PackedInt32Array, n: int, q: float) -> float:
+	var target := n * q
+	var run := 0
+	for i in bins.size():
+		run += bins[i]
+		if run >= target:
+			return (i + 1) * BIN_MS
+	return BINS * BIN_MS
+
+
+## De samenvatting van één golf als Markdown (leesbaar in GitHub, en door mij te lezen).
+func report_markdown() -> String:
+	var n: int = maxi(int(_w.n), 1)
+	var secs := float(Time.get_ticks_msec() - int(_w.t0)) / 1000.0
+	var avg: float = float(_w.sum) / n
+	var t := "## Golf %d · %.0f s gespeeld · %s\n\n" % [_wave_no, secs, Time.get_datetime_string_from_system().replace("T", " ")]
+	t += "| | |\n|---|---|\n"
+	t += "| beelden | %d (gem. %.1f ms = %.0f fps) |\n" % [_w.n, avg, 1000.0 / maxf(avg, 0.001)]
+	t += "| p50 / p95 / p99 / slechtst | %.1f / %.1f / %.1f / %.1f ms |\n" % [_percentile(_w.bins, _w.n, 0.5), _percentile(_w.bins, _w.n, 0.95), _percentile(_w.bins, _w.n, 0.99), _w.worst]
+	t += "| beelden > 20 ms | %d (%.1f%%) |\n" % [_w.over20, 100.0 * _w.over20 / n]
+	t += "| beelden > 33 ms (pieken) | %d (%.2f%%) |\n" % [_w.over33, 100.0 * _w.over33 / n]
+	t += "| resolutie 3D | gem. %.0f%% · laagst %.0f%% |\n" % [100.0 * _w.res_sum / n, 100.0 * _w.res_min]
+	t += "| draw calls | gem. %.0f · max %d |\n" % [_w.draw_sum / n, _w.draw_max]
+	t += "| objecten / driehoeken (max) | %d / %dk |\n" % [_w.objects_max, _w.tris_max / 1000]
+	t += "| videogeheugen (max) | %.0f MB |\n" % _w.vmem_max
+	t += "| nodes (max) | %d |\n" % _w.nodes_max
+	t += "| vijanden / kogels (max) | %d / %d |\n" % [_w.enemies_max, _w.bullets_max]
+	t += "| bunker | %.0f -> %.0f hp · kills %d · punten %d |\n\n" % [_w.base_hp, Game.base_hp, Game.kills - int(_w.kills), Game.points]
+	if _w.spikes.is_empty():
+		t += "Geen pieken boven 33 ms.\n\n"
+	else:
+		t += "**Pieken** (eerste %d):\n\n| na | ms | vijanden | kogels | gebeurtenis ervoor |\n|---|---|---|---|---|\n" % _w.spikes.size()
+		for s in _w.spikes:
+			t += "| %.1f s | %.0f | %d | %d | %s |\n" % [s.at, s.ms, s.enemies, s.bullets, ("%s (%.1f s eerder)" % [s.after, s.ago]) if s.after != "" else "-"]
+		t += "\n"
+	return t
+
+
+static func device_header() -> String:
+	var vp := Engine.get_main_loop() as SceneTree
+	var size_ := DisplayServer.window_get_size()
+	var t := "# Prestatiemeting Bloedjungle\n\n"
+	t += "- toestel: %s · %s · %s\n" % [OS.get_name(), OS.get_model_name(), RenderingServer.get_video_adapter_name()]
+	t += "- Godot %s · renderer %s · venster %dx%d\n" % [Engine.get_version_info().string, RenderingServer.get_current_rendering_method(), size_.x, size_.y]
+	t += "- instellingen: grafiek %s · tijd %s · weer %s · Hz-keuze %s · schermsnelheid gemeld %.0f · bomen bewegen %s · boomschaduw %s\n\n" % [GameSettings.get_value("quality"), GameSettings.get_value("time"), GameSettings.get_value("weather"), GameSettings.get_value("hz"), DisplayServer.screen_get_refresh_rate(), GameSettings.get_value("wind"), GameSettings.get_value("treeshadow")]
+	return t
+
+
+## Schrijft het rapport van de afgelopen golf: eerst in de projectmap (res://prestatie), anders in user://prestatie.
+func finish_wave() -> void:
+	if int(_w.n) < 30:
+		return  # te kort om iets te zeggen
+	if _report_file == "":
+		var d := Time.get_datetime_dict_from_system()
+		_report_file = "meting_%04d%02d%02d_%02d%02d%02d.md" % [d.year, d.month, d.day, d.hour, d.minute, d.second]
+	var body := report_markdown()
+	for dir in [report_dir, "user://prestatie"]:
+		DirAccess.make_dir_recursive_absolute(dir)
+		var path: String = dir + "/" + _report_file
+		var f := FileAccess.open(path, FileAccess.READ_WRITE if FileAccess.file_exists(path) else FileAccess.WRITE)
+		if f == null:
+			continue
+		f.seek_end()
+		if f.get_position() == 0:
+			f.store_string(device_header())
+		f.store_string(body)
+		f.close()
+		saved_to = ProjectSettings.globalize_path(path)
+		note("rapport opgeslagen")
+		return
+	saved_to = "NIET opgeslagen (geen schrijfrechten)"

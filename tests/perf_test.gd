@@ -68,6 +68,28 @@ func _run() -> void:
 		gs.set("observed_peak", 118.0)
 		_check(float(gs.call("target_fps")) == 120.0, "echt 120 fps haalt het 120-doel niet")
 	gs.get("values")["hz"] = "60"
+	# 3d. rapport per golf: na afloop van "play" komt er een Markdown-bestand met de kerncijfers
+	script.set("report_dir", "user://test_prestatie")
+	gs.get("values")["perf"] = "on"
+	var game = root.get_node("Game")
+	game.state = "play"
+	game.wave = 3
+	var mon3: Control = script.new()
+	root.add_child(mon3)
+	for i in 40:
+		mon3.call("_process", 0.0167 if i != 20 else 0.05)  # één piek van 50 ms
+	game.state = "prep"
+	mon3.call("_process", 0.0167)
+	var saved := str(mon3.get("saved_to"))
+	_check(saved != "" and not saved.begins_with("NIET"), "rapport niet opgeslagen: '%s'" % saved)
+	if FileAccess.file_exists(saved):
+		var txt := FileAccess.get_file_as_string(saved)
+		for needle in ["# Prestatiemeting Bloedjungle", "## Golf 3", "p50 / p95 / p99", "beelden > 33 ms", "Pieken"]:
+			_check(txt.contains(needle), "rapport mist '%s'" % needle)
+		DirAccess.remove_absolute(saved)
+	else:
+		_check(false, "rapportbestand bestaat niet: " + saved)
+	gs.get("values")["perf"] = "off"
 	# 4. kogels worden geteld en weer afgetrokken
 	var b: Script = load("res://scripts/bullet.gd")
 	var before: int = script.get("bullets_live")

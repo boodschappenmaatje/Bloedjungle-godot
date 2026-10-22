@@ -2,7 +2,7 @@ extends CanvasLayer
 ## Meldingen en knoppen midden op het scherm (golf-titel, "Start nu", gesneuveld). De balken, punten
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
-const VERSION := "v66"
+const VERSION := "v67"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -22,7 +22,9 @@ func _ready() -> void:
 	start_btn.pressed.connect(func(): get_parent().start_wave())
 	%Restart.pressed.connect(func(): get_tree().reload_current_scene())
 	over_box.hide()
-	add_child(HudExtra.new())
+	var extra := HudExtra.new()
+	extra.name = "HudExtra"
+	add_child(extra)
 	var weapon_strip: Control = load("res://scripts/weapon_strip.gd").new()
 	add_child(weapon_strip)
 	add_child(Shop.new())

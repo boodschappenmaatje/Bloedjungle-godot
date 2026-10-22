@@ -17,6 +17,19 @@ func toggle_view() -> void:
 func zoom(delta_step: int) -> void:
 	zoom_step = clampi(zoom_step + delta_step, -3, 4)
 
+
+func _unhandled_input(event: InputEvent) -> void:
+	# Het muiswiel zoomt alleen in de speelcamera; bouwmodus behoudt zijn eigen zoombediening.
+	if Game.build_mode or (Game.state != "play" and Game.state != "prep"):
+		return
+	if event is InputEventMouseButton and event.pressed:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			zoom(-1)
+			get_viewport().set_input_as_handled()
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			zoom(1)
+			get_viewport().set_input_as_handled()
+
 func _ready() -> void:
 	# lange lens en onscherpe verte: kijkt als een filmbeeld, niet als een kaart
 	fov = 45.0
@@ -99,9 +112,9 @@ func _process(delta: float) -> void:
 	_blook = Vector3.ZERO
 	far = 220.0
 	# Generals-first camera, Dead Nation gevechtsstand, met begrensde zoom.
-	var dist: float = (16.0 if combat_view else 28.0) + float(zoom_step) * 2.5
+	var dist: float = clampf((16.0 if combat_view else 28.0) + float(zoom_step) * 2.5, 8.5, 38.0)
 	if portrait:
-		dist *= 1.25
+		dist = minf(dist * 1.2, 42.0)
 	var angle: float = deg_to_rad(48.0 if combat_view else 58.0)
 	var h: float = sin(angle) * dist
 	var back: float = cos(angle) * dist
@@ -111,9 +124,21 @@ func _process(delta: float) -> void:
 	_lead = _lead.lerp(want, 1.0 - exp(-3.0 * delta))
 	var target: Vector3 = p.global_position + _lead
 	var goal: Vector3 = target + Vector3(0.0, h, back)
+	goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)
 	global_position = goal if _snap else global_position.lerp(goal, 1.0 - exp(-5.0 * delta))
 	_snap = false
-	_nlook = global_position - Vector3(0.0, h, back)
-	look_at(_nlook, Vector3.UP)
+	_nlook = target
+	look_at(target, Vector3.UP)
 	# Alleen vlak bij het personage worden bladers uit de kijklijn gehouden.
 	Foliage.update_visibility_focus(p.global_position, global_position)
+
+
+func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vector3:
+	# Alleen statische bouwstukken en de bunker blokkeren de camera; het grote grondvlak
+	# ligt onder de zichtlijn en wordt niet iedere frame onnodig meegenomen.
+	var query := PhysicsRayQueryParameters3D.create(origin, desired, Kit.LAYER_WALL | Kit.LAYER_BUNKER)
+	query.exclude = [player.get_rid()]
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return desired
+	return hit.position + hit.normal * 0.35

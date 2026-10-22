@@ -15,6 +15,9 @@ rows_ok = np.where(union.sum(axis=1) >= 6)[0]
 cols_ok = np.where(union.sum(axis=0) >= 6)[0]
 box = (int(cols_ok[0]), int(rows_ok[0]), int(cols_ok[-1]) + 1, int(rows_ok[-1]) + 1)
 W0 = Image.open(files[0]).size[0]
+# symmetrisch om het midden (daar staat de explosie), zodat de vuurbal precies op de plek van de ontploffing staat
+half = max(W0 // 2 - box[0], box[2] - W0 // 2)
+box = (max(0, W0 // 2 - half), box[1], min(W0, W0 // 2 + half), box[3])
 pad = int(W0 * 0.02)
 box = (max(0, box[0] - pad), max(0, box[1] - pad), min(W0, box[2] + pad), min(W0, box[3] + pad))
 cw = px

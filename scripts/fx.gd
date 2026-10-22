@@ -362,9 +362,9 @@ const FIREBALL_TIME := 2.4  # seconden voor de hele beeldreeks
 const MAX_FIREBALLS := 4  # meer tegelijk tekenen kost een telefoon te veel; extra explosies houden vonken, licht en puin
 # Elke variant komt uit een eigen Blender-render (bron/explosie, andere ruis en vorm); size = afmeting in meters van het uitgesneden beeld
 const FIREBALLS := [
-	{"sheet": preload("res://assets/fx/explosie_vuur.png"), "cols": 6, "rows": 6, "frames": 36, "size": Vector2(7.06, 7.92)},  # de eerste: middelhoog
-	{"sheet": preload("res://assets/fx/explosie_vuur2.png"), "cols": 6, "rows": 5, "frames": 30, "size": Vector2(7.06, 8.0)},  # hoog met een grote rookkop
-	{"sheet": preload("res://assets/fx/explosie_vuur3.png"), "cols": 6, "rows": 5, "frames": 30, "size": Vector2(7.53, 6.8)},  # laag en breed: een grondexplosie
+	{"sheet": preload("res://assets/fx/explosie_vuur.png"), "cols": 6, "rows": 5, "frames": 30, "size": Vector2(5.9, 7.9)},  # middelhoog
+	{"sheet": preload("res://assets/fx/explosie_vuur2.png"), "cols": 6, "rows": 5, "frames": 30, "size": Vector2(5.95, 8.0)},  # hoog met een grote rookkop
+	{"sheet": preload("res://assets/fx/explosie_vuur3.png"), "cols": 6, "rows": 5, "frames": 30, "size": Vector2(7.74, 6.8)},  # laag en breed: een grondexplosie
 ]
 static var _fire_quad := {}
 static var _fireballs_live := 0
@@ -435,6 +435,7 @@ static func flame(parent: Node3D, local_pos: Vector3, height: float, light := tr
 	m.set_shader_parameter("rows", 4)
 	m.set_shader_parameter("frames", 16)
 	m.set_shader_parameter("looping", true)
+	m.set_shader_parameter("bright", 0.8)  # niet witheet: een vat brandt oranje
 	m.set_shader_parameter("flip_x", randf() < 0.5)
 	var mi := MeshInstance3D.new()
 	mi.mesh = _flame_quad

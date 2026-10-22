@@ -179,8 +179,8 @@ func _set_glow(amount: float) -> void:
 	_own_mat.albedo_color = Color.WHITE.lerp(Color(0.3, 0.22, 0.2), a)  # verkolen
 	_own_mat.emission = Color(1.0, 0.2, 0.04)
 	_own_mat.emission_energy_multiplier = 0.05 + 0.45 * a * a
-	_own_lid.emission = Color(1.0, 0.38, 0.06)
-	_own_lid.emission_energy_multiplier = 0.4 + 2.6 * a
+	_own_lid.emission = Color(1.0, 0.28, 0.04)
+	_own_lid.emission_energy_multiplier = 0.25 + 1.1 * a
 
 
 ## Onder de helft: het vat lekt een vlam en ontploft na enkele seconden vanzelf (ook als je niet meer schiet).

@@ -34,6 +34,15 @@ static func material(kind := "") -> ShaderMaterial:
 	return _mats[kind]
 
 
+## Globale uniforms op gedeelde leaf-materialen, zonder per-palm drawcalls.
+static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3) -> void:
+	for key in ["palm", "leaf", "fern"]:
+		var mat: ShaderMaterial = material(key)
+		mat.set_shader_parameter("fade_sightline", true)
+		mat.set_shader_parameter("view_player", player_pos + Vector3.UP * 1.2)
+		mat.set_shader_parameter("view_camera", camera_pos)
+
+
 ## Zet de wind in alle bladeren aan of uit.
 static func set_wind(on: bool) -> void:
 	for k in _mats:

@@ -214,7 +214,7 @@ func _apply_view() -> void:
 			continue
 		if s.floor != _inside:
 			continue
-		var outward: Vector3 = -(s.node as Node3D).global_transform.basis.z   # buitenkant = lokale -Z (Blender -Y)
+		var outward: Vector3 = (s.node as Node3D).global_transform.basis.z   # buitenkant = lokale +Z (Blender -Y)
 		if String(s.name).begins_with("P") or outward.dot(cam_dir) > 0.4:
 			_show_seg(s, false)
 			_hidden.append(s)
@@ -293,7 +293,7 @@ func _center(s: Dictionary) -> Vector3:
 
 
 func _outward(s: Dictionary) -> Vector3:
-	var o: Vector3 = -(s.node as Node3D).global_transform.basis.z
+	var o: Vector3 = (s.node as Node3D).global_transform.basis.z
 	o.y = 0.0
 	return o.normalized()
 

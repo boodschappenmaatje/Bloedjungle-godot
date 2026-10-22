@@ -83,9 +83,9 @@ func _ready() -> void:
 	var cs := CollisionShape3D.new()
 	var cyl := CylinderShape3D.new()
 	cyl.radius = 0.42
-	cyl.height = 1.0
+	cyl.height = 2.0  # kogels vliegen op schouderhoogte (~1,3 m): de botsvorm is hoger dan het vat zelf, anders gaan ze eroverheen
 	cs.shape = cyl
-	cs.position.y = 0.5
+	cs.position.y = 1.0
 	add_child(cs)
 	_build()
 	rotation.y = fmod(spot.x * 12.9898 + spot.z * 78.233, TAU)

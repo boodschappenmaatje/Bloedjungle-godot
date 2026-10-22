@@ -60,9 +60,11 @@ func _process(_dt: float) -> bool:
 		e1 = _spawn_enemy(Vector3(10, 0, 42))
 		e2 = _spawn_enemy(Vector3(30, 0, 30))
 		hp1 = e1.hp
+		# een echte kogel op schouderhoogte moet het vat raken (niet eroverheen vliegen)
+		var bullet_script: Script = load("res://scripts/bullet.gd")
+		bullet_script.call("fire", main, Vector3(10, 1.35, 36), 0.0, 75.0, 500.0, 1.0, true)
 		v1.call("hit", 10.0, Vector3.RIGHT, true)
 		_check(is_instance_valid(v1) and not v1.lit, "een zwak schot laat het vat al ontploffen")
-		v1.call("hit", 500.0, Vector3.RIGHT, true)
 	if frames == 40:
 		_check(not is_instance_valid(v1) or v1.is_queued_for_deletion(), "vat 1 is niet ontploft")
 		_check(not is_instance_valid(v2) or v2.is_queued_for_deletion(), "naburig vat ging niet mee (kettingreactie)")

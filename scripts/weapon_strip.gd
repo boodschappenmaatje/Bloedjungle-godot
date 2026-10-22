@@ -4,6 +4,18 @@ extends Control
 ## foto's van de echte 3D-wapenmodellen (assets/wapens.glb), eenmalig gerenderd bij het opstarten.
 ## Het spel bezit de wapens; de HUD is uitsluitend een selectie- en informatielaag.
 
+## Pijl getekend als vorm: het lettertype heeft geen ◀ ▶ en toonde alleen een leeg vakje.
+class ArrowGlyph:
+	extends Control
+	var dir := 1.0
+	func _draw() -> void:
+		var c := size * 0.5
+		var w := minf(size.x * 0.28, 9.0)
+		var h := minf(size.y * 0.22, 14.0)
+		var pts := PackedVector2Array([c + Vector2(dir * w, 0.0), c + Vector2(-dir * w, -h), c + Vector2(-dir * w, h)])
+		draw_colored_polygon(pts, Color.WHITE)  # de kleur komt van modulate (goud of gedimd)
+
+
 const IDS := ["m1911", "thompson", "garand", "trench", "mg42", "bazooka"]
 const GUNS := preload("res://assets/wapens.glb")
 const OPEN_TIME := 3.0
@@ -13,6 +25,8 @@ var _icons := {}  # wapen-id -> ImageTexture
 var _card: Button
 var _prev: Button
 var _next: Button
+var _prev_glyph: ArrowGlyph
+var _next_glyph: ArrowGlyph
 var _pic: TextureRect
 var _name: Label
 var _ammo: Label
@@ -31,9 +45,9 @@ func _ready() -> void:
 	_name = _label(_card, 11, HORIZONTAL_ALIGNMENT_LEFT)
 	_ammo = _label(_card, 22, HORIZONTAL_ALIGNMENT_RIGHT)
 	_prev = _button(_cycle.bind(-1))
-	_prev.text = "◀"
+	_prev_glyph = _arrow(_prev, -1.0)
 	_next = _button(_cycle.bind(1))
-	_next.text = "▶"
+	_next_glyph = _arrow(_next, 1.0)
 	for i in IDS.size():
 		var b := _button(_select.bind(i))
 		_list.append(b)
@@ -52,6 +66,15 @@ func _button(on_press: Callable) -> Button:
 	b.button_down.connect(on_press)
 	add_child(b)
 	return b
+
+
+func _arrow(parent: Control, dir: float) -> ArrowGlyph:
+	var g := ArrowGlyph.new()
+	g.dir = dir
+	g.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	g.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	parent.add_child(g)
+	return g
 
 
 func _picture(parent: Control) -> TextureRect:
@@ -121,10 +144,54 @@ func _render_icons() -> void:
 		await get_tree().process_frame
 		var img := vp.get_texture().get_image()
 		if img != null and not img.is_empty():
-			_icons[id] = ImageTexture.create_from_image(img)
+			_icons[id] = ImageTexture.create_from_image(_polish(img))
 	vp.queue_free()
 	_last_state = ""
 	_refresh()
+
+
+## Maakt het plaatje leesbaar op de donkere kaart: de donkere metalen delen lichter en een lichte rand rondom, zodat de vorm
+## ook van een zwart pistool goed te zien is.
+static func _polish(img: Image) -> Image:
+	img.convert(Image.FORMAT_RGBA8)
+	var w := img.get_width()
+	var h := img.get_height()
+	var src := img.get_data()
+	var out := src.duplicate()
+	var r := 3
+	# rand: alpha een paar punten uitsmeren (eerst horizontaal, dan verticaal)
+	var hor := PackedByteArray()
+	hor.resize(w * h)
+	for y in h:
+		for x in w:
+			var m := 0
+			for k in range(-r, r + 1):
+				var xx := x + k
+				if xx >= 0 and xx < w:
+					m = maxi(m, src[(y * w + xx) * 4 + 3])
+			hor[y * w + x] = m
+	for y in h:
+		for x in w:
+			var m := 0
+			for k in range(-r, r + 1):
+				var yy := y + k
+				if yy >= 0 and yy < h:
+					m = maxi(m, hor[yy * w + x])
+			var i := (y * w + x) * 4
+			var fa := src[i + 3] / 255.0
+			var ba := (m / 255.0) * 0.9  # de lichte rand
+			# voorgrond (opgelicht) over de rand heen leggen
+			var fr := minf(src[i] / 255.0 * 1.7 + 0.1, 1.0)
+			var fg := minf(src[i + 1] / 255.0 * 1.7 + 0.1, 1.0)
+			var fb := minf(src[i + 2] / 255.0 * 1.7 + 0.1, 1.0)
+			var oa := fa + ba * (1.0 - fa)
+			if oa <= 0.001:
+				continue
+			out[i] = int(clampf((fr * fa + 0.96 * ba * (1.0 - fa)) / oa, 0.0, 1.0) * 255.0)
+			out[i + 1] = int(clampf((fg * fa + 0.86 * ba * (1.0 - fa)) / oa, 0.0, 1.0) * 255.0)
+			out[i + 2] = int(clampf((fb * fa + 0.62 * ba * (1.0 - fa)) / oa, 0.0, 1.0) * 255.0)
+			out[i + 3] = int(oa * 255.0)
+	return Image.create_from_data(w, h, false, Image.FORMAT_RGBA8, out)
 
 
 static func _box(root: Node3D) -> AABB:
@@ -259,11 +326,11 @@ func _refresh() -> void:
 	_skin(_card, true)
 	_skin(_prev, false)
 	_skin(_next, false)
-	for b in [_prev, _next]:
-		b.add_theme_color_override("font_color", gold)
 	var multi := _owned_ids().size() > 1
 	_prev.disabled = not multi
 	_next.disabled = not multi
+	for g in [_prev_glyph, _next_glyph]:
+		g.modulate = gold if multi else Color(0.45, 0.47, 0.45, 0.6)
 	_pic.texture = _icons.get(cur)
 	_name.text = str(Data.WEAPONS[cur].short)
 	_name.add_theme_color_override("font_color", gold)

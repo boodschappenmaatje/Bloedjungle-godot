@@ -6,8 +6,16 @@ var _lead := Vector3.ZERO
 var _blook := Vector3.ZERO
 var _nlook := Vector3.ZERO
 var _fog0 := -1.0
+var combat_view := false
+var zoom_step := 0
 var _snap := true  # eerste beeld meteen op de speler, niet ernaartoe vliegen
 
+
+func toggle_view() -> void:
+	combat_view = not combat_view
+
+func zoom(delta_step: int) -> void:
+	zoom_step = clampi(zoom_step + delta_step, -3, 4)
 
 func _ready() -> void:
 	# lange lens en onscherpe verte: kijkt als een filmbeeld, niet als een kaart
@@ -90,16 +98,22 @@ func _process(delta: float) -> void:
 	attributes.dof_blur_far_enabled = GameSettings.get_value("quality") == "ultra"  # scherptediepte kost veel op mobiel
 	_blook = Vector3.ZERO
 	far = 220.0
-	# V66: circa 48 graden neerwaartse helling en 14.5 m afstand in landscape.
-	# Staand iets verder voor overzicht; bouwcamera blijft onafhankelijk.
-	var h := 17.0 if portrait else 10.8
-	var back := 15.0 if portrait else 9.7
-	var aiming := not is_nan(Game.aim)
-	var want := Vector3(sin(p.face), 0, cos(p.face)) * (2.5 if aiming else 0.7)
+	# Generals-first camera, Dead Nation gevechtsstand, met begrensde zoom.
+	var dist: float = (16.0 if combat_view else 28.0) + float(zoom_step) * 2.5
+	if portrait:
+		dist *= 1.25
+	var angle: float = deg_to_rad(48.0 if combat_view else 58.0)
+	var h: float = sin(angle) * dist
+	var back: float = cos(angle) * dist
+	var aiming: bool = not is_nan(Game.aim)
+	var lead_dist: float = (2.5 if combat_view else 3.0) if aiming else 0.5
+	var want: Vector3 = Vector3(sin(p.face), 0.0, cos(p.face)) * lead_dist
 	_lead = _lead.lerp(want, 1.0 - exp(-3.0 * delta))
 	var target: Vector3 = p.global_position + _lead
-	var goal := target + Vector3(0, h, back)
-	global_position = goal if _snap else global_position.lerp(goal, 1.0 - exp(-7.0 * delta))
+	var goal: Vector3 = target + Vector3(0.0, h, back)
+	global_position = goal if _snap else global_position.lerp(goal, 1.0 - exp(-5.0 * delta))
 	_snap = false
-	_nlook = global_position - Vector3(0, h, back)
+	_nlook = global_position - Vector3(0.0, h, back)
 	look_at(_nlook, Vector3.UP)
+	# Alleen vlak bij het personage worden bladers uit de kijklijn gehouden.
+	Foliage.update_visibility_focus(p.global_position, global_position)

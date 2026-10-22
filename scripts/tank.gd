@@ -149,7 +149,7 @@ func _shoot(at: Vector3) -> void:
 	var boom := Vector3(at.x, 0.0, at.z)
 	get_tree().create_timer(0.5).timeout.connect(func() -> void:
 		Fx.explosion(get_parent(), boom, 1.0)
-		Woonhuis.blast_all(boom, SHELL_RADIUS, 140.0)
+		Woonhuis.blast_all(boom, 2.0, 140.0)  # kleiner dan de straal tegen vijanden: alleen de muur waar hij op mikt
 		for e in Game.enemies.duplicate():
 			if is_instance_valid(e) and e.global_position.distance_to(boom) < SHELL_RADIUS and SHELL_DAMAGE > 0.0:
 				e.hit(SHELL_DAMAGE, (e.global_position - boom).normalized(), true))
@@ -220,6 +220,13 @@ func _aim_point() -> Vector3:
 		var dist := v.length()
 		if dist > 3.0 and dist < best and absf(fwd.angle_to(v)) < 0.12:
 			best = dist
+	# staat er een muur of huis in de lijn van de loop, dan slaat de granaat daar in
+	var from := _loop.global_position + Vector3(0, 0.3, 0)
+	var q := PhysicsRayQueryParameters3D.create(from, from + fwd * best, Kit.LAYER_WALL | Kit.LAYER_BUNKER)
+	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	if hit:
+		var at: Vector3 = hit.position
+		return Vector3(at.x, 0.0, at.z)
 	return global_position + fwd * best
 
 

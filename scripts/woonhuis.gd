@@ -1,42 +1,108 @@
 class_name Woonhuis
 extends Node3D
-## Woonhuis van 2 verdiepingen in de stad achter de brug (assets/woonhuis.glb, gemaakt in Blender: bron/woonhuis).
-## Je kunt naar binnen: het dak verdwijnt, op de begane grond ook de verdieping, en de muren aan de camerakant
-## gaan weg zodat je jezelf ziet. De trap brengt je naar boven (hoogte via floor_at, zoals de toren met elev).
-## Alles kan kapot: elk muurstuk (M0*, M1*, P*, T_*) gaat van heel naar kapot naar weg, met puin als dekking.
-## Vallen er 6 muurstukken van de begane grond weg, dan zakt de verdieping in.
-## Lokale maten (Godot): voorkant (deur) aan +Z, x -4..4, z -3,5..3,5, tuin tot z = -10.
+## Gebouwen in de stad achter de brug, gemaakt in Blender (bron/woonhuis, bron/winkel). Eén script voor alle soorten:
+## de maten, trappen en sloopregels staan per soort in _spec().
+## Je kunt naar binnen: het dak verdwijnt, en ook de verdiepingen boven je, en de muren aan de camerakant
+## gaan weg zodat je jezelf ziet. Trappen brengen je naar boven (hoogte via floor_at, zoals de toren met elev).
+## Alles kan kapot: elk muurstuk (M0*, M1*, M2*, P*, T_*) gaat van heel naar kapot naar weg, met puin als dekking.
+## Vallen er genoeg muurstukken van een laag weg, dan zakken de verdiepingen erboven in; bij de winkel stort
+## het hele gebouw in (de 'Ruine' uit het model komt ervoor in de plaats).
+## Lokale maten (Godot): voorkant (deur) aan +Z. Trappen en gaten in Blender-y (b = -z).
 
-const F0 := 0.3            # vloer begane grond
-const F1 := 3.2            # vloer verdieping
-const HX := 4.0
-const HZ := 3.5
-const STAIR_X0 := -3.75
-const STAIR_X1 := -2.75
-const STAIR_B0 := -1.8     # trap in Blender-y (= -z): onderste trede ...
-const STAIR_B1 := 2.25     # ... tot de overloop
-const HOLE_B0 := -1.2      # trapgat in de verdiepingsvloer begint hier
 const HP := {"M": 320.0, "P": 160.0, "T": 140.0}
-const COLLAPSE := 6
+
+
+## Per soort: model, vloerhoogtes, grondvlak, trappen [x0, x1, b0 (onder), b1 (boven), van laag, naar laag],
+## trapgaten [laag, x0, x1, b0, b1], balkon [x0, x1, z0, z1, laag], botsvlakken [midden, maat],
+## instorten: per laag hoeveel muurstukken weg moeten voordat alles erboven valt (0 = nooit).
+static func _spec(kind: String) -> Dictionary:
+	if kind == "winkel":
+		var f0 := 0.3
+		var f1 := 3.8
+		var f2 := 6.8
+		return {
+			"glb": "res://assets/winkel.glb", "levels": [f0, f1, f2], "hx": 4.5, "hz": 4.0,
+			"groups": ["Begane", "Verdieping", "Verdieping2"],
+			"stairs": [[-4.25, -3.25, -1.4, 2.6, 0, 1], [-3.25, -2.25, 2.6, -1.4, 1, 2]],
+			"holes": [[1, -4.3, -3.2, -1.0, 2.6], [2, -3.3, -2.2, -1.4, 2.2]],
+			"balcony": [-1.15, 1.15, 3.95, 4.95, 1],
+			"guards": [
+				# trap A: wang aan de winkelkant; muurtje tussen trap A en B (boven vloer 1, ook reling boven)
+				[Vector3(-3.19, (f0 + f1) * 0.5 - 0.1, -0.85), Vector3(0.1, f1 - f0 - 0.2, 3.5)],
+				[Vector3(-3.2, (f1 + f2 + 1.0) * 0.5, -0.6), Vector3(0.1, f2 + 1.0 - f1, 4.0)],
+				# trap B: wang aan de kamerkant en de dichte kant onder het bovenste bordes
+				[Vector3(-2.19, (f1 + f2 - 0.2) * 0.5, -0.35), Vector3(0.1, f2 - f1 - 0.2, 3.5)],
+				[Vector3(-2.75, (f1 + f2 - 0.2) * 0.5, 1.46), Vector3(1.0, f2 - f1 - 0.2, 0.1)],
+				# reling trapgat vloer 1 (voorkant) en vloer 2 (oost en achter)
+				[Vector3(-3.75, f1 + 0.55, 1.03), Vector3(1.0, 1.1, 0.1)],
+				[Vector3(-2.19, f2 + 0.55, -0.4), Vector3(0.1, 1.1, 3.6)],
+				[Vector3(-2.75, f2 + 0.55, -2.23), Vector3(1.1, 1.1, 0.1)],
+				# balkonhek
+				[Vector3(0.0, f1 + 0.55, 4.88), Vector3(2.2, 1.1, 0.1)],
+				[Vector3(-1.08, f1 + 0.55, 4.45), Vector3(0.1, 1.1, 0.9)],
+				[Vector3(1.08, f1 + 0.55, 4.45), Vector3(0.1, 1.1, 0.9)],
+			],
+			"doors": ["DeurVoor", "DeurAchter", "DeurBinnen0", "DeurBinnen1", "DeurBinnen2"],
+			"collapse": [5, 5], "ruin": true,
+			"ruin_boxes": [[Vector3(0, 0.8, 0), Vector3(8.4, 1.6, 7.4)], [Vector3(0, 1.9, 0.2), Vector3(5.6, 1.4, 5.0)]],
+			"roof_y": 8.0, "roof_r": 5.5, "roof_c": Vector3(-0.6, 9.9, 0.8),
+			"fall_piles": [[Vector3(2.0, f0, -0.5), 1.15], [Vector3(-0.8, f0, 1.4), 1.0], [Vector3(1.0, f0, 2.0), 1.0]],
+			"near": 10.0, "banner": "WINKEL INGESTORT",
+		}
+	var f0 := 0.3
+	var f1 := 3.2
+	return {
+		"glb": "res://assets/woonhuis.glb", "levels": [f0, f1], "hx": 4.0, "hz": 3.5,
+		"groups": ["Begane", "Verdieping"],
+		"stairs": [[-3.75, -2.75, -1.8, 2.25, 0, 1]],
+		"holes": [[1, -3.85, -2.65, -1.2, 2.25]],
+		"balcony": [-0.15, 2.15, 3.45, 4.5, 1],
+		"guards": [
+			# trapwang aan de kamerkant en de achterkant van de trap onder de overloop
+			[Vector3(-2.69, (f0 + f1) * 0.5 - 0.1, -(-1.8 + 0.5 + 2.25) * 0.5), Vector3(0.1, f1 - f0 - 0.2, 2.25 + 1.8 - 0.5)],
+			[Vector3(-3.25, f0 + 1.3, -2.31), Vector3(1.0, 2.0, 0.1)],
+			# reling boven
+			[Vector3(-2.69, f1 + 0.55, -(-1.2 + 2.25) * 0.5), Vector3(0.1, 1.1, 2.25 + 1.2)],
+			[Vector3(-3.25, f1 + 0.55, 1.24), Vector3(1.1, 1.1, 0.1)],
+			# balkonhek (balkon x -0.1..2.1, z 3.5..4.45)
+			[Vector3(1.0, f1 + 0.55, 4.45), Vector3(2.2, 1.1, 0.1)],
+			[Vector3(-0.08, f1 + 0.55, 3.97), Vector3(0.1, 1.1, 0.95)],
+			[Vector3(2.08, f1 + 0.55, 3.97), Vector3(0.1, 1.1, 0.95)],
+		],
+		"doors": ["DeurVoor", "DeurAchter", "DeurBinnen0", "DeurBinnen1"],
+		"collapse": [6], "ruin": false, "ruin_boxes": [],
+		"roof_y": 4.0, "roof_r": 5.0, "roof_c": Vector3(0, 7.0, 0),
+		"fall_piles": [[Vector3(2.2, f0, -0.5), 1.15], [Vector3(-1.0, f0, -1.5), 1.0]],
+		"near": 9.0, "banner": "HUIS INGESTORT",
+	}
+
 
 static var all: Array = []
 
+var kind := "woonhuis"
+var spec: Dictionary
+var levels: Array
 var model: Node3D
 var segs: Array = []        # {name, node, heel, kapot, body, shape_heel, shape_kapot, hp, max, staat, out, floor}
 var doors: Array = []       # {node, closed, t}
 var _dak: Node3D
 var _dak_heel: Node3D
 var _dak_kapot: Node3D
-var _ver: Node3D
+var _ver: Node3D           # eerste verdieping (Verdieping)
+var _groups: Array = []     # Begane, Verdieping, (Verdieping2): per laag
 var _puin: Dictionary = {}
-var _collapsed := false
-var _inside := -1           # -1 buiten, 0 begane grond, 1 verdieping
+var _collapsed := false     # er is iets ingestort
+var _fall := 99             # laagste laag die is ingestort
+var _ruin := false          # het hele gebouw ligt plat
+var _guard_body: StaticBody3D
+var _inside := -1           # -1 buiten, anders de laag waarop je staat
 var _hidden: Array = []     # muurstukken die nu voor de camera weg zijn
 
 
 ## Zet een huis neer in de wereld (Level), yaw in radialen.
-static func place(parent: Node3D, at: Vector3, yaw := 0.0) -> Woonhuis:
+static func place(parent: Node3D, at: Vector3, yaw := 0.0, soort := "woonhuis") -> Woonhuis:
 	var h := Woonhuis.new()
+	h.kind = soort
 	h.position = at
 	h.rotation.y = yaw
 	parent.add_child(h)
@@ -46,12 +112,20 @@ static func place(parent: Node3D, at: Vector3, yaw := 0.0) -> Woonhuis:
 func _ready() -> void:
 	all.append(self)
 	add_to_group("huis")
-	model = (load("res://assets/woonhuis.glb") as PackedScene).instantiate()
+	add_to_group(kind)
+	spec = _spec(kind)
+	levels = spec.levels
+	model = (load(spec.glb) as PackedScene).instantiate()
 	add_child(model)
 	for l in model.find_children("*", "Light3D", true, false):
 		l.visible = false   # lampen pas 's nachts (scheelt op de iPhone)
 	_dak = model.find_child("Dak", true, false)
 	_ver = model.find_child("Verdieping", true, false)
+	for g in spec.groups:
+		_groups.append(model.find_child(g, true, false))
+	var ruine: Node3D = model.find_child("Ruine", true, false)
+	if ruine:
+		ruine.visible = false
 	var puin: Node3D = model.find_child("Puin", true, false)
 	for c in puin.get_children():
 		_puin[c.name] = c
@@ -66,10 +140,10 @@ func _ready() -> void:
 			_dak_heel = heel
 			_dak_kapot = kapot
 			continue
-		if n.name == "Vloer1":
+		if String(n.name).begins_with("Vloer"):
 			continue
 		_add_seg(n, heel, kapot)
-	for nm in ["DeurVoor", "DeurAchter", "DeurBinnen0", "DeurBinnen1"]:
+	for nm in spec.doors:
 		var d: Node3D = model.find_child(nm, true, false)
 		if d:
 			doors.append({"node": d, "closed": d.rotation.y, "t": 0.0})
@@ -93,10 +167,17 @@ func _add_seg(n: Node3D, heel: MeshInstance3D, kapot: MeshInstance3D) -> void:
 	var hp: float = HP.get(kind, 200.0)
 	var s := {"name": String(n.name), "node": n, "heel": heel, "kapot": kapot, "body": body, "cs": cs,
 		"shape_heel": sh_heel, "shape_kapot": null, "hp": hp, "max": hp, "staat": 0,
-		"floor": 1 if String(n.name).begins_with("M1") or n.name == "P1" else 0}
+		"floor": _seg_floor(String(n.name))}
 	body.house = self
 	body.seg = s
 	segs.append(s)
+
+
+## Laag van een muurstuk: M1V0 en P1 horen bij laag 1, T_* (tuin) bij 0.
+static func _seg_floor(nm: String) -> int:
+	if nm.length() > 1 and (nm[0] == "M" or nm[0] == "P") and nm[1].is_valid_int():
+		return int(nm[1])
+	return 0
 
 
 ## Botsvorm van alleen het metselwerk (pleister/binnen/baksteen): kozijnen, luiken en vensterbanken zitten niet in de weg.
@@ -112,22 +193,14 @@ func _wall_shape(mi: MeshInstance3D) -> Shape3D:
 	return keep.create_trimesh_shape()
 
 
-## Extra botsvlakken: de zijkant van de trap (beneden), de reling rond het trapgat en het balkonhek (boven).
+## Extra botsvlakken: trapwangen, relingen rond de trapgaten en het balkonhek.
 func _guards() -> void:
-	var body := StaticBody3D.new()
-	body.collision_layer = Kit.LAYER_WALL
-	body.collision_mask = 0
-	add_child(body)
-	# trapwang aan de kamerkant en de achterkant van de trap onder de overloop
-	_box(body, Vector3(STAIR_X1 + 0.06, (F0 + F1) * 0.5 - 0.1, -(STAIR_B0 + 0.5 + STAIR_B1) * 0.5), Vector3(0.1, F1 - F0 - 0.2, STAIR_B1 - STAIR_B0 - 0.5))
-	_box(body, Vector3((STAIR_X0 + STAIR_X1) * 0.5, F0 + 1.3, -(STAIR_B1 + 0.06)), Vector3(STAIR_X1 - STAIR_X0, 2.0, 0.1))
-	# reling boven
-	_box(body, Vector3(STAIR_X1 + 0.06, F1 + 0.55, -(HOLE_B0 + STAIR_B1) * 0.5), Vector3(0.1, 1.1, STAIR_B1 - HOLE_B0))
-	_box(body, Vector3((STAIR_X0 + STAIR_X1) * 0.5, F1 + 0.55, -HOLE_B0 + 0.04), Vector3(STAIR_X1 - STAIR_X0 + 0.1, 1.1, 0.1))
-	# balkonhek (balkon x -0.1..2.1, z 3.5..4.45)
-	_box(body, Vector3(1.0, F1 + 0.55, 4.45), Vector3(2.2, 1.1, 0.1))
-	_box(body, Vector3(-0.08, F1 + 0.55, 3.97), Vector3(0.1, 1.1, 0.95))
-	_box(body, Vector3(2.08, F1 + 0.55, 3.97), Vector3(0.1, 1.1, 0.95))
+	_guard_body = StaticBody3D.new()
+	_guard_body.collision_layer = Kit.LAYER_WALL
+	_guard_body.collision_mask = 0
+	add_child(_guard_body)
+	for g in spec.guards:
+		_box(_guard_body, g[0], g[1])
 
 
 func _box(body: StaticBody3D, pos: Vector3, size: Vector3) -> void:
@@ -151,26 +224,42 @@ static func floor_at(p: Vector3, cur: float) -> float:
 
 
 func _floor_local(lp: Vector3, cur: float) -> float:
-	var up := cur > F1 - 0.6 and not _collapsed
+	if _ruin:
+		return -1.0
+	var hx: float = spec.hx
+	var hz: float = spec.hz
 	var b := -lp.z
 	# balkon: alleen voor wie boven is
-	if up and lp.x > -0.15 and lp.x < 2.15 and lp.z > HZ - 0.05 and lp.z < HZ + 1.0:
-		return F1
-	if absf(lp.x) > HX + 0.05 or absf(lp.z) > HZ + 0.05:
+	var bal: Array = spec.balcony
+	var bl: int = bal[4]
+	if bl < _fall and cur > levels[bl] - 0.6 and lp.x > bal[0] and lp.x < bal[1] and lp.z > bal[2] and lp.z < bal[3]:
+		return levels[bl]
+	if absf(lp.x) > hx + 0.05 or absf(lp.z) > hz + 0.05:
 		return -1.0
-	if lp.x > STAIR_X0 - 0.1 and lp.x < STAIR_X1 + 0.1 and b > STAIR_B0 - 0.05 and b < STAIR_B1 and not _collapsed:
-		var stair := F0 + clampf((b - STAIR_B0) / (STAIR_B1 - STAIR_B0), 0.0, 1.0) * (F1 - F0)
-		if absf(cur - stair) < 0.9:
-			return stair
-		if up and b < HOLE_B0:
-			return F1
-		return stair if cur > stair else F0
-	if up:
-		return F1
-	# drempels: buiten de muren loopt de grond van 0 naar de vloer
-	if absf(lp.x) > HX - 0.25 or absf(lp.z) > HZ - 0.25:
-		return F0 * 0.5
-	return F0
+	# de hoogste vloer of trede onder je voeten waar je bij kunt (een trede op, of vallen)
+	var lim := cur + 0.6
+	var best: float = levels[0]
+	if absf(lp.x) > hx - 0.25 or absf(lp.z) > hz - 0.25:
+		best = levels[0] * 0.5   # drempels: buiten de muren loopt de grond van 0 naar de vloer
+	for k in range(1, mini(levels.size(), _fall)):
+		if levels[k] <= lim and levels[k] > best and not _in_hole(k, lp.x, b):
+			best = levels[k]
+	for st in spec.stairs:
+		if st[5] >= _fall:
+			continue
+		if lp.x > st[0] - 0.1 and lp.x < st[1] + 0.1 and b > minf(st[2], st[3]) - 0.05 and b < maxf(st[2], st[3]) + 0.05:
+			var t := clampf((b - st[2]) / (st[3] - st[2]), 0.0, 1.0)
+			var y := lerpf(levels[st[4]], levels[st[5]], t)
+			if y <= lim and y > best:
+				best = y
+	return best
+
+
+func _in_hole(k: int, x: float, b: float) -> bool:
+	for h in spec.holes:
+		if h[0] == k and x > h[1] and x < h[2] and b > h[3] and b < h[4]:
+			return true
+	return false
 
 
 # ---------------------------------------------------------------- zicht: dak, verdieping en de muren voor de camera
@@ -180,9 +269,14 @@ func _process(delta: float) -> void:
 	var where := -1
 	if p != null and not p.driving:
 		var lp := to_local(p.global_position)
-		var on_balcony: bool = p.position.y > F1 - 0.6 and lp.x > -0.2 and lp.x < 2.2 and lp.z > HZ and lp.z < HZ + 1.1
-		if (absf(lp.x) < HX + 0.3 and absf(lp.z) < HZ + 0.3) or on_balcony:
-			where = 1 if p.position.y > F1 - 0.6 else 0
+		var bal: Array = spec.balcony
+		var on_balcony: bool = p.position.y > levels[bal[4]] - 0.6 and lp.x > bal[0] - 0.05 and lp.x < bal[1] + 0.05 \
+			and lp.z > bal[2] and lp.z < bal[3] + 0.1
+		if not _ruin and ((absf(lp.x) < spec.hx + 0.3 and absf(lp.z) < spec.hz + 0.3) or on_balcony):
+			where = 0
+			for k in range(1, levels.size()):
+				if p.position.y > levels[k] - 0.6:
+					where = k
 	if where != _inside:
 		_inside = where
 		_apply_view()
@@ -201,10 +295,13 @@ func _apply_view() -> void:
 	for s in _hidden:
 		_show_seg(s, true)
 	_hidden.clear()
+	if _ruin:
+		return
 	if _dak:
 		_dak.visible = _inside < 0
-	if _ver:
-		_ver.visible = _inside != 0 or _collapsed
+	for k in range(1, _groups.size()):
+		if _groups[k]:
+			(_groups[k] as Node3D).visible = _inside < 0 or k <= _inside or k >= _fall
 	if _inside < 0:
 		return
 	# muren van deze verdieping die naar de camera (+Z in de wereld) kijken
@@ -230,11 +327,13 @@ func _show_seg(s: Dictionary, vis: bool) -> void:
 ## Ontploffing in de buurt van huizen (raketten, tankgranaten): muurstukken in de straal krijgen schade.
 static func blast_all(at: Vector3, radius: float, dmg: float) -> void:
 	for h: Woonhuis in all:
-		if h.global_position.distance_to(at) < radius + 9.0:
+		if h.global_position.distance_to(at) < radius + float(h.spec.near):
 			h.blast(at, radius, dmg)
 
 
 func blast(at: Vector3, radius: float, dmg: float) -> void:
+	if _ruin:
+		return
 	for s in segs.duplicate():
 		if s.staat >= 2:
 			continue
@@ -243,14 +342,14 @@ func blast(at: Vector3, radius: float, dmg: float) -> void:
 		var d := closest.distance_to(at)
 		if d < radius:
 			damage(s, dmg * 2.2 * (1.0 - d / radius), at)
-	if _dak_heel and _dak.visible:
-		var top := global_position + Vector3(0, 7.0, 0)
-		if Vector2(at.x - top.x, at.z - top.z).length() < 5.0 and at.y > 4.0:
+	if _dak_heel and _dak.visible and not _ruin:
+		var top := to_global(spec.roof_c)
+		if Vector2(at.x - top.x, at.z - top.z).length() < spec.roof_r and at.y > spec.roof_y:
 			_roof_state(1)
 
 
 func damage(s: Dictionary, dmg: float, from := Vector3.INF) -> void:
-	if s.staat >= 2 or dmg <= 0.0:
+	if s.staat >= 2 or dmg <= 0.0 or _ruin:
 		return
 	s.hp -= dmg
 	var c := _center(s)
@@ -282,8 +381,9 @@ func _set_state(s: Dictionary, st: int) -> void:
 	elif st >= 2:
 		cs.disabled = true
 		(s.body as StaticBody3D).collision_layer = 0
-	if String(s.name).begins_with("M1") and st >= 2:
-		var gone := segs.filter(func(x): return String(x.name).begins_with("M1") and x.staat >= 2).size()
+	var top := "M%d" % (levels.size() - 1)
+	if String(s.name).begins_with(top) and st >= 2:
+		var gone := segs.filter(func(x): return String(x.name).begins_with(top) and x.staat >= 2).size()
 		_roof_state(2 if gone >= 4 else 1)
 
 
@@ -367,39 +467,101 @@ func _roof_state(st: int) -> void:
 		if _dak_heel.visible:
 			_dak_heel.visible = false
 			_dak_kapot.visible = true
-			Fx.dust(get_parent(), global_position + Vector3(-1.2, 7.0, 1.6))
+			Fx.dust(get_parent(), to_global(spec.roof_c))
 	elif st >= 2 and not _dak.get_meta("weg", false):
 		_dak.set_meta("weg", true)
 		_dak_heel.visible = false
 		_dak_kapot.visible = false
-		_pile(to_global(Vector3(1.5, F0, 0.5)), "PuinGroot", 1.0)
+		# het dak valt op de hoogste vloer die nog staat
+		var y: float = levels[mini(_fall, levels.size()) - 1]
+		_pile(to_global(Vector3(1.5, y, 0.5)), "PuinGroot", 1.0)
 
 
-## Te veel muren van de begane grond weg: de verdieping zakt in.
+## Te veel muren van een laag weg: alles erboven zakt in. Bij de winkel stort dan het hele gebouw in.
 func _check_collapse() -> void:
-	if _collapsed:
+	if _ruin:
 		return
-	var gone := segs.filter(func(x): return String(x.name).begins_with("M0") and x.staat >= 2).size()
-	if gone < COLLAPSE:
+	var rules: Array = spec.collapse
+	for lvl in rules.size():
+		if lvl + 1 >= _fall or int(rules[lvl]) <= 0:
+			continue
+		var pre := "M%d" % lvl
+		var gone := segs.filter(func(x): return String(x.name).begins_with(pre) and x.staat >= 2).size()
+		if gone < int(rules[lvl]):
+			continue
+		if lvl == 0 and spec.ruin:
+			_ruin_all()
+		else:
+			_fall_from(lvl + 1)
 		return
+
+
+## Verdieping k en alles erboven zakt in: vloeren kapot, inrichting weg, muren erboven kapot of weg, dak weg.
+func _fall_from(k: int) -> void:
+	_fall = k
 	_collapsed = true
-	var v1h: Node3D = _ver.find_child("Vloer1_heel", true, false)
-	var v1k: Node3D = _ver.find_child("Vloer1_kapot", true, false)
-	if v1h and v1k:
-		v1h.visible = false
-		v1k.visible = true
-	for nm in ["Inrichting1", "Balkon", "DeurBinnen1"]:
-		var o: Node3D = _ver.find_child(nm, true, false)
-		if o:
-			o.visible = false
+	for j in range(k, levels.size()):
+		var g: Node3D = _groups[j]
+		var vh: Node3D = model.find_child("Vloer%d_heel" % j, true, false)
+		var vk: Node3D = model.find_child("Vloer%d_kapot" % j, true, false)
+		if vh and vk:
+			vh.visible = false
+			vk.visible = true
+		if g:
+			for c in g.get_children():
+				var nm := String(c.name)
+				if nm.begins_with("Inrichting") or nm.begins_with("DeurBinnen") or nm == "Balkon":
+					c.visible = false
 	for s in segs:
-		if s.floor == 1 and s.staat < 2:
+		if s.floor >= k and s.staat < 2:
 			_set_state(s, 2 if randf() < 0.6 else 1)
 	_roof_state(2)
-	_pile(to_global(Vector3(2.2, F0, -0.5)), "PuinGroot", 1.15)
-	_pile(to_global(Vector3(-1.0, F0, -1.5)), "PuinGroot", 1.0)
-	Fx.explosion(get_parent(), global_position + Vector3(0, 3.0, 0), 1.4)
-	for k in 8:
-		Fx.dust(get_parent(), global_position + Vector3(randf_range(-4, 4), randf_range(0.5, 5), randf_range(-3.5, 3.5)))
-	Game.banner.emit("HUIS INGESTORT", "", 1.4)
+	for fp in spec.fall_piles:
+		_pile(to_global(fp[0]), "PuinGroot", fp[1])
+	var mid: float = levels[k]
+	Fx.explosion(get_parent(), global_position + Vector3(0, mid, 0), 1.4)
+	for n in 8:
+		Fx.dust(get_parent(), global_position + Vector3(randf_range(-spec.hx, spec.hx), randf_range(0.5, mid + 2.0), randf_range(-spec.hz, spec.hz)))
+	Game.banner.emit(spec.banner if k == 1 else "VERDIEPING INGESTORT", "", 1.4)
 	_apply_view()
+
+
+## Het hele gebouw stort in: alles weg, de ruïne uit het model komt ervoor in de plaats (houdt kogels tegen).
+func _ruin_all() -> void:
+	_ruin = true
+	_collapsed = true
+	_fall = 0
+	for s in segs:
+		s.staat = 2
+		(s.cs as CollisionShape3D).disabled = true
+		(s.body as StaticBody3D).collision_layer = 0
+	for g in _groups:
+		if g:
+			(g as Node3D).visible = false
+	if _dak:
+		_dak.visible = false
+	for c in get_children():
+		if c is StaticBody3D or (c is Node3D and c != model):
+			c.queue_free()   # losse puinhopen en de relingen
+	var ruine: Node3D = model.find_child("Ruine", true, false)
+	if ruine:
+		ruine.visible = true
+	var body := StaticBody3D.new()
+	body.collision_layer = Kit.LAYER_WALL
+	body.collision_mask = 0
+	add_child(body)
+	for rb in spec.ruin_boxes:
+		_box(body, rb[0], rb[1])
+	# wie binnen stond, wordt bedolven en naar buiten geduwd
+	var p = Game.player
+	if p != null and _inside >= 0 and not p.driving:
+		p.global_position = to_global(Vector3(0, 0, spec.hz + 2.6))
+		p.position.y = 0.0
+		p.hit(60.0, Vector3(0, 0, 1), false)
+	_inside = -1
+	for n in 3:
+		Fx.explosion(get_parent(), to_global(Vector3(randf_range(-2, 2), 2.0 + n * 2.5, randf_range(-2, 2))), 1.6)
+	for n in 14:
+		Fx.dust(get_parent(), to_global(Vector3(randf_range(-5, 5), randf_range(0.3, 6.0), randf_range(-4.5, 4.5))))
+	Sfx.play("thud", 1.0, global_position)
+	Game.banner.emit(spec.banner, "", 1.6)

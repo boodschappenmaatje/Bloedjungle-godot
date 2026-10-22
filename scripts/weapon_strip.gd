@@ -1,71 +1,143 @@
 extends Control
-## Compacte, rechtstreeks selecteerbare wapenstrook gebaseerd op Dead Nation.
-## Hergebruikt Game.cur, Game.owned en Data.WEAPON_ORDER; geen nieuwe inventaris.
+## V66: compacte Dead Nation-geinspireerde wapenstrip.
+## Het spel bezit de wapens; de HUD is uitsluitend een selectie- en informatielaag.
+
+class WeaponGlyph:
+	extends Control
+	var kind: String = ""
+	var tone: Color = Color.WHITE
+	func _draw() -> void:
+		var c := tone
+		var y := size.y * 0.5
+		var left := 3.0
+		var right := size.x - 3.0
+		# Herkenbaar zijprofiel per wapentype; geen externe assetdownloads.
+		match kind:
+			"m1911":
+				draw_line(Vector2(5,y-5),Vector2(right-7,y-5),c,4)
+				draw_line(Vector2(right-7,y-5),Vector2(right-7,y-1),c,3)
+				draw_colored_polygon(PackedVector2Array([Vector2(10,y-2),Vector2(21,y-2),Vector2(17,y+11),Vector2(12,y+11)]),c)
+			"bazooka":
+				draw_line(Vector2(left,y-3),Vector2(right,y-3),c,7)
+				draw_line(Vector2(left+4,y-9),Vector2(left+4,y+3),c,2)
+				draw_line(Vector2(right-3,y-9),Vector2(right-3,y+3),c,2)
+				draw_line(Vector2(22,y+1),Vector2(20,y+10),c,3)
+			_:
+				draw_line(Vector2(left,y-4),Vector2(right,y-4),c,4)
+				draw_line(Vector2(right-13,y-8),Vector2(right-13,y-1),c,2)
+				draw_line(Vector2(19,y-1),Vector2(14,y+9),c,4)
+				draw_line(Vector2(left+4,y-1),Vector2(left,y+6),c,3)
+				if kind == "thompson" or kind == "mg42":
+					draw_line(Vector2(26,y-2),Vector2(27,y+10),c,5)
+				if kind == "trench":
+					draw_line(Vector2(12,y+1),Vector2(33,y+1),c,3)
+				if kind == "mg42":
+					draw_line(Vector2(right-11,y),Vector2(right-14,y+10),c,2)
+					draw_line(Vector2(right-11,y),Vector2(right-4,y+10),c,2)
+
 var _slots: Array[Button] = []
-var _ammo_labels: Array[Label] = []
-var _last_signature := ""
+var _glyphs: Array[WeaponGlyph] = []
+var _counts: Array[Label] = []
+var _names: Array[Label] = []
+var _last_state := ""
+const IDS := ["m1911", "thompson", "garand", "trench", "mg42", "bazooka"]
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	resized.connect(_layout)
-	for i in Data.WEAPON_ORDER.size():
+	for i in IDS.size():
 		var b := Button.new()
-		b.custom_minimum_size = Vector2(51, 48)
+		b.text = ""
+		b.focus_mode = Control.FOCUS_NONE
 		b.add_to_group("hud_button")
-		b.add_theme_font_size_override("font_size", 10)
 		b.pressed.connect(_select.bind(i))
 		add_child(b)
 		_slots.append(b)
+		var glyph := WeaponGlyph.new()
+		glyph.kind = IDS[i]
+		glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.add_child(glyph)
+		_glyphs.append(glyph)
+		var count := Label.new()
+		count.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		count.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		count.add_theme_font_size_override("font_size", 12)
+		b.add_child(count)
+		_counts.append(count)
+		var label := Label.new()
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		label.add_theme_font_size_override("font_size", 9)
+		b.add_child(label)
+		_names.append(label)
+	resized.connect(_layout)
 	_layout()
 	_refresh()
+
+func _layout() -> void:
+	var portrait := size.x < size.y
+	var slot_w := minf(67.0, (size.x * (0.57 if not portrait else 0.94) - 18.0) / 6.0)
+	var slot_h := 64.0
+	var x0 := 16.0
+	# Op iPhone landschap boven de linker bewegingszone, zodat de sticks vrij blijven.
+	var y0 := size.y - (140.0 if not portrait else 188.0)
+	for i in _slots.size():
+		var b := _slots[i]
+		b.position = Vector2(x0 + i * (slot_w + 3.0), y0)
+		b.size = Vector2(slot_w, slot_h)
+		_glyphs[i].position = Vector2(5, 5)
+		_glyphs[i].size = Vector2(slot_w - 10, 29)
+		_names[i].position = Vector2(1, 34)
+		_names[i].size = Vector2(slot_w - 2, 13)
+		_counts[i].position = Vector2(1, 46)
+		_counts[i].size = Vector2(slot_w - 2, 16)
 
 func _select(index: int) -> void:
 	if Game.state != "play" and Game.state != "prep":
 		return
-	var id: String = Data.WEAPON_ORDER[index]
+	var id: String = IDS[index]
 	if not Game.owned.has(id):
 		return
 	Game.cur = id
 	Game.changed.emit()
+	_last_state = ""
 	_refresh()
-
-func _layout() -> void:
-	var width_available := maxf(180.0, size.x - 24.0)
-	var slot_width := minf(51.0, (width_available - 5.0 * 3.0) / 6.0)
-	var y := size.y - (169.0 if size.x < size.y else 110.0)
-	for i in _slots.size():
-		_slots[i].position = Vector2(12.0 + i * (slot_width + 3.0), y)
-		_slots[i].size = Vector2(slot_width, 48.0)
 
 func _process(_delta: float) -> void:
 	visible = (Game.state == "play" or Game.state == "prep") and not Game.build_mode
-	if not visible:
-		return
-	_refresh()
+	if visible:
+		_refresh()
 
 func _refresh() -> void:
-	for i in _slots.size():
-		var id: String = Data.WEAPON_ORDER[i]
-		var b: Button = _slots[i]
+	var fingerprint := Game.cur
+	for id in IDS:
+		fingerprint += "|" + id + ":" + (str(Game.owned[id].ammo) if Game.owned.has(id) else "-")
+	if Game.player != null:
+		fingerprint += ":" + str(Game.player.weapon) + ":" + str(Game.player.ammo)
+	if fingerprint == _last_state:
+		return
+	_last_state = fingerprint
+	for i in IDS.size():
+		var id: String = IDS[i]
 		var owned: bool = Game.owned.has(id)
-		b.disabled = not owned
-		var name_text: String = str(Data.WEAPONS[id].name)
-		var short_name := name_text.substr(0, 9)
-		var amount := "--"
+		var active: bool = owned and Game.cur == id
+		var color := Color(1.0, 0.88, 0.63) if active else (Color(0.79, 0.84, 0.78) if owned else Color(0.43, 0.47, 0.43))
+		_slots[i].disabled = not owned
+		_glyphs[i].tone = color
+		_glyphs[i].queue_redraw()
+		_names[i].text = str(Data.WEAPONS[id].short).substr(0, 9)
+		_names[i].add_theme_color_override("font_color",color)
+		var ammo := "--"
 		if owned:
-			amount = str(Game.owned[id].ammo)
+			ammo = str(Game.owned[id].ammo)
 			if Game.player != null and Game.player.weapon == id:
-				amount = str(Game.player.ammo)
-		b.text = "%s\n%s" % [short_name, amount]
-		var active: bool = Game.cur == id and owned
-		b.add_theme_color_override("font_color", Color(1.0, 0.84, 0.47) if active else Color(0.85, 0.86, 0.81))
-		b.add_theme_color_override("font_disabled_color", Color(0.48, 0.5, 0.48))
+				ammo = str(Game.player.ammo)
+		_counts[i].text = ammo
+		_counts[i].add_theme_color_override("font_color",color)
 		var sb := StyleBoxFlat.new()
-		sb.bg_color = Color(0.14, 0.19, 0.15, 0.9) if active else Color(0.04, 0.08, 0.07, 0.76)
-		sb.border_color = Color(1.0, 0.74, 0.31) if active else Color(0.45, 0.54, 0.43, 0.55)
+		sb.bg_color = Color(0.12,0.17,0.13,0.92) if active else Color(0.035,0.06,0.05,0.79)
+		sb.border_color = Color(1,0.73,0.32) if active else Color(0.35,0.45,0.35,0.35)
 		sb.set_border_width_all(2 if active else 1)
-		sb.set_corner_radius_all(4)
-		b.add_theme_stylebox_override("normal", sb)
-		b.add_theme_stylebox_override("hover", sb)
-		b.add_theme_stylebox_override("pressed", sb)
+		sb.set_corner_radius_all(5)
+		for state in ["normal","hover","pressed","disabled","focus"]:
+			_slots[i].add_theme_stylebox_override(state,sb)

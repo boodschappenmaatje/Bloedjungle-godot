@@ -203,7 +203,7 @@ func _set_glow(amount: float) -> void:
 func _start_burning() -> void:
 	burning = true
 	burn_t = randf_range(BURN_TIME.x, BURN_TIME.y)
-	_flame = Fx.flame(self, Vector3(0.0, 1.0, 0.0), 1.1)
+	_flame = Fx.flame(self, Vector3(0.0, 0.95, 0.0), 1.6)
 	PerfMonitor.note("vat brandt")
 
 

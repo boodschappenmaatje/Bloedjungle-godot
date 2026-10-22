@@ -43,9 +43,11 @@ void fragment() {
 	float env = looping ? 1.0 : smoothstep(0.0, fade_in, progress) * (1.0 - smoothstep(1.0 - fade_out, 1.0, progress));
 	// Het vel is met rechte alpha opgeslagen: voor premultiplied blending eerst vermenigvuldigen
 	// de donkere stofring onderin (afgesneden door de grond in Blender) zacht laten uitlopen: geen harde rand
-	float low = smoothstep(0.78, 0.97, uv.y);
+	float low = smoothstep(0.7, 0.95, uv.y);
 	float dark = 1.0 - smoothstep(0.05, 0.3, dot(c.rgb, vec3(0.33)));
-	c.a *= 1.0 - low * (0.55 * dark + 0.45);
+	c.a *= 1.0 - low * (0.85 * dark + 0.35);
+	// ook links en rechts zacht uitlopen: de stofring loopt door tot de rand van het beeld en zou daar een rechte lijn geven
+	c.a *= smoothstep(0.0, 0.08, uv.x) * (1.0 - smoothstep(0.92, 1.0, uv.x));
 	ALBEDO = c.rgb * c.a * bright * env;
 	ALPHA = c.a * env;
 }

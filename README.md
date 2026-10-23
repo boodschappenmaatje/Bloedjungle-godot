@@ -30,6 +30,7 @@ Nog niet: winkel, andere wapens kopen, granaten, gebouwen, jeep, gore, geluid. D
 | `scripts/level.gd` | Bouwt grond, muur, bunker en bomen (ook zichtbaar in de editor) |
 | `scripts/touch_sticks.gd`, `hud.gd` | Besturing en schermteksten |
 | `assets/tank.glb`, `scripts/tank.gd` | Eigen tank die buiten de oostmuur patrouilleert; de koepel volgt vijanden. Blender-bron in `bron/tank/` |
+| `assets/legerjeep.glb`, `scenes/legerjeep.tscn` | Gedetailleerde statische legerjeep (open terreinwagen, ~75.600 driehoeken) met eenvoudige botsing, klaar om in een level te plaatsen; geen besturing. Los van de bestuurbare jeep (`assets/jeep.glb`, `scripts/jeep.gd`). Blender-bron in `bron/legerjeep/` |
 | `assets/vrachtwagen.glb`, `scripts/vrachtwagen.gd` | Legertruck uit de garage: neemt tot 10 soldaten mee, die via de laadklep en het trapje instappen. Zeil rolt op en af. Blender-bron in `bron/vrachtwagen/`, zit-animatie in `bron/zitten/` |
 | `assets/soldaat.glb` | Het mannetje met animaties; gemaakt met `tools/godot-soldaat.mjs` in de privé-repo bloedjungle |
 | `tests/smoke_test.gd` | Automatische test die golf 1 en 2 speelt |

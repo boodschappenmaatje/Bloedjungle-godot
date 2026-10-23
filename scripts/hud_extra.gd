@@ -403,6 +403,9 @@ void fragment() {
 
 func _process(delta: float) -> void:
 	visible = Game.state != "menu"
+	_bars.visible = not Game.editing
+	_top_right.visible = not Game.editing
+	_weapon.visible = not Game.editing
 	var play_hud := (Game.state == "play" or Game.state == "prep") and not Game.build_mode
 	_camera_controls.visible = play_hud
 	_radar.visible = play_hud
@@ -412,7 +415,7 @@ func _process(delta: float) -> void:
 		if _radar_refresh <= 0.0:
 			_radar_refresh = 0.12
 			_radar.queue_redraw()
-	_fps.visible = GameSettings.get_value("fps") == "on"
+	_fps.visible = GameSettings.get_value("fps") == "on" and (not Game.editing or StadEditor.debug_enabled)
 	if _fps.visible:
 		_fps.text = "%d FPS · %d%%" % [Engine.get_frames_per_second(), roundi(get_viewport().scaling_3d_scale * 100.0)]
 		var screen_hz := DisplayServer.screen_get_refresh_rate()

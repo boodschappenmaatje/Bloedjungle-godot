@@ -2,7 +2,7 @@ extends CanvasLayer
 ## Meldingen en knoppen midden op het scherm (golf-titel, "Start nu", gesneuveld). De balken, punten
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
-const VERSION := "v84"
+const VERSION := "v85"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -103,6 +103,7 @@ func _rescale() -> void:
 
 
 func _process(delta: float) -> void:
+	info.visible = not Game.editing
 	if _banner_t > 0.0:
 		_banner_t -= delta
 		if _banner_t <= 0.0:

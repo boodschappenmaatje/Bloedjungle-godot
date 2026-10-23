@@ -1,10 +1,10 @@
 extends SceneTree
 ## Maakt de plaatjes voor de knoppen van de stadseditor: van elk wegdeel, gebouw en straatding één schuin plaatje.
 ## Draaien (met scherm, bv. xvfb): godot --rendering-driver vulkan --path . -s tools/stad_icons.gd
-## Schrijft assets/stad_icons/<soort>.png (160 x 160, doorzichtige achtergrond).
+## Schrijft assets/stad_icons/<soort>.png (256 x 256, doorzichtige achtergrond).
 ## Alleen één groep opnieuw: zet de groep (weg, gebouw of straat) achter --, bv. ... -s tools/stad_icons.gd -- weg
 
-const SIZE := 160
+const SIZE := 256
 var Stad
 var _kinds: Array = []
 var _i := 0

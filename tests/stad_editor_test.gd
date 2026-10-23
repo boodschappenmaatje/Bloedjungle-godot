@@ -9,6 +9,13 @@ var game: Node
 var ed
 var stad
 var n0 := 0
+var failures := 0
+
+
+func _check(ok: bool, message: String) -> void:
+	if not ok:
+		failures += 1
+		push_error("STAD EDITOR TEST: " + message)
 
 
 func _initialize() -> void:
@@ -62,46 +69,50 @@ func _process(_d: float) -> bool:
 		ed._pick_kind("weg_recht")
 		_click(_screen_of(6, -96))
 	if t == 45:
+		_check(stad.items.size() == n0 + 1, "weg plaatsen")
 		print("na plaatsen: ", stad.items.size() - n0, " erbij (verwacht 1)")
 		_click(_screen_of(6, -96))   # zelfde plek: moet geweigerd worden
 	if t == 50:
+		_check(stad.items.size() == n0 + 1, "dubbele weg weigeren")
 		print("dubbel geweigerd: ", stad.items.size() - n0, " erbij (verwacht 1), melding: ", ed._msg.text)
 		ed._pick_kind("weg_recht")   # uitzetten
 		ed._pick_kind("bankje")
 		_click(_screen_of(6, -96))
 	if t == 55:
+		_check(stad.items.size() == n0 + 2, "bankje plaatsen")
 		print("bankje erbij: ", stad.items.size() - n0, " (verwacht 2)")
 		ed._pick_kind("bankje")
 		ed._pick_kind("woonhuis")
 		_click(_screen_of(6, -96))   # huis op de weg: geweigerd
 	if t == 60:
+		_check(stad.items.size() == n0 + 2, "huis op weg weigeren")
 		print("huis op weg geweigerd: ", stad.items.size() - n0, " (verwacht 2), melding: ", ed._msg.text)
 		ed._pick_kind("woonhuis")
 		# selecteer het nieuwe wegdeel (onder het bankje: tik ernaast) en draai
 		_click(_screen_of(7.8, -96))
 	if t == 65:
 		print("geselecteerd: ", ed._sel.get("k", "niets"), " r=", ed._sel.get("r", -1))
-		ed._rotate()   # draaimodus aan
-		print("draaimodus: ", ed._tool)
-		_click(_screen_of(7.8, -96))   # tik op het wegdeel
+		ed._rotate()   # contextknop draait een selectie direct, in stappen van 90 graden
+		_check(ed._sel.get("r", -1) == 1, "selectie direct draaien")
 		print("gedraaid: r=", ed._sel.get("r", -1), " (verwacht 1) tool ", ed._tool)
-		ed._rotate()   # draaimodus uit
-		print("draaimodus uit: '", ed._tool, "'")
-		_click(_screen_of(7.8, -96))
 		ed._copy()
+		_check(stad.items.size() == n0 + 3, "selectie kopiëren")
 		print("gekopieerd: ", stad.items.size() - n0, " erbij (verwacht 3), selectie ", ed._sel.get("x", 0), ",", ed._sel.get("z", 0))
 		ed._mirror()
 		ed._delete_sel()
+		_check(stad.items.size() == n0 + 2, "selectie verwijderen")
 		print("weggehaald: ", stad.items.size() - n0, " (verwacht 2)")
 	if t == 70:
 		for i in 6:
 			ed._do_undo()
 		print("alles ongedaan: ", stad.items.size() - n0, " (verwacht 0)")
+		_check(stad.items.size() == n0, "alle zes bewerkingen ongedaan")
 		ed._show_text()
 		print("tekst: ", ed._text.text.length() > 100)
 		ed.exit()
 		print("editor dicht: ", not game.editing, " ", not game.build_mode)
 		print("STAD EDITOR TEST KLAAR")
-		quit()
+		_check(not game.editing and not game.build_mode, "editor sluiten")
+		quit(0 if failures == 0 else 1)
 		return true
 	return false

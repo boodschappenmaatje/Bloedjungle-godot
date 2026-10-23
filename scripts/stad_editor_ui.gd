@@ -66,6 +66,7 @@ static func icon(kind: String) -> Texture2D:
 	if not _icons.has(kind):
 		var paths := {
 			"view": '<path d="m3 8 9-5 9 5-9 5zM3 12l9 5 9-5M3 16l9 5 9-5"/>',
+			"oog": '<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
 			"weg": '<path d="M7 3 4 21M17 3l3 18M12 4v3m0 4v3m0 4v3"/>',
 			"gebouw": '<path d="m3 11 9-8 9 8M5 10v11h14V10M10 21v-7h4v7"/>',
 			"straat": '<path d="M5 21V7a4 4 0 0 1 4-4h5M12 3h7v5h-7zM3 21h5m4-5h8m-7 0v5m6-5v5"/>',

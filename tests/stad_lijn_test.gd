@@ -39,6 +39,7 @@ func _process(_d: float) -> bool:
 		ed = root.find_children("*", "Control", true, false).filter(func(n): return n.get_script() and String(n.get_script().resource_path).ends_with("stad_editor.gd"))[0]
 		n0 = stad.items.size()
 		ed.enter()
+		ed._set_look_mode(false)
 		ed._pick_kind("lijn")
 		print("tool ", ed._tool)
 		# rij verlengen naar het oosten

@@ -80,7 +80,7 @@ func _place() -> void:
 
 func _process(_delta: float) -> void:
 	var on := enabled()
-	visible = on
+	visible = on and (not Game.editing or StadEditor.debug_enabled)
 	if _gpu_on != on:
 		_gpu_on = on
 		RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), on)

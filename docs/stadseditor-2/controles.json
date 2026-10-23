@@ -1,0 +1,240 @@
+{
+  "version": "v85",
+  "date_utc": "2026-10-23T14:37:11.243308+00:00",
+  "base_main": "ca282ca77dca95f941916bb16bf523582cc595f4",
+  "engine": "Godot 4.7.2.stable.official.ed1daf0bf",
+  "environment": "Linux / Xvfb; Mesa llvmpipe (software)",
+  "headless_import": {
+    "exit_code": 0,
+    "script_errors": 0,
+    "missing_resources": 0,
+    "log_sha256": "0f02531b943e8ef39a91404981e9997446879eda0c9a07d7c1e42275658aad34"
+  },
+  "editor_tests": [
+    {
+      "mode": "headless",
+      "checks": 2814,
+      "failures": 0,
+      "log_sha256": "5f1032cd54f80db5228c854c0ede17d60570077459c8ef15b075c46a29346a69"
+    },
+    {
+      "mode": "native X11 / OpenGL Compatibility / continuous rendering",
+      "checks": 2814,
+      "failures": 0,
+      "log_sha256": "b1740b4b5f4ec01e54a088768a4bc9e23818ab25c7cd72fdae4b337a7d9cda4b"
+    }
+  ],
+  "regressions": [
+    {
+      "test": "stad",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "stad_editor",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "stad_lijn",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "stad_menu",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "hud_layout",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "camera",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "besturing",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "stick",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "bouw",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "smoke",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "magazijn",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "magazijn_dak",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "hotel",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "kerk",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "benzine",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "huis",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "winkel",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "ai",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "tank_mik",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "granaat",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "meubels",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "explosie",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "schade",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "loadout",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": false
+    },
+    {
+      "test": "brandkraan",
+      "exit": 0,
+      "errors": [],
+      "shutdown_warning": true
+    }
+  ],
+  "captures": {
+    "renderer": "Vulkan 1.4.305 / Forward+ / llvmpipe",
+    "draw_method": "RenderingServer.force_draw, four actual frames",
+    "files": [
+      {
+        "file": "editor-1280x720.png",
+        "width": 1280,
+        "height": 720,
+        "sha256": "386c4b7f90bbe070cc59caca9be9c5382605ed43fe77d13c1b4c37becc2d9f9e"
+      },
+      {
+        "file": "editor-934x430-compact.png",
+        "width": 934,
+        "height": 430,
+        "sha256": "f9a19ca1c7b224d30634c4e4ed1ee9d0384b8bd259a8dbc6854156969bec0476"
+      },
+      {
+        "file": "editor-934x430-expanded.png",
+        "width": 934,
+        "height": 430,
+        "sha256": "12c3365d773478ee0845c7ad8d1c5d44c29c894fdc01150004b90b2d6d39fafd"
+      },
+      {
+        "file": "editor-934x430-hidden.png",
+        "width": 934,
+        "height": 430,
+        "sha256": "c5ba15592421ff6123ac606033bfbb95c4e24b2d4f51c5dd75458917501de657"
+      }
+    ],
+    "log_sha256": "23fb8eb338145405862d264075e850d4da0ac9896631142f34c1d4308ea4f210"
+  },
+  "existing_shutdown_warnings": {
+    "baseline_commit": "ca282ca77dca95f941916bb16bf523582cc595f4",
+    "baseline_test": "stad_editor_test.gd",
+    "resources_still_in_use": 9,
+    "baseline_log_sha256": "2064c0a509cc6aa2debd94bccb5c95084adbf15c3b9ab07d336b8e4f5d49341a"
+  },
+  "limitations": [
+    "Physical Windows and iPhone/Xogot not executed; user will test Xogot.",
+    "Software rendering does not establish mobile frame rate.",
+    "First continuous Forward+ capture timed out after 180s; the four explicit-frame captures subsequently succeeded."
+  ],
+  "upstream_initial_import": {
+    "baseline_commit": "ca282ca77dca95f941916bb16bf523582cc595f4",
+    "reproduced_on_unmodified_main": true,
+    "preload_before_glb_import": true,
+    "glb_zero_basis_messages": true,
+    "settled_import_errors": 0,
+    "baseline_initial_log_sha256": "bed7363986b6502416321f66473c11671fef90c0f83a7f9611a8b899d615759b",
+    "baseline_settled_log_sha256": "0f02531b943e8ef39a91404981e9997446879eda0c9a07d7c1e42275658aad34",
+    "feature_initial_log_sha256": "10eb9574582b17cbf6f897b3542707f509a9feff0c96a61f2d8c62f7663b13f0"
+  },
+  "tested_sources_sha256": {
+    "scripts/stad_editor.gd": "89405239355632380e3ba9384dd1d2b4b2ab1067c94f6098897f3bd7d0dcc059",
+    "scripts/stad_editor_ui.gd": "33c9d9773965f276afe7eb72ca0db3a50c6a4818b843c4fecba34f80fe69029e",
+    "scripts/stad_editor_preview.gd": "258cec967ed7fc48a84000a2b67a3ceed9f3b3c6c15e1713fd6975d4aa63fac5",
+    "scripts/hud.gd": "f015dbab8c3f4d7e50763282a5ef85db61ecdd50b40ee937aa72c5c4bf929206",
+    "scripts/hud_extra.gd": "9a120f1722462f4e8502dec4758aa8049d8cf4e385b069cbdb79698f86caf16e",
+    "scripts/perf_monitor.gd": "c7f61d0f09c11127e3ed8bdcf60833abc99b1a10d4eb9a7d73c0b4f6a655702a",
+    "tests/stad_editor_2_test.gd": "3250e9df15ef95c74b819d5210a6ec2be8ebb2b24c09ae2d11da02ac1e4f0e7c"
+  }
+}

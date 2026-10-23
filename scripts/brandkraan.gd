@@ -8,7 +8,7 @@ extends StaticBody3D
 const MODEL := preload("res://assets/brandkraan.glb")
 const HP := 30.0
 const SPRAY_TIME := 45.0
-const DRIVE_OVER := 0.6   # marge rond de botsvorm van een voertuig; de kraan is massief, dus het voertuig staat er tegenaan
+const DRIVE_OVER := 0.9   # marge rond de botsvorm van een voertuig; de kraan is massief, dus het voertuig staat er tegenaan
 const NOZZLE := Vector3(0.0, 1.0, 0.0)
 
 static var all: Array = []
@@ -52,6 +52,12 @@ static func catch_blast(at: Vector3, radius: float) -> void:
 	for k: Brandkraan in all.duplicate():
 		if is_instance_valid(k) and not k.sprayed and k.global_position.distance_to(at) < radius + 0.5:
 			k.burst()
+
+
+## Ligt dit punt in de botsvorm van de kraan?
+func inside(p: Vector3) -> bool:
+	var d := p - global_position
+	return absf(d.x) < 0.4 and absf(d.z) < 0.4 and d.y > -0.1 and d.y < 1.5
 
 
 func hit(dmg: float, dir: Vector3, _from_player: bool) -> void:

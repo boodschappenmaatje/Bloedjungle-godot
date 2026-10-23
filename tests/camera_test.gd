@@ -92,7 +92,8 @@ func _run() -> void:
 	if extra != null and radar != null:
 		_check(radar.visible, "radar is niet zichtbaar tijdens prep")
 		var marker: Vector2 = extra.call("_radar_point", Vector3.ZERO, Rect2(Vector2.ZERO, Vector2(100, 100)))
-		_check(absf(marker.x - 50.0) < 0.1 and absf(marker.y - 61.54) < 0.2, "radar projecteert wereldcoördinaten verkeerd")
+		var expected_y := 100.0 * Data.WORLD_Z_N / (Data.WORLD_Z_N + Data.WORLD_Z_S)
+		_check(absf(marker.x - 50.0) < 0.1 and absf(marker.y - expected_y) < 0.2, "radar projecteert wereldcoördinaten verkeerd")
 		var view_button: Button = hud.find_child("CameraViewButton", true, false)
 		_check(view_button != null and view_button.is_in_group("hud_button"), "camera-knop blokkeert geen stick-touch")
 		if view_button != null:

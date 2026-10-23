@@ -1,6 +1,6 @@
 class_name Woonhuis
 extends Node3D
-## Gebouwen in de stad achter de brug, gemaakt in Blender (bron/woonhuis, bron/winkel, bron/kerk, bron/benzine). Eén script voor alle
+## Gebouwen in de stad achter de brug, gemaakt in Blender (bron/woonhuis, bron/winkel, bron/kerk, bron/benzine, bron/magazijn). Eén script voor alle
 ## soorten: de maten, trappen en sloopregels staan per soort in _spec().
 ## Je kunt naar binnen: het dak verdwijnt, en ook de verdiepingen boven je, en de muren aan de camerakant
 ## gaan weg zodat je jezelf ziet. Trappen brengen je naar boven (hoogte via floor_at, zoals de toren met elev).
@@ -28,6 +28,8 @@ static func _spec(kind: String) -> Dictionary:
 		return _spec_benzine()
 	if kind == "hotel":
 		return _spec_hotel()
+	if kind == "magazijn":
+		return _spec_magazijn()
 	if kind == "winkel":
 		var f0 := 0.3
 		var f1 := 3.8
@@ -218,6 +220,42 @@ static func _spec_hotel() -> Dictionary:
 	}
 
 
+## Militair bevoorradingsmagazijn: één open vloer, een brede dubbele deur en een zijdeur.
+## Twee lange stellingen geven dekking; de middenbaan blijft vrij voor speler en vijanden.
+static func _spec_magazijn() -> Dictionary:
+	var f0 := 0.21
+	return {
+		"glb": "res://assets/magazijn.glb", "levels": [f0], "hx": 6.0, "hz": 4.0,
+		"groups": ["Begane"],
+		"stairs": [], "holes": [],
+		"guards": [
+			[Vector3(-4.25, 1.55, 0.0), Vector3(1.32, 2.9, 5.15)],
+			[Vector3(4.25, 1.55, 0.0), Vector3(1.32, 2.9, 5.15)],
+			[Vector3(-2.15, 0.82, -2.45), Vector3(0.98, 1.3, 0.86)],
+			[Vector3(2.15, 0.82, -2.45), Vector3(0.98, 1.3, 0.86)],
+			[Vector3(-2.15, 0.82, 2.45), Vector3(0.98, 1.3, 0.86)],
+			[Vector3(2.15, 0.82, 2.45), Vector3(0.98, 1.3, 0.86)],
+			[Vector3(-2.6, 0.55, -3.0), Vector3(0.78, 1.1, 0.78)],
+			[Vector3(2.6, 0.55, -3.0), Vector3(0.78, 1.1, 0.78)],
+			[Vector3(-2.7, 0.55, 3.15), Vector3(0.78, 1.1, 0.78)],
+			[Vector3(2.7, 0.55, 3.15), Vector3(0.78, 1.1, 0.78)],
+		],
+		"doors": ["DeurVoorL", "DeurVoorR", "DeurZij"],
+		"collapse": [{"pre": "M0", "need": 12, "ruin": "all"}],
+		"ruin": true,
+		"ruin_boxes": [
+			[Vector3(0.0, 0.48, -0.4), Vector3(10.0, 0.96, 6.0)],
+			[Vector3(-3.1, 0.82, 1.8), Vector3(3.6, 1.64, 2.1)],
+			[Vector3(3.0, 0.72, -2.0), Vector3(3.2, 1.44, 2.2)],
+		],
+		"roof_pre": "M0", "roof_need": 5, "roof_levels": 0,
+		"roof_y": 5.3, "roof_r": 7.3, "roof_c": Vector3(0.0, 5.2, 0.0),
+		"roof_pile": Vector3(4.2, f0, -0.9),
+		"fall_piles": [[Vector3(-2.2, f0, -0.7), 0.95], [Vector3(2.1, f0, 1.0), 1.0]],
+		"near": 9.0, "banner": "MAGAZIJN INGESTORT",
+	}
+
+
 static var all: Array = []
 
 var kind := "woonhuis"
@@ -300,7 +338,8 @@ func _ready() -> void:
 	for nm in spec.doors:
 		var d: Node3D = model.find_child(nm, true, false)
 		if d:
-			doors.append({"node": d, "closed": d.rotation.y, "t": 0.0})
+			var closed := d.rotation.z if kind == "magazijn" else d.rotation.y
+			doors.append({"node": d, "closed": closed, "t": 0.0})
 	_guards()
 	_furniture()
 
@@ -623,9 +662,13 @@ func _process(delta: float) -> void:
 		var near := false
 		if p != null:
 			var dp: Vector3 = n.global_position - p.global_position
-			near = Vector2(dp.x, dp.z).length() < 1.9 and absf(dp.y) < 1.5
+			var reach := 2.8 if kind == "magazijn" and String(n.name).begins_with("DeurVoor") else 1.9
+			near = Vector2(dp.x, dp.z).length() < reach and absf(dp.y) < 1.5
 		d.t = move_toward(d.t, 1.0 if near else 0.0, delta * 3.0)
-		n.rotation.y = d.closed + d.t * PI * 0.5
+		if kind == "magazijn":
+			n.rotation.z = d.closed + d.t * PI * 0.5
+		else:
+			n.rotation.y = d.closed + d.t * PI * 0.5
 
 
 func _apply_view() -> void:
@@ -650,7 +693,7 @@ func _apply_view() -> void:
 			continue
 		if s.floor != _inside:
 			continue
-		var outward: Vector3 = (s.node as Node3D).global_transform.basis.z   # buitenkant = lokale +Z (Blender -Y)
+		var outward := _outward(s)
 		if String(s.name).begins_with("P") or outward.dot(cam_dir) > 0.4:
 			_show_seg(s, false)
 			_hidden.append(s)
@@ -741,7 +784,10 @@ func _center(s: Dictionary) -> Vector3:
 
 
 func _outward(s: Dictionary) -> Vector3:
-	var o: Vector3 = (s.node as Node3D).global_transform.basis.z
+	var basis := (s.node as Node3D).global_transform.basis
+	# Blender's Y-up GLB import maps warehouse wall normals through local +Y; the
+	# other buildings use the original local +Z convention.
+	var o: Vector3 = basis.y if kind == "magazijn" else basis.z
 	o.y = 0.0
 	return o.normalized()
 

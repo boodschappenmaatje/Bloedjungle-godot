@@ -24,7 +24,7 @@ const KINDS := {
 	"winkel": {"cat": "gebouw", "name": "Winkel met flat", "hx": 4.5, "hz": 4.0, "snap": 0.5, "cost": 14.0, "model": true, "h": 9.0},
 	"kerk": {"cat": "gebouw", "name": "Kerk met toren", "hx": 4.75, "hz": 9.5, "snap": 0.5, "cost": 20.0, "model": true, "h": 12.0, "glb": "res://assets/kerk.glb"},
 	"benzine": {"cat": "gebouw", "name": "Benzinestation", "hx": 5.0, "hz": 5.5, "snap": 0.5, "cost": 12.0, "model": true, "h": 5.0, "glb": "res://assets/benzine.glb"},
-	"magazijn": {"cat": "gebouw", "name": "Magazijn", "hx": 6.0, "hz": 4.0, "snap": 0.5, "cost": 3.0, "h": 6.0, "color": Color("6c7566"), "label": "MAGAZIJN"},
+	"magazijn": {"cat": "gebouw", "name": "Magazijn", "hx": 6.0, "hz": 4.0, "snap": 0.5, "cost": 3.0, "model": true, "h": 5.8, "glb": "res://assets/magazijn.glb"},
 	"hotel": {"cat": "gebouw", "name": "Hotel", "hx": 5.0, "hz": 4.5, "snap": 0.5, "cost": 18.0, "model": true, "h": 12.9, "glb": "res://assets/hotel.glb"},
 	"blok1": {"cat": "gebouw", "name": "Blok 1 laag", "hx": 4.0, "hz": 3.5, "snap": 0.5, "cost": 3.0, "h": 3.2, "color": Color("8a8a84"), "label": "1 LAAG"},
 	"blok2": {"cat": "gebouw", "name": "Blok 2 lagen", "hx": 4.0, "hz": 3.5, "snap": 0.5, "cost": 3.0, "h": 6.4, "color": Color("8a8a84"), "label": "2 LAGEN"},

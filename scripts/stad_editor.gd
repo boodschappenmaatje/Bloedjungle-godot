@@ -3,7 +3,7 @@ extends Control
 ## Stadseditor: deel de stad achter de brug zelf in. Recht van boven kijk je op de stad; kies onderaan een wegdeel, gebouw
 ## of straatding en tik op de kaart. Sleep iets om het te verschuiven, tik erop om het te draaien, te kopiëren of weg te halen.
 ## Twee vingers schuiven en zoomen. Alles springt op een raster; rood betekent dat het daar niet past.
-## Open hem tussen de golven met het kleine "STAD"-knopje onder BOUWEN (of F8). Je indeling wordt vanzelf bewaard;
+## Open hem tussen de golven met "Stadseditor" in het hoofdmenu of het pauzemenu (of F8). Je indeling wordt vanzelf bewaard;
 ## met KOPIEER krijg je een tekst die Claude in stad_data.gd zet, dan ligt de stad vast.
 
 const FOLIAGE_GROUPS := ["foliage_palm", "foliage_bush", "foliage_fern", "foliage_grass", "foliage_rock", "treeshadow"]
@@ -13,7 +13,7 @@ const BAD_COL := Color(1.0, 0.25, 0.2, 0.5)
 const SEL_COL := Color(1.0, 0.85, 0.3, 0.4)
 
 var _stad: Stad
-var _open_btn: Button
+var _rot_btn: Button
 var _ui: Control
 var _top: PanelContainer
 var _count: Label
@@ -54,14 +54,7 @@ var _hidden: Array = []
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_open_btn = Button.new()
-	_open_btn.add_to_group("hud_button")
-	_open_btn.text = "STAD"
-	UI.style_button(_open_btn, "pause")
-	_open_btn.add_theme_font_size_override("font_size", 11)
-	_open_btn.modulate.a = 0.4
-	_open_btn.pressed.connect(enter)
-	add_child(_open_btn)
+	add_to_group("stad_editor")
 	_ui = Control.new()
 	_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -153,7 +146,7 @@ func _make_actions() -> void:
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 6)
 	_actions.add_child(hb)
-	_btn("DRAAI", "buy", _rotate, hb)
+	_rot_btn = _btn("DRAAI", "buy", _rotate, hb)
 	_btn("SPIEGEL", "buy", _mirror, hb)
 	_btn("KOPIE", "buy", _copy, hb)
 	_btn("WIS", "buy", _delete_sel, hb)
@@ -243,8 +236,6 @@ func _layout() -> void:
 	var pw := minf(w - 24.0, 520.0)
 	_popup.size = Vector2(pw, minf(size.y - 40.0, 360.0))
 	_popup.position = Vector2((w - pw) / 2.0, 20.0)
-	_open_btn.size = Vector2(44, 28)
-	_open_btn.position = Vector2(12, 166)
 
 
 # ---------------------------------------------------------------- in en uit
@@ -304,7 +295,6 @@ func exit() -> void:
 
 
 func _process(delta: float) -> void:
-	_open_btn.visible = Game.state == "prep" and not Game.build_mode and Game.player != null
 	if Game.editing and Game.state != "prep":
 		exit()
 	if _msg_t > 0.0:
@@ -334,7 +324,7 @@ func _pick_tab(id: String) -> void:
 		_tool = "gum" if _tool != "gum" else ""
 	else:
 		_cat = id
-		if _tool == "gum":
+		if _tool == "gum" or _tool == "draai":
 			_tool = ""
 	_sel = {}
 	_refresh()
@@ -371,8 +361,11 @@ func _refresh() -> void:
 			b.pressed.connect(func(): _pick_kind(kind))
 			_chips.add_child(b)
 	UI.style_button(_brush_btn, "gold" if _brush else "buy")
+	UI.style_button(_rot_btn, "gold" if _tool == "draai" else "buy")
 	_brush_btn.text = "KWAST AAN" if _brush else "KWAST"
-	if _tool == "gum":
+	if _tool == "draai":
+		_hint.text = "Draaien: tik op het onderdeel dat je wilt draaien. Elke tik is een kwartslag. Tik nog eens op DRAAI om te stoppen."
+	elif _tool == "gum":
 		_hint.text = "Gum: tik op iets om het weg te halen, of veeg eroverheen."
 	elif _tool != "":
 		_hint.text = "%s: tik op de kaart om neer te zetten. Het gekleurde vlak toont of het past. DRAAI draait het." % Stad.KINDS[_tool].name
@@ -438,7 +431,7 @@ func _input(event: InputEvent) -> void:
 		elif event is InputEventMouseMotion:
 			if _ptrs.has(-1) or _ptrs.has(-2):
 				_move(-2 if _ptrs.has(-2) else -1, event.position)
-			elif _tool != "" and _tool != "gum" and not _over_ui(event.position):
+			elif _tool != "" and _tool != "gum" and _tool != "draai" and not _over_ui(event.position):
 				_hover(event.position)
 
 
@@ -519,6 +512,14 @@ func _down(id: int, pos: Vector2) -> void:
 	if _tool == "gum":
 		_drag = {"gum": true, "id": id, "sp": pos, "moved": false}
 		_erase_at(g)
+		return
+	if _tool == "draai":
+		var it := _pick(g)
+		if it.is_empty():
+			_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id}
+		else:
+			_sel = it
+			_turn(it)
 		return
 	if _tool != "":
 		_drag = {"place": true, "id": id, "sp": pos, "moved": false}
@@ -621,7 +622,7 @@ func _up(id: int) -> void:
 
 ## Zet de kandidaat onder de vinger, op het raster.
 func _aim(g: Vector3) -> void:
-	if _tool == "" or _tool == "gum":
+	if _tool == "" or _tool == "gum" or _tool == "draai":
 		return
 	var s: float = Stad.KINDS[_tool].snap
 	_cand = {"k": _tool, "x": roundf(g.x / s) * s, "z": roundf(g.z / s) * s, "r": _rot, "m": _mir}
@@ -695,19 +696,25 @@ func _delete_sel() -> void:
 	_refresh_hl()
 
 
+## DRAAI: met een soort gekozen draait het plaatsvlak; anders zet het draaimodus aan of uit.
+## In draaimodus draait elke tik op een onderdeel het een kwartslag.
 func _rotate() -> void:
-	if _tool != "" and _tool != "gum":
+	if _tool != "" and _tool != "gum" and _tool != "draai":
 		_rot = (_rot + 1) % 4
 		if not _cand.is_empty():
 			_cand.r = _rot
 			_show_cand()
 		return
-	if _sel.is_empty():
-		_say("TIK EERST OP IETS")
-		return
-	var cand := _sel.duplicate()
-	cand.r = (int(_sel.r) + 1) % 4
-	_apply_change(_sel, cand)
+	_tool = "" if _tool == "draai" else "draai"
+	_sel = {}
+	_cand = {}
+	_refresh()
+
+
+func _turn(it: Dictionary) -> void:
+	var cand := it.duplicate()
+	cand.r = (int(it.r) + 1) % 4
+	_apply_change(it, cand)
 
 
 func _mirror() -> void:

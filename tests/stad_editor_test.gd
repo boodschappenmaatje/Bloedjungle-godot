@@ -81,11 +81,13 @@ func _process(_d: float) -> bool:
 		_click(_screen_of(7.8, -96))
 	if t == 65:
 		print("geselecteerd: ", ed._sel.get("k", "niets"), " r=", ed._sel.get("r", -1))
-		ed._rotate()
-		print("gedraaid: r=", ed._sel.get("r", -1), " (verwacht 1) ", ed._msg.text)
-		ed._rotate()
-		ed._rotate()
-		ed._rotate()
+		ed._rotate()   # draaimodus aan
+		print("draaimodus: ", ed._tool)
+		_click(_screen_of(7.8, -96))   # tik op het wegdeel
+		print("gedraaid: r=", ed._sel.get("r", -1), " (verwacht 1) tool ", ed._tool)
+		ed._rotate()   # draaimodus uit
+		print("draaimodus uit: '", ed._tool, "'")
+		_click(_screen_of(7.8, -96))
 		ed._copy()
 		print("gekopieerd: ", stad.items.size() - n0, " erbij (verwacht 3), selectie ", ed._sel.get("x", 0), ",", ed._sel.get("z", 0))
 		ed._mirror()

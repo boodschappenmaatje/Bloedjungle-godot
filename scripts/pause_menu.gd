@@ -240,6 +240,7 @@ func _build_menu() -> void:
 	row.add_child(start)
 	row.add_child(_button("Uitrusting", "secondary", func(): _open_gear("menu")))
 	row.add_child(_button("Instellingen", "secondary", func(): _open_settings("menu")))
+	row.add_child(_button("Stadseditor", "secondary", _open_stad_editor))
 	left.add_child(row)
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 12)
@@ -289,6 +290,22 @@ func _start_game() -> void:
 	get_tree().current_scene.begin()
 
 
+## Stadseditor vanuit het hoofdmenu (start de wereld op en opent hem meteen) of vanuit het pauzemenu (alleen tussen de golven).
+func _open_stad_editor() -> void:
+	var ed := get_tree().get_first_node_in_group("stad_editor") as StadEditor
+	if ed == null:
+		return
+	if Game.state == "menu":
+		_show("")
+		await get_tree().current_scene.begin()
+	else:
+		if Game.state != "prep":
+			Game.banner.emit("STADSEDITOR", "Alleen tussen de golven", 2.0)
+			return
+		set_paused(false)
+	ed.enter()
+
+
 # ---------------------------------------------------------------- pauze
 
 func _build_pause() -> void:
@@ -298,6 +315,7 @@ func _build_pause() -> void:
 	_mute_btn = _button("", "secondary", _toggle_sound)
 	v.add_child(_mute_btn)
 	v.add_child(_button("Instellingen", "secondary", func(): _open_settings("pause")))
+	v.add_child(_button("Stadseditor", "secondary", _open_stad_editor))
 	v.add_child(_button("Stoppen", "secondary", func():
 		get_tree().paused = false
 		_show("")

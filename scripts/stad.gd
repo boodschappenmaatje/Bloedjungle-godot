@@ -9,6 +9,7 @@ extends Node3D
 const CELL := 6.0   # een wegdeel is 6 x 6 m
 const SAVE_PATH := "user://stad_editor.json"
 const STRAAT_GLB := "res://assets/straat.glb"
+const MEUBILAIR_GLB := "res://assets/straatmeubilair.glb"   # bron/straatmeubilair/maak_straatmeubilair.py
 ## Materialen van de straatset met wereld-UV (meters per herhaling): de bovenkant loopt zo naadloos door over gedraaide wegdelen.
 const WORLD_UV := {"Asfalt": 12.0, "Stoep": 1.2, "Keien": 1.0, "Steen": 2.0}
 
@@ -42,6 +43,10 @@ const KINDS := {
 	"auto": {"cat": "straat", "name": "Auto", "hx": 1.0, "hz": 2.2, "snap": 0.5, "cost": 1.0, "h": 1.5, "spacing": 5.5, "road": true},
 	"autowrak": {"cat": "straat", "name": "Autowrak", "hx": 1.0, "hz": 2.2, "snap": 0.5, "cost": 1.0, "h": 1.5, "spacing": 5.5, "road": true},
 	"autobrand": {"cat": "straat", "name": "Brandende auto", "hx": 1.0, "hz": 2.2, "snap": 0.5, "cost": 4.0, "h": 1.5, "spacing": 7.0, "road": true},
+	"brandkraan": {"cat": "straat", "name": "Brandkraan", "hx": 0.25, "hz": 0.25, "snap": 0.5, "cost": 0.3, "h": 0.8, "spacing": 12.0, "road": true},
+	"container": {"cat": "straat", "name": "Vuilcontainer", "hx": 0.95, "hz": 0.5, "snap": 0.5, "cost": 0.7, "h": 1.2, "spacing": 5.0, "road": true},
+	"bord": {"cat": "straat", "name": "Verkeersbord", "hx": 0.3, "hz": 0.3, "snap": 0.5, "cost": 0.3, "h": 2.5, "spacing": 8.0, "road": true},
+	"stoplicht": {"cat": "straat", "name": "Stoplicht", "hx": 0.3, "hz": 0.3, "snap": 0.5, "cost": 0.5, "h": 3.7, "spacing": 8.0, "road": true},
 	"zandzakken": {"cat": "straat", "name": "Zandzakken", "hx": 1.6, "hz": 0.5, "snap": 0.5, "cost": 0.5, "h": 1.0, "spacing": 3.5, "road": true},
 	"puin": {"cat": "straat", "name": "Puin", "hx": 1.2, "hz": 1.2, "snap": 0.5, "cost": 0.5, "h": 0.8, "spacing": 3.0, "road": true},
 	"hek": {"cat": "straat", "name": "Hek", "hx": 1.5, "hz": 0.15, "snap": 0.5, "cost": 0.3, "h": 1.2, "spacing": 3.0, "road": true},
@@ -53,7 +58,7 @@ const KINDS := {
 const ORDER := {
 	"weg": ["weg_recht", "weg_bocht", "weg_t", "weg_kruis", "weg_steeg", "weg_zebra", "stoep", "plein"],
 	"gebouw": ["woonhuis", "winkel", "kerk", "benzine", "magazijn", "hotel", "blok1", "blok2", "blok3", "blok4"],
-	"straat": ["lantaarn", "bankje", "bushokje", "prullenbak", "auto", "autowrak", "autobrand", "zandzakken", "puin", "hek", "boom", "struik"],
+	"straat": ["lantaarn", "bankje", "bushokje", "prullenbak", "brandkraan", "container", "bord", "stoplicht", "auto", "autowrak", "autobrand", "zandzakken", "puin", "hek", "boom", "struik"],
 }
 
 ## Gebouwen met een eigen sloopmodel (woonhuis.gd): zoveel mogen er tegelijk actief zijn.
@@ -331,73 +336,33 @@ func _fountain() -> Node3D:
 	return root
 
 
+## Straatmeubilair: het model uit assets/straatmeubilair.glb, met een botsvorm waar je er niet doorheen mag lopen.
+const PROP_PARTS := {"lantaarn": "Lantaarn", "bankje": "Bankje", "bushokje": "Bushokje", "prullenbak": "Prullenbak", "brandkraan": "Brandkraan",
+		"container": "Container", "bord": "Bord", "stoplicht": "Stoplicht", "zandzakken": "Zandzakken", "puin": "Puin", "hek": "Hek",
+		"boom": "Boom", "struik": "Struik"}
+## Botsvormen: [midden, maat] in meters (voorkant = +z).
+const PROP_BOXES := {
+	"bankje": [Vector3(0, 0.45, 0), Vector3(1.8, 0.9, 0.5)],
+	"bushokje": [Vector3(0, 1.1, 0.5), Vector3(3.2, 2.2, 0.3)],
+	"zandzakken": [Vector3(0, 0.5, 0), Vector3(3.2, 1.0, 0.8)],
+	"puin": [Vector3(0, 0.4, 0), Vector3(2.0, 0.8, 1.8)],
+	"boom": [Vector3(0, 1.0, 0), Vector3(0.6, 2.0, 0.6)],
+	"container": [Vector3(0, 0.6, 0), Vector3(1.9, 1.2, 0.95)],
+	"prullenbak": [Vector3(0, 0.45, 0), Vector3(0.5, 0.9, 0.5)],
+	"brandkraan": [Vector3(0, 0.4, 0), Vector3(0.4, 0.8, 0.4)],
+}
+
+
 func _prop(kind: String) -> Node3D:
 	var root := Node3D.new()
-	var dark := Kit.flat(Color("2a2d2a"), 0.6, 0.5)
-	match kind:
-		"lantaarn":
-			Kit.cylinder(root, Vector3.ZERO, 0.09, 4.0, dark, 8, 0.06)
-			Kit.box(root, Vector3(0, 3.95, 0.35), Vector3(0.1, 0.1, 0.8), dark)
-			Kit.box(root, Vector3(0, 3.78, 0.7), Vector3(0.3, 0.16, 0.45), Kit.flat(Color("e8d9a0"), 0.5))
-		"bankje":
-			var wood := Kit.wood()
-			Kit.box(root, Vector3(0, 0.42, 0), Vector3(1.8, 0.07, 0.45), wood)
-			Kit.box(root, Vector3(0, 0.7, -0.2), Vector3(1.8, 0.4, 0.06), wood)
-			Kit.box(root, Vector3(-0.8, 0, 0), Vector3(0.08, 0.42, 0.4), dark)
-			Kit.box(root, Vector3(0.8, 0, 0), Vector3(0.08, 0.42, 0.4), dark)
-			Kit.collider(root, Vector3(0, 0.45, 0), Vector3(1.8, 0.9, 0.5), Kit.LAYER_WALL)
-		"bushokje":
-			Kit.box(root, Vector3(0, 0, -0.62), Vector3(3.2, 2.2, 0.08), Kit.flat(Color("6e8a8c"), 0.2, 0.2))
-			Kit.box(root, Vector3(-1.56, 0, 0), Vector3(0.08, 2.2, 1.2), Kit.flat(Color("6e8a8c"), 0.2, 0.2))
-			Kit.box(root, Vector3(0, 2.2, 0), Vector3(3.4, 0.12, 1.5), dark)
-			Kit.box(root, Vector3(0.4, 0, -0.3), Vector3(1.8, 0.45, 0.4), Kit.wood())
-			Kit.collider(root, Vector3(0, 1.1, -0.6), Vector3(3.2, 2.2, 0.2), Kit.LAYER_WALL)
-		"prullenbak":
-			Kit.cylinder(root, Vector3.ZERO, 0.26, 0.9, Kit.flat(Color("3c4a3a"), 0.7, 0.3), 10)
-		"auto", "autowrak", "autobrand":
-			_car(root, kind)
-		"zandzakken":
-			Kit.sandbags(root, Vector3(-1.5, 0, 0), Vector3(1.5, 0, 0), 3, 7)
-			Kit.collider(root, Vector3(0, 0.5, 0), Vector3(3.2, 1.0, 0.8), Kit.LAYER_WALL)
-		"puin":
-			var rock := Kit.concrete_dark()
-			var sizes: Array = [Vector3(1.6, 0.6, 1.2), Vector3(0.9, 0.9, 0.8), Vector3(1.2, 0.4, 1.4), Vector3(0.5, 0.5, 0.5)]
-			var offs: Array = [Vector3(0, 0, 0), Vector3(0.4, 0.3, -0.3), Vector3(-0.6, 0, 0.5), Vector3(0.7, 0, 0.6)]
-			for i in sizes.size():
-				Kit.box(root, offs[i], sizes[i], rock, 0.5 + i * 0.9)
-			Kit.collider(root, Vector3(0, 0.4, 0), Vector3(2.0, 0.8, 1.8), Kit.LAYER_WALL)
-		"hek":
-			var wood := Kit.wood()
-			for x in [-1.4, 0.0, 1.4]:
-				Kit.box(root, Vector3(x, 0, 0), Vector3(0.1, 1.2, 0.1), wood)
-			Kit.box(root, Vector3(0, 0.45, 0), Vector3(3.0, 0.08, 0.05), wood)
-			Kit.box(root, Vector3(0, 0.9, 0), Vector3(3.0, 0.08, 0.05), wood)
-		"boom":
-			Kit.cylinder(root, Vector3.ZERO, 0.28, 4.2, Kit.photo("nature/tree_bark", 1.5, Color(0.7, 0.62, 0.52)), 8, 0.18)
-			var leaf := Kit.flat(Color("2f5a28"), 0.95)
-			for i in 3:
-				var mi := MeshInstance3D.new()
-				var sm := SphereMesh.new()
-				sm.radius = 1.7 - i * 0.35
-				sm.height = (1.7 - i * 0.35) * 1.6
-				sm.radial_segments = 10
-				sm.rings = 5
-				mi.mesh = sm
-				mi.material_override = leaf
-				mi.position = Vector3(0, 4.3 + i * 0.9, 0)
-				root.add_child(mi)
-			Kit.collider(root, Vector3(0, 1.0, 0), Vector3(0.6, 2.0, 0.6), Kit.LAYER_WALL)
-		"struik":
-			var mi := MeshInstance3D.new()
-			var sm := SphereMesh.new()
-			sm.radius = 0.8
-			sm.height = 1.2
-			sm.radial_segments = 8
-			sm.rings = 4
-			mi.mesh = sm
-			mi.material_override = Kit.flat(Color("3a6a2c"), 0.95)
-			mi.position = Vector3(0, 0.55, 0)
-			root.add_child(mi)
+	if PROP_PARTS.has(kind) and not _part(PROP_PARTS[kind]).is_empty():
+		var mi := MeshInstance3D.new()
+		mi.mesh = _part(PROP_PARTS[kind]).mesh
+		root.add_child(mi)
+		if PROP_BOXES.has(kind):
+			Kit.collider(root, PROP_BOXES[kind][0], PROP_BOXES[kind][1], Kit.LAYER_WALL)
+	elif kind.begins_with("auto"):
+		_car(root, kind)
 	return root
 
 
@@ -426,14 +391,17 @@ const DIRS := {"N": Vector2(0, -1), "E": Vector2(1, 0), "S": Vector2(0, 1), "W":
 
 ## Een object uit de straatset: de mesh en per vlak het materiaal en de arrays (één keer ingelezen).
 static func _part(name: String) -> Dictionary:
-	if _parts.is_empty() and ResourceLoader.exists(STRAAT_GLB):
-		var root: Node = (load(STRAAT_GLB) as PackedScene).instantiate()
-		for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
-			var list: Array = []
-			for i in mi.mesh.get_surface_count():
-				list.append({"mat": mi.mesh.surface_get_material(i), "a": mi.mesh.surface_get_arrays(i)})
-			_parts[String(mi.name)] = {"mesh": mi.mesh, "surfaces": list}
-		root.free()
+	if _parts.is_empty():
+		for path in [STRAAT_GLB, MEUBILAIR_GLB]:
+			if not ResourceLoader.exists(path):
+				continue
+			var root: Node = (load(path) as PackedScene).instantiate()
+			for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+				var list: Array = []
+				for i in mi.mesh.get_surface_count():
+					list.append({"mat": mi.mesh.surface_get_material(i), "a": mi.mesh.surface_get_arrays(i)})
+				_parts[String(mi.name)] = {"mesh": mi.mesh, "surfaces": list}
+			root.free()
 	return _parts.get(name, {})
 
 

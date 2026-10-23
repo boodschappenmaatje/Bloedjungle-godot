@@ -37,12 +37,12 @@ func _process(_d: float) -> bool:
 		# proefwijk: hoofdstraat met zebrapad en kruispunt, bocht, T, steeg, stoep en plein
 		var lines: Array = [
 			["weg_recht", 0, -96, 0, 0], ["weg_zebra", 0, -102, 0, 0], ["weg_kruis", 0, -108, 0, 0], ["weg_recht", 0, -114, 0, 0],
-			["plein", 0, -123, 0, 0],
-			["weg_recht", 6, -108, 1, 0], ["weg_t", 12, -108, 3, 0], ["weg_recht", 18, -108, 1, 0], ["weg_bocht", 24, -108, 2, 0],
-			["weg_recht", 24, -102, 0, 0], ["weg_steeg", 12, -114, 0, 0], ["weg_bocht", 12, -120, 1, 1],
-			["weg_recht", -6, -108, 1, 0], ["weg_bocht", -12, -108, 3, 0], ["weg_recht", -12, -102, 0, 0],
-			["stoep", 6, -102, 0, 0], ["stoep", -6, -102, 0, 0], ["stoep", 6, -114, 0, 0],
-			["lantaarn", 6, -102, 0, 0], ["bankje", -6, -102, 0, 0], ["auto", 1, -95, 0, 0],
+			["weg_recht", 6, -108, 1, 0], ["weg_recht", -6, -108, 1, 0], ["stoep", 6, -102, 0, 0], ["stoep", -6, -102, 0, 0],
+			["stoep", 6, -114, 0, 0], ["stoep", -6, -114, 0, 0],
+			["lantaarn", 3.4, -99, 0, 0], ["lantaarn", -3.4, -105, 0, 0], ["bankje", -5, -103.5, 3, 0], ["bushokje", 6.5, -101.2, 0, 0],
+			["prullenbak", 3.4, -104, 0, 0], ["brandkraan", -3.4, -99, 0, 0], ["container", -5.2, -113, 0, 0], ["bord", 3.4, -106.5, 0, 0],
+			["stoplicht", -3.4, -110.5, 0, 0], ["zandzakken", 6, -113, 0, 0], ["puin", 9.5, -108, 0, 0], ["hek", -9, -104.5, 0, 0],
+			["boom", 9, -103, 0, 0], ["struik", -9, -112, 0, 0], ["auto", 1, -95, 0, 0],
 		]
 		Stad.current.set_items(Stad.from_lines(lines))
 	if frames == 120:
@@ -50,7 +50,7 @@ func _process(_d: float) -> bool:
 		game.player.face = PI
 	if frames == 220:
 		_shot("spel")
-		game.player.global_position = Vector3(8.0, 0, -112.0)
+		game.player.global_position = Vector3(2.0, 0, -108.0)
 	if frames == 300:
 		_shot("spel2")
 		ed = root.find_children("*", "Control", true, false).filter(func(n): return n.get_script() and String(n.get_script().resource_path).ends_with("stad_editor.gd"))[0]

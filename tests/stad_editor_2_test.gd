@@ -35,7 +35,11 @@ func _free(kind: String, except := Vector2.INF) -> Dictionary:
 		for x in range(-48, 55, 6):
 			var d := {"k": kind, "x": float(x), "z": float(z), "r": 0, "m": 0}
 			var p := _screen(d)
-			if Rect2(Vector2(10, 10), Vector2(root.size) - Vector2(20, 20)).has_point(p) and not ed._over_ui(p) and Vector2(x, z).distance_to(except) > 8 and city.problem(d, ed._stad.items) == "":
+			var clear := true
+			for offset in [Vector2.ZERO, Vector2(40, 0), Vector2(-40, 0), Vector2(0, 40), Vector2(0, -40)]:
+				if ed._over_ui(p + offset):
+					clear = false
+			if Rect2(Vector2(50, 50), Vector2(root.size) - Vector2(100, 100)).has_point(p) and clear and Vector2(x, z).distance_to(except) > 8 and city.problem(d, ed._stad.items) == "":
 				return d
 	_check(false, "vrije zichtbare testplek voor " + kind)
 	return {"k": kind, "x": 48.0, "z": -144.0, "r": 0, "m": 0}
@@ -107,7 +111,7 @@ func _same_layout(a: Array, b: Array) -> bool:
 
 
 func _panels() -> Array:
-	return [ed._top, ed._side, ed._palette, ed._palette_handle, ed._zoom_box, ed._actions]
+	return [ed._top, ed._side, ed._palette, ed._palette_handle, ed._zoom_box, ed._view_btn, ed._actions]
 
 
 func _layout_checks(label: String) -> void:
@@ -122,7 +126,7 @@ func _layout_checks(label: String) -> void:
 			var b: Control = panels[j]
 			if b.is_visible_in_tree():
 				_check(not a.get_global_rect().intersects(b.get_global_rect()), label + ": overlap " + a.name + "/" + b.name)
-	for b in [ed._title_btn, ed._undo_btn, ed._done_btn, ed._palette_handle] + ed._tab_btns.values() + ed._action_grid.get_children() + ed._zoom_box.get_children():
+	for b in [ed._title_btn, ed._undo_btn, ed._done_btn, ed._palette_handle, ed._view_btn] + ed._tab_btns.values() + ed._action_grid.get_children() + ed._zoom_box.get_children():
 		_check(b.size.x >= 43.9 and b.size.y >= 43.9, label + ": aanraakvlak " + b.name)
 	var top_row = ed._top.get_child(0)
 	for child in top_row.get_children():
@@ -132,7 +136,7 @@ func _layout_checks(label: String) -> void:
 
 func _run() -> void:
 	city = load("res://scripts/stad.gd")
-	city.save_path = "user://stad_editor_2_test.json"
+	city.save_path = "user://stad_editor_2_%s_%s_test.json" % [DisplayServer.get_name(), "boven" if OS.get_cmdline_user_args().has("boven") else "schuin"]
 	city.clear_saved()
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
@@ -149,6 +153,9 @@ func _run() -> void:
 	var original: Array = city.to_lines(city.current.items)
 	_check(original == city.to_lines(city.from_lines(load("res://scripts/stad_data.gd").ITEMS)), "ongewijzigde standaardstad inclusief magazijn")
 	ed.enter()
+	if OS.get_cmdline_user_args().has("boven"):
+		root.get_camera_3d().editor_oblique = false
+		ed._sync_camera_button()
 	await _frames(45)
 	_check(game.editing and game.build_mode and ed._ui.visible, "editor openen")
 	_check(ed._library_state == 1, "compact is standaard")
@@ -237,8 +244,13 @@ func _run() -> void:
 	_touch(0, p + Vector2(20, 0), false)
 	_check(city.current.items.size() == before, "kaart slepen met bouwobject plaatst niets")
 	await _frames(8)
+	bench = _free("bankje")
 	p = _screen(bench)
 	var p2 := p + Vector2(30, 12)
+	for offset in [Vector2(30, 12), Vector2(-30, 12), Vector2(0, -40), Vector2(0, 40)]:
+		if not ed._over_ui(p + offset):
+			p2 = p + offset
+			break
 	_touch(0, p, true)
 	_touch(1, p2, true)
 	_drag(1, p2 + Vector2(30, 0))

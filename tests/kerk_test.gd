@@ -59,7 +59,8 @@ func _process(_d: float) -> bool:
 		var w: Array = _route[_wp]
 		var d := Vector2(w[0] - _l().x, w[1] - _l().z)
 		if d.length() < 0.3:
-			print("  bij ", w[2], ": ", _l(), " binnen=", k._inside)
+			var cam := root.get_viewport().get_camera_3d()
+			print("  bij ", w[2], ": ", _l(), " binnen=", k._inside, " camera-afstand ", snappedf(cam.global_position.distance_to(game.player.global_position), 0.1))
 			_wp += 1
 			if _wp == _route.size():
 				move = Vector2.ZERO

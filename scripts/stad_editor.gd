@@ -1,6 +1,6 @@
 class_name StadEditor
 extends Control
-## Stadseditor: deel de stad achter de brug zelf in. Recht van boven kijk je op de stad; kies onderaan een wegdeel, gebouw
+## Stadseditor: deel de stad achter de brug zelf in. Schuin of recht van boven; kies onderaan een wegdeel, gebouw
 ## of straatding en tik op de kaart. Sleep iets om het te verschuiven, tik erop om het te draaien, te kopiëren of weg te halen.
 ## Twee vingers schuiven en zoomen. Alles springt op een raster; rood betekent dat het daar niet past.
 ## Open hem tussen de golven met "Stadseditor" in het hoofdmenu of het pauzemenu (of F8). Je indeling wordt vanzelf bewaard;
@@ -59,6 +59,7 @@ var _palette: PanelContainer
 var _actions: PanelContainer
 var _brush_btn: Button
 var _zoom_box: VBoxContainer
+var _view_btn: Button
 var _popup: PanelContainer
 var _text: TextEdit
 var _reset_btn: Button
@@ -142,13 +143,13 @@ func _make_top() -> void:
 	_top = _panel(4)
 	_top.name = "Bovenbalk"
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
+	row.add_theme_constant_override("separation", 6)
 	_top.add_child(row)
 	_title_btn = _btn("STADSEDITOR", "", _show_text, row)
 	_title_btn.add_theme_font_override("font", UI.display(0))
 	_title_btn.tooltip_text = "Stadsindeling kopiëren of de standaardstad herstellen"
 	_title_btn.add_theme_stylebox_override("normal", UI.box(Color.TRANSPARENT))
-	_selected_label = UI.label("KIES EEN OBJECT", UI.body(700), 14, EUI.GOLD)
+	_selected_label = UI.label("Kies een object", EUI.font(), 13, EUI.GOLD)
 	_selected_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_selected_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_selected_label.clip_text = true
@@ -162,9 +163,9 @@ func _make_top() -> void:
 	_load_bar.add_theme_stylebox_override("fill", UI.box(EUI.GREEN, Color.TRANSPARENT, 0, 4, 0))
 	_load_bar.custom_minimum_size = Vector2(70, 8)
 	row.add_child(_load_bar)
-	_count = UI.label("", UI.body(700), 14, EUI.INK)
+	_count = UI.label("", EUI.font(), 13, EUI.INK)
 	row.add_child(_count)
-	_sloop_label = UI.label("", UI.body(700), 12, EUI.MUTED)
+	_sloop_label = UI.label("", EUI.font(500), 11, EUI.MUTED)
 	_sloop_label.tooltip_text = "Maximaal %d sloopbare gebouwen tegelijk actief" % Stad.MAX_SLOOP
 	row.add_child(_sloop_label)
 	_undo_btn = _btn("", "", _do_undo, row, "undo")
@@ -178,7 +179,7 @@ func _make_top() -> void:
 	_toast = _panel(8)
 	_toast.name = "Plaatsingsmelding"
 	_toast.visible = false
-	_msg = UI.label("", UI.body(700), 13, Color("f1cf9a"))
+	_msg = UI.label("", EUI.font(), 13, Color("f1cf9a"))
 	_msg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_toast.add_child(_msg)
 
@@ -193,7 +194,7 @@ func _make_palette() -> void:
 		var id: String = t[0]
 		var b := _btn(t[1], "", func(): _pick_tab(id), tabs, id)
 		b.name = "Categorie_" + id
-		b.custom_minimum_size = Vector2(64, 52)
+		b.custom_minimum_size = Vector2(72, 52)
 		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		b.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 		b.add_theme_constant_override("icon_max_width", 21)
@@ -225,12 +226,12 @@ func _make_actions() -> void:
 	_action_grid.add_theme_constant_override("h_separation", 2)
 	_action_grid.add_theme_constant_override("v_separation", 2)
 	_actions.add_child(_action_grid)
-	_rot_btn = _btn("DRAAI", "", _rotate, _action_grid, "draai")
+	_rot_btn = _btn("Draai", "", _rotate, _action_grid, "draai")
 	_rot_btn.tooltip_text = "Draai 90 graden · R"
-	_mirror_btn = _btn("SPIEGEL", "", _mirror, _action_grid, "spiegel")
-	_copy_btn = _btn("KOPIE", "", _copy, _action_grid, "kopie")
-	_delete_btn = _btn("WIS", "", _delete_sel, _action_grid, "wis")
-	_brush_btn = _btn("KWAST", "", _toggle_brush, _action_grid, "kwast")
+	_mirror_btn = _btn("Spiegel", "", _mirror, _action_grid, "spiegel")
+	_copy_btn = _btn("Kopie", "", _copy, _action_grid, "kopie")
+	_delete_btn = _btn("Wis", "", _delete_sel, _action_grid, "wis")
+	_brush_btn = _btn("Kwast", "", _toggle_brush, _action_grid, "kwast")
 	_brush_btn.tooltip_text = "Straatobjecten of gum langs een veeg plaatsen · K"
 	for b: Button in _action_grid.get_children():
 		b.add_theme_font_size_override("font_size", 11)
@@ -238,6 +239,9 @@ func _make_actions() -> void:
 
 
 func _make_zoom() -> void:
+	_view_btn = _btn("SCHUIN", "", _toggle_camera, _ui, "view")
+	_view_btn.name = "EditorKijkhoek"
+	_view_btn.add_theme_font_size_override("font_size", 11)
 	_zoom_box = VBoxContainer.new()
 	_zoom_box.name = "Kaartzoom"
 	_zoom_box.add_theme_constant_override("separation", 6)
@@ -261,8 +265,8 @@ func _make_popup() -> void:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 8)
 	_popup.add_child(vb)
-	vb.add_child(UI.label("JOUW STAD", UI.display(0), 18, EUI.INK))
-	var info := UI.label("Je stad wordt automatisch bewaard. Kopieer de tekst om de indeling te delen.", UI.body(), 13, EUI.MUTED)
+	vb.add_child(UI.label("Jouw stad", EUI.font(), 18, EUI.INK))
+	var info := UI.label("Je stad wordt automatisch bewaard. Kopieer de tekst om de indeling te delen.", EUI.font(500), 13, EUI.MUTED)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(info)
 	_text = TextEdit.new()
@@ -352,29 +356,29 @@ func _layout() -> void:
 	_top.position = inner.position
 	_top.size = Vector2(inner.size.x, 52)
 	var narrow := inner.size.x < 760.0
-	_title_btn.custom_minimum_size.x = 96 if narrow else 114
+	_title_btn.custom_minimum_size.x = 88 if narrow else 114
 	_title_btn.add_theme_font_size_override("font_size", 11 if narrow else 13)
-	_selected_label.custom_minimum_size.x = 42 if narrow else 74
-	_selected_label.add_theme_font_size_override("font_size", 12 if narrow else 14)
-	_load_bar.custom_minimum_size.x = 38 if narrow else 70
-	_count.add_theme_font_size_override("font_size", 12 if narrow else 14)
-	_sloop_label.add_theme_font_size_override("font_size", 11 if narrow else 12)
-	_done_btn.custom_minimum_size.x = 72 if narrow else 84
+	_selected_label.custom_minimum_size.x = 40 if narrow else 74
+	_selected_label.add_theme_font_size_override("font_size", 12 if narrow else 13)
+	_load_bar.custom_minimum_size.x = 32 if narrow else 64
+	_count.add_theme_font_size_override("font_size", 11 if narrow else 13)
+	_sloop_label.add_theme_font_size_override("font_size", 10 if narrow else 11)
+	_done_btn.custom_minimum_size.x = 68 if narrow else 84
 	_side.position = Vector2(inner.position.x, _top.position.y + 64)
-	_side.size = Vector2(76, 229)
+	_side.size = Vector2(84, 229)
 	var library_x := _side.position.x + _side.size.x + 10
 	var library_w := inner.end.x - library_x
-	var library_h := 96.0 if _library_state == LibraryState.COMPACT else minf(176.0, safe.size.y * 0.39)
+	var library_h := 112.0 if _library_state == LibraryState.COMPACT else minf(188.0, safe.size.y * 0.40)
 	var count := 0
 	for card: Button in _chips.get_children():
 		if card.visible:
 			count += 1
 	_chips.columns = maxi(1, ceili(count / 2.0) if _library_state == LibraryState.EXPANDED else count)
-	var card_h := (library_h - 18.0) * 0.5 if _library_state == LibraryState.EXPANDED else 80.0
+	var card_h := (library_h - 18.0) * 0.5 if _library_state == LibraryState.EXPANDED else 96.0
 	for card: Button in _chips.get_children():
-		card.custom_minimum_size = Vector2(100, card_h)
+		card.custom_minimum_size = Vector2(140, card_h)
 		var picture := card.get_node("Inhoud/Preview") as TextureRect
-		picture.custom_minimum_size.y = maxf(24, card_h - 27)
+		picture.custom_minimum_size.y = maxf(24, card_h - 26)
 	_library_scroll.custom_minimum_size.y = maxf(0, library_h - 12)
 	_palette.visible = _library_state != LibraryState.HIDDEN and _tool != "gum"
 	_palette.size = Vector2(library_w, library_h)
@@ -385,8 +389,10 @@ func _layout() -> void:
 	_palette_handle.tooltip_text = ["Bibliotheek tonen", "Bibliotheek uitbreiden", "Bibliotheek verbergen"][_library_state]
 	var map_bottom := _palette.position.y - 8 if _palette.visible else inner.end.y
 	var map_top := _top.position.y + _top.size.y + 8
+	_view_btn.size = Vector2(96, 44)
+	_view_btn.position = Vector2(inner.end.x - 96, map_top)
 	_zoom_box.size = Vector2(44, 94)
-	_zoom_box.position = Vector2(inner.end.x - 44, maxf(map_top, (map_top + map_bottom - 94) * 0.5))
+	_zoom_box.position = Vector2(inner.end.x - 44, maxf(_view_btn.position.y + 52, (map_top + map_bottom - 94) * 0.5))
 	_toast.size = Vector2(minf(380, library_w - 64), 0)
 	_toast.position = Vector2(library_x + (library_w - _toast.size.x) * 0.5, map_top)
 	_msg.custom_minimum_size.x = maxf(80, _toast.size.x - 16)
@@ -414,6 +420,27 @@ func _toggle_brush() -> void:
 	_brush = not _brush
 	_last_brush = Vector2(INF, INF)
 	_refresh()
+
+
+func _toggle_camera() -> void:
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		return
+	var preview := _cand.duplicate() if _drag.is_empty() and _is_place() else {}
+	_cancel_drag()
+	_ptrs.clear()
+	_pinch = {}
+	camera.set("editor_oblique", not bool(camera.get("editor_oblique")))
+	_cand = preview
+	_refresh_hl()
+	_sync_camera_button()
+
+
+func _sync_camera_button() -> void:
+	var camera := get_viewport().get_camera_3d()
+	var oblique := camera != null and bool(camera.get("editor_oblique"))
+	_view_btn.text = "SCHUIN" if oblique else "BOVEN"
+	_view_btn.tooltip_text = "Kijkhoek: schuin of recht van boven. Zoom en kaartpositie blijven gelijk."
 
 
 func _layout_dynamic() -> void:
@@ -450,7 +477,7 @@ func _position_actions() -> void:
 		Vector2(anchor.position.x - toolbar_size.x - 12, anchor.get_center().y - toolbar_size.y * 0.5),
 		Vector2(anchor.get_center().x - toolbar_size.x * 0.5, anchor.position.y - toolbar_size.y - 12),
 		Vector2(anchor.get_center().x - toolbar_size.x * 0.5, anchor.end.y + 12)]
-	var obstacles: Array[Control] = [_top, _side, _palette, _palette_handle, _zoom_box, _toast]
+	var obstacles: Array[Control] = [_top, _side, _palette, _palette_handle, _zoom_box, _view_btn, _toast]
 	var best := safe.position
 	var best_score := INF
 	# Bij een rand of klein scherm zoeken we ook vrije plekken langs de bedieningspanelen.
@@ -501,6 +528,7 @@ func enter() -> void:
 			_stad.add_child(preview)
 	Game.editing = true
 	Game.build_mode = true
+	_sync_camera_button()
 	_ui.visible = true
 	_close_popup()
 	_library_state = LibraryState.COMPACT
@@ -665,8 +693,8 @@ func _chip(tool: String, label: String, icon_kind: String) -> void:
 			_textures[path] = load(path)
 		picture.texture = _textures[path]
 	box.add_child(picture)
-	var short_names := {"winkel": "WINKEL + FLAT", "kerk": "KERK + TOREN", "benzine": "BENZINE", "autobrand": "BRANDENDE AUTO"}
-	var title := UI.label(short_names.get(tool, label.to_upper()), UI.body(700), 12, EUI.INK)
+	var short_names := {"winkel": "Winkel + flat", "kerk": "Kerk + toren", "benzine": "Benzine", "autobrand": "Brandende auto"}
+	var title := UI.label(short_names.get(tool, label), EUI.font(), 12, EUI.INK)
 	title.name = "Naam"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -702,7 +730,7 @@ func _update_controls() -> void:
 	if _selected_label == null:
 		return
 	var kind := String(_sel.get("k", _tool))
-	_selected_label.text = String(Stad.KINDS[kind].name).to_upper() if Stad.KINDS.has(kind) else "WEG TEKENEN" if LINE_TOOLS.has(kind) else "GUM" if kind == "gum" else "DRAAIMODUS" if kind == "draai" else "KIES EEN OBJECT"
+	_selected_label.text = String(Stad.KINDS[kind].name) if Stad.KINDS.has(kind) else "Weg tekenen" if LINE_TOOLS.has(kind) else "Gum" if kind == "gum" else "Draaimodus" if kind == "draai" else "Kies een object"
 	_selected_label.tooltip_text = _selected_label.text
 	_undo_btn.disabled = _undo.is_empty()
 	var has_kind := Stad.KINDS.has(kind)
@@ -855,7 +883,7 @@ func _is_place() -> bool:
 func _over_ui(p: Vector2) -> bool:
 	if _popup.visible:
 		return true
-	for control: Control in [_top, _side, _palette, _palette_handle, _actions, _zoom_box, _toast]:
+	for control: Control in [_top, _side, _palette, _palette_handle, _actions, _zoom_box, _view_btn, _toast]:
 		if control.is_visible_in_tree() and control.get_global_rect().has_point(p):
 			return true
 	return false
@@ -875,14 +903,20 @@ func _clamp_cam() -> void:
 	Game.ecam.y = clampf(Game.ecam.y, -Data.WORLD_Z_N, 10.0)
 
 
-## Hoeveel meter op de grond is één scherm-pixel.
-func _mpp() -> float:
-	var cam := get_viewport().get_camera_3d()
-	return 2.0 * 62.0 * Game.ecam.z * tan(deg_to_rad(cam.fov * 0.5)) / maxf(1.0, get_viewport().get_visible_rect().size.y)
+## Grondprojectie houdt slepen correct bij beide kijkhoeken, zoom en schermranden.
+func _pan_screen(from: Vector2, to: Vector2) -> void:
+	var a: Variant = _ground(from)
+	var b: Variant = _ground(to)
+	if a != null and b != null:
+		Game.ecam.x += a.x - b.x
+		Game.ecam.y += a.z - b.z
+		_clamp_cam()
 
 
 func _down(id: int, pos: Vector2) -> void:
 	if _over_ui(pos):
+		if not _ptrs.is_empty():
+			_cancel_drag()
 		return
 	_ptrs[id] = pos
 	if _ptrs.size() == 2:
@@ -954,12 +988,8 @@ func _move(id: int, pos: Vector2) -> void:
 		var v: Array = _ptrs.values()
 		_set_zoom(_pinch.zoom * _pinch.d / maxf(1.0, (v[0] - v[1]).length()))
 		var mid: Vector2 = (v[0] + v[1]) * 0.5
-		var dm: Vector2 = mid - _pinch.mid
+		_pan_screen(_pinch.mid, mid)
 		_pinch.mid = mid
-		var mp := _mpp()
-		Game.ecam.x -= dm.x * mp
-		Game.ecam.y -= dm.y * mp
-		_clamp_cam()
 		return
 	if _drag.is_empty() or id != _drag.id:
 		return
@@ -973,12 +1003,8 @@ func _move(id: int, pos: Vector2) -> void:
 		if not _drag.moved and pos.distance_to(_drag.sp) < 8.0:
 			return
 		_drag.moved = true
-		var d: Vector2 = pos - _drag.last
+		_pan_screen(_drag.last, pos)
 		_drag.last = pos
-		var m := _mpp()
-		Game.ecam.x -= d.x * m
-		Game.ecam.y -= d.y * m
-		_clamp_cam()
 		return
 	if _over_ui(pos):
 		return
@@ -1101,6 +1127,35 @@ func _place_cand() -> bool:
 
 
 func _pick(g: Vector3) -> Dictionary:
+	# Bij schuin zicht ligt de zichtbare bovenkant niet boven dezelfde schermpixel als de voet.
+	# Raak daarom eerst de echte botsvorm en zoek het bijbehorende bestaande stadsitem.
+	var camera := get_viewport().get_camera_3d()
+	var picked := {}
+	var distance := INF
+	if camera and Game.editing:
+		var screen := camera.unproject_position(g)
+		var origin := camera.project_ray_origin(screen)
+		var end := origin + camera.project_ray_normal(screen) * camera.far
+		var query := PhysicsRayQueryParameters3D.create(origin, end, Kit.LAYER_WALL)
+		var hit := camera.get_world_3d().direct_space_state.intersect_ray(query)
+		if not hit.is_empty():
+			var node: Node = hit.collider
+			while node != null and node != _stad:
+				for item in _stad.items:
+					if is_instance_valid(item.get("node")) and item.node == node:
+						picked = item
+						distance = origin.distance_squared_to(hit.position)
+				node = node.get_parent()
+		# Lantaarns zijn bewust decor zonder spelbotsing. Test hun zichtbare modelgrenzen
+		# uitsluitend in de editor, zonder nieuwe physics of wijzigingen aan AI/gevechten.
+		for item in _stad.items:
+			if Stad.KINDS[item.k].cat == "straat" and is_instance_valid(item.get("node")):
+				var mesh_distance := _mesh_hit(item.node, origin, end)
+				if mesh_distance < distance:
+					distance = mesh_distance
+					picked = item
+		if not picked.is_empty():
+			return picked
 	var pt := Vector2(g.x, g.z)
 	for cat in ["straat", "gebouw", "weg"]:
 		for i in range(_stad.items.size() - 1, -1, -1):
@@ -1113,6 +1168,19 @@ func _pick(g: Vector3) -> Dictionary:
 			if r.has_point(pt):
 				return d
 	return {}
+
+
+func _mesh_hit(node: Node, origin: Vector3, end: Vector3) -> float:
+	if node is Node3D and not node.is_visible_in_tree():
+		return INF
+	var distance := INF
+	if node is MeshInstance3D and node.mesh:
+		var hit: Variant = node.mesh.get_aabb().intersects_segment(node.to_local(origin), node.to_local(end))
+		if hit != null:
+			distance = origin.distance_squared_to(node.to_global(hit))
+	for child in node.get_children():
+		distance = minf(distance, _mesh_hit(child, origin, end))
+	return distance
 
 
 func _erase_at(g: Vector3) -> void:

@@ -2,22 +2,29 @@ class_name StadEditorUI
 extends RefCounted
 ## Alleen de stadseditor: gedeelde stijlen en eenmaal gerasterde lijniconen.
 
-const PANEL := Color(0.075, 0.09, 0.085, 0.91)
-const BORDER := Color("455044")
+const PANEL := Color(0.065, 0.08, 0.075, 0.89)
+const BORDER := Color(0.31, 0.36, 0.31, 0.60)
 const GOLD := Color("d8b45d")
 const INK := Color("eee8d6")
 const MUTED := Color("a7ad9b")
 const GREEN := Color("80b768")
 static var _styles := {}
 static var _icons := {}
+static var _fonts := {}
+
+
+static func font(weight := 600) -> Font:
+	if not _fonts.has(weight):
+		_fonts[weight] = load("res://assets/fonts/Barlow-%s.ttf" % ("SemiBold" if weight >= 600 else "Medium"))
+	return _fonts[weight]
 
 
 static func panel(margin := 8) -> StyleBoxFlat:
 	var key := "panel_%d" % margin
 	if not _styles.has(key):
-		var sb := UI.box(PANEL, BORDER, 1, 9, margin)
-		sb.shadow_color = Color(0, 0, 0, 0.28)
-		sb.shadow_size = 5
+		var sb := UI.box(PANEL, BORDER, 1, 12, margin)
+		sb.shadow_color = Color(0, 0, 0, 0.22)
+		sb.shadow_size = 8
 		sb.shadow_offset = Vector2(0, 3)
 		_styles[key] = sb
 	return _styles[key]
@@ -26,8 +33,8 @@ static func panel(margin := 8) -> StyleBoxFlat:
 static func button(b: Button, selected := false, primary := false) -> void:
 	var key := "primary" if primary else "selected" if selected else "button"
 	if not _styles.has(key):
-		var bg := GOLD if primary else Color(0.19, 0.23, 0.16, 0.94) if selected else Color(0.11, 0.135, 0.12, 0.68)
-		var sb := UI.box(bg, GOLD if selected or primary else Color(0.30, 0.35, 0.29, 0.65), 2 if selected else 1, 6, 6)
+		var bg := GOLD if primary else Color(0.19, 0.23, 0.16, 0.75) if selected else Color(0.11, 0.135, 0.12, 0.34)
+		var sb := UI.box(bg, GOLD if selected or primary else Color(0.30, 0.35, 0.29, 0.30), 1, 8, 6)
 		_styles[key] = sb
 		var hover := sb.duplicate() as StyleBoxFlat
 		hover.bg_color = bg.lightened(0.08)
@@ -44,7 +51,7 @@ static func button(b: Button, selected := false, primary := false) -> void:
 	b.add_theme_stylebox_override("pressed", _styles[key + "_pressed"])
 	b.add_theme_stylebox_override("disabled", _styles[key + "_disabled"])
 	b.add_theme_stylebox_override("focus", _styles[key + "_hover"])
-	b.add_theme_font_override("font", UI.body(700, 0))
+	b.add_theme_font_override("font", font())
 	b.add_theme_font_size_override("font_size", 12)
 	var color := Color("20261c") if primary else GOLD if selected else INK
 	for state in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color", "icon_normal_color", "icon_hover_color", "icon_pressed_color"]:
@@ -58,6 +65,7 @@ static func button(b: Button, selected := false, primary := false) -> void:
 static func icon(kind: String) -> Texture2D:
 	if not _icons.has(kind):
 		var paths := {
+			"view": '<path d="m3 8 9-5 9 5-9 5zM3 12l9 5 9-5M3 16l9 5 9-5"/>',
 			"weg": '<path d="M7 3 4 21M17 3l3 18M12 4v3m0 4v3m0 4v3"/>',
 			"gebouw": '<path d="m3 11 9-8 9 8M5 10v11h14V10M10 21v-7h4v7"/>',
 			"straat": '<path d="M5 21V7a4 4 0 0 1 4-4h5M12 3h7v5h-7zM3 21h5m4-5h8m-7 0v5m6-5v5"/>',

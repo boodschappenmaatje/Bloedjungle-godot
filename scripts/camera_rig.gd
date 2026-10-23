@@ -10,6 +10,11 @@ var combat_view := false
 var zoom_step := 0
 var focus := Vector3.ZERO  # het punt waar de camera naar kijkt (speler + look-ahead, iets naar achteren geschoven)
 var _snap := true  # eerste beeld meteen op de speler, niet ernaartoe vliegen
+const EDITOR_DISTANCE := 62.0
+const EDITOR_TILT := PI / 6.0  # 30° uit het lood: kleine straatobjecten krijgen een zichtbare hoogte.
+var editor_oblique := true
+var _editor_tilt := EDITOR_TILT
+var _editor_active := false
 
 
 func toggle_view() -> void:
@@ -97,19 +102,22 @@ func _build_cam(delta: float, portrait: bool) -> void:
 	far = maxf(220.0, global_position.y * 1.5 + 40.0)
 
 
-## Stadseditor: recht van boven op de stad, verschuiven en zoomen met Game.ecam.
+## Alleen de stadseditor: rond hetzelfde grondpunt kantelen, met dezelfde afstand en zoom.
 func _edit_cam(delta: float) -> void:
-	var h := 62.0 * Game.ecam.z
-	var goal := Vector3(Game.ecam.x, h, Game.ecam.y)
-	var f := minf(1.0, delta * 8.0)
-	if _blook == Vector3.ZERO:
-		_blook = _nlook
-	global_position = global_position.lerp(goal, f)
-	_blook = _blook.lerp(Vector3(Game.ecam.x, 0.0, Game.ecam.y), f)
-	var look := Vector3(_blook.x, 0.0, _blook.z)
-	if global_position.distance_to(look) > 0.01:
-		look_at(look, Vector3(0, 0, -1))
-	far = maxf(220.0, h * 1.6 + 40.0)
+	var target := Vector3(Game.ecam.x, 0.0, Game.ecam.y)
+	var tilt := EDITOR_TILT if editor_oblique else 0.0
+	var f := 1.0 - exp(-10.0 * delta)
+	if not _editor_active:
+		_blook = target
+		_editor_tilt = tilt
+		_editor_active = true
+	else:
+		_blook = _blook.lerp(target, f)
+		_editor_tilt = lerpf(_editor_tilt, tilt, f)
+	var distance := EDITOR_DISTANCE * Game.ecam.z
+	global_position = _blook + Vector3(0, cos(_editor_tilt), sin(_editor_tilt)) * distance
+	look_at(_blook, Vector3(0, 0, -1))
+	far = maxf(220.0, distance * 1.6 + 40.0)
 
 
 func _process(delta: float) -> void:
@@ -128,10 +136,12 @@ func _process(delta: float) -> void:
 		if Game.editing:
 			_edit_cam(delta)
 		else:
+			_editor_active = false
 			_build_cam(delta, portrait)
 		# geen bladdithering in het overzicht: de fade loopt rustig naar 0
 		Foliage.update_visibility_focus(p.global_position, global_position, delta, false)
 		return
+	_editor_active = false
 	if _fog0 >= 0.0 and env:
 		# mist en zichtafstand keren zacht terug i.p.v. in één frame te springen
 		env.fog_density = lerpf(env.fog_density, _fog0, minf(1.0, delta * 4.0))

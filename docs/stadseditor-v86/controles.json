@@ -1,0 +1,285 @@
+{
+  "version": "v86",
+  "date_utc": "2026-10-23T17:02:26.422268+00:00",
+  "base_main": "07a45e469f27a4b277e4e1fb8c3a6889f9ea585e",
+  "engine": "4.7.2.stable.official.ed1daf0bf",
+  "headless_import": {
+    "exit": 0,
+    "script_or_resource_errors": 0,
+    "log_sha256": "614a802459381a1b2c1e2ef83be5b56eda2a4c95f9cfdd4eddfb61cfdb3b298e"
+  },
+  "headless_tests": [
+    {
+      "test": "stad",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "stad_editor",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "stad_lijn",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "stad_menu",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "hud_layout",
+      "exit": 0,
+      "errors": [],
+      "summaries": [
+        "HUD TEST PASS: geen overlappende of verdwenen knoppen"
+      ],
+      "shutdown_warning": true
+    },
+    {
+      "test": "camera",
+      "exit": 0,
+      "errors": [],
+      "summaries": [
+        "CAMERA TEST PASS: camera modes, zoom, build restore, HUD touch targets, radar projection, attack data and foliage uniforms"
+      ],
+      "shutdown_warning": true
+    },
+    {
+      "test": "besturing",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "stick",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "bouw",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "smoke",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "magazijn",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "magazijn_dak",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "hotel",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "kerk",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "benzine",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "huis",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "winkel",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "ai",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "tank_mik",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "granaat",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "meubels",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "explosie",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "schade",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "loadout",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": false
+    },
+    {
+      "test": "brandkraan",
+      "exit": 0,
+      "errors": [],
+      "summaries": [],
+      "shutdown_warning": true
+    },
+    {
+      "test": "stad_editor_view",
+      "exit": 0,
+      "errors": [],
+      "summaries": [
+        "EDITOR VIEW RESULT: 169 controles, 0 fouten"
+      ],
+      "shutdown_warning": true
+    },
+    {
+      "test": "stad_editor_2",
+      "exit": 0,
+      "errors": [],
+      "summaries": [
+        "STADSEDITOR 2.0: 3302 controles, 0 fouten"
+      ],
+      "shutdown_warning": true
+    },
+    {
+      "test": "stad_editor_2_boven",
+      "exit": 0,
+      "errors": [],
+      "summaries": [
+        "STADSEDITOR 2.0: 3302 controles, 0 fouten"
+      ],
+      "shutdown_warning": true
+    }
+  ],
+  "native_opengl_editor": {
+    "checks": 3302,
+    "failures": 0,
+    "log_sha256": "a730ab86d8fdb316813334d755e5823d4b2fdc9040799e9bb5562cd4de6bca39"
+  },
+  "native_x11_view": {
+    "checks": 169,
+    "failures": 0,
+    "log_sha256": "2f131f45ca588d84557612d6c51c2b10cdf542684e9ede5d4dd167a08cad4b57"
+  },
+  "icons": {
+    "count": 26,
+    "size": [
+      256,
+      256
+    ],
+    "log_sha256": "81456718816f36cf616d3974a8c3da6175e05f822cb5b5c2650f158722b86fe6"
+  },
+  "captures": {
+    "renderer": "Vulkan / Forward+ / Mesa llvmpipe",
+    "draw": "RenderingServer.force_draw; actual frames, no generated concept images",
+    "files": [
+      {
+        "file": "editor-bibliotheek-934x430.png",
+        "width": 934,
+        "height": 430,
+        "sha256": "a6ab46db67f8acbf25526ec0ddbb4306a34066733a94b4a828585865df4d175e"
+      },
+      {
+        "file": "editor-boven-934x430.png",
+        "width": 934,
+        "height": 430,
+        "sha256": "2befafaf1ac3918b5edc6b02fd7beb2507c6c2e5d30eb68759f96e0b13a6c5ac"
+      },
+      {
+        "file": "editor-desktop-1280x720.png",
+        "width": 1280,
+        "height": 720,
+        "sha256": "a5ae43204415774f73acd745556be90f448dba881555af9d65fb5f9458fd629c"
+      },
+      {
+        "file": "editor-schuin-934x430.png",
+        "width": 934,
+        "height": 430,
+        "sha256": "45137c0d2c4514b250aa09a55e66265fca64e27f23d68669c009d240805f80c0"
+      }
+    ],
+    "log_sha256": "1a261382a3098253a7f34b4f0883d54f3c513f54bda50d01990aabf349b30380"
+  },
+  "tested_sources_sha256": {
+    "scripts/camera_rig.gd": "9cb4367049c67009aabafdfcd871530a66d4e2a6e5fb8dd62942b78dfb066e89",
+    "scripts/stad_editor.gd": "161848c1786f97cb08fbe879d69039327eee55c8ead09bd1247180f6eaf8751e",
+    "scripts/stad_editor_ui.gd": "51a9bd9c572a3e960ce1925aa2a0ea20fd65d6db6673c8c81ba299a90f300ba8",
+    "scripts/hud.gd": "499c78bfe290cb284dca787f2c72f6bf5f4aaf25a255fa1e16ecc88f0e5f89e4",
+    "tools/stad_icons.gd": "faaa2737bb952062fc0bb8975e6de71e48c44360e82b51d98e6ef5f5ba2addad",
+    "tests/stad_editor_2_test.gd": "424bf7578211f88291c4ddcdb6c1b5ee7a6900c4abded0002c14fa19f2a5f1f3",
+    "tests/stad_editor_view_test.gd": "e98f7a9a48195f1f8e5591a333953b2498bdc51d60ff830dac6266b31d414440",
+    "tests/stad_editor_view_foto.gd": "576a4eae2b913fe8db2ab9c02920984a99599d62f0c1958edd886fc6ea485d7e"
+  },
+  "limitations": [
+    "Physical Windows and iPhone/Xogot not executed.",
+    "Software rendering is not a mobile FPS measurement.",
+    "Existing main ObjectDB/resource shutdown warnings remain; see v85 report.",
+    "Building mirroring retains the existing restriction."
+  ],
+  "headless_view_log_sha256": "e37da352c2e97331e97a0d0b21237b6d86abd8cfe14acff663bc5663d77aeb21"
+}

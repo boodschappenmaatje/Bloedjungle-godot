@@ -14,6 +14,17 @@ var _stad
 var _wait := 0
 
 
+func _corners(node: Node, points: PackedVector3Array) -> void:
+	if node is Node3D and not node.is_visible_in_tree():
+		return
+	if node is MeshInstance3D and node.mesh:
+		var box: AABB = node.mesh.get_aabb()
+		for i in 8:
+			points.append(node.global_transform * box.get_endpoint(i))
+	for child in node.get_children():
+		_corners(child, points)
+
+
 func _initialize() -> void:
 	Stad = load("res://scripts/stad.gd")
 	var only := OS.get_cmdline_user_args()
@@ -52,27 +63,53 @@ func _process(_d: float) -> bool:
 		_wait -= 1
 		return false
 	if _stad != null:
+		if not RenderingServer.is_render_loop_enabled():
+			RenderingServer.force_draw()
 		var img := _vp.get_texture().get_image()
-		img.save_png("res://assets/stad_icons/%s.png" % _kinds[_i])
-		print("icoon ", _kinds[_i])
+		if img.is_empty():
+			push_error("Leeg icoon: " + _kinds[_i])
+			quit(1)
+			return true
+		if img.save_png("res://assets/stad_icons/%s.png" % _kinds[_i]) != OK:
+			push_error("Icoon kon niet worden opgeslagen: " + _kinds[_i])
+			quit(1)
+			return true
 		_stad.queue_free()
 		_stad = null
 		_i += 1
 	if _i >= _kinds.size():
+		print("ICONEN KLAAR: ", _i)
 		return true
 	var kind: String = _kinds[_i]
-	var k: Dictionary = Stad.KINDS[kind]
 	_stad = Stad.new()
 	_vp.add_child(_stad)
-	_stad.set_items([{"k": kind, "x": 0.0, "z": 0.0, "r": 0, "m": 0}])
-	var half: Vector2 = Stad.half_of({"k": kind, "x": 0.0, "z": 0.0, "r": 0, "m": 0})
-	var h := float(k.get("h", 0.5))
-	var r := maxf(half.x, half.y)
-	var tilt := deg_to_rad(52.0)
-	var fwd := Vector3(0, -sin(tilt), -cos(tilt))
-	var focus := Vector3(0, minf(h, 8.0) * 0.4, 0)
-	_cam.size = (r * 2.0 + h * 0.6) * 1.12 + 0.6
-	_cam.position = focus - fwd * 60.0
+	# De vuur-FX hebben een parent in de sceneboom nodig; het wrak zelf is dezelfde geometrie.
+	_stad.set_items([{"k": "autowrak" if kind == "autobrand" else kind, "x": 0.0, "z": 0.0, "r": 0, "m": 0}])
+	if kind == "autobrand":
+		load("res://scripts/fx.gd").burning(_stad.items[0].node, Vector3.ZERO, true).position = Vector3(0, 0.8, 0)
+	if kind == "brandkraan":
+		var animation: AnimationPlayer = _stad.items[0].node._anim
+		if animation and animation.has_animation("Spuit"):
+			animation.play("Spuit")
+			animation.advance(0)
+			animation.pause()
+	var points := PackedVector3Array()
+	_corners(_stad, points)
+	if points.is_empty():
+		push_error("Geen zichtbare geometrie: " + kind)
+		quit(1)
+		return true
+	var bounds := AABB(points[0], Vector3.ZERO)
+	for p in points:
+		bounds = bounds.expand(p)
+	var focus := bounds.get_center()
+	_cam.position = focus + Vector3(0.8, 1.15, 1.35).normalized() * 60.0
 	_cam.look_at(focus)
-	_wait = 6
+	var extent := Vector2.ZERO
+	for p in points:
+		var local: Vector3 = _cam.global_basis.inverse() * (p - focus)
+		extent.x = maxf(extent.x, absf(local.x))
+		extent.y = maxf(extent.y, absf(local.y))
+	_cam.size = maxf(extent.x, extent.y) * 2.0 * 1.12
+	_wait = 3
 	return false

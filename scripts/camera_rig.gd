@@ -97,6 +97,21 @@ func _build_cam(delta: float, portrait: bool) -> void:
 	far = maxf(220.0, global_position.y * 1.5 + 40.0)
 
 
+## Stadseditor: recht van boven op de stad, verschuiven en zoomen met Game.ecam.
+func _edit_cam(delta: float) -> void:
+	var h := 62.0 * Game.ecam.z
+	var goal := Vector3(Game.ecam.x, h, Game.ecam.y)
+	var f := minf(1.0, delta * 8.0)
+	if _blook == Vector3.ZERO:
+		_blook = _nlook
+	global_position = global_position.lerp(goal, f)
+	_blook = _blook.lerp(Vector3(Game.ecam.x, 0.0, Game.ecam.y), f)
+	var look := Vector3(_blook.x, 0.0, _blook.z)
+	if global_position.distance_to(look) > 0.01:
+		look_at(look, Vector3(0, 0, -1))
+	far = maxf(220.0, h * 1.6 + 40.0)
+
+
 func _process(delta: float) -> void:
 	var p = Game.player
 	if p == null:
@@ -110,7 +125,10 @@ func _process(delta: float) -> void:
 		if env:
 			env.fog_density = lerpf(env.fog_density, _fog0 * 0.3, minf(1.0, delta * 4.0))
 		attributes.dof_blur_far_enabled = false
-		_build_cam(delta, portrait)
+		if Game.editing:
+			_edit_cam(delta)
+		else:
+			_build_cam(delta, portrait)
 		# geen bladdithering in het overzicht: de fade loopt rustig naar 0
 		Foliage.update_visibility_focus(p.global_position, global_position, delta, false)
 		return

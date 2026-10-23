@@ -36,6 +36,8 @@ var gates: Gates
 var bridge  # de ophaalbrug (bridge.gd)
 var build_mode := false  # bouwscherm open: camera hoog boven de basis
 var bcam := Vector3(0.0, 0.0, 1.0)  # bouwcamera: x, z en zoom
+var editing := false  # stadseditor open (stad_editor.gd): bouwmodus staat dan ook aan
+var ecam := Vector3(6.0, -108.0, 1.0)  # editorcamera recht van boven: x, z en zoom
 var buildings: Array = []
 var allies: Array = []
 var troop_mode := "follow"  # follow of hold
@@ -117,6 +119,7 @@ func reset() -> void:
 	place_armed = false
 	build_credit = BUILD_CREDIT
 	build_mode = false
+	editing = false
 	bcam = Vector3(0.0, 0.0, 1.0)
 	buildings.clear()
 	allies.clear()

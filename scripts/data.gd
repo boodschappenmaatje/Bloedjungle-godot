@@ -72,6 +72,8 @@ const WINKEL_POS := Vector3(22.0, 0.0, -110.5)
 const KERK_POS := Vector3(-14.0, 0.0, -115.0)
 ## Benzinestation (stad_data.gd): de luifel en de pompen aan de straatkant (+Z).
 const BENZINE_POS := Vector3(48.0, 0.0, -111.0)
+## Hotel (stad_data.gd): vier lagen met kamers, de entree aan de straatkant (+Z).
+const HOTEL_POS := Vector3(-27.0, 0.0, -111.0)
 
 ## Midden van de rivier op afstand x: ongeveer 90 m achter de basis, met een bos ertussen.
 const RIVER_Z0 := -92.0

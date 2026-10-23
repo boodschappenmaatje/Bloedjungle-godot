@@ -17,7 +17,8 @@ const ITEMS := [
 	["woonhuis", 11, -110, 0, 0],
 	["winkel", 22, -110.5, 0, 0],
 	# grijze blokken voor de gebouwen die nog gemaakt moeten worden
-	["benzine", -13, -109.5, 0, 0],
+	["kerk", -14, -115, 0, 0],
+	["benzine", 48, -111, 0, 0],
 	["hotel", -27, -111, 0, 0],
 	["magazijn", 36, -112, 0, 0],
 	# straatmeubilair

@@ -7,8 +7,10 @@ editable blend; the GLB embeds its own texture data.
 """
 import bpy
 import bmesh
+import json
 import math
 import os
+import struct
 import random
 import sys
 from array import array
@@ -130,6 +132,41 @@ lamp_bsdf.inputs["Emission Strength"].default_value = 2.0
 lamp_bsdf.inputs["Roughness"].default_value = 0.38
 
 MATERIALS = [PLASTER, CONCRETE, STEEL, ROOF, WOOD, RUBBLE, OLIVE, YELLOW, GLASS, LAMP]
+
+
+def normalize_glb_image_names(path):
+    """Match embedded glTF image names to Godot's magazijn_<image>.png sidecars."""
+    with open(path, "rb") as f:
+        source = f.read()
+    magic, version, _ = struct.unpack_from("<4sII", source, 0)
+    if magic != b"glTF" or version != 2:
+        raise RuntimeError("Blender did not write a valid GLB")
+    chunks = []
+    offset = 12
+    found_json = False
+    while offset < len(source):
+        length, kind = struct.unpack_from("<I4s", source, offset)
+        offset += 8
+        payload = source[offset:offset + length]
+        offset += length
+        if kind == b"JSON":
+            doc = json.loads(payload)
+            for image in doc.get("images", []):
+                name = image.get("name", "")
+                if name.startswith("magazijn_"):
+                    image["name"] = name[len("magazijn_"):]
+            payload = json.dumps(doc, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+            payload += b" " * ((-len(payload)) % 4)
+            found_json = True
+        chunks.append((kind, payload))
+    if not found_json:
+        raise RuntimeError("GLB is missing its JSON chunk")
+    output = bytearray(b"glTF" + struct.pack("<II", 2, 0))
+    for kind, payload in chunks:
+        output += struct.pack("<I4s", len(payload), kind) + payload
+    struct.pack_into("<I", output, 8, len(output))
+    with open(path, "wb") as f:
+        f.write(output)
 
 
 def empty(name, parent=None, loc=(0, 0, 0), rot=(0, 0, 0)):
@@ -649,6 +686,7 @@ bpy.ops.export_scene.gltf(
     use_visible=False,
     use_renderable=False,
 )
+normalize_glb_image_names(glb_path)
 
 triangles = 0
 meshes = 0

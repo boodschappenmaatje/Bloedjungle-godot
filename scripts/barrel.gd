@@ -85,6 +85,7 @@ static func catch_blast(at: Vector3, radius: float) -> void:
 	for b in Game.barrels.duplicate():
 		if is_instance_valid(b) and b.global_position.distance_to(at) < radius + 0.5:
 			b.ignite(randf_range(0.12, 0.45), true)  # na elkaar, niet allemaal tegelijk
+	Pomp.catch_blast(at, radius)  # benzinepompen en olievaten bij het benzinestation
 
 
 func _ready() -> void:
@@ -227,30 +228,35 @@ func _blow() -> void:
 	Game.note_blast(at, RADIUS)
 	Fx.explosion(parent, at, 0.6 if chained else 0.85, Fx.CHUNKS_BARREL)  # kleiner dan een raket: een vat is geen bom
 	Game.alert(at, 30.0, 6.0)
+	area_damage(at, RADIUS, DAMAGE)
+	catch_blast(at, RADIUS)
+	Fx.wreck(parent, global_position)
+	queue_free()
+
+
+## Schade van een ontploffing in een straal: vijanden, gebouwen (ook de huizen in de stad), poorten, jij en de bunker.
+static func area_damage(at: Vector3, radius: float, dmg: float) -> void:
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e):
 			var d: float = e.global_position.distance_to(at)
-			if d < RADIUS:
-				e.hit(DAMAGE * (1.0 - d / RADIUS * 0.7), (e.global_position - at).normalized(), true)
+			if d < radius:
+				e.hit(dmg * (1.0 - d / radius * 0.7), (e.global_position - at).normalized(), true)
 	if Game.builds:
-		Game.builds.blast(at, RADIUS, DAMAGE, true)
+		Game.builds.blast(at, radius, dmg, true)
 	if Game.gates:
 		for i in Game.gates.list.size():
 			var gt: Dictionary = Game.gates.list[i]
 			var gp: Vector3 = Game.gates.pos_of(gt)
 			var gd: float = maxf(0.0, Vector2(gp.x - at.x, gp.z - at.z).length() - Data.GATE_GAP)
-			if not gt.broken and gd < RADIUS:
-				Game.gates.damage(i, DAMAGE * 0.35 * (1.0 - gd / RADIUS), "explosive")
+			if not gt.broken and gd < radius:
+				Game.gates.damage(i, dmg * 0.35 * (1.0 - gd / radius), "explosive")
 	var p = Game.player
 	if p != null and not p.dead:
 		var pd: float = Vector2(p.global_position.x - at.x, p.global_position.z - at.z).length()
-		if pd < RADIUS:
-			p.hit(DAMAGE * 0.25 * (1.0 - pd / RADIUS), (p.global_position - at).normalized(), false)
+		if pd < radius:
+			p.hit(dmg * 0.25 * (1.0 - pd / radius), (p.global_position - at).normalized(), false)
 	var bx := maxf(absf(at.x) - Data.BUNKER_HALF, 0.0)
 	var bz := maxf(absf(at.z) - Data.BUNKER_HALF, 0.0)
 	var bd := Vector2(bx, bz).length()
-	if bd < RADIUS:
-		Game.damage_base(DAMAGE * 0.3 * (1.0 - bd / RADIUS))
-	catch_blast(at, RADIUS)
-	Fx.wreck(parent, global_position)
-	queue_free()
+	if bd < radius:
+		Game.damage_base(dmg * 0.3 * (1.0 - bd / radius))

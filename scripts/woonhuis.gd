@@ -1,13 +1,14 @@
 class_name Woonhuis
 extends Node3D
-## Gebouwen in de stad achter de brug, gemaakt in Blender (bron/woonhuis, bron/winkel, bron/kerk). Eén script voor alle
+## Gebouwen in de stad achter de brug, gemaakt in Blender (bron/woonhuis, bron/winkel, bron/kerk, bron/benzine). Eén script voor alle
 ## soorten: de maten, trappen en sloopregels staan per soort in _spec().
 ## Je kunt naar binnen: het dak verdwijnt, en ook de verdiepingen boven je, en de muren aan de camerakant
 ## gaan weg zodat je jezelf ziet. Trappen brengen je naar boven (hoogte via floor_at, zoals de toren met elev).
 ## Alles kan kapot: elk muurstuk (M0*, M1*, M2*, P*, S*, T_*) gaat van heel naar kapot naar weg, met puin als dekking.
 ## Vallen er genoeg muurstukken van een laag weg, dan zakken de verdiepingen erboven in; bij de winkel stort
 ## het hele gebouw in (de 'Ruine' uit het model komt ervoor in de plaats). De kerk heeft twee delen die elk apart
-## instorten: de toren en het schip ('parts', met elk een eigen ruïne).
+## instorten: de toren en het schip ('parts', met elk een eigen ruïne). Bij het benzinestation zijn dat het winkeltje en de
+## luifel (kolommen K*); de pompen en olievaten (XPomp*, XVat*) ontploffen (pomp.gd).
 ## Lokale maten (Godot): voorkant (deur) aan +Z. Trappen en gaten in Blender-y (b = -z).
 
 const STAIR_LIFT := 1.0
@@ -19,10 +20,12 @@ const HP := {"M": 320.0, "P": 160.0, "T": 140.0}
 ## instorten: regels {pre, need} met "fall" (laag waarvanaf alles inzakt) of "ruin" ("all" of een deel uit "parts").
 ## Optioneel: "foot" (grondvlak als rechthoeken [x0, x1, z0, z1]), "floor_rects" (waar een verdieping vloer heeft),
 ## "hp" (levens per soort muurstuk), "roof_pre"/"roof_need" (welke muren het dak dragen), "roof_levels" (tot welke
-## laag het dak weggaat als je binnen bent).
+## laag het dak weggaat als je binnen bent), "covers" (knooppunt dat weggaat als je eronder staat, met de rechthoek).
 static func _spec(kind: String) -> Dictionary:
 	if kind == "kerk":
 		return _spec_kerk()
+	if kind == "benzine":
+		return _spec_benzine()
 	if kind == "winkel":
 		var f0 := 0.3
 		var f1 := 3.8
@@ -126,6 +129,45 @@ static func _spec_kerk() -> Dictionary:
 	}
 
 
+## Benzinestation: winkeltje (x -3,5..3,5, z -5,2..0, één laag, plat dak) met de luifel ervoor (x -4,8..4,8, z 0,3..5,4) op
+## vier kolommen K0..K3, en twee pompeilanden met elk twee pompen. Het winkeltje en de luifel storten elk apart in.
+static func _spec_benzine() -> Dictionary:
+	var f0 := 0.2
+	return {
+		"glb": "res://assets/benzine.glb", "levels": [f0], "hx": 4.8, "hz": 5.4,
+		"foot": [[-3.5, 3.5, -5.2, 0.0]],
+		"groups": ["Begane"],
+		"stairs": [], "holes": [],
+		"guards": [
+			# toonbank, de rekken en de koeling in het winkeltje
+			[Vector3(2.05, f0 + 0.5, -1.9), Vector3(0.7, 1.0, 2.0), "Winkel"],
+			[Vector3(-0.6, f0 + 0.8, -2.22), Vector3(2.0, 1.6, 0.95), "Winkel"],
+			[Vector3(-3.0, f0 + 1.0, -1.6), Vector3(0.5, 2.0, 2.0), "Winkel"],
+			[Vector3(0.9, f0 + 0.95, -3.45), Vector3(1.2, 1.9, 0.6), "Winkel"],
+			# pompeilanden
+			[Vector3(-1.6, 0.1, 2.85), Vector3(0.9, 0.2, 3.1)],
+			[Vector3(1.6, 0.1, 2.85), Vector3(0.9, 0.2, 3.1)],
+		],
+		"doors": ["DeurVoor", "DeurAchter", "DeurBinnen0"],
+		"hp": {"M": 300.0, "P": 160.0, "K": 260.0},
+		# twee kolommen weg: de luifel klapt in; vijf muren van het winkeltje weg: het winkeltje stort in (het dak valt na vier)
+		"collapse": [{"pre": "K", "need": 2, "ruin": "Luifel"}, {"pre": "M0", "need": 5, "ruin": "Winkel"}],
+		"ruin": false, "ruin_boxes": [],
+		"parts": {
+			"Winkel": {"node": "RuineWinkel", "rect": [-3.5, 3.5, -5.2, 0.0], "hide": ["Begane", "Dak"],
+				"pre": ["M", "P"], "exit": Vector3(0.0, 0.0, 1.6), "banner": "BENZINESTATION INGESTORT",
+				"boxes": [[Vector3(0, 0.75, -2.6), Vector3(6.8, 1.5, 5.0)]]},
+			"Luifel": {"node": "RuineLuifel", "rect": [-4.8, 4.8, 0.3, 5.4], "hide": ["Luifel"],
+				"pre": ["K"], "exit": Vector3(0.0, 0.0, 7.0), "banner": "LUIFEL INGESTORT",
+				"boxes": [[Vector3(-3.3, 0.55, 2.85), Vector3(3.6, 1.1, 4.4)], [Vector3(3.3, 0.55, 2.85), Vector3(3.6, 1.1, 4.4)]]},
+		},
+		"covers": [["LuifelDak", [-4.8, 4.8, 0.3, 5.4]]],
+		"roof_y": 3.0, "roof_r": 4.5, "roof_c": Vector3(0, 3.6, -2.6), "roof_pile": Vector3(0.5, f0, -2.4),
+		"fall_piles": [],
+		"near": 9.0, "banner": "BENZINESTATION INGESTORT",
+	}
+
+
 static var all: Array = []
 
 var kind := "woonhuis"
@@ -149,6 +191,8 @@ var _guard_body: StaticBody3D
 var _guard_bodies: Dictionary = {}   # per deel ("" = het hele gebouw)
 var _inside := -1           # -1 buiten, anders de laag waarop je staat
 var _hidden: Array = []     # muurstukken die nu voor de camera weg zijn
+var pumps: Array = []       # pompen en olievaten (benzinestation)
+var _covers: Array = []     # [knooppunt, rechthoek]: gaat weg als je eronder staat (luifel)
 
 
 ## Zet een huis neer in de wereld (Level), yaw in radialen.
@@ -194,7 +238,14 @@ func _ready() -> void:
 			continue
 		if String(n.name).begins_with("Vloer"):
 			continue
+		if String(n.name).begins_with("X"):
+			pumps.append(Pomp.attach(self, n, heel, kapot))
+			continue
 		_add_seg(n, heel, kapot)
+	for c in spec.get("covers", []):
+		var cn: Node3D = model.find_child(c[0], true, false)
+		if cn:
+			_covers.append([cn, c[1]])
 	for nm in spec.doors:
 		var d: Node3D = model.find_child(nm, true, false)
 		if d:
@@ -371,6 +422,12 @@ func _process(delta: float) -> void:
 	if where != _inside:
 		_inside = where
 		_apply_view()
+	# onder de luifel: de luifel gaat weg zodat je jezelf en de pompen ziet
+	for c in _covers:
+		var under := false
+		if p != null and not p.driving:
+			under = _in_rect(c[1], to_local(p.global_position), 0.2)
+		(c[0] as Node3D).visible = not under
 	# deuren gaan open als er iemand dichtbij is
 	for d in doors:
 		var n: Node3D = d.node
@@ -400,7 +457,7 @@ func _apply_view() -> void:
 	# muren van deze verdieping die naar de camera (+Z in de wereld) kijken
 	var cam_dir := Vector3(0, 0, 1)
 	for s in segs:
-		if s.staat >= 2 or String(s.name).begins_with("T"):
+		if s.staat >= 2 or String(s.name).begins_with("T") or String(s.name).begins_with("K"):
 			continue
 		if s.floor != _inside:
 			continue
@@ -531,7 +588,7 @@ func _rubble(s: Dictionary, big := false) -> void:
 	var out := _outward(s)
 	var foot := c + out * (0.9 if s.floor == 0 else 2.0)
 	foot.y = 0.0
-	var small: bool = not big and (String(s.name).begins_with("T") or String(s.name).begins_with("P"))
+	var small: bool = not big and (String(s.name).begins_with("T") or String(s.name).begins_with("P") or String(s.name).begins_with("K"))
 	_pile(foot, "PuinKlein" if small else "PuinGroot", 0.75 if small else 0.85)
 	for k in 3:
 		Fx.dust(get_parent(), c + Vector3(randf_range(-1, 1), randf_range(-1, 1), randf_range(-1, 1)))

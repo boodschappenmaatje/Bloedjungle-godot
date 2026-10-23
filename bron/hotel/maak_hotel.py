@@ -1035,10 +1035,10 @@ for v, (par, inr, B) in enumerate(((ver, inr1, F1), (ver2, inr2, F2), (ver3, inr
     kamer(inr, par, B, 3.3, -3.1, 1.4, (4.2, -0.4), (1.9, -3.9), d1)
     kamer(inr, par, B, -0.4, 3.1, 1.4, (-2.0, 1.0), (0.4, 1.2), d2)
     kamer(inr, par, B, 3.3, 3.1, 1.4, (4.2, 1.0), (1.9, 1.2), d0)
-    # in de trapruimte: een bank op de voorste overloop en een bagagekar achter
+    # in de trapruimte: een bank op de voorste overloop en een koffer achter (de overlopen blijven vrij)
     inr.append(box("Bank", (0.5, 1.3, 0.42), STOF2, par, (SA_X0 + 0.3, -3.3, B + 0.21)))
     inr.append(box("BankRug", (0.12, 1.3, 0.5), STOF2, par, (SA_X0 + 0.08, -3.3, B + 0.6)))
-    inr.append(box("Koffer", (0.7, 0.3, 0.5), HOUT, par, (SA_X0 + 0.6, 3.6, B + 0.25)))
+    inr.append(box("Koffer", (0.5, 0.3, 0.4), HOUT, par, (-2.45, 3.9, B + 0.2)))   # naast de overloop, niet erop
     inr.append(box("Lampkap", (0.5, 0.5, 0.1), EMAILLE, par, (0.6, 0.4 - 1.0, B + 3.0 - SLAB - 0.4)))
 inrichting1 = join(inr1[0], inr1[1:])
 inrichting1.name = "Inrichting1"

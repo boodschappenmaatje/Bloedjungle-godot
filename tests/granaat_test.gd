@@ -39,7 +39,7 @@ func _process(_d: float) -> bool:
 	if t == 0:
 		main.begin()
 	if t == 20:
-		for kind in ["woonhuis", "winkel", "kerk", "benzine", "hotel"]:
+		for kind in ["woonhuis", "winkel", "kerk", "benzine", "hotel", "magazijn"]:
 			var hs := get_nodes_in_group(kind)
 			if hs.is_empty():
 				print(kind, ": NIET GEVONDEN")

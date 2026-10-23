@@ -220,26 +220,31 @@ static func _spec_hotel() -> Dictionary:
 	}
 
 
-## Militair bevoorradingsmagazijn: één open vloer, een brede dubbele deur en een zijdeur.
-## Twee lange stellingen geven dekking; de middenbaan blijft vrij voor speler en vijanden.
+## Militair bevoorradingsmagazijn: één open vloer, een brede dubbele deur en een zijdeur. Twee lange stellingen geven dekking;
+## de middenbaan blijft vrij voor speler en vijanden. Een stalen buitentrap langs de oostmuur (buiten het grondvlak, "ext") gaat
+## naar het golfplaten dak (laag 1, loopt schuin op naar de nok: "slope") voor de sluipschutter.
 static func _spec_magazijn() -> Dictionary:
 	var f0 := 0.21
+	var dak := 4.96   # dakrand; de nok ligt 0,5 m hoger
 	return {
-		"glb": "res://assets/magazijn.glb", "levels": [f0], "hx": 6.0, "hz": 4.0,
+		"glb": "res://assets/magazijn.glb", "levels": [f0, dak], "hx": 6.0, "hz": 4.0,
 		"groups": ["Begane"],
-		"stairs": [], "holes": [],
+		"ext": [[6.2, 7.2, -3.8, 3.6]],
+		"stairs": [[6.3, 7.15, -3.3, 2.7, 0, 1]],
+		"holes": [],
+		"slope": {1: [6.18, 0.082]},
+		"roof_hole": [1, -2.4, 1.2, -2.2, 1.1],
+		"roof_walk": 1,
+		"door_w": 1.62,
+		"door_dir": {"DeurVoorR": -1.0, "DeurZij": -1.0},   # alle drie draaien naar buiten open
 		"guards": [
+			# de twee lange stellingen (de kisten, vaten en kasten zijn massief via Inrichting0)
 			[Vector3(-4.25, 1.55, 0.0), Vector3(1.32, 2.9, 5.15)],
 			[Vector3(4.25, 1.55, 0.0), Vector3(1.32, 2.9, 5.15)],
-			[Vector3(-2.15, 0.82, -2.45), Vector3(0.98, 1.3, 0.86)],
-			[Vector3(2.15, 0.82, -2.45), Vector3(0.98, 1.3, 0.86)],
-			[Vector3(-2.15, 0.82, 2.45), Vector3(0.98, 1.3, 0.86)],
-			[Vector3(2.15, 0.82, 2.45), Vector3(0.98, 1.3, 0.86)],
-			[Vector3(-2.6, 0.55, -3.0), Vector3(0.78, 1.1, 0.78)],
-			[Vector3(2.6, 0.55, -3.0), Vector3(0.78, 1.1, 0.78)],
-			[Vector3(-2.7, 0.55, 3.15), Vector3(0.78, 1.1, 0.78)],
-			[Vector3(2.7, 0.55, 3.15), Vector3(0.78, 1.1, 0.78)],
-		],
+			# reling van het bordes (buitenkant en achterkant), laag zodat je eroverheen schiet
+			[Vector3(7.17, dak + 0.6, -3.25), Vector3(0.05, 0.6, 1.1)],
+			[Vector3(6.65, dak + 0.6, -3.76), Vector3(1.1, 0.6, 0.05)],
+		] + _rail(Vector3(7.17, f0, 3.3), Vector3(7.17, dak, -2.7), 10),
 		"doors": ["DeurVoorL", "DeurVoorR", "DeurZij"],
 		"collapse": [{"pre": "M0", "need": 12, "ruin": "all"}],
 		"ruin": true,
@@ -254,6 +259,16 @@ static func _spec_magazijn() -> Dictionary:
 		"fall_piles": [[Vector3(-2.2, f0, -0.7), 0.95], [Vector3(2.1, f0, 1.0), 1.0]],
 		"near": 9.0, "banner": "MAGAZIJN INGESTORT",
 	}
+
+
+## Trapreling als losse stukjes langs de trap (van voet tot top), elk ter hoogte van je heup op dat stuk van de trap.
+static func _rail(from: Vector3, to: Vector3, n: int) -> Array:
+	var out: Array = []
+	var d := to - from
+	for i in n:
+		var m := from + d * ((i + 0.5) / n)
+		out.append([m + Vector3(0, 0.75, 0), Vector3(0.05, 0.9, absf(d.z) / n + 0.05)])
+	return out
 
 
 static var all: Array = []
@@ -339,7 +354,7 @@ func _ready() -> void:
 		var d: Node3D = model.find_child(nm, true, false)
 		if d:
 			var closed := d.rotation.z if kind == "magazijn" else d.rotation.y
-			doors.append({"node": d, "closed": closed, "t": 0.0})
+			doors.append({"node": d, "closed": closed, "t": 0.0, "dir": float(spec.get("door_dir", {}).get(nm, 1.0))})
 	_guards()
 	_furniture()
 
@@ -455,8 +470,10 @@ func _door_zones() -> Array:
 		if d == null:
 			continue
 		var xf := global_transform.affine_inverse() * d.global_transform
-		var a := xf * Vector3(0.0, 0.0, -0.6)
-		var b := xf * Vector3(0.94, 0.0, 0.6)
+		var leaf := xf.basis.x.normalized() * float(spec.get("door_w", 0.94))
+		var depth := Vector3.UP.cross(leaf).normalized() * 0.6
+		var a := xf.origin - depth
+		var b := xf.origin + leaf + depth
 		var r := Rect2(Vector2(minf(a.x, b.x), minf(a.z, b.z)), Vector2(absf(b.x - a.x), absf(b.z - a.z)))
 		zones.append([r, xf.origin.y, xf.origin.y + 1.8])
 	# trappen: wat in de trap of tegen de wang staat (trapmuurtjes en dergelijke) heeft een eigen botsvlak in "guards"
@@ -570,7 +587,7 @@ func _floor_local(lp: Vector3, cur: float) -> float:
 		var bl: int = bal[4]
 		if bl < _fall and cur > levels[bl] - 0.6 and lp.x > bal[0] and lp.x < bal[1] and lp.z > bal[2] and lp.z < bal[3]:
 			return levels[bl]
-	if not _in_foot(lp, 0.05):
+	if not _in_foot(lp, 0.05) and not _in_ext(lp):
 		return -1.0
 	# de hoogste vloer of trede onder je voeten waar je bij kunt (een trede op, of vallen)
 	var lim := cur + 0.6
@@ -579,8 +596,9 @@ func _floor_local(lp: Vector3, cur: float) -> float:
 		best = levels[0] * 0.5   # drempels: buiten de muren loopt de grond van 0 naar de vloer
 	var rects: Dictionary = spec.get("floor_rects", {})
 	for k in range(1, mini(levels.size(), _fall)):
-		if levels[k] <= lim and levels[k] > best and not _in_hole(k, lp.x, b) and (not rects.has(k) or _in_rect(rects[k], lp, 0.0)):
-			best = levels[k]
+		var ly := _level_y(k, lp)
+		if ly <= lim and ly > best and not _in_hole(k, lp.x, b) and (not rects.has(k) or _in_rect(rects[k], lp, 0.0)):
+			best = ly
 	for st in spec.stairs:
 		if st[5] >= _fall:
 			continue
@@ -629,6 +647,26 @@ func _in_hole(k: int, x: float, b: float) -> bool:
 	for h in spec.holes:
 		if h[0] == k and x > h[1] and x < h[2] and b > h[3] and b < h[4]:
 			return true
+	# het gat in het kapotte dak (magazijn): [laag, x0, x1, z0, z1]
+	var rh: Array = spec.get("roof_hole", [])
+	if not rh.is_empty() and rh[0] == k and _dak_kapot != null and _dak_kapot.visible and x > rh[1] and x < rh[2] and -b > rh[3] and -b < rh[4]:
+		return true
+	return false
+
+
+## Hoogte van laag k op lokale plek lp: een schuin dak ("slope": {laag: [halve breedte, stijging per m]}) loopt op naar de nok bij x = 0.
+func _level_y(k: int, lp: Vector3) -> float:
+	var sl: Array = spec.get("slope", {}).get(k, [])
+	if sl.is_empty():
+		return levels[k]
+	return levels[k] + maxf(0.0, float(sl[0]) - absf(lp.x)) * float(sl[1])
+
+
+## Op een loopstrook buiten de muren (buitentrap): telt voor de vloerhoogte, niet als binnen.
+func _in_ext(lp: Vector3) -> bool:
+	for r in spec.get("ext", []):
+		if _in_rect(r, lp, 0.0):
+			return true
 	return false
 
 
@@ -666,9 +704,9 @@ func _process(delta: float) -> void:
 			near = Vector2(dp.x, dp.z).length() < reach and absf(dp.y) < 1.5
 		d.t = move_toward(d.t, 1.0 if near else 0.0, delta * 3.0)
 		if kind == "magazijn":
-			n.rotation.z = d.closed + d.t * PI * 0.5
+			n.rotation.z = d.closed + d.t * PI * 0.5 * d.dir
 		else:
-			n.rotation.y = d.closed + d.t * PI * 0.5
+			n.rotation.y = d.closed + d.t * PI * 0.5 * d.dir
 
 
 func _apply_view() -> void:
@@ -864,10 +902,12 @@ func _roof_state(st: int) -> void:
 			Fx.dust(get_parent(), to_global(spec.roof_c))
 	elif st >= 2 and not _dak.get_meta("weg", false):
 		_dak.set_meta("weg", true)
-		_dak_heel.visible = false
-		_dak_kapot.visible = false
+		for c in _dak.get_children():   # ook de dakspanten en de dakrand (magazijn)
+			(c as Node3D).visible = false
 		# het dak valt op de hoogste vloer die nog staat
 		var y: float = levels[mini(_fall, levels.size()) - 1]
+		if spec.has("roof_walk"):
+			_fall = mini(_fall, int(spec.roof_walk))   # wie op het dak stond, valt naar beneden
 		_pile(to_global(spec.get("roof_pile", Vector3(1.5, y, 0.5))), "PuinGroot", 1.0)
 
 

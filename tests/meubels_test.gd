@@ -42,7 +42,7 @@ func _process(_d: float) -> bool:
 			if n.get_script() and String(n.get_script().resource_path).ends_with("touch_sticks.gd"):
 				n.set_process(false)
 	if t == 20:
-		for kind in ["woonhuis", "winkel", "kerk", "benzine", "hotel"]:
+		for kind in ["woonhuis", "winkel", "kerk", "benzine", "hotel", "magazijn"]:
 			var hs := get_nodes_in_group(kind)
 			if hs.is_empty():
 				print(kind, ": NIET GEVONDEN")
@@ -60,14 +60,16 @@ func _process(_d: float) -> bool:
 			var geblokkeerd := 0
 			for d in h.doors:
 				var n: Node3D = d.node
-				var b := n.global_transform.basis
-				var mid := n.global_position + b * Vector3(0.47, 0.9 + 0.0, 0.0)
+				# langs het deurblad (lokale x) en dwars erop in het grondvlak (ook voor de gedraaide magazijndeuren)
+				var leaf := n.global_transform.basis.x.normalized()
+				var dep := Vector3.UP.cross(leaf).normalized()
+				var mid := n.global_position + leaf * 0.47
 				mid.y = n.global_position.y + 0.9
-				for off in [Vector3.ZERO, Vector3(0, 0, 0.25), Vector3(0, 0, -0.25)]:
-					if not _hits(h, mid + b * off).is_empty():
+				for off in [0.0, 0.25, -0.25]:
+					if not _hits(h, mid + dep * off).is_empty():
 						geblokkeerd += 1
 						print("   deur ", n.name, " geblokkeerd bij ", off, " deur lokaal ", snapped(h.to_local(n.global_position), Vector3(0.01, 0.01, 0.01)))
-						var pt: Vector3 = h.to_local(mid + b * off)
+						var pt: Vector3 = h.to_local(mid + dep * off)
 						for m in h._meubels:
 							for cs in m.body.get_children():
 								var sz: Vector3 = (cs.shape as BoxShape3D).size

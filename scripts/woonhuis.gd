@@ -95,21 +95,12 @@ static func _spec_kerk() -> Dictionary:
 		"foot": [[-2.5, 2.5, 4.5, 9.5], [-4.75, 4.75, -9.5, 4.5]],
 		"floor_rects": {1: [-2.0, 2.0, 5.0, 9.0], 2: [-2.0, 2.0, 5.0, 9.0], 3: [-2.15, 2.15, 4.85, 9.15]},
 		"groups": ["Begane", "Toren1", "Toren2", "Toren3"],
-		"stairs": [[-2.0, -0.95, -9.0, -6.0, 0, 1], [0.95, 2.0, -5.0, -8.0, 1, 2], [-2.0, -0.95, -9.0, -6.0, 2, 3]],
-		"holes": [[1, -2.0, -0.95, -8.0, -6.0], [2, 0.95, 2.0, -8.0, -6.0], [3, -2.0, -0.95, -8.0, -6.0]],
+		"stairs": [[-2.0, -0.7, -9.0, -6.0, 0, 1], [0.7, 2.0, -5.0, -8.0, 1, 2], [-2.0, -0.7, -9.0, -6.0, 2, 3]],
+		"holes": [[1, -2.0, -0.7, -8.6, -6.0], [2, 0.7, 2.0, -8.0, -6.2], [3, -2.0, -0.7, -8.6, -6.0]],
+		# alleen waar de trap dicht is: ver van de voet en de top, zodat je er zijwaarts opstapt (een muurdikte + straal van de rand)
 		"guards": [
-			# trap A: beschot aan de kamerkant; laag 1: reling om het trapgat en het beschot onder trap B
-			[Vector3(-0.95, 2.0, 7.2), Vector3(0.1, 3.4, 2.4), "Toren"],
-			[Vector3(-0.92, f[1] + rail * 0.5, 7.0), Vector3(0.1, rail, 2.0), "Toren"],
-			[Vector3(-1.46, f[1] + rail * 0.5, 8.03), Vector3(1.08, rail, 0.1), "Toren"],
-			[Vector3(0.95, f[1] + 1.7, 6.8), Vector3(0.1, 3.4, 2.4), "Toren"],
-			# klokkenkamer: reling om trapgat B en het beschot onder de ladder naar het luik
-			[Vector3(0.92, f[2] + rail * 0.5, 7.0), Vector3(0.1, rail, 2.0), "Toren"],
-			[Vector3(1.46, f[2] + rail * 0.5, 5.97), Vector3(1.08, rail, 0.1), "Toren"],
-			[Vector3(-0.95, f[2] + 1.7, 7.2), Vector3(0.1, 3.4, 2.4), "Toren"],
-			# torendak: reling om het luik
-			[Vector3(-0.92, f[3] + rail * 0.5, 7.0), Vector3(0.1, rail, 2.0), "Toren"],
-			[Vector3(-1.46, f[3] + rail * 0.5, 8.03), Vector3(1.08, rail, 0.1), "Toren"],
+			[Vector3(-0.7, 2.0, 6.5), Vector3(0.1, 3.4, 1.0), "Toren"],   # trapA, kamerkant
+			[Vector3(0.7, f[1] + 1.7, 7.4), Vector3(0.1, 3.4, 1.2), "Toren"],   # trap B, bovenste deel
 		],
 		"doors": ["DeurVoorL", "DeurVoorR", "DeurZij"],
 		"hp": {"M": 650.0, "S": 420.0, "P": 500.0},
@@ -263,6 +254,7 @@ func _guards() -> void:
 			var b := StaticBody3D.new()
 			b.collision_layer = Kit.LAYER_WALL
 			b.collision_mask = 0
+			b.set_meta("nocam", true)   # relingen en trapwangen zijn binnen: de camera kijkt er doorheen
 			add_child(b)
 			_guard_bodies[part] = b
 		_box(_guard_bodies[part], g[0], g[1])

@@ -51,12 +51,12 @@ TI0, TI1 = -TX + TT, TX - TT            # binnenkant toren x
 TYI0, TYI1 = TY0 + TT, TY1 - TT         # binnenkant toren y (-9..-5)
 # trappen in de toren (Blender-y): A (0 -> 1) langs de westmuur naar achter, B (1 -> 2) langs de oostmuur naar voor,
 # C (2 -> 3) weer langs de westmuur naar achter, door het luik op het torendak
-ST_W = 1.05                 # breed genoeg voor de speler (straal 0,45)
+ST_W = 1.3                  # breed genoeg voor de speler (straal 0,45)
 A_X0, A_X1 = TI0, TI0 + ST_W
 B_X0, B_X1 = TI1 - ST_W, TI1
-HOLE1 = (A_X0, A_X1, -8.0, -6.0)
-HOLE2 = (B_X0, B_X1, -8.0, -6.0)
-HOLE3 = (A_X0, A_X1, -8.0, -6.0)
+HOLE1 = (A_X0, A_X1, -8.6, -6.0)
+HOLE2 = (B_X0, B_X1, -8.0, -6.2)
+HOLE3 = (A_X0, A_X1, -8.6, -6.0)
 NSTEP = 14
 
 
@@ -999,11 +999,8 @@ def wang(lst, parent, x, y0, y1, z0, z1):
 
 inr0t, inr1, inr2, inr3 = [], [], [], []
 wang(inr0t, tvoet, A_X1, TYI0, -6.0, L0, L1)
-reling(inr1, t1, L1, [((A_X1 + 0.03, -8.0), (A_X1 + 0.03, -6.0)), ((A_X0, -8.03), (A_X1 + 0.03, -8.03))])
 wang(inr1, t1, B_X0, TYI1, -8.0, L1, L2)
-reling(inr2, t2, L2, [((B_X0 - 0.03, -8.0), (B_X0 - 0.03, -6.0)), ((B_X0 - 0.03, -5.97), (B_X1, -5.97))])
 wang(inr2, t2, A_X1, TYI0, -6.0, L2, L3)
-reling(inr3, t3, L3, [((A_X1 + 0.03, -8.0), (A_X1 + 0.03, -6.0)), ((A_X0, -8.03), (A_X1 + 0.03, -8.03))])
 
 
 # ---------- deuren (knooppunt = scharnier) ----------

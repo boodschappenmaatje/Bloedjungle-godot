@@ -2,6 +2,7 @@ extends SceneTree
 ## Maakt de plaatjes voor de knoppen van de stadseditor: van elk wegdeel, gebouw en straatding één schuin plaatje.
 ## Draaien (met scherm, bv. xvfb): godot --rendering-driver vulkan --path . -s tools/stad_icons.gd
 ## Schrijft assets/stad_icons/<soort>.png (160 x 160, doorzichtige achtergrond).
+## Alleen één groep opnieuw: zet de groep (weg, gebouw of straat) achter --, bv. ... -s tools/stad_icons.gd -- weg
 
 const SIZE := 160
 var Stad
@@ -15,7 +16,10 @@ var _wait := 0
 
 func _initialize() -> void:
 	Stad = load("res://scripts/stad.gd")
+	var only := OS.get_cmdline_user_args()
 	for cat in Stad.ORDER:
+		if not only.is_empty() and not only.has(cat):
+			continue
 		for k in Stad.ORDER[cat]:
 			if Stad.available(k):
 				_kinds.append(k)

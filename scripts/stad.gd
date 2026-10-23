@@ -3,23 +3,28 @@ extends Node3D
 ## De stad achter de brug: wegdelen, gebouwen en straatmeubilair, opgebouwd uit een lijst (StadData.ITEMS).
 ## De stadseditor (stad_editor.gd) voegt dingen toe, schuift ze en haalt ze weg; Stad houdt de 3D-wereld bij.
 ## Een item is een woordenboek: k = soort (zie KINDS), x en z = midden in meters, r = kwartslagen (0-3), m = gespiegeld.
-## Wegen zitten samen in één mesh (snel op de iPhone); gebouwen en straatmeubilair zijn losse nodes.
+## Wegdelen komen uit de straatset (assets/straat.glb, bron/straat/maak_straat.py) en zitten samen in één mesh met één vlak
+## per materiaal (snel op de iPhone); gebouwen en straatmeubilair zijn losse nodes.
 
 const CELL := 6.0   # een wegdeel is 6 x 6 m
-const ASPHALT_Y := 0.03
-const PAVE_Y := 0.1
 const SAVE_PATH := "user://stad_editor.json"
+const STRAAT_GLB := "res://assets/straat.glb"
+## Materialen van de straatset met wereld-UV (meters per herhaling): de bovenkant loopt zo naadloos door over gedraaide wegdelen.
+const WORLD_UV := {"Asfalt": 12.0, "Stoep": 1.2, "Keien": 1.0, "Steen": 2.0}
 
 ## cat: weg / gebouw / straat. hx en hz = halve maat van de voetafdruk, snap = rasterstap, cost = zwaarte voor de iPhone.
 ## open = zijkanten van een wegdeel (N, E, S, W), rw = breedte van het asfalt. h = hoogte van een grijs blok.
-## spacing = afstand tussen kopieën met de kwast, road = mag op de weg staan.
+## spacing = afstand tussen kopieën met de kwast, road = mag op de weg staan. part = object in de straatset.
+## stoep = straatmeubilair, bomen en struiken mogen erop.
 const KINDS := {
-	"weg_recht": {"cat": "weg", "name": "Recht", "open": "NS", "rw": 4.0, "hx": 3.0, "hz": 3.0, "snap": 6.0, "cost": 1.0},
-	"weg_bocht": {"cat": "weg", "name": "Bocht", "open": "NE", "rw": 4.0, "hx": 3.0, "hz": 3.0, "snap": 6.0, "cost": 1.0},
-	"weg_t": {"cat": "weg", "name": "T-kruising", "open": "NES", "rw": 4.0, "hx": 3.0, "hz": 3.0, "snap": 6.0, "cost": 1.0},
-	"weg_kruis": {"cat": "weg", "name": "Kruispunt", "open": "NESW", "rw": 4.0, "hx": 3.0, "hz": 3.0, "snap": 6.0, "cost": 1.0},
-	"weg_steeg": {"cat": "weg", "name": "Steeg", "open": "NS", "rw": 2.0, "hx": 3.0, "hz": 3.0, "snap": 6.0, "cost": 1.0},
-	"plein": {"cat": "weg", "name": "Plein", "plein": true, "hx": 6.0, "hz": 6.0, "snap": 3.0, "cost": 3.0},
+	"weg_recht": {"cat": "weg", "name": "Recht", "open": "NS", "rw": 4.0, "hx": 3.0, "hz": 3.0, "snap": 6.0, "cost": 1.0, "part": "Recht"},
+	"weg_bocht": {"cat": "weg", "name": "Bocht", "open": "NE", "rw": 4.0, "hx": 3.0, "hz": 3.0, "snap": 6.0, "cost": 1.0, "part": "Bocht"},
+	"weg_t": {"cat": "weg", "name": "T-kruising", "open": "NES", "rw": 4.0, "hx": 3.0, "hz": 3.0, "snap": 6.0, "cost": 1.0, "part": "TStuk"},
+	"weg_kruis": {"cat": "weg", "name": "Kruispunt", "open": "NESW", "rw": 4.0, "hx": 3.0, "hz": 3.0, "snap": 6.0, "cost": 1.0, "part": "Kruis"},
+	"weg_steeg": {"cat": "weg", "name": "Steeg", "open": "NS", "rw": 2.0, "hx": 3.0, "hz": 3.0, "snap": 6.0, "cost": 1.0, "part": "Steeg"},
+	"weg_zebra": {"cat": "weg", "name": "Zebrapad", "open": "NS", "rw": 4.0, "hx": 3.0, "hz": 3.0, "snap": 6.0, "cost": 1.0, "part": "Zebra"},
+	"stoep": {"cat": "weg", "name": "Stoep", "open": "", "rw": 0.0, "hx": 3.0, "hz": 3.0, "snap": 6.0, "cost": 0.5, "part": "Stoep", "stoep": true},
+	"plein": {"cat": "weg", "name": "Plein", "plein": true, "hx": 6.0, "hz": 6.0, "snap": 3.0, "cost": 3.0, "part": "Plein"},
 	"woonhuis": {"cat": "gebouw", "name": "Woonhuis", "hx": 4.0, "hz": 3.5, "snap": 0.5, "cost": 10.0, "model": true, "h": 7.0},
 	"winkel": {"cat": "gebouw", "name": "Winkel met flat", "hx": 4.5, "hz": 4.0, "snap": 0.5, "cost": 14.0, "model": true, "h": 9.0},
 	"kerk": {"cat": "gebouw", "name": "Kerk met toren", "hx": 4.75, "hz": 9.5, "snap": 0.5, "cost": 20.0, "model": true, "h": 12.0, "glb": "res://assets/kerk.glb"},
@@ -46,7 +51,7 @@ const KINDS := {
 
 ## Volgorde in het palet van de editor.
 const ORDER := {
-	"weg": ["weg_recht", "weg_bocht", "weg_t", "weg_kruis", "weg_steeg", "plein"],
+	"weg": ["weg_recht", "weg_bocht", "weg_t", "weg_kruis", "weg_steeg", "weg_zebra", "stoep", "plein"],
 	"gebouw": ["woonhuis", "winkel", "kerk", "benzine", "magazijn", "hotel", "blok1", "blok2", "blok3", "blok4"],
 	"straat": ["lantaarn", "bankje", "bushokje", "prullenbak", "auto", "autowrak", "autobrand", "zandzakken", "puin", "hek", "boom", "struik"],
 }
@@ -59,6 +64,7 @@ static var current: Stad
 static var rects: Array = []      # voetafdrukken van wegen en gebouwen, om de jungle eromheen weg te laten
 static var _mats := {}
 static var save_path := SAVE_PATH
+static var _parts := {}   # straatset: objectnaam -> {mesh, surfaces: [{mat, a (arrays)}]}
 
 var items: Array = []
 var _roads: MeshInstance3D
@@ -214,7 +220,7 @@ static func problem(d: Dictionary, others: Array, ignore := {}) -> String:
 			if r.has_point(Vector2(o.x, o.z)):
 				return "STAAT OP IETS"
 		elif k.cat == "straat" and ok.cat == "weg":
-			if not k.get("road", false) and _overlap(r, ro, 0.05):
+			if not k.get("road", false) and not ok.get("stoep", false) and _overlap(r, ro, 0.05):
 				return "NIET OP DE WEG"
 		elif k.cat == "straat" and ok.cat == "straat":
 			if _overlap(r, ro, 0.15):
@@ -297,20 +303,6 @@ func _place_node(d: Dictionary) -> void:
 	n.scale = Vector3(-1.0 if int(d.m) == 1 and KINDS[d.k].cat == "straat" else 1.0, 1.0, 1.0)
 
 
-func _mat(key: String) -> Material:
-	if not _mats.has(key):
-		match key:
-			"asfalt":
-				_mats[key] = Kit.surface("asfalt", Color("232526"), Color("383b3b"), 0.93, 0.0, 0.08, 0.5)
-			"stoep":
-				_mats[key] = Kit.photo("buildings/concrete", 2.5, Color(0.66, 0.65, 0.6))
-			"streep":
-				_mats[key] = Kit.flat(Color("c9bd6a"), 0.8)
-			"tegels":
-				_mats[key] = Kit.photo("buildings/concrete", 3.0, Color(0.82, 0.79, 0.72))
-	return _mats[key]
-
-
 ## Grijs blok voor een gebouw dat nog niet gemaakt is, met een deurtje aan de voorkant (+z).
 func _block(kind: String) -> Node3D:
 	var k: Dictionary = KINDS[kind]
@@ -332,11 +324,9 @@ func _block(kind: String) -> Node3D:
 
 func _fountain() -> Node3D:
 	var root := Node3D.new()
-	var stone := Kit.photo("buildings/concrete", 2.0, Color(0.7, 0.68, 0.62))
-	Kit.cylinder(root, Vector3.ZERO, 1.9, 0.5, stone, 16)
-	Kit.cylinder(root, Vector3(0, 0.5, 0), 1.3, 0.4, stone, 16)
-	Kit.cylinder(root, Vector3.ZERO, 0.3, 2.8, stone, 8, 0.2)
-	Kit.cylinder(root, Vector3(0, 2.8, 0), 0.55, 0.25, stone, 10)
+	var mi := MeshInstance3D.new()
+	mi.mesh = _part("Fontein").get("mesh")
+	root.add_child(mi)
 	Kit.collider(root, Vector3(0, 0.6, 0), Vector3(3.6, 1.2, 3.6), Kit.LAYER_WALL)
 	return root
 
@@ -434,99 +424,79 @@ func _car(root: Node3D, kind: String) -> void:
 const DIRS := {"N": Vector2(0, -1), "E": Vector2(1, 0), "S": Vector2(0, 1), "W": Vector2(-1, 0)}
 
 
-## Bouwt alle wegen opnieuw als één mesh met vier vlakken: asfalt, stoep, strepen en pleintegels.
+## Een object uit de straatset: de mesh en per vlak het materiaal en de arrays (één keer ingelezen).
+static func _part(name: String) -> Dictionary:
+	if _parts.is_empty() and ResourceLoader.exists(STRAAT_GLB):
+		var root: Node = (load(STRAAT_GLB) as PackedScene).instantiate()
+		for mi: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+			var list: Array = []
+			for i in mi.mesh.get_surface_count():
+				list.append({"mat": mi.mesh.surface_get_material(i), "a": mi.mesh.surface_get_arrays(i)})
+			_parts[String(mi.name)] = {"mesh": mi.mesh, "surfaces": list}
+		root.free()
+	return _parts.get(name, {})
+
+
+## Bouwt alle wegen opnieuw als één mesh: de wegdelen uit de straatset, gedraaid en verschoven, samengevoegd per materiaal.
 func rebuild_roads() -> void:
 	if _roads == null:
 		_roads = MeshInstance3D.new()
 		_roads.name = "Wegen"
 		_roads.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		add_child(_roads)
-	var keys: Array = ["asfalt", "stoep", "streep", "tegels"]
-	var sts: Array = []
-	var used: Array = [false, false, false, false]
-	for i in 4:
-		var st := SurfaceTool.new()
-		st.begin(Mesh.PRIMITIVE_TRIANGLES)
-		sts.append(st)
+	var buckets := {}
 	for d in items:
 		var k: Dictionary = KINDS[d.k]
-		if k.cat != "weg":
-			continue
-		if k.get("plein", false):
-			used[3] = true
-			_top(sts[3], d, -k.hx, -k.hz, k.hx, k.hz, 0.05)
-			continue
-		_piece(d, k, sts, used)
+		if k.cat == "weg":
+			_append_part(buckets, d, String(k.part))
 	var mesh := ArrayMesh.new()
-	for i in 4:
-		if used[i]:
-			sts[i].commit(mesh)
-			mesh.surface_set_material(mesh.get_surface_count() - 1, _mat(keys[i]))
+	for key in buckets:
+		var bk: Dictionary = buckets[key]
+		var arr := []
+		arr.resize(Mesh.ARRAY_MAX)
+		arr[Mesh.ARRAY_VERTEX] = bk.v
+		arr[Mesh.ARRAY_NORMAL] = bk.n
+		arr[Mesh.ARRAY_TEX_UV] = bk.uv
+		arr[Mesh.ARRAY_INDEX] = bk.i
+		if bk.has_t:
+			arr[Mesh.ARRAY_TANGENT] = bk.t
+		mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+		mesh.surface_set_material(mesh.get_surface_count() - 1, bk.mat)
 	_roads.mesh = mesh if mesh.get_surface_count() > 0 else null
 
 
-func _piece(d: Dictionary, k: Dictionary, sts: Array, used: Array) -> void:
-	var rw: float = k.rw
-	var a := (CELL - rw) / 2.0
-	var xs: Array = [-CELL / 2.0, -CELL / 2.0 + a, CELL / 2.0 - a, CELL / 2.0]
-	var open: String = k.open
-	for j in 3:
-		for i in 3:
-			var is_open := false
-			if i == 1 and j == 1:
-				is_open = true
-			elif i == 1 and j == 0:
-				is_open = open.contains("N")
-			elif i == 1 and j == 2:
-				is_open = open.contains("S")
-			elif i == 0 and j == 1:
-				is_open = open.contains("W")
-			elif i == 2 and j == 1:
-				is_open = open.contains("E")
-			if is_open:
-				used[0] = true
-				_top(sts[0], d, xs[i], xs[j], xs[i + 1], xs[j + 1], ASPHALT_Y)
-			else:
-				used[1] = true
-				_curb(sts[1], d, xs[i], xs[j], xs[i + 1], xs[j + 1])
-	# stippellijn midden op een recht stuk
-	if open == "NS" and rw > 3.0:
-		used[2] = true
-		_top(sts[2], d, -0.07, -1.2, 0.07, 1.2, ASPHALT_Y + 0.012)
-
-
-func _w(d: Dictionary, lx: float, y: float, lz: float) -> Vector3:
-	var v := Vector3(lx * (-1.0 if int(d.m) == 1 else 1.0), y, lz)
-	return Basis(Vector3.UP, yaw_of(d)) * v + Vector3(d.x, 0, d.z)
-
-
-func _tri(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, n: Vector3) -> void:
-	if (c - a).cross(b - a).dot(n) < 0.0:
-		var t := b
-		b = c
-		c = t
-	for v in [a, b, c]:
-		st.set_normal(n)
-		st.add_vertex(v)
-
-
-func _quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, e: Vector3, n: Vector3) -> void:
-	_tri(st, a, b, c, n)
-	_tri(st, a, c, e, n)
-
-
-func _top(st: SurfaceTool, d: Dictionary, x0: float, z0: float, x1: float, z1: float, y: float) -> void:
-	_quad(st, _w(d, x0, y, z0), _w(d, x1, y, z0), _w(d, x1, y, z1), _w(d, x0, y, z1), Vector3.UP)
-
-
-## Stoeptegel met een opstaande rand rondom.
-func _curb(st: SurfaceTool, d: Dictionary, x0: float, z0: float, x1: float, z1: float) -> void:
-	_top(st, d, x0, z0, x1, z1, PAVE_Y)
-	var y := PAVE_Y
-	var wall := func(ax: float, az: float, bx: float, bz: float) -> void:
-		var out := Basis(Vector3.UP, yaw_of(d)) * Vector3((bz - az) * (-1.0 if int(d.m) == 1 else 1.0), 0, -(bx - ax))
-		_quad(st, _w(d, ax, 0, az), _w(d, bx, 0, bz), _w(d, bx, y, bz), _w(d, ax, y, az), out.normalized())
-	wall.call(x0, z0, x1, z0)
-	wall.call(x1, z0, x1, z1)
-	wall.call(x1, z1, x0, z1)
-	wall.call(x0, z1, x0, z0)
+## Voegt één wegdeel toe aan de emmers (per materiaal). Gespiegeld = x omgekeerd, dus de driehoeken andersom.
+func _append_part(buckets: Dictionary, d: Dictionary, part: String) -> void:
+	var mir := int(d.m) == 1
+	var b := Basis(Vector3.UP, yaw_of(d)) * Basis.from_scale(Vector3(-1.0 if mir else 1.0, 1.0, 1.0))
+	var o := Vector3(d.x, 0, d.z)
+	for s: Dictionary in _part(part).get("surfaces", []):
+		var mat: Material = s.mat
+		var key := mat.resource_name if mat != null else ""
+		if not buckets.has(key):
+			buckets[key] = {"mat": mat, "v": PackedVector3Array(), "n": PackedVector3Array(), "uv": PackedVector2Array(),
+					"t": PackedFloat32Array(), "i": PackedInt32Array(), "has_t": true}
+		var bk: Dictionary = buckets[key]
+		var a: Array = s.a
+		var verts: PackedVector3Array = a[Mesh.ARRAY_VERTEX]
+		var norms: PackedVector3Array = a[Mesh.ARRAY_NORMAL]
+		var uvs: PackedVector2Array = a[Mesh.ARRAY_TEX_UV]
+		var tans: PackedFloat32Array = a[Mesh.ARRAY_TANGENT] if a[Mesh.ARRAY_TANGENT] != null else PackedFloat32Array()
+		var idx: PackedInt32Array = a[Mesh.ARRAY_INDEX] if a[Mesh.ARRAY_INDEX] != null else PackedInt32Array(range(verts.size()))
+		var ws: float = WORLD_UV.get(key, 0.0)
+		bk.has_t = bk.has_t and tans.size() == verts.size() * 4
+		var base: int = bk.v.size()
+		for j in verts.size():
+			var p: Vector3 = b * verts[j] + o
+			var nn: Vector3 = b * norms[j]
+			bk.v.append(p)
+			bk.n.append(nn)
+			var world := ws > 0.0 and nn.y > 0.7
+			bk.uv.append(Vector2(p.x / ws, p.z / ws) if world else uvs[j])
+			if tans.size() == verts.size() * 4:
+				var t := Vector3(1, 0, 0) if world else b * Vector3(tans[j * 4], tans[j * 4 + 1], tans[j * 4 + 2])
+				bk.t.append_array([t.x, t.y, t.z, tans[j * 4 + 3] * (-1.0 if mir and not world else 1.0)])
+		for j in range(0, idx.size(), 3):
+			bk.i.append(base + idx[j])
+			bk.i.append(base + idx[j + 2 if mir else j + 1])
+			bk.i.append(base + idx[j + 1 if mir else j + 2])

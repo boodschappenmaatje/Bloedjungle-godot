@@ -14,10 +14,12 @@ static var _mesh: SphereMesh
 var vel := Vector3.ZERO
 var fuse := FUSE
 var _ring: MeshInstance3D
+var home = null   # Woonhuis waarin hij is gegooid: daar blijft hij binnen tot het gebouw plat ligt
+var _prev := Vector3.ZERO
 
 
 ## Gooit een granaat vanaf de speler in de kijkrichting (reikwijdte ~11 m).
-static func throw_from(parent: Node, from: Vector3, angle: float, dist := 11.0) -> void:
+static func throw_from(parent: Node, from: Vector3, angle: float, dist := 11.0, body_pos := Vector3.INF) -> Grenade:
 	var g := Grenade.new()
 	if _mesh == null:
 		_mesh = SphereMesh.new()
@@ -34,6 +36,17 @@ static func throw_from(parent: Node, from: Vector3, angle: float, dist := 11.0) 
 	g.vel = Vector3(sin(angle) * dist / t, 7.0, cos(angle) * dist / t)
 	parent.add_child(g)
 	g.global_position = from
+	# gegooid vanuit een gebouw (positie van de werper of van de granaat): hij blijft erin
+	for h in Woonhuis.all:
+		if h._ruin:
+			continue
+		for p: Vector3 in [from, body_pos]:
+			if p != Vector3.INF and h._in_foot(h.to_local(p), 0.0):
+				g.home = h
+		if g.home != null:
+			break
+	g._prev = g.global_position
+	return g
 
 
 func _physics_process(delta: float) -> void:
@@ -48,8 +61,16 @@ func _physics_process(delta: float) -> void:
 		vel = vel.bounce(n) * 0.35
 	else:
 		global_position += step
-	if global_position.y < 0.1:
-		global_position.y = 0.1
+	var floor_y := 0.0
+	if home != null:
+		if is_instance_valid(home) and not home._ruin:
+			_keep_inside()
+			floor_y = maxf(0.0, home._floor_local(home.to_local(global_position), _prev.y))
+		else:
+			home = null
+	_prev = global_position
+	if global_position.y < floor_y + 0.1:
+		global_position.y = floor_y + 0.1
 		vel.y = absf(vel.y) * 0.35
 		vel.x *= 0.55
 		vel.z *= 0.55
@@ -58,6 +79,25 @@ func _physics_process(delta: float) -> void:
 	if fuse <= 0.0:
 		_explode()
 		queue_free()
+
+
+## Muren met kozijnen zijn open (ramen, deuren) en vloeren/dak hebben geen botsvorm: de granaat mag het grondvlak en het dak
+## van zijn gebouw niet uit. Aan de rand stuitert hij terug.
+func _keep_inside() -> void:
+	var lp: Vector3 = home.to_local(global_position)
+	if not home._in_foot(lp, -0.1):
+		global_position = _prev
+		var back: Vector3 = home.to_local(_prev)
+		if not home._in_foot(back, -0.1):
+			# stond al in de muur (spawn vlak bij de rand): terug naar het midden van het gebouw
+			var c := Vector3(0, _prev.y - home.global_position.y, 0)
+			global_position = home.to_global(back + (c - back).normalized() * 0.3)
+		vel.x = -vel.x * 0.35
+		vel.z = -vel.z * 0.35
+	var top: float = home.global_position.y + float(home.levels[home.levels.size() - 1]) + 3.0
+	if global_position.y > top:
+		global_position.y = top
+		vel.y = -absf(vel.y) * 0.35
 
 
 func _explode() -> void:

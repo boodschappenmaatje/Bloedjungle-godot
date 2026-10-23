@@ -26,6 +26,8 @@ static func _spec(kind: String) -> Dictionary:
 		return _spec_kerk()
 	if kind == "benzine":
 		return _spec_benzine()
+	if kind == "hotel":
+		return _spec_hotel()
 	if kind == "winkel":
 		var f0 := 0.3
 		var f1 := 3.8
@@ -165,6 +167,54 @@ static func _spec_benzine() -> Dictionary:
 		"roof_y": 3.0, "roof_r": 4.5, "roof_c": Vector3(0, 3.6, -2.6), "roof_pile": Vector3(0.5, f0, -2.4),
 		"fall_piles": [],
 		"near": 9.0, "banner": "BENZINESTATION INGESTORT",
+	}
+
+
+## Hotel: vier lagen (lobby met balie en bar, drie verdiepingen met elk vier kamers), 10 x 9 m, plat dak met reclame. Bordestrap langs de
+## westmuur: A (lobby naar 1) en C (2 naar 3) lopen naar achter, B (1 naar 2) ernaast terug naar voor. Muren M0..M3 per laag, kamerwanden P1a..P3c.
+static func _spec_hotel() -> Dictionary:
+	var f0 := 0.3
+	var f1 := 3.8
+	var f2 := 6.8
+	var f3 := 9.8
+	return {
+		"glb": "res://assets/hotel.glb", "levels": [f0, f1, f2, f3], "hx": 5.0, "hz": 4.5,
+		"groups": ["Begane", "Verdieping", "Verdieping2", "Verdieping3"],
+		"stairs": [[-4.75, -3.75, -1.4, 2.6, 0, 1], [-3.75, -2.75, 2.6, -1.4, 1, 2], [-4.75, -3.75, -1.4, 2.6, 2, 3]],
+		"holes": [[1, -4.8, -3.7, -1.0, 2.6], [2, -3.8, -2.7, -1.4, 2.2], [3, -4.8, -3.7, -1.0, 2.6]],
+		"balcony": [-1.15, 1.15, 4.45, 5.4, 1],
+		"guards": [
+			# trap A: wang aan de kant van trap B; muurtje tussen A en B (boven vloer 1)
+			[Vector3(-3.74, (f0 + f1) * 0.5 - 0.1, -0.85), Vector3(0.03, f1 - f0 - 0.2, 3.5)],
+			[Vector3(-3.74, (f1 + f2 + 1.0) * 0.5, -0.6), Vector3(0.03, f2 + 1.0 - f1, 4.0)],
+			# trap B: wang aan de kamerkant en de dichte kant onder het bovenste bordes
+			[Vector3(-2.69, (f1 + f2 - 0.2) * 0.5, -0.35), Vector3(0.1, f2 - f1 - 0.2, 3.5)],
+			[Vector3(-3.25, (f1 + f2 - 0.2) * 0.5, 1.46), Vector3(1.0, f2 - f1 - 0.2, 0.1)],
+			# reling trapgat vloer 1 (voorkant) en vloer 2 (oost en achter)
+			[Vector3(-4.25, f1 + 0.55, 1.03), Vector3(1.0, 1.1, 0.1)],
+			[Vector3(-2.69, f2 + 0.55, -0.4), Vector3(0.1, 1.1, 3.6)],
+			[Vector3(-3.25, f2 + 0.55, -2.23), Vector3(1.1, 1.1, 0.1)],
+			# trap C: wang, muurtje tussen B en C, reling trapgat vloer 3 (voor en oost)
+			[Vector3(-3.74, (f2 + f3) * 0.5 - 0.1, -0.85), Vector3(0.03, f3 - f2 - 0.2, 3.5)],
+			[Vector3(-3.74, (f2 + f3 + 1.0) * 0.5, -0.6), Vector3(0.03, f3 + 1.0 - f2, 4.0)],
+			[Vector3(-4.25, f3 + 0.55, 1.03), Vector3(1.0, 1.1, 0.1)],
+			[Vector3(-3.69, f3 + 0.55, -0.8), Vector3(0.1, 1.1, 3.6)],
+			# balkonhek
+			[Vector3(0.0, f1 + 0.55, 5.38), Vector3(2.2, 1.1, 0.1)],
+			[Vector3(-1.08, f1 + 0.55, 4.95), Vector3(0.1, 1.1, 0.9)],
+			[Vector3(1.08, f1 + 0.55, 4.95), Vector3(0.1, 1.1, 0.9)],
+		],
+		"doors": ["DeurVoor", "DeurAchter", "DeurBinnen0",
+			"DeurBinnen1a", "DeurBinnen1b", "DeurBinnen1c", "DeurBinnen1d", "DeurBinnen2a", "DeurBinnen2b", "DeurBinnen2c", "DeurBinnen2d",
+			"DeurBinnen3a", "DeurBinnen3b", "DeurBinnen3c", "DeurBinnen3d"],
+		"hp": {"M": 360.0, "P": 160.0},
+		# zes muren van de lobby weg: alles stort in; vijf muren van een verdieping: alles erboven zakt in
+		"collapse": [{"pre": "M0", "need": 6, "ruin": "all"}, {"pre": "M1", "need": 5, "fall": 2}, {"pre": "M2", "need": 5, "fall": 3}],
+		"ruin": true,
+		"ruin_boxes": [[Vector3(0, 0.9, 0), Vector3(9.6, 1.8, 8.4)], [Vector3(0, 2.1, 0.2), Vector3(6.4, 1.6, 5.6)]],
+		"roof_y": 11.0, "roof_r": 6.5, "roof_c": Vector3(-0.6, 12.9, 0.8),
+		"fall_piles": [[Vector3(2.4, f0, -0.5), 1.2], [Vector3(-0.8, f0, 1.4), 1.0], [Vector3(1.0, f0, 2.0), 1.0]],
+		"near": 11.0, "banner": "HOTEL INGESTORT",
 	}
 
 

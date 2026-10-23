@@ -76,9 +76,9 @@ const BENZINE_POS := Vector3(48.0, 0.0, -111.0)
 ## Midden van de rivier op afstand x: ongeveer 90 m achter de basis, met een bos ertussen.
 const RIVER_Z0 := -92.0
 const FOREST_Z0 := -30.0   # het bos begint bij de noordmuur
-const WORLD_X := 88.0      # kaartrand west/oost, zuid, en noord (voorbij de rivier)
+const WORLD_X := 112.0     # kaartrand west/oost, zuid, en noord (voorbij de rivier)
 const WORLD_Z_S := 80.0
-const WORLD_Z_N := 128.0
+const WORLD_Z_N := 150.0
 
 
 static func river_z(x: float) -> float:

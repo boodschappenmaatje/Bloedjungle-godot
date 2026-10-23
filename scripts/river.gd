@@ -7,7 +7,7 @@ class_name River
 const W := Data.RIVER_HALF
 const BEDDING := [[-1.0, 0.0, 0.0], [-0.73, -0.5, 0.45], [-0.5, -0.85, 0.85], [0.5, -0.85, 0.85], [0.73, -0.5, 0.45], [1.0, 0.0, 0.0]]  # dwarsprofiel: factor van W, hoogte, modder -> bodem
 const WATER_Y := -0.2
-const X_MAX := 118.0
+const X_MAX := 210.0
 const BRIDGE_HALF := 2.5
 
 

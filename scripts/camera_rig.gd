@@ -171,8 +171,20 @@ func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vect
 	# Alleen statische bouwstukken en de bunker blokkeren de camera; het grote grondvlak
 	# ligt onder de zichtlijn en wordt niet iedere frame onnodig meegenomen.
 	var query := PhysicsRayQueryParameters3D.create(origin, desired, Kit.LAYER_WALL | Kit.LAYER_BUNKER)
-	query.exclude = [player.get_rid()]
-	var hit := get_world_3d().direct_space_state.intersect_ray(query)
-	if hit.is_empty():
-		return desired
+	var skip: Array[RID] = [player.get_rid()]
+	var hit := {}
+	# muren van een huis die voor de camera zijn weggehaald (en relingen/trapwangen binnen) tellen niet mee,
+	# anders schiet de camera naar de speler toe zodra je naar binnen loopt
+	for i in 8:
+		query.exclude = skip
+		hit = get_world_3d().direct_space_state.intersect_ray(query)
+		if hit.is_empty():
+			return desired
+		var c: Object = hit.collider
+		if c is HouseBody and not (c.seg.heel.visible or c.seg.kapot.visible):
+			skip.append(hit.rid)
+		elif c is Node and c.has_meta("nocam"):
+			skip.append(hit.rid)
+		else:
+			break
 	return hit.position + hit.normal * 0.35

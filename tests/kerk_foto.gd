@@ -36,9 +36,10 @@ func _process(_d: float) -> bool:
 	if frames == 200:
 		huis = get_nodes_in_group("kerk")[0]   # in het spel wordt de wereld in stappen gebouwd
 		_shot("buiten")
-		game.player.global_position = Data.KERK_POS + Vector3(-1.48, 0.3, 8.9)
+		game.player.global_position = Data.KERK_POS + Vector3(0.0, 7.5, 7.0)
 	if frames == 260:
 		_shot("binnen")
+		game.player.position.y = 7.5
 		game.player.global_position = Data.KERK_POS + Vector3(0.0, 11.1, 7.0)
 		game.player.position.y = 11.1
 	if frames == 320:

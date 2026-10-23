@@ -98,6 +98,16 @@ static func safe_margins(view_size: Vector2, base := 12.0) -> Vector4:
 		base + maxf(0.0, (screen.y - safe.end.y) * sy))
 
 
+## Mobile hosts such as Xogot can report no touchscreen through the display server while still
+## delivering native touch events. Keep the explicit override for simulator and layout checks.
+static func is_touch_platform() -> bool:
+	var os_name := OS.get_name().to_lower()
+	return DisplayServer.is_touchscreen_available() \
+		or OS.get_environment("BJ_TOUCH") == "1" \
+		or os_name in ["ios", "android"] \
+		or OS.has_feature("mobile")
+
+
 ## Zet de web-stijl op een knop. kind: "buy", "primary", "gold", "tab", "round", "pause".
 static func style_button(b: Button, kind: String) -> void:
 	b.focus_mode = Control.FOCUS_NONE

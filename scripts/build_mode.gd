@@ -248,13 +248,17 @@ func _exit() -> void:
 func _process(delta: float) -> void:
 	_btn.visible = Game.state == "prep" and not Game.build_mode and Game.player != null
 	var safe := UI.safe_margins(size)
-	_btn.size = Vector2(82, 82)
+	var portrait := size.x < size.y
+	_btn.size = Vector2(64, 64) if portrait else Vector2(82, 82)
 	var button_x := safe.x + 8.0
-	if size.x >= size.y:
+	if portrait:
+		button_x = safe.x + 8.0
+		_btn.position = Vector2(button_x, size.y - safe.w - 316.0)
+	else:
 		var card_width := minf(220.0, maxf(150.0, size.x - safe.x - safe.z - 100.0))
 		var weapon_left := (size.x - (100.0 + card_width)) * 0.5
 		button_x = maxf(safe.x + 8.0, minf(maxf(safe.x + 164.0, size.x * 0.2), weapon_left - 94.0))
-	_btn.position = Vector2(button_x, size.y - safe.w - 90.0)
+		_btn.position = Vector2(button_x, size.y - safe.w - 90.0)
 	if Game.build_mode and Game.state != "prep":
 		_exit()
 	if _msg_t > 0.0:

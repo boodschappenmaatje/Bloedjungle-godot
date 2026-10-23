@@ -8,6 +8,7 @@ const GAP := 62.0
 
 var kind := ""
 var caption := ""
+var equipment_kind := "grenade"
 var bar := -1.0  # 0..1 toont een smalle sterktebalk onder de knop, -1 verbergt hem
 var open_state := false
 var badge := ""  # klein getal rechtsboven, bijv. "×3"
@@ -124,10 +125,21 @@ func _draw() -> void:
 			draw_arc(c, 11.0, PI * 0.15, PI * 1.75, 16, col, w)
 			draw_colored_polygon(PackedVector2Array([c + Vector2(-13, 2), c + Vector2(-5, 3), c + Vector2(-9, 11)]), col)
 		"granaat":
-			draw_circle(c + Vector2(0, 3), 10.0, col)
-			draw_rect(Rect2(c + Vector2(-3, -12), Vector2(6, 6)), col)
-			draw_line(c + Vector2(2, -11), c + Vector2(10, -14), col, 2.4)
-			draw_arc(c + Vector2(0, 3), 6.0, 2.4, 3.9, 6, Color(0.05, 0.06, 0.04, 0.8), 2.0)
+			match equipment_kind:
+				"mine":
+					draw_circle(c + Vector2(0, 3), 11.0, col)
+					draw_arc(c + Vector2(0, 3), 11.0, 0, TAU, 20, Color(0.05, 0.06, 0.04, 0.8), 2.0)
+					draw_circle(c + Vector2(0, 3), 3.5, Color(0.05, 0.06, 0.04, 0.9))
+				"c4":
+					draw_rect(Rect2(c + Vector2(-10, -8), Vector2(20, 20)), col, false, 2.0)
+					draw_line(c + Vector2(-7, -11), c + Vector2(7, -11), col, 2.0)
+					draw_line(c + Vector2(-6, -11), c + Vector2(-6, -7), col, 2.0)
+					draw_line(c + Vector2(6, -11), c + Vector2(6, -7), col, 2.0)
+				_:
+					draw_circle(c + Vector2(0, 3), 10.0, col)
+					draw_rect(Rect2(c + Vector2(-3, -12), Vector2(6, 6)), col)
+					draw_line(c + Vector2(2, -11), c + Vector2(10, -14), col, 2.4)
+					draw_arc(c + Vector2(0, 3), 6.0, 2.4, 3.9, 6, Color(0.05, 0.06, 0.04, 0.8), 2.0)
 	if kind in ["sprint"] and open_state:
 		draw_arc(size * 0.5, size.x * 0.5 - 2.0, 0, TAU, 28, UI.BRASS, 2.4)  # staat aan
 	if kind == "rol" and bar >= 0.0:

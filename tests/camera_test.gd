@@ -139,10 +139,11 @@ func _run() -> void:
 		game.get("attack")["N"] = 2.0
 		game.call("mark_attack", Vector3(0, 0, -20))
 		_check(game.get("attack")["N"] > 0.0, "noordelijke aanvalsrichting mist radarbrondata")
+		var build_radar: Control = main.get_node("Hud").find_child("TacticalRadar", true, false)
 		game.set("build_mode", true)
 		await process_frame
 		await process_frame
-		_check(not radar.visible, "radar bedekt de bouwinterface")
+		_check(build_radar.visible, "minimap verdwijnt in bouwmodus")
 		game.set("build_mode", false)
 	var materials := ["palm", "leaf", "fern"]
 	foliage_script.call("update_visibility_focus", player.global_position, camera.global_position, 1.0, true, [player.global_position + Vector3(5, 0, 0)])

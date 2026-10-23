@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/painted_metal/base_color.jpg" id="1_a0lag"]
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/painted_metal/normal_gl.jpg" id="2_m5u1n"]
+[ext_resource type="Texture2D" path="res://assets/textures/buildings/painted_metal/roughness.jpg" id="3_dhj3u"]
+
+[resource]
+resource_name = "painted_metal"
+albedo_texture = ExtResource("1_a0lag")
+roughness_texture = ExtResource("3_dhj3u")
+normal_enabled = true
+normal_texture = ExtResource("2_m5u1n")

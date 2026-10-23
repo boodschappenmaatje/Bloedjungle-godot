@@ -15,7 +15,7 @@ De web-versie in `src/` blijft zoals hij is; dit is een losse map.
 
 De bedoelde look staat in `referentie-stijl.png` (donkere, dichte jungle, schuine camera, echte 3D-gebouwen, zon met lange schaduwen). Alles wat we bouwen houdt dat als richting aan. Dit is nu gedaan: de zwaardere (mobiele) renderer met schaduwen, mist, gloed en filmkleuren, een bodem met gras, modder en paden, zelfgemaakte palmen, struiken en varens die in de wind bewegen, en een basis met muur, poortposten, bunker met zandzakken en antenne, vier wachttorens, hutten en kratten. De webversie gebruikt automatisch de lichtere renderer.
 
-Nog niet: winkel, andere wapens kopen, granaten, gebouwen, speelbare jeep, gore, geluid. Het jeepmodel en een plaatsbare scène zijn inmiddels wel aanwezig.
+Nog niet: winkel, andere wapens kopen, granaten, gebouwen, jeep, gore, geluid. Dat komt stap voor stap.
 
 ## Indeling
 
@@ -30,7 +30,8 @@ Nog niet: winkel, andere wapens kopen, granaten, gebouwen, speelbare jeep, gore,
 | `scripts/level.gd` | Bouwt grond, muur, bunker en bomen (ook zichtbaar in de editor) |
 | `scripts/touch_sticks.gd`, `hud.gd` | Besturing en schermteksten |
 | `assets/tank.glb`, `scripts/tank.gd` | Eigen tank die buiten de oostmuur patrouilleert; de koepel volgt vijanden. Blender-bron in `bron/tank/` |
-| `assets/jeep.glb`, `scenes/jeep.tscn` | Gedetailleerde legerjeep met botsing, klaar om in een level te plaatsen. Blender-bron in `bron/jeep/` |
+| `assets/legerjeep.glb`, `scenes/legerjeep.tscn` | Gedetailleerde statische legerjeep (open terreinwagen, ~75.600 driehoeken) met eenvoudige botsing, klaar om in een level te plaatsen; geen besturing. Los van de bestuurbare jeep (`assets/jeep.glb`, `scripts/jeep.gd`). Blender-bron in `bron/legerjeep/` |
+| `assets/vrachtwagen.glb`, `scripts/vrachtwagen.gd` | Legertruck uit de garage: neemt tot 10 soldaten mee, die via de laadklep en het trapje instappen. Zeil rolt op en af. Blender-bron in `bron/vrachtwagen/`, zit-animatie in `bron/zitten/` |
 | `assets/soldaat.glb` | Het mannetje met animaties; gemaakt met `tools/godot-soldaat.mjs` in de privé-repo bloedjungle |
 | `tests/smoke_test.gd` | Automatische test die golf 1 en 2 speelt |
 

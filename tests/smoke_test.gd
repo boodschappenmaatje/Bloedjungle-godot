@@ -18,6 +18,8 @@ func _process(delta: float) -> bool:
 	var game = root.get_node("Game")
 	if frames == 2:
 		main.get_node("Hud/Sticks").set_process(false)  # de bot bestuurt, niet de sticks
+	if frames == 4:
+		main.begin()
 	if frames == 5:
 		main.start_wave()
 	var p = game.player

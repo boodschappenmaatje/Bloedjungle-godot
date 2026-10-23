@@ -1,0 +1,12 @@
+[gd_resource type="StandardMaterial3D" format=3]
+
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/mud/base_color.jpg" id="1_yy1wj"]
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/mud/normal_gl.jpg" id="2_bj6l5"]
+[ext_resource type="Texture2D" path="res://assets/textures/terrain/mud/roughness.jpg" id="3_iyujp"]
+
+[resource]
+resource_name = "mud"
+albedo_texture = ExtResource("1_yy1wj")
+roughness_texture = ExtResource("3_iyujp")
+normal_enabled = true
+normal_texture = ExtResource("2_bj6l5")

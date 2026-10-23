@@ -5,6 +5,7 @@ class_name Kit
 const LAYER_GROUND := 1
 const LAYER_WALL := 2
 const LAYER_BUNKER := 16
+const LAYER_WATER := 64  # onzichtbare oever van de rivier: houdt mensen tegen, kogels vliegen erover
 
 static var _mats := {}
 
@@ -50,36 +51,137 @@ static func surface(key: String, c0: Color, c1: Color, rough := 0.9, metal := 0.
 	return m
 
 
+## Foto-materiaal uit assets/textures: kleur, oneffenheden en glans, over de wereld heen gespannen.
+## tile = meters per herhaling; tint kleurt het materiaal bij (donker/warm), zodat het bij de jungle past.
+static func photo(dir: String, tile := 3.0, tint := Color.WHITE, rough := 1.0) -> StandardMaterial3D:
+	var key := "photo%s%s%s" % [dir, tile, tint.to_html()]
+	if _mats.has(key):
+		return _mats[key]
+	var base := "res://assets/textures/%s/" % dir
+	var m := StandardMaterial3D.new()
+	m.albedo_texture = load(base + "base_color.jpg")
+	m.albedo_color = tint
+	m.normal_enabled = true
+	m.normal_texture = load(base + "normal_gl.jpg")
+	m.normal_scale = 0.8
+	m.roughness_texture = load(base + "roughness.jpg")
+	m.roughness = rough
+	m.uv1_triplanar = true
+	m.uv1_world_triplanar = true
+	m.uv1_scale = Vector3.ONE / tile
+	_mats[key] = m
+	return m
+
+
 static func concrete() -> StandardMaterial3D:
-	return surface("concrete", Color("6f6c61"), Color("a5a294"), 0.95)
+	return photo("buildings/concrete", 3.0, Color(0.74, 0.74, 0.71))
 
 
 static func concrete_dark() -> StandardMaterial3D:
-	return surface("concrete_dark", Color("4c4a42"), Color("77746a"), 0.95)
+	return photo("buildings/concrete", 3.0, Color(0.5, 0.5, 0.46))
 
 
 static func wood() -> StandardMaterial3D:
-	return surface("wood", Color("4a3220"), Color("7a5636"), 0.85, 0.0, 0.09, 0.6)
+	return photo("buildings/weathered_wood", 2.2, Color(0.66, 0.58, 0.5))
+
+
+## Zet foto-materialen op een Blender-model: de naam van het materiaal in het .glb bepaalt de textuur.
+static func skin(root: Node, kind: String) -> void:
+	var all := _skins()
+	if not all.has(kind):
+		return
+	var map: Dictionary = all[kind]
+	for n in root.find_children("*", "MeshInstance3D", true, false):
+		var mi := n as MeshInstance3D
+		for i in mi.mesh.get_surface_count():
+			var old := mi.mesh.surface_get_material(i)
+			if old and map.has(old.resource_name):
+				mi.set_surface_override_material(i, map[old.resource_name].call())
+
+
+static var _skin_cache := {}
+
+
+## Pas bij het eerste gebruik gebouwd: in de editor (@tool) bestaat een static var nog niet tijdens het laden.
+static func _skins() -> Dictionary:
+	if _skin_cache.is_empty():
+		_skin_cache = _build_skins()
+	return _skin_cache
+
+
+static func _build_skins() -> Dictionary:
+	return {
+	"toren": {
+		"Paal": func(): return photo("buildings/weathered_wood", 1.6, Color(0.5, 0.42, 0.34)),
+		"Plank1": func(): return photo("buildings/weathered_wood", 1.4, Color(0.72, 0.62, 0.5)),
+		"Plank2": func(): return photo("buildings/weathered_wood", 1.4, Color(0.6, 0.52, 0.42)),
+		"Plank3": func(): return photo("buildings/weathered_wood", 1.4, Color(0.8, 0.7, 0.56)),
+		"Dak": func(): return photo("buildings/corrugated_iron", 1.5, Color(0.85, 0.6, 0.5)),
+		"Dakrib": func(): return photo("buildings/rusted_metal", 1.0, Color(0.75, 0.5, 0.4)),
+		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.55, 0.55, 0.55)),
+		"Zak": func(): return canvas(),
+		"Kist": func(): return photo("buildings/army_green_paint", 0.9, Color(0.7, 0.75, 0.6)),
+	},
+	"kazerne": {
+		"Wand1": func(): return photo("buildings/army_green_paint", 1.8, Color(0.82, 0.86, 0.7)),
+		"Wand2": func(): return photo("buildings/army_green_paint", 1.8, Color(0.68, 0.72, 0.58)),
+		"Wand3": func(): return photo("buildings/army_green_paint", 1.8, Color(0.92, 0.95, 0.78)),
+		"Plank1": func(): return photo("buildings/weathered_wood", 1.4, Color(0.72, 0.62, 0.5)),
+		"Paal": func(): return photo("buildings/weathered_wood", 1.6, Color(0.5, 0.42, 0.34)),
+		"Dak": func(): return photo("buildings/corrugated_iron", 1.5, Color(0.6, 0.7, 0.55)),
+		"Dakrib": func(): return photo("buildings/corrugated_iron", 1.5, Color(0.5, 0.58, 0.46)),
+		"Beton": func(): return concrete(),
+		"Zak": func(): return canvas(),
+		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.55, 0.55, 0.55)),
+	},
+	"poort": {
+		"Staal": func(): return photo("buildings/metal", 1.4, Color(0.84, 0.88, 0.93)),
+		"StaalDonker": func(): return photo("buildings/metal", 1.4, Color(0.5, 0.53, 0.58)),
+		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.6, 0.61, 0.63)),
+	},
+	"brug": {
+		"Hout1": func(): return photo("buildings/weathered_wood", 1.4, Color(1.25, 1.1, 0.9)),
+		"Hout2": func(): return photo("buildings/weathered_wood", 1.4, Color(1.05, 0.92, 0.75)),
+		"Hout3": func(): return photo("buildings/weathered_wood", 1.4, Color(1.4, 1.22, 1.0)),
+		"Balk": func(): return photo("buildings/weathered_wood", 1.6, Color(0.8, 0.68, 0.54)),
+		"Paal": func(): return photo("nature/tree_bark", 1.2, Color(0.55, 0.47, 0.38)),
+		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.6, 0.62, 0.64)),
+		"Touw": func(): return photo("buildings/jute", 1.2, Color(0.8, 0.72, 0.55)),
+	},
+	"loopgraaf": {
+		"Hout1": func(): return photo("buildings/weathered_wood", 1.4, Color(0.72, 0.62, 0.5)),
+		"Hout2": func(): return photo("buildings/weathered_wood", 1.4, Color(0.58, 0.5, 0.4)),
+		"Hout3": func(): return photo("buildings/weathered_wood", 1.4, Color(0.8, 0.7, 0.56)),
+		"Balk": func(): return photo("buildings/weathered_wood", 1.6, Color(0.45, 0.38, 0.3)),
+		"Zak1": func(): return canvas(),
+		"Zak2": func(): return photo("buildings/jute", 1.2, Color(0.66, 0.62, 0.5)),
+		"Aarde": func(): return photo("terrain/dry_earth", 1.5, Color(0.75, 0.65, 0.55)),
+		"AardeDonker": func(): return photo("terrain/dry_earth", 1.5, Color(0.5, 0.42, 0.34)),
+		"Modder": func(): return photo("terrain/mud", 1.5, Color(0.45, 0.4, 0.35)),
+		"Metaal": func(): return photo("buildings/metal", 0.8, Color(0.55, 0.55, 0.55)),
+		"Kist": func(): return photo("buildings/army_green_paint", 0.9, Color(0.7, 0.75, 0.6)),
+	},
+}
 
 
 static func olive() -> StandardMaterial3D:
-	return surface("olive", Color("3b4527"), Color("5a6a38"), 0.8, 0.1)
+	return photo("buildings/army_green_paint", 2.5, Color(0.8, 0.85, 0.7))
 
 
 static func rust() -> StandardMaterial3D:
-	return surface("rust", Color("5a3a24"), Color("8a5a35"), 0.65, 0.6, 0.07, 0.5)
+	return photo("buildings/rusted_metal", 1.6, Color(0.62, 0.5, 0.42))
 
 
 static func roof() -> StandardMaterial3D:
-	return surface("roof", Color("5c6258"), Color("858b7e"), 0.55, 0.7, 0.2, 1.0)
+	return photo("buildings/rusted_metal", 3.5, Color(0.36, 0.3, 0.27))
 
 
 static func canvas() -> StandardMaterial3D:
-	return surface("canvas", Color("7d7452"), Color("a39a72"), 1.0, 0.0, 0.12, 1.2)
+	return photo("buildings/jute", 1.2, Color(0.78, 0.74, 0.6))
 
 
 static func rock() -> StandardMaterial3D:
-	return surface("rock", Color("4e4d47"), Color("86847a"), 0.95, 0.0, 0.06, 0.5)
+	return photo("nature/rock_material", 2.0, Color(0.7, 0.7, 0.66))
 
 
 static func flat(color: Color, rough := 0.9, metal := 0.0) -> StandardMaterial3D:

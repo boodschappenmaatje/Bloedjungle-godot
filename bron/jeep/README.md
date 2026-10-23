@@ -1,14 +1,30 @@
-# Legerjeep (Blender-bron)
+# Jeep met schutter (Blender-bron)
 
-`assets/jeep.glb` is een originele, in Blender gemaakte open militaire terreinwagen. De bewerkbare onderdelen staan in `jeep.blend`; `preview.png` laat het resultaat zien. Het model heeft terreinbanden met profiel, een reservewiel, voorruit, stoelen, dashboard, verlichting, een jerrycan en een schep.
+`assets/jeep.glb` wordt gemaakt door `maak_jeep.py` (Blender 5.2, ook zonder scherm via `pip install bpy`):
 
-`scenes/jeep.tscn` is een kant-en-klare Godot-scène met een eenvoudige botsingsvorm. De voorkant wijst naar -Z. Afmetingen inclusief reservewiel: ongeveer 1,86 × 3,92 × 1,82 meter. De GLB bevat één mesh, 15 materiaalvlakken en ongeveer 75.600 driehoeken. Gebruik het model bij voorkeur als opvallend voertuig en plaats niet veel exemplaren tegelijk op een mobiele telefoon.
+    python3 maak_jeep.py uit/      # maakt jeep.glb, jeep.blend en jeep_olijf.png
 
-Opnieuw bouwen met Blender 4.3 of nieuwer:
+Willys-achtige legerjeep met een .50 MG op een paal, een staande schutter en een bestuurder. Ongeveer 5.300 driehoeken.
+Voorkant is -Z in Godot, 1 meter = 1 eenheid. In het spel: `scenes/jeep.tscn` + `scripts/jeep.gd` (geparkeerd in de basis, instappen met de knop, rechter stick richt het MG).
 
-```bash
-blender -b -t 4 --python maak_jeep.py
-cp jeep.glb ../../assets/jeep.glb
-```
+## Onderdelen
 
-Het script maakt `jeep.glb`, `jeep.blend` en `preview.png` in deze map opnieuw aan. De geometrie en materialen zijn procedureel opgebouwd; er zijn geen externe bronmodellen of afbeeldingen gebruikt.
+`Jeep` > `Body` > `RompMesh`, `Bestuurder`, `StuurLV`/`StuurRV` (sturen, draait om de hoogte-as) > `WielLV`/`WielRV`,
+`WielLA`, `WielRA`, lampen `KoplampL/R` (spot) en `AchterlichtL/RLamp` (punt), en
+`Geschut` (draait om de hoogte-as) > `MG` (terugslag) > `Monding` > `Vlam`, plus `Schutter` > `Bovenlijf`.
+De schutter staat in `Geschut` en draait dus mee als het spel het geschut richt.
+
+Lampen: materialen `Koplamp` en `Achterlicht` gloeien (emissie); de lichtbronnen zitten in de glb
+(export in RAW-modus, dus de waarden zijn direct Godot-lichtsterktes). Remlicht = emissie van `Achterlicht` hoger zetten.
+
+## Animaties
+
+| Clip | Wat | Lus |
+|---|---|---|
+| `Stationair` | motor draait, alles trilt licht | ja |
+| `Rijden` | 8 m/s: wielen rollen, vering deint | ja |
+| `Achteruit` | 3 m/s achteruit | ja |
+| `Bocht` | voorwielen 26 graden ingestuurd, carrosserie helt over | ja |
+| `Remmen` | neus duikt, wielen stoppen | nee |
+| `Vuren` | MG vuurt 8 schoten per seconde: terugslag, mondingsvlam, hulzen, schutter schokt mee | ja |
+| `Rondkijken` | schutter draait het geschut 70 graden links en rechts | ja |

@@ -3,6 +3,18 @@ class_name Foliage
 ## Kleuren zitten in de vertexkleuren; de alfa is hoe sterk iets in de wind beweegt (foliage.gdshader).
 
 static var _mats := {}
+static var _shadow_mats := {}  # soort -> nepschaduw-materiaal
+const STRIP_EXTRA := {"palm": 70, "bush": 230, "fern": 330, "grass": 1300, "rock": 26}  # extra stuks in de strook tussen muur en rivier
+## Hoeveel van de extra planten per gebied blijft staan: moeras = varens en gras, open plek = bijna kaal met rotsen, dicht = alles.
+const STRIP_KEEP := {
+	"dicht": {"palm": 1.0, "bush": 1.0, "fern": 1.0, "grass": 1.0, "rock": 0.5},
+	"moeras": {"palm": 0.3, "bush": 0.35, "fern": 0.9, "grass": 1.0, "rock": 0.2},
+	"open": {"palm": 0.06, "bush": 0.12, "fern": 0.3, "grass": 0.45, "rock": 1.0},
+}
+## Afstand (m, vanaf de camera, gemeten tot het midden van een vak van 36 m) waarboven een soort niet meer getekend wordt.
+const VIS_END := {"palm": 140.0, "bush": 95.0, "fern": 85.0, "grass": 55.0}
+const PALM_NEAR := 62.0  # dichterbij: volledige palm; verder: de simpele palm
+const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.5], "bush": [1.1, 1.8, 0.45], "rock": [0.5, 1.2, 0.4]}  # hoogte, breedte, sterkte
 
 
 ## Wind-materiaal; met een bladtextuur (kind) of zonder (stam, rotsen).
@@ -13,11 +25,68 @@ static func material(kind := "") -> ShaderMaterial:
 		m.set_shader_parameter("use_tex", kind != "")
 		if kind != "":
 			m.set_shader_parameter("tex", LeafTex.get_tex(kind))
+			m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
 		if kind == "grass":
 			m.set_shader_parameter("sway", 0.08)
 			m.set_shader_parameter("cut", 0.35)
+		m.set_shader_parameter("wind", 1.0 if GameSettings.get_value("wind") == "on" else 0.0)
 		_mats[kind] = m
 	return _mats[kind]
+
+
+static var _focus_mats: Array[ShaderMaterial] = []
+static var _fade := 0.0  # 0..1, loopt zacht mee zodat bladeren niet ploffen
+
+
+## Globale uniforms op gedeelde leaf-materialen, zonder per-palm drawcalls of raycasts.
+## active = false (bouwmodus, menu): de zichtlijn-fade loopt rustig terug naar 0.
+## extras = tot drie wereldposities (vijanden) die ook uit de bladeren moeten blijven.
+static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, delta := 1.0 / 60.0, active := true, extras: Array = []) -> void:
+	_fade = move_toward(_fade, 1.0 if active else 0.0, delta / 0.35)
+	if _focus_mats.is_empty():
+		for key in ["palm", "leaf", "fern"]:
+			_focus_mats.append(material(key))
+	var on := _fade > 0.001
+	var e: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO, Vector4.ZERO]
+	for i in mini(extras.size(), 3):
+		var pos: Vector3 = extras[i]
+		e[i] = Vector4(pos.x, pos.y + 1.0, pos.z, 1.0)
+	for mat in _focus_mats:
+		mat.set_shader_parameter("fade_sightline", on)
+		if not on:
+			continue
+		mat.set_shader_parameter("fade_amount", _fade)
+		mat.set_shader_parameter("view_player", player_pos + Vector3.UP * 1.2)
+		mat.set_shader_parameter("view_camera", camera_pos)
+		mat.set_shader_parameter("view_e0", e[0])
+		mat.set_shader_parameter("view_e1", e[1])
+		mat.set_shader_parameter("view_e2", e[2])
+
+
+## Zet de wind in alle bladeren aan of uit.
+static func set_wind(on: bool) -> void:
+	for k in _mats:
+		_mats[k].set_shader_parameter("wind", 1.0 if on else 0.0)
+
+
+## Richting en lengte van de nepschaduwen volgen de zon (dir = waarheen de schaduw valt, elev = zonhoogte in graden).
+static func set_sun(dir: Vector2, elev: float) -> void:
+	var reach := 1.0 / tan(deg_to_rad(clampf(elev, 8.0, 80.0)))
+	for k in _shadow_mats:
+		_shadow_mats[k].set_shader_parameter("sun_dir", dir)
+		_shadow_mats[k].set_shader_parameter("reach", reach)
+
+
+static func _shadow_mat(kind: String) -> ShaderMaterial:
+	if not _shadow_mats.has(kind):
+		var c: Array = SHADOW_KINDS[kind]
+		var m := ShaderMaterial.new()
+		m.shader = preload("res://shaders/treeshadow.gdshader")
+		m.set_shader_parameter("height", c[0])
+		m.set_shader_parameter("width", c[1])
+		m.set_shader_parameter("strength", c[2])
+		_shadow_mats[kind] = m
+	return _shadow_mats[kind]
 
 
 ## Eén blad of palmtak: een gebogen strook met een licht gevouwen middenrib. De textuur loopt
@@ -50,12 +119,13 @@ static func _frond(st: SurfaceTool, origin: Vector3, yaw: float, length: float, 
 					st.add_vertex(v[0])
 
 
-static func palm() -> ArrayMesh:
+## Verre palm (afstand-niveau): dezelfde vorm met veel minder driehoeken.
+static func palm(far := false) -> ArrayMesh:
 	var mesh := ArrayMesh.new()
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var segs := 10
-	var sides := 7
+	var segs := 4 if far else 10
+	var sides := 4 if far else 7
 	var rings: Array = []
 	var top := Vector3.ZERO
 	for i in segs + 1:
@@ -90,10 +160,11 @@ static func palm() -> ArrayMesh:
 	rng.seed = 5
 	var white := Color(0.78, 0.9, 0.7)
 	var dark := Color(0.5, 0.64, 0.42)
-	for k in 12:
-		var yaw := TAU * k / 12.0 + rng.randf_range(-0.2, 0.2)
-		_frond(crown, top + Vector3.UP * 0.05, yaw, rng.randf_range(2.6, 3.4), rng.randf_range(0.65, 0.85), rng.randf_range(0.9, 1.5), rng.randf_range(1.1, 1.9), dark, white, 7)
-	for k in 6:
+	var n_fronds := 8 if far else 12
+	for k in n_fronds:
+		var yaw := TAU * k / float(n_fronds) + rng.randf_range(-0.2, 0.2)
+		_frond(crown, top + Vector3.UP * 0.05, yaw, rng.randf_range(2.6, 3.4), rng.randf_range(0.65, 0.85), rng.randf_range(0.9, 1.5), rng.randf_range(1.1, 1.9), dark, white, 3 if far else 7)
+	for k in (0 if far else 6):
 		_frond(crown, top + Vector3.UP * 0.1, TAU * k / 6.0 + 0.3, 1.5, 0.45, 1.3, 0.3, dark, white, 4)
 	crown.commit(mesh)
 	mesh.surface_set_material(1, material("palm"))
@@ -158,22 +229,79 @@ static func rock() -> Mesh:
 
 
 ## Zet de hele jungle neer: buiten de muur, met het pad vanaf de poorten vrij.
-static func plant(parent: Node3D, seed_ := 11) -> void:
+static var trees := PackedVector2Array()  # plekken van palmen en rotsen, voor de landing van de heli
+
+
+static func has_tree_near(x: float, z: float, r: float) -> bool:
+	var r2 := r * r
+	for t in trees:
+		if (t.x - x) * (t.x - x) + (t.y - z) * (t.y - z) < r2:
+			return true
+	return false
+
+
+static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
+	trees.clear()
+	logs(parent)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
-	var sets := {"palm": [150, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
-	var meshes := {"palm": palm(), "bush": bush(), "fern": fern(), "grass": grass(), "rock": rock()}
+	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
+	var meshes := {"palm": palm(), "bush": bush(), "fern": fern(), "grass": grass(), "rock": rock(), "palm_far": palm(true)}
 	for kind in sets:
+		if step.is_valid():
+			await step.call(kind)
 		var c: Array = sets[kind]
 		var xf: Array = []
 		var cols: Array = []
 		_scatter(rng, c[0], c[1], c[2], xf, cols, c[3], c[4], c[5])
+		_strip(rng, kind, xf.size() + STRIP_EXTRA[kind], xf, cols, c[3], c[4], c[5])
+		if kind == "palm" or kind == "rock":
+			for t in xf:
+				trees.append(Vector2(t.origin.x, t.origin.z))
 		if kind == "rock":
 			var rm := Kit.rock().duplicate() as StandardMaterial3D
 			rm.vertex_color_use_as_albedo = true
-			Kit.scatter(parent, meshes[kind], rm, xf, cols)
+			var ri := Kit.scatter(parent, meshes[kind], rm, xf, cols)
+			ri.add_to_group("foliage_rock")
+			_blobs(parent, kind, [xf])
 		else:
-			Kit.scatter(parent, meshes[kind], null, xf, cols, kind != "grass")
+			# in vakken van 36 m, zodat de camera alleen tekent en laat schaduwen wat in beeld is
+			var cells := {}
+			for i in xf.size():
+				var o: Vector3 = xf[i].origin
+				var key := Vector2i(floori(o.x / 36.0), floori(o.z / 36.0))
+				if not cells.has(key):
+					cells[key] = [[], []]
+				cells[key][0].append(xf[i])
+				cells[key][1].append(cols[i])
+			for key in cells:
+				var inst := Kit.scatter(parent, meshes[kind], null, cells[key][0], cells[key][1], kind != "grass")
+				inst.add_to_group("foliage_" + kind)  # de grafiekinstelling dunt gras en struiken uit
+				# vakken die ver weg liggen worden niet meer getekend; ver weg staan palmen als simpeler model
+				inst.visibility_range_end = VIS_END[kind]
+				inst.visibility_range_end_margin = 16.0
+				inst.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF  # zacht in- en uitdoven i.p.v. ploffen
+				if kind == "palm":
+					inst.visibility_range_end = PALM_NEAR
+					var far := Kit.scatter(parent, meshes["palm_far"], null, cells[key][0], cells[key][1], false)
+					far.add_to_group("foliage_palm")
+					far.visibility_range_begin = PALM_NEAR
+					far.visibility_range_begin_margin = 16.0
+					far.visibility_range_end = VIS_END["palm"]
+					far.visibility_range_end_margin = 16.0
+					far.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+				if SHADOW_KINDS.has(kind):
+					_blobs(parent, kind, [cells[key][0]])
+
+
+## Vaste nepschaduwen (platte ovalen) voor één vak bomen.
+static func _blobs(parent: Node3D, kind: String, lists: Array) -> void:
+	var q := PlaneMesh.new()
+	q.size = Vector2.ONE
+	var inst := Kit.scatter(parent, q, _shadow_mat(kind), lists[0], [], false)
+	inst.add_to_group("treeshadow")
+	inst.visibility_range_end = 100.0
+	inst.extra_cull_margin = 30.0  # de schaduw valt tot ver buiten de boom
 
 
 static func _scatter(rng: RandomNumberGenerator, count: int, r_min: float, r_max: float, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
@@ -185,12 +313,95 @@ static func _scatter(rng: RandomNumberGenerator, count: int, r_min: float, r_max
 		var p := Vector3(cos(a) * r, 0, sin(a) * r)
 		if maxf(absf(p.x), absf(p.z)) < Data.COMPOUND + 1.8:
 			continue
-		if absf(p.x) < 4.6 and absf(p.z) > Data.COMPOUND and absf(p.z) < 50.0:
+		if absf(p.x) < 4.6 and absf(p.z) > Data.COMPOUND and absf(p.z) < 70.0:
 			continue  # pad vanaf de poorten
-		if p.x > Data.COMPOUND and p.x < 25.5 and absf(p.z) < 23.0:
+		if p.x > Data.COMPOUND and p.x < Data.COMPOUND + 11.5 and absf(p.z) < 23.0:
 			continue  # tankbaan langs de oostmuur
-		var s := rng.randf_range(s_min, s_max)
-		var b := Basis.from_euler(Vector3(rng.randf_range(-tilt, tilt), rng.randf() * TAU, rng.randf_range(-tilt, tilt))).scaled(Vector3(s, s * rng.randf_range(0.85, 1.2), s))
-		out.append(Transform3D(b, p))
-		var v := rng.randf_range(0.78, 1.12)
-		cols.append(Color(v, v * rng.randf_range(0.94, 1.08), v * 0.92))
+		if _in_river(p):
+			continue
+		_add(rng, out, cols, p, s_min, s_max, tilt)
+
+
+
+## In de rivier, op de oevers en op de open paden naar brug en ondiepte.
+static func _in_river(p: Vector3) -> bool:
+	var d := absf(p.z - Data.river_z(p.x))
+	if d < Data.RIVER_HALF + 1.0:
+		return true
+	if p.z < Data.FOREST_Z0 and p.z > Data.river_z(0.0) and absf(p.x - Data.path_x(p.z)) < 3.4:
+		return true  # het pad door het bos blijft open
+	if d < 12.0 and (absf(p.x - Data.BRIDGE_X) < 4.2 or absf(p.x - Data.FORD_X) < 3.6):
+		return true
+	if Stad.covers(p, 4.0):
+		return true  # de stad met zijn wegen en gebouwen, en een strook eromheen
+	return false
+
+
+static func _add(rng: RandomNumberGenerator, out: Array, cols: Array, p: Vector3, s_min: float, s_max: float, tilt: float) -> void:
+	var s := rng.randf_range(s_min, s_max)
+	var b := Basis.from_euler(Vector3(rng.randf_range(-tilt, tilt), rng.randf() * TAU, rng.randf_range(-tilt, tilt))).scaled(Vector3(s, s * rng.randf_range(0.85, 1.2), s))
+	out.append(Transform3D(b, p))
+	var v := rng.randf_range(0.78, 1.12)
+	cols.append(Color(v, v * rng.randf_range(0.94, 1.08), v * 0.92))
+
+
+## Bos tussen de basismuur en de rivier en daarachter: bosjes en open plekken wisselen elkaar af (rustige sinus-ruis),
+## dus je kunt tussen de bomen door lopen en kijken. Het pad van de poort naar de brug blijft vrij.
+static func _grove(x: float, z: float) -> float:
+	return 0.5 + 0.5 * sin(x * 0.075 + 1.3) * sin(z * 0.095 + 0.4)
+
+
+static func _strip(rng: RandomNumberGenerator, kind: String, count: int, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
+	var tries := 0
+	while out.size() < count and tries < count * 30:
+		tries += 1
+		var x := rng.randf_range(-Data.WORLD_X + 2.0, Data.WORLD_X - 2.0)
+		var north := rng.randf() < 0.3
+		var zr := Data.river_z(x)
+		var z := rng.randf_range(-Data.WORLD_Z_N + 3.0, zr - Data.RIVER_HALF - 1.2) if north else rng.randf_range(zr + Data.RIVER_HALF + 1.2, -Data.COMPOUND - 2.0)
+		var p := Vector3(x, 0, z)
+		if _in_river(p):
+			continue
+		if kind == "palm" and p.z < Data.FOREST_Z0 and absf(x - Data.path_x(z)) < 7.5:
+			continue  # langs het pad geen kruinen die het zicht afsluiten
+		if kind != "grass" and rng.randf() > 0.25 + 0.75 * _grove(x, z):
+			continue
+		if rng.randf() > STRIP_KEEP[Data.strip_zone(x)][kind]:
+			continue
+		_add(rng, out, cols, p, s_min, s_max, tilt)
+
+
+## Omgevallen stammen in de strook tussen muur en rivier: dekking voor jou en de vijand.
+static func logs(parent: Node3D, seed_ := 41) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = 0.34
+	cyl.bottom_radius = 0.4
+	cyl.height = 1.0
+	cyl.radial_segments = 8
+	cyl.rings = 1
+	var mat := Kit.photo("nature/tree_bark", 1.5, Color(0.7, 0.62, 0.52))
+	var xf: Array = []
+	var body := StaticBody3D.new()
+	body.collision_layer = Kit.LAYER_WALL
+	body.collision_mask = 0
+	parent.add_child(body)
+	var tries := 0
+	while xf.size() < 30 and tries < 800:
+		tries += 1
+		var x := rng.randf_range(-Data.WORLD_X + 3.0, Data.WORLD_X - 3.0)
+		var p := Vector3(x, 0.32, rng.randf_range(Data.river_z(x) + 5.0, -Data.COMPOUND - 3.0))
+		if absf(x) < 6.0 or _in_river(p) or Data.strip_zone(x) == "moeras" and rng.randf() < 0.5:
+			continue
+		var len_ := rng.randf_range(3.5, 7.0)
+		var yaw := rng.randf() * PI
+		var b: Basis = Basis.from_euler(Vector3(0, yaw, 0)) * Basis.from_euler(Vector3(PI / 2.0, 0, 0)) * Basis.from_scale(Vector3(1, len_, 1))
+		xf.append(Transform3D(b, p))
+		var cs := CollisionShape3D.new()
+		var bs := BoxShape3D.new()
+		bs.size = Vector3(0.7, 0.64, len_)
+		cs.shape = bs
+		cs.transform = Transform3D(Basis.from_euler(Vector3(0, yaw, 0)), p)
+		body.add_child(cs)
+	Kit.scatter(parent, cyl, mat, xf, [], true)

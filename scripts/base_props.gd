@@ -1,6 +1,6 @@
 class_name BaseProps
 ## De basis: betonnen muur met palen, de bunker met zandzakken en antenne, vier wachttorens,
-## twee hutten en kratten. Muren, bunker, torens en hutten houden kogels en mensen tegen.
+## (hutten en kratten zijn weg). Muren, bunker en torens houden kogels en mensen tegen.
 ## Maten van muur, poorten en bunker komen uit data.gd (zoals in de web-versie).
 
 const C := Data.COMPOUND
@@ -14,10 +14,6 @@ static func build(root: Node3D) -> void:
 	for sx in [-1.0, 1.0]:
 		for sz in [-1.0, 1.0]:
 			_tower(root, Vector3(sx * (C - 1.8), 0, sz * (C - 1.8)))
-	_hut(root, Vector3(-9.6, 0, 7.5), 0.12)
-	_hut(root, Vector3(9.4, 0, -8.0), PI + 0.1)
-	_crates(root, Vector3(-6.2, 0, 9.2))
-	_crates(root, Vector3(6.4, 0, -9.6))
 	Kit.sandbags(root, Vector3(-C + 0.7, 0, 3.0), Vector3(-C + 0.7, 0, 8.0), 2, 3)
 	Kit.sandbags(root, Vector3(C - 0.7, 0, -3.0), Vector3(C - 0.7, 0, -8.0), 2, 4)
 
@@ -48,25 +44,13 @@ static func _wall(root: Node3D) -> void:
 			Kit.box(root, pp, Vector3(0.55 if along_x else t + 0.25, h + 0.3, t + 0.25 if along_x else 0.55), Kit.concrete_dark())
 
 
-## Poortposten met een rood lampje; de stalen poorten komen later weer terug.
+## Poortposten; de stalen schuifpoorten en de zwaailichten erop staan in gates.gd.
 static func _gates(root: Node3D) -> void:
-	var lamp := Kit.flat(Color(1.0, 0.15, 0.08), 0.4)
-	lamp.emission_enabled = true
-	lamp.emission = Color(1.0, 0.1, 0.05)
-	lamp.emission_energy_multiplier = 2.5
 	for sz in [-1.0, 1.0]:
 		for sx in [-1.0, 1.0]:
 			var p := Vector3(sx * (G + 0.3), 0, sz * C)
 			Kit.box(root, p, Vector3(0.7, 2.1, 0.7), Kit.concrete_dark(), 0.0, Kit.LAYER_WALL)
 			Kit.box(root, p + Vector3.UP * 2.1, Vector3(0.9, 0.16, 0.9), Kit.concrete())
-			var l := MeshInstance3D.new()
-			var sm := SphereMesh.new()
-			sm.radius = 0.1
-			sm.height = 0.2
-			l.mesh = sm
-			l.material_override = lamp
-			l.position = p + Vector3(0, 2.4, 0)
-			root.add_child(l)
 		# stalen bovenbalk met geel-zwarte rand
 		Kit.box(root, Vector3(0, 2.0, sz * C), Vector3(G * 2.0 + 1.0, 0.18, 0.4), Kit.olive())
 		for i in 10:
@@ -77,6 +61,7 @@ static func _gates(root: Node3D) -> void:
 static func _bunker(root: Node3D) -> void:
 	var b := Kit.box(root, Vector3.ZERO, Vector3(4.6, 2.0, 4.6), Kit.concrete(), 0.0, Kit.LAYER_BUNKER)
 	b.set_script(preload("res://scripts/bunker.gd"))
+	b.set_process(true)
 	Kit.box(root, Vector3(0, 2.0, 0), Vector3(5.2, 0.4, 5.2), Kit.concrete_dark())
 	Kit.box(root, Vector3(0, 2.4, 0), Vector3(4.2, 0.18, 4.2), Kit.concrete())
 	# schietgleuven rondom en een stalen deur
@@ -119,44 +104,24 @@ static func _bunker(root: Node3D) -> void:
 
 ## Houten wachttoren met platform, reling, ladder en golfplaten dak.
 static func _tower(root: Node3D, pos: Vector3) -> void:
-	var h := 5.2
-	var wood := Kit.wood()
 	var holder := Node3D.new()
 	holder.position = pos
+	holder.rotation.y = 0.0 if pos.x < 0.0 else PI  # de trap loopt naar het midden van de basis
 	root.add_child(holder)
-	Kit.collider(holder, Vector3(0, h / 2.0, 0), Vector3(1.9, h, 1.9), Kit.LAYER_WALL)
-	for sx in [-0.85, 0.85]:
-		for sz in [-0.85, 0.85]:
-			Kit.box(holder, Vector3(sx, 0, sz), Vector3(0.2, h, 0.2), wood)
-	for y in [1.2, 2.8]:
-		for sx in [-1.0, 1.0]:
-			Kit.box(holder, Vector3(0, y, sx * 0.85), Vector3(1.8, 0.1, 0.1), wood)
-			Kit.box(holder, Vector3(sx * 0.85, y, 0), Vector3(0.1, 0.1, 1.8), wood)
-	# kruisverbanden op twee zijden
-	for sx in [-1.0, 1.0]:
-		var diag := Kit.box(holder, Vector3(0.0, 1.2, sx * 0.88), Vector3(2.4, 0.08, 0.08), wood)
-		diag.rotation = Vector3(0, 0, atan2(1.6, 1.8))
-	Kit.box(holder, Vector3(0, h, 0), Vector3(2.4, 0.16, 2.4), wood)
-	for sx in [-1.0, 1.0]:
-		Kit.box(holder, Vector3(0, h + 0.16, sx * 1.12), Vector3(2.3, 0.7, 0.07), wood)
-		Kit.box(holder, Vector3(sx * 1.12, h + 0.16, 0), Vector3(0.07, 0.7, 2.3), wood)
-	for sx in [-1.0, 1.0]:
-		for sz in [-1.0, 1.0]:
-			Kit.box(holder, Vector3(sx * 1.1, h + 0.16, sz * 1.1), Vector3(0.12, 1.9, 0.12), wood)
-	Kit.gable(holder, Vector3(0, h + 2.0, 0), Vector3(2.9, 0.9, 2.9), Kit.roof())
-	# ladder
-	Kit.box(holder, Vector3(1.15, 0, 0.3), Vector3(0.08, h, 0.08), wood)
-	Kit.box(holder, Vector3(1.15, 0, -0.3), Vector3(0.08, h, 0.08), wood)
-	for i in 9:
-		Kit.box(holder, Vector3(1.15, 0.45 + i * 0.52, 0), Vector3(0.08, 0.06, 0.64), wood)
+	holder.add_to_group("tower")
+	Kit.collider(holder, Vector3(0, 2.5, 0), Vector3(1.9, 5.0, 1.9), Kit.LAYER_WALL)
+	var model: Node = (load("res://assets/wachttoren.glb") as PackedScene).instantiate()
+	Kit.skin(model, "toren")
+	holder.add_child(model)
 
 
 static func _hut(root: Node3D, pos: Vector3, yaw: float) -> void:
 	var holder := Node3D.new()
 	holder.position = pos
 	holder.rotation.y = yaw
+	holder.scale = Vector3.ONE * 1.15
 	root.add_child(holder)
-	Kit.box(holder, Vector3.ZERO, Vector3(3.6, 2.3, 2.8), Kit.surface("hutwall", Color("6b6a58"), Color("8d8b74"), 0.95), 0.0, Kit.LAYER_WALL)
+	Kit.box(holder, Vector3.ZERO, Vector3(3.6, 2.3, 2.8), Kit.photo("buildings/plywood", 2.0, Color(0.62, 0.64, 0.5)), 0.0, Kit.LAYER_WALL)
 	Kit.box(holder, Vector3(0, 0, 0), Vector3(3.7, 0.3, 2.9), Kit.concrete_dark())
 	Kit.gable(holder, Vector3(0, 2.3, 0), Vector3(4.4, 1.0, 3.6), Kit.roof())
 	Kit.box(holder, Vector3(-0.6, 0, 1.41), Vector3(0.9, 1.7, 0.1), Kit.wood())

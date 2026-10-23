@@ -1,3 +1,4 @@
+class_name TouchSticks
 extends Control
 ## Twee zwevende sticks (20-input.js): waar je duim neerkomt verschijnt de stick.
 ## Linker helft = lopen. Rechter helft = richten; half duwen richt alleen, tot de rand duwen schiet.
@@ -9,17 +10,46 @@ const AIM_FIRE := 0.8
 var _sticks := {}  # vinger-index -> {"aim": bool, "origin": Vector2, "d": Vector2}
 var _mouse_used := false
 var _mouse_down := false
+var _events := 0
+static var info := ""  # voor de fps-teller: wat de sticks nu zien (om te kijken waarom ze niet reageren)
+
+
+func _ready() -> void:
+	get_viewport().size_changed.connect(_clear)  # bij draaien van het scherm zijn alle vingers weg
+	# ook tijdens pauze of een menu loslaten van je vinger zien, anders blijft er een "spook-stick" hangen
+	process_mode = Node.PROCESS_MODE_ALWAYS
+
+
+func _notification(what: int) -> void:
+	# app naar de achtergrond, meldingscentrum, schermopname-knop: de vinger kan weg zijn zonder dat wij het horen
+	if what == NOTIFICATION_APPLICATION_FOCUS_OUT or what == NOTIFICATION_WM_WINDOW_FOCUS_OUT or what == NOTIFICATION_APPLICATION_PAUSED:
+		_clear()
+
+
+func _clear() -> void:
+	_sticks.clear()
+	_mouse_down = false
+	Game.move = Vector2.ZERO
+	Game.aim = NAN
+	Game.fire = false
+	queue_redraw()
 
 
 func _input(event: InputEvent) -> void:
+	if event is InputEventScreenTouch or event is InputEventScreenDrag:
+		_events += 1
+	if Game.build_mode:
+		return
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			if _on_button(event.position):
 				return
 			var aim: bool = event.position.x > get_viewport_rect().size.x * 0.5
-			for s in _sticks.values():
-				if s.aim == aim:
-					return  # deze kant heeft al een stick
+			# een nieuwe vinger op deze kant wint: de oude is waarschijnlijk al weg (loslaten gemist), anders
+			# blijft de stick "vast" en doet de nieuwe aanraking niets
+			for k in _sticks.keys():
+				if _sticks[k].aim == aim:
+					_sticks.erase(k)
 			_sticks[event.index] = {"aim": aim, "origin": event.position, "d": Vector2.ZERO}
 			_mouse_used = false
 		else:
@@ -48,6 +78,17 @@ func _on_button(p: Vector2) -> bool:
 
 
 func _process(_delta: float) -> void:
+	if get_tree().paused or Game.state == "menu" or Game.state == "shop":
+		if not _sticks.is_empty():
+			_clear()  # menu of pauze open: sticks weg, de volgende aanraking begint schoon
+		return
+	if Game.build_mode:
+		_sticks.clear()
+		Game.move = Vector2.ZERO
+		Game.aim = NAN
+		Game.fire = false
+		queue_redraw()
+		return
 	var mv := Vector2(
 		float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT)),
 		float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP)))
@@ -69,9 +110,10 @@ func _process(_delta: float) -> void:
 			var p: Vector3 = Game.player.global_position
 			aim = atan2(hit.x - p.x, hit.z - p.z)
 		fire = _mouse_down
+	info = "touch %d · sticks %d · %dx%d" % [_events, _sticks.size(), get_viewport_rect().size.x, get_viewport_rect().size.y]
 	Game.move = mv.limit_length(1.0)
 	Game.aim = aim
-	Game.fire = fire and Game.state != "over"
+	Game.fire = fire and Game.state != "over" and Game.state != "shop" and Game.state != "menu"
 
 
 func _draw() -> void:

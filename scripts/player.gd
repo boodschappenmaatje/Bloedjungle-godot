@@ -204,7 +204,7 @@ func throw_grenade() -> void:
 	Game.grenades -= 1
 	grenade_cd = 0.5
 	var fwd := Vector3(sin(face), 0.0, cos(face))
-	Grenade.throw_from(get_parent(), global_position + fwd * 0.5 + Vector3.UP * 1.6 + Vector3.UP * elev, face)
+	Grenade.throw_from(get_parent(), global_position + fwd * 0.5 + Vector3.UP * 1.6 + Vector3.UP * elev, face, 11.0, global_position)
 	Sfx.play("knife")
 	Game.changed.emit()
 

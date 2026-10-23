@@ -44,7 +44,7 @@ func _style() -> void:
 	# golf-titel en ondertitel
 	var ls: LabelSettings = big.label_settings.duplicate()
 	ls.font = UI.display(1)
-	ls.font_size = 23
+	ls.font_size = 20
 	ls.font_color = UI.INK
 	ls.outline_size = 0
 	ls.shadow_color = Color(0, 0, 0, 0.7)
@@ -57,19 +57,23 @@ func _style() -> void:
 	ss.font_color = UI.BRASS
 	small.label_settings = ss
 	$BannerPlate/Banner.add_theme_constant_override("separation", 0)
-	var plate := UI.box(Color(0.025, 0.035, 0.027, 0.91), Color(UI.PANEL_LINE, 0.82), 1, 7, 7)
-	plate.border_width_top = 2
+	var plate := UI.box(Color(0.025, 0.035, 0.027, 0.91), Color(UI.BRASS, 0.38), 1, 7, 7)
+	plate.border_width_bottom = 2
+	plate.content_margin_top = 4
+	plate.content_margin_bottom = 4
 	$BannerPlate.add_theme_stylebox_override("panel", plate)
-	$BannerPlate.custom_minimum_size = Vector2(256, 60)
+	$BannerPlate.custom_minimum_size = Vector2(216, 48)
+	$BannerPlate.offset_left = -108.0
+	$BannerPlate.offset_right = 108.0
 	# "Start nu" staat links naast "Wapenkamer"
 	start_btn.text = "START NU"
 	UI.style_button(start_btn, "gold")
 	start_btn.add_theme_font_size_override("font_size", 12)
-	start_btn.custom_minimum_size = Vector2(0, 32)
-	start_btn.offset_top = 122.0
-	start_btn.offset_bottom = 154.0
+	start_btn.custom_minimum_size = Vector2(0, 30)
+	start_btn.offset_top = 62.0
+	start_btn.offset_bottom = 92.0
 	start_btn.offset_right = -2.0
-	start_btn.offset_left = -2.0 - 104.0
+	start_btn.offset_left = -2.0 - 96.0
 	# versiemarkering (zodat je kunt zien welke versie draait)
 	info.text = VERSION
 	info.add_theme_font_override("font", UI.body(600, 1))
@@ -97,7 +101,7 @@ func _style() -> void:
 
 func _rescale() -> void:
 	var s := get_window().size
-	var touch := DisplayServer.is_touchscreen_available() or OS.get_environment("BJ_TOUCH") == "1"
+	var touch := UI.is_touch_platform()
 	get_window().content_scale_factor = clampf(minf(s.x, s.y) / (430.0 if touch else 720.0), 1.0, 4.0)
 	_layout_wave_banner()
 
@@ -105,15 +109,15 @@ func _rescale() -> void:
 func _layout_wave_banner() -> void:
 	var view_size := Vector2(get_viewport().get_visible_rect().size)
 	var safe := UI.safe_margins(view_size)
-	var top := maxf(52.0, safe.y + 14.0)
+	var top := safe.y + 8.0
 	$BannerPlate.offset_top = top
-	$BannerPlate.offset_bottom = top + 60.0
-	start_btn.offset_top = maxf(top + 68.0, safe.y + 80.0)
-	start_btn.offset_bottom = start_btn.offset_top + 32.0
+	$BannerPlate.offset_bottom = top + 48.0
+	start_btn.offset_top = top + 54.0
+	start_btn.offset_bottom = start_btn.offset_top + 30.0
 
 
 func _process(delta: float) -> void:
-	info.visible = GameSettings.get_value("fps") == "on" and not Game.editing
+	info.visible = GameSettings.get_value("fps") == "on" and StadEditor.debug_enabled and not Game.editing
 	if _banner_t > 0.0:
 		_banner_t -= delta
 	var temporary_banner := _banner_t > 0.0

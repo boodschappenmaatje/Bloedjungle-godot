@@ -183,9 +183,17 @@ func _update_ghost() -> void:
 
 
 func place() -> void:
+	place_kind(Game.place_sel)
+
+
+## Gedeelde plaatsingsroute voor de verdedigingsbalk en de uitrustingsknop.
+## De voorraad wordt hier op precies één plek verlaagd.
+func place_kind(kind: String) -> void:
 	if Game.state != "play" and Game.state != "prep":
 		return
-	var k: String = Game.place_sel
+	var k := kind
+	if not KINDS.has(k):
+		return
 	if Game.inv[k] <= 0 or Game.player == null:
 		return
 	var a: float = Game.player.face
@@ -226,9 +234,10 @@ func place() -> void:
 	items.append(d)
 	Sfx.play("thud" if k == "trench" or k == "sentry" else "click")
 	Game.inv[k] -= 1
-	if Game.inv[k] <= 0:
+	if Game.inv[k] <= 0 and Game.place_sel == k:
 		cycle()
-	Game.changed.emit()
+	else:
+		Game.changed.emit()
 
 
 # ---------------------------------------------------------------- vormen

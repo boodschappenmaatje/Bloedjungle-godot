@@ -211,10 +211,14 @@ func _layout() -> void:
 	var portrait := size.x < size.y
 	var safe := UI.safe_margins(size)
 	var arrow := Vector2(46.0, 64.0)
-	var card := Vector2(minf(220.0, maxf(150.0, size.x - safe.x - safe.z - arrow.x * 2.0 - 8.0)), 64.0)
+	var card_max := 220.0
+	if UI.is_touch_platform() and not portrait:
+		# Ruimte vrijhouden tussen de rechter pijl en het mobiele actiecluster.
+		card_max = minf(card_max, maxf(150.0, size.x - 680.0))
+	var card := Vector2(minf(card_max, maxf(150.0, size.x - safe.x - safe.z - arrow.x * 2.0 - 8.0)), 64.0)
 	var total := arrow.x * 2.0 + card.x + 8.0
 	var x := maxf(safe.x, (size.x - total) * 0.5)
-	var y0 := size.y - (222.0 if portrait else 140.0) - maxf(0.0, safe.w - 12.0)
+	var y0 := size.y - (252.0 if portrait else 140.0) - maxf(0.0, safe.w - 12.0)
 	_prev.position = Vector2(x, y0)
 	_prev.size = arrow
 	_card.position = Vector2(x + arrow.x + 3.0, y0)

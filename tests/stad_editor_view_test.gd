@@ -139,7 +139,7 @@ func _run() -> void:
 	_touch(1, ed._side.get_global_rect().get_center(), false)
 	_check(city.current.items.size() == count and ed._ptrs.is_empty(), "tweede vinger op UI annuleert kaartplaatsing")
 	var helper = load("res://scripts/stad_editor_ui.gd")
-	_check(ed._count.get_theme_font("font") == helper.font(), "rustig editorlettertype")
+	_check(ed._selected_label.get_theme_font("font") == helper.font(), "rustig editorlettertype")
 	_check(helper.font().resource_path.ends_with("Barlow-SemiBold.ttf"), "lokale sans-serif zonder externe afhankelijkheid")
 	ed._pick_tab("gebouw")
 	_check(ed._cards.magazijn.custom_minimum_size.x == 140, "grotere objectkaarten")
@@ -149,7 +149,7 @@ func _run() -> void:
 	for view in [Vector2i(934, 430), Vector2i(844, 390), Vector2i(736, 414)]:
 		root.size = view
 		ed._safe_area_override = Rect2(44, 0, view.x - 88, view.y - 21)
-		ed._count.text = "195 / 100 · TE ZWAAR"
+		ed._selected_label.text = "195 / 100 · TE ZWAAR"
 		ed._sloop_label.text = "SLOOPBAAR 18"
 		ed._layout()
 		for _i in 5:

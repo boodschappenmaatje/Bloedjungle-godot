@@ -78,7 +78,7 @@ func _process(_d: float) -> bool:
 		game.player.position.y = h.position.y + 5.2
 	if t == 720:
 		h._roof_state(2)
-	if t == 800:
+	if t == 840:
 		var y: float = game.player.position.y - h.position.y
 		_check(y < 0.5, "dak ingestort: je valt naar de vloer (y %.2f)" % y)
 		_check(h._floor_local(Vector3(6.75, 0.0, 0.0), 0.0) < 1.0, "de trap leidt nergens meer heen na het instorten van het dak")

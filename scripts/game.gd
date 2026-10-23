@@ -27,6 +27,7 @@ var inv := {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
 var place_sel := "bags"
 var grenades := 3  # handgranaten (werpknop); te koop in de wapenkamer, maximaal GRENADE_MAX
 const GRENADE_MAX := 9
+var equipment_sel := "grenade"  # uitrusting op de HUD: grenade, mine of c4 (C4 is nog niet beschikbaar)
 var place_armed := false  # spookbeeld en neerzetten aan/uit
 # bouwen (Buildings): het bouwtegoed ga je eerst uitgeven, daarna je punten
 const BUILD_CREDIT := 1000
@@ -117,6 +118,7 @@ func reset() -> void:
 	inv = {"bags": 0, "trench": 0, "mine": 0, "wire": 0, "sentry": 0}
 	place_sel = "bags"
 	grenades = 3
+	equipment_sel = "grenade"
 	place_armed = false
 	build_credit = BUILD_CREDIT
 	build_mode = false

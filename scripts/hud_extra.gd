@@ -21,6 +21,7 @@ var _bars: VBoxContainer
 var _status_panel: PanelContainer
 var _top_right: HBoxContainer
 var _menu: PauseMenu
+var _menu_button: Button
 var _fps: Label
 var _camera_controls: Control
 var _camera_button: Button
@@ -85,7 +86,9 @@ func _build_bars() -> void:
 	_status_panel.name = "StatusPanel"
 	_status_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_status_panel.custom_minimum_size = Vector2(0, 48)
-	_status_panel.add_theme_stylebox_override("panel", UI.box(Color(0.015, 0.025, 0.02, 0.82), Color(UI.PANEL_LINE, 0.75), 1, 6, 6))
+	var status_style := UI.box(Color(0.015, 0.025, 0.02, 0.88), Color(UI.PANEL_LINE, 0.82), 1, 6, 6)
+	status_style.border_width_top = 2
+	_status_panel.add_theme_stylebox_override("panel", status_style)
 	add_child(_status_panel)
 	_bars = VBoxContainer.new()
 	_bars.add_theme_constant_override("separation", 5)
@@ -151,19 +154,18 @@ func _build_top_right() -> void:
 	_score = _shadowed(UI.label("★ 0", UI.body(700, 0), 12, UI.INK_DIM))
 	_score.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_top_right.add_child(_score)
-	var pb := Button.new()
-	pb.name = "MenuButton"
-	pb.tooltip_text = "Pauzemenu"
-	pb.custom_minimum_size = Vector2(38, 34)
-	pb.add_to_group("hud_button")
-	pb.process_mode = Node.PROCESS_MODE_ALWAYS
-	UI.style_button(pb, "pause")
+	_menu_button = Button.new()
+	_menu_button.name = "MenuButton"
+	_menu_button.tooltip_text = "Pauzemenu"
+	_menu_button.custom_minimum_size = Vector2(38, 34)
+	_menu_button.add_to_group("hud_button")
+	_menu_button.process_mode = Node.PROCESS_MODE_ALWAYS
+	UI.style_button(_menu_button, "pause")
 	var glyph := MenuGlyph.new()
 	glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	glyph.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	pb.add_child(glyph)
-	pb.pressed.connect(func(): _set_paused(true))
-	_top_right.add_child(pb)
+	_menu_button.add_child(glyph)
+	_menu_button.pressed.connect(func(): _set_paused(true))
 
 
 func _build_ammo() -> void:
@@ -253,6 +255,9 @@ func _build_radar() -> void:
 	_radar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_radar.draw.connect(_draw_radar)
 	add_child(_radar)
+	_menu_button.size = Vector2(36, 34)
+	_menu_button.position = Vector2(_radar.size.x - 38.0, 4.0)
+	_radar.add_child(_menu_button)
 
 
 func _radar_point(world_pos: Vector3, area: Rect2) -> Vector2:
@@ -405,9 +410,13 @@ func _layout() -> void:
 	_status_panel.position = Vector2(safe.x, safe.y)
 	_status_panel.size = Vector2(minf(size.x * 0.42, 232.0), 52.0)
 	_top_right.reset_size()
-	_top_right.position = Vector2(size.x - safe.z - _top_right.size.x, safe.y)
 	_camera_controls.position = Vector2(safe.x, safe.y + _status_panel.size.y + 7.0)
-	_radar.position = Vector2(size.x - safe.z - _radar.size.x, safe.y + 42.0)
+	_radar.position = Vector2(size.x - safe.z - _radar.size.x, safe.y + 8.0)
+	_menu_button.position = Vector2(_radar.size.x - 38.0, 4.0)
+	if size.x < size.y:
+		_top_right.position = Vector2(safe.x, safe.y + _status_panel.size.y + 7.0 + 34.0 + 4.0)
+	else:
+		_top_right.position = Vector2(size.x - safe.z - _radar.size.x - _top_right.size.x, safe.y + 4.0)
 	_fps.position = Vector2(safe.x, safe.y + _status_panel.size.y + 46.0)
 	_arrows.queue_redraw()
 
@@ -432,7 +441,7 @@ func _process(delta: float) -> void:
 	_top_right.visible = not Game.editing
 	_weapon.visible = not Game.editing
 	var active_hud := Game.state == "play" or Game.state == "prep"
-	_camera_controls.visible = active_hud and not Game.build_mode
+	_camera_controls.visible = active_hud and not Game.build_mode and size.x >= size.y
 	_radar.visible = active_hud
 	if active_hud:
 		_update_camera_controls()
@@ -440,12 +449,9 @@ func _process(delta: float) -> void:
 		if _radar_refresh <= 0.0:
 			_radar_refresh = 0.12
 			_radar.queue_redraw()
-	_fps.visible = GameSettings.get_value("fps") == "on" and (not Game.editing or StadEditor.debug_enabled)
+	_fps.visible = GameSettings.get_value("fps") == "on" and StadEditor.debug_enabled and not Game.editing
 	if _fps.visible:
 		_fps.text = "%d FPS · %d%%" % [Engine.get_frames_per_second(), roundi(get_viewport().scaling_3d_scale * 100.0)]
-		var screen_hz := DisplayServer.screen_get_refresh_rate()
-		_fps.text += "\nKeuze %s Hz · limiet %d · scherm %.0f Hz" % [GameSettings.get_value("hz"), Engine.max_fps, screen_hz]
-		_fps.text += "\n" + TouchSticks.info + " · st " + Game.state + (" · pauze" if get_tree().paused else "")
 	var main := get_parent().get_parent()
 	var left: int = Game.enemies.size() + (main.queue.size() if "queue" in main else 0)
 	_enemies.text = "–" if Game.state != "play" else str(left)

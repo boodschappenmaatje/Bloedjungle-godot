@@ -8,8 +8,8 @@ extends StaticBody3D
 const MODEL := preload("res://assets/brandkraan.glb")
 const HP := 30.0
 const SPRAY_TIME := 45.0
-const DRIVE_OVER := 1.5   # zo dichtbij moet een voertuig komen
-const NOZZLE := Vector3(0.0, 0.8, 0.0)
+const DRIVE_OVER := 0.6   # marge rond de botsvorm van een voertuig; de kraan is massief, dus het voertuig staat er tegenaan
+const NOZZLE := Vector3(0.0, 1.0, 0.0)
 
 static var all: Array = []
 
@@ -30,7 +30,7 @@ func _ready() -> void:
 	collision_mask = 0
 	var cs := CollisionShape3D.new()
 	var b := BoxShape3D.new()
-	b.size = Vector3(0.5, 1.4, 0.5)
+	b.size = Vector3(0.75, 1.4, 0.75)
 	cs.shape = b
 	cs.position = Vector3(0, 0.7, 0)
 	add_child(cs)
@@ -78,9 +78,19 @@ func _physics_process(delta: float) -> void:
 		return
 	_check = 0.1
 	for v in get_tree().get_nodes_in_group("voertuigen"):
-		if is_instance_valid(v) and Vector2(v.global_position.x - global_position.x, v.global_position.z - global_position.z).length() < DRIVE_OVER:
+		if is_instance_valid(v) and _raakt(v):
 			burst()
 			return
+
+
+## Staat dit voertuig tegen of op de kraan? De kraan is een botsvorm waar voertuigen niet doorheen kunnen, dus meet tegen hun botsdoos.
+func _raakt(v: Node3D) -> bool:
+	var cs := v.get_node_or_null("Shape") as CollisionShape3D
+	if cs == null or not (cs.shape is BoxShape3D):
+		return Vector2(v.global_position.x - global_position.x, v.global_position.z - global_position.z).length() < 2.0
+	var half := (cs.shape as BoxShape3D).size * 0.5
+	var p := cs.to_local(global_position)
+	return absf(p.x) < half.x + DRIVE_OVER and absf(p.z) < half.z + DRIVE_OVER and absf(p.y) < half.y + 1.5
 
 
 ## De dop knalt eraf en het water spuit.
@@ -125,7 +135,7 @@ func _add_fx() -> void:
 	var offs := [0.0, 0.25, 1.0]
 	# nevel boven in de straal, nevel en opspattend water onderaan
 	var top := Fx._puff(14, 1.5, 1.5, false, Fx._ramp(white, offs), Vector2(0.4, 1.2), 2.0)
-	top.position = Vector3(0, 2.4, 0)
+	top.position = Vector3(0, 2.6, 0)
 	var foot := Fx._puff(14, 1.2, 1.1, false, Fx._ramp(white, offs), Vector2(0.8, 1.6), 1.6)
 	foot.position = Vector3(0, 0.15, 0)
 	foot.spread = 85.0

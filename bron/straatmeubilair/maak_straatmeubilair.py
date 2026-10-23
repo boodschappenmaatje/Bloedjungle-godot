@@ -255,8 +255,10 @@ class Ding:
             f.material_index = MI[mat.name]
         return self
 
-    def obj(self, loc, smooth=False):
+    def obj(self, loc, smooth=False, scale=1.0):
         me = bpy.data.meshes.new(self.name)
+        if scale != 1.0:
+            bmesh.ops.scale(self.bm, vec=(scale, scale, scale), verts=self.bm.verts)
         self.bm.normal_update()
         self.bm.to_mesh(me)
         self.bm.free()
@@ -421,7 +423,8 @@ SCHUIM.surface_render_method = "BLENDED"
 SCHUIM.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value = 0.32
 FPS, T_LUS, N_LUS = 30, 1.5, 45          # een druppelcyclus duurt 1,5 s (45 beeldjes); de uitbarsting 3 s (twee cycli)
 N_SPUIT = 90
-ZN = 0.8                                  # hoogte van de opening waar het water uitkomt
+HS = 1.5                                  # de kraan is 1,5x groter dan zijn eerste ontwerp (hij oogde te klein in het spel)
+ZN = 1.0                                  # hoogte van de opening waar het water uitkomt
 MATS.append(WATER)
 MATS.append(SCHUIM)
 MI["Schuim"] = len(MATS) - 1
@@ -449,14 +452,14 @@ for sx in (-1, 1):                                                  # twee zijui
 d.cyl((0, -0.08, 0.34), 0.085, 0.085, 0.1, ROOD, 10, (math.pi / 2, 0, 0))   # grote pompaansluiting voor
 d.cyl((0, -0.17, 0.34), 0.1, 0.1, 0.05, IJZER, 10, (math.pi / 2, 0, 0))
 d.cyl((0, -0.225, 0.34), 0.04, 0.04, 0.025, IJZER, 5, (math.pi / 2, 0, 0))
-romp = d.obj((0, 0))
+romp = d.obj((0, 0), scale=HS)
 
 d = Ding("Dop")
 d.cyl((0, 0, -0.04), 0.125, 0.12, 0.07, ROOD, 10)
 d.blob((0, 0, 0.0), 0.11, ROOD, 0.85, 500, 1, 0.0)
 d.cyl((0, 0, 0.08), 0.035, 0.03, 0.06, IJZER, 5)                    # vijfhoekige bedieningsmoer
-dop = d.obj((0, 0))
-dop.location = (0, 0, 0.66)
+dop = d.obj((0, 0), scale=HS)
+dop.location = (0, 0, 0.66 * HS)
 
 rg = np.random.default_rng(77)
 G = 9.81
@@ -504,7 +507,7 @@ def vlucht(x, tau):
 
 def dop_baan():
     """Dop schiet omhoog, tuimelt en stuitert tot hij stilligt (balistisch, per beeldje)."""
-    pos, vel = np.array([0.0, 0.0, 0.66]), np.array([1.5, -1.0, 6.3])
+    pos, vel = np.array([0.0, 0.0, 0.66 * HS]), np.array([1.5, -1.0, 6.3])
     ang, om = np.zeros(3), np.array([9.0, 5.0, 7.0])
     keys = []
     sub = 6

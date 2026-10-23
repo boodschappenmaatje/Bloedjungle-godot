@@ -230,7 +230,32 @@ class Ding:
         self._fin(fs, mat, Matrix.Translation(c))
         return self
 
-    def obj(self, loc):
+    def tube(self, pts, radii, mat, sides=7):
+        """Buis langs een lijn van punten met per punt een straal (waterstraal, boog). Gladde schaduw, dichte uiteinden."""
+        rings = []
+        for i, c in enumerate(pts):
+            c = Vector(c)
+            d = (Vector(pts[min(i + 1, len(pts) - 1)]) - Vector(pts[max(i - 1, 0)])).normalized()
+            a_ = Vector((1, 0, 0)) if abs(d.x) < 0.9 else Vector((0, 1, 0))
+            u = d.cross(a_).normalized()
+            v = d.cross(u).normalized()
+            ring = []
+            for k in range(sides):
+                t = 2 * math.pi * k / sides
+                ring.append(self.bm.verts.new(c + (u * math.cos(t) + v * math.sin(t)) * radii[i]))
+            rings.append(ring)
+        fs = []
+        for i in range(len(rings) - 1):
+            for k in range(sides):
+                f = self.bm.faces.new([rings[i][k], rings[i][(k + 1) % sides], rings[i + 1][(k + 1) % sides], rings[i + 1][k]])
+                fs.append(f)
+        fs.append(self.bm.faces.new(rings[0][::-1]))
+        fs.append(self.bm.faces.new(rings[-1]))
+        for f in fs:
+            f.material_index = MI[mat.name]
+        return self
+
+    def obj(self, loc, smooth=False):
         me = bpy.data.meshes.new(self.name)
         self.bm.normal_update()
         self.bm.to_mesh(me)
@@ -238,7 +263,7 @@ class Ding:
         for m in MATS:
             me.materials.append(m)
         for p in me.polygons:
-            p.use_smooth = False
+            p.use_smooth = smooth
         o = bpy.data.objects.new(self.name, me)
         o.location = (loc[0], loc[1], 0)
         scene.collection.objects.link(o)
@@ -354,18 +379,6 @@ for i, (x, y, z, r) in enumerate(((0, 0, 0.5, 0.75), (0.6, 0.2, 0.4, 0.5), (-0.5
     d.blob((x, y, z), r, BLAD, 0.7, 300 + i, 1, 0.25)
 objs.append(d.obj((21, 0)))
 
-# ---------- brandkraan: rode kraan met twee uitgangen en een dop ----------
-d = Ding("Brandkraan")
-d.cyl((0, 0, 0), 0.17, 0.17, 0.08, IJZER, 8)
-d.cyl((0, 0, 0.08), 0.12, 0.1, 0.55, ROOD, 8)
-d.cyl((0, 0, 0.55), 0.14, 0.14, 0.05, ROOD, 8)
-d.blob((0, 0, 0.68), 0.12, ROOD, 0.9, 400, 1, 0.0)
-d.cyl((0, 0, 0.74), 0.04, 0.04, 0.06, IJZER, 6)
-for sx in (-1, 1):
-    d.cyl((sx * 0.1, 0, 0.4), 0.05, 0.05, 0.12, IJZER, 6, (0, sx * math.pi / 2, 0))
-d.cyl((0, -0.1, 0.35), 0.06, 0.06, 0.1, IJZER, 6, (math.pi / 2, 0, 0))
-objs.append(d.obj((24, 0)))
-
 # ---------- vuilcontainer: groene bak met ribben, deksel en wieltjes ----------
 d = Ding("Container")
 d.box((0, 0, 0.65), (1.8, 0.85, 0.85), METAAL)
@@ -399,9 +412,186 @@ for z, m in ((3.5, ROOD), (3.2, ORANJE), (2.9, GROEN)):
     d.cyl((0, -0.2, z), 0.09, 0.09, 0.03, m, 10, (math.pi / 2, 0, 0))
 objs.append(d.obj((31, 0)))
 
+# ---------- brandkraan met animatie: romp, dop die eraf knalt en een straal van 3 m hoog ----------
+WATER = mat("Water", (0.78, 0.9, 0.96), 0.04)
+WATER.surface_render_method = "BLENDED"
+WATER.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value = 0.5
+SCHUIM = mat("Schuim", (0.95, 0.98, 1.0), 0.15)
+SCHUIM.surface_render_method = "BLENDED"
+SCHUIM.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value = 0.32
+FPS, T_LUS, N_LUS = 30, 1.5, 45          # een druppelcyclus duurt 1,5 s (45 beeldjes); de uitbarsting 3 s (twee cycli)
+N_SPUIT = 90
+ZN = 0.8                                  # hoogte van de opening waar het water uitkomt
+MATS.append(WATER)
+MATS.append(SCHUIM)
+MI["Schuim"] = len(MATS) - 1
+scene.render.fps = FPS
+MI["Water"] = len(MATS) - 2
+
+hyd_root = bpy.data.objects.new("Brandkraan", None)
+scene.collection.objects.link(hyd_root)
+hyd_root.location = (33, 0, 0)
+
+d = Ding("Romp")
+d.cyl((0, 0, 0), 0.18, 0.17, 0.05, IJZER, 10)                       # voetplaat met boutjes
+for i in range(4):
+    a_ = i * math.pi / 2 + 0.4
+    d.cyl((0.14 * math.cos(a_), 0.14 * math.sin(a_), 0.05), 0.018, 0.018, 0.025, IJZER, 5)
+d.cyl((0, 0, 0.05), 0.13, 0.11, 0.1, ROOD, 10)                      # onderstuk
+d.cyl((0, 0, 0.15), 0.105, 0.095, 0.42, ROOD, 10)                   # romp
+d.cyl((0, 0, 0.3), 0.115, 0.115, 0.035, IJZER, 10)                  # ring
+d.cyl((0, 0, 0.56), 0.125, 0.115, 0.05, ROOD, 10)                   # bovenrand
+d.cyl((0, 0, 0.61), 0.09, 0.09, 0.01, ZWART, 10)                    # opening als de dop weg is
+for sx in (-1, 1):                                                  # twee zijuitgangen met dop
+    d.cyl((sx * 0.08, 0, 0.4), 0.06, 0.06, 0.1, ROOD, 8, (0, sx * math.pi / 2, 0))
+    d.cyl((sx * 0.17, 0, 0.4), 0.072, 0.072, 0.045, IJZER, 8, (0, sx * math.pi / 2, 0))
+    d.cyl((sx * 0.215, 0, 0.4), 0.03, 0.03, 0.02, IJZER, 5, (0, sx * math.pi / 2, 0))
+d.cyl((0, -0.08, 0.34), 0.085, 0.085, 0.1, ROOD, 10, (math.pi / 2, 0, 0))   # grote pompaansluiting voor
+d.cyl((0, -0.17, 0.34), 0.1, 0.1, 0.05, IJZER, 10, (math.pi / 2, 0, 0))
+d.cyl((0, -0.225, 0.34), 0.04, 0.04, 0.025, IJZER, 5, (math.pi / 2, 0, 0))
+romp = d.obj((0, 0))
+
+d = Ding("Dop")
+d.cyl((0, 0, -0.04), 0.125, 0.12, 0.07, ROOD, 10)
+d.blob((0, 0, 0.0), 0.11, ROOD, 0.85, 500, 1, 0.0)
+d.cyl((0, 0, 0.08), 0.035, 0.03, 0.06, IJZER, 5)                    # vijfhoekige bedieningsmoer
+dop = d.obj((0, 0))
+dop.location = (0, 0, 0.66)
+
+rg = np.random.default_rng(77)
+G = 9.81
+d = Ding("Straal")        # waterkolom in het midden met een krans van dunne bogen die naar buiten vallen (draait langzaam rond)
+d.tube([(0, 0, z) for z in np.linspace(0, 2.15, 12)], [0.1 - 0.06 * (i / 11) ** 0.8 for i in range(12)], WATER, 9)
+for k in range(10):
+    a_ = 2 * math.pi * k / 10 + rg.uniform(-0.2, 0.2)
+    v0, vh = rg.uniform(6.1, 6.65), rg.uniform(0.45, 1.25)
+    fl = (v0 + math.sqrt(v0 ** 2 + 2 * G * (ZN - 0.1))) / G   # tot de boog de grond raakt
+    pts, rad = [], []
+    for i in range(16):
+        t = fl * 0.97 * i / 15
+        pts.append((vh * math.cos(a_) * t, vh * math.sin(a_) * t, v0 * t - 0.5 * G * t * t))
+        rad.append(0.034 - 0.018 * i / 15)
+    d.tube(pts, rad, SCHUIM, 6)
+straal = d.obj((0, 0), smooth=True)
+straal.location = (0, 0, ZN - 0.1)
+
+# druppels: één gedeelde gladde mesh, 24 objecten met eigen baan
+dr = Ding("Druppel")
+dr.blob((0, 0, 0), (0.035, 0.035, 0.035), WATER, 1.35, 600, 1, 0.05)
+dr.obj((0, 0), smooth=True)
+druppel_mesh = bpy.context.scene.objects["Druppel"].data
+bpy.data.objects.remove(bpy.context.scene.objects["Druppel"])
+druppels = []
+for i in range(24):
+    o = bpy.data.objects.new("Druppel%02d" % i, druppel_mesh)
+    scene.collection.objects.link(o)
+    druppels.append({
+        "o": o, "phi": (i + rg.uniform(-0.3, 0.3)) / 24, "v0": rg.uniform(5.6, 6.65), "vh": rg.uniform(0.2, 1.5),
+        "ang": rg.uniform(0, 2 * math.pi), "sz": rg.uniform(0.6, 1.5)})
+for e in (romp, dop, straal) + tuple(x["o"] for x in druppels):
+    e.parent = hyd_root
+
+
+def vlucht(x, tau):
+    """Plek en zichtbaarheid van een druppel op tijd tau (s) in de lus."""
+    t = (tau + x["phi"] * T_LUS) % T_LUS
+    flight = (x["v0"] + math.sqrt(x["v0"] ** 2 + 2 * G * ZN)) / G
+    if t > flight:
+        return (0, 0, 0.02), 0.0
+    z = ZN + x["v0"] * t - 0.5 * G * t * t
+    return (x["vh"] * math.cos(x["ang"]) * t, x["vh"] * math.sin(x["ang"]) * t, max(z, 0.02)), x["sz"] * (1.0 if t > 0.03 else 0.0)
+
+
+def dop_baan():
+    """Dop schiet omhoog, tuimelt en stuitert tot hij stilligt (balistisch, per beeldje)."""
+    pos, vel = np.array([0.0, 0.0, 0.66]), np.array([1.5, -1.0, 6.3])
+    ang, om = np.zeros(3), np.array([9.0, 5.0, 7.0])
+    keys = []
+    sub = 6
+    for f in range(N_SPUIT + 1):
+        keys.append((tuple(pos), tuple(ang)))
+        for _ in range(sub):
+            h = 1 / FPS / sub
+            vel[2] -= G * h
+            pos = pos + vel * h
+            ang = ang + om * h
+            if pos[2] < 0.1 and vel[2] < 0:
+                pos[2] = 0.1
+                vel[2] = -vel[2] * 0.38
+                vel[:2] *= 0.6
+                om *= 0.6
+                if abs(vel[2]) < 0.6:
+                    vel[2] = 0
+                    vel[:2] *= 0.8
+                    om *= 0.7
+    return keys
+
+
+def zet_actie(obj, clip, frames, vals):
+    """vals: lijst (loc, rot, scale) per beeldje; één NLA-strook met de naam van de clip (zo exporteert Blender er één animatie van)."""
+    act = bpy.data.actions.new("%s_%s" % (clip, obj.name))
+    obj.animation_data_create()
+    obj.animation_data.action = act
+    for f, (loc, rot, sc) in zip(frames, vals):
+        obj.location, obj.rotation_euler, obj.scale = loc, rot, sc
+        obj.keyframe_insert("location", frame=f)
+        obj.keyframe_insert("rotation_euler", frame=f)
+        obj.keyframe_insert("scale", frame=f)
+    for fc in act.fcurves if hasattr(act, "fcurves") else []:
+        for kp in fc.keyframe_points:
+            kp.interpolation = "LINEAR"
+    tr = obj.animation_data.nla_tracks.new()
+    tr.name = clip
+    tr.strips.new(clip, 0, act)
+    obj.animation_data.action = None
+
+
+baan = dop_baan()
+rust = (0, 0, 0)
+for clip, n in (("Spuit", N_SPUIT), ("Spuiten-loop", N_LUS)):
+    frames = list(range(n + 1))
+    # dop
+    if clip == "Spuit":
+        zet_actie(dop, clip, frames, [(b[0], b[1], (1, 1, 1)) for b in baan[:n + 1]])
+    else:
+        zet_actie(dop, clip, frames, [(baan[-1][0], baan[-1][1], (1, 1, 1))] * (n + 1))
+    # waterkolom: groeit in het begin, wiebelt daarna
+    kol = []
+    for f in frames:
+        tau = f / FPS
+        gro = min(1.0, (tau / 0.3)) ** 0.6 if clip == "Spuit" else 1.0
+        w = 1.0 + 0.05 * math.sin(tau / T_LUS * 2 * math.pi * 4) + 0.03 * math.sin(tau / T_LUS * 2 * math.pi * 7)
+        kol.append(((0, 0, ZN - 0.1), (0, 0, tau / T_LUS * 2 * math.pi), (w, 1.0 / w, max(gro, 0.001))))
+    zet_actie(straal, clip, frames, kol)
+    # druppels
+    for x in druppels:
+        vals = []
+        for f in frames:
+            tau = f / FPS
+            loc, sz = vlucht(x, tau)
+            if clip == "Spuit":
+                emit = (T_LUS - x["phi"] * T_LUS) % T_LUS     # tijdstip waarop deze druppel voor het eerst de opening verlaat
+                if tau < emit - 1e-6 and tau < T_LUS:
+                    sz = 0.0
+            vals.append((loc, rust, (sz, sz, sz)))
+        zet_actie(x["o"], clip, frames, vals)
+
+hyd_objs = [hyd_root, romp, dop, straal] + [x["o"] for x in druppels]
+
 # ---------- afwerking ----------
 bpy.ops.object.select_all(action="DESELECT")
-bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "straatmeubilair.glb"), export_format="GLB", export_apply=True, export_yup=True)
+for o in objs:
+    o.select_set(True)
+bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "straatmeubilair.glb"), export_format="GLB", export_apply=True, export_yup=True,
+                          use_selection=True, export_animations=False)
+bpy.ops.object.select_all(action="DESELECT")
+hyd_root.location = (0, 0, 0)   # in het spel staat de kraan op de plek van het knooppunt
+for o in hyd_objs:
+    o.select_set(True)
+bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "brandkraan.glb"), export_format="GLB", export_apply=True, export_yup=True,
+                          use_selection=True, export_animations=True, export_animation_mode="NLA_TRACKS", export_force_sampling=True,
+                          export_frame_range=False)
+hyd_root.location = (33, 0, 0)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "straatmeubilair.blend"))
 tris = {}
 for o in objs:

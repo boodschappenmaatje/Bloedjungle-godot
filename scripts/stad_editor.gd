@@ -1100,11 +1100,15 @@ func _line_plan_for(cells: Array) -> Dictionary:
 			if (open_mask(Stad.KINDS[nd.k].open, int(nd.r), int(nd.m)) & _opposite(bit)) != 0:
 				m |= bit
 		var was_narrow := false
+		var was_zebra := false
 		if ro.has(c):
 			var od: Dictionary = ro[c]
 			m |= open_mask(Stad.KINDS[od.k].open, int(od.r), int(od.m))
 			was_narrow = od.k == "weg_steeg"
+			was_zebra = od.k == "weg_zebra"
 		var pc := piece_for(m, (narrow and not ro.has(c)) or was_narrow)
+		if was_zebra and pc[0] == "weg_recht":
+			pc = ["weg_zebra", pc[1]]   # een zebrapad blijft een zebrapad zolang de weg recht blijft
 		var item := {"k": pc[0], "x": float(c.x) * Stad.CELL, "z": float(c.y) * Stad.CELL, "r": pc[1], "m": 0}
 		if ro.has(c):
 			var od2: Dictionary = ro[c]

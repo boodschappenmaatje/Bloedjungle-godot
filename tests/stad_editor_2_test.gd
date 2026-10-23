@@ -304,8 +304,15 @@ func _run() -> void:
 	_check(city.current.items.size() == before, "gum tik verwijdert straatobject")
 	_undo_all()
 	# UI en popup mogen de kaart niet veranderen of erdoorheen zoomen.
-	var weight: float = city.weight_of(city.current.items)
-	_check(is_equal_approx(ed._load_bar.value, minf(100, weight)), "werkelijke stadsbelasting")
+	ed._update_performance_display(60.0, 60.0)
+	_check(ed._fps_label.text == "60 FPS · OP DOEL" and is_equal_approx(ed._fps_bar.value, 60.0) and is_equal_approx(ed._fps_bar.max_value, 60.0), "werkelijke FPS op doel")
+	ed._update_performance_display(45.0, 60.0)
+	_check(ed._fps_label.text == "45 FPS · ONDER DOEL" and is_equal_approx(ed._fps_bar.value, 45.0), "werkelijke FPS onder doel")
+	ed._update_performance_display(30.0, 60.0)
+	_check(ed._fps_label.text == "30 FPS · LAGE FPS", "werkelijke lage FPS wordt gemeld")
+	ed._update_performance_display(0.0, 60.0)
+	_check(ed._fps_label.text == "0 FPS · METEN", "FPS-meter toont meetstatus bij nul")
+	ed._update_performance_display(Engine.get_frames_per_second(), GameSettings.target_fps())
 	_check(ed._sloop_label.text == "SLOOPBAAR %d" % city.sloop_count(city.current.items), "werkelijke sloopindicator")
 	var zoom: float = game.ecam.z
 	var wheel := InputEventMouseButton.new()

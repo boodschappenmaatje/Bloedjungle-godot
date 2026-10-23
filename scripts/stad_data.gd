@@ -16,7 +16,7 @@ const ITEMS := [
 	# de twee gebouwen die er al stonden
 	["woonhuis", 11, -110, 0, 0],
 	["winkel", 22, -110.5, 0, 0],
-	# kerk, benzinestation en hotel; het magazijn is nog een grijs blok
+	# kerk, benzinestation, hotel en magazijn
 	["kerk", -14, -115, 0, 0],
 	["benzine", 48, -111, 0, 0],
 	["hotel", -27, -111, 0, 0],

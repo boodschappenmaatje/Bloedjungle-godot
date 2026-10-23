@@ -1,17 +1,34 @@
-# Militair magazijn — Blender v78 (werkbranch)
+# Militair bevoorradingsmagazijn — v78
 
-Nieuw gebouw op de bestaande stadspositie voor `magazijn`: 12 × 8 m. Ontwerp: verweerde betonnen plint, metalen ribben, dubbele schuifdeur, licht hellend golfplaten dak, rekken met legerkisten, vaten en zandzakken bij de laadplaats.
+Het magazijn vervangt de bestaande stadsplaceholder op dezelfde opgeslagen positie. Het is een 12 × 8 m gebouw met één open vloer, een hoge laadopening aan Godot `+Z`, dubbele draaideuren, een aparte personeelsdeur, metalen stellingen en voorraad als dekking.
 
-## Belangrijk
-Deze branch is een **voorbereidende ontwerpbranch**. De Blender-bron `maak_magazijn.py`, `magazijn.blend` en `magazijn.glb` moeten na export en validatie nog aan deze branch worden toegevoegd. `main` en de stadseditor zijn niet aangepast. De bestaande `magazijn`-placeholder blijft dus werken.
+## Bron en export
 
-## Contract voor integratie
-- Footprint: x [-6,6], z [-4,4] in Godot; voorkant aan Godot +Z.
-- Blender: x [-6,6], y [-4,4], z omhoog.
-- Boom: `Magazijn/Begane`, `Dak/Dak_heel`, `Dak/Dak_kapot`, `Ruine`, `Puin`.
-- Destructibele segmenten: `M0*` met `*_heel` en `*_kapot`; alle knoopnamen moeten aansluiten op `scripts/woonhuis.gd`.
-- Laat toegang, dakzichtbaarheid, destructie, kollisie, en oude saves intact.
-- Registreer pas `model=true` in `scripts/stad.gd` nadat GLB en `Woonhuis._spec("magazijn")` succesvol getest zijn.
-- Uit te voeren tests: Blender headless export, Godot headless import, stadseditor, betreden/verlaten, explosie en tankinslag, iPhone/Xogot-performance.
+- `maak_magazijn.py` bouwt de meshes, materialen en texturen in Blender.
+- `magazijn.blend` is het bewerkbare Blender-bronbestand.
+- `assets/magazijn.glb` is de zelfstandige Godot-export; de beelden zijn in de GLB ingebed.
+- `assets/magazijn_*_base.png` en `assets/magazijn_*_normal.png` bevatten de procedureel gemaakte 512 px textures voor de Godot-import.
 
-Dit ontwerp is geïnspireerd op de bestaande modellen in `bron/woonhuis`, `bron/winkel`, `bron/kerk`, `bron/benzine`. Gebruik uitsluitend originele geometrie.
+Herbouw vanaf de repository-root:
+
+```sh
+blender -b --python bron/magazijn/maak_magazijn.py -- assets
+```
+
+De bron gebruikt originele beton-, pleister-, staal-, golfplaat- en houttexturen. De blend bevat gepakte afbeeldingen; losse PNG's laten Godot de textures via zijn importpipeline comprimeren. De GLB bevat eveneens alle texturedata en blijft zelfstandig.
+
+## Godot- en sloopintegratie
+
+`scripts/stad.gd` registreert `magazijn` als model met dezelfde 6 × 8 m plaatsingsvoetprint, rasterstap, kosten, opgeslagen soortnaam en positie als de oude placeholder. `scripts/woonhuis.gd` laadt het gebouw met de gedeelde deur-, collision-, camera-, schade- en instortcode.
+
+De achttien structurele segmenten heten `M000`–`M017` en hebben directe mesh-kinderen `_heel` en `_kapot`. `Dak/Dak_heel` en `Dak/Dak_kapot` tonen de twee daktoestanden. Na vijf ingestorte segmenten bezwijkt het dak; na twaalf segmenten verschijnt `Ruine` en wordt de speler naar buiten gezet. Bestaande kogelschade blijft ongewijzigd; explosies en tankgranaten gebruiken de bestaande explosieschade.
+
+## Controle
+
+De geautomatiseerde magazijntest staat in `tests/magazijn_test.gd`:
+
+```sh
+godot --headless --path . -s tests/magazijn_test.gd --fixed-fps 60
+```
+
+De projectinstellingen blijven op Godot 4.7 staan.

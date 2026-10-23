@@ -61,6 +61,7 @@ func _process(_d: float) -> bool:
 		n0 = stad.items.size()
 		print("state ", game.state, " items ", n0)
 		ed.enter()
+		ed._set_look_mode(false)
 		print("editor open: ", game.editing, " bouwmodus ", game.build_mode)
 	if t == 40:
 		var cam := root.get_camera_3d()

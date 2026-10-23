@@ -1,7 +1,7 @@
 class_name StadEditor
 extends Control
-## Stadseditor: deel de stad achter de brug zelf in. Schuin of recht van boven; kies onderaan een wegdeel, gebouw
-## of straatding en tik op de kaart. Sleep iets om het te verschuiven, tik erop om het te draaien, te kopiëren of weg te halen.
+## Stadseditor: deel de stad achter de brug zelf in. De editor opent vergrendeld in KIJK; schakel naar BEWERK
+## om iets te plaatsen of te veranderen. Schuin of recht van boven; twee vingers bewegen en zoomen de kaart.
 ## Twee vingers schuiven en zoomen. Alles springt op een raster; rood betekent dat het daar niet past.
 ## Open hem tussen de golven met "Stadseditor" in het hoofdmenu of het pauzemenu (of F8). Je indeling wordt vanzelf bewaard;
 ## via de titel krijg je de tekst van de indeling om te delen of in stad_data.gd op te nemen.
@@ -20,6 +20,8 @@ static var debug_enabled := false
 
 var _stad: Stad
 var _side: PanelContainer
+var _side_tabs: VBoxContainer
+var _look_btn: Button
 var _selected_label: Label
 var _load_bar: ProgressBar
 var _sloop_label: Label
@@ -71,6 +73,7 @@ var _marks: Array = []
 
 var _tool := ""             # "" = niets gekozen, een soortnaam = plaatsen, "gum" = weghalen
 var _cat := "gebouw"
+var _look_mode := true
 var _rot := 0
 var _mir := 0
 var _brush := false
@@ -187,18 +190,26 @@ func _make_top() -> void:
 func _make_palette() -> void:
 	_side = _panel(6)
 	_side.name = "Categorieën"
-	var tabs := VBoxContainer.new()
-	tabs.add_theme_constant_override("separation", 3)
-	_side.add_child(tabs)
+	_side_tabs = VBoxContainer.new()
+	_side_tabs.add_theme_constant_override("separation", 3)
+	_side.add_child(_side_tabs)
+	_look_btn = _btn("KIJK", "", _toggle_look_mode, _side_tabs, "oog")
+	_look_btn.name = "VeiligeKijkmodus"
+	_look_btn.custom_minimum_size = Vector2(96, 48)
+	_look_btn.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	_look_btn.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
+	_look_btn.add_theme_constant_override("icon_max_width", 18)
+	_look_btn.add_theme_font_size_override("font_size", 11)
+	_look_btn.tooltip_text = "Veilig rondkijken; kaartacties zijn vergrendeld"
 	for t in TABS:
 		var id: String = t[0]
-		var b := _btn(t[1], "", func(): _pick_tab(id), tabs, id)
+		var b := _btn(t[1], "", func(): _pick_tab(id), _side_tabs, id)
 		b.name = "Categorie_" + id
-		b.custom_minimum_size = Vector2(72, 52)
-		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		b.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
-		b.add_theme_constant_override("icon_max_width", 21)
-		b.add_theme_font_size_override("font_size", 11)
+		b.custom_minimum_size = Vector2(96, 44)
+		b.icon_alignment = HORIZONTAL_ALIGNMENT_LEFT
+		b.vertical_icon_alignment = VERTICAL_ALIGNMENT_CENTER
+		b.add_theme_constant_override("icon_max_width", 18)
+		b.add_theme_font_size_override("font_size", 10)
 		_tab_btns[id] = b
 	_palette = _panel(6)
 	_palette.name = "Bouwbibliotheek"
@@ -365,7 +376,7 @@ func _layout() -> void:
 	_sloop_label.add_theme_font_size_override("font_size", 10 if narrow else 11)
 	_done_btn.custom_minimum_size.x = 68 if narrow else 84
 	_side.position = Vector2(inner.position.x, _top.position.y + 64)
-	_side.size = Vector2(84, 229)
+	_side.size = Vector2(108, _side_tabs.get_combined_minimum_size().y + 12)
 	var library_x := _side.position.x + _side.size.x + 10
 	var library_w := inner.end.x - library_x
 	var library_h := 112.0 if _library_state == LibraryState.COMPACT else minf(188.0, safe.size.y * 0.40)
@@ -417,6 +428,8 @@ func _set_library_state(state: int) -> void:
 
 
 func _toggle_brush() -> void:
+	if _look_mode:
+		return
 	_brush = not _brush
 	_last_brush = Vector2(INF, INF)
 	_refresh()
@@ -441,6 +454,9 @@ func _sync_camera_button() -> void:
 	var oblique := camera != null and bool(camera.get("editor_oblique"))
 	_view_btn.text = "SCHUIN" if oblique else "BOVEN"
 	_view_btn.tooltip_text = "Kijkhoek: schuin of recht van boven. Zoom en kaartpositie blijven gelijk."
+	_look_btn.text = "KIJK" if _look_mode else "BEWERK"
+	_look_btn.tooltip_text = "Veilig rondkijken; kaartacties zijn vergrendeld" if _look_mode else "Bewerken ingeschakeld; tik op KIJK om kaartacties te vergrendelen"
+	EUI.button(_look_btn, _look_mode)
 
 
 func _layout_dynamic() -> void:
@@ -536,6 +552,7 @@ func enter() -> void:
 	_brush = false
 	_cand = {}
 	_tool = ""
+	_look_mode = true
 	_sel = {}
 	_undo.clear()
 	_ptrs.clear()
@@ -612,6 +629,26 @@ func _pick_tab(id: String) -> void:
 	_refresh()
 
 
+func _toggle_look_mode() -> void:
+	_set_look_mode(not _look_mode)
+
+
+func _set_look_mode(enabled: bool) -> void:
+	if _look_mode == enabled:
+		return
+	if enabled:
+		_cancel_drag()
+		_ptrs.clear()
+		_pinch = {}
+		_line_clear()
+	_sel = {}
+	_cand = {}
+	_tool = ""
+	_brush = false
+	_look_mode = enabled
+	_refresh()
+
+
 func _pick_kind(kind: String) -> void:
 	_tool = "" if _tool == kind else kind
 	if Stad.KINDS.has(kind):
@@ -636,7 +673,7 @@ func _refresh() -> void:
 	for t in TABS:
 		var on: bool = (t[0] == "gum" and _tool == "gum") or (t[0] != "gum" and t[0] == _cat and _tool != "gum")
 		EUI.button(_tab_btns[t[0]], on)
-		(_tab_btns[t[0]] as Button).add_theme_font_size_override("font_size", 11)
+		(_tab_btns[t[0]] as Button).add_theme_font_size_override("font_size", 10)
 	if not _cards.has("category_" + _cat):
 		for kind: String in Stad.ORDER[_cat]:
 			if Stad.available(kind):
@@ -729,10 +766,13 @@ func _stats(persist := true) -> void:
 func _update_controls() -> void:
 	if _selected_label == null:
 		return
+	_look_btn.text = "KIJK" if _look_mode else "BEWERK"
+	_look_btn.tooltip_text = "Veilig rondkijken; kaartacties zijn vergrendeld" if _look_mode else "Bewerken ingeschakeld; tik op KIJK om kaartacties te vergrendelen"
+	EUI.button(_look_btn, _look_mode)
 	var kind := String(_sel.get("k", _tool))
 	_selected_label.text = String(Stad.KINDS[kind].name) if Stad.KINDS.has(kind) else "Weg tekenen" if LINE_TOOLS.has(kind) else "Gum" if kind == "gum" else "Draaimodus" if kind == "draai" else "Kies een object"
 	_selected_label.tooltip_text = _selected_label.text
-	_undo_btn.disabled = _undo.is_empty()
+	_undo_btn.disabled = _look_mode or _undo.is_empty()
 	var has_kind := Stad.KINDS.has(kind)
 	var building: bool = has_kind and Stad.KINDS[kind].cat == "gebouw"
 	_mirror_btn.disabled = building or not has_kind
@@ -741,7 +781,7 @@ func _update_controls() -> void:
 	_copy_btn.disabled = _sel.is_empty()
 	_delete_btn.disabled = _sel.is_empty()
 	_brush_btn.disabled = not (_tool == "gum" or has_kind and Stad.KINDS[kind].cat == "straat" and _is_place())
-	var show_actions := has_kind or _tool in ["gum", "draai"] or LINE_TOOLS.has(_tool)
+	var show_actions := not _look_mode and (has_kind or _tool in ["gum", "draai"] or LINE_TOOLS.has(_tool))
 	if _actions.visible != show_actions:
 		_actions.visible = show_actions
 		call_deferred("_layout")
@@ -850,6 +890,8 @@ func _unhandled_key_input(e: InputEvent) -> void:
 		return
 	if not Game.editing:
 		return
+	if _look_mode and e.keycode != KEY_ESCAPE and e.keycode != KEY_F3:
+		return
 	match e.keycode:
 		KEY_R:
 			_rotate()
@@ -925,6 +967,9 @@ func _down(id: int, pos: Vector2) -> void:
 		_pinch = {"d": maxf(1.0, (v[0] - v[1]).length()), "zoom": Game.ecam.z, "mid": (v[0] + v[1]) * 0.5}
 		return
 	if _ptrs.size() > 2:
+		return
+	if _look_mode:
+		_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id}
 		return
 	var g: Variant = _ground(pos)
 	if g == null:
@@ -1091,7 +1136,7 @@ func _up(id: int, pos := Vector2.INF) -> void:
 
 
 func _aim(g: Vector3) -> void:
-	if not _is_place():
+	if _look_mode or not _is_place():
 		return
 	var s: float = Stad.KINDS[_tool].snap
 	_cand = {"k": _tool, "x": roundf(g.x / s) * s, "z": roundf(g.z / s) * s, "r": _rot, "m": _mir}
@@ -1105,14 +1150,14 @@ func _hover(pos: Vector2) -> void:
 
 
 func _stamp() -> void:
-	if _cand.is_empty():
+	if _look_mode or _cand.is_empty():
 		return
 	if _place_cand():
 		_last_brush = Vector2(_cand.x, _cand.z)
 
 
 func _place_cand() -> bool:
-	if _cand.is_empty():
+	if _look_mode or _cand.is_empty():
 		return false
 	var p := Stad.problem(_cand, _stad.items)
 	if p != "":
@@ -1197,6 +1242,8 @@ func _erase_at(g: Vector3) -> void:
 
 
 func _delete_sel() -> void:
+	if _look_mode:
+		return
 	if _sel.is_empty():
 		_say("TIK EERST OP IETS")
 		return
@@ -1211,6 +1258,8 @@ func _delete_sel() -> void:
 ## DRAAI: met een soort gekozen draait het plaatsvlak; anders zet het draaimodus aan of uit.
 ## In draaimodus draait elke tik op een onderdeel het een kwartslag.
 func _rotate() -> void:
+	if _look_mode:
+		return
 	if _is_place():
 		_rot = (_rot + 1) % 4
 		if not _cand.is_empty():
@@ -1232,6 +1281,8 @@ func _turn(it: Dictionary) -> void:
 
 
 func _mirror() -> void:
+	if _look_mode:
+		return
 	var kind := String(_sel.get("k", _tool))
 	if Stad.KINDS.has(kind) and Stad.KINDS[kind].cat == "gebouw":
 		_say("GEBOUWEN KUNNEN NIET SPIEGELEN")
@@ -1267,6 +1318,8 @@ func _apply_change(it: Dictionary, cand: Dictionary) -> void:
 
 
 func _copy() -> void:
+	if _look_mode:
+		return
 	if _sel.is_empty():
 		_say("TIK EERST OP IETS")
 		return

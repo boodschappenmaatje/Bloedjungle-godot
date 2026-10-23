@@ -59,6 +59,8 @@ func _run() -> void:
 	ed.enter()
 	await _settle()
 	_check(camera.editor_oblique and ed._view_btn.text == "SCHUIN", "schuin is standaard")
+	_check(ed._look_mode and ed._look_btn.text == "KIJK", "editor opent veilig vergrendeld")
+	ed._set_look_mode(false)
 	var selected_center: Vector3 = game.ecam
 	ed._pick_kind("magazijn")
 	var preview: Dictionary = ed._cand.duplicate()

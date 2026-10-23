@@ -126,7 +126,7 @@ func _layout_checks(label: String) -> void:
 			var b: Control = panels[j]
 			if b.is_visible_in_tree():
 				_check(not a.get_global_rect().intersects(b.get_global_rect()), label + ": overlap " + a.name + "/" + b.name)
-	for b in [ed._title_btn, ed._undo_btn, ed._done_btn, ed._palette_handle, ed._view_btn] + ed._tab_btns.values() + ed._action_grid.get_children() + ed._zoom_box.get_children():
+	for b in [ed._title_btn, ed._undo_btn, ed._done_btn, ed._palette_handle, ed._view_btn, ed._look_btn] + ed._tab_btns.values() + ed._action_grid.get_children() + ed._zoom_box.get_children():
 		_check(b.size.x >= 43.9 and b.size.y >= 43.9, label + ": aanraakvlak " + b.name)
 	var top_row = ed._top.get_child(0)
 	for child in top_row.get_children():
@@ -159,8 +159,25 @@ func _run() -> void:
 	await _frames(45)
 	_check(game.editing and game.build_mode and ed._ui.visible, "editor openen")
 	_check(ed._library_state == 1, "compact is standaard")
+	_check(ed._look_mode and ed._look_btn.text == "KIJK", "veilige kijkstand staat standaard aan")
 	_check(ed._tab_btns.size() == 4, "vier categorieën")
 	_check(ed._undo_btn.disabled, "undo aanvankelijk uit")
+	var safe_before: Array = city.to_lines(city.current.items)
+	var cam_before: Vector3 = game.ecam
+	var look_start := Vector2(620, 320)
+	_touch(31, look_start, true)
+	_drag(31, look_start + Vector2(45, 24), Vector2(45, 24))
+	_touch(31, look_start + Vector2(45, 24), false)
+	_check(city.to_lines(city.current.items) == safe_before and ed._undo.is_empty(), "slepen in KIJK verplaatst of verwijdert niets")
+	_check(game.ecam != cam_before, "slepen in KIJK verschuift alleen de kaart")
+	ed._pick_tab("gum")
+	_check(city.to_lines(city.current.items) == safe_before, "gum kiezen in KIJK wist geen stadsobject")
+	ed._pick_kind("bankje")
+	ed._aim(Vector3(18, 0, -118))
+	ed._stamp()
+	_check(ed._cand.is_empty() and city.to_lines(city.current.items) == safe_before, "plaats-preview en stempelen zijn vergrendeld in KIJK")
+	ed._set_look_mode(false)
+	_check(not ed._look_mode and ed._look_btn.text == "BEWERK" and ed._tool.is_empty(), "bewerkstand bewust inschakelbaar zonder achtergebleven wisactie")
 	for cat in ["weg", "straat", "gebouw"]:
 		ed._pick_tab(cat)
 		for kind in city.ORDER[cat]:

@@ -422,11 +422,11 @@ func _process(delta: float) -> void:
 	if where != _inside:
 		_inside = where
 		_apply_view()
-	# onder de luifel: de luifel gaat weg zodat je jezelf en de pompen ziet
+	# onder de luifel of in de winkel erachter: de luifel gaat weg zodat je jezelf en de pompen ziet
 	for c in _covers:
-		var under := false
+		var under := _inside >= 0
 		if p != null and not p.driving:
-			under = _in_rect(c[1], to_local(p.global_position), 0.2)
+			under = under or _in_rect(c[1], to_local(p.global_position), 0.2)
 		(c[0] as Node3D).visible = not under
 	# deuren gaan open als er iemand dichtbij is
 	for d in doors:

@@ -781,7 +781,8 @@ func _update_controls() -> void:
 	_copy_btn.disabled = _sel.is_empty()
 	_delete_btn.disabled = _sel.is_empty()
 	_brush_btn.disabled = not (_tool == "gum" or has_kind and Stad.KINDS[kind].cat == "straat" and _is_place())
-	var show_actions := not _look_mode and (has_kind or _tool in ["gum", "draai"] or LINE_TOOLS.has(_tool))
+	var selected_city_item := not _sel.is_empty() and _stad != null and _stad.items.has(_sel)
+	var show_actions := not _look_mode and selected_city_item
 	if _actions.visible != show_actions:
 		_actions.visible = show_actions
 		call_deferred("_layout")

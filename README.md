@@ -19,6 +19,8 @@ De [Stadseditor 2.0](docs/stadseditor-2/README.md) gebruikt een compacte zwevend
 
 [Nieuw in v87](docs/stadseditor-v87/README.md): veilige KIJK-stand voorkomt onbedoeld plaatsen, verplaatsen of wissen in de stadseditor.
 
+[Nieuw in v88](docs/stadseditor-v88/README.md): de objectwerkbalk verschijnt alleen bij een geselecteerd, al geplaatst stadsobject.
+
 De bedoelde look staat in `referentie-stijl.png` (donkere, dichte jungle, schuine camera, echte 3D-gebouwen, zon met lange schaduwen). Alles wat we bouwen houdt dat als richting aan. Dit is nu gedaan: de zwaardere (mobiele) renderer met schaduwen, mist, gloed en filmkleuren, een bodem met gras, modder en paden, zelfgemaakte palmen, struiken en varens die in de wind bewegen, en een basis met muur, poortposten, bunker met zandzakken en antenne, vier wachttorens, hutten en kratten. De webversie gebruikt automatisch de lichtere renderer.
 
 Nog niet: winkel, andere wapens kopen, granaten, gebouwen, jeep, gore, geluid. Dat komt stap voor stap.

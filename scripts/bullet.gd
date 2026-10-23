@@ -146,6 +146,11 @@ func _physics_process(delta: float) -> void:
 	if sink > 0.0:
 		dir.y = -sink if global_position.y > 1.3 else 0.0
 	var step := dir * speed * delta
+	for k: Brandkraan in Brandkraan.all:   # schiet je er tegenaan, dan begint de kogel in de botsvorm en ziet de straal hem niet
+		if is_instance_valid(k) and not k.sprayed and (mask & Barrel.LAYER) != 0 and k.inside(global_position):
+			k.hit(dmg, dir, from_player)
+			queue_free()
+			return
 	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + step, mask)
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	if hit:

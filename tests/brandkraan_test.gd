@@ -8,6 +8,7 @@ var Stad
 var ks: Array = []
 var ls: Array = []
 var car: Node3D
+var close
 var Bk
 
 
@@ -37,6 +38,12 @@ func _process(_d: float) -> bool:
 		for i in 3:
 			ks[0].hit(12.0, Vector3.RIGHT, true)
 		print("na 3 kogels spuit: ", ks[0].sprayed, " (verwacht true)")
+		# kogels die er vlak tegenaan beginnen (schutter staat tegen de kraan)
+		close = Bk.new()
+		root.add_child(close)
+		close.global_position = Vector3(40, 0, -80)
+		for i in 5:
+			load("res://scripts/bullet.gd").fire(root, Vector3(40.2, 0.9, -80.1), 0.0, 60.0, 12.0, 1.0, true)
 		# ontploffing 3 m verderop
 		Bk.catch_blast(Vector3(8, 0, -94), 3.0)
 		print("na ontploffing spuit: ", ks[1].sprayed, " (verwacht true)")
@@ -57,6 +64,8 @@ func _process(_d: float) -> bool:
 	if frames == 34:
 		print("voertuig op 4,5 m (net buiten): ", ks[2].sprayed, " (verwacht false)")
 		car.global_position = ks[2].global_position + Vector3(0, 0, 2.2)   # tegen de kraan aan, zoals een geblokkeerde auto
+	if frames == 30:
+		print("kogels van dichtbij: ", close.sprayed, " (verwacht true)")
 	if frames == 50:
 		print("voertuig eroverheen: ", ks[2].sprayed, " (verwacht true)")
 		var playing: String = ks[0]._anim.current_animation if ks[0]._anim else "-"

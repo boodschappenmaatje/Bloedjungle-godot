@@ -23,7 +23,7 @@ var _side: PanelContainer
 var _side_tabs: VBoxContainer
 var _look_btn: Button
 var _selected_label: Label
-var _load_bar: ProgressBar
+var _fps_bar: ProgressBar
 var _sloop_label: Label
 var _title_btn: Button
 var _undo_btn: Button
@@ -52,7 +52,7 @@ var _last_toolbar_signature := ""
 var _rot_btn: Button
 var _ui: Control
 var _top: PanelContainer
-var _count: Label
+var _fps_label: Label
 var _hint: Label
 var _msg: Label
 var _tab_btns := {}
@@ -84,6 +84,7 @@ var _drag: Dictionary = {}
 var _pinch: Dictionary = {}
 var _touch := false
 var _msg_t := 0.0
+var _fps_refresh := 0.0
 var _cand: Dictionary = {}
 var _last_brush := Vector2(INF, INF)
 var _hidden: Array = []
@@ -157,17 +158,17 @@ func _make_top() -> void:
 	_selected_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	_selected_label.clip_text = true
 	row.add_child(_selected_label)
-	_load_bar = ProgressBar.new()
-	_load_bar.name = "Stadsbelasting"
-	_load_bar.show_percentage = false
-	_load_bar.max_value = Stad.WEIGHT_MAX
-	_load_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_load_bar.add_theme_stylebox_override("background", UI.box(Color("30392d"), Color.TRANSPARENT, 0, 4, 0))
-	_load_bar.add_theme_stylebox_override("fill", UI.box(EUI.GREEN, Color.TRANSPARENT, 0, 4, 0))
-	_load_bar.custom_minimum_size = Vector2(70, 8)
-	row.add_child(_load_bar)
-	_count = UI.label("", EUI.font(), 13, EUI.INK)
-	row.add_child(_count)
+	_fps_bar = ProgressBar.new()
+	_fps_bar.name = "ActueleFPS"
+	_fps_bar.show_percentage = false
+	_fps_bar.max_value = 60.0
+	_fps_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_fps_bar.add_theme_stylebox_override("background", UI.box(Color("30392d"), Color.TRANSPARENT, 0, 4, 0))
+	_fps_bar.add_theme_stylebox_override("fill", UI.box(EUI.GREEN, Color.TRANSPARENT, 0, 4, 0))
+	_fps_bar.custom_minimum_size = Vector2(70, 8)
+	row.add_child(_fps_bar)
+	_fps_label = UI.label("", EUI.font(), 13, EUI.INK)
+	row.add_child(_fps_label)
 	_sloop_label = UI.label("", EUI.font(500), 11, EUI.MUTED)
 	_sloop_label.tooltip_text = "Maximaal %d sloopbare gebouwen tegelijk actief" % Stad.MAX_SLOOP
 	row.add_child(_sloop_label)
@@ -371,8 +372,8 @@ func _layout() -> void:
 	_title_btn.add_theme_font_size_override("font_size", 11 if narrow else 13)
 	_selected_label.custom_minimum_size.x = 40 if narrow else 74
 	_selected_label.add_theme_font_size_override("font_size", 12 if narrow else 13)
-	_load_bar.custom_minimum_size.x = 32 if narrow else 64
-	_count.add_theme_font_size_override("font_size", 11 if narrow else 13)
+	_fps_bar.custom_minimum_size.x = 32 if narrow else 64
+	_fps_label.add_theme_font_size_override("font_size", 11 if narrow else 13)
 	_sloop_label.add_theme_font_size_override("font_size", 10 if narrow else 11)
 	_done_btn.custom_minimum_size.x = 68 if narrow else 84
 	_side.position = Vector2(inner.position.x, _top.position.y + 64)
@@ -604,6 +605,10 @@ func _process(delta: float) -> void:
 	_toast.visible = Game.editing and _msg.text != ""
 	if Game.editing:
 		_layout_dynamic()
+		_fps_refresh -= delta
+		if _fps_refresh <= 0.0:
+			_fps_refresh = 0.5
+			_update_performance_display(Engine.get_frames_per_second(), GameSettings.target_fps())
 
 
 func _say(t: String) -> void:
@@ -743,24 +748,36 @@ func _chip(tool: String, label: String, icon_kind: String) -> void:
 func _stats(persist := true) -> void:
 	if _stad == null:
 		return
-	var weight := Stad.weight_of(_stad.items)
-	var level := "LICHT"
-	var color: Color = EUI.GREEN
-	if weight >= Stad.WEIGHT_MAX:
-		level = "TE ZWAAR"
-		color = Color("ed8e78")
-	elif weight >= Stad.WEIGHT_MAX * 0.6:
-		level = "MIDDEL"
-		color = EUI.GOLD
-	_count.text = "%d / %d · %s" % [roundi(weight), roundi(Stad.WEIGHT_MAX), level]
-	_count.add_theme_color_override("font_color", color)
-	_load_bar.value = weight
-	_load_bar.tooltip_text = "Stadsbelasting: %.1f / %d" % [weight, Stad.WEIGHT_MAX]
-	_load_bar.add_theme_stylebox_override("fill", UI.box(color, Color.TRANSPARENT, 0, 4, 0))
 	_sloop_label.text = "SLOOPBAAR %d" % Stad.sloop_count(_stad.items)
+	_update_performance_display(Engine.get_frames_per_second(), GameSettings.target_fps())
 	_update_controls()
 	if persist:
 		_stad.save_user()
+
+
+func _update_performance_display(fps: float, target: float) -> void:
+	var goal := maxf(1.0, target)
+	var actual := maxf(0.0, fps)
+	var ratio := actual / goal
+	var status := "METEN"
+	var color: Color = EUI.MUTED
+	if actual > 0.0:
+		if ratio >= 0.93:
+			status = "OP DOEL"
+			color = EUI.GREEN
+		elif ratio >= 0.75:
+			status = "ONDER DOEL"
+			color = EUI.GOLD
+		else:
+			status = "LAGE FPS"
+			color = Color("ed8e78")
+	_fps_label.text = "%d FPS · %s" % [roundi(actual), status]
+	_fps_label.add_theme_color_override("font_color", color)
+	_fps_label.tooltip_text = "Gemeten: %d FPS · doel: %d FPS" % [roundi(actual), roundi(goal)]
+	_fps_bar.max_value = goal
+	_fps_bar.value = minf(actual, goal)
+	_fps_bar.tooltip_text = _fps_label.tooltip_text
+	_fps_bar.add_theme_stylebox_override("fill", UI.box(color, Color.TRANSPARENT, 0, 4, 0))
 
 
 func _update_controls() -> void:

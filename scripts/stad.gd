@@ -337,7 +337,7 @@ func _fountain() -> Node3D:
 
 
 ## Straatmeubilair: het model uit assets/straatmeubilair.glb, met een botsvorm waar je er niet doorheen mag lopen.
-const PROP_PARTS := {"lantaarn": "Lantaarn", "bankje": "Bankje", "bushokje": "Bushokje", "prullenbak": "Prullenbak", "brandkraan": "Brandkraan",
+const PROP_PARTS := {"bankje": "Bankje", "bushokje": "Bushokje", "prullenbak": "Prullenbak",
 		"container": "Container", "bord": "Bord", "stoplicht": "Stoplicht", "zandzakken": "Zandzakken", "puin": "Puin", "hek": "Hek",
 		"boom": "Boom", "struik": "Struik"}
 ## Botsvormen: [midden, maat] in meters (voorkant = +z).
@@ -349,7 +349,6 @@ const PROP_BOXES := {
 	"boom": [Vector3(0, 1.0, 0), Vector3(0.6, 2.0, 0.6)],
 	"container": [Vector3(0, 0.6, 0), Vector3(1.9, 1.2, 0.95)],
 	"prullenbak": [Vector3(0, 0.45, 0), Vector3(0.5, 0.9, 0.5)],
-	"brandkraan": [Vector3(0, 0.4, 0), Vector3(0.4, 0.8, 0.4)],
 }
 
 
@@ -361,6 +360,10 @@ func _prop(kind: String) -> Node3D:
 		root.add_child(mi)
 		if PROP_BOXES.has(kind):
 			Kit.collider(root, PROP_BOXES[kind][0], PROP_BOXES[kind][1], Kit.LAYER_WALL)
+	elif kind == "brandkraan":
+		return Brandkraan.new()
+	elif kind == "lantaarn":
+		return Lantaarn.new()
 	elif kind.begins_with("auto"):
 		_car(root, kind)
 	return root

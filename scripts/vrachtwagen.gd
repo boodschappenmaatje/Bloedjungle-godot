@@ -74,6 +74,7 @@ var _fx_player: AudioStreamPlayer
 
 
 func _ready() -> void:
+	add_to_group("voertuigen")   # brandkranen spuiten als je erover rijdt
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 	process_physics_priority = -1  # eerst de truck, dan de soldaten die erop zitten
 	_body_base = _body.transform

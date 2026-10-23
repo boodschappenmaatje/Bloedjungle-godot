@@ -49,6 +49,7 @@ var _btn: ActionBtn
 
 
 func _ready() -> void:
+	add_to_group("voertuigen")   # brandkranen spuiten als je erover rijdt
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 	_body_base = _body.transform
 	_mg_base = _mg.transform

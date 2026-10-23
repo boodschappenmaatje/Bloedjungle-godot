@@ -47,6 +47,7 @@ var _ram_cd := 0.0
 
 
 func _ready() -> void:
+	add_to_group("voertuigen")   # brandkranen spuiten als je erover rijdt
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 	var layer := CanvasLayer.new()
 	layer.layer = 5

@@ -43,12 +43,21 @@ func _process(_d: float) -> bool:
 		# voertuig
 		car = Node3D.new()
 		car.add_to_group("voertuigen")
+		var csh := CollisionShape3D.new()
+		csh.name = "Shape"
+		var bx := BoxShape3D.new()
+		bx.size = Vector3(1.7, 1.8, 3.6)
+		csh.shape = bx
+		car.add_child(csh)
 		root.add_child(car)
 		car.global_position = Vector3(30, 0, -96)
 	if frames == 30:
 		print("voertuig ver weg: ", ks[2].sprayed, " (verwacht false)")
-		car.global_position = Vector3(16.5, 0, -96)
-	if frames == 40:
+		car.global_position = ks[2].global_position + Vector3(0, 0, 4.5)
+	if frames == 34:
+		print("voertuig op 4,5 m (net buiten): ", ks[2].sprayed, " (verwacht false)")
+		car.global_position = ks[2].global_position + Vector3(0, 0, 2.2)   # tegen de kraan aan, zoals een geblokkeerde auto
+	if frames == 50:
 		print("voertuig eroverheen: ", ks[2].sprayed, " (verwacht true)")
 		var playing: String = ks[0]._anim.current_animation if ks[0]._anim else "-"
 		print("animatie: ", playing)

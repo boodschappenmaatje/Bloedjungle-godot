@@ -9,6 +9,14 @@ var frames := 0
 var game: Node
 var move := Vector2.ZERO
 var k
+var _wp := 0
+var _top := 0.0
+var _stuck := 0
+var _last := Vector3.ZERO
+# route langs de torendeur, trap A, trap B en ladder C naar het torendak en weer naar beneden (x, z, naam)
+var _route := [[0.0, 8.2, "deur"], [-1.3, 8.4, "voet A"], [-1.3, 6.2, "boven A (3,9)"], [-1.3, 5.6, "overloop 1"], [0.0, 5.7, "gang 1"], [1.35, 5.55, "voet B"],
+	[1.35, 8.4, "boven B (7,5)"], [0.0, 8.5, "gang 2"], [-1.3, 8.5, "voet C"], [-1.3, 5.7, "torendak (11,1)"], [0.0, 7.0, "midden dak"],
+	[-1.3, 6.5, "gat C"], [-1.3, 8.5, "beneden C"], [0.0, 8.5, "gang 2b"], [1.35, 7.0, "gat B"], [1.35, 5.6, "beneden B"], [-1.3, 5.7, "naar A"], [-1.3, 8.4, "beneden A"]]
 
 
 func _initialize() -> void:
@@ -46,33 +54,31 @@ func _process(_d: float) -> bool:
 				n.set_process(false)
 		k = get_nodes_in_group("kerk")[0]
 		print("kerk op ", k.global_position, " muurstukken ", k.segs.size(), " deuren ", k.doors.size(), " lagen ", k._groups.size())
-		_at(Vector3(0.0, 0, 12.0))
-		move = Vector2(0, -1)
-	if t == 130:
-		print("door de torendeur: ", _l(), " binnen=", k._inside, " schipdak=", k._dak.visible, " toren1 zichtbaar=", k._groups[1].visible, " weg voor camera=", k._hidden.size())
-		move = Vector2.ZERO
-		_at(Vector3(-1.48, 0.3, 9.0))
-		move = Vector2(0, -1)
-	if false:
-		print("  ", t, " ", _l(), " y=", game.player.position.y, " fa=", k.floor_at(game.player.global_position, game.player.position.y), " tower=", game.player.tower)
-	if t > 130 and t < 160 and t % 5 == 0 and false:
-		print("  ", t, " ", _l(), " floor_at=", k.floor_at(game.player.global_position, game.player.position.y), " y=", game.player.position.y, " parent_y=", game.player.get_parent().global_position.y)
-	if t == 160:
-		print("trap A halverwege: ", _l())
-	if t == 260:
-		print("boven trap A (3.9): ", _l(), " binnen=", k._inside, " toren1=", k._groups[1].visible, " toren2=", k._groups[2].visible, " schipdak=", k._dak.visible)
-		_at(Vector3(1.5, 3.9, 5.5))
-		move = Vector2(0, 1)
-	if t == 420:
-		print("boven trap B (7.5): ", _l(), " binnen=", k._inside, " toren2=", k._groups[2].visible, " toren3=", k._groups[3].visible)
-		_at(Vector3(-1.48, 7.5, 8.5))
-		move = Vector2(0, -1)
-	if t == 640:
-		print("door het luik op het torendak (11.1): ", _l(), " binnen=", k._inside, " toren3=", k._groups[3].visible)
-		move = Vector2(1, 0)
-	if t == 760:
-		print("over het torendak naar oost (kantelen houden je tegen): ", _l())
-		move = Vector2(0, 1)
+		_at(Vector3(0.0, 0, 13.0))
+	if t > 0 and t < 1500 and _wp < _route.size():
+		var w: Array = _route[_wp]
+		var d := Vector2(w[0] - _l().x, w[1] - _l().z)
+		if d.length() < 0.3:
+			print("  bij ", w[2], ": ", _l(), " binnen=", k._inside)
+			_wp += 1
+			if _wp == _route.size():
+				move = Vector2.ZERO
+				print("route klaar, hoogste y ", _top)
+				frames = 860 + 2
+		else:
+			move = d.normalized()
+		_top = maxf(_top, game.player.position.y)
+		if (_l() - _last).length() < 0.01:
+			_stuck += 1
+		else:
+			_stuck = 0
+		_last = _l()
+		if _stuck > 60:
+			print("VAST bij ", w[2], " ", _l())
+			_wp = 999
+			frames = 860 + 2
+	if t > 0 and t < 860 and _wp >= _route.size():
+		return false
 	if t == 860:
 		print("naar voor (kantelen): ", _l())
 		move = Vector2.ZERO

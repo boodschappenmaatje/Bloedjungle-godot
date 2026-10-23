@@ -243,6 +243,7 @@ var _inside := -1           # -1 buiten, anders de laag waarop je staat
 var _hidden: Array = []     # muurstukken die nu voor de camera weg zijn
 var pumps: Array = []       # pompen en olievaten (benzinestation)
 var _covers: Array = []     # [knooppunt, rechthoek]: gaat weg als je eronder staat (luifel)
+var _meubels: Array = []    # {body, group, level}: botsvormen van de inrichting (zie _furniture)
 
 
 ## Zet een huis neer in de wereld (Level), yaw in radialen.
@@ -301,6 +302,7 @@ func _ready() -> void:
 		if d:
 			doors.append({"node": d, "closed": d.rotation.y, "t": 0.0})
 	_guards()
+	_furniture()
 
 
 func _exit_tree() -> void:
@@ -360,6 +362,143 @@ func _guards() -> void:
 			_guard_bodies[part] = b
 		_box(_guard_bodies[part], g[0], g[1])
 	_guard_body = _guard_bodies.get("")
+
+
+## Meubels zijn massief: van elk knooppunt "Inrichting*" in het model (de samengevoegde meubels van een laag) wordt elk los
+## voorwerp een botsblok, zodat je er niet doorheen loopt. Nieuwe gebouwen krijgen dit vanzelf zolang het meubilair in een mesh
+## "Inrichting<laag>" onder de groep van die laag zit. Een voorwerp is een groep driehoeken die dezelfde hoekpunten delen.
+## Niet massief: platte dingen op de vloer (kleden), dingen die hoger beginnen dan je lang bent (lampen, ventilators) en piepkleine
+## dingen (poten, flessen, spijlen).
+const FURN_MIN_AREA := 0.012     # m2 grondvlak
+const FURN_MIN_TOP := 0.06       # m: lager dan dit boven de vloer = kleed
+const FURN_MAX_BOTTOM := 1.6     # m: begint het hoger boven de vloer, dan loop je eronderdoor
+
+
+func _furniture() -> void:
+	var holder := Node3D.new()
+	holder.name = "Meubels"
+	add_child(holder)
+	var zones := _door_zones()
+	for mi: MeshInstance3D in model.find_children("Inrichting*", "MeshInstance3D", true, false):
+		var group := String(mi.get_parent().name)
+		var gi: int = spec.groups.find(group)
+		var level: float = levels[gi] if gi >= 0 else levels[0]
+		var body := StaticBody3D.new()
+		body.collision_layer = Kit.LAYER_WALL
+		body.collision_mask = 0
+		body.set_meta("nocam", true)   # meubels zijn binnen: de camera kijkt er doorheen
+		holder.add_child(body)
+		var n := 0
+		for bb: AABB in _objects(mi):
+			if bb.end.y - level < FURN_MIN_TOP or bb.position.y - level > FURN_MAX_BOTTOM or bb.size.x * bb.size.z < FURN_MIN_AREA:
+				continue
+			if _in_doorway(bb, zones):
+				continue
+			var cs := CollisionShape3D.new()
+			var sh := BoxShape3D.new()
+			sh.size = bb.size
+			cs.shape = sh
+			cs.position = bb.get_center()
+			body.add_child(cs)
+			n += 1
+		if n == 0:
+			body.queue_free()
+		else:
+			_meubels.append({"body": body, "group": group, "level": maxi(gi, 0)})
+
+
+## Voor elke deur een strook van de breedte van de opening en 0,6 m aan weerszijden, en de trappen zelf: daar mag geen meubel staan,
+## anders kom je niet meer door de deur of de trap op. Meubels die erin vallen, krijgen geen botsblok. Gemeten in de ruimte van dit gebouw (xz-rechthoek + hoogte).
+func _door_zones() -> Array:
+	var zones: Array = []
+	for nm: String in spec.doors:
+		var d: Node3D = model.find_child(nm, true, false)
+		if d == null:
+			continue
+		var xf := global_transform.affine_inverse() * d.global_transform
+		var a := xf * Vector3(0.0, 0.0, -0.6)
+		var b := xf * Vector3(0.94, 0.0, 0.6)
+		var r := Rect2(Vector2(minf(a.x, b.x), minf(a.z, b.z)), Vector2(absf(b.x - a.x), absf(b.z - a.z)))
+		zones.append([r, xf.origin.y, xf.origin.y + 1.8])
+	# trappen: wat in de trap of tegen de wang staat (trapmuurtjes en dergelijke) heeft een eigen botsvlak in "guards"
+	for st in spec.stairs:
+		var z0 := minf(-st[2], -st[3])
+		var z1 := maxf(-st[2], -st[3])
+		zones.append([Rect2(Vector2(st[0] - 0.1, z0 - 0.1), Vector2(st[1] - st[0] + 0.2, z1 - z0 + 0.2)), levels[st[4]], levels[st[5]] + 1.8])
+	return zones
+
+
+func _in_doorway(bb: AABB, zones: Array) -> bool:
+	var r := Rect2(Vector2(bb.position.x, bb.position.z), Vector2(bb.size.x, bb.size.z))
+	for z in zones:
+		if r.intersects(z[0]) and bb.end.y > z[1] and bb.position.y < z[2]:
+			return true
+	return false
+
+
+## De losse voorwerpen van een mesh als AABB's in de ruimte van dit gebouw.
+func _objects(mi: MeshInstance3D) -> Array:
+	var xf := global_transform.affine_inverse() * mi.global_transform
+	var parent := {}   # hoekpunt -> ouder (union-find)
+	var mesh := mi.mesh
+	var surfaces: Array = []
+	for si in mesh.get_surface_count():
+		var arr := mesh.surface_get_arrays(si)
+		var vs: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
+		var idx: PackedInt32Array = arr[Mesh.ARRAY_INDEX]
+		if idx.is_empty():
+			idx = PackedInt32Array(range(vs.size()))
+		var keys := PackedVector3Array()
+		keys.resize(vs.size())
+		for i in vs.size():
+			var k := Vector3i((vs[i] * 1000.0).round())
+			keys[i] = Vector3(k)
+			if not parent.has(keys[i]):
+				parent[keys[i]] = keys[i]
+		for t in range(0, idx.size() - 2, 3):
+			_union(parent, keys[idx[t]], keys[idx[t + 1]])
+			_union(parent, keys[idx[t + 1]], keys[idx[t + 2]])
+		surfaces.append([vs, keys])
+	var boxes := {}
+	for sv in surfaces:
+		var vs: PackedVector3Array = sv[0]
+		var keys: PackedVector3Array = sv[1]
+		for i in vs.size():
+			var r := _find(parent, keys[i])
+			var p := xf * vs[i]
+			if boxes.has(r):
+				boxes[r] = (boxes[r] as AABB).expand(p)
+			else:
+				boxes[r] = AABB(p, Vector3.ZERO)
+	return boxes.values()
+
+
+static func _find(parent: Dictionary, k: Vector3) -> Vector3:
+	var r := k
+	while parent[r] != r:
+		r = parent[r]
+	var c := k
+	while parent[c] != r:
+		var nx: Vector3 = parent[c]
+		parent[c] = r
+		c = nx
+	return r
+
+
+static func _union(parent: Dictionary, a: Vector3, b: Vector3) -> void:
+	var ra := _find(parent, a)
+	var rb := _find(parent, b)
+	if ra != rb:
+		parent[ra] = rb
+
+
+## Meubels van ingestorte verdiepingen en delen verdwijnen mee.
+func _drop_furniture(from_level := -1, groups: Array = []) -> void:
+	for m in _meubels.duplicate():
+		if (from_level >= 0 and int(m.level) >= from_level) or groups.has(m.group):
+			if is_instance_valid(m.body):
+				(m.body as Node).queue_free()
+			_meubels.erase(m)
 
 
 func _box(body: StaticBody3D, pos: Vector3, size: Vector3) -> void:
@@ -714,6 +853,7 @@ func _check_collapse() -> void:
 func _fall_from(k: int) -> void:
 	_fall = k
 	_collapsed = true
+	_drop_furniture(k)
 	for j in range(k, levels.size()):
 		var g: Node3D = _groups[j]
 		var vh: Node3D = model.find_child("Vloer%d_heel" % j, true, false)
@@ -805,6 +945,7 @@ func _ruin_part(nm: String) -> void:
 				(s.cs as CollisionShape3D).disabled = true
 				(s.body as StaticBody3D).collision_layer = 0
 				_show_seg(s, false)
+	_drop_furniture(-1, part.hide)
 	for hn: String in part.hide:
 		var n: Node3D = model.find_child(hn, true, false)
 		if n:

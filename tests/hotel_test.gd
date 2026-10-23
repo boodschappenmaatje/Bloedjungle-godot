@@ -52,30 +52,14 @@ func _process(_d: float) -> bool:
 	if t == 320:
 		print("op het bordes naar trap B: ", _l())
 		move = Vector2(0, 1)
-	if t > 320 and t < 480 and t % 10 == 0:
-		print("  B ", t, " ", _l())
-	if t == 400:
-		var q := PhysicsShapeQueryParameters3D.new()
-		var sp := SphereShape3D.new()
-		sp.radius = 0.62
-		q.shape = sp
-		q.transform = Transform3D(Basis(), game.player.global_position + Vector3(0, 0.9, 0))
-		q.collision_mask = 0xFFFFFFFF
-		for r in game.player.get_world_3d().direct_space_state.intersect_shape(q, 20):
-			var c: Node = r.collider
-			print("   bij: ", c.get_path() if c.is_inside_tree() else c, " ", c.get_class(), " pos ", (c as Node3D).global_position - w.global_position if c is Node3D else "")
-	if t == 405:
-		var pl = game.player
-		print("   slide ", pl.get_slide_collision_count(), " vel ", pl.velocity, " wall ", pl.is_on_wall(), " floor ", pl.is_on_floor())
-		for i in pl.get_slide_collision_count():
-			var c = pl.get_slide_collision(i)
-			print("   bots ", c.get_collider(), " n ", c.get_normal(), " at ", c.get_position() - w.global_position)
 	if t == 360:
 		print("trap B halverwege: ", _l())
 	if t == 480:
 		print("boven trap B (6.8): ", _l(), " binnen=", w._inside)
+		move = Vector2(0, -1)   # van de voorste overloop eerst naar achteren tot voor trap C, dan naar het westen
+	if t == 497:
 		move = Vector2(-1, 0)
-	if t == 492:
+	if t == 507:
 		move = Vector2(0, -1)
 	if t == 540:
 		print("trap C halverwege: ", _l())

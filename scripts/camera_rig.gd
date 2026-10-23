@@ -181,7 +181,7 @@ func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vect
 		if hit.is_empty():
 			return desired
 		var c: Object = hit.collider
-		if c is HouseBody and not (c.seg.heel.visible or c.seg.kapot.visible):
+		if c is HouseBody and not (c.seg.heel.is_visible_in_tree() or c.seg.kapot.is_visible_in_tree()):
 			skip.append(hit.rid)
 		elif c is Node and c.has_meta("nocam"):
 			skip.append(hit.rid)

@@ -338,11 +338,19 @@ static func _in_river(p: Vector3) -> bool:
 	var wp := p - Data.WINKEL_POS
 	if wp.x > -6.0 and wp.x < 8.0 and wp.z > -9.0 and wp.z < 16.0:
 		return true  # de winkel, het steegje naar het woonhuis en de straat ervoor
+	var kp := p - Data.KERK_POS
+	if absf(kp.x) < 9.0 and kp.z > -13.0 and kp.z < 15.0:
+		return true  # de kerk, het kerkhof eromheen en het plein voor de toren
 	var front := Data.HUIS_POS.z + 3.5
 	if p.z < Data.river_z(Data.BRIDGE_X) and p.z > front:
 		var t := clampf((Data.river_z(Data.BRIDGE_X) - p.z) / (Data.river_z(Data.BRIDGE_X) - front), 0.0, 1.0)
 		if absf(p.x - lerpf(Data.BRIDGE_X, Data.HUIS_POS.x + 1.0, t)) < 2.6:
 			return true  # paadje van de brug naar de voordeur
+	var kerk_deur := Data.KERK_POS.z + 10.5
+	if p.z < Data.river_z(Data.BRIDGE_X) and p.z > kerk_deur:
+		var t := clampf((Data.river_z(Data.BRIDGE_X) - p.z) / (Data.river_z(Data.BRIDGE_X) - kerk_deur), 0.0, 1.0)
+		if absf(p.x - lerpf(Data.BRIDGE_X, Data.KERK_POS.x, t)) < 2.6:
+			return true  # paadje van de brug naar de kerkdeur
 	return false
 
 

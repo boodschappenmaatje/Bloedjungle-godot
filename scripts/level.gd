@@ -23,6 +23,7 @@ func build_now() -> void:
 	River.build(self)
 	Woonhuis.place(self, Data.HUIS_POS)
 	Woonhuis.place(self, Data.WINKEL_POS, 0.0, "winkel")
+	Woonhuis.place(self, Data.KERK_POS, 0.0, "kerk")
 	Foliage.plant(self)
 	built = true
 
@@ -43,6 +44,7 @@ func build_stepped(progress: Callable) -> void:
 	River.build(self)
 	Woonhuis.place(self, Data.HUIS_POS)
 	Woonhuis.place(self, Data.WINKEL_POS, 0.0, "winkel")
+	Woonhuis.place(self, Data.KERK_POS, 0.0, "kerk")
 	var names := {"palm": "Palmen planten...", "bush": "Struiken planten...", "fern": "Varens planten...", "grass": "Gras laten groeien...", "rock": "Rotsen neerleggen..."}
 	var order := ["palm", "bush", "fern", "grass", "rock"]
 	var step := func(kind: String) -> void:

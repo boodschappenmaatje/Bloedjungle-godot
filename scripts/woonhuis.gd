@@ -1,21 +1,28 @@
 class_name Woonhuis
 extends Node3D
-## Gebouwen in de stad achter de brug, gemaakt in Blender (bron/woonhuis, bron/winkel). Eén script voor alle soorten:
-## de maten, trappen en sloopregels staan per soort in _spec().
+## Gebouwen in de stad achter de brug, gemaakt in Blender (bron/woonhuis, bron/winkel, bron/kerk). Eén script voor alle
+## soorten: de maten, trappen en sloopregels staan per soort in _spec().
 ## Je kunt naar binnen: het dak verdwijnt, en ook de verdiepingen boven je, en de muren aan de camerakant
 ## gaan weg zodat je jezelf ziet. Trappen brengen je naar boven (hoogte via floor_at, zoals de toren met elev).
-## Alles kan kapot: elk muurstuk (M0*, M1*, M2*, P*, T_*) gaat van heel naar kapot naar weg, met puin als dekking.
+## Alles kan kapot: elk muurstuk (M0*, M1*, M2*, P*, S*, T_*) gaat van heel naar kapot naar weg, met puin als dekking.
 ## Vallen er genoeg muurstukken van een laag weg, dan zakken de verdiepingen erboven in; bij de winkel stort
-## het hele gebouw in (de 'Ruine' uit het model komt ervoor in de plaats).
+## het hele gebouw in (de 'Ruine' uit het model komt ervoor in de plaats). De kerk heeft twee delen die elk apart
+## instorten: de toren en het schip ('parts', met elk een eigen ruïne).
 ## Lokale maten (Godot): voorkant (deur) aan +Z. Trappen en gaten in Blender-y (b = -z).
 
+const STAIR_LIFT := 1.0
 const HP := {"M": 320.0, "P": 160.0, "T": 140.0}
 
 
 ## Per soort: model, vloerhoogtes, grondvlak, trappen [x0, x1, b0 (onder), b1 (boven), van laag, naar laag],
-## trapgaten [laag, x0, x1, b0, b1], balkon [x0, x1, z0, z1, laag], botsvlakken [midden, maat],
-## instorten: per laag hoeveel muurstukken weg moeten voordat alles erboven valt (0 = nooit).
+## trapgaten [laag, x0, x1, b0, b1], balkon [x0, x1, z0, z1, laag], botsvlakken [midden, maat, (deel)],
+## instorten: regels {pre, need} met "fall" (laag waarvanaf alles inzakt) of "ruin" ("all" of een deel uit "parts").
+## Optioneel: "foot" (grondvlak als rechthoeken [x0, x1, z0, z1]), "floor_rects" (waar een verdieping vloer heeft),
+## "hp" (levens per soort muurstuk), "roof_pre"/"roof_need" (welke muren het dak dragen), "roof_levels" (tot welke
+## laag het dak weggaat als je binnen bent).
 static func _spec(kind: String) -> Dictionary:
+	if kind == "kerk":
+		return _spec_kerk()
 	if kind == "winkel":
 		var f0 := 0.3
 		var f1 := 3.8
@@ -43,7 +50,7 @@ static func _spec(kind: String) -> Dictionary:
 				[Vector3(1.08, f1 + 0.55, 4.45), Vector3(0.1, 1.1, 0.9)],
 			],
 			"doors": ["DeurVoor", "DeurAchter", "DeurBinnen0", "DeurBinnen1", "DeurBinnen2"],
-			"collapse": [5, 5], "ruin": true,
+			"collapse": [{"pre": "M0", "need": 5, "ruin": "all"}, {"pre": "M1", "need": 5, "fall": 2}], "ruin": true,
 			"ruin_boxes": [[Vector3(0, 0.8, 0), Vector3(8.4, 1.6, 7.4)], [Vector3(0, 1.9, 0.2), Vector3(5.6, 1.4, 5.0)]],
 			"roof_y": 8.0, "roof_r": 5.5, "roof_c": Vector3(-0.6, 9.9, 0.8),
 			"fall_piles": [[Vector3(2.0, f0, -0.5), 1.15], [Vector3(-0.8, f0, 1.4), 1.0], [Vector3(1.0, f0, 2.0), 1.0]],
@@ -70,10 +77,61 @@ static func _spec(kind: String) -> Dictionary:
 			[Vector3(2.08, f1 + 0.55, 3.97), Vector3(0.1, 1.1, 0.95)],
 		],
 		"doors": ["DeurVoor", "DeurAchter", "DeurBinnen0", "DeurBinnen1"],
-		"collapse": [6], "ruin": false, "ruin_boxes": [],
+		"collapse": [{"pre": "M0", "need": 6, "fall": 1}], "ruin": false, "ruin_boxes": [],
 		"roof_y": 4.0, "roof_r": 5.0, "roof_c": Vector3(0, 7.0, 0),
 		"fall_piles": [[Vector3(2.2, f0, -0.5), 1.15], [Vector3(-1.0, f0, -1.5), 1.0]],
 		"near": 9.0, "banner": "HUIS INGESTORT",
+	}
+
+
+## Oude kerk: schip (x -4,75..4,75, z -9,5..4,5) met de toren ervoor (x -2,5..2,5, z 4,5..9,5, deur aan +Z).
+## Toren: vloeren 0,3 / 3,9 / 7,5 / 11,1 (ingang, uurwerk, klokkenkamer, torendak met kantelen). Trap A en C langs de
+## westmuur naar achter, trap B langs de oostmuur naar voor. De toren en het schip storten elk apart in.
+static func _spec_kerk() -> Dictionary:
+	var f := [0.3, 3.9, 7.5, 11.1]
+	var rail := 1.1   # hoogte van de relingen rond de trapgaten
+	return {
+		"glb": "res://assets/kerk.glb", "levels": f, "hx": 4.75, "hz": 9.5,
+		"foot": [[-2.5, 2.5, 4.5, 9.5], [-4.75, 4.75, -9.5, 4.5]],
+		"floor_rects": {1: [-2.0, 2.0, 5.0, 9.0], 2: [-2.0, 2.0, 5.0, 9.0], 3: [-2.15, 2.15, 4.85, 9.15]},
+		"groups": ["Begane", "Toren1", "Toren2", "Toren3"],
+		"stairs": [[-2.0, -0.95, -9.0, -6.0, 0, 1], [0.95, 2.0, -5.0, -8.0, 1, 2], [-2.0, -0.95, -9.0, -6.0, 2, 3]],
+		"holes": [[1, -2.0, -0.95, -8.0, -6.0], [2, 0.95, 2.0, -8.0, -6.0], [3, -2.0, -0.95, -8.0, -6.0]],
+		"guards": [
+			# trap A: beschot aan de kamerkant; laag 1: reling om het trapgat en het beschot onder trap B
+			[Vector3(-0.95, 2.0, 7.2), Vector3(0.1, 3.4, 2.4), "Toren"],
+			[Vector3(-0.92, f[1] + rail * 0.5, 7.0), Vector3(0.1, rail, 2.0), "Toren"],
+			[Vector3(-1.46, f[1] + rail * 0.5, 8.03), Vector3(1.08, rail, 0.1), "Toren"],
+			[Vector3(0.95, f[1] + 1.7, 6.8), Vector3(0.1, 3.4, 2.4), "Toren"],
+			# klokkenkamer: reling om trapgat B en het beschot onder de ladder naar het luik
+			[Vector3(0.92, f[2] + rail * 0.5, 7.0), Vector3(0.1, rail, 2.0), "Toren"],
+			[Vector3(1.46, f[2] + rail * 0.5, 5.97), Vector3(1.08, rail, 0.1), "Toren"],
+			[Vector3(-0.95, f[2] + 1.7, 7.2), Vector3(0.1, 3.4, 2.4), "Toren"],
+			# torendak: reling om het luik
+			[Vector3(-0.92, f[3] + rail * 0.5, 7.0), Vector3(0.1, rail, 2.0), "Toren"],
+			[Vector3(-1.46, f[3] + rail * 0.5, 8.03), Vector3(1.08, rail, 0.1), "Toren"],
+		],
+		"doors": ["DeurVoorL", "DeurVoorR", "DeurZij"],
+		"hp": {"M": 650.0, "S": 420.0, "P": 500.0},
+		# twee van de drie torenmuren beneden weg: de toren valt; twee muren van een hogere laag: de rest erboven breekt af;
+		# vijf muren van het schip: het schip stort in (het dak valt al na drie)
+		"collapse": [{"pre": "M0", "need": 2, "ruin": "Toren"}, {"pre": "M1", "need": 2, "fall": 2},
+			{"pre": "M2", "need": 2, "fall": 3}, {"pre": "S0", "need": 5, "ruin": "Schip"}],
+		"ruin": false, "ruin_boxes": [],
+		"parts": {
+			"Toren": {"node": "RuineToren", "rect": [-2.5, 2.5, 4.5, 9.5], "hide": ["TorenVoet", "Toren1", "Toren2", "Toren3"],
+				"pre": ["M", "P"], "fall": 1, "roof": 1, "exit": Vector3(4.2, 0.0, 11.0), "banner": "KERKTOREN INGESTORT",
+				"boxes": [[Vector3(0, 1.1, 7.0), Vector3(5.0, 2.2, 5.0)], [Vector3(0.5, 0.45, 10.8), Vector3(3.8, 0.9, 2.4)]]},
+			"Schip": {"node": "RuineSchip", "rect": [-4.75, 4.75, -9.5, 4.5], "hide": ["Schip", "Dak"],
+				"pre": ["S"], "exit": Vector3(6.8, 0.0, -1.0), "banner": "KERK INGESTORT",
+				"boxes": [[Vector3(0, 0.9, 0.8), Vector3(8.6, 1.8, 6.4)], [Vector3(0, 0.8, -5.0), Vector3(8.6, 1.6, 7.0)]]},
+		},
+		"roof_pre": "S0", "roof_need": 3, "roof_levels": 0,
+		"roof_y": 6.0, "roof_r": 7.5, "roof_c": Vector3(0, 10.5, -2.5), "roof_pile": Vector3(0.0, 0.3, -2.0),
+		"fall_roof": false, "fall_c": Vector3(0, 0, 7.0), "fall_r": Vector2(2.5, 2.5), "fall_banner": "TOREN BREEKT AF",
+		# y < 0: op de vloer onder het stuk dat afbreekt
+		"fall_piles": [[Vector3(0.3, -1.0, 6.6), 0.85], [Vector3(3.4, 0.0, 10.4), 0.9]],
+		"near": 14.0, "banner": "KERK INGESTORT",
 	}
 
 
@@ -94,7 +152,10 @@ var _puin: Dictionary = {}
 var _collapsed := false     # er is iets ingestort
 var _fall := 99             # laagste laag die is ingestort
 var _ruin := false          # het hele gebouw ligt plat
+var _ruined: Dictionary = {}  # delen (kerk: "Toren", "Schip") die al zijn ingestort
+var _gone: Array = []       # knooppunten die met een ingestort deel zijn verdwenen
 var _guard_body: StaticBody3D
+var _guard_bodies: Dictionary = {}   # per deel ("" = het hele gebouw)
 var _inside := -1           # -1 buiten, anders de laag waarop je staat
 var _hidden: Array = []     # muurstukken die nu voor de camera weg zijn
 
@@ -164,7 +225,7 @@ func _add_seg(n: Node3D, heel: MeshInstance3D, kapot: MeshInstance3D) -> void:
 	body.add_child(cs)
 	heel.add_child(body)
 	var kind := String(n.name).substr(0, 1)
-	var hp: float = HP.get(kind, 200.0)
+	var hp: float = spec.get("hp", {}).get(kind, HP.get(kind, 200.0))
 	var s := {"name": String(n.name), "node": n, "heel": heel, "kapot": kapot, "body": body, "cs": cs,
 		"shape_heel": sh_heel, "shape_kapot": null, "hp": hp, "max": hp, "staat": 0,
 		"floor": _seg_floor(String(n.name))}
@@ -173,9 +234,9 @@ func _add_seg(n: Node3D, heel: MeshInstance3D, kapot: MeshInstance3D) -> void:
 	segs.append(s)
 
 
-## Laag van een muurstuk: M1V0 en P1 horen bij laag 1, T_* (tuin) bij 0.
+## Laag van een muurstuk: M1V0 en P1 horen bij laag 1, S0* (kerkschip) en T_* (tuin) bij 0.
 static func _seg_floor(nm: String) -> int:
-	if nm.length() > 1 and (nm[0] == "M" or nm[0] == "P") and nm[1].is_valid_int():
+	if nm.length() > 1 and (nm[0] == "M" or nm[0] == "P" or nm[0] == "S") and nm[1].is_valid_int():
 		return int(nm[1])
 	return 0
 
@@ -186,21 +247,26 @@ func _wall_shape(mi: MeshInstance3D) -> Shape3D:
 	var keep := ArrayMesh.new()
 	for i in src.get_surface_count():
 		var m := src.surface_get_material(i)
-		if m and m.resource_name in ["Pleister", "Binnen", "Baksteen"]:
+		if m and m.resource_name in ["Pleister", "Binnen", "Baksteen", "Steen"]:
 			keep.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, src.surface_get_arrays(i))
 	if keep.get_surface_count() == 0:
 		return src.create_trimesh_shape()
 	return keep.create_trimesh_shape()
 
 
-## Extra botsvlakken: trapwangen, relingen rond de trapgaten en het balkonhek.
+## Extra botsvlakken: trapwangen, relingen rond de trapgaten en het balkonhek. Per deel een eigen body, zodat ze
+## meegaan als dat deel instort (derde waarde = deel).
 func _guards() -> void:
-	_guard_body = StaticBody3D.new()
-	_guard_body.collision_layer = Kit.LAYER_WALL
-	_guard_body.collision_mask = 0
-	add_child(_guard_body)
 	for g in spec.guards:
-		_box(_guard_body, g[0], g[1])
+		var part: String = g[2] if g.size() > 2 else ""
+		if not _guard_bodies.has(part):
+			var b := StaticBody3D.new()
+			b.collision_layer = Kit.LAYER_WALL
+			b.collision_mask = 0
+			add_child(b)
+			_guard_bodies[part] = b
+		_box(_guard_bodies[part], g[0], g[1])
+	_guard_body = _guard_bodies.get("")
 
 
 func _box(body: StaticBody3D, pos: Vector3, size: Vector3) -> void:
@@ -226,23 +292,23 @@ static func floor_at(p: Vector3, cur: float) -> float:
 func _floor_local(lp: Vector3, cur: float) -> float:
 	if _ruin:
 		return -1.0
-	var hx: float = spec.hx
-	var hz: float = spec.hz
 	var b := -lp.z
 	# balkon: alleen voor wie boven is
-	var bal: Array = spec.balcony
-	var bl: int = bal[4]
-	if bl < _fall and cur > levels[bl] - 0.6 and lp.x > bal[0] and lp.x < bal[1] and lp.z > bal[2] and lp.z < bal[3]:
-		return levels[bl]
-	if absf(lp.x) > hx + 0.05 or absf(lp.z) > hz + 0.05:
+	var bal: Array = spec.get("balcony", [])
+	if not bal.is_empty():
+		var bl: int = bal[4]
+		if bl < _fall and cur > levels[bl] - 0.6 and lp.x > bal[0] and lp.x < bal[1] and lp.z > bal[2] and lp.z < bal[3]:
+			return levels[bl]
+	if not _in_foot(lp, 0.05):
 		return -1.0
 	# de hoogste vloer of trede onder je voeten waar je bij kunt (een trede op, of vallen)
 	var lim := cur + 0.6
 	var best: float = levels[0]
-	if absf(lp.x) > hx - 0.25 or absf(lp.z) > hz - 0.25:
+	if _near_edge(lp, 0.25):
 		best = levels[0] * 0.5   # drempels: buiten de muren loopt de grond van 0 naar de vloer
+	var rects: Dictionary = spec.get("floor_rects", {})
 	for k in range(1, mini(levels.size(), _fall)):
-		if levels[k] <= lim and levels[k] > best and not _in_hole(k, lp.x, b):
+		if levels[k] <= lim and levels[k] > best and not _in_hole(k, lp.x, b) and (not rects.has(k) or _in_rect(rects[k], lp, 0.0)):
 			best = levels[k]
 	for st in spec.stairs:
 		if st[5] >= _fall:
@@ -250,9 +316,42 @@ func _floor_local(lp: Vector3, cur: float) -> float:
 		if lp.x > st[0] - 0.1 and lp.x < st[1] + 0.1 and b > minf(st[2], st[3]) - 0.05 and b < maxf(st[2], st[3]) + 0.05:
 			var t := clampf((b - st[2]) / (st[3] - st[2]), 0.0, 1.0)
 			var y := lerpf(levels[st[4]], levels[st[5]], t)
-			if y <= lim and y > best:
+			if y <= cur + STAIR_LIFT and y > best:   # de voet van een trap ligt een muurdikte van de rand: ruim opstappen
 				best = y
 	return best
+
+
+## Grondvlak: rechthoeken [x0, x1, z0, z1] (lokaal); standaard één rechthoek van hx bij hz.
+func _foot() -> Array:
+	return spec.get("foot", [[-spec.hx, spec.hx, -spec.hz, spec.hz]])
+
+
+static func _in_rect(r: Array, lp: Vector3, m: float) -> bool:
+	return lp.x > r[0] - m and lp.x < r[1] + m and lp.z > r[2] - m and lp.z < r[3] + m
+
+
+## Binnen het grondvlak (met marge m) en niet in een deel dat al is ingestort.
+func _in_foot(lp: Vector3, m: float) -> bool:
+	for r in _foot():
+		if _in_rect(r, lp, m):
+			for nm in _ruined:
+				if _in_rect(spec.parts[nm].rect, lp, m):
+					return false
+			return true
+	return false
+
+
+## Dicht bij de buitenrand: een stapje opzij en je staat buiten (een gedeelde rand tussen toren en schip telt niet).
+func _near_edge(lp: Vector3, d: float) -> bool:
+	for o in [Vector3(d, 0, 0), Vector3(-d, 0, 0), Vector3(0, 0, d), Vector3(0, 0, -d)]:
+		var inside := false
+		for r in _foot():
+			if _in_rect(r, lp + o, 0.0):
+				inside = true
+				break
+		if not inside:
+			return true
+	return false
 
 
 func _in_hole(k: int, x: float, b: float) -> bool:
@@ -269,10 +368,10 @@ func _process(delta: float) -> void:
 	var where := -1
 	if p != null and not p.driving:
 		var lp := to_local(p.global_position)
-		var bal: Array = spec.balcony
-		var on_balcony: bool = p.position.y > levels[bal[4]] - 0.6 and lp.x > bal[0] - 0.05 and lp.x < bal[1] + 0.05 \
-			and lp.z > bal[2] and lp.z < bal[3] + 0.1
-		if not _ruin and ((absf(lp.x) < spec.hx + 0.3 and absf(lp.z) < spec.hz + 0.3) or on_balcony):
+		var bal: Array = spec.get("balcony", [])
+		var on_balcony: bool = not bal.is_empty() and p.position.y > levels[bal[4]] - 0.6 and lp.x > bal[0] - 0.05 \
+			and lp.x < bal[1] + 0.05 and lp.z > bal[2] and lp.z < bal[3] + 0.1
+		if not _ruin and (_in_foot(lp, 0.3) or on_balcony):
 			where = 0
 			for k in range(1, levels.size()):
 				if p.position.y > levels[k] - 0.6:
@@ -298,10 +397,12 @@ func _apply_view() -> void:
 	if _ruin:
 		return
 	if _dak:
-		_dak.visible = _inside < 0
+		_dak.visible = _inside < 0 or _inside > int(spec.get("roof_levels", 99))
 	for k in range(1, _groups.size()):
 		if _groups[k]:
 			(_groups[k] as Node3D).visible = _inside < 0 or k <= _inside or k >= _fall
+	for n in _gone:
+		(n as Node3D).visible = false
 	if _inside < 0:
 		return
 	# muren van deze verdieping die naar de camera (+Z in de wereld) kijken
@@ -381,10 +482,10 @@ func _set_state(s: Dictionary, st: int) -> void:
 	elif st >= 2:
 		cs.disabled = true
 		(s.body as StaticBody3D).collision_layer = 0
-	var top := "M%d" % (levels.size() - 1)
+	var top: String = spec.get("roof_pre", "M%d" % (levels.size() - 1))
 	if String(s.name).begins_with(top) and st >= 2:
 		var gone := segs.filter(func(x): return String(x.name).begins_with(top) and x.staat >= 2).size()
-		_roof_state(2 if gone >= 4 else 1)
+		_roof_state(2 if gone >= int(spec.get("roof_need", 4)) else 1)
 
 
 ## Voor het mikken van de tank: midden en buitenrichting van een muurstuk.
@@ -483,25 +584,30 @@ func _roof_state(st: int) -> void:
 		_dak_kapot.visible = false
 		# het dak valt op de hoogste vloer die nog staat
 		var y: float = levels[mini(_fall, levels.size()) - 1]
-		_pile(to_global(Vector3(1.5, y, 0.5)), "PuinGroot", 1.0)
+		_pile(to_global(spec.get("roof_pile", Vector3(1.5, y, 0.5))), "PuinGroot", 1.0)
 
 
-## Te veel muren van een laag weg: alles erboven zakt in. Bij de winkel stort dan het hele gebouw in.
+## Te veel muren van een laag weg: alles erboven zakt in. Bij de winkel stort dan het hele gebouw in, bij de kerk
+## de toren of het schip.
 func _check_collapse() -> void:
 	if _ruin:
 		return
-	var rules: Array = spec.collapse
-	for lvl in rules.size():
-		if lvl + 1 >= _fall or int(rules[lvl]) <= 0:
+	for rule: Dictionary in spec.collapse:
+		if rule.has("fall") and int(rule.fall) >= _fall:
 			continue
-		var pre := "M%d" % lvl
+		if rule.has("ruin") and _ruined.has(rule.ruin):
+			continue
+		var pre: String = rule.pre
 		var gone := segs.filter(func(x): return String(x.name).begins_with(pre) and x.staat >= 2).size()
-		if gone < int(rules[lvl]):
+		if gone < int(rule.need):
 			continue
-		if lvl == 0 and spec.ruin:
-			_ruin_all()
+		if rule.has("ruin"):
+			if rule.ruin == "all":
+				_ruin_all()
+			else:
+				_ruin_part(rule.ruin)
 		else:
-			_fall_from(lvl + 1)
+			_fall_from(int(rule.fall))
 		return
 
 
@@ -524,14 +630,23 @@ func _fall_from(k: int) -> void:
 	for s in segs:
 		if s.floor >= k and s.staat < 2:
 			_set_state(s, 2 if randf() < 0.6 else 1)
-	_roof_state(2)
+	if spec.get("fall_roof", true):
+		_roof_state(2)
 	for fp in spec.fall_piles:
-		_pile(to_global(fp[0]), "PuinGroot", fp[1])
+		var at: Vector3 = fp[0]
+		if at.y < 0.0:
+			at.y = levels[k - 1]
+		_pile(to_global(at), "PuinGroot", fp[1])
 	var mid: float = levels[k]
-	Fx.explosion(get_parent(), global_position + Vector3(0, mid, 0), 1.4)
+	var fc: Vector3 = spec.get("fall_c", Vector3.ZERO)
+	var fr: Vector2 = spec.get("fall_r", Vector2(spec.hx, spec.hz))
+	Fx.explosion(get_parent(), to_global(fc + Vector3(0, mid, 0)), 1.4)
 	for n in 8:
-		Fx.dust(get_parent(), global_position + Vector3(randf_range(-spec.hx, spec.hx), randf_range(0.5, mid + 2.0), randf_range(-spec.hz, spec.hz)))
-	Game.banner.emit(spec.banner if k == 1 else "VERDIEPING INGESTORT", "", 1.4)
+		Fx.dust(get_parent(), to_global(fc + Vector3(randf_range(-fr.x, fr.x), randf_range(0.5, mid + 2.0), randf_range(-fr.y, fr.y))))
+	if spec.has("fall_banner"):
+		Game.banner.emit(spec.fall_banner, "", 1.4)
+	else:
+		Game.banner.emit(spec.banner if k == 1 else "VERDIEPING INGESTORT", "", 1.4)
 	_apply_view()
 
 
@@ -574,3 +689,69 @@ func _ruin_all() -> void:
 		Fx.dust(get_parent(), to_global(Vector3(randf_range(-5, 5), randf_range(0.3, 6.0), randf_range(-4.5, 4.5))))
 	Sfx.play("thud", 1.0, global_position)
 	Game.banner.emit(spec.banner, "", 1.6)
+
+
+## Eén deel van het gebouw stort in (kerk: de toren of het schip): de muren van dat deel weg, de knooppunten uit
+## "hide" verdwijnen, de ruïne van dat deel komt ervoor in de plaats. Zijn alle delen ingestort, dan ligt alles plat.
+func _ruin_part(nm: String) -> void:
+	if _ruined.has(nm):
+		return
+	var part: Dictionary = spec.parts[nm]
+	_ruined[nm] = true
+	_collapsed = true
+	for s in segs:
+		for pre: String in part.pre:
+			if String(s.name).begins_with(pre):
+				s.staat = 2
+				(s.cs as CollisionShape3D).disabled = true
+				(s.body as StaticBody3D).collision_layer = 0
+				_show_seg(s, false)
+	for hn: String in part.hide:
+		var n: Node3D = model.find_child(hn, true, false)
+		if n:
+			n.visible = false
+			_gone.append(n)
+	if part.has("fall"):
+		_fall = mini(_fall, int(part.fall))
+	if _guard_bodies.has(nm):
+		(_guard_bodies[nm] as Node).queue_free()
+		_guard_bodies.erase(nm)
+	var rn: Node3D = model.find_child(part.node, true, false)
+	if rn:
+		var holder := rn.get_parent() as Node3D   # 'Ruine'
+		holder.visible = true
+		rn.visible = true
+		for c in holder.get_children():
+			if not _ruined.has(String(c.name).trim_prefix("Ruine")):
+				(c as Node3D).visible = false
+	var body := StaticBody3D.new()
+	body.collision_layer = Kit.LAYER_WALL
+	body.collision_mask = 0
+	add_child(body)
+	for rb in part.boxes:
+		_box(body, rb[0], rb[1])
+	if int(part.get("roof", 0)) > 0:
+		_roof_state(int(part.roof))
+	# wie in dit deel stond, wordt bedolven en naar buiten geduwd
+	var p = Game.player
+	var r: Array = part.rect
+	if p != null and not p.driving:
+		var lp := to_local(p.global_position)
+		if _in_rect(r, lp, 0.3):
+			p.global_position = to_global(part.exit)
+			p.position.y = 0.0
+			p.hit(60.0, (to_global(part.exit) - global_position).normalized(), false)
+	var c := Vector3((r[0] + r[1]) * 0.5, 0.0, (r[2] + r[3]) * 0.5)
+	var hw: float = (r[1] - r[0]) * 0.5
+	var hd: float = (r[3] - r[2]) * 0.5
+	for n in 3:
+		Fx.explosion(get_parent(), to_global(c + Vector3(randf_range(-1.5, 1.5), 2.0 + n * 2.5, randf_range(-1.5, 1.5))), 1.6)
+	for n in 12:
+		Fx.dust(get_parent(), to_global(c + Vector3(randf_range(-hw, hw), randf_range(0.3, 6.0), randf_range(-hd, hd))))
+	Sfx.play("thud", 1.0, to_global(c))
+	Game.banner.emit(part.banner, "", 1.6)
+	if _ruined.size() >= spec.parts.size():
+		_ruin = true
+		_fall = 0
+	_inside = -1
+	_apply_view()

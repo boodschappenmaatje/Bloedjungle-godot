@@ -11,6 +11,9 @@ const TABS := [["weg", "WEGEN"], ["gebouw", "GEBOUWEN"], ["straat", "STRAAT"], [
 const GOOD_COL := Color(0.3, 0.9, 0.35, 0.45)
 const BAD_COL := Color(1.0, 0.25, 0.2, 0.5)
 const SEL_COL := Color(1.0, 0.85, 0.3, 0.4)
+const LINE_TOOLS := {"lijn": "weg_recht", "lijn_steeg": "weg_steeg"}   # wegen trek je als een lijn; het spel kiest de wegdelen
+const ICON_DIR := "res://assets/stad_icons/%s.png"
+const PANEL_BG := Color(18.0 / 255.0, 22.0 / 255.0, 12.0 / 255.0, 0.8)
 
 var _stad: Stad
 var _rot_btn: Button
@@ -49,6 +52,9 @@ var _msg_t := 0.0
 var _cand: Dictionary = {}
 var _last_brush := Vector2(INF, INF)
 var _hidden: Array = []
+var _line_hl: Node3D
+var _line_cells: Array = []   # cellen van de lijn die je trekt (Vector2i), op volgorde
+var _line_plan: Dictionary = {}
 
 
 func _ready() -> void:
@@ -74,7 +80,7 @@ func _ready() -> void:
 
 func _panel() -> PanelContainer:
 	var pc := PanelContainer.new()
-	pc.add_theme_stylebox_override("panel", UI.box(UI.PANEL, UI.PANEL_LINE, 1, 6, 8))
+	pc.add_theme_stylebox_override("panel", UI.box(PANEL_BG, UI.PANEL_LINE, 1, 6, 6))
 	_ui.add_child(pc)
 	return pc
 
@@ -84,8 +90,8 @@ func _btn(text: String, kind: String, cb: Callable, parent: Control) -> Button:
 	b.add_to_group("hud_button")
 	b.text = text
 	UI.style_button(b, kind)
-	b.add_theme_font_size_override("font_size", 13)
-	b.custom_minimum_size = Vector2(0, 38)
+	b.add_theme_font_size_override("font_size", 12)
+	b.custom_minimum_size = Vector2(0, 30)
 	b.pressed.connect(cb)
 	parent.add_child(b)
 	return b
@@ -94,13 +100,13 @@ func _btn(text: String, kind: String, cb: Callable, parent: Control) -> Button:
 func _make_top() -> void:
 	_top = _panel()
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 4)
+	vb.add_theme_constant_override("separation", 3)
 	_top.add_child(vb)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	vb.add_child(row)
-	row.add_child(UI.label("STADSEDITOR", UI.display(1), 17, UI.INK))
-	_count = UI.label("", UI.body(700, 0), 13, UI.BRASS)
+	row.add_child(UI.label("STADSEDITOR", UI.display(1), 14, UI.INK))
+	_count = UI.label("", UI.body(700, 0), 11, UI.BRASS)
 	_count.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_count.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	row.add_child(_count)
@@ -110,10 +116,10 @@ func _make_top() -> void:
 	_btn("ONGEDAAN", "buy", _do_undo, btns).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_btn("KOPIEER", "buy", _show_text, btns).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_btn("KLAAR", "gold", exit, btns).size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_hint = UI.label("", UI.body(600, 0), 12, UI.INK_DIM)
+	_hint = UI.label("", UI.body(600, 0), 11, UI.INK_DIM)
 	_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(_hint)
-	_msg = UI.label("", UI.body(700, 0), 13, Color("ff7a6a"))
+	_msg = UI.label("", UI.body(700, 0), 12, Color("ff7a6a"))
 	_msg.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(_msg)
 
@@ -121,7 +127,7 @@ func _make_top() -> void:
 func _make_palette() -> void:
 	_palette = _panel()
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 6)
+	vb.add_theme_constant_override("separation", 4)
 	_palette.add_child(vb)
 	var tabs := HBoxContainer.new()
 	tabs.add_theme_constant_override("separation", 6)
@@ -134,7 +140,7 @@ func _make_palette() -> void:
 	var sc := ScrollContainer.new()
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_AUTO
 	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	sc.custom_minimum_size = Vector2(0, 50)
+	sc.custom_minimum_size = Vector2(0, 70)
 	vb.add_child(sc)
 	_chips = HBoxContainer.new()
 	_chips.add_theme_constant_override("separation", 6)
@@ -165,7 +171,7 @@ func _make_zoom() -> void:
 		b.text = z
 		UI.style_button(b, "pause")
 		b.add_theme_font_size_override("font_size", 22)
-		b.custom_minimum_size = Vector2(42, 42)
+		b.custom_minimum_size = Vector2(38, 38)
 		b.pressed.connect(func(): _zoom_by(0.8 if z == "+" else 1.25))
 		_zoom_box.add_child(b)
 
@@ -226,13 +232,13 @@ func _layout() -> void:
 		return
 	var w := size.x
 	_top.position = Vector2(12, 8)
-	_top.size = Vector2(minf(w - 24.0, 460.0), 0)
-	_hint.custom_minimum_size.x = _top.size.x - 20.0
-	_msg.custom_minimum_size.x = _top.size.x - 20.0
+	_top.size = Vector2(minf(w - 24.0, 400.0), 0)
+	_hint.custom_minimum_size.x = _top.size.x - 16.0
+	_msg.custom_minimum_size.x = _top.size.x - 16.0
 	_palette.size = Vector2(w - 24.0, 0)
 	_palette.position = Vector2(12, size.y - _palette.size.y - 10.0)
 	_actions.position = Vector2(12, size.y - _palette.size.y - _actions.size.y - 18.0)
-	_zoom_box.position = Vector2(w - 54.0, size.y * 0.35)
+	_zoom_box.position = Vector2(w - 54.0, size.y * 0.3)
 	var pw := minf(w - 24.0, 520.0)
 	_popup.size = Vector2(pw, minf(size.y - 40.0, 360.0))
 	_popup.position = Vector2((w - pw) / 2.0, 20.0)
@@ -284,6 +290,7 @@ func exit() -> void:
 	Game.build_mode = false
 	_ui.visible = false
 	_hl.visible = false
+	_line_clear()
 	_ptrs.clear()
 	_drag = {}
 	_pinch = {}
@@ -324,7 +331,7 @@ func _pick_tab(id: String) -> void:
 		_tool = "gum" if _tool != "gum" else ""
 	else:
 		_cat = id
-		if _tool == "gum" or _tool == "draai":
+		if _tool == "gum" or _tool == "draai" or LINE_TOOLS.has(_tool):
 			_tool = ""
 	_sel = {}
 	_refresh()
@@ -351,29 +358,49 @@ func _refresh() -> void:
 		for kind: String in Stad.ORDER[_cat]:
 			if not Stad.available(kind):
 				continue
-			var k: Dictionary = Stad.KINDS[kind]
-			var b := Button.new()
-			b.add_to_group("hud_button")
-			b.text = String(k.name).to_upper()
-			UI.style_button(b, "gold" if _tool == kind else "buy")
-			b.add_theme_font_size_override("font_size", 13)
-			b.custom_minimum_size = Vector2(0, 40)
-			b.pressed.connect(func(): _pick_kind(kind))
-			_chips.add_child(b)
+			_chip(kind, String(Stad.KINDS[kind].name), kind)
+		if _cat == "weg":
+			_chip("lijn", "Trek weg", "weg_recht")
+			_chip("lijn_steeg", "Trek steeg", "weg_steeg")
+	_line_clear()
 	UI.style_button(_brush_btn, "gold" if _brush else "buy")
 	UI.style_button(_rot_btn, "gold" if _tool == "draai" else "buy")
 	_brush_btn.text = "KWAST AAN" if _brush else "KWAST"
 	if _tool == "draai":
-		_hint.text = "Draaien: tik op het onderdeel dat je wilt draaien. Elke tik is een kwartslag. Tik nog eens op DRAAI om te stoppen."
+		_hint.text = "DRAAI: tik op een onderdeel, elke tik is een kwartslag."
 	elif _tool == "gum":
-		_hint.text = "Gum: tik op iets om het weg te halen, of veeg eroverheen."
+		_hint.text = "GUM: tik op iets om het weg te halen." + (" Veeg eroverheen." if _brush else " Met KWAST AAN kun je vegen.")
+	elif LINE_TOOLS.has(_tool):
+		_hint.text = "Trek een lijn met je vinger. Het spel kiest zelf bochten, T-stukken en kruisingen."
 	elif _tool != "":
-		_hint.text = "%s: tik op de kaart om neer te zetten. Het gekleurde vlak toont of het past. DRAAI draait het." % Stad.KINDS[_tool].name
+		_hint.text = "%s: tik op de kaart. Schuif de kaart met je vinger." % Stad.KINDS[_tool].name
 		if Stad.KINDS[_tool].cat == "straat":
-			_hint.text += " Met KWAST AAN zet je er een rij van door te slepen."
+			_hint.text += " KWAST AAN: slepen zet een rij."
 	else:
-		_hint.text = "Kies onderaan iets en tik op de kaart. Tik op iets dat er staat om het te draaien of te verschuiven. Twee vingers schuiven en zoomen."
+		_hint.text = "Kies iets onderaan. Veeg over de kaart om te schuiven, sleep een onderdeel om het te verplaatsen."
 	_refresh_hl()
+
+
+## Knop met een plaatje van het onderdeel (assets/stad_icons, gemaakt met tools/stad_icons.gd).
+func _chip(tool: String, label: String, icon_kind: String) -> void:
+	var b := Button.new()
+	b.add_to_group("hud_button")
+	b.text = label.to_upper()
+	UI.style_button(b, "gold" if _tool == tool else "buy")
+	b.add_theme_font_size_override("font_size", 10)
+	b.custom_minimum_size = Vector2(86, 66)
+	var path := ICON_DIR % icon_kind
+	if ResourceLoader.exists(path):
+		b.icon = load(path)
+		b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		b.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+		b.expand_icon = true
+		b.add_theme_constant_override("icon_max_width", 44)
+		b.add_theme_constant_override("h_separation", 0)
+	b.clip_text = true
+	b.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	b.pressed.connect(func(): _pick_kind(tool))
+	_chips.add_child(b)
 
 
 func _stats() -> void:
@@ -431,7 +458,7 @@ func _input(event: InputEvent) -> void:
 		elif event is InputEventMouseMotion:
 			if _ptrs.has(-1) or _ptrs.has(-2):
 				_move(-2 if _ptrs.has(-2) else -1, event.position)
-			elif _tool != "" and _tool != "gum" and _tool != "draai" and not _over_ui(event.position):
+			elif _is_place() and not _over_ui(event.position):
 				_hover(event.position)
 
 
@@ -463,6 +490,11 @@ func _unhandled_key_input(e: InputEvent) -> void:
 		KEY_Z:
 			if e.ctrl_pressed or e.meta_pressed:
 				_do_undo()
+
+
+## Een gewoon onderdeel plaatsen (geen gum, draaimodus of wegenlijn)?
+func _is_place() -> bool:
+	return _tool != "" and _tool != "gum" and _tool != "draai" and not LINE_TOOLS.has(_tool)
 
 
 func _over_ui(p: Vector2) -> bool:
@@ -502,7 +534,7 @@ func _down(id: int, pos: Vector2) -> void:
 	if _ptrs.size() == 2:
 		_cancel_drag()
 		var v: Array = _ptrs.values()
-		_pinch = {"d": maxf(1.0, (v[0] - v[1]).length()), "zoom": Game.ecam.z}
+		_pinch = {"d": maxf(1.0, (v[0] - v[1]).length()), "zoom": Game.ecam.z, "mid": (v[0] + v[1]) * 0.5}
 		return
 	if _ptrs.size() > 2:
 		return
@@ -510,8 +542,11 @@ func _down(id: int, pos: Vector2) -> void:
 	if g == null:
 		return
 	if _tool == "gum":
-		_drag = {"gum": true, "id": id, "sp": pos, "moved": false}
-		_erase_at(g)
+		if _brush:
+			_drag = {"gum": true, "id": id, "sp": pos, "moved": false}
+			_erase_at(g)
+		else:
+			_drag = {"tap": "gum", "g": g, "id": id, "sp": pos, "moved": false, "last": pos}   # tik = weghalen, slepen = kaart schuiven
 		return
 	if _tool == "draai":
 		var it := _pick(g)
@@ -521,11 +556,18 @@ func _down(id: int, pos: Vector2) -> void:
 			_sel = it
 			_turn(it)
 		return
+	if LINE_TOOLS.has(_tool):
+		_line_cells = [_cell_of(g)]
+		_drag = {"line": true, "id": id, "sp": pos, "moved": false}
+		_line_update()
+		return
 	if _tool != "":
-		_drag = {"place": true, "id": id, "sp": pos, "moved": false}
-		_aim(g)
 		if _brush and Stad.KINDS[_tool].cat == "straat":
+			_drag = {"place": true, "id": id, "sp": pos, "moved": false}
+			_aim(g)
 			_stamp()
+		else:
+			_drag = {"tap": "place", "g": g, "id": id, "sp": pos, "moved": false, "last": pos}   # tik = neerzetten, slepen = kaart schuiven
 		return
 	var it := _pick(g)
 	if it.is_empty():
@@ -551,8 +593,25 @@ func _move(id: int, pos: Vector2) -> void:
 	if not _pinch.is_empty() and _ptrs.size() >= 2:
 		var v: Array = _ptrs.values()
 		_set_zoom(_pinch.zoom * _pinch.d / maxf(1.0, (v[0] - v[1]).length()))
+		var mid: Vector2 = (v[0] + v[1]) * 0.5
+		var dm: Vector2 = mid - _pinch.mid
+		_pinch.mid = mid
+		var mp := _mpp()
+		Game.ecam.x -= dm.x * mp
+		Game.ecam.y -= dm.y * mp
+		_clamp_cam()
 		return
 	if _drag.is_empty() or id != _drag.id:
+		return
+	if _drag.has("tap"):
+		if pos.distance_to(_drag.sp) < 10.0:
+			return
+		_drag = {"pan": true, "last": _drag.last, "sp": _drag.sp, "moved": false, "id": id}
+	if _drag.has("line"):
+		var gl: Variant = _ground(pos)
+		if gl != null:
+			_line_extend(_cell_of(gl))
+		_drag.moved = true
 		return
 	if _drag.has("pan"):
 		if not _drag.moved and pos.distance_to(_drag.sp) < 8.0:
@@ -599,6 +658,19 @@ func _up(id: int) -> void:
 		return
 	var dr := _drag
 	_drag = {}
+	if dr.has("line"):
+		_line_apply()
+		return
+	if dr.has("tap"):
+		if dr.tap == "gum":
+			_erase_at(dr.g)
+		else:
+			_aim(dr.g)
+			_place_cand()
+			_cand = {}
+			_hl.visible = false
+		_refresh_hl()
+		return
 	if dr.has("place"):
 		if not (_brush and Stad.KINDS[_tool].cat == "straat"):
 			_place_cand()
@@ -622,7 +694,7 @@ func _up(id: int) -> void:
 
 ## Zet de kandidaat onder de vinger, op het raster.
 func _aim(g: Vector3) -> void:
-	if _tool == "" or _tool == "gum" or _tool == "draai":
+	if not _is_place():
 		return
 	var s: float = Stad.KINDS[_tool].snap
 	_cand = {"k": _tool, "x": roundf(g.x / s) * s, "z": roundf(g.z / s) * s, "r": _rot, "m": _mir}
@@ -699,7 +771,7 @@ func _delete_sel() -> void:
 ## DRAAI: met een soort gekozen draait het plaatsvlak; anders zet het draaimodus aan of uit.
 ## In draaimodus draait elke tik op een onderdeel het een kwartslag.
 func _rotate() -> void:
-	if _tool != "" and _tool != "gum" and _tool != "draai":
+	if _is_place():
 		_rot = (_rot + 1) % 4
 		if not _cand.is_empty():
 			_cand.r = _rot
@@ -718,7 +790,7 @@ func _turn(it: Dictionary) -> void:
 
 
 func _mirror() -> void:
-	if _tool != "" and _tool != "gum":
+	if _is_place():
 		_mir = 1 - _mir
 		if not _cand.is_empty():
 			_cand.m = _mir
@@ -781,6 +853,18 @@ func _do_undo() -> void:
 		_say("NIETS OM ONGEDAAN TE MAKEN")
 		return
 	var u: Dictionary = _undo.pop_back()
+	if u.op == "group":
+		for i in range(u.ops.size() - 1, -1, -1):
+			var o: Dictionary = u.ops[i]
+			if o.op == "add":
+				_stad.remove_item(o.d)
+			else:
+				_stad.add_item(o.d)
+		_sel = {}
+		Sfx.play("click")
+		_stats()
+		_refresh_hl()
+		return
 	var d: Dictionary = u.d
 	match u.op:
 		"add":
@@ -848,6 +932,267 @@ func _set_hl(d: Dictionary, col: Color) -> void:
 			var dist := absf(world.x) * reach.x + absf(world.z) * reach.y
 			m.position = world * (dist + 0.1)
 			m.position.y = 0.2
+
+
+# ---------------------------------------------------------------- wegen trekken als lijn
+
+const N := 1
+const E := 2
+const S := 4
+const W := 8
+static var _mask_table := {}   # bitmasker van openingen -> [soort, kwartslagen]
+
+
+## Bitmasker (N=1, E=2, S=4, W=8) van de openingen van een wegdeel, met kwartslagen r (en spiegeling).
+static func open_mask(open: String, r: int, mir := 0) -> int:
+	var m := 0
+	for c in open:
+		var v: Vector2 = Stad.DIRS[c]
+		var w := Basis(Vector3.UP, r * PI / 2.0) * Vector3(v.x * (-1.0 if mir == 1 else 1.0), 0, v.y)
+		if roundf(w.z) < -0.5:
+			m |= N
+		elif roundf(w.x) > 0.5:
+			m |= E
+		elif roundf(w.z) > 0.5:
+			m |= S
+		else:
+			m |= W
+	return m
+
+
+static func _table() -> Dictionary:
+	if _mask_table.is_empty():
+		for kind in ["weg_recht", "weg_bocht", "weg_t", "weg_kruis"]:
+			for r in 4:
+				var m := open_mask(Stad.KINDS[kind].open, r)
+				if not _mask_table.has(m):
+					_mask_table[m] = [kind, r]
+	return _mask_table
+
+
+static func _bits(m: int) -> int:
+	return ((m & N) >> 0) + ((m & E) >> 1) + ((m & S) >> 2) + ((m & W) >> 3)
+
+
+## Welk wegdeel en welke kwartslag hoort bij een bitmasker; steeg = smalle versie voor rechte stukken.
+static func piece_for(mask: int, narrow: bool) -> Array:
+	var m := mask
+	if _bits(m) <= 1:
+		m = E | W if (m & (E | W)) != 0 else N | S
+	var t: Array = _table()[m]
+	if narrow and t[0] == "weg_recht":
+		return ["weg_steeg", t[1]]
+	return t
+
+
+static func _dir_bit(d: Vector2i) -> int:
+	if d.x > 0:
+		return E
+	if d.x < 0:
+		return W
+	return S if d.y > 0 else N
+
+
+static func _opposite(bit: int) -> int:
+	match bit:
+		N:
+			return S
+		S:
+			return N
+		E:
+			return W
+	return E
+
+
+static func _bit_dir(bit: int) -> Vector2i:
+	match bit:
+		N:
+			return Vector2i(0, -1)
+		S:
+			return Vector2i(0, 1)
+		E:
+			return Vector2i(1, 0)
+	return Vector2i(-1, 0)
+
+
+func _cell_of(g: Vector3) -> Vector2i:
+	return Vector2i(roundi(g.x / Stad.CELL), roundi(g.z / Stad.CELL))
+
+
+func _cell_pos(c: Vector2i) -> Vector2:
+	return Vector2(c.x, c.y) * Stad.CELL
+
+
+## Voegt cel c aan de lijn toe; tussenliggende cellen worden aangevuld, teruggaan maakt het laatste stukje ongedaan.
+func _line_extend(c: Vector2i) -> void:
+	var cur: Vector2i = _line_cells[-1]
+	var guard := 0
+	while cur != c and guard < 60:
+		guard += 1
+		var d := c - cur
+		var step := Vector2i(signi(d.x), 0) if absi(d.x) >= absi(d.y) else Vector2i(0, signi(d.y))
+		var nxt := cur + step
+		if _line_cells.size() >= 2 and _line_cells[-2] == nxt:
+			_line_cells.pop_back()
+		else:
+			_line_cells.append(nxt)
+		cur = nxt
+	_line_update()
+
+
+func _road_items() -> Dictionary:
+	var out := {}
+	for d in _stad.items:
+		var k: Dictionary = Stad.KINDS[d.k]
+		if k.cat == "weg" and k.has("open"):
+			out[Vector2i(roundi(d.x / Stad.CELL), roundi(d.z / Stad.CELL))] = d
+	return out
+
+
+func _in_plein(c: Vector2i) -> bool:
+	var p := _cell_pos(c)
+	for d in _stad.items:
+		if Stad.KINDS[d.k].get("plein", false) and Stad.rect_of(d).has_point(p):
+			return true
+	return false
+
+
+## Wat moet er gebeuren voor deze lijn? {ok, problem, cells: [[pos, slecht]], remove: [items], add: [items]}
+func _line_plan_for(cells: Array) -> Dictionary:
+	var narrow: bool = _tool == "lijn_steeg"
+	var masks := {}
+	for c: Vector2i in cells:
+		if not masks.has(c):
+			masks[c] = 0
+	for i in range(cells.size() - 1):
+		var a: Vector2i = cells[i]
+		var b: Vector2i = cells[i + 1]
+		var bit := _dir_bit(b - a)
+		masks[a] |= bit
+		masks[b] |= _opposite(bit)
+	var roads := _road_items()
+	var remove: Array = []
+	var add: Array = []
+	var shown: Array = []
+	var bad := ""
+	var base: Array = []
+	var ro := {}   # cel -> bestaand item dat vervangen wordt
+	for c: Vector2i in masks:
+		if roads.has(c):
+			ro[c] = roads[c]
+	for d in _stad.items:
+		var replaced := false
+		for c in ro:
+			if is_same(ro[c], d):
+				replaced = true
+		if not replaced:
+			base.append(d)
+	for c: Vector2i in masks:
+		if _in_plein(c):
+			continue
+		var m: int = masks[c]
+		# sluit aan op bestaande wegen ernaast die naar deze cel wijzen
+		for bit in [N, E, S, W]:
+			var nb: Vector2i = c + _bit_dir(bit)
+			if masks.has(nb) or not roads.has(nb):
+				continue
+			var nd: Dictionary = roads[nb]
+			if (open_mask(Stad.KINDS[nd.k].open, int(nd.r), int(nd.m)) & _opposite(bit)) != 0:
+				m |= bit
+		var was_narrow := false
+		if ro.has(c):
+			var od: Dictionary = ro[c]
+			m |= open_mask(Stad.KINDS[od.k].open, int(od.r), int(od.m))
+			was_narrow = od.k == "weg_steeg"
+		var pc := piece_for(m, (narrow and not ro.has(c)) or was_narrow)
+		var item := {"k": pc[0], "x": float(c.x) * Stad.CELL, "z": float(c.y) * Stad.CELL, "r": pc[1], "m": 0}
+		if ro.has(c):
+			var od2: Dictionary = ro[c]
+			if od2.k == item.k and int(od2.r) == int(item.r):
+				shown.append([_cell_pos(c), false])
+				continue
+			remove.append(od2)
+		var p := Stad.problem(item, base)
+		if p != "":
+			if bad == "":
+				bad = p
+			shown.append([_cell_pos(c), true])
+			continue
+		base.append(item)
+		add.append(item)
+		shown.append([_cell_pos(c), false])
+	return {"ok": bad == "" and not (add.is_empty() and remove.is_empty()), "problem": bad, "cells": shown, "remove": remove, "add": add}
+
+
+func _line_update() -> void:
+	_line_plan = _line_plan_for(_line_cells)
+	_line_show(_line_plan.cells)
+	if _line_plan.problem != "":
+		_msg.text = _line_plan.problem
+		_msg_t = 0.6
+
+
+func _line_show(cells: Array) -> void:
+	if _line_hl == null or not is_instance_valid(_line_hl):
+		_line_hl = Node3D.new()
+		_stad.add_child(_line_hl)
+	while _line_hl.get_child_count() < cells.size():
+		var mi := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = Vector3(Stad.CELL - 0.3, 0.3, Stad.CELL - 0.3)
+		mi.mesh = bm
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_line_hl.add_child(mi)
+	for i in _line_hl.get_child_count():
+		var mi := _line_hl.get_child(i) as MeshInstance3D
+		mi.visible = i < cells.size()
+		if i < cells.size():
+			var pos: Vector2 = cells[i][0]
+			mi.position = Vector3(pos.x, 0.25, pos.y)
+			mi.material_override = _hl_mat_for(cells[i][1])
+
+
+var _good_mat: StandardMaterial3D
+var _bad_mat: StandardMaterial3D
+
+
+func _hl_mat_for(bad: bool) -> StandardMaterial3D:
+	if _good_mat == null:
+		_good_mat = _hl_mat.duplicate()
+		_good_mat.albedo_color = GOOD_COL
+		_bad_mat = _hl_mat.duplicate()
+		_bad_mat.albedo_color = BAD_COL
+	return _bad_mat if bad else _good_mat
+
+
+func _line_clear() -> void:
+	_line_cells = []
+	_line_plan = {}
+	if _line_hl != null and is_instance_valid(_line_hl):
+		for c in _line_hl.get_children():
+			(c as Node3D).visible = false
+
+
+func _line_apply() -> void:
+	var plan := _line_plan
+	_line_clear()
+	if plan.is_empty():
+		return
+	if plan.problem != "":
+		_say(plan.problem)
+		return
+	if plan.add.is_empty() and plan.remove.is_empty():
+		return
+	var ops: Array = []
+	for d in plan.remove:
+		_stad.remove_item(d)
+		ops.append({"op": "del", "d": d})
+	for d in plan.add:
+		_stad.add_item(d)
+		ops.append({"op": "add", "d": d})
+	_undo.append({"op": "group", "ops": ops})
+	Sfx.play("click")
+	_stats()
 
 
 # ---------------------------------------------------------------- tekst voor Claude

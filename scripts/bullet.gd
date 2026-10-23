@@ -208,7 +208,7 @@ func _boom_enemy(at: Vector3) -> void:
 	if p != null and not p.dead:
 		var pd: float = Vector2(p.global_position.x - at.x, p.global_position.z - at.z).length()
 		if pd < r:
-			p.hit(dmg * 0.6 * (0.5 if p.elev > 1.0 else 1.0) * (1.0 - pd / r), (p.global_position - at).normalized(), false)
+			p.hit(dmg * 0.6 * (0.5 if p.elev > 1.0 else 1.0) * (1.0 - pd / r), (p.global_position - at).normalized(), false, true)
 	var bx := maxf(absf(at.x) - Data.BUNKER_HALF, 0.0)
 	var bz := maxf(absf(at.z) - Data.BUNKER_HALF, 0.0)
 	var bd := Vector2(bx, bz).length()

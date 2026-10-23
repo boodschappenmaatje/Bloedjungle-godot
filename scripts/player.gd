@@ -13,6 +13,7 @@ var reload_t := 0.0
 var idle_t := 0.0
 var dead := false
 var airborne := false        # vliegt in de helikopter: onkwetsbaar voor kogels van beneden
+var in_tank := false       # zit in de tank: alleen raketten (en tankgranaten) doen hem iets, kogels en messen niet
 var driving := false         # zit in de jeep: dan rijdt jeep.gd en loopt hij niet zelf
 var elev := 0.0              # hoogte: 0 op de grond, TOWER_TOP op een wachttoren
 var tower: Node3D = null     # de toren waar hij op staat of die hij beklimt
@@ -386,19 +387,29 @@ func _animate(mv: Vector2, moving: float) -> void:
 			model.play("lopen", 0.2, spd / 2.4)
 
 
-func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
+func hit(dmg: float, dir: Vector3, from_player: bool, heavy := false) -> void:
 	if from_player or dead or airborne or Game.state == "over":
 		return
+	if in_tank:
+		if not heavy:
+			Fx.spark(get_parent(), global_position + Vector3.UP * 1.2, dir)  # kogels en messen ketsen af op het pantser
+			return
+		dmg *= 0.5  # pantser
 	if dodge_t > DODGE_TIME - DODGE_SAFE:
 		return  # midden in de rol
 	var cover := 0.45 if Game.defs and Game.defs.in_trench(global_position) else 1.0  # in een loopgraaf mis je ruim de helft
 	hp -= dmg * (1.0 - 0.08 * Game.upg.armor) * Progress.bonus().taken * cover
 	model.flash()
 	Sfx.play("hurt", 0.7)
-	Fx.blood(get_parent(), global_position + Vector3.UP * 1.3, dir, 8)
+	if in_tank:
+		Fx.explosion(get_parent(), global_position + Vector3.UP * 0.5, 0.8)
+	else:
+		Fx.blood(get_parent(), global_position + Vector3.UP * 1.3, dir, 8)
 	Game.changed.emit()
 	if hp <= 0.0:
 		hp = 0.0
 		dead = true
+		if in_tank:
+			Fx.explosion(get_parent(), global_position + Vector3.UP * 0.5, 1.8)  # de tank wordt opgeblazen
 		model.play("dood1", 0.1)
 		Game.end_game("Je bent gesneuveld in golf %d" % Game.wave)

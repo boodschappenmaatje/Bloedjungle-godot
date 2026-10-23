@@ -24,6 +24,7 @@ const DRIVE_TURRET := 2.4  # rad/s koepel als jij richt
 const DRIVE_RELOAD := 1.6
 const BOARD_DIST := 6.5
 const RAM_DAMAGE := 60.0
+const SHOT_RANGE := 45.0   # m, verder landt de granaat op de grond
 
 const LOCK_FWD_MIN := 3.0   # m, muurstukken dichterbij dan dit worden niet gekozen
 const LOCK_FWD_MAX := 38.0
@@ -69,6 +70,7 @@ func _toggle() -> void:
 	if driven:
 		driven = false
 		p.driving = false
+		p.in_tank = false
 		p.visible = true
 		_clear_sight()
 		p.global_position = global_position - global_transform.basis.x * 3.2
@@ -80,6 +82,7 @@ func _toggle() -> void:
 		driven = true
 		goals.clear()
 		p.driving = true
+		p.in_tank = true
 		p.visible = false
 		p.collision_mask = 0
 		p.velocity = Vector3.ZERO
@@ -162,9 +165,13 @@ func _shoot(at: Vector3) -> void:
 	var boom := at
 	get_tree().create_timer(0.5).timeout.connect(func() -> void:
 		Fx.explosion(get_parent(), boom, 1.0)
-		Woonhuis.blast_all(boom, 1.4, 140.0)  # kleiner dan de straal tegen vijanden: alleen de muur waar hij op mikt
+		Game.note_blast(boom, SHELL_RADIUS)
+		Barrel.catch_blast(boom, 2.0)
+		Woonhuis.blast_all(boom, 1.8, 140.0)  # kleiner dan de straal tegen vijanden: alleen de muur waar hij op mikt
 		for e in Game.enemies.duplicate():
-			if is_instance_valid(e) and e.global_position.distance_to(boom) < SHELL_RADIUS and SHELL_DAMAGE > 0.0:
+			var flat: Vector3 = e.global_position - boom if is_instance_valid(e) else Vector3.ZERO
+			flat.y = 0.0
+			if is_instance_valid(e) and flat.length() < SHELL_RADIUS and SHELL_DAMAGE > 0.0:
 				e.hit(SHELL_DAMAGE, (e.global_position - boom).normalized(), true))
 
 
@@ -227,29 +234,29 @@ func _drive_driven(delta: float, live: bool) -> void:
 	_ram()
 
 
-## Waar de granaat landt: bij de eerste vijand vlak voor de loop, anders 22 m verderop.
+## Waar de granaat landt: het eerste dat de loop op zijn weg tegenkomt (muur, huis, bunker, vijand), anders het verste punt.
 func _aim_point() -> Vector3:
 	if not _lock.is_empty():
 		return _lock_point()
 	var fwd := -_loop.global_transform.basis.z
 	fwd.y = 0.0
 	fwd = fwd.normalized()
-	var best := 22.0
+	var best := SHOT_RANGE
 	for e in Game.enemies:
 		if not is_instance_valid(e):
 			continue
 		var v: Vector3 = e.global_position - global_position
 		v.y = 0.0
 		var dist := v.length()
-		if dist > 3.0 and dist < best and absf(fwd.angle_to(v)) < 0.12:
+		if dist > 3.0 and dist < best and absf(fwd.angle_to(v)) < 0.1:
 			best = dist
-	# staat er een muur of huis in de lijn van de loop, dan slaat de granaat daar in
 	var from := _loop.global_position + Vector3(0, 0.3, 0)
-	var q := PhysicsRayQueryParameters3D.create(from, from + fwd * best, Kit.LAYER_WALL | Kit.LAYER_BUNKER)
+	var q := PhysicsRayQueryParameters3D.create(from, from + fwd * best, Kit.LAYER_WALL | Kit.LAYER_BUNKER | 8)
+	q.exclude = [get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	if hit:
 		var at: Vector3 = hit.position
-		return Vector3(at.x, 0.0, at.z)
+		return Vector3(at.x, clampf(at.y, 0.0, 5.0), at.z)
 	return global_position + fwd * best
 
 

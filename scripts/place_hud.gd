@@ -74,6 +74,7 @@ func _ready() -> void:
 		add_child(t)
 		_tiles[k] = t
 	_more = Button.new()
+	_more.name = "ExpandEquipment"
 	_more.add_to_group("hud_button")
 	_more.text = "▲"
 	UI.style_button(_more, "pause")
@@ -163,24 +164,53 @@ func _sync() -> void:
 
 
 func _layout() -> void:
-	var bottom := size.y - (64.0 if size.x >= size.y else 8.0)  # staand onder de contextknoppen
-	var x := size.x - 16.0 - (128.0 if size.x >= size.y else 0.0)  # liggend: links van het knoppenraster (combat_buttons.gd)
+	var safe := UI.safe_margins(size)
+	var landscape := size.x >= size.y
+	var safe_bottom := maxf(0.0, safe.w - 12.0)
+	var bottom := size.y - 8.0 - safe_bottom
+	var row_y := size.y - 416.0 - safe_bottom
+	var radar_bottom := 0.0
+	if landscape:
+		var radar_h := 120.0 if size.y < 420.0 else 144.0
+		radar_bottom = safe.y + 42.0 + radar_h
+		row_y = maxf(size.y - 208.0 - safe_bottom, radar_bottom + 8.0)
+		bottom = row_y + TILE
+	var x := size.x - safe.z - (132.0 if landscape else 0.0)  # liggend: links van het knoppenraster (combat_buttons.gd)
 	if _place.visible:
 		_place.size = Vector2(BIG, BIG)
-		_place.position = Vector2(x - BIG, bottom - BIG)
-		x -= BIG + 12.0
+		var place_y := bottom - BIG
+		if landscape:
+			place_y = maxf(row_y - 6.0, radar_bottom + 2.0)
+		_place.position = Vector2(x - BIG, place_y)
+		if landscape or not _open:
+			x -= BIG + 12.0
 	var base := Vector2(x - TILE, bottom - TILE)
 	var sel: Tile = _tiles[Game.place_sel]
 	sel.size = Vector2(TILE, TILE)
+	if _open:
+		base.y = row_y
 	sel.position = base
 	_more.size = Vector2(34, TILE)
 	_more.position = Vector2(base.x - 6.0 - 34.0, base.y)
+	if _open:
+		var available: Array[String] = []
+		for k in Defenses.KINDS:
+			if k != Game.place_sel and Game.inv[k] > 0:
+				available.append(k)
+		var start_x := base.x - available.size() * (TILE + GAP)
+		for i in available.size():
+			var t: Tile = _tiles[available[i]]
+			t.size = Vector2(TILE, TILE)
+			t.position = Vector2(start_x + i * (TILE + GAP), base.y)
+		_more.position = Vector2(start_x - 6.0 - 34.0, base.y)
 	var y := base.y
 	for k in Defenses.KINDS:
 		if k == Game.place_sel:
 			continue
 		var t: Tile = _tiles[k]
 		if not t.visible:
+			continue
+		if _open:
 			continue
 		y -= TILE + GAP
 		t.size = Vector2(TILE, TILE)

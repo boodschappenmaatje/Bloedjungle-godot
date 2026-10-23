@@ -39,12 +39,13 @@ func _player_call(method: String) -> void:
 ## Alles rechts, binnen bereik van de duim die richt: 2x2 raster in de rechteronderhoek.
 ## Onder: sprint + rol, boven: granaat + herlaad. De wisselknop (shop.gd) staat links van het raster.
 func _layout() -> void:
+	var safe := UI.safe_margins(size)
 	var g := ActionBtn.SIZE.x + 8.0
-	var x1 := size.x - 16.0 - ActionBtn.SIZE.x
+	var x1 := size.x - safe.z - 4.0 - ActionBtn.SIZE.x
 	var x0 := x1 - g
-	var y1 := size.y - 16.0 - ActionBtn.SIZE.y
+	var y1 := size.y - safe.w - 4.0 - ActionBtn.SIZE.y
 	if size.x < size.y:
-		y1 = size.y - 222.0 - 8.0 - ActionBtn.SIZE.y  # staand: boven de wapenstrip (weapon_strip.gd)
+		y1 = size.y - 222.0 - 8.0 - ActionBtn.SIZE.y - maxf(0.0, safe.w - 12.0)  # staand: boven de wapenstrip (weapon_strip.gd)
 	var y0 := y1 - g
 	_sprint.position = Vector2(x0, y1)
 	_roll.position = Vector2(x1, y1)

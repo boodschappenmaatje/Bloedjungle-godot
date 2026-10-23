@@ -82,6 +82,22 @@ static func label(text: String, font: Font, size: int, color: Color) -> Label:
 	return l
 
 
+## Marges voor schermranden en uitsparingen zoals de Dynamic Island, omgerekend naar HUD-coördinaten.
+## Op desktops en schermen zonder veilige marge valt alleen de kleine standaardmarge toe.
+static func safe_margins(view_size: Vector2, base := 12.0) -> Vector4:
+	var screen := Vector2(DisplayServer.screen_get_size())
+	var safe: Rect2i = DisplayServer.get_display_safe_area()
+	if screen.x <= 0.0 or screen.y <= 0.0 or safe.size.x <= 0 or safe.size.y <= 0:
+		return Vector4(base, base, base, base)
+	var sx := view_size.x / screen.x
+	var sy := view_size.y / screen.y
+	return Vector4(
+		base + maxf(0.0, safe.position.x * sx),
+		base + maxf(0.0, safe.position.y * sy),
+		base + maxf(0.0, (screen.x - safe.end.x) * sx),
+		base + maxf(0.0, (screen.y - safe.end.y) * sy))
+
+
 ## Zet de web-stijl op een knop. kind: "buy", "primary", "gold", "tab", "round", "pause".
 static func style_button(b: Button, kind: String) -> void:
 	b.focus_mode = Control.FOCUS_NONE

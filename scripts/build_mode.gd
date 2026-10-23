@@ -31,6 +31,20 @@ var _ring: MeshInstance3D
 var _msg_t := 0.0
 
 
+class BuildIconButton:
+	extends Button
+	func _draw() -> void:
+		var c := Vector2(size.x * 0.5, size.y * 0.38)
+		var col := UI.BRASS
+		var dark := Color(0.08, 0.07, 0.035, 0.95)
+		for p in [Vector2(-12, 2), Vector2(4, 2), Vector2(-4, -12)]:
+			var r := Rect2(c + p, Vector2(12, 12))
+			draw_rect(r, col, true)
+			draw_rect(r, dark, false, 1.2)
+		var f: Font = UI.body(700, 1)
+		draw_string(f, Vector2(0, size.y - 10.0), "BOUWEN", HORIZONTAL_ALIGNMENT_CENTER, size.x, 11, UI.INK)
+
+
 class Card:
 	extends Control
 	var kind := ""
@@ -112,13 +126,17 @@ class Card:
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_btn = Button.new()
+	_btn = BuildIconButton.new()
 	_btn.add_to_group("hud_button")
-	_btn.text = "BOUWEN"
-	UI.style_button(_btn, "pause")
-	_btn.add_theme_font_override("font", UI.display(1))
-	_btn.add_theme_font_size_override("font_size", 12)
-	_btn.pressed.connect(_enter)
+	_btn.text = ""
+	_btn.tooltip_text = "Bouwmodus openen"
+	_btn.focus_mode = Control.FOCUS_NONE
+	var normal := UI.box(Color(0.025, 0.035, 0.025, 0.88), Color(UI.BRASS, 0.55), 1, 8, 0)
+	var pressed := UI.box(Color(0.16, 0.13, 0.055, 0.96), Color(UI.BRASS, 0.8), 2, 8, 0)
+	for state in ["normal", "hover", "focus", "disabled"]:
+		_btn.add_theme_stylebox_override(state, normal)
+	_btn.add_theme_stylebox_override("pressed", pressed)
+	_btn.pressed.connect(func(): _exit() if Game.build_mode else _enter())
 	add_child(_btn)
 	_ui = Control.new()
 	_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -162,7 +180,7 @@ func _make_info() -> void:
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 5)
 	_info.add_child(vb)
-	vb.add_child(UI.label("BOUWEN", UI.display(1), 17, UI.INK))
+	vb.add_child(UI.label("BOUWMODUS ACTIEF", UI.display(1), 17, UI.INK))
 	var hint := UI.label("Sleep een kaartje op de kaart. Sleep de grond om te schuiven, knijp of gebruik + en − om te zoomen.", UI.body(600, 0), 12, UI.INK_DIM)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size.x = 186
@@ -184,7 +202,7 @@ func _make_info() -> void:
 	row.add_child(_credit_box)
 	var done := Button.new()
 	done.add_to_group("hud_button")
-	done.text = "Klaar"
+	done.text = "TERUG NAAR HET VELD"
 	UI.style_button(done, "gold")
 	done.pressed.connect(_exit)
 	vb.add_child(done)
@@ -229,8 +247,14 @@ func _exit() -> void:
 
 func _process(delta: float) -> void:
 	_btn.visible = Game.state == "prep" and not Game.build_mode and Game.player != null
-	_btn.size = Vector2(88, 32)
-	_btn.position = Vector2(12, 128)
+	var safe := UI.safe_margins(size)
+	_btn.size = Vector2(82, 82)
+	var button_x := safe.x + 8.0
+	if size.x >= size.y:
+		var card_width := minf(220.0, maxf(150.0, size.x - safe.x - safe.z - 100.0))
+		var weapon_left := (size.x - (100.0 + card_width)) * 0.5
+		button_x = maxf(safe.x + 8.0, minf(maxf(safe.x + 164.0, size.x * 0.2), weapon_left - 94.0))
+	_btn.position = Vector2(button_x, size.y - safe.w - 90.0)
 	if Game.build_mode and Game.state != "prep":
 		_exit()
 	if _msg_t > 0.0:

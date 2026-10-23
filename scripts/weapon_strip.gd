@@ -209,10 +209,12 @@ static func _box(root: Node3D) -> AABB:
 
 func _layout() -> void:
 	var portrait := size.x < size.y
-	var y0 := size.y - (140.0 if not portrait else 222.0)  # staand boven de zet-neer-knoppen (place_hud.gd)
-	var arrow := Vector2(34.0, 64.0)
-	var card := Vector2(150.0, 64.0)
-	var x := 16.0
+	var safe := UI.safe_margins(size)
+	var arrow := Vector2(46.0, 64.0)
+	var card := Vector2(minf(220.0, maxf(150.0, size.x - safe.x - safe.z - arrow.x * 2.0 - 8.0)), 64.0)
+	var total := arrow.x * 2.0 + card.x + 8.0
+	var x := maxf(safe.x, (size.x - total) * 0.5)
+	var y0 := size.y - (222.0 if portrait else 140.0) - maxf(0.0, safe.w - 12.0)
 	_prev.position = Vector2(x, y0)
 	_prev.size = arrow
 	_card.position = Vector2(x + arrow.x + 3.0, y0)
@@ -300,16 +302,22 @@ func _process(delta: float) -> void:
 func _style(active: bool) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = Color(0.12, 0.17, 0.13, 0.92) if active else Color(0.035, 0.06, 0.05, 0.79)
-	sb.border_color = Color(1, 0.73, 0.32) if active else Color(0.35, 0.45, 0.35, 0.45)
-	sb.set_border_width_all(2 if active else 1)
+	sb.border_color = Color(UI.BRASS, 0.72) if active else Color(UI.INK_DIM, 0.18)
+	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(5)
 	return sb
 
 
 func _skin(b: Button, active: bool) -> void:
 	var sb := _style(active)
-	for state in ["normal", "hover", "pressed", "disabled", "focus"]:
+	var pressed := _style(active)
+	pressed.bg_color = Color(0.24, 0.2, 0.1, 0.95) if active else Color(0.15, 0.18, 0.14, 0.9)
+	var disabled := _style(false)
+	disabled.bg_color = Color(0.03, 0.04, 0.035, 0.72)
+	for state in ["normal", "hover", "focus"]:
 		b.add_theme_stylebox_override(state, sb)
+	b.add_theme_stylebox_override("pressed", pressed)
+	b.add_theme_stylebox_override("disabled", disabled)
 
 
 func _refresh() -> void:

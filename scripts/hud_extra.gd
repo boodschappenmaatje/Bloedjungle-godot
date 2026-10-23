@@ -6,7 +6,6 @@ extends Control
 
 var _hp_bar: ProgressBar
 var _base_bar: ProgressBar
-var _wave: Label
 var _enemies: Label
 var _points: Label
 var _score: Label
@@ -19,6 +18,7 @@ var _hurt_a := 0.0
 var _last_hp := -1.0
 var _arrows: Control
 var _bars: VBoxContainer
+var _status_panel: PanelContainer
 var _top_right: HBoxContainer
 var _menu: PauseMenu
 var _fps: Label
@@ -35,6 +35,14 @@ const RADAR_POST_SIGHT := 26.0  # m rond torens, soldaten en gebouwen
 const RADAR_BASE_MARGIN := 8.0  # m buiten de muur die de basis overziet
 const RADAR_MEMORY := 2.5  # s
 var _seen := {}  # instance-id -> laatste keer gezien (s)
+
+
+class MenuGlyph:
+	extends Control
+	func _draw() -> void:
+		var c := size * 0.5
+		for y in [-6.0, 0.0, 6.0]:
+			draw_line(c + Vector2(-8.0, y), c + Vector2(8.0, y), UI.BRASS, 2.0, true)
 
 
 func _ready() -> void:
@@ -73,10 +81,16 @@ func _shadowed(l: Label) -> Label:
 
 
 func _build_bars() -> void:
+	_status_panel = PanelContainer.new()
+	_status_panel.name = "StatusPanel"
+	_status_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_status_panel.custom_minimum_size = Vector2(0, 48)
+	_status_panel.add_theme_stylebox_override("panel", UI.box(Color(0.015, 0.025, 0.02, 0.82), Color(UI.PANEL_LINE, 0.75), 1, 6, 6))
+	add_child(_status_panel)
 	_bars = VBoxContainer.new()
 	_bars.add_theme_constant_override("separation", 5)
 	_bars.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(_bars)
+	_status_panel.add_child(_bars)
 	_hp_bar = _bar_row("heart", Color8(224, 71, 58), UI.BLOOD_HI)
 	_base_bar = _bar_row("base", UI.OLIVE_HI, UI.OLIVE_HI)
 
@@ -93,6 +107,7 @@ func _bar_row(icon: String, icon_col: Color, fill: Color) -> ProgressBar:
 	ic.custom_minimum_size = Vector2(14, 14)
 	ic.modulate = icon_col
 	ic.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ic.tooltip_text = "Spelergezondheid" if icon == "heart" else "Gezondheid van de basis"
 	row.add_child(ic)
 	var pb := ProgressBar.new()
 	pb.show_percentage = false
@@ -103,6 +118,7 @@ func _bar_row(icon: String, icon_col: Color, fill: Color) -> ProgressBar:
 	pb.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	pb.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	pb.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	pb.tooltip_text = "Spelergezondheid" if icon == "heart" else "Gezondheid van de basis"
 	pb.add_theme_stylebox_override("background", UI.box(Color(0, 0, 0, 0.55), Color(UI.INK, 0.25), 1, 2, 0))
 	pb.add_theme_stylebox_override("fill", UI.box(fill, Color(0, 0, 0, 0), 0, 1, 0))
 	row.add_child(pb)
@@ -114,9 +130,6 @@ func _build_top_right() -> void:
 	_top_right.add_theme_constant_override("separation", 10)
 	_top_right.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_top_right)
-	_wave = _shadowed(UI.label("GOLF 1", UI.display(1), 16, UI.INK))
-	_wave.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_top_right.add_child(_wave)
 	var en := HBoxContainer.new()
 	en.add_theme_constant_override("separation", 3)
 	en.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -139,11 +152,16 @@ func _build_top_right() -> void:
 	_score.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	_top_right.add_child(_score)
 	var pb := Button.new()
-	pb.text = "II"
-	pb.custom_minimum_size = Vector2(34, 30)
+	pb.name = "MenuButton"
+	pb.tooltip_text = "Pauzemenu"
+	pb.custom_minimum_size = Vector2(38, 34)
 	pb.add_to_group("hud_button")
 	pb.process_mode = Node.PROCESS_MODE_ALWAYS
 	UI.style_button(pb, "pause")
+	var glyph := MenuGlyph.new()
+	glyph.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	glyph.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	pb.add_child(glyph)
 	pb.pressed.connect(func(): _set_paused(true))
 	_top_right.add_child(pb)
 
@@ -247,11 +265,14 @@ func _draw_radar() -> void:
 	if _radar == null or not _radar.visible:
 		return
 	var bounds := Rect2(Vector2.ZERO, _radar.size)
-	_radar.draw_rect(bounds, Color(0.025, 0.055, 0.045, 0.9), true)
-	_radar.draw_rect(bounds, Color(0.58, 0.66, 0.43, 0.85), false, 1.5)
-	var head := 18.0 if _radar.size.x >= 110.0 else 6.0
+	_radar.draw_style_box(UI.box(Color(0.025, 0.045, 0.035, 0.9), Color(UI.PANEL_LINE, 0.82), 1, 6, 0), bounds)
+	var head := 22.0 if _radar.size.x >= 110.0 else 16.0
 	if head > 6.0:
-		_radar.draw_string(UI.body(700, 0), Vector2(7, 13), "RADAR  ·  CONTACTEN" if _radar.size.x >= 130.0 else "RADAR", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK_DIM)
+		_radar.draw_string(UI.body(700, 0), Vector2(7, 14), "CONTACTEN" if _radar.size.x >= 110.0 else "RADAR", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK_DIM)
+	if _radar.size.x >= 88.0:
+		var north_x := _radar.size.x * 0.5
+		_radar.draw_string(UI.body(700, 0), Vector2(north_x - 4.0, 13.0), "N", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK)
+		_radar.draw_colored_polygon(PackedVector2Array([Vector2(north_x, 15.0), Vector2(north_x - 3.5, 21.0), Vector2(north_x + 3.5, 21.0)]), UI.BRASS)
 	var map := Rect2(5.0, head, _radar.size.x - 10.0, _radar.size.y - head - 5.0)
 	# kruislijnen als schaalreferentie, geen extra scene of viewport
 	var mid_x: float = map.position.x + map.size.x * 0.5
@@ -273,7 +294,8 @@ func _draw_radar() -> void:
 	_radar.draw_rect(Rect2(base - Vector2(3.5, 3.5), Vector2(7, 7)), Color(1.0, 0.74, 0.28), true)
 	for tower in get_tree().get_nodes_in_group("tower"):
 		if is_instance_valid(tower) and tower is Node3D:
-			_radar.draw_rect(Rect2(_radar_point(tower.global_position, map) - Vector2(2.5, 2.5), Vector2(5, 5)), Color(0.38, 0.75, 0.48), true)
+			var tp := _radar_point(tower.global_position, map)
+			_radar.draw_colored_polygon(PackedVector2Array([tp + Vector2(0, -4), tp + Vector2(4, 0), tp + Vector2(0, 4), tp + Vector2(-4, 0)]), Color(0.38, 0.75, 0.48))
 	if Game.gates != null and is_instance_valid(Game.gates):
 		for gate in Game.gates.list:
 			var root: Variant = gate.get("root")
@@ -298,7 +320,7 @@ func _draw_radar() -> void:
 		if vis <= 0.0:
 			continue
 		var point := _radar_point(enemy.global_position, map)
-		_radar.draw_circle(point, 2.2, Color(1.0, 0.24, 0.16, 0.95 * vis))
+		_radar.draw_circle(point, 2.5, Color(1.0, 0.24, 0.16, 0.95 * vis))
 	if _seen.size() > 64:  # oude contacten opruimen
 		var alive := {}
 		for e in Game.enemies:
@@ -377,14 +399,16 @@ func _radar_size() -> Vector2:
 
 
 func _layout() -> void:
+	var safe := UI.safe_margins(size)
 	_radar.custom_minimum_size = _radar_size()
 	_radar.size = _radar.custom_minimum_size
-	_bars.position = Vector2(12, 10)
-	_bars.size = Vector2(minf(size.x * 0.3, 150.0), 0)
+	_status_panel.position = Vector2(safe.x, safe.y)
+	_status_panel.size = Vector2(minf(size.x * 0.42, 232.0), 52.0)
 	_top_right.reset_size()
-	_top_right.position = Vector2(size.x - 12.0 - _top_right.size.x, 10)
-	_camera_controls.position = Vector2(12.0, 48.0)
-	_radar.position = Vector2(size.x - _radar.size.x - 12.0, 48.0)
+	_top_right.position = Vector2(size.x - safe.z - _top_right.size.x, safe.y)
+	_camera_controls.position = Vector2(safe.x, safe.y + _status_panel.size.y + 7.0)
+	_radar.position = Vector2(size.x - safe.z - _radar.size.x, safe.y + 42.0)
+	_fps.position = Vector2(safe.x, safe.y + _status_panel.size.y + 46.0)
 	_arrows.queue_redraw()
 
 
@@ -404,12 +428,13 @@ void fragment() {
 func _process(delta: float) -> void:
 	visible = Game.state != "menu"
 	_bars.visible = not Game.editing
+	_status_panel.visible = not Game.editing
 	_top_right.visible = not Game.editing
 	_weapon.visible = not Game.editing
-	var play_hud := (Game.state == "play" or Game.state == "prep") and not Game.build_mode
-	_camera_controls.visible = play_hud
-	_radar.visible = play_hud
-	if play_hud:
+	var active_hud := Game.state == "play" or Game.state == "prep"
+	_camera_controls.visible = active_hud and not Game.build_mode
+	_radar.visible = active_hud
+	if active_hud:
 		_update_camera_controls()
 		_radar_refresh -= delta
 		if _radar_refresh <= 0.0:
@@ -423,7 +448,6 @@ func _process(delta: float) -> void:
 		_fps.text += "\n" + TouchSticks.info + " · st " + Game.state + (" · pauze" if get_tree().paused else "")
 	var main := get_parent().get_parent()
 	var left: int = Game.enemies.size() + (main.queue.size() if "queue" in main else 0)
-	_wave.text = "GOLF %d" % maxi(Game.wave, 1)
 	_enemies.text = "–" if Game.state != "play" else str(left)
 	_points.text = "%s pt" % UI.nl(Game.points)
 	_score.text = "★ %s" % UI.nl(Game.score)

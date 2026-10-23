@@ -69,9 +69,16 @@ func _ready() -> void:
 ## Plek van de knoppen: "Wapenkamer" naast "Start nu" onder de golf-titel, "Wissel" in de boog rechts.
 func _layout() -> void:
 	var s := size
+	var safe := UI.safe_margins(s)
 	_open_btn.size = Vector2(110, 32)
-	_open_btn.position = Vector2(s.x * 0.5 + 2.0, 132)
-	_swap_btn.position = Vector2(s.x - 16.0 - 54.0 + 4.0, s.y - (230.0 if s.x < s.y else 16.0) - 54.0 - 62.0 - 54.0)  # boven het knoppenraster (combat_buttons.gd)
+	var banner_top := maxf(52.0, safe.y + 14.0)
+	_open_btn.position = Vector2(s.x * 0.5 + 2.0, maxf(banner_top + 68.0, safe.y + 80.0))
+	var swap_y := s.y - safe.w - 4.0 - 54.0 - 62.0 - 54.0  # boven het knoppenraster (combat_buttons.gd)
+	if s.x < s.y:
+		# In staande stand is de ruimte boven het actieknoppenraster vrij; de uitklapbare voorraad blijft lager.
+		var radar_bottom := safe.y + 42.0 + 100.0
+		swap_y = radar_bottom + 10.0
+	_swap_btn.position = Vector2(s.x - safe.z - 54.0, swap_y)
 
 
 ## Met je vinger (of muis) de lijst met kaarten verslepen; de scrollbalk hoeft niet.

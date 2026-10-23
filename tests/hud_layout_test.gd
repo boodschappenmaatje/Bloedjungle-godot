@@ -45,6 +45,10 @@ func _run() -> void:
 	game.place_sel = "bags"
 	game.place_armed = true
 	game.emit_signal("changed")
+	var equipment_toggle := main.get_node("Hud").find_child("ExpandEquipment", true, false) as Button
+	if equipment_toggle != null:
+		equipment_toggle.pressed.emit()
+	await process_frame
 	var action_btn: Script = load("res://scripts/action_btn.gd")
 	for s in SIZES:
 		root.size = s
@@ -67,9 +71,10 @@ func _run() -> void:
 				var b: Rect2 = (buttons[j] as Control).get_global_rect()
 				if a.intersects(b):
 					_check(false, "%s: overlap %s en %s" % [s, _label(buttons[i]), _label(buttons[j])])
-		# de contextknoppen (poort, brug, repareer, voertuig) staan op vaste plekken onderin het midden; ook daar mag niets overlappen
+		# de contextknoppen staan onder de wapenbalk in landschap en portret.
 		for slot in 3:
-			var ctx := Rect2(Vector2(view.x * 0.5 + float(action_btn.call("slot_x", slot)), view.y - 126.0), action_btn.get("SIZE"))
+			var context_y: float = view.y - 126.0 if view.x < view.y else view.y - 68.0
+			var ctx := Rect2(Vector2(view.x * 0.5 + float(action_btn.call("slot_x", slot)), context_y), action_btn.get("SIZE"))
 			for b in buttons:
 				if ctx.intersects((b as Control).get_global_rect()):
 					_check(false, "%s: contextknop-plek %d overlapt %s" % [s, slot, _label(b)])

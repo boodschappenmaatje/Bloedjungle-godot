@@ -21,10 +21,23 @@ static func make(k: String, cap: String) -> ActionBtn:
 	var b := ActionBtn.new()
 	b.kind = k
 	b.caption = cap
+	b.tooltip_text = {
+		"granaat": "Granaat gooien",
+		"herlaad": "Actief wapen herladen",
+		"sprint": "Sprinten · balk toont uithoudingsvermogen",
+		"rol": "Ontwijkrol · afkoeling wordt rond de knop getoond",
+	}.get(k, cap)
 	b.add_to_group("hud_button")
 	b.custom_minimum_size = SIZE
 	b.size = SIZE
 	UI.style_button(b, "round")
+	var idle := UI.box(Color(0.025, 0.04, 0.035, 0.84), Color(UI.BRASS, 0.28), 1, 30, 0)
+	var pressed := UI.box(Color(0.17, 0.14, 0.065, 0.94), Color(UI.BRASS, 0.72), 1, 30, 0)
+	var disabled := UI.box(Color(0.02, 0.03, 0.025, 0.56), Color(UI.INK_DIM, 0.16), 1, 30, 0)
+	for state in ["normal", "hover", "focus"]:
+		b.add_theme_stylebox_override(state, idle)
+	b.add_theme_stylebox_override("pressed", pressed)
+	b.add_theme_stylebox_override("disabled", disabled)
 	b.text = ""
 	b.visible = false
 	return b
@@ -32,7 +45,13 @@ static func make(k: String, cap: String) -> ActionBtn:
 
 func place(i: int, parent_size: Vector2) -> void:
 	size = SIZE
-	position = Vector2(parent_size.x * 0.5 + slot_x(i), parent_size.y - 126.0)
+	var safe := UI.safe_margins(parent_size)
+	var y := parent_size.y - 126.0 - maxf(0.0, safe.w - 12.0)
+	if parent_size.x >= parent_size.y:
+		# In landschap staat de wapenbalk midden onderin; contextacties komen er net onder.
+		var weapon_y := parent_size.y - 140.0 - maxf(0.0, safe.w - 12.0)
+		y = weapon_y + 64.0 + 8.0
+	position = Vector2(parent_size.x * 0.5 + slot_x(i), y)
 
 
 func set_caption(c: String) -> void:
@@ -42,7 +61,7 @@ func set_caption(c: String) -> void:
 
 
 func _draw() -> void:
-	var col: Color = UI.BRASS
+	var col: Color = Color(UI.BRASS, 0.42) if disabled else UI.BRASS
 	var c := Vector2(size.x * 0.5, 21.0)
 	var w := 2.6
 	match kind:
@@ -111,6 +130,12 @@ func _draw() -> void:
 			draw_arc(c + Vector2(0, 3), 6.0, 2.4, 3.9, 6, Color(0.05, 0.06, 0.04, 0.8), 2.0)
 	if kind in ["sprint"] and open_state:
 		draw_arc(size * 0.5, size.x * 0.5 - 2.0, 0, TAU, 28, UI.BRASS, 2.4)  # staat aan
+	if kind == "rol" and bar >= 0.0:
+		var ring_center := Vector2(size.x * 0.5, size.y * 0.5)
+		var radius := size.x * 0.5 - 2.0
+		draw_arc(ring_center, radius, 0, TAU, 36, Color(UI.INK_DIM, 0.45), 2.2, true)
+		if bar > 0.001:
+			draw_arc(ring_center, radius, -PI * 0.5, -PI * 0.5 + TAU * clampf(bar, 0.0, 1.0), 36, UI.BRASS, 2.8, true)
 	var f: Font = UI.body(700, 1)
 	var fs := 10
 	while fs > 6 and f.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > size.x - 16.0:

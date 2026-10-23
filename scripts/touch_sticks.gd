@@ -119,8 +119,10 @@ func _process(_delta: float) -> void:
 func _draw() -> void:
 	for s in _sticks.values():
 		var fire: bool = s.aim and s.d.length() > AIM_FIRE
-		draw_circle(s.origin, STICK_R, Color(1, 1, 1, 0.12))
-		draw_arc(s.origin, STICK_R, 0, TAU, 40, Color(1, 0.3, 0.2, 0.8) if fire else Color(1, 1, 1, 0.35), 2.0)
+		draw_circle(s.origin, STICK_R, Color(0.015, 0.03, 0.025, 0.2))
+		draw_arc(s.origin, STICK_R, 0, TAU, 40, Color(1, 0.3, 0.2, 0.8) if fire else Color(UI.BRASS, 0.38), 1.6)
 		if s.aim:
-			draw_arc(s.origin, STICK_R * AIM_FIRE, 0, TAU, 40, Color(1, 1, 1, 0.25), 1.5)  # vanaf hier schiet hij
-		draw_circle(s.origin + s.d * STICK_R, 24.0, Color(1, 1, 1, 0.45))
+			draw_arc(s.origin, STICK_R * AIM_FIRE, 0, TAU, 40, Color(UI.INK, 0.22), 1.2)  # vanaf hier schiet hij
+		var knob: Vector2 = s.origin + s.d * STICK_R
+		draw_circle(knob, 24.0, Color(0.07, 0.09, 0.075, 0.92))
+		draw_arc(knob, 24.0, 0, TAU, 32, Color(UI.INK, 0.5), 1.4)

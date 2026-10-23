@@ -44,39 +44,38 @@ func _style() -> void:
 	# golf-titel en ondertitel
 	var ls: LabelSettings = big.label_settings.duplicate()
 	ls.font = UI.display(1)
-	ls.font_size = 32
+	ls.font_size = 23
 	ls.font_color = UI.INK
 	ls.outline_size = 0
-	ls.shadow_color = Color(0, 0, 0, 0.9)
-	ls.shadow_offset = Vector2(0, 3)
-	ls.shadow_size = 4
+	ls.shadow_color = Color(0, 0, 0, 0.7)
+	ls.shadow_offset = Vector2(0, 1)
+	ls.shadow_size = 2
 	big.label_settings = ls
 	var ss := LabelSettings.new()
 	ss.font = UI.body(600, 2)
-	ss.font_size = 13
-	ss.font_color = UI.INK_DIM
-	ss.shadow_color = Color(0, 0, 0, 0.9)
-	ss.shadow_offset = Vector2(0, 2)
-	ss.shadow_size = 3
+	ss.font_size = 12
+	ss.font_color = UI.BRASS
 	small.label_settings = ss
-	$Banner.offset_top = 64.0
-	$Banner.offset_bottom = 120.0
-	$Banner.add_theme_constant_override("separation", 6)
+	$BannerPlate/Banner.add_theme_constant_override("separation", 0)
+	var plate := UI.box(Color(0.025, 0.035, 0.027, 0.91), Color(UI.PANEL_LINE, 0.82), 1, 7, 7)
+	plate.border_width_top = 2
+	$BannerPlate.add_theme_stylebox_override("panel", plate)
+	$BannerPlate.custom_minimum_size = Vector2(256, 60)
 	# "Start nu" staat links naast "Wapenkamer"
 	start_btn.text = "START NU"
 	UI.style_button(start_btn, "gold")
 	start_btn.add_theme_font_size_override("font_size", 12)
 	start_btn.custom_minimum_size = Vector2(0, 32)
-	start_btn.offset_top = 132.0
-	start_btn.offset_bottom = 164.0
+	start_btn.offset_top = 122.0
+	start_btn.offset_bottom = 154.0
 	start_btn.offset_right = -2.0
-	start_btn.offset_left = -2.0 - 88.0
+	start_btn.offset_left = -2.0 - 104.0
 	# versiemarkering (zodat je kunt zien welke versie draait)
 	info.text = VERSION
 	info.add_theme_font_override("font", UI.body(600, 1))
 	info.add_theme_font_size_override("font_size", 11)
 	info.add_theme_color_override("font_color", Color(UI.INK_DIM, 0.6))
-	info.offset_top = 66.0
+	info.offset_top = 68.0
 	info.offset_left = 12.0
 	# gesneuveld-scherm
 	over_box.add_theme_stylebox_override("panel", UI.box(UI.PANEL, UI.PANEL_LINE, 1, 6, 20))
@@ -100,21 +99,35 @@ func _rescale() -> void:
 	var s := get_window().size
 	var touch := DisplayServer.is_touchscreen_available() or OS.get_environment("BJ_TOUCH") == "1"
 	get_window().content_scale_factor = clampf(minf(s.x, s.y) / (430.0 if touch else 720.0), 1.0, 4.0)
+	_layout_wave_banner()
+
+
+func _layout_wave_banner() -> void:
+	var view_size := Vector2(get_viewport().get_visible_rect().size)
+	var safe := UI.safe_margins(view_size)
+	var top := maxf(52.0, safe.y + 14.0)
+	$BannerPlate.offset_top = top
+	$BannerPlate.offset_bottom = top + 60.0
+	start_btn.offset_top = maxf(top + 68.0, safe.y + 80.0)
+	start_btn.offset_bottom = start_btn.offset_top + 32.0
 
 
 func _process(delta: float) -> void:
-	info.visible = not Game.editing
+	info.visible = GameSettings.get_value("fps") == "on" and not Game.editing
 	if _banner_t > 0.0:
 		_banner_t -= delta
-		if _banner_t <= 0.0:
-			big.text = ""
+	var temporary_banner := _banner_t > 0.0
+	if not temporary_banner:
+		big.text = "GOLF %d" % maxi(Game.wave, 1) if Game.state == "prep" or Game.state == "play" else ""
+		if Game.state == "prep":
+			var seconds := ceili(Game.prep_t)
+			small.text = "%02d:%02d" % [floori(seconds / 60.0), posmod(seconds, 60)]
+		else:
 			small.text = ""
-	if Game.state == "prep" and _banner_t <= 0.0:
-		big.text = "GOLF %d" % Game.wave
-		small.text = ("Begint over %d · koop wapens en upgrades" % ceili(Game.prep_t)).to_upper()
-	var shown: bool = Game.state != "shop" and Game.state != "menu" and not Game.build_mode
+	$BannerPlate.visible = Game.state == "prep" or Game.state == "play" or temporary_banner
+	var shown: bool = Game.state != "shop" and Game.state != "menu" and Game.state != "over"
 	big.visible = shown
-	small.visible = shown
+	small.visible = shown and small.text != ""
 	start_btn.visible = Game.state == "prep" and not Game.build_mode
 
 

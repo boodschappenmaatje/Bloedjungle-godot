@@ -26,7 +26,7 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
 
 
-def make_texture(name, base, style, seed, size=512):
+def make_texture(name, base, style, seed, size=256):
     """Generate a small tileable, authored weathering map and a matching normal."""
     rng = random.Random(seed)
     height = array("f", [0.0]) * (size * size)
@@ -379,19 +379,22 @@ for i, (side, x, y, rot, window, doorway) in enumerate(wall_specs):
 # Swinging front leaves. The script rotates each hinge open using the shared house system.
 front_left = empty("DeurVoorL", ground, (-1.72, 0, 3.79))
 front_right = empty("DeurVoorR", ground, (1.72, 0, 3.79), (0, math.pi, 0))
+# Both leaves run along their hinge's local +X (the right hinge is turned half round, so its leaf points to -X and
+# closes the right half of the opening); the ribs sit on the inside (local -Z for the left, +Z for the turned right).
 for hinge, s in ((front_left, 1), (front_right, -1)):
     panel = empty("Paneel", hinge)
     parts = []
-    box_component(parts, s * 0.80, 2.05, 0, 1.62, 3.9, 0.11, OLIVE)
+    box_component(parts, 0.80, 2.05, 0, 1.62, 3.9, 0.11, OLIVE)
     for yy in (0.25, 0.62, 1.05, 1.52, 2.05, 2.55, 3.0, 3.48):
-        box_component(parts, s * 0.80, yy, -0.07, 1.60, 0.055, 0.04, ROOF)
-    box_component(parts, s * 0.80, 2.05, -0.11, 0.08, 3.9, 0.05, STEEL)
-    box_component(parts, s * 1.52, 2.05, -0.11, 0.08, 3.9, 0.05, STEEL)
-    box_component(parts, s * 0.80, 0.18, -0.12, 0.17, 0.11, 0.06, STEEL)
+        box_component(parts, 0.80, yy, -0.07 * s, 1.60, 0.055, 0.04, ROOF)
+    box_component(parts, 0.80, 2.05, -0.11 * s, 0.08, 3.9, 0.05, STEEL)
+    box_component(parts, 1.52, 2.05, -0.11 * s, 0.08, 3.9, 0.05, STEEL)
+    box_component(parts, 0.80, 0.18, -0.12 * s, 0.17, 0.11, 0.06, STEEL)
     compound_mesh("Schuifdeur paneel", panel, parts)
 
 # Side personnel door is a single hinged leaf in the cut wall module.
-side_door = empty("DeurZij", ground, (-5.79, 0, 3.59), (0, -math.pi / 2, 0))
+# Hinge at the front jamb; the leaf runs back (-Z) over the opening z 2.41..3.59 of wall M010.
+side_door = empty("DeurZij", ground, (-5.79, 0, 3.59), (0, math.pi / 2, 0))
 personnel = empty("Paneel", side_door)
 parts = []
 box_component(parts, 0.54, 1.15, 0, 1.05, 2.30, 0.09, OLIVE)
@@ -531,9 +534,11 @@ for x in (-5.20, -3.90):
 box_component(work_blocks, -4.53, 1.37, -3.25, 1.5, 0.70, 0.56, OLIVE)
 for x in (-5.65, 5.65):
     for y in (-2.45, -0.75, 1.05, 2.75):
+        if x < 0 and y > 2.0:
+            continue   # the personnel door opens here
         box_component(work_blocks, x, 1.05, y, 0.38, 1.85, 0.48, OLIVE)
         for yy in (0.44, 1.0, 1.66):
-            box_component(work_blocks, x - 0.21, yy, y, 0.04, 0.06, 0.34, YELLOW)
+            box_component(work_blocks, x - (0.21 if x > 0 else -0.21), yy, y, 0.04, 0.06, 0.34, YELLOW)
 compound_mesh("Werkbank en gereedschapskasten", workshop, work_blocks)
 
 drums = empty("Olievaten", inside)
@@ -574,11 +579,13 @@ stencil.select_set(False)
 
 # Corrugated two-slope roof. Corrugation is real geometry, not a normal-only trick.
 def roof_panel(name, parent, damaged=False):
-    x0, x1 = -6.18, 6.18
-    nx, ny = 50, 112
+    # The slope is linear in |x|, so x only needs vertices at the eaves, the ridge and the edges of the
+    # torn patch; the corrugation runs along y (4 samples per 0.22 m wave). ~1.2k instead of 11k triangles.
+    xs = [-6.18, -2.4, 0.0, 1.2, 6.18]
+    nx, ny = len(xs) - 1, 150
     verts, faces = [], []
     for ix in range(nx + 1):
-        x = x0 + (x1 - x0) * ix / nx
+        x = xs[ix]
         for iy in range(ny + 1):
             y = -4.12 + 8.24 * iy / ny
             base_z = 5.42 - abs(x) * 0.082
@@ -589,7 +596,7 @@ def roof_panel(name, parent, damaged=False):
             a = ix * (ny + 1) + iy
             b = a + ny + 1
             # leave the torn-out central patch in the damaged roof mesh
-            cx = x0 + (x1 - x0) * (ix + 0.5) / nx
+            cx = (xs[ix] + xs[ix + 1]) * 0.5
             cy = -4.12 + 8.24 * (iy + 0.5) / ny
             if damaged and -2.4 < cx < 1.2 and -1.1 < cy < 2.2:
                 continue
@@ -657,11 +664,112 @@ debris_prop("PuinGroot", [
     ((-0.12, 0.63, 0.12), (0.58, 0.24, 0.44), WOOD, (0.0, 0.12, -0.1)),
 ])
 
+# Exterior steel stair on the east wall (Godot +X) up to the roof for a sniper. Authored in the ground frame:
+# x, height, Godot z. Bottom at the front (z +3.3), top landing at the back (z -2.7..-3.75) at eave height.
+# Woonhuis._spec_magazijn() has the matching walkable strip and roof slope.
+STAIR_X0, STAIR_X1 = 6.3, 7.15
+STAIR_Z0, STAIR_Z1 = 3.3, -2.7
+EAVE = 4.96
+stair = empty("Buitentrap", ground)
+stair_blocks = []
+run = STAIR_Z0 - STAIR_Z1
+pitch = math.atan2(EAVE, run)
+length = math.hypot(EAVE, run)
+for x in (STAIR_X0 + 0.04, STAIR_X1 - 0.04):
+    # stringers
+    box_component(stair_blocks, x, EAVE / 2 - 0.12, (STAIR_Z0 + STAIR_Z1) / 2, 0.07, 0.22, length, STEEL, (pitch, 0, 0))
+steps = 20
+for i in range(1, steps + 1):
+    t = i / steps
+    box_component(stair_blocks, (STAIR_X0 + STAIR_X1) / 2, EAVE * t - 0.03, STAIR_Z0 - run * t + run / steps / 2,
+                  STAIR_X1 - STAIR_X0 - 0.1, 0.05, run / steps + 0.04, STEEL)
+# landing grate on two brackets
+box_component(stair_blocks, (5.95 + STAIR_X1) / 2, EAVE - 0.04, (STAIR_Z1 - 3.75) / 2, STAIR_X1 - 5.95, 0.07, 3.75 + STAIR_Z1, STEEL)
+for z in (STAIR_Z1 - 0.1, -3.65):
+    box_component(stair_blocks, (6.0 + STAIR_X1) / 2, EAVE - 0.35, z, STAIR_X1 - 6.0, 0.08, 0.08, STEEL, (0, 0, -0.35))
+# posts down to the ground under the landing
+for z in (STAIR_Z1 - 0.05, -3.7):
+    box_component(stair_blocks, STAIR_X1 - 0.05, EAVE / 2, z, 0.08, EAVE, 0.08, OLIVE)
+# outer handrail along the flight and around the landing (open towards the roof)
+box_component(stair_blocks, STAIR_X1 - 0.03, EAVE / 2 + 0.95, (STAIR_Z0 + STAIR_Z1) / 2, 0.05, 0.05, length, YELLOW, (pitch, 0, 0))
+for i in range(0, steps + 1, 4):
+    t = i / steps
+    box_component(stair_blocks, STAIR_X1 - 0.03, EAVE * t + 0.47, STAIR_Z0 - run * t, 0.05, 0.95, 0.05, STEEL)
+box_component(stair_blocks, STAIR_X1 - 0.03, EAVE + 0.95, (STAIR_Z1 - 3.75) / 2, 0.05, 0.05, 3.75 + STAIR_Z1, YELLOW)
+box_component(stair_blocks, (6.1 + STAIR_X1) / 2, EAVE + 0.95, -3.73, STAIR_X1 - 6.1, 0.05, 0.05, YELLOW)
+for x, z in ((STAIR_X1 - 0.03, -3.73), (6.12, -3.73), (STAIR_X1 - 0.03, STAIR_Z1)):
+    box_component(stair_blocks, x, EAVE + 0.47, z, 0.05, 0.95, 0.05, STEEL)
+compound_mesh("Buitentrap mesh", stair, stair_blocks)
+
 # UVs are generated after all transforms are evaluated; all image dependencies are packed in both outputs.
 bpy.context.view_layer.update()
 for obj in list(scene.objects):
     if obj.type == "MESH":
         uv_world(obj)
+
+# Merge for the iPhone: every static ground detail becomes one "Gevel" mesh, the interior one "Inrichting0" mesh
+# (Woonhuis._furniture turns each loose object in it into a collision box), and the small window/beam pieces join
+# their wall or roof state. Destructible segments, doors, roof states, ruin and debris stay separate nodes.
+def join(objs, name):
+    objs = [o for o in objs if o.type == "MESH"]
+    if not objs:
+        return None
+    keep = objs[0]
+    if len(objs) > 1:
+        with bpy.context.temp_override(active_object=keep, object=keep, selected_objects=objs,
+                                       selected_editable_objects=objs):
+            bpy.ops.object.join()
+    keep.name = name
+    keep.data.name = name
+    return keep
+
+
+def reparent(obj, parent):
+    mw = obj.matrix_world.copy()
+    obj.parent = parent
+    obj.matrix_world = mw
+
+
+def drop_empties(node):
+    for c in list(node.children):
+        drop_empties(c)
+    if node.type == "EMPTY" and not node.children:
+        bpy.data.objects.remove(node)
+
+
+def under(obj, prefixes):
+    p = obj.parent
+    while p is not None and p != ground:
+        if any(p.name.startswith(pre) for pre in prefixes):
+            return True
+        p = p.parent
+    return False
+
+
+bpy.context.view_layer.update()
+for seg in wall_groups:
+    for heel in [c for c in seg.children if c.name.endswith("_heel")]:
+        join([heel] + list(heel.children_recursive), heel.name)
+join([roof_broken] + list(roof_broken.children_recursive), "Dak_kapot")
+inside.name = "Inrichting_bron"
+furniture = [o for o in inside.children_recursive if o.type == "MESH"]
+interior = join(furniture, "Inrichting0")
+reparent(interior, ground)
+# the rafters belong to the roof: they disappear with it when you are inside and when it collapses
+rafters = [o for o in structure.children if o.type == "MESH"]
+for o in rafters:
+    reparent(o, roof_root)
+join(rafters, "Dakspanten")
+decor = [o for o in ground.children_recursive if o.type == "MESH" and o != interior
+         and not under(o, ("M0", "Deur", "Inrichting"))]
+for o in decor:
+    reparent(o, ground)
+facade_mesh = join(decor, "Gevel")
+drop_empties(inside)
+for c in list(ground.children):
+    if c.type == "EMPTY" and not c.name.startswith(("M0", "Deur")):
+        drop_empties(c)
+bpy.context.view_layer.update()
 
 roof_broken.hide_set(True)
 roof_broken.hide_render = True

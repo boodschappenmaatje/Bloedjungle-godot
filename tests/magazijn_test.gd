@@ -129,9 +129,9 @@ func _process(_delta: float) -> bool:
 		print("MAGAZIJN_MODEL mesh_nodes=", mesh_nodes.size(), " materials=", materials.size(),
 			" textured_surfaces=", textured_surfaces, " normal_surfaces=", normal_surfaces,
 			" normal_arrays=", normal_arrays, " bounds=", bounds.size)
-		_check(mesh_nodes.size() >= 90 and materials.size() >= 8 and normal_arrays > 0, "GLB-meshes, PBR-materialen en mesh-normals laden")
+		_check(mesh_nodes.size() >= 40 and mesh_nodes.size() <= 60 and materials.size() >= 8 and normal_arrays > 0, "samengevoegde GLB-meshes, PBR-materialen en mesh-normals laden")
 		_check(textured_surfaces >= 8 and normal_surfaces >= 6, "base-color- en normalemaps zijn in de GLB beschikbaar")
-		_check(has_bounds and bounds.size.x > 11.0 and bounds.size.x < 13.5 and bounds.size.y > 5.0 and bounds.size.y < 6.5
+		_check(has_bounds and bounds.size.x > 11.0 and bounds.size.x < 14.5 and bounds.size.y > 5.0 and bounds.size.y < 6.5
 			and bounds.size.z > 8.0 and bounds.size.z < 12.0, "GLB-afmetingen passen bij een 12 × 8 meter magazijn")
 		var editor_item := {"k": "magazijn", "x": 72.0, "z": -86.0, "r": 1, "m": 0}
 		var city = city_script.current

@@ -242,7 +242,7 @@ func _process(delta: float) -> void:
 
 
 func _unhandled_key_input(e: InputEvent) -> void:
-	if e is InputEventKey and e.pressed and not e.echo and e.keycode == KEY_B:
+	if e is InputEventKey and e.pressed and not e.echo and e.keycode == KEY_B and not Game.editing:
 		if Game.build_mode:
 			_exit()
 		else:
@@ -424,7 +424,7 @@ func _act(row: Container, text: String, sub: String, enabled: bool, cb: Callable
 # ---------------------------------------------------------------- invoer
 
 func _input(event: InputEvent) -> void:
-	if not Game.build_mode:
+	if not Game.build_mode or Game.editing:
 		return
 	if event is InputEventScreenTouch:
 		_touch = true

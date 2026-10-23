@@ -2,7 +2,7 @@ extends CanvasLayer
 ## Meldingen en knoppen midden op het scherm (golf-titel, "Start nu", gesneuveld). De balken, punten
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
-const VERSION := "v69"
+const VERSION := "v70"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -32,6 +32,7 @@ func _ready() -> void:
 	add_child(Shop.new())
 	add_child(PlaceHud.new())
 	add_child(BuildMode.new())
+	add_child(StadEditor.new())
 	add_child(GateHud.new())
 	_style()
 	# schermtekst en sticks schalen mee met de schermgrootte: op een telefoon staat 1 punt = meerdere pixels

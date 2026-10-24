@@ -1,6 +1,6 @@
 # Blender Visual Quality 2 — resultaten en testinstructies
 
-De drie bestaande modellen zijn daadwerkelijk opnieuw opgebouwd en geëxporteerd met Blender 4.3.2. De definitieve GLB's worden rechtstreeks door de bestaande game geladen. PR #54 blijft Draft tot de gebruiker de beelden op een fysieke iPhone/Xogot heeft beoordeeld.
+De drie bestaande modellen zijn daadwerkelijk opnieuw opgebouwd en geëxporteerd met Blender 4.3.2. De definitieve GLB's worden rechtstreeks door de bestaande game geladen. **PR #54 is inmiddels naar main gemerged.** Deze pagina documenteert de opgeleverde VQ2-referentie; de voortaan geldende projectbrede standaard voor Codex en Claude Code staat in [docs/ASSET_QUALITY_STANDARD.md](../ASSET_QUALITY_STANDARD.md). Nieuwe modelwijzigingen gaan op een aparte Draft PR, zonder automatische merge.
 
 ## Open de interactieve viewer
 

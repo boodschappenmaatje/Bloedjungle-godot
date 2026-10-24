@@ -51,6 +51,9 @@ func _run() -> void:
 		_check(Data.WEAPON_VISUALS.has(id), "%s mist een visueel wapenprofiel" % id)
 		_check(is_equal_approx(float(Data.WEAPONS[id].dmg), expected_damage[id]), "%s schadewaarde is veranderd" % id)
 		_check(float(Data.WEAPON_VISUALS[id].recoil) > 0.0, "%s mist wapenspecifieke terugslag" % id)
+		if id != "bazooka":
+			_check(float(Data.WEAPON_VISUALS[id].flash_length) >= 0.6 and float(Data.WEAPON_VISUALS[id].flash_width) >= 0.2, "%s mondingsflits is te klein voor een telefoon" % id)
+			_check(float(Data.WEAPON_VISUALS[id].flash_life) <= 0.07, "%s mondingsflits duurt langer dan de mobiele limiet" % id)
 		if not game.owned.has(id):
 			game.owned[id] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": Data.WEAPONS[id].mag}
 		if not game.loadout.has(id):
@@ -60,6 +63,7 @@ func _run() -> void:
 		player.set("fire_t", 0.0)
 		var before := _bullets().size()
 		player.call("_shoot", game.wstat(id))
+		_check(float(player.get("model").get("_recoil")) > 0.0, "%s geeft geen zichtbare wapenimpuls" % id)
 		var spawned := _bullets().slice(before)
 		var expected_count: int = Data.WEAPONS[id].pellets
 		_check(spawned.size() == expected_count, "%s vuurt %d projectielen af i.p.v. %d" % [id, spawned.size(), expected_count])

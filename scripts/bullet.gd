@@ -280,7 +280,7 @@ func _physics_process(delta: float) -> void:
 			var target_handles_impact := target_script_path in ["res://scripts/enemy.gd", "res://scripts/player.gd"] or c is Barrel or c is Pomp or c is Brandkraan
 			if not target_handles_impact:
 				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
-			# De extra groene trefflits hoort bij de M1911 en verandert de schade niet.
+			# Extra rode bloedspetters bij een M1911-treffer; schade blijft onveranderd.
 			if from_player and visual_weapon == "m1911" and target_script_path == "res://scripts/enemy.gd":
 				Fx.m1911_zombie_hit(get_parent(), hit.position, dir)
 			c.hit(dmg, dir, from_player)

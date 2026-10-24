@@ -1,0 +1,102 @@
+{
+  "license": "CC0-1.0",
+  "resolution": [
+    1024,
+    1024
+  ],
+  "method": "Native-resolution photographic PBR derivation; seeded directional rain/mud and edge-wear masks, no upscaling.",
+  "inputs_license_manifest": "assets/licenses/downloaded_assets.json",
+  "sets": {
+    "painted_timber": {
+      "source_directory": "assets/textures/buildings/weathered_wood",
+      "source_sha256": {
+        "normal_gl.jpg": "6ce33298285f55bf34af7d7da26b648d692a314f123d4ab967ea2cbc23775457",
+        "base_color.jpg": "44bbc8ec7d6e68d4500804f2b24eb8f60552945b5e5f0b3c1f2fe4d97b91f71e",
+        "roughness.jpg": "74ba3f13d3cee5d0ab9b8b538840bd984f74d60cdf166de8a8de8a5a15428ac3"
+      },
+      "output_sha256": {
+        "orm.png": "869ff72991598a88a19b04615b2dc8631a8c12d0b6d4af539e3445d5ca9f5313",
+        "normal.jpg": "97417c4402ac592dd1f6111834094d0e30d1ebd4f300688089d73abc36ad7652",
+        "albedo.jpg": "39d632874cc7345ba49ea3fd115ab95fecabe4aa4550d1e307b0480015ea4876"
+      }
+    },
+    "timber": {
+      "source_directory": "assets/textures/buildings/weathered_wood",
+      "source_sha256": {
+        "normal_gl.jpg": "6ce33298285f55bf34af7d7da26b648d692a314f123d4ab967ea2cbc23775457",
+        "base_color.jpg": "44bbc8ec7d6e68d4500804f2b24eb8f60552945b5e5f0b3c1f2fe4d97b91f71e",
+        "roughness.jpg": "74ba3f13d3cee5d0ab9b8b538840bd984f74d60cdf166de8a8de8a5a15428ac3"
+      },
+      "output_sha256": {
+        "orm.png": "869ff72991598a88a19b04615b2dc8631a8c12d0b6d4af539e3445d5ca9f5313",
+        "normal.jpg": "97417c4402ac592dd1f6111834094d0e30d1ebd4f300688089d73abc36ad7652",
+        "albedo.jpg": "c94f2385792544220d92b554f1257bb69869ea99901d3ddb8b77d877ebcf5b86"
+      }
+    },
+    "roof": {
+      "source_directory": "assets/textures/buildings/corrugated_iron",
+      "source_sha256": {
+        "normal_gl.jpg": "57062515e461b3ba51267e648cfe6fd309051e99e0385c75f18ade46f15debe9",
+        "base_color.jpg": "21a3ced738887a66fb7832a6682eb790fc81ff85232106dfbc5b1687bc809ba5",
+        "roughness.jpg": "03540f602293263524c784ab1c1dce12fdf8626d2e0f53997fb3e30dc37c5ac0"
+      },
+      "output_sha256": {
+        "orm.png": "70f12ce3c2caed7d39f393e9868486ff2897aa39988f09c96ef9bd8eb07478fe",
+        "normal.jpg": "0c2e64a21401bb329c727483441f43d913adf87df7424ccf851e818528daa28e",
+        "albedo.jpg": "f6fe07b6b5348cf2d1302a400ad2fcd4dbb4689289c09c85a9cd93ab6c3c4c3b"
+      }
+    },
+    "concrete": {
+      "source_directory": "assets/textures/buildings/concrete",
+      "source_sha256": {
+        "normal_gl.jpg": "0006882f5381c6307855e3ad267863f979daf8f4645f7f1f07aa4a86ecd121f7",
+        "base_color.jpg": "f1d9abd06e52641f419a3f8209a2831271f2339c811ac1c0407a771fbbf75669",
+        "roughness.jpg": "2f9ab53a5b841bde9eac1b77589e0d476b31ec4eacb33c7e69ee581a50a89ad8"
+      },
+      "output_sha256": {
+        "orm.png": "a46e76fb21c4dea15394e025547465bbd4f573a4710c67a1327a2ddf1af63058",
+        "normal.jpg": "d6c28e57a28df1f5e8ce9718f57773eee8a08172c5b7995333b179df91a347af",
+        "albedo.jpg": "e228af6b611663987346f562d38ecb78d48716e8b3be6a1a7f3f50f6bb4e61b5"
+      }
+    },
+    "canvas": {
+      "source_directory": "assets/textures/buildings/jute",
+      "source_sha256": {
+        "normal_gl.jpg": "8eea8ee303ced031bd73a616c3e6f0b4e0d7416da29fa672e89391dd59e9a582",
+        "base_color.jpg": "9d4efa4481b18f4378b521e856dea8e93448d61004eee35187e67112e57c2b02",
+        "roughness.jpg": "282e824a7e136b0d5329e0037925af17fa0d80224bef637d777b2c6902c48d0c"
+      },
+      "output_sha256": {
+        "orm.png": "cda015b9bcd6ac43c8a4ccc2e9009cf8bc5933da51d628b104244356b02127bb",
+        "normal.jpg": "7b674fa2874501f0a5677ec10b526b2254ee92060093cb435c83123d9e87df8d",
+        "albedo.jpg": "e5aeb7a4ba5053ed3c996468e14dc748bee0015e5cec1a92a40d7f44fc9ad270"
+      }
+    },
+    "olive": {
+      "source_directory": "assets/textures/buildings/army_green_paint",
+      "source_sha256": {
+        "normal_gl.jpg": "6fcb14227608625fb194ea2a1239d1b443104209ae53ad515cfe1519031b356f",
+        "base_color.jpg": "f35b05d9f66000f432305078705676b9d1539bfc4d527dd80850c5177af15b54",
+        "roughness.jpg": "02c406ca11265dde0008b2a4ee520fb34ed92620887694653de4e21d45aa6d4d"
+      },
+      "output_sha256": {
+        "orm.png": "819000fc5e206a3e5b7bf529d192ab7c8220e94fba21ba9a1bb4abacef3e2223",
+        "normal.jpg": "38dda95e48781c01f041241e9617959058dd96d2bdcce5b3c06b7765b7079b2d",
+        "albedo.jpg": "a01c3b75ee55c4407dd85674a3e4f13068826c0d7abc8b9541b547e34b33d46b"
+      }
+    },
+    "steel": {
+      "source_directory": "assets/textures/buildings/metal",
+      "source_sha256": {
+        "normal_gl.jpg": "1e6e5b80772636a65e332a0941b71c1773c51b190184fb0c3b4ce5c692908ded",
+        "base_color.jpg": "099aa0f6f1915d59b491c75b475760271defffe910eccb3c466acdaa5ca12b0b",
+        "roughness.jpg": "a6785fb99c45172567cc93aa815b2cdd52e60a6668926d9d7b7eb47b807d0d76"
+      },
+      "output_sha256": {
+        "orm.png": "9f060f134d8ab648167200f0ebea7d6180b388c3cd59a0bb32012d2686acab4c",
+        "normal.jpg": "173b208e36277ec30bf7a767e96c9fbfe7033511a8405dcb6bc09dbe528e8f13",
+        "albedo.jpg": "73aa16255e7a1503a4d7d418fdae5f13fe30ba86f5b97fe02e61f68fcb1cfe9b"
+      }
+    }
+  }
+}

@@ -1,0 +1,218 @@
+[
+  {
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "asset": "kazerne",
+    "camera_position": [
+      0.0,
+      23.7453460693359,
+      66.8377380371094
+    ],
+    "camera_rotation": [
+      -1.01229095458984,
+      0.0,
+      0.0
+    ],
+    "exposure": 1.0,
+    "file": "res://docs/vq2/renders/kazerne-godot-game-v1.png",
+    "fov": 45.0,
+    "renderer": "gl_compatibility",
+    "sha256": "6bde056047e483f85a152697a59b1b33e06892f550a8f59950078193ec0a1055",
+    "size": [
+      1280,
+      720
+    ],
+    "version": "v1"
+  },
+  {
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "asset": "kazerne",
+    "camera_position": [
+      0.0,
+      23.7453460693359,
+      66.8377380371094
+    ],
+    "camera_rotation": [
+      -1.01229095458984,
+      0.0,
+      0.0
+    ],
+    "exposure": 1.0,
+    "file": "res://docs/vq2/renders/kazerne-godot-game-v2.png",
+    "fov": 45.0,
+    "renderer": "gl_compatibility",
+    "sha256": "9b007f327cc314a6d7ea8baaddc28f66776781d6dd9b8d2cf3c6c4d33a45450c",
+    "size": [
+      1280,
+      720
+    ],
+    "version": "v2"
+  },
+  {
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "asset": "wachttoren",
+    "camera_position": [
+      0.0,
+      23.7453460693359,
+      66.8377380371094
+    ],
+    "camera_rotation": [
+      -1.01229095458984,
+      0.0,
+      0.0
+    ],
+    "exposure": 1.0,
+    "file": "res://docs/vq2/renders/wachttoren-godot-game-v1.png",
+    "fov": 45.0,
+    "renderer": "gl_compatibility",
+    "sha256": "37b749462f405a6ef8488d2a0172ad4898755a730301d7d98014e0afe8adb908",
+    "size": [
+      1280,
+      720
+    ],
+    "version": "v1"
+  },
+  {
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "asset": "wachttoren",
+    "camera_position": [
+      0.0,
+      23.7453460693359,
+      66.8377380371094
+    ],
+    "camera_rotation": [
+      -1.01229095458984,
+      0.0,
+      0.0
+    ],
+    "exposure": 1.0,
+    "file": "res://docs/vq2/renders/wachttoren-godot-game-v2.png",
+    "fov": 45.0,
+    "renderer": "gl_compatibility",
+    "sha256": "408c9e4453a60d4570ae882e9351692904190088a37dc2c624017179540e4692",
+    "size": [
+      1280,
+      720
+    ],
+    "version": "v2"
+  },
+  {
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "asset": "legerjeep",
+    "camera_position": [
+      0.0,
+      23.7453460693359,
+      66.8377380371094
+    ],
+    "camera_rotation": [
+      -1.01229095458984,
+      0.0,
+      0.0
+    ],
+    "exposure": 1.0,
+    "file": "res://docs/vq2/renders/legerjeep-godot-game-v1.png",
+    "fov": 45.0,
+    "renderer": "gl_compatibility",
+    "sha256": "4dd2651fc371a7526782d6e9856a97ddbf70abefc174eec0f4c4245e40c78602",
+    "size": [
+      1280,
+      720
+    ],
+    "version": "v1"
+  },
+  {
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "asset": "legerjeep",
+    "camera_position": [
+      0.0,
+      23.7453460693359,
+      66.8377380371094
+    ],
+    "camera_rotation": [
+      -1.01229095458984,
+      0.0,
+      0.0
+    ],
+    "exposure": 1.0,
+    "file": "res://docs/vq2/renders/legerjeep-godot-game-v2.png",
+    "fov": 45.0,
+    "renderer": "gl_compatibility",
+    "sha256": "b77403bb6c25247867327a95e6ead7e9c0e79a45b5bfd6fbfb4eb7f8a028606f",
+    "size": [
+      1280,
+      720
+    ],
+    "version": "v2"
+  },
+  {
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "asset": "jeep",
+    "camera_position": [
+      5.17308807373047,
+      5.39847087860107,
+      58.7250137329102
+    ],
+    "camera_rotation": [
+      -0.453814744949341,
+      0.655695736408234,
+      0.0
+    ],
+    "exposure": 1.0,
+    "file": "res://docs/vq2/renders/jeep-rijden.png",
+    "fov": 45.0,
+    "renderer": "gl_compatibility",
+    "sha256": "94b9fc7fac926c486c681b6e111c8c16de4f974a56d7caa4708c13a24b110776",
+    "size": [
+      1280,
+      720
+    ],
+    "version": "v2"
+  },
+  {
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "asset": "jeep",
+    "camera_position": [
+      5.17308807373047,
+      5.39847087860107,
+      58.7250137329102
+    ],
+    "camera_rotation": [
+      -0.453814744949341,
+      0.655695736408234,
+      0.0
+    ],
+    "exposure": 1.0,
+    "file": "res://docs/vq2/renders/jeep-bocht.png",
+    "fov": 45.0,
+    "renderer": "gl_compatibility",
+    "sha256": "c59619aabdc497bd5586816c3352187041399f3abb3a3d716c136b08bdba2d44",
+    "size": [
+      1280,
+      720
+    ],
+    "version": "v2"
+  },
+  {
+    "adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "asset": "jeep",
+    "camera_position": [
+      5.17308807373047,
+      5.39847087860107,
+      58.7250137329102
+    ],
+    "camera_rotation": [
+      -0.453814744949341,
+      0.655695736408234,
+      0.0
+    ],
+    "exposure": 1.0,
+    "file": "res://docs/vq2/renders/jeep-vuren.png",
+    "fov": 45.0,
+    "renderer": "gl_compatibility",
+    "sha256": "6afe7d83c9b60762b29ea1283629fafd09d776d3002a5ec7d0a12bc6a60b5083",
+    "size": [
+      1280,
+      720
+    ],
+    "version": "v2"
+  }
+]

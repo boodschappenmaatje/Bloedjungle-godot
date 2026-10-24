@@ -1,0 +1,195 @@
+{
+  "note": "Imported desktop compressed image payload incl mipmaps. Shared family paths reused by the three GLBs. Not measured GPU residency or mobile FPS; platform-specific ETC2 payload may differ.",
+  "shared_payload_MiB": 14.0002670288086,
+  "textures": [
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/painted_timber/albedo.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/painted_timber/normal.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/painted_timber/orm.png",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/timber/albedo.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/timber/normal.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/timber/orm.png",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/roof/albedo.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/roof/normal.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/roof/orm.png",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/concrete/albedo.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/concrete/normal.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/concrete/orm.png",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/canvas/albedo.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/canvas/normal.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/canvas/orm.png",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/olive/albedo.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/olive/normal.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/olive/orm.png",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/steel/albedo.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/steel/normal.jpg",
+      "width": 1024
+    },
+    {
+      "compressed": true,
+      "height": 1024,
+      "image_format_enum": 17,
+      "image_payload_bytes": 699064,
+      "mipmaps": 10,
+      "path": "res://assets/textures/vq2/steel/orm.png",
+      "width": 1024
+    }
+  ]
+}

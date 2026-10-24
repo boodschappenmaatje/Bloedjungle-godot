@@ -1,0 +1,30 @@
+[
+  {
+    "source": "bron/kazerne/uit/kazerne.blend",
+    "sha256": "c42839d064640e9a906c8f214113dac5d2f6dfcf3618922afba4c223c05e5cb8",
+    "editable_mesh_objects": 13,
+    "packed_image_files": 18,
+    "native_blender_load": "PASS"
+  },
+  {
+    "source": "bron/wachttoren/uit/wachttoren.blend",
+    "sha256": "bc56eaae30e8befc3695ca8d2afe9d8ae94835725859014d941b61623500d6ba",
+    "editable_mesh_objects": 10,
+    "packed_image_files": 15,
+    "native_blender_load": "PASS"
+  },
+  {
+    "source": "bron/legerjeep/jeep.blend",
+    "sha256": "225822151c92fcfe221a4988666fe300077ad97b36315601b648d229a85e78f4",
+    "editable_mesh_objects": 443,
+    "packed_image_files": 9,
+    "native_blender_load": "PASS"
+  },
+  {
+    "source": "bron/jeep/jeep.blend",
+    "sha256": "e636cfb326a9df3b53f0b75bff21970db6c176f68172fc4f04effa2bb9926499",
+    "editable_mesh_objects": 18,
+    "packed_image_files": 1,
+    "native_blender_load": "PASS"
+  }
+]

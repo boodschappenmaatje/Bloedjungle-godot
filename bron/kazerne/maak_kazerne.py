@@ -3,8 +3,12 @@ De deur zit aan de -Y kant in Blender (= +Z in Godot). 1 eenheid = 1 meter, gron
 import math, sys, os, random
 import bpy, bmesh
 from mathutils import Matrix, Vector
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from vq2_common import pbr, finish_mesh, corrugated, bolt, export_and_save
 
-OUT = os.path.abspath(sys.argv[1])
+ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+OUT = os.path.abspath(ARGS[0] if ARGS else str(Path(__file__).parent / "uit"))
 os.makedirs(OUT, exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -48,7 +52,7 @@ def box(k, loc, size, rot=(0, 0, 0)):
 
 def blob(k, loc, size, rot=0.0):
     bm = bms[k]
-    r = bmesh.ops.create_uvsphere(bm, u_segments=8, v_segments=5, radius=0.5)
+    r = bmesh.ops.create_uvsphere(bm, u_segments=12, v_segments=6, radius=0.5)
     v = r["verts"]
     bmesh.ops.scale(bm, vec=size, verts=v)
     bmesh.ops.rotate(bm, verts=v, cent=(0, 0, 0), matrix=Matrix.Rotation(rot, 3, "Z"))
@@ -85,8 +89,8 @@ def boards(x0, y0, x1, y1, z0, z1, skip=None):
 Z0 = 0.16
 # achterwand (+Y) en zijwanden (+/-X)
 boards(-HW, HD, HW, HD, Z0, H)
-boards(-HW, -HD, -HW, HD, Z0, H, skip=(0.9, 1.9, 0.9, 1.7))
-boards(HW, -HD, HW, HD, Z0, H, skip=(0.9, 1.9, 0.9, 1.7))
+boards(-HW, -HD, -HW, HD, Z0, H, skip=(1.1, 2.1, 0.9, 1.7))
+boards(HW, -HD, HW, HD, Z0, H, skip=(1.1, 2.1, 0.9, 1.7))
 # voorwand (-Y) met deur van 1,1 m breed en 1,7 m hoog in het midden
 boards(-HW, -HD, -0.55, -HD, Z0, H)
 boards(0.55, -HD, HW, -HD, Z0, H)
@@ -101,7 +105,11 @@ for sx in (-1, 1):
     for sy in (-1, 1):
         box("Paal", (sx * HW, sy * HD, H / 2 + 0.1), (0.14, 0.14, H + 0.1))
 for z in (0.9, 1.6, H - 0.05):
-    box("Plank1", (0, -HD - 0.035, z), (W + 0.1, 0.04, 0.07))
+    if z > 1.9:
+        box("Plank1", (0, -HD - 0.035, z), (W + 0.1, 0.04, 0.07))
+    else:
+        for sx in (-1,1):
+            box("Plank1",(sx*(HW+.55)/2,-HD-.035,z),(HW-.55,.04,.07))
     box("Plank1", (0, HD + 0.035, z), (W + 0.1, 0.04, 0.07))
     for sx in (-1, 1):
         box("Plank1", (sx * (HW + 0.035), 0, z), (0.04, D + 0.1, 0.07))
@@ -117,16 +125,17 @@ for sx in (-1, 1):
 RZ = H + 0.1
 OV = 0.45
 for sy in (-1, 1):
-    top = Vector((0, 0, RZ + 0.7)); edge = Vector((0, sy * (HD + OV), RZ - 0.05))
-    d = edge - top; ln = d.length
-    mid = (top + edge) / 2
-    tilt = sy * -math.atan2(d.z, abs(d.y)) * -1
-    box("Dak", (0, mid.y, mid.z), (W + 2 * OV, ln, 0.06), (tilt, 0, 0))
-    n = int((W + 2 * OV) / 0.22)
-    for i in range(n):
-        xx = -(W / 2 + OV) + (i + 0.5) * (W + 2 * OV) / n
-        box("Dakrib", (xx, mid.y, mid.z + 0.035), (0.07, ln, 0.04), (tilt, 0, 0))
-box("Dakrib", (0, 0, RZ + 0.74), (W + 2 * OV + 0.1, 0.18, 0.1))
+    corrugated(bms["Dak"], W+2*OV, HD+OV, RZ+.7, RZ-.05, sy)
+    tilt = -sy*math.atan2(.75, HD+OV)
+    # Sheet laps, screwed seams, and a real eave/gutter shadow.
+    for xx in (-1.76, 0, 1.76):
+        box("Dakrib", (xx, sy*(HD+OV)*.5, RZ+.325), (.025, math.hypot(HD+OV,.75), .035), (tilt,0,0))
+        for f in (.18,.65,.94):
+            bolt(bms["Metaal"], (xx,sy*(HD+OV)*f,RZ+.7-.75*f+.035), radius=.019)
+    box("Dakrib", (0,sy*(HD+OV),RZ-.08),(W+2*OV,.07,.09))
+    box("Paal", (0,sy*HD,H+.04),(W+.08,.09,.16))
+for sy in (-1,1):
+    box("Dakrib", (0,sy*.065,RZ+.72),(W+2*OV+.08,.16,.035),(-sy*.33,0,0))
 # gevelvullingen (driehoek) voor en achter
 def prism(k, pts_yz, x0, x1):
     bm = bms[k]
@@ -142,12 +151,18 @@ def prism(k, pts_yz, x0, x1):
 prism("Wand2", [(-HD, H - 0.05), (HD, H - 0.05), (HD, RZ + 0.0), (0, RZ + 0.64), (-HD, RZ + 0.0)], -W / 2 - 0.01, W / 2 + 0.01)
 
 # bord boven de deur
-box("Donker", (0, -HD - 0.08, H + 0.0), (1.6, 0.05, 0.34))
-box("Goud", (0, -HD - 0.11, H + 0.0), (1.3, 0.03, 0.07))
-box("Goud", (0, -HD - 0.11, H + 0.11), (1.3, 0.03, 0.025))
+box("Donker", (0, -HD - 0.08, 2.035), (1.6, 0.05, 0.21))
+box("Goud", (0, -HD - 0.11, 2.13), (1.5, 0.015, 0.012))
+font = bpy.data.curves.new("Kazerne naamplaat", "FONT")
+font.body = "KAZERNE"; font.align_x = "CENTER"; font.size = .155; font.extrude = .001
+sign = bpy.data.objects.new("Kazerne_naamplaat", font); scene.collection.objects.link(sign)
+sign.location = (0,-HD-.115,1.975); sign.rotation_euler.x = math.pi/2
+font.materials.append(M["Goud"])
 # vlaggenmast met vlag
 box("Metaal", (HW + 0.15, -HD + 0.1, 1.9), (0.06, 0.06, 3.8))
-box("Vlag", (HW + 0.55, -HD + 0.1, 3.5), (0.75, 0.02, 0.45))
+for i in range(12):
+    xx=HW+.175+i*.0625
+    box("Vlag", (xx,-HD+.1+.04*math.sin(i*.55),3.5-.015*i/12),(.063,.012,.45-.025*i/12))
 # zandzakken bij de deur
 for sx in (-1, 1):
     for row in range(2):
@@ -156,20 +171,45 @@ for sx in (-1, 1):
 # houten stoep voor de deur
 box("Plank1", (0, -HD - 0.3, 0.14), (1.5, 0.6, 0.06))
 
+# VQ2: recessed sill, ventilation louvers, door hardware and localized foundation grime.
+for sx in (-1,1):
+    box("Paal", (sx*(HW+.025),0,.25),(.08,D,.11))
+    for yy in (-.39,.39):
+        box("Plank1", (sx*(HW+.075),yy,1.3),(.07,.06,.88))
+    box("Plank1", (sx*(HW+.09),0,.86),(.15,1.02,.08))
+    for yy in (-.21,0,.21):
+        box("Metaal", (sx*(HW+.05),yy,1.31),(.025,.018,.72))
+    for zz in (.43,1.35,1.9):
+        bolt(bms["Metaal"],(sx*.58,-HD-.09,zz),(0,-1,0))
+    for xx in (-1.6,-.95,.95,1.6):
+        bolt(bms["Metaal"],(xx,HD+.055,1.62),(0,1,0),.016)
+for xx in (-1.6,1.6):
+    box("Donker", (xx,-HD-.04,1.95),(.42,.025,.20))
+    for zz in (1.88,1.93,1.98,2.03):
+        box("Metaal", (xx,-HD-.065,zz),(.40,.04,.018),(.2,0,0))
+box("Donker",(0,-HD+.09,.22),(1.06,.05,.08))
+for i in range(4):
+    box("Wand2",(-.43+i*.18,-HD+.085,.99),(.172,.05,1.6))
+for zz in (.55,1.43):
+    box("Metaal",(-.46,-HD+.048,zz),(.13,.025,.04))
+box("Metaal",(.13,-HD+.04,1.02),(.025,.04,.16))
+for i in range(5):
+    box("Plank1",(-.6+i*.3,-HD-.29,.183),(.285,.58,.035))
+
+families = {"Wand1":"painted_timber","Wand2":"painted_timber","Wand3":"painted_timber",
+            "Plank1":"timber","Paal":"timber","Dak":"roof","Dakrib":"roof",
+            "Beton":"concrete","Zak":"canvas","Metaal":"steel","Vlag":"canvas"}
+for k,family in families.items():
+    M[k] = pbr(family, (.7,.8,.55) if k=="Vlag" else (1,1,1))
+
 for k, bm in bms.items():
+    bmesh.ops.recalc_face_normals(bm, faces=list(bm.faces))
     me = bpy.data.meshes.new(k)
     bm.to_mesh(me)
     bm.free()
     for p in me.polygons:
         p.use_smooth = False
     me.materials.append(M[k])
-    scene.collection.objects.link(bpy.data.objects.new("Kazerne_" + k, me))
-
-bpy.ops.object.select_all(action="DESELECT")
-bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "kazerne.glb"), export_format="GLB", export_apply=True, export_yup=True)
-bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "kazerne.blend"))
-tris = 0
-for o in scene.objects:
-    if o.type == "MESH":
-        o.data.calc_loop_triangles(); tris += len(o.data.loop_triangles)
-print("TRIS", tris)
+    obj=bpy.data.objects.new("Kazerne_" + k, me); scene.collection.objects.link(obj)
+    finish_mesh(obj, families.get(k,"steel"), 0 if k=="Dak" else .006)
+export_and_save(OUT,"kazerne")

@@ -3,8 +3,12 @@
 import math, sys, os, random
 import bpy, bmesh
 from mathutils import Matrix, Vector
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from vq2_common import pbr, finish_mesh, corrugated, bolt, export_and_save
 
-OUT = os.path.abspath(sys.argv[1])
+ARGS = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+OUT = os.path.abspath(ARGS[0] if ARGS else str(Path(__file__).parent / "uit"))
 os.makedirs(OUT, exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -58,7 +62,7 @@ def box(k, loc, size, rot=(0, 0, 0)):
 
 def blob(k, loc, size, rot=0.0):
     bm = bms[k]
-    r = bmesh.ops.create_uvsphere(bm, u_segments=8, v_segments=5, radius=0.5)
+    r = bmesh.ops.create_uvsphere(bm, u_segments=12, v_segments=6, radius=0.5)
     v = r["verts"]
     bmesh.ops.scale(bm, vec=size, verts=v)
     bmesh.ops.rotate(bm, verts=v, cent=(0, 0, 0), matrix=Matrix.Rotation(rot, 3, "Z"))
@@ -95,7 +99,7 @@ for y in (-1.0, -0.5, 0.0, 0.5, 1.0):
     beam("paal", (-1.3, y, H - 0.14), (1.3, y, H - 0.14), w=0.12, w2=0.12)
 x = -1.3
 while x < 1.3:
-    box(rnd.choice(PL), (x + 0.1, rnd.uniform(-0.01, 0.01), H - 0.05), (0.19, 2.7, 0.07), (0, 0, rnd.uniform(-0.01, 0.01)))
+    box(rnd.choice(PL), (x + 0.1, rnd.uniform(-0.01, 0.01), H - 0.05), (0.19, 2.7, 0.10), (0, 0, rnd.uniform(-0.01, 0.01)))
     x += 0.205
 # vloerluik/laag kistje en lantaarn
 box("kist", (-0.78, -0.78, H + 0.17), (0.5, 0.4, 0.28))
@@ -131,18 +135,17 @@ for sx in (-1, 1):
         beam("paal", (sx * R, sy * R, H), (sx * R, sy * R, ROOF_Z), w=0.15)
 OV = 0.5
 for sy in (-1, 1):
-    # plaat loopt van de nok (y=0, z=ROOF_Z+0.7) naar de rand (y=sy*(R+OV), z=ROOF_Z-0.1)
-    top = Vector((0, 0, ROOF_Z + 0.75)); edge = Vector((0, sy * (R + OV), ROOF_Z - 0.05))
-    d = edge - top; ln = d.length
-    ang = math.atan2(d.y, -d.z if False else abs(d.z))
-    tilt = math.atan2(abs(d.y), abs(d.z))
-    mid = (top + edge) / 2
-    box("dak", (0, mid.y, mid.z), (2 * (R + OV), ln, 0.06), (-sy * (math.pi / 2 - tilt) * -1 if False else sy * -math.atan2(d.z, abs(d.y)) * -1, 0, 0))
-    n = int(2 * (R + OV) / 0.22)
-    for i in range(n):
-        xx = -(R + OV) + (i + 0.5) * 2 * (R + OV) / n
-        box("dakrib", (xx, mid.y, mid.z + 0.035), (0.07, ln, 0.04), (sy * -math.atan2(d.z, abs(d.y)) * -1, 0, 0))
-box("dakrib", (0, 0, ROOF_Z + 0.78), (2 * (R + OV) + 0.1, 0.18, 0.1))
+    corrugated(bms["dak"],2*(R+OV),R+OV,ROOF_Z+.75,ROOF_Z-.05,sy)
+    tilt=-sy*math.atan2(.8,R+OV)
+    for xx in (-.9,.9):
+        box("dakrib",(xx,sy*(R+OV)/2,ROOF_Z+.37),(.028,math.hypot(R+OV,.8),.035),(tilt,0,0))
+        for f in (.15,.6,.94):
+            bolt(bms["dakrib"],(xx,sy*(R+OV)*f,ROOF_Z+.75-.8*f+.03),radius=.022)
+    box("dakrib",(0,sy*(R+OV),ROOF_Z-.09),(2*(R+OV),.07,.11))
+    # All drainage and roof hardware deliberately stay in the two hideable roof groups.
+    box("dakrib",(-R-.17,sy*(R+OV),ROOF_Z-.28),(.07,.07,.37))
+for sy in (-1,1):
+    box("dakrib",(0,sy*.07,ROOF_Z+.77),(2*(R+OV)+.1,.18,.035),(-sy*.4,0,0))
 # gevelbalken en kleine lamp
 for sx in (-1, 1):
     beam("paal", (sx * R, -R, ROOF_Z), (sx * R, R, ROOF_Z), w=0.12)
@@ -178,20 +181,40 @@ for ang in range(0, 360, 24):
     if ang % 48 == 0:
         blob("zak", (math.cos(a + 0.2) * (r - 0.05), math.sin(a + 0.2) * (r - 0.05), 0.33), (0.58, 0.34, 0.22), a + 1.4)
 
+# VQ2 structural joinery: galvanised shoes, straps, hex fasteners and deck rim.
+for sx in (-1,1):
+    for sy in (-1,1):
+        box("metaal",(sx*FB,sy*FB,.07),(.30,.30,.16))
+        for zz in (2.0,3.6,H-.25):
+            px,py,_=at(sx,sy,zz)
+            box("metaal",(px,py-sy*.075,zz),(.19,.025,.26))
+            for dz in (-.075,.075):
+                bolt(bms["metaal"],(px,py-sy*.095,zz+dz),(0,-sy,0))
+        # Knee braces form a believable support between posts and roof beams.
+        beam("paal",(sx*R,sy*R,H+1.65),(sx*.72,sy*R,ROOF_Z-.02),w=.085)
+for sy in (-1,1):
+    beam("paal",(-R-.07,sy*(R+.03),H-.12),(R+.07,sy*(R+.03),H-.12),w=.13,w2=.20)
+    for xx in (-1.0,-.55,0,.55,1.0):
+        bolt(bms["metaal"],(xx,sy*(R+.11),H-.12),(0,sy,0),.017)
+    for zz in (1.0,2.6,4.2):
+        bolt(bms["metaal"],(lx(zz)+.055,sy*.34,zz),(1,0,0),.022)
+for zz in (.3,.6,.9,1.2,1.5,1.8,2.1,2.4,2.7,3.0,3.3,3.6,3.9,4.2,4.5,4.8,5.1):
+    # Non-slip treads fitted to the existing +X climbing route, without narrowing its opening.
+    box("metaal",(lx(zz)+.04,0,zz+.032),(.025,.61,.014))
+
+families={"paal":"timber","plank1":"timber","plank2":"timber","plank3":"timber",
+          "dak":"roof","dakrib":"roof","metaal":"steel","zak":"canvas","kist":"olive"}
+for k,family in families.items():
+    M[k]=pbr(family)
+
 for k, bm in bms.items():
+    bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
     me = bpy.data.meshes.new(k)
     bm.to_mesh(me)
     bm.free()
     for p in me.polygons:
         p.use_smooth = False
     me.materials.append(M[k])
-    scene.collection.objects.link(bpy.data.objects.new("Toren_" + k, me))
-
-bpy.ops.object.select_all(action="DESELECT")
-bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "wachttoren.glb"), export_format="GLB", export_apply=True, export_yup=True)
-bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "wachttoren.blend"))
-tris = 0
-for o in scene.objects:
-    if o.type == "MESH":
-        o.data.calc_loop_triangles(); tris += len(o.data.loop_triangles)
-print("TRIS", tris)
+    obj=bpy.data.objects.new("Toren_"+k,me); scene.collection.objects.link(obj)
+    finish_mesh(obj,families.get(k,"steel"),0 if k=="dak" else .006)
+export_and_save(OUT,"wachttoren")

@@ -1,0 +1,829 @@
+{
+  "baseline_commit": "967e9c23baffa0f5e5d62eedce3af30b8634d7c0",
+  "assets": {
+    "kazerne": {
+      "v1": {
+        "path": "assets/vq2_baseline/kazerne.glb",
+        "sha256": "a20a4d5ce522869c2ae708a2a7dbc591bddc07962d26d17152cb5e2cfff028ad",
+        "bytes": 144300,
+        "triangles": 2428,
+        "meshes": 13,
+        "material_surfaces": 13,
+        "materials": 13,
+        "images": [],
+        "rgba8_with_mips_MiB": 0.0,
+        "pbr_materials": 0,
+        "node_names": [
+          "Kazerne_Beton",
+          "Kazerne_Dak",
+          "Kazerne_Dakrib",
+          "Kazerne_Donker",
+          "Kazerne_Goud",
+          "Kazerne_Metaal",
+          "Kazerne_Paal",
+          "Kazerne_Plank1",
+          "Kazerne_Vlag",
+          "Kazerne_Wand1",
+          "Kazerne_Wand2",
+          "Kazerne_Wand3",
+          "Kazerne_Zak"
+        ],
+        "clips": []
+      },
+      "v2": {
+        "path": "assets/kazerne.glb",
+        "sha256": "48d13e97093e0c1b7864adb33b4a0b477b27d68c906306f1a42b1fe20f077b13",
+        "bytes": 6404720,
+        "triangles": 13912,
+        "meshes": 14,
+        "material_surfaces": 14,
+        "materials": 9,
+        "images": [
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 309567
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 244606
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 165815
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 247877
+          },
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 261266
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 136262
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 182491
+          },
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 855920
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 281494
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 678392
+          },
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 554861
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 355934
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 4545
+          },
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 29303
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 279711
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 975600
+          }
+        ],
+        "rgba8_with_mips_MiB": 85.33,
+        "pbr_materials": 7,
+        "node_names": [
+          "Kazerne_naamplaat",
+          "Kazerne_Wand1",
+          "Kazerne_Wand2",
+          "Kazerne_Wand3",
+          "Kazerne_Plank1",
+          "Kazerne_Paal",
+          "Kazerne_Dak",
+          "Kazerne_Dakrib",
+          "Kazerne_Beton",
+          "Kazerne_Zak",
+          "Kazerne_Donker",
+          "Kazerne_Goud",
+          "Kazerne_Vlag",
+          "Kazerne_Metaal"
+        ],
+        "clips": []
+      }
+    },
+    "wachttoren": {
+      "v1": {
+        "path": "assets/vq2_baseline/wachttoren.glb",
+        "sha256": "2ded2c091e0af1f099d66431054c91e888aa699f47ccc76cfd7b521c65bdfc18",
+        "bytes": 190452,
+        "triangles": 3240,
+        "meshes": 10,
+        "material_surfaces": 10,
+        "materials": 10,
+        "images": [],
+        "rgba8_with_mips_MiB": 0.0,
+        "pbr_materials": 0,
+        "node_names": [
+          "Toren_dak",
+          "Toren_dakrib",
+          "Toren_kist",
+          "Toren_lamp",
+          "Toren_metaal",
+          "Toren_paal",
+          "Toren_plank1",
+          "Toren_plank2",
+          "Toren_plank3",
+          "Toren_zak"
+        ],
+        "clips": []
+      },
+      "v2": {
+        "path": "assets/wachttoren.glb",
+        "sha256": "a895bdaab10f29f682de28d5d290d96b7978d59813eedab61ef0f589e8e576d1",
+        "bytes": 4770376,
+        "triangles": 16312,
+        "meshes": 10,
+        "material_surfaces": 10,
+        "materials": 6,
+        "images": [
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 309567
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 247877
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 165815
+          },
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 261266
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 136262
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 182491
+          },
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 29303
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 279711
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 975600
+          },
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 554861
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 355934
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 4545
+          },
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 105220
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 99517
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 133668
+          }
+        ],
+        "rgba8_with_mips_MiB": 80.0,
+        "pbr_materials": 5,
+        "node_names": [
+          "Toren_paal",
+          "Toren_plank1",
+          "Toren_plank2",
+          "Toren_plank3",
+          "Toren_dak",
+          "Toren_dakrib",
+          "Toren_metaal",
+          "Toren_zak",
+          "Toren_lamp",
+          "Toren_kist"
+        ],
+        "clips": []
+      }
+    },
+    "legerjeep": {
+      "v1": {
+        "path": "assets/vq2_baseline/legerjeep.glb",
+        "sha256": "c5303ad7f71004700dec26509b301ea34ad71244327e2b351ab7359d28d05cb1",
+        "bytes": 5368500,
+        "triangles": 75628,
+        "meshes": 1,
+        "material_surfaces": 15,
+        "materials": 15,
+        "images": [],
+        "rgba8_with_mips_MiB": 0.0,
+        "pbr_materials": 0,
+        "node_names": [
+          "Bloedjungle | Army Jeep"
+        ],
+        "clips": []
+      },
+      "v2": {
+        "path": "assets/legerjeep.glb",
+        "sha256": "7c11ec84268b5d46090ec0a366c6bacb0eae70ffdcfadd44fbd7c9a9c6b622ba",
+        "bytes": 6461392,
+        "triangles": 46436,
+        "meshes": 1,
+        "material_surfaces": 13,
+        "materials": 13,
+        "images": [
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 29303
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 279711
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 975600
+          },
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 105220
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 99517
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 133668
+          },
+          {
+            "name": "normal",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 554861
+          },
+          {
+            "name": "albedo",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 355934
+          },
+          {
+            "name": "orm",
+            "size": [
+              1024,
+              1024
+            ],
+            "encoded_bytes": 4545
+          }
+        ],
+        "rgba8_with_mips_MiB": 48.0,
+        "pbr_materials": 6,
+        "node_names": [
+          "Bloedjungle | Army Jeep"
+        ],
+        "clips": []
+      }
+    },
+    "playable_jeep": {
+      "path": "assets/jeep.glb",
+      "sha256": "4442eb51acebf9b061262d10599192cd46ce5fb7bfd7541f1be568e9221f3692",
+      "bytes": 874212,
+      "triangles": 7598,
+      "meshes": 18,
+      "material_surfaces": 49,
+      "materials": 19,
+      "images": [
+        {
+          "name": "jeep_olijf",
+          "size": [
+            512,
+            512
+          ],
+          "encoded_bytes": 344471
+        }
+      ],
+      "rgba8_with_mips_MiB": 1.33,
+      "pbr_materials": 0,
+      "node_names": [
+        "AchterlichtLLamp",
+        "AchterlichtRLamp",
+        "BestuurderBenen",
+        "BestuurderBovenMesh",
+        "BestuurderBoven",
+        "Bestuurder",
+        "GeschutMesh",
+        "Huls0",
+        "Huls1",
+        "Huls2",
+        "MGMesh",
+        "Vlam",
+        "Monding",
+        "MG",
+        "BovenlijfMesh",
+        "Bovenlijf",
+        "SchutterBenen",
+        "Schutter",
+        "Geschut",
+        "Kolf",
+        "Loop",
+        "Riem",
+        "Karabijn",
+        "KoplampL",
+        "KoplampR",
+        "RompMesh",
+        "WielLV",
+        "StuurLV",
+        "WielRV",
+        "StuurRV",
+        "WielLA",
+        "WielRA",
+        "Body",
+        "Jeep"
+      ],
+      "clips": [
+        {
+          "name": "Stationair-loop",
+          "duration_s": 2.0,
+          "channels": 1,
+          "changing_channels": [
+            {
+              "node": "Body",
+              "path": "rotation",
+              "range": 0.00173
+            }
+          ]
+        },
+        {
+          "name": "Rijden-loop",
+          "duration_s": 2.0,
+          "channels": 7,
+          "changing_channels": [
+            {
+              "node": "Body",
+              "path": "translation",
+              "range": 0.053902
+            },
+            {
+              "node": "Body",
+              "path": "rotation",
+              "range": 0.017388
+            },
+            {
+              "node": "BestuurderBoven",
+              "path": "rotation",
+              "range": 0.013228
+            },
+            {
+              "node": "WielLV",
+              "path": "rotation",
+              "range": 1.998904
+            },
+            {
+              "node": "WielRV",
+              "path": "rotation",
+              "range": 1.998904
+            },
+            {
+              "node": "WielLA",
+              "path": "rotation",
+              "range": 1.998904
+            },
+            {
+              "node": "WielRA",
+              "path": "rotation",
+              "range": 1.998904
+            }
+          ]
+        },
+        {
+          "name": "Achteruit-loop",
+          "duration_s": 2.0,
+          "channels": 7,
+          "changing_channels": [
+            {
+              "node": "Body",
+              "path": "translation",
+              "range": 0.023869
+            },
+            {
+              "node": "Body",
+              "path": "rotation",
+              "range": 0.008679
+            },
+            {
+              "node": "BestuurderBoven",
+              "path": "rotation",
+              "range": 0.004961
+            },
+            {
+              "node": "WielLV",
+              "path": "rotation",
+              "range": 1.996437
+            },
+            {
+              "node": "WielRV",
+              "path": "rotation",
+              "range": 1.996437
+            },
+            {
+              "node": "WielLA",
+              "path": "rotation",
+              "range": 1.996437
+            },
+            {
+              "node": "WielRA",
+              "path": "rotation",
+              "range": 1.996437
+            }
+          ]
+        },
+        {
+          "name": "Bocht-loop",
+          "duration_s": 2.0,
+          "channels": 9,
+          "changing_channels": [
+            {
+              "node": "Body",
+              "path": "translation",
+              "range": 0.029836
+            },
+            {
+              "node": "Body",
+              "path": "rotation",
+              "range": 0.01041
+            },
+            {
+              "node": "BestuurderBoven",
+              "path": "rotation",
+              "range": 0.009921
+            },
+            {
+              "node": "StuurLV",
+              "path": "rotation",
+              "range": 0.224951
+            },
+            {
+              "node": "WielLV",
+              "path": "rotation",
+              "range": 1.996274
+            },
+            {
+              "node": "StuurRV",
+              "path": "rotation",
+              "range": 0.224951
+            },
+            {
+              "node": "WielRV",
+              "path": "rotation",
+              "range": 1.996274
+            },
+            {
+              "node": "WielLA",
+              "path": "rotation",
+              "range": 1.996274
+            },
+            {
+              "node": "WielRA",
+              "path": "rotation",
+              "range": 1.996274
+            }
+          ]
+        },
+        {
+          "name": "Remmen",
+          "duration_s": 1.5,
+          "channels": 7,
+          "changing_channels": [
+            {
+              "node": "Body",
+              "path": "translation",
+              "range": 0.023333
+            },
+            {
+              "node": "Body",
+              "path": "rotation",
+              "range": 0.030295
+            },
+            {
+              "node": "BestuurderBoven",
+              "path": "rotation",
+              "range": 0.004371
+            },
+            {
+              "node": "WielLV",
+              "path": "rotation",
+              "range": 1.976374
+            },
+            {
+              "node": "WielRV",
+              "path": "rotation",
+              "range": 1.976374
+            },
+            {
+              "node": "WielLA",
+              "path": "rotation",
+              "range": 1.976374
+            },
+            {
+              "node": "WielRA",
+              "path": "rotation",
+              "range": 1.976374
+            }
+          ]
+        },
+        {
+          "name": "Vuren-loop",
+          "duration_s": 2.0,
+          "channels": 15,
+          "changing_channels": [
+            {
+              "node": "Body",
+              "path": "rotation",
+              "range": 0.00173
+            },
+            {
+              "node": "MG",
+              "path": "translation",
+              "range": 0.034671
+            },
+            {
+              "node": "Huls0",
+              "path": "translation",
+              "range": 0.466667
+            },
+            {
+              "node": "Huls0",
+              "path": "rotation",
+              "range": 1.744776
+            },
+            {
+              "node": "Huls0",
+              "path": "scale",
+              "range": 0.999
+            },
+            {
+              "node": "Huls1",
+              "path": "translation",
+              "range": 0.466667
+            },
+            {
+              "node": "Huls1",
+              "path": "rotation",
+              "range": 1.744776
+            },
+            {
+              "node": "Huls1",
+              "path": "scale",
+              "range": 0.999
+            },
+            {
+              "node": "Huls2",
+              "path": "translation",
+              "range": 0.466667
+            },
+            {
+              "node": "Huls2",
+              "path": "rotation",
+              "range": 1.744776
+            },
+            {
+              "node": "Huls2",
+              "path": "scale",
+              "range": 0.999
+            },
+            {
+              "node": "Vlam",
+              "path": "rotation",
+              "range": 1.962084
+            },
+            {
+              "node": "Vlam",
+              "path": "scale",
+              "range": 1.1996
+            },
+            {
+              "node": "Bovenlijf",
+              "path": "translation",
+              "range": 0.020803
+            },
+            {
+              "node": "Bovenlijf",
+              "path": "rotation",
+              "range": 0.006885
+            }
+          ]
+        },
+        {
+          "name": "Rondkijken-loop",
+          "duration_s": 4.0,
+          "channels": 2,
+          "changing_channels": [
+            {
+              "node": "Body",
+              "path": "rotation",
+              "range": 0.00173
+            },
+            {
+              "node": "Geschut",
+              "path": "rotation",
+              "range": 1.147153
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "playable_jeep_compatibility": {
+    "hierarchy_preserved": true,
+    "geometry_positions_preserved_1e_5_m": true,
+    "materials_preserved": true,
+    "seven_clip_names_preserved": true,
+    "repair": "Bocht now exports an actual steering channel; all seven original clip names and node hierarchy retained."
+  },
+  "memory_note": "RGBA8 worst case including mips, per GLB image list, not measured GPU VRAM. Godot platform compression/sharing may reduce this. No physical iPhone timings measured."
+}

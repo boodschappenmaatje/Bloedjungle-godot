@@ -6,10 +6,13 @@ Blender units are metres. Vehicle front is Blender +Y (Godot -Z after glTF expor
 
 import bpy
 import math
+import sys
 from mathutils import Vector
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
+sys.path.insert(0,str(ROOT.parent))
+from vq2_common import pbr, projected_uv
 bpy.ops.object.select_all(action='SELECT')
 bpy.ops.object.delete(use_global=False)
 for datablock in bpy.data.materials:
@@ -47,6 +50,16 @@ amber = mat('13 | signal lens', (0.8, 0.37, 0.06), .03, .27)
 white = mat('14 | faded identification mark', (0.72, 0.72, 0.60), .02, .88)
 rust = mat('15 | exposed primer', (0.35, 0.19, 0.11), .16, .91)
 
+# Native 1K photographed PBR surfaces; unpainted bolts are metal, coated bodywork is not.
+olive = pbr('olive')
+olive_light = olive
+olive_dark = pbr('olive', (.76,.80,.73), '_recess')
+steel = pbr('steel', (.55,.58,.56), '_gunmetal')
+bare_metal = pbr('steel')
+canvas = pbr('canvas')
+canvas_dark = pbr('canvas', (.63,.62,.55), '_seams')
+rubber_edge = rubber
+
 def put(obj, name, material):
     obj.name = name
     for c in list(obj.users_collection):
@@ -56,10 +69,10 @@ def put(obj, name, material):
         obj.data.materials.append(material)
     return obj
 
-def bevel(obj, amount=.015, segments=2):
+def bevel(obj, amount=.015, segments=1):
     mod = obj.modifiers.new('soft manufactured edges', 'BEVEL')
     mod.width = amount
-    mod.segments = segments
+    mod.segments = max(segments, 2 if amount > .035 else 1)
     mod.affect = 'EDGES'
     mod2 = obj.modifiers.new('weighted corner normals', 'WEIGHTED_NORMAL')
     mod2.keep_sharp = True
@@ -76,7 +89,8 @@ def box(name, pos, size, material, bevel_amount=0.0, rotation=None):
         bevel(o, bevel_amount)
     return o
 
-def cyl(name, pos, radius, depth, material, vertices=20, axis='Z'):
+def cyl(name, pos, radius, depth, material, vertices=16, axis='Z'):
+    vertices=min(vertices,24)
     bpy.ops.mesh.primitive_cylinder_add(vertices=vertices, radius=radius, depth=depth, location=pos)
     o = put(bpy.context.object, name, material)
     if axis == 'X': o.rotation_euler[1] = math.pi/2
@@ -84,7 +98,9 @@ def cyl(name, pos, radius, depth, material, vertices=20, axis='Z'):
     bevel(o, min(.008, radius*.09), 2)
     return o
 
-def torus(name, pos, major, minor, material, axis='Z', major_segments=40, minor_segments=8):
+def torus(name, pos, major, minor, material, axis='Z', major_segments=24, minor_segments=6):
+    major_segments=min(major_segments,24)
+    minor_segments=min(minor_segments,6)
     bpy.ops.mesh.primitive_torus_add(major_segments=major_segments, minor_segments=minor_segments,
         location=pos, major_radius=major, minor_radius=minor)
     o = put(bpy.context.object, name, material)
@@ -233,8 +249,8 @@ def wheel(name, x, y, z=.392, axle='X', spare=False):
             torus(name+' sidewall', (x,y+dy,z),.25,.045,rubber_edge,axis,40,8)
             cyl(name+' pressed wheel rim',(x,y+dy*1.25,z),.178,.026,olive_dark,32,axis)
             cyl(name+' centre cap',(x,y+dy*1.40,z),.071,.018,steel,20,axis)
-        for i in range(28):
-            a=2*math.pi*i/28
+        for i in range(22):
+            a=2*math.pi*i/22
             bx=x+.344*math.cos(a); bz=z+.344*math.sin(a)
             b=box(name+' tread lug',(bx,y,bz),(.105,.135,.045),rubber_edge,.008)
             b.rotation_euler[1]=-a
@@ -252,8 +268,8 @@ def wheel(name, x, y, z=.392, axle='X', spare=False):
     for i in range(5):
         a=2*math.pi*i/5
         cyl(name+' wheel lug',(outer+side*.029,y+.087*math.cos(a),z+.087*math.sin(a)),.012,.010,bare_metal,8,'X')
-    for i in range(28):
-        a=2*math.pi*i/28
+    for i in range(22):
+        a=2*math.pi*i/22
         for dx in (-.048,.048):
             yy=y+.345*math.cos(a); zz=z+.345*math.sin(a)
             block=box(name+' alternating chevron tread',(x+dx,yy,zz),(.066,.11,.044),rubber_edge,.006)
@@ -287,6 +303,27 @@ for x in (-.46,.46):
     for y in (.40,1.43):
         cyl('bonnet fixing bolt',(x,y,1.133),.012,.008,bare_metal,8)
 
+# VQ2 pressed-panel detail, bonnet hinge/latches, wheel-arch mud and spare-can straps.
+bar('bonnet centre hinge',(0,.20,1.153),(0,1.51,1.086),.009,steel,8)
+for x in (-.637,.637):
+    for y in (.38,1.28):
+        box('bonnet latch base',(x,y,.99),(.018,.055,.11),steel,.005)
+        bar('bonnet overcentre clasp',(x*1.015,y,.96),(x*1.015,y,1.055),.009,bare_metal,8)
+for x in (-.705,.705):
+    box('rear pressed reinforcing rib',(x,-1.24,.96),(.020,.48,.035),olive_dark,.009)
+    # Dirt belongs to the wheel arch and lower sill, rather than random flecks all over the body.
+    box('dry mud lip at rear wheel arch',(x*1.11,-1.07,.70),(.025,.64,.035),rust,.008)
+    box('dry mud at front wing',(x*1.11,1.10,.72),(.018,.90,.03),rust,.007)
+for a,b in [((-.52,-1.875,.79),(-.35,-1.875,1.07)),((-.52,-1.875,1.07),(-.35,-1.875,.79))]:
+    bar('jerrycan stamped diagonal',a,b,.010,olive,8)
+box('jerrycan retaining strap',(-.43,-1.88,.96),(.028,.013,.36),canvas_dark,.004)
+for x in (-.75,.75):
+    bar('rear grab handle',(x,-1.48,1.11),(x,-1.26,1.11),.012,steel,8)
+for obj in asset.objects:
+    if obj.type=='MESH' and obj.data.materials and obj.data.materials[0].name.startswith('VQ2_'):
+        family='canvas' if 'canvas' in obj.data.materials[0].name else 'olive'
+        projected_uv(obj,family)
+
 # Flatten the many editable parts to a single export mesh with material groups.
 # The .blend retains all individual parts for further editing.
 bpy.ops.object.select_all(action='DESELECT')
@@ -301,7 +338,7 @@ bpy.context.view_layer.objects.active = bpy.context.selected_objects[0]
 bpy.ops.object.join()
 export_mesh = bpy.context.view_layer.objects.active
 export_mesh.name = 'Bloedjungle | Army Jeep'
-bpy.ops.export_scene.gltf(filepath=str(ROOT/'jeep.glb'), export_format='GLB',
+bpy.ops.export_scene.gltf(filepath=str(ROOT.parents[1]/'assets/legerjeep.glb'), export_format='GLB',
     use_selection=True, export_apply=True, export_yup=True, export_materials='EXPORT',
     export_cameras=False, export_lights=False)
 bpy.data.objects.remove(export_mesh, do_unlink=True)
@@ -345,6 +382,9 @@ bpy.context.scene.render.image_settings.file_format='PNG'
 bpy.context.scene.render.filepath=str(ROOT/'preview.png')
 bpy.context.scene.view_settings.view_transform='AgX'
 bpy.context.scene.render.film_transparent=False
+bpy.context.preferences.filepaths.save_version=0
+bpy.ops.file.pack_all()
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'jeep.blend'))
-bpy.ops.render.render(write_still=True)
+if '--render' in sys.argv:
+    bpy.ops.render.render(write_still=True)
 print(f'EXPORTED {len(asset.objects)} asset objects to {ROOT}')

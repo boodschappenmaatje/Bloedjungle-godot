@@ -2,7 +2,7 @@
 
 ## Referentie en doel
 
-Bron: door de gebruiker aangeleverde schermopname, 4,3 seconden, 512×1112, 30 fps. Hierin is top-down jungle-combat te zien met felgele schietsporen, korte warme flitsen en zichtbaar groene zombie-treffers.
+Bron: door de gebruiker aangeleverde schermopname, 4,3 seconden, 512×1112, 30 fps. Hierin is top-down jungle-combat te zien met felgele schietsporen, korte warme flitsen en aanvankelijk groene zombie-treffers. De gebruikersfeedback vraagt om natuurlijk rood bloed in de game.
 
 **Dit is een gameplay-integratie, geen video-overlay.** Alle effecten reageren per schot op de bestaande speler, collision-detectie, munitie, projectielen en camerahoek.
 
@@ -10,7 +10,7 @@ Bron: door de gebruiker aangeleverde schermopname, 4,3 seconden, 512×1112, 30 f
 
 - M1911-glow: langer en breder geel/wit tracer met oranje uitlopende staart, via bestaande `Bullet._weapon_glow`. Elk M1911-schot gebruikt dezelfde bestaande gameprojectiel-logica.
 - M1911-muzzle: meer zichtbare warme mondingsflits, korte tijdelijke belichting en een beperkt aantal bestaande pooled particles.
-- Zombies: bij echte raakdetectie met een M1911-projectiel een extra felgroene hit-flits plus kort groen splashburst; normale damage, knockback, death, blood en SFX blijven bestaan.
+- Zombies: na gebruikersfeedback van 24 oktober rode bloedspetters in plaats van de groene hit-flits en groen splashburst. Ook het bestaande groene zombie-bloed is teruggezet naar de standaard donkerrode bloedkleur; normale damage, knockback, death en SFX blijven bestaan.
 - Geluid: drie *originele* procedurale M1911-schietgeluiden, gegenereerd bij opstarten met 22.050 Hz mono PCM; korte crack, lage body, zachte tail, mechanische klik. De bestaande `Sfx.play("pistol")`-aanroep triggert ze **tegelijkertijd** met het schot. Dit bevat geen audio van de Facebook-referentie.
 - Geen veranderingen aan schietsnelheid, schade, munitie, camera-instellingen of andere wapens. Geen nieuwe externe licenties of binaire assets.
 
@@ -18,8 +18,8 @@ Bron: door de gebruiker aangeleverde schermopname, 4,3 seconden, 512×1112, 30 f
 
 1. Open deze **featurebranch**, niet `main`, in Working Copy of Git. Importeer de branch in Xogot of Godot 4.
 2. Start de bestaande `scenes/main.tscn`. Kies het M1911-pistool en schiet in open ruimte: per schot een warmgele muzzle flash, fel zichtbare kogelstreep en droog `pop/crack`-geluid.
-3. Schiet een zombie: groene korte oplichtende impact, terwijl bestaande schade en death werken.
-4. Schiet tegen grond/muur: bestaande stof/vonken, geen groene zombie-hit.
+3. Schiet een zombie: uitsluitend rode/donkerrode bloedspetters, geen groene lichtflits of groene bloedsplash; bestaande schade en death blijven werken.
+4. Schiet tegen grond/muur: bestaande stof/vonken, geen bloedsplash.
 5. Controleer op iPhone: meerdere schoten achter elkaar, geluid bij elk schot, geen crashes of opvallende framerate-inzakking. Test ook ander wapen om te bevestigen dat het onveranderd is.
 6. Herhaal met geluid uit / aan en met build-camera op afstand.
 
@@ -32,7 +32,7 @@ Bron: door de gebruiker aangeleverde schermopname, 4,3 seconden, 512×1112, 30 f
 
 ## Belangrijkste bestanden
 
-`scripts/data.gd`, `scripts/fx.gd`, `scripts/bullet.gd`, `scripts/sfx.gd`.
+`scripts/data.gd`, `scripts/fx.gd`, `scripts/bullet.gd`, `scripts/enemy.gd`, `scripts/sfx.gd`.
 
 ## Optioneel later
 

@@ -15,6 +15,8 @@ const EDITOR_TILT := PI / 6.0  # 30° uit het lood: kleine straatobjecten krijge
 var editor_oblique := true
 var _editor_tilt := EDITOR_TILT
 var _editor_active := false
+var _combat_shake_time := 0.0
+var _combat_shake_strength := 0.0
 
 
 func toggle_view() -> void:
@@ -22,6 +24,12 @@ func toggle_view() -> void:
 
 func zoom(delta_step: int) -> void:
 	zoom_step = clampi(zoom_step + delta_step, -3, 4)
+
+
+## Kleine, korte camerakick voor zware wapens en nabije explosies.
+func combat_impulse(strength: float) -> void:
+	_combat_shake_strength = maxf(_combat_shake_strength, clampf(strength, 0.0, 0.055))
+	_combat_shake_time = maxf(_combat_shake_time, 0.13)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
@@ -170,6 +178,13 @@ func _process(delta: float) -> void:
 	goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)
 	global_position = goal if _snap else global_position.lerp(goal, 1.0 - exp(-5.0 * delta))
 	_snap = false
+	if _combat_shake_time > 0.0:
+		var envelope := clampf(_combat_shake_time / 0.13, 0.0, 1.0) * _combat_shake_strength
+		var t := float(Time.get_ticks_usec()) * 0.000001
+		global_position += Vector3(sin(t * 97.0) * envelope, sin(t * 131.0) * envelope * 0.3, cos(t * 83.0) * envelope)
+		_combat_shake_time = maxf(0.0, _combat_shake_time - delta)
+		if _combat_shake_time == 0.0:
+			_combat_shake_strength = 0.0
 	_nlook = focus
 	look_at(focus, Vector3.UP)
 	# Alleen de zichtlijn naar de speler en naar de dichtstbijzijnde vijanden wordt uit de bladeren gehouden.

@@ -312,9 +312,20 @@ func _shoot(w: Dictionary) -> void:
 	var profile: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
 	var tracer_every: int = int(profile.get("trail_every", 1))
 	var tracer_weapon := "bazooka" if weapon == "bazooka" else (weapon if tracer_every > 0 and (_shot_sequence - 1) % tracer_every == 0 else "")
+	var camera_impulse := 0.0
+	match weapon:
+		"garand": camera_impulse = 0.012
+		"trench": camera_impulse = 0.02
+		"mg42": camera_impulse = 0.006 if _shot_sequence % 5 == 0 else 0.0
+		"bazooka": camera_impulse = 0.035
+	if camera_impulse > 0.0:
+		var camera := get_parent().get_node_or_null("Camera")
+		if camera and camera.has_method("combat_impulse"):
+			camera.call("combat_impulse", camera_impulse)
 	for i in w.pellets:
 		var a: float = face + (randf() - 0.5) * w.spread * 2.0
-		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0), 0.28 if elev > 1.0 else 0.0, 0.0, tracer_weapon)
+		var projectile_visual := tracer_weapon if weapon != "trench" or i == 0 else ""
+		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0), 0.28 if elev > 1.0 else 0.0, 0.0, projectile_visual)
 	if weapon == "bazooka":
 		Fx.rocket_launch(get_parent(), muzzle, face)
 	else:

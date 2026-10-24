@@ -11,8 +11,8 @@ const MASK_BUNKER := 16
 static var _mesh: BoxMesh
 static var _mat_p: StandardMaterial3D
 static var _mat_e: StandardMaterial3D
-static var _glow_p: ArrayMesh
-static var _glow_e: ArrayMesh
+static var _plain_player_bullet: BoxMesh
+static var _plain_enemy_bullet: BoxMesh
 static var _weapon_glows := {}
 static var _rocket_body: CylinderMesh
 static var _rocket_nose: CylinderMesh
@@ -20,7 +20,6 @@ static var _rocket_tail: CylinderMesh
 static var _rocket_fin: BoxMesh
 static var _rocket_body_mat: StandardMaterial3D
 static var _rocket_nose_mat: StandardMaterial3D
-static var _plain_player_bullet: BoxMesh
 
 var dir := Vector3.FORWARD
 var speed := 75.0
@@ -50,22 +49,18 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 		_mesh.size = Vector3(0.05, 0.05, 0.9)
 		_mat_p = _tracer(Color(1.0, 0.85, 0.4))
 		_mat_e = _tracer(Color(1.0, 0.45, 0.25))
-		_glow_p = _glow(Color(1.0, 0.85, 0.3, 1.0), Color(1.0, 0.35, 0.0, 0.0))
-		_glow_e = _glow(Color(1.0, 0.45, 0.25, 1.0), Color(0.9, 0.05, 0.0, 0.0))
 	var b := Bullet.new()
 	b.visual_weapon = visual_weapon
 	if visual_weapon == "bazooka":
 		b._add_rocket_visual()
-	elif by_player and Data.WEAPON_VISUALS.has(visual_weapon):
-		var every: int = int(Data.WEAPON_VISUALS[visual_weapon].get("trail_every", 1))
-		b.mesh = _weapon_glow(visual_weapon) if every > 0 else _plain_bullet_mesh()
-		if every <= 0:
-			b.scale = Vector3.ONE * 0.35
+	elif Data.WEAPON_VISUALS.has(visual_weapon):
+		b.mesh = _weapon_glow(visual_weapon, not by_player)
 	elif by_player:
 		b.mesh = _plain_bullet_mesh()
 		b.scale = Vector3.ONE * 0.35
 	else:
-		b.mesh = _glow_p if by_player else _glow_e
+		b.mesh = _plain_enemy_mesh()
+		b.scale = Vector3.ONE * 0.35
 	b.dir = Vector3(sin(angle), 0.0, cos(angle))
 	b.speed = spd
 	b.dmg = damage
@@ -113,6 +108,14 @@ static func _plain_bullet_mesh() -> BoxMesh:
 		_plain_player_bullet.size = Vector3(0.035, 0.035, 0.28)
 		_plain_player_bullet.material = _mat_p
 	return _plain_player_bullet
+
+
+static func _plain_enemy_mesh() -> BoxMesh:
+	if _plain_enemy_bullet == null:
+		_plain_enemy_bullet = BoxMesh.new()
+		_plain_enemy_bullet.size = Vector3(0.035, 0.035, 0.28)
+		_plain_enemy_bullet.material = _mat_e
+	return _plain_enemy_bullet
 
 
 func _add_rocket_visual() -> void:
@@ -178,12 +181,15 @@ func _add_rocket_part(parent: Node3D, part_mesh: Mesh, mat: Material, at: Vector
 
 ## Lichtspoor: een felle kop met een staart die uitdooft (twee kruislings gezette vlakken met een kleurverloop)
 ## en een kleine gloeiende bol als kop. Beide tellen op bij wat erachter ligt, dus het straalt zonder te vullen.
-static func _weapon_glow(weapon: String) -> ArrayMesh:
-	if _weapon_glows.has(weapon):
-		return _weapon_glows[weapon]
+static func _weapon_glow(weapon: String, enemy_tracer := false) -> ArrayMesh:
+	var key := "%s:%s" % [weapon, "enemy" if enemy_tracer else "player"]
+	if _weapon_glows.has(key):
+		return _weapon_glows[key]
 	var v: Dictionary = Data.WEAPON_VISUALS[weapon]
-	var m := _glow(v.trail_head, v.trail_tail, v.trail_length, v.trail_width, 0.10, 0.042 if weapon != "bazooka" else 0.07)
-	_weapon_glows[weapon] = m
+	var head: Color = Color(1.0, 0.48, 0.28, 0.94) if enemy_tracer else v.trail_head
+	var tail: Color = Color(0.85, 0.12, 0.035, 0.0) if enemy_tracer else v.trail_tail
+	var m := _glow(head, tail, v.trail_length, v.trail_width, 0.1, 0.022)
+	_weapon_glows[key] = m
 	return m
 
 

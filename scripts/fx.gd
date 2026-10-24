@@ -6,6 +6,7 @@ const MAX_CASINGS := 36
 const MAX_MUZZLE_SMOKE := 16
 const MAX_ROCKET_TRAILS := 3
 const MAX_MUZZLE_FLASHES := 18
+const MAX_FLASH_LIGHTS := 2
 const MAX_FLASH_QUADS := 48
 const MAX_BURST_NODES := 64
 const MAX_ACTIVE_BURSTS := 40
@@ -26,6 +27,7 @@ static var _muzzle_smoke_live := 0
 static var _rocket_trails_live := 0
 static var _rocket_flame_mesh: ArrayMesh
 static var _soft: GradientTexture2D
+static var _impact_star_texture: ImageTexture
 static var _tex := {}
 static var _mats := {}
 static var _decals: Array = []
@@ -123,8 +125,8 @@ static func ground_blood(parent: Node, pos: Vector3, size := 1.2) -> void:
 	decal(parent, Vector3(pos.x, 0.0, pos.z), Vector3.UP, "blood", size)
 
 
-static func blood(parent: Node, pos: Vector3, dir: Vector3, amount := 14) -> void:
-	_burst(parent, pos, dir, maxi(amount, 20), Color(0.52, 0.015, 0.015), 0.085, 6.0)
+static func blood(parent: Node, pos: Vector3, dir: Vector3, amount := 14, color := Color(0.52, 0.015, 0.015)) -> void:
+	_burst(parent, pos, dir, maxi(amount, 20), color, 0.085, 6.0)
 
 
 static func dust(parent: Node, pos: Vector3) -> void:
@@ -151,19 +153,42 @@ static func impact(parent: Node, pos: Vector3, normal: Vector3, material := "con
 
 ## Felle vonkjes met een korte flits: inslag in muur of bunker, en bij een raak op een mens.
 static func spark(parent: Node, pos: Vector3, normal: Vector3) -> void:
-	_flash_quad(parent, pos + normal.normalized() * 0.035, randf_range(0.32, 0.46), 0.065, Color(1.0, 0.9, 0.66, 0.92))
-	_burst(parent, pos, normal, 7, Color(1.0, 0.78, 0.38), 0.03, 8.0, Vector3(0.02, 0.075, 0.02))
+	_flash_quad(parent, pos + normal.normalized() * 0.035, randf_range(0.34, 0.48), 0.075, Color(1.0, 0.62, 0.12, 0.96), "star")
+	_burst(parent, pos, normal, 8, Color(1.0, 0.58, 0.12), 0.03, 8.5, Vector3(0.02, 0.075, 0.02))
 
 
-static func _flash_quad(parent: Node, pos: Vector3, size: float, life: float, col: Color) -> void:
-	var key := "flash_quad_%s" % col.to_html(true)
+static func _impact_star() -> ImageTexture:
+	if _impact_star_texture != null:
+		return _impact_star_texture
+	var side := 96
+	var img := Image.create(side, side, false, Image.FORMAT_RGBA8)
+	img.fill(Color(1.0, 1.0, 1.0, 0.0))
+	for y in side:
+		for x in side:
+			var p := Vector2((float(x) + 0.5) / side * 2.0 - 1.0, (float(y) + 0.5) / side * 2.0 - 1.0)
+			var radius := p.length()
+			if radius > 1.0:
+				continue
+			var angle := atan2(p.y, p.x)
+			var ray := pow(absf(cos(angle * 4.0)), 9.0)
+			var reach := lerpf(0.25, 0.96, ray)
+			var edge_alpha := clampf((reach - radius) * 14.0, 0.0, 1.0)
+			var center_alpha := clampf((0.27 - radius) * 8.0, 0.0, 1.0)
+			var fade := clampf((1.0 - radius) * 7.0, 0.0, 1.0)
+			img.set_pixel(x, y, Color(1.0, 1.0, 1.0, maxf(edge_alpha, center_alpha) * fade))
+	_impact_star_texture = ImageTexture.create_from_image(img)
+	return _impact_star_texture
+
+
+static func _flash_quad(parent: Node, pos: Vector3, size: float, life: float, col: Color, shape := "soft") -> void:
+	var key := "flash_quad_%s_%s" % [shape, col.to_html(true)]
 	if not _mats.has(key):
 		var m := StandardMaterial3D.new()
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 		m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-		m.albedo_texture = soft()
+		m.albedo_texture = _impact_star() if shape == "star" else soft()
 		m.albedo_color = col
 		m.no_depth_test = false
 		var q := QuadMesh.new()
@@ -410,7 +435,7 @@ static func _muzzle_mesh(weapon: String, variant: int) -> ArrayMesh:
 	rng.seed = hash(key)
 	var length: float = v.flash_length * rng.randf_range(0.91, 1.08)
 	var width: float = v.flash_width * rng.randf_range(0.88, 1.12)
-	var hot := Color(1.0, 0.97, 0.78, 0.98)
+	var hot := Color(1.0, 0.9, 0.48, 0.98)
 	var middle: Color = v.flash_color
 	var fade := Color(middle.r, middle.g * 0.55, middle.b * 0.24, 0.0)
 	var st := SurfaceTool.new()
@@ -422,7 +447,7 @@ static func _muzzle_mesh(weapon: String, variant: int) -> ArrayMesh:
 		var tip := length * rng.randf_range(0.82, 1.08) * (asymmetry if side > 0.0 else 2.0 - asymmetry)
 		_muzzle_triangle(st, Vector3(0, 0.04, 0), hot, Vector3(side * edge, 0.04, length * 0.13), middle, Vector3(side * width * rng.randf_range(0.03, 0.16), 0.04, tip), fade)
 		_muzzle_triangle(st, Vector3(0, 0.04, 0), hot, Vector3(side * width * 0.06, 0.04, length * 0.66), Color(middle.r, middle.g * 0.74, middle.b * 0.42, 0.56), Vector3(side * edge, 0.04, length * 0.13), middle)
-		_muzzle_triangle(st, Vector3(0, 0.06, 0), Color.WHITE, Vector3(side * width * 0.11, 0.06, length * 0.1), hot, Vector3(side * width * 0.025, 0.06, length * 0.57), Color(hot.r, hot.g * 0.72, hot.b * 0.4, 0.0))
+		_muzzle_triangle(st, Vector3(0, 0.06, 0), Color(1.0, 0.94, 0.58), Vector3(side * width * 0.11, 0.06, length * 0.1), hot, Vector3(side * width * 0.025, 0.06, length * 0.57), Color(hot.r, hot.g * 0.72, hot.b * 0.4, 0.0))
 	var m := st.commit()
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -439,10 +464,10 @@ static func muzzle(parent: Node, pos: Vector3, weapon := "m1911", angle := 0.0) 
 	var v: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
 	if weapon == "bazooka" or float(v.flash_life) <= 0.0:
 		return
-	_show_muzzle_flash(parent, pos, _muzzle_mesh(weapon, randi() % 3), angle, v.flash_life, v.flash_width * 2.4, weapon, v.flash_particles, v.flash_color)
+	_show_muzzle_flash(parent, pos, _muzzle_mesh(weapon, randi() % 3), angle, v.flash_life, v.flash_width * 1.55, weapon, v.flash_particles, v.flash_color, v.flash_energy, v.flash_range)
 
 
-static func _show_muzzle_flash(parent: Node, pos: Vector3, flash_mesh: ArrayMesh, angle: float, life: float, glow_size: float, smoke_style: String, particles: int, color: Color) -> void:
+static func _show_muzzle_flash(parent: Node, pos: Vector3, flash_mesh: ArrayMesh, angle: float, life: float, glow_size: float, smoke_style: String, particles: int, color: Color, light_energy: float, light_range: float) -> void:
 	if _muzzle_flash_live >= MAX_MUZZLE_FLASHES or not _near_camera(parent, pos, 38.0):
 		return
 	var f: Node3D
@@ -474,10 +499,31 @@ static func _show_muzzle_flash(parent: Node, pos: Vector3, flash_mesh: ArrayMesh
 	f.scale = Vector3(randf_range(0.94, 1.08), 1.0, randf_range(0.92, 1.1))
 	# Hef de flits net boven de loop uit; zo valt hij vanuit de gameplaycamera niet weg in de grond of het geweermodel.
 	f.global_position = pos + Vector3.UP * 0.24
+	var warm_light := f.get_node_or_null("WarmMuzzleLight") as OmniLight3D
+	if warm_light == null and _flash_lights < MAX_FLASH_LIGHTS:
+		warm_light = OmniLight3D.new()
+		warm_light.name = "WarmMuzzleLight"
+		warm_light.shadow_enabled = false
+		f.add_child(warm_light)
+		_flash_lights += 1
+		warm_light.tree_exited.connect(func(): _flash_lights = maxi(0, _flash_lights - 1))
+	if warm_light != null:
+		var old_light_tween := f.get_meta("light_tween") as Tween if f.has_meta("light_tween") else null
+		if old_light_tween != null and old_light_tween.is_valid():
+			old_light_tween.kill()
+		warm_light.light_color = Color(1.0, 0.55, 0.12)
+		warm_light.omni_range = light_range
+		warm_light.light_energy = light_energy
+		var light_tween := f.create_tween()
+		light_tween.tween_property(warm_light, "light_energy", 0.0, maxf(life, 0.2)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+		f.set_meta("light_tween", light_tween)
 	var tw := flame.create_tween()
 	tw.tween_property(flame, "scale", Vector3(0.72, 0.78, 0.72), life)
-	tw.tween_callback(_release_muzzle_flash.bind(f))
-	_flash_quad(parent, pos + Vector3.UP * 0.3, glow_size, life * 0.8, Color(1.0, 0.9, 0.62, 0.96))
+	tw.tween_callback(func(): flame.visible = false)
+	var release_tween := f.create_tween()
+	release_tween.tween_interval(maxf(life, 0.2 if warm_light != null else life))
+	release_tween.tween_callback(_release_muzzle_flash.bind(f))
+	_flash_quad(parent, pos + Vector3.UP * 0.3, glow_size, life * 0.85, Color(1.0, 0.58, 0.12, 0.76))
 	_muzzle_smoke(parent, pos - Vector3(sin(angle), 0.0, cos(angle)) * 0.05, smoke_style, angle)
 	if particles > 0:
 		_burst(parent, pos, Vector3.UP * 0.2, particles, color, 0.025, 4.8, Vector3(0.025, 0.035, 0.025))
@@ -571,7 +617,7 @@ static func rocket_launch(parent: Node, pos: Vector3, angle: float, _weapon := "
 	if not _near_camera(parent, pos, 34.0):
 		return
 	var forward := Vector3(sin(angle), 0.0, cos(angle))
-	_show_muzzle_flash(parent, pos, _rocket_flash_mesh(), angle, 0.1, 0.95, "bazooka", 10, Color(1.0, 0.56, 0.19))
+	_show_muzzle_flash(parent, pos, _rocket_flash_mesh(), angle, 0.1, 0.95, "bazooka", 10, Color(1.0, 0.56, 0.19), 1.5, 4.8)
 	_muzzle_smoke(parent, pos - forward * 0.3, "bazooka", angle)
 	_muzzle_smoke(parent, pos - forward * 0.62, "bazooka", angle)
 	_burst(parent, pos, Vector3.UP * 0.4 - forward * 0.3, 8, Color(1.0, 0.68, 0.28), 0.035, 3.6, Vector3(0.04, 0.05, 0.04))

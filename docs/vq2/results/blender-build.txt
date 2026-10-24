@@ -1,0 +1,145 @@
+ERROR Draco mesh compression is not available because library could not be found at /usr/bin/4.3/python/lib/python3.13/site-packages/libextern_draco.so
+19:25:33 | INFO: Starting glTF 2.0 export
+19:25:33 | INFO: Extracting primitive: Kazerne naamplaat
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Wand1
+19:25:33 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Wand2
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Wand3
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Plank1
+19:25:33 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Paal
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Dak
+19:25:33 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Dakrib
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Beton
+19:25:33 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Zak
+19:25:33 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Donker
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Goud
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Vlag
+19:25:33 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Extracting primitive: Metaal
+19:25:33 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:25:33 | INFO: Primitives created: 1
+19:25:33 | INFO: Finished glTF 2.0 export in 0.24198412895202637 s
+
+Info: Packed 18 file(s)
+Info: Saved "kazerne.blend"
+VQ2_EXPORT kazerne triangles 13300
+Blender 4.3.2
+
+Blender quit
+ERROR Draco mesh compression is not available because library could not be found at /usr/bin/4.3/python/lib/python3.13/site-packages/libextern_draco.so
+19:25:35 | INFO: Starting glTF 2.0 export
+19:25:35 | INFO: Extracting primitive: paal
+19:25:35 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:25:35 | INFO: Primitives created: 1
+19:25:35 | INFO: Extracting primitive: plank1
+19:25:35 | INFO: Primitives created: 1
+19:25:35 | INFO: Extracting primitive: plank2
+19:25:35 | INFO: Primitives created: 1
+19:25:35 | INFO: Extracting primitive: plank3
+19:25:35 | INFO: Primitives created: 1
+19:25:35 | INFO: Extracting primitive: dak
+19:25:35 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:25:35 | INFO: Primitives created: 1
+19:25:35 | INFO: Extracting primitive: dakrib
+19:25:35 | INFO: Primitives created: 1
+19:25:35 | INFO: Extracting primitive: metaal
+19:25:35 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:25:35 | INFO: Primitives created: 1
+19:25:35 | INFO: Extracting primitive: zak
+19:25:35 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:25:35 | INFO: Primitives created: 1
+19:25:35 | INFO: Extracting primitive: lamp
+19:25:35 | INFO: Primitives created: 1
+19:25:35 | INFO: Extracting primitive: kist
+19:25:35 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:25:35 | INFO: Primitives created: 1
+19:25:35 | INFO: Finished glTF 2.0 export in 0.18548083305358887 s
+
+Info: Packed 15 file(s)
+Info: Saved "wachttoren.blend"
+VQ2_EXPORT wachttoren triangles 16312
+Blender 4.3.2
+
+Blender quit
+ERROR Draco mesh compression is not available because library could not be found at /usr/bin/4.3/python/lib/python3.13/site-packages/libextern_draco.so
+19:26:19 | INFO: Starting glTF 2.0 export
+19:26:19 | INFO: Extracting primitive: Cube.309
+19:26:19 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:26:19 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:26:19 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:26:19 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:26:19 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:26:19 | WARNING: More than one shader node tex image used for a texture. The resulting glTF sampler will behave like the first shader node tex image.
+19:26:19 | INFO: Primitives created: 13
+19:26:19 | INFO: Finished glTF 2.0 export in 0.17019867897033691 s
+
+Info: Packed 9 file(s)
+Info: Saved "jeep.blend"
+EXPORTED 442 asset objects to /workspace/bloedjungle-vq2-work/bron/legerjeep
+Blender 4.3.2
+
+Blender quit
+ERROR Draco mesh compression is not available because library could not be found at /usr/bin/4.3/python/lib/python3.13/site-packages/libextern_draco.so
+19:26:20 | INFO: Starting glTF 2.0 export
+19:26:20 | INFO: Extracting primitive: BestuurderDij-1
+19:26:20 | INFO: Primitives created: 2
+19:26:20 | INFO: Extracting primitive: BestuurderBovenHeup
+19:26:20 | INFO: Primitives created: 4
+19:26:20 | INFO: Extracting primitive: Draaikop
+19:26:20 | INFO: Primitives created: 2
+19:26:20 | INFO: Extracting primitive: Huls0
+19:26:20 | INFO: Primitives created: 1
+19:26:20 | INFO: Extracting primitive: Huls1
+19:26:20 | INFO: Primitives created: 1
+19:26:20 | INFO: Extracting primitive: Huls2
+19:26:20 | INFO: Primitives created: 1
+19:26:20 | INFO: Extracting primitive: Kast
+19:26:20 | INFO: Primitives created: 4
+19:26:20 | INFO: Extracting primitive: Vlam0
+19:26:20 | INFO: Primitives created: 1
+19:26:20 | INFO: Extracting primitive: BovenlijfHeup
+19:26:20 | INFO: Primitives created: 4
+19:26:20 | INFO: Extracting primitive: SchutterBeen-1
+19:26:20 | INFO: Primitives created: 2
+19:26:20 | INFO: Extracting primitive: Kolf
+19:26:20 | INFO: Primitives created: 1
+19:26:20 | INFO: Extracting primitive: Loop.001
+19:26:20 | INFO: Primitives created: 1
+19:26:20 | INFO: Extracting primitive: Riem
+19:26:21 | INFO: Primitives created: 1
+19:26:21 | INFO: Extracting primitive: RompMesh
+19:26:21 | INFO: Primitives created: 12
+19:26:21 | INFO: Extracting primitive: WielLV
+19:26:21 | INFO: Primitives created: 3
+19:26:21 | INFO: Extracting primitive: WielRV
+19:26:21 | INFO: Primitives created: 3
+19:26:21 | INFO: Extracting primitive: WielLA
+19:26:21 | INFO: Primitives created: 3
+19:26:21 | INFO: Extracting primitive: WielRA
+19:26:21 | INFO: Primitives created: 3
+19:26:22 | INFO: Finished glTF 2.0 export in 1.8521943092346191 s
+
+Info: Saved "jeep.blend"
+TRIS 7598
+Blender 4.3.2
+
+Blender quit
+VQ2: 7 photographic PBR sets, native 1024px; provenance.json written
+Built VQ2 assets; baseline pinned to 967e9c23baffa0f5e5d62eedce3af30b8634d7c0

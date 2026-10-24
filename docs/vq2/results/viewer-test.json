@@ -1,0 +1,111 @@
+{
+  "browser": "Chromium headless, software WebGL; not a physical Safari/iPhone test",
+  "models": [
+    {
+      "name": "kazerne",
+      "materials": [
+        "Goud",
+        "VQ2_painted_timber",
+        "VQ2_timber",
+        "VQ2_roof",
+        "VQ2_concrete",
+        "VQ2_canvas",
+        "Donker",
+        "VQ2_canvas_tint",
+        "VQ2_steel"
+      ],
+      "orbit": true,
+      "game_camera_58deg_28m": true,
+      "inspection_modes": true
+    },
+    {
+      "name": "wachttoren",
+      "materials": [
+        "VQ2_timber",
+        "VQ2_roof",
+        "VQ2_steel",
+        "VQ2_canvas",
+        "Lamp",
+        "VQ2_olive"
+      ],
+      "orbit": true,
+      "game_camera_58deg_28m": true,
+      "inspection_modes": true
+    },
+    {
+      "name": "legerjeep",
+      "materials": [
+        "VQ2_steel_gunmetal",
+        "VQ2_steel",
+        "VQ2_olive_recess",
+        "VQ2_olive",
+        "04 | charcoal tyre rubber",
+        "11 | warm headlamp glass",
+        "13 | signal lens",
+        "12 | rear light lens",
+        "10 | slightly tinted windshield",
+        "14 | faded identification mark",
+        "VQ2_canvas",
+        "VQ2_canvas_seams",
+        "15 | exposed primer"
+      ],
+      "orbit": true,
+      "game_camera_58deg_28m": true,
+      "inspection_modes": true
+    }
+  ],
+  "clips": [
+    {
+      "name": "Stationair-loop",
+      "actual_node_transform_changes": true,
+      "verified_part": "Body"
+    },
+    {
+      "name": "Rijden-loop",
+      "actual_node_transform_changes": true,
+      "verified_part": "WielLV"
+    },
+    {
+      "name": "Achteruit-loop",
+      "actual_node_transform_changes": true,
+      "verified_part": "WielLV"
+    },
+    {
+      "name": "Bocht-loop",
+      "actual_node_transform_changes": true,
+      "verified_part": "Body",
+      "steering": true
+    },
+    {
+      "name": "Remmen",
+      "actual_node_transform_changes": true,
+      "verified_part": "Body"
+    },
+    {
+      "name": "Vuren-loop",
+      "actual_node_transform_changes": true,
+      "verified_part": "MG"
+    },
+    {
+      "name": "Rondkijken-loop",
+      "actual_node_transform_changes": true,
+      "verified_part": "Geschut"
+    }
+  ],
+  "mobile": [
+    {
+      "width": 390,
+      "height": 844,
+      "no_horizontal_overflow": true
+    },
+    {
+      "width": 844,
+      "height": 390,
+      "no_horizontal_overflow": true
+    }
+  ],
+  "errors": [],
+  "webgl": "ANGLE (Google, Vulkan 1.3.0 (SwiftShader Device (Subzero) (0x0000C0DE)), SwiftShader driver)",
+  "touch_pinch_zoom": true,
+  "pass": true
+}

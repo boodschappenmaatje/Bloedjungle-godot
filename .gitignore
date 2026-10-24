@@ -2,3 +2,4 @@
 /export/
 *.translation
 *.import
+__pycache__/

@@ -1,6 +1,6 @@
 # BLOEDJUNGLE — Visual Quality 2.0 / Blender production gate
 
-Status: **production brief, not yet implemented**. This specification applies to the three selected model upgrades in `boodschappenmaatje/Bloedjungle-godot`. Never merge this branch without explicit user approval after an iPhone Xogot review.
+Status: **implemented on the feature branch; physical iPhone/Xogot visual approval pending**. Results and reproduction instructions are in [vq2/README.md](vq2/README.md). This specification applies to the three selected model upgrades in `boodschappenmaatje/Bloedjungle-godot`. Never merge this branch without explicit user approval after an iPhone Xogot review.
 
 ## Goal
 

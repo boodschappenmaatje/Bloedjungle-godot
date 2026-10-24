@@ -13,8 +13,10 @@ import math, os, sys
 import bpy, bmesh
 import numpy as np
 from mathutils import Matrix, Vector
+from pathlib import Path
 
-OUT = os.path.abspath(sys.argv[1])
+ARGS = sys.argv[sys.argv.index("--")+1:] if "--" in sys.argv else []
+OUT = os.path.abspath(ARGS[0] if ARGS else str(Path(__file__).parent/"uit"))
 os.makedirs(OUT, exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -694,7 +696,9 @@ clip("Achteruit-loop", LUS,
 clip("Bocht-loop", LUS,
      lambda t: (0.015 * math.sin(t * math.tau * 2) + tril(t, 0.5)[0], math.radians(-0.4),
                 math.radians(3.5) + math.radians(0.6) * math.sin(t * math.tau)),
-     lambda t: 6.0, lambda t: math.radians(26))
+     # A changing steering input is retained by glTF exporters and visibly
+     # demonstrates steering; the old all-constant channel was omitted entirely.
+     lambda t: 6.0, lambda t: math.radians(26) * (.5-.5*math.cos(t*math.tau/LUS)))
 
 
 def remmen(t):
@@ -715,6 +719,7 @@ bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "jeep.glb"), export_format=
                           export_yup=True, export_lights=True, export_import_convert_lighting_mode="RAW", export_animations=True,
                           export_animation_mode="NLA_TRACKS", export_force_sampling=True,
                           export_optimize_animation_size=False)
+bpy.context.preferences.filepaths.save_version=0
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "jeep.blend"))
 tris = 0
 for o in scene.objects:

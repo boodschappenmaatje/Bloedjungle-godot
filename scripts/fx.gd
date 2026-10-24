@@ -3,7 +3,7 @@ class_name Fx
 
 const MAX_DECALS := 70
 
-static var _flash_mesh: SphereMesh
+static var _muzzle_meshes := {}
 static var _soft: GradientTexture2D
 static var _tex := {}
 static var _mats := {}
@@ -119,22 +119,22 @@ static func spark(parent: Node, pos: Vector3, normal: Vector3) -> void:
 
 
 static func _flash_quad(parent: Node, pos: Vector3, size: float, life: float, col: Color) -> void:
-	if not _mats.has("flash"):
+	var key := "flash_quad_%s" % col.to_html(true)
+	if not _mats.has(key):
 		var m := StandardMaterial3D.new()
 		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 		m.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 		m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 		m.albedo_texture = soft()
-		m.albedo_color = Color(1.0, 0.72, 0.3, 0.8)
-		m.no_depth_test = true
-		_mats["flash"] = m
+		m.albedo_color = col
+		m.no_depth_test = false
 		var q := QuadMesh.new()
 		q.size = Vector2.ONE
 		q.material = m
-		_mats["flash_mesh"] = q
+		_mats[key] = q
 	var f := MeshInstance3D.new()
-	f.mesh = _mats["flash_mesh"]
+	f.mesh = _mats[key]
 	f.scale = Vector3.ONE * size
 	f.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(f)
@@ -218,29 +218,65 @@ static func _burst(parent: Node, pos: Vector3, dir: Vector3, amount: int, col: C
 static var _flash_lights := 0
 
 
-static func muzzle(parent: Node, pos: Vector3) -> void:
-	if _flash_mesh == null:
-		_flash_mesh = SphereMesh.new()
-		_flash_mesh.radius = 0.09
-		_flash_mesh.height = 0.18
-		var mat := StandardMaterial3D.new()
-		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-		mat.albedo_color = Color(1.0, 0.8, 0.35)
-		_flash_mesh.material = mat
+static func _muzzle_triangle(st: SurfaceTool, a: Vector3, ca: Color, b: Vector3, cb: Color, c: Vector3, cc: Color) -> void:
+	st.set_color(ca)
+	st.add_vertex(a)
+	st.set_color(cb)
+	st.add_vertex(b)
+	st.set_color(cc)
+	st.add_vertex(c)
+
+
+static func _muzzle_mesh(weapon: String) -> ArrayMesh:
+	if _muzzle_meshes.has(weapon):
+		return _muzzle_meshes[weapon]
+	var v: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
+	var length: float = v.flash_length
+	var width: float = v.flash_width
+	var hot := Color(1.0, 0.97, 0.78, 0.98)
+	var middle: Color = v.flash_color
+	var fade := Color(middle.r, middle.g * 0.55, middle.b * 0.24, 0.0)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Twee taps toelopende zijden en een smalle hete kern vormen een korte vlam langs de loop.
+	for side in [-1.0, 1.0]:
+		_muzzle_triangle(st, Vector3(0, 0.012, 0), hot, Vector3(side * width * 0.5, 0.012, length * 0.18), middle, Vector3(0, 0.012, length), fade)
+		_muzzle_triangle(st, Vector3(0, 0.012, 0), hot, Vector3(0, 0.012, length), fade, Vector3(side * width * 0.34, 0.012, length * 0.58), Color(middle.r, middle.g, middle.b, 0.55))
+		_muzzle_triangle(st, Vector3(0, 0.018, 0), Color.WHITE, Vector3(side * width * 0.12, 0.018, length * 0.12), hot, Vector3(0, 0.018, length * 0.55), Color(hot.r, hot.g * 0.72, hot.b * 0.4, 0.0))
+	var m := st.commit()
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.vertex_color_use_as_albedo = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.surface_set_material(0, mat)
+	_muzzle_meshes[weapon] = m
+	return m
+
+
+static func muzzle(parent: Node, pos: Vector3, weapon := "m1911", angle := 0.0) -> void:
+	var v: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
+	var life: float = v.flash_life
 	var f := MeshInstance3D.new()
-	f.mesh = _flash_mesh
+	f.mesh = _muzzle_mesh(weapon)
+	f.rotation.y = angle
+	f.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(f)
 	f.global_position = pos
-	parent.get_tree().create_timer(0.05).timeout.connect(f.queue_free)
-	_flash_quad(parent, pos, randf_range(0.45, 0.65), 0.05, Color.WHITE)
-	_burst(parent, pos, Vector3.UP * 0.2, 4, Color(1.0, 0.8, 0.4), 0.03, 6.0)
+	var tw := f.create_tween()
+	tw.tween_property(f, "scale", Vector3(0.65, 0.65, 0.75), life)
+	parent.get_tree().create_timer(life).timeout.connect(f.queue_free)
+	_flash_quad(parent, pos, randf_range(v.flash_width * 2.2, v.flash_width * 2.8), life, v.flash_color)
+	if v.flash_particles > 0:
+		_burst(parent, pos, Vector3.UP * 0.2, v.flash_particles, v.flash_color, 0.025, 5.0)
 	# hooguit twee flitslichten tegelijk: elk licht kost op de telefoon beeldkracht en vertraagt drukke gevechten
 	if _flash_lights < 2:
 		_flash_lights += 1
 		var l := OmniLight3D.new()
-		l.light_color = Color(1.0, 0.75, 0.4)
-		l.light_energy = 3.0
-		l.omni_range = 7.0
+		l.light_color = v.flash_color
+		l.light_energy = v.flash_energy
+		l.omni_range = v.flash_range
 		l.shadow_enabled = false
 		f.add_child(l)
 		l.tree_exited.connect(func(): _flash_lights -= 1)

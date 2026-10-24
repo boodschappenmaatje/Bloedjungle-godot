@@ -13,6 +13,7 @@ static var _mat_p: StandardMaterial3D
 static var _mat_e: StandardMaterial3D
 static var _glow_p: ArrayMesh
 static var _glow_e: ArrayMesh
+static var _weapon_glows := {}
 
 var dir := Vector3.FORWARD
 var speed := 75.0
@@ -35,7 +36,7 @@ func _exit_tree() -> void:
 
 
 ## Maakt een kogel. over_wall: de schutter staat tegen de muur en schiet eroverheen.
-static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false, pierce_ := 0, explosive_ := 0.0, sink_ := 0.0, rise_ := 0.0) -> void:
+static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false, pierce_ := 0, explosive_ := 0.0, sink_ := 0.0, rise_ := 0.0, visual_weapon := "") -> void:
 	if _mesh == null:
 		_mesh = BoxMesh.new()
 		_mesh.size = Vector3(0.05, 0.05, 0.9)
@@ -44,7 +45,7 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 		_glow_p = _glow(Color(1.0, 0.85, 0.3, 1.0), Color(1.0, 0.35, 0.0, 0.0))
 		_glow_e = _glow(Color(1.0, 0.45, 0.25, 1.0), Color(0.9, 0.05, 0.0, 0.0))
 	var b := Bullet.new()
-	b.mesh = _glow_p if by_player else _glow_e
+	b.mesh = _weapon_glow(visual_weapon) if by_player and Data.WEAPON_VISUALS.has(visual_weapon) else (_glow_p if by_player else _glow_e)
 	b.dir = Vector3(sin(angle), 0.0, cos(angle))
 	b.speed = spd
 	b.dmg = damage
@@ -86,14 +87,23 @@ static func fire_rocket(parent: Node, from: Vector3, angle: float, damage: float
 
 ## Lichtspoor: een felle kop met een staart die uitdooft (twee kruislings gezette vlakken met een kleurverloop)
 ## en een kleine gloeiende bol als kop. Beide tellen op bij wat erachter ligt, dus het straalt zonder te vullen.
-static func _glow(head: Color, tail: Color) -> ArrayMesh:
+static func _weapon_glow(weapon: String) -> ArrayMesh:
+	if _weapon_glows.has(weapon):
+		return _weapon_glows[weapon]
+	var v: Dictionary = Data.WEAPON_VISUALS[weapon]
+	var m := _glow(v.trail_head, v.trail_tail, v.trail_length, v.trail_width, 0.10, 0.042 if weapon != "bazooka" else 0.07)
+	_weapon_glows[weapon] = m
+	return m
+
+
+static func _glow(head: Color, tail: Color, tail_length := 2.0, width := 0.07, head_length := 0.35, ball_size := 0.09) -> ArrayMesh:
 	var m := ArrayMesh.new()
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var z0 := -2.0   # staart
-	var z1 := 0.35   # kop
+	var z0 := -tail_length   # korte, taps toelopende staart achter de kogel
+	var z1 := head_length
 	for ang in [0.0, PI * 0.5]:
-		var side := Vector3(cos(ang), sin(ang), 0.0) * 0.07
+		var side := Vector3(cos(ang), sin(ang), 0.0) * width
 		var pts := [Vector3(0, 0, z0) - side * 0.2, Vector3(0, 0, z0) + side * 0.2, Vector3(0, 0, z1) + side, Vector3(0, 0, z1) - side]
 		var cols := [tail, tail, head, head]
 		for i in [0, 1, 2, 0, 2, 3]:
@@ -108,13 +118,15 @@ static func _glow(head: Color, tail: Color) -> ArrayMesh:
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	m.surface_set_material(0, mat)
 	var ball := SphereMesh.new()
-	ball.radius = 0.09
-	ball.height = 0.18
+	ball.radius = ball_size
+	ball.height = ball_size * 2.0
 	ball.radial_segments = 8
 	ball.rings = 4
 	var bm := StandardMaterial3D.new()
 	bm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	bm.albedo_color = Color(1.0, 0.95, 0.75)
+	bm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	bm.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	bm.albedo_color = head
 	var arr := ball.get_mesh_arrays()
 	var verts: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
 	for i in verts.size():

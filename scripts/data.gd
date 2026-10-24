@@ -17,6 +17,15 @@ const WEAPONS := {
 	"mg42": {"short": "MG 42", "name": "MG 42", "price": 2800, "dmg": 27.0, "rate": 0.05, "mag": 100, "reload": 3.6, "spread": 0.1, "speed": 95.0, "pellets": 1, "pierce": 1, "life": 0.6, "slow": 0.78, "desc": "1200 schoten per minuut. Je loopt er wel trager mee."},
 	"bazooka": {"short": "Bazooka", "name": "M1 Bazooka", "price": 3800, "dmg": 240.0, "rate": 1.0, "mag": 1, "reload": 2.1, "spread": 0.01, "speed": 32.0, "pellets": 1, "pierce": 0, "life": 1.4, "explosive": 4.8, "desc": "Raketwerper. Enorme ontploffing, houd afstand."},
 }
+# Alleen visuele kogel- en flitsinstellingen; deze waarden veranderen de schietlogica niet.
+const WEAPON_VISUALS := {
+	"m1911": {"flash_length": 0.48, "flash_width": 0.15, "flash_life": 0.055, "flash_color": Color(1.0, 0.72, 0.30), "flash_particles": 2, "flash_energy": 1.7, "flash_range": 4.0, "trail_length": 0.52, "trail_width": 0.025, "trail_head": Color(1.0, 0.82, 0.48, 0.88), "trail_tail": Color(1.0, 0.34, 0.08, 0.0)},
+	"thompson": {"flash_length": 0.42, "flash_width": 0.12, "flash_life": 0.045, "flash_color": Color(1.0, 0.60, 0.22), "flash_particles": 1, "flash_energy": 1.3, "flash_range": 3.0, "trail_length": 0.38, "trail_width": 0.021, "trail_head": Color(1.0, 0.67, 0.32, 0.72), "trail_tail": Color(0.93, 0.25, 0.06, 0.0)},
+	"garand": {"flash_length": 0.68, "flash_width": 0.18, "flash_life": 0.065, "flash_color": Color(1.0, 0.78, 0.38), "flash_particles": 3, "flash_energy": 2.2, "flash_range": 5.0, "trail_length": 0.82, "trail_width": 0.028, "trail_head": Color(1.0, 0.91, 0.68, 0.96), "trail_tail": Color(1.0, 0.48, 0.12, 0.0)},
+	"trench": {"flash_length": 0.72, "flash_width": 0.30, "flash_life": 0.075, "flash_color": Color(1.0, 0.67, 0.26), "flash_particles": 4, "flash_energy": 2.0, "flash_range": 4.5, "trail_length": 0.30, "trail_width": 0.018, "trail_head": Color(1.0, 0.72, 0.40, 0.58), "trail_tail": Color(0.94, 0.32, 0.07, 0.0)},
+	"mg42": {"flash_length": 0.40, "flash_width": 0.14, "flash_life": 0.04, "flash_color": Color(1.0, 0.57, 0.20), "flash_particles": 1, "flash_energy": 1.2, "flash_range": 3.0, "trail_length": 0.36, "trail_width": 0.020, "trail_head": Color(1.0, 0.65, 0.29, 0.72), "trail_tail": Color(0.94, 0.24, 0.04, 0.0)},
+	"bazooka": {"flash_length": 0.95, "flash_width": 0.28, "flash_life": 0.11, "flash_color": Color(1.0, 0.56, 0.20), "flash_particles": 5, "flash_energy": 3.0, "flash_range": 7.0, "trail_length": 1.05, "trail_width": 0.055, "trail_head": Color(1.0, 0.84, 0.48, 0.98), "trail_tail": Color(0.95, 0.20, 0.03, 0.0)},
+}
 const WEAPON_ORDER := ["m1911", "thompson", "garand", "trench", "mg42", "bazooka"]
 const UPGS := [["dmg", "Schade", "+30% schade"], ["rate", "Vuursnelheid", "14% sneller"], ["mag", "Magazijn", "+30% kogels"], ["rel", "Herladen", "18% sneller"]]
 const UPG_MAX := 5

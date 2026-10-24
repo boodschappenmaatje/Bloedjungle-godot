@@ -8,6 +8,8 @@ De drie bestaande modellen zijn daadwerkelijk opnieuw opgebouwd en geëxporteerd
 
 De preview wordt privé voor de eigenaar gehost; meld zo nodig aan met hetzelfde ChatGPT-account. De bron staat op `feature/blender-visual-quality-v2-three-models`. Een lokale server kan ook, zie [viewer-instructies](../../tools/blender-vq2-viewer/README.md).
 
+De hostingdienst bevestigt een geslaagde publicatie en leverde een [echt browserbeeld van de geladen kazerne](renders/hosted-viewer-kazerne.jpg). De volledige live-URL-check vanuit deze uitvoeromgeving is geblokkeerd: de netwerkproxy weigert de CONNECT met HTTP 403 vóór de site bereikt wordt. Alle interactieve functies zijn wel lokaal in Chromium gecontroleerd. [Publicatiebewijs en exacte beperking](results/live-site-test.json). Dit is een externe webviewer; er wordt geen native inline 3D-weergave binnen ChatGPT geclaimd.
+
 - Eén vinger/muis draait 360°, twee vingers zoomen en verplaatsen.
 - Kies V1, VQ2 of beide naast elkaar. V1 gebruikt vaste originele bytes uit main `967e9c2`, niet de later veranderende main.
 - Camera en belichting zijn gedeeld. Het gamepreset gebruikt 58° elevatie, 28 meter afstand en 45° FOV.

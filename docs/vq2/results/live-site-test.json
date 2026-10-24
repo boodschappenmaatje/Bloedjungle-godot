@@ -1,0 +1,21 @@
+{
+  "url": "https://bloedjungle-vq2-modellen.whole-jam-7898.chatgpt.site/tools/blender-vq2-viewer/",
+  "access": "Private owner preview; sign in with the owning ChatGPT account.",
+  "published_game_source_commit": "4ed69d765c639ad1b595841a8e377f6837c3582d",
+  "static_mirror_commit": "00ef7bb7649b92ad53f0e84666bbd39c4d285066",
+  "deployment_id": "appgdep_6add0c85288481919c80524c9a3970c2",
+  "deployment_status": "succeeded",
+  "deployment_failure_message": null,
+  "hosting_service_browser_capture": {
+    "status": "PASS: real Kazerne GLB and viewer rendered",
+    "file": "../renders/hosted-viewer-kazerne.jpg",
+    "sha256": "ce164a8dd9e34f3dcbec3fae9ea277f396c1b6a4c23499730493f0823b4215a4"
+  },
+  "local_browser_functional_tests": "PASS: all three comparisons, seven real animation clips, two mobile viewports and pinch; see viewer-test.json",
+  "external_live_end_to_end_check": {
+    "status": "BLOCKED",
+    "reason": "Execution environment proxy rejects CONNECT to the published chatgpt.site hostname with HTTP 403 before the website receives the request. No claim of live clip playback verification."
+  },
+  "physical_iphone_safari": "NOT RUN",
+  "physical_iphone_xogot": "NOT RUN"
+}

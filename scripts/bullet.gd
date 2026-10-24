@@ -14,6 +14,13 @@ static var _mat_e: StandardMaterial3D
 static var _glow_p: ArrayMesh
 static var _glow_e: ArrayMesh
 static var _weapon_glows := {}
+static var _rocket_body: CylinderMesh
+static var _rocket_nose: CylinderMesh
+static var _rocket_tail: CylinderMesh
+static var _rocket_fin: BoxMesh
+static var _rocket_body_mat: StandardMaterial3D
+static var _rocket_nose_mat: StandardMaterial3D
+static var _plain_player_bullet: BoxMesh
 
 var dir := Vector3.FORWARD
 var speed := 75.0
@@ -24,6 +31,7 @@ var from_player := true
 var pierce := 0
 var explosive := 0.0
 var rocket := false  # vijandelijke raket: ontploft op de plek waar hij gemikt was
+var visual_weapon := ""
 var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
 
 
@@ -45,7 +53,19 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 		_glow_p = _glow(Color(1.0, 0.85, 0.3, 1.0), Color(1.0, 0.35, 0.0, 0.0))
 		_glow_e = _glow(Color(1.0, 0.45, 0.25, 1.0), Color(0.9, 0.05, 0.0, 0.0))
 	var b := Bullet.new()
-	b.mesh = _weapon_glow(visual_weapon) if by_player and Data.WEAPON_VISUALS.has(visual_weapon) else (_glow_p if by_player else _glow_e)
+	b.visual_weapon = visual_weapon
+	if visual_weapon == "bazooka":
+		b._add_rocket_visual()
+	elif by_player and Data.WEAPON_VISUALS.has(visual_weapon):
+		var every: int = int(Data.WEAPON_VISUALS[visual_weapon].get("trail_every", 1))
+		b.mesh = _weapon_glow(visual_weapon) if every > 0 else _plain_bullet_mesh()
+		if every <= 0:
+			b.scale = Vector3.ONE * 0.35
+	elif by_player:
+		b.mesh = _plain_bullet_mesh()
+		b.scale = Vector3.ONE * 0.35
+	else:
+		b.mesh = _glow_p if by_player else _glow_e
 	b.dir = Vector3(sin(angle), 0.0, cos(angle))
 	b.speed = spd
 	b.dmg = damage
@@ -59,6 +79,8 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	parent.add_child(b)
 	b.global_position = from
 	b.rotation.y = angle
+	if visual_weapon == "bazooka":
+		Fx.rocket_trail(b)
 
 
 ## Vijandelijke raket (18-enemies.js): traag; ontploft waar hij gemikt was of tegen de eerste muur, speler of bunker.
@@ -69,9 +91,7 @@ static func fire_rocket(parent: Node, from: Vector3, angle: float, damage: float
 			if c is Bullet and c.speed == 0.0:
 				c.queue_free()
 	var b := Bullet.new()
-	b.mesh = _mesh
-	b.material_override = _mat_e
-	b.scale = Vector3(3.0, 3.0, 0.8)
+	b._add_rocket_visual()
 	b.dir = Vector3(sin(angle), 0.0, cos(angle))
 	b.speed = 17.0
 	b.dmg = damage
@@ -83,6 +103,77 @@ static func fire_rocket(parent: Node, from: Vector3, angle: float, damage: float
 	parent.add_child(b)
 	b.global_position = from
 	b.rotation.y = angle
+	Fx.rocket_trail(b)
+	Fx.rocket_launch(parent, from, angle, "bazooka")
+
+
+static func _plain_bullet_mesh() -> BoxMesh:
+	if _plain_player_bullet == null:
+		_plain_player_bullet = BoxMesh.new()
+		_plain_player_bullet.size = Vector3(0.035, 0.035, 0.28)
+		_plain_player_bullet.material = _mat_p
+	return _plain_player_bullet
+
+
+func _add_rocket_visual() -> void:
+	mesh = null
+	if _rocket_body == null:
+		_rocket_body = CylinderMesh.new()
+		_rocket_body.top_radius = 0.022
+		_rocket_body.bottom_radius = 0.022
+		_rocket_body.height = 0.38
+		_rocket_body.radial_segments = 8
+		_rocket_nose = CylinderMesh.new()
+		_rocket_nose.top_radius = 0.0
+		_rocket_nose.bottom_radius = 0.022
+		_rocket_nose.height = 0.11
+		_rocket_nose.radial_segments = 8
+		_rocket_tail = CylinderMesh.new()
+		_rocket_tail.top_radius = 0.027
+		_rocket_tail.bottom_radius = 0.027
+		_rocket_tail.height = 0.045
+		_rocket_tail.radial_segments = 8
+		_rocket_fin = BoxMesh.new()
+		_rocket_fin.size = Vector3(0.09, 0.008, 0.08)
+		_rocket_body_mat = StandardMaterial3D.new()
+		_rocket_body_mat.albedo_color = Color("454b3c")
+		_rocket_body_mat.roughness = 0.72
+		_rocket_nose_mat = StandardMaterial3D.new()
+		_rocket_nose_mat.albedo_color = Color("71736b")
+		_rocket_nose_mat.metallic = 0.32
+		_rocket_nose_mat.roughness = 0.52
+	var model := Node3D.new()
+	model.name = "RocketVisual"
+	add_child(model)
+	_add_rocket_part(model, _rocket_body, _rocket_body_mat, Vector3(0, 0, 0), PI * 0.5)
+	_add_rocket_part(model, _rocket_nose, _rocket_nose_mat, Vector3(0, 0, 0.245), PI * 0.5)
+	_add_rocket_part(model, _rocket_tail, _rocket_nose_mat, Vector3(0, 0, -0.2), PI * 0.5)
+	_add_rocket_part(model, _rocket_fin, _rocket_body_mat, Vector3(0.035, 0, -0.155), 0.0)
+	_add_rocket_part(model, _rocket_fin, _rocket_body_mat, Vector3(-0.035, 0, -0.155), 0.0)
+	var fin_cross := MeshInstance3D.new()
+	fin_cross.mesh = _rocket_fin
+	fin_cross.material_override = _rocket_body_mat
+	fin_cross.position = Vector3(0, 0.035, -0.155)
+	fin_cross.rotation.z = PI * 0.5
+	fin_cross.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	model.add_child(fin_cross)
+	fin_cross = MeshInstance3D.new()
+	fin_cross.mesh = _rocket_fin
+	fin_cross.material_override = _rocket_body_mat
+	fin_cross.position = Vector3(0, -0.035, -0.155)
+	fin_cross.rotation.z = PI * 0.5
+	fin_cross.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	model.add_child(fin_cross)
+
+
+func _add_rocket_part(parent: Node3D, part_mesh: Mesh, mat: Material, at: Vector3, tilt: float) -> void:
+	var mi := MeshInstance3D.new()
+	mi.mesh = part_mesh
+	mi.material_override = mat
+	mi.position = at
+	mi.rotation.x = tilt
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
 
 
 ## Lichtspoor: een felle kop met een staart die uitdooft (twee kruislings gezette vlakken met een kleurverloop)
@@ -157,6 +248,8 @@ func _physics_process(delta: float) -> void:
 		Fx.dust(get_parent(), global_position - dir * 0.6)
 	if sink > 0.0:
 		dir.y = -sink if global_position.y > 1.3 else 0.0
+	var flat_speed := Vector2(dir.x, dir.z).length()
+	rotation = Vector3(-atan2(dir.y, maxf(flat_speed, 0.001)), atan2(dir.x, dir.z), 0.0)
 	var step := dir * speed * delta
 	for k: Brandkraan in Brandkraan.all:   # schiet je er tegenaan, dan begint de kogel in de botsvorm en ziet de straal hem niet
 		if is_instance_valid(k) and not k.sprayed and (mask & Barrel.LAYER) != 0 and k.inside(global_position):

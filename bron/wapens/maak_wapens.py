@@ -7,7 +7,7 @@ import bpy, bmesh
 import numpy as np
 from mathutils import Matrix, Vector
 
-OUT = os.path.abspath(sys.argv[1])
+OUT = os.path.abspath(sys.argv[-1])
 os.makedirs(OUT, exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -125,6 +125,9 @@ STAAL = mat("Staal", (0.20, 0.20, 0.21), 0.42, 0.85)
 BRUIN = mat("Parkerized", (0.09, 0.095, 0.10), 0.5, 0.7)   # donker gebrand staal
 HOUT = mat("Hout", (0.36, 0.21, 0.09), 0.62)
 HOUT_D = mat("HoutDonker", (0.22, 0.12, 0.05), 0.7)
+# Los materiaal zodat de Winchester-pomp met het handvat kan bewegen, zonder de kolf mee te nemen.
+POMP_HOUT = mat("PompHout", (0.36, 0.21, 0.09), 0.62)
+POMP_HOUT_D = mat("PompDonker", (0.22, 0.12, 0.05), 0.7)
 MESSING = mat("Messing", (0.82, 0.60, 0.22), 0.3, 1.0)
 OLIJF = mat("Olijf", (0.25, 0.28, 0.16), 0.7, 0.1)
 RIEM = mat("Riem", (0.20, 0.19, 0.11), 0.9)
@@ -236,9 +239,9 @@ def trench():
     cyl("Hitteschild", 0.026, 0.026, 0.28, STAAL, "Y", 12, r, (0, 0.62, 0.108))
     for i in range(6):
         box("Gat", (0.012, 0.018, 0.012), BRUIN, r, (0, 0.5 + i * 0.045, 0.133))
-    cyl("Pomp", 0.032, 0.032, 0.17, HOUT, "Y", 12, r, (0, 0.42, 0.052))
+    cyl("Pomp", 0.032, 0.032, 0.17, POMP_HOUT, "Y", 12, r, (0, 0.42, 0.052))
     for i in range(4):
-        cyl("Groefje", 0.034, 0.034, 0.006, HOUT_D, "Y", 12, r, (0, 0.37 + i * 0.03, 0.052))
+        cyl("Groefje", 0.034, 0.034, 0.006, POMP_HOUT_D, "Y", 12, r, (0, 0.37 + i * 0.03, 0.052))
     box("Beugel", (0.008, 0.1, 0.008), BRUIN, r, (0, 0.12, 0.04))
     box("Trekker", (0.006, 0.008, 0.026), STAAL, r, (0, 0.1, 0.05))
     box("Bajonetpen", (0.012, 0.03, 0.014), STAAL, r, (0, 0.88, 0.07))

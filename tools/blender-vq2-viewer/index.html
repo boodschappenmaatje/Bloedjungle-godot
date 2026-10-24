@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#132019">
+<title>Bloedjungle — Blender VQ2 Model Viewer</title>
+<script type="module" src="https://unpkg.com/@google/model-viewer@4.0.0/dist/model-viewer.min.js"></script>
+<style>
+:root {color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;background:#101914;color:#edf4ed}
+* {box-sizing:border-box}
+body {margin:0;min-height:100vh;padding:12px;padding-bottom:env(safe-area-inset-bottom)}
+main {max-width:1200px;margin:0 auto}
+header {display:flex;gap:12px;align-items:baseline;flex-wrap:wrap;padding:10px 4px}
+h1 {font-size:1.3rem;margin:0} small,.muted {color:#afc0b2}
+.controls {display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:12px 0}
+label {display:grid;gap:5px;font-size:.85rem;color:#b9cbbf}
+select,button {border:1px solid #576b5b;border-radius:8px;background:#233628;color:white;padding:11px;font:inherit}
+button {cursor:pointer}button:disabled {opacity:.4;cursor:default}
+button:focus-visible,select:focus-visible {outline:2px solid #a0db99}
+model-viewer {width:100%;height:min(64vh,680px);min-height:380px;background:radial-gradient(circle at 50% 25%, #5a665b, #1b2820 75%);border-radius:12px;border:1px solid #4d6350;--poster-color:transparent}
+.toolbar {display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.status {padding:11px;background:#1c2c21;border:1px solid #455847;border-radius:8px;margin:10px 0;min-height:45px}
+.caption {font-size:.85rem;color:#bbc9bc}
+@media(max-width:560px){model-viewer{min-height:320px;height:53vh}.controls{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+<main>
+<header><h1>BLOEDJUNGLE · ASSET VIEWER</h1><small>Visual Quality 2.0 — mobiel vergelijkingslab (prototype)</small></header>
+<p class="caption">Draai met één vinger, zoom met twee vingers. De viewer toont alleen echt aanwezige GLB-bestanden en animatieclips. De nieuwe VQ2-modellen worden pas zichtbaar zodra Codex ze naar de featurebranch pusht.</p>
+<div class="controls">
+<label>Model<select id="asset"><option value="kazerne">Kazerne</option><option value="wachttoren">Wachttoren</option><option value="legerjeep">Legerjeep (statisch)</option><option value="jeep">Jeep (speelbaar, animaties)</option></select></label>
+<label>Versie<select id="version"><option value="main">Oud — main</option><option value="feature/blender-visual-quality-v2-three-models">Nieuw — VQ2-branch</option></select></label>
+<label>Animatie<select id="clips" disabled><option value="">Geen animaties geladen</option></select></label>
+</div>
+<model-viewer id="viewer" alt="Draaibaar Bloedjungle GLB-model" camera-controls touch-action="pan-y" shadow-intensity="1" shadow-softness="1" exposure="1.0" environment-image="neutral" loading="eager" reveal="auto" interaction-prompt="none" camera-orbit="35deg 60deg auto"></model-viewer>
+<div class="toolbar">
+<button id="play" disabled>▶ Afspelen</button>
+<button id="pause" disabled>Ⅱ Pauze</button>
+<button id="restart" disabled>↺ Animatie opnieuw</button>
+<button id="top">⬇ Top-down</button>
+<button id="iso">◩ Schuin</button>
+<button id="reset">⟲ Camera reset</button>
+<button id="full">⛶ Volledig scherm</button>
+</div>
+<p id="status" class="status" role="status" aria-live="polite">Model wordt geladen…</p>
+<p class="caption">3D in deze webviewer is een aanvulling op echte Godot/Xogot-tests. Dit HTML-bestand is een startpunt; vereiste hosting, netwerktoegang en iPhone-functionaliteit moeten door Codex nog gevalideerd worden.</p>
+</main>
+<script>
+(() => {
+"use strict";
+const root = "https://raw.githubusercontent.com/boodschappenmaatje/Bloedjungle-godot/";
+const asset = document.getElementById("asset");
+const version = document.getElementById("version");
+const clips = document.getElementById("clips");
+const viewer = document.getElementById("viewer");
+const status = document.getElementById("status");
+const play = document.getElementById("play");
+const pause = document.getElementById("pause");
+const restart = document.getElementById("restart");
+const label = {kazerne:"Kazerne",wachttoren:"Wachttoren",legerjeep:"Legerjeep",jeep:"Speelbare jeep"};
+let requestId = 0;
+function message(txt) { status.textContent = txt; }
+function setClipControls(enabled) {
+ clips.disabled = !enabled;
+ play.disabled = pause.disabled = restart.disabled = !enabled;
+}
+function load() {
+ const currentRequest = ++requestId;
+ const v = version.value, a = asset.value;
+ viewer.pause();
+ setClipControls(false);
+ clips.replaceChildren(new Option("Bezig met laden…",""));
+ message("Laden van " + label[a] + " (" + (v === "main" ? "oud" : "nieuw") + ")…");
+ const listenerLoad = () => {
+  if(currentRequest !== requestId) return;
+  viewer.removeEventListener("load",listenerLoad);
+  const tracks = Array.isArray(viewer.availableAnimations) ? viewer.availableAnimations : [];
+  clips.replaceChildren();
+  if(!tracks.length) {
+   clips.add(new Option("Geen animaties in dit model",""));
+   message(label[a] + " geladen. Dit GLB-bestand bevat geen animatieclips.");
+  } else {
+   tracks.forEach(c => clips.add(new Option(c,c)));
+   viewer.animationName = tracks[0];
+   viewer.pause();
+   setClipControls(true);
+   message(label[a] + " geladen, " + tracks.length + " echte animatieclip(s): " + tracks.join(", ") + ".");
+  }
+ };
+ viewer.addEventListener("load", listenerLoad, {once:true});
+ viewer.src = root + v + "/assets/" + a + ".glb";
+}
+asset.addEventListener("change", load);
+version.addEventListener("change", load);
+clips.addEventListener("change", () => { viewer.pause(); viewer.animationName=clips.value; });
+play.addEventListener("click", () => { if(!clips.disabled) { viewer.animationName=clips.value; viewer.play(); }});
+pause.addEventListener("click", () => viewer.pause());
+restart.addEventListener("click", () => { viewer.pause(); viewer.currentTime=0; viewer.play(); });
+document.getElementById("top").addEventListener("click",() => viewer.cameraOrbit="0deg 15deg auto");
+document.getElementById("iso").addEventListener("click",() => viewer.cameraOrbit="35deg 60deg auto");
+document.getElementById("reset").addEventListener("click",() => {viewer.cameraOrbit="35deg 60deg auto";viewer.cameraTarget="auto auto auto";viewer.fieldOfView="auto";viewer.jumpCameraToGoal();});
+document.getElementById("full").addEventListener("click",() => { if(viewer.requestFullscreen) viewer.requestFullscreen().catch(() => message("Fullscreen niet ondersteund door deze browser.")); else message("Fullscreen niet ondersteund door deze browser."); });
+viewer.addEventListener("error", (e) => message("Model kon niet geladen worden. Controleer GLB-export, het gekozen branch-pad en netwerktoegang. " + (e.detail && e.detail.type ? e.detail.type : "")));
+if(!("customElements" in window)) { message("Deze browser ondersteunt de 3D-viewer niet."); }
+else {customElements.whenDefined("model-viewer").then(load).catch(() => message("De online 3D-viewerbibliotheek kon niet worden geladen."));}
+})();
+</script>
+</body>
+</html>

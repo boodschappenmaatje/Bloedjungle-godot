@@ -20,6 +20,7 @@ const VOICES := 20
 const MASTER := 0.6
 
 var _streams := {}
+var _m1911_shots: Array[AudioStreamWAV] = []
 var _players: Array[AudioStreamPlayer] = []
 var _next := 0
 var _rain: AudioStreamPlayer
@@ -29,6 +30,9 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	for k in DEFS:
 		_streams[k] = _make(DEFS[k])
+	# Drie originele, vooraf gesynthetiseerde pistoolknallen: geen externe audio-assets.
+	for variant in 3:
+		_m1911_shots.append(_make_m1911_shot(variant))
 	for i in VOICES:
 		var p := AudioStreamPlayer.new()
 		add_child(p)
@@ -48,8 +52,12 @@ func play(name: String, vol := 1.0, pos = null) -> void:
 		vol *= clampf(1.2 - d / 35.0, 0.05, 1.0)
 	var p := _players[_next]
 	_next = (_next + 1) % VOICES
-	p.stream = _streams[name]
-	p.pitch_scale = randf_range(0.88, 1.14)
+	if name == "pistol" and not _m1911_shots.is_empty():
+		p.stream = _m1911_shots[randi() % _m1911_shots.size()]
+		p.pitch_scale = randf_range(0.97, 1.04)
+	else:
+		p.stream = _streams[name]
+		p.pitch_scale = randf_range(0.88, 1.14)
 	p.volume_db = linear_to_db(maxf(0.001, vol * MASTER))
 	p.play()
 
@@ -88,6 +96,38 @@ func _make(s: Dictionary) -> AudioStreamWAV:
 	w.mix_rate = RATE
 	w.data = data
 	return w
+
+
+## Een droge, krachtige .45 ACP-achtige gameknal: snelle crack, lage body,
+## korte nagalm en een zachte mechanische klik. Volledig zelf gegenereerd
+## tijdens opstarten: sample-accuraat synchroon via Sfx.play("pistol").
+func _make_m1911_shot(variant: int) -> AudioStreamWAV:
+	var count := int(RATE * 0.25)
+	var pcm := PackedByteArray()
+	pcm.resize(count * 2)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 191100 + variant * 4099
+	var lowpass := 0.0
+	var phase := 0.0
+	for i in count:
+		var t := float(i) / RATE
+		var noise := rng.randf_range(-1.0, 1.0)
+		lowpass += 0.28 * (noise - lowpass)
+		phase += TAU * (155.0 * exp(-t * 11.0) + 63.0) / RATE
+		var crack := noise * exp(-t * 120.0) * 0.9
+		var punch := sin(phase) * exp(-t * 23.0) * 0.58
+		var tail := lowpass * exp(-t * 19.0) * 0.48
+		var action_click := 0.0
+		if t >= 0.045 and t < 0.09:
+			var mech_t := t - 0.045
+			action_click = noise * exp(-mech_t * 105.0) * 0.17
+		var signal := tanh((crack + punch + tail + action_click) * 1.15)
+		pcm.encode_s16(i * 2, clampi(roundi(signal * 30700.0), -32768, 32767))
+	var sound := AudioStreamWAV.new()
+	sound.format = AudioStreamWAV.FORMAT_16_BITS
+	sound.mix_rate = RATE
+	sound.data = pcm
+	return sound
 
 
 func _make_rain() -> AudioStreamWAV:

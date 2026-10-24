@@ -129,6 +129,15 @@ static func blood(parent: Node, pos: Vector3, dir: Vector3, amount := 14, color 
 	_burst(parent, pos, dir, maxi(amount, 20), color, 0.085, 6.0)
 
 
+## Alleen bij M1911-treffers: korte felgroene hit-bevestiging, zoals in de referentie.
+## Gebruikt de bestaande gepoolde bursts/quads en respecteert het FX-budget op mobiel.
+static func m1911_zombie_hit(parent: Node, pos: Vector3, direction: Vector3) -> void:
+	if not _near_camera(parent, pos, 42.0):
+		return
+	_flash_quad(parent, pos + Vector3.UP * 0.1, 0.74, 0.095, Color(0.35, 1.0, 0.08, 0.9))
+	_burst(parent, pos, direction.normalized() + Vector3.UP * 0.3, 9, Color(0.33, 0.95, 0.1, 0.9), 0.065, 5.5, Vector3(0.04, 0.065, 0.04))
+
+
 static func dust(parent: Node, pos: Vector3) -> void:
 	_burst(parent, pos, Vector3.UP, 9, Color(0.58, 0.52, 0.42), 0.055, 2.8)
 

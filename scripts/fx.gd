@@ -105,17 +105,27 @@ static func dust(parent: Node, pos: Vector3) -> void:
 	_burst(parent, pos, Vector3.UP, 6, Color(0.55, 0.5, 0.42), 0.05, 2.5)
 
 
-## Inslag in een muur of bunker: stof en een kogelgat.
-static func impact(parent: Node, pos: Vector3, normal: Vector3) -> void:
-	dust(parent, pos)
-	spark(parent, pos, normal)
-	decal(parent, pos, normal, "hole", 0.35, 60.0)
+## Inslagreactie op aarde, hout, metaal of steen/beton.
+static func impact(parent: Node, pos: Vector3, normal: Vector3, material := "concrete") -> void:
+	match material:
+		"dirt":
+			_burst(parent, pos, normal, 7, Color(0.34, 0.24, 0.13), 0.045, 4.0, Vector3(0.045, 0.035, 0.045))
+			_burst(parent, pos, normal, 4, Color(0.52, 0.43, 0.30, 0.78), 0.08, 1.8)
+		"wood":
+			_burst(parent, pos, normal, 5, Color(0.55, 0.34, 0.17), 0.07, 4.5, Vector3(0.025, 0.09, 0.018))
+			_burst(parent, pos, normal, 3, Color(0.48, 0.36, 0.24, 0.7), 0.075, 1.7)
+		"metal":
+			spark(parent, pos, normal)
+		_:
+			dust(parent, pos)
+			_burst(parent, pos, normal, 3, Color(0.42, 0.40, 0.36), 0.05, 3.2, Vector3(0.055, 0.045, 0.05))
+			decal(parent, pos, normal, "hole", 0.35, 60.0)
 
 
 ## Felle vonkjes met een korte flits: inslag in muur of bunker, en bij een raak op een mens.
 static func spark(parent: Node, pos: Vector3, normal: Vector3) -> void:
-	_flash_quad(parent, pos, randf_range(0.35, 0.55), 0.06, Color(1.0, 0.85, 0.5, 0.9))
-	_burst(parent, pos, normal, 5, Color(1.0, 0.8, 0.4), 0.035, 7.0)
+	_flash_quad(parent, pos, randf_range(0.22, 0.34), 0.045, Color(1.0, 0.88, 0.62, 0.85))
+	_burst(parent, pos, normal, 4, Color(1.0, 0.78, 0.38), 0.025, 7.0, Vector3(0.018, 0.06, 0.018))
 
 
 static func _flash_quad(parent: Node, pos: Vector3, size: float, life: float, col: Color) -> void:
@@ -189,7 +199,7 @@ static func casing(parent: Node, pos: Vector3) -> void:
 	tw.tween_callback(c.queue_free)
 
 
-static func _burst(parent: Node, pos: Vector3, dir: Vector3, amount: int, col: Color, size: float, spd: float) -> void:
+static func _burst(parent: Node, pos: Vector3, dir: Vector3, amount: int, col: Color, size: float, spd: float, mesh_size := Vector3.ZERO) -> void:
 	var p := CPUParticles3D.new()
 	p.one_shot = true
 	p.amount = amount
@@ -202,12 +212,14 @@ static func _burst(parent: Node, pos: Vector3, dir: Vector3, amount: int, col: C
 	p.gravity = Vector3(0, -14, 0)
 	p.scale_amount_min = 0.6
 	var m := BoxMesh.new()
-	m.size = Vector3.ONE * size
+	m.size = mesh_size if mesh_size != Vector3.ZERO else Vector3.ONE * size
 	var mat := StandardMaterial3D.new()
 	mat.albedo_color = col
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	m.material = mat
 	p.mesh = m
+	p.angular_velocity_min = -220.0
+	p.angular_velocity_max = 220.0
 	parent.add_child(p)
 	p.global_position = pos
 	p.emitting = true

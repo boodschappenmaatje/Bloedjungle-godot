@@ -386,6 +386,7 @@ static func logs(parent: Node3D, seed_ := 41) -> void:
 	var body := StaticBody3D.new()
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
+	body.set_meta("impact_material", "wood")
 	parent.add_child(body)
 	var tries := 0
 	while xf.size() < 30 and tries < 800:

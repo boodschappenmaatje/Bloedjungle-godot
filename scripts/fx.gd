@@ -129,6 +129,14 @@ static func blood(parent: Node, pos: Vector3, dir: Vector3, amount := 14, color 
 	_burst(parent, pos, dir, maxi(amount, 20), color, 0.085, 6.0)
 
 
+## M1911-treffer: donkere rode bloedspetters in plaats van een groene lichtflits.
+## Gebruikt de bestaande gepoolde particles en respecteert het FX-budget op mobiel.
+static func m1911_zombie_hit(parent: Node, pos: Vector3, direction: Vector3) -> void:
+	if not _near_camera(parent, pos, 42.0):
+		return
+	_burst(parent, pos, direction.normalized() + Vector3.UP * 0.3, 9, Color(0.52, 0.015, 0.015), 0.075, 5.5, Vector3(0.04, 0.065, 0.04))
+
+
 static func dust(parent: Node, pos: Vector3) -> void:
 	_burst(parent, pos, Vector3.UP, 9, Color(0.58, 0.52, 0.42), 0.055, 2.8)
 

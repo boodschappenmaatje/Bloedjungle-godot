@@ -292,12 +292,14 @@ func _shoot(a: float) -> void:
 	if _tgt_y > 1.0 and Game.player:
 		var dd := _flat(Game.player.global_position - muzzle).length()
 		rise = (_tgt_y + 1.0 - muzzle.y) / maxf(dd, 3.0)
-	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread * _aim_mult(), Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false, false, 0, 0.0, 0.0, rise)
 	var weapon_kind := "mg42" if type == "heavy" else "garand"
+	_shot_sequence += 1
+	var tracer_every := 1 if type == "heavy" else 2
+	var tracer_weapon := weapon_kind if _shot_sequence % tracer_every == 0 else ""
+	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread * _aim_mult(), Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false, false, 0, 0.0, 0.0, rise, tracer_weapon)
 	model.shoot_recoil(weapon_kind)
 	_shoot_pose_t = 0.24
 	Fx.muzzle(get_parent(), muzzle, weapon_kind, a)
-	_shot_sequence += 1
 	var casing_every: int = int(Data.WEAPON_VISUALS[weapon_kind].get("casing_every", 1))
 	if _shot_sequence % casing_every == 0 and Game.player and _flat(Game.player.global_position - global_position).length() < 30.0:
 		var axes := model.casing_axes()

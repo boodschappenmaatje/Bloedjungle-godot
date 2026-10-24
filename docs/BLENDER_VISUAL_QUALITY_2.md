@@ -1,6 +1,6 @@
 # BLOEDJUNGLE — Visual Quality 2.0 / Blender production gate
 
-Status: **implemented on the feature branch; physical iPhone/Xogot visual approval pending**. Results and reproduction instructions are in [vq2/README.md](vq2/README.md). This specification applies to the three selected model upgrades in `boodschappenmaatje/Bloedjungle-godot`. Never merge this branch without explicit user approval after an iPhone Xogot review.
+Status: **historisch productiecontract van VQ2 (PR #54 is inmiddels gemerged naar main)**. De projectbrede standaard voor nieuwe modellen staat in [ASSET_QUALITY_STANDARD.md](ASSET_QUALITY_STANDARD.md), die door zowel `AGENTS.md` (Codex) als `CLAUDE.md` (Claude Code) gebruikt wordt. Resultaten, bronbestanden en reproduceerinstructies van de oorspronkelijke drie VQ2-modellen staan in [vq2/README.md](vq2/README.md). Deze oorspronkelijke opdracht blijft bewaard als technische referentie; voor nieuwe model-/gamewijzigingen zijn een aparte branch, Draft PR en expliciete goedkeuring voor een merge vereist.
 
 ## Goal
 
@@ -58,10 +58,10 @@ For each of three assets supply:
 5. Viewer URL or launch instructions; verified animation clip playback for animated models.
 6. Human user review in Xogot still required. Don't mark it visually approved until user approves.
 
-## Workflow and branch control
+## Workflow and branch control (historische VQ2-opdracht; niet opnieuw uitvoeren)
 
-- Work on `feature/blender-visual-quality-v2-three-models`, created from the current main at task kickoff. Rebase/refresh carefully rather than overwrite subsequent work.
+- Oorspronkelijke branch: `feature/blender-visual-quality-v2-three-models`, inmiddels in main gemerged als PR #54. Gebruik voor nieuw werk een nieuwe branch vanaf actuele main. Rebase/refresh carefully rather than overwrite subsequent work.
 - Do not modify or close unrelated PRs (including PR #6 and M1911 VFX).
-- Never merge to `main` or enable auto-merge.
+- Voor toekomstige wijzigingen: niet zonder expliciete gebruikersgoedkeuring mergen naar `main` of auto-merge activeren.
 - Produce a Draft PR, and include an honest checklist with pass/fail/untested labels. No placeholder screenshots, no fabricated performance measurements.
 - If Blender/Godot unavailable in Codex environment: first try reproducible free GitHub Actions CPU pipeline. If blocked, commit the actual scripts and integration work possible, report the exact blocker. Do not claim finished models without real assets.

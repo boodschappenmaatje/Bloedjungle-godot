@@ -1,7 +1,5 @@
 {
   "version": 1,
   "project_id": "appgprj_6add044cb96c8191aa127117aa0cba84",
-  "static": {
-    "directory": "_site"
-  }
+  "static": "dist"
 }

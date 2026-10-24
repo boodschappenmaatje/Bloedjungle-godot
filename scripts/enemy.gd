@@ -382,7 +382,7 @@ func _animate(spd: float, moving: bool) -> void:
 		model.play("lopen", 0.2, spd / 2.4)
 
 
-func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
+func hit(dmg: float, dir: Vector3, from_player: bool, arcade_profile: ArcadeVfxProfile = null) -> void:
 	if not from_player or dead:
 		return
 	hp -= dmg
@@ -390,8 +390,8 @@ func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	model.flash(Color(1.0, 0.38, 0.07))
 	model.hit_reaction(dir, clampf(dmg / 55.0, 0.75, 1.7))
 	Sfx.play("splat", 1.0, global_position)
-	Fx.spark(get_parent(), global_position + Vector3.UP * 1.15, -dir)
-	Fx.blood(get_parent(), global_position + Vector3.UP * 1.2, dir, 14, Color(0.18, 0.58, 0.07))
+	Fx.spark(get_parent(), global_position + Vector3.UP * 1.15, -dir, arcade_profile)
+	Fx.blood(get_parent(), global_position + Vector3.UP * 1.2, dir, 14, Color(0.18, 0.58, 0.07), arcade_profile)
 	if randf() < 0.5:
 		Fx.ground_blood(get_parent(), global_position + dir * 0.6, 0.5)
 	if hp <= 0.0:

@@ -121,8 +121,8 @@ func _make_m1911_shot(variant: int) -> AudioStreamWAV:
 		if t >= 0.045 and t < 0.09:
 			var mech_t := t - 0.045
 			action_click = noise * exp(-mech_t * 105.0) * 0.17
-		var signal := tanh((crack + punch + tail + action_click) * 1.15)
-		pcm.encode_s16(i * 2, clampi(roundi(signal * 30700.0), -32768, 32767))
+		var sample_value := tanh((crack + punch + tail + action_click) * 1.15)
+		pcm.encode_s16(i * 2, clampi(roundi(sample_value * 30700.0), -32768, 32767))
 	var sound := AudioStreamWAV.new()
 	sound.format = AudioStreamWAV.FORMAT_16_BITS
 	sound.mix_rate = RATE

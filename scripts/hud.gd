@@ -128,10 +128,13 @@ func _process(delta: float) -> void:
 			small.text = "%02d:%02d" % [floori(seconds / 60.0), posmod(seconds, 60)]
 		else:
 			small.text = ""
-	$BannerPlate.visible = Game.state == "prep" or Game.state == "play" or temporary_banner
 	var shown: bool = Game.state != "shop" and Game.state != "menu" and Game.state != "over"
-	big.visible = shown
-	small.visible = shown and small.text != ""
+	# De bestaande plaat blijft tijdens prep de golf en timer tonen. In play verschijnen alleen
+	# tijdelijke Game.banner-meldingen; na hun bestaande timer verdwijnt de hele Control.
+	var banner_visible := shown and (Game.state == "prep" or temporary_banner)
+	$BannerPlate.visible = banner_visible
+	big.visible = banner_visible and big.text != ""
+	small.visible = banner_visible and small.text != ""
 	start_btn.visible = Game.state == "prep" and not Game.build_mode
 
 

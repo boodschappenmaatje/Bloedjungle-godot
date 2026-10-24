@@ -107,12 +107,31 @@ func _run() -> void:
 					continue  # deze menuactie zit bewust in de rand van de radar
 				if rr.intersects((b as Control).get_global_rect()):
 					_check(false, "%s: radar overlapt %s" % [s, _label(b)])
-	# De voorbereidingsknop verdwijnt zodra de golfovergang plaatsvindt.
+	# De golfplaat en voorbereidingsknoppen volgen prep → play → tijdelijke melding → prep.
+	var hud: Node = main.get_node("Hud")
+	var banner: Control = hud.get_node("BannerPlate")
 	var start_wave: Button = main.get_node("Hud/StartWave")
 	_check(start_wave.visible, "startknop ontbreekt tijdens golfvoorbereiding")
+	_check(banner.visible, "golfbanner ontbreekt tijdens golfvoorbereiding")
+	var shop_button: Button
+	for candidate in get_nodes_in_group("hud_button"):
+		if candidate is Button and candidate.text == "WAPENKAMER":
+			shop_button = candidate
+	_check(shop_button != null and shop_button.visible, "wapenkamerknop ontbreekt tijdens golfvoorbereiding")
 	main.call("start_wave")
 	await process_frame
 	_check(game.state == "play" and not start_wave.visible, "golfstart sluit het voorbereidingspaneel niet")
+	_check(banner.visible and hud.get_node("BannerPlate/Banner/Big").text == "GOLF 1 BEGONNEN", "golfstartmelding ontbreekt")
+	_check(shop_button != null and not shop_button.visible, "wapenkamerknop blijft zichtbaar tijdens gevecht")
+	hud.call("_process", 1.6)
+	_check(not banner.visible, "golfbanner blijft zichtbaar tijdens gevecht na de startmelding")
+	_check(not hud.get_node("BannerPlate/Banner/Big").is_visible_in_tree(), "verborgen golfbannerlabel blijft zichtbaar")
+	main.call("_wave_cleared")
+	hud.call("_process", 0.1)
+	_check(banner.visible and hud.get_node("BannerPlate/Banner/Big").text == "GOLF 1 OVERLEEFD", "overwinningsmelding ontbreekt")
+	hud.call("_process", 3.1)
+	_check(banner.visible and hud.get_node("BannerPlate/Banner/Big").text == "GOLF 2", "golfbanner keert niet terug bij de volgende voorbereiding")
+	_check(start_wave.visible and shop_button.visible, "voorbereidingsknoppen keren niet terug na de overwinningsmelding")
 	main.queue_free()
 	await process_frame
 	if failures.is_empty():

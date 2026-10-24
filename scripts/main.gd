@@ -123,7 +123,7 @@ func start_wave() -> void:
 	queue = Data.build_wave(Game.wave)
 	spawn_t = 0.5
 	clear_t = -1.0
-	Game.banner.emit("GOLF %d" % Game.wave, "Ze komen eraan", 1.5)
+	Game.banner.emit("GOLF %d BEGONNEN" % Game.wave, "", 1.5)
 	Game.changed.emit()
 
 

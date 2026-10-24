@@ -176,21 +176,34 @@ func _physics_process(delta: float) -> void:
 			queue_free()
 			return
 		if c.has_method("hit"):
-			if not (c is BuildingBody or c is HouseBody):
-				Fx.spark(get_parent(), hit.position, -dir)
+			var target_script: Script = (c as Node).get_script() as Script if c is Node else null
+			var target_script_path := target_script.resource_path if target_script != null else ""
+			var target_handles_impact := target_script_path in ["res://scripts/enemy.gd", "res://scripts/player.gd"] or c is Barrel or c is Pomp or c is Brandkraan
+			if not target_handles_impact:
+				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
 			c.hit(dmg, dir, from_player)
-			if c is BuildingBody or c is HouseBody:
-				Fx.impact(get_parent(), hit.position, hit.normal)
 			if pierce > 0 and c.collision_layer == MASK_ENEMY:
 				pierce -= 1
 				dmg *= 0.85
 				global_position = hit.position + dir * 0.5
 				return
 		else:
-			Fx.impact(get_parent(), hit.position, hit.normal)
+			Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
 		queue_free()
 		return
 	global_position += step
+
+
+func _impact_material(collider: Object) -> String:
+	if collider is Node:
+		var node := collider as Node
+		if node.is_in_group("ground"):
+			return "dirt"
+		if node.has_meta("impact_material"):
+			return str(node.get_meta("impact_material"))
+	if collider is Barrel or collider is Brandkraan or collider is Pomp or collider is GateBody:
+		return "metal"
+	return "concrete"
 
 
 ## Raket: grote ontploffing, schade neemt af met de afstand (alleen vijanden).

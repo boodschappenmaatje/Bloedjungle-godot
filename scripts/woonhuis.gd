@@ -367,6 +367,7 @@ func _add_seg(n: Node3D, heel: MeshInstance3D, kapot: MeshInstance3D) -> void:
 	var body := HouseBody.new()
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
+	body.set_meta("impact_material", _bullet_impact_material(String(n.name)))
 	var cs := CollisionShape3D.new()
 	var sh_heel := _wall_shape(heel)
 	cs.shape = sh_heel
@@ -380,6 +381,16 @@ func _add_seg(n: Node3D, heel: MeshInstance3D, kapot: MeshInstance3D) -> void:
 	body.house = self
 	body.seg = s
 	segs.append(s)
+
+
+func _bullet_impact_material(segment_name: String) -> String:
+	if kind == "magazijn":
+		return "metal"
+	if kind == "kerk" or kind == "hotel":
+		return "concrete"
+	if kind == "benzine":
+		return "metal" if segment_name.begins_with("K") else "concrete"
+	return "wood"
 
 
 ## Laag van een muurstuk: M1V0 en P1 horen bij laag 1, S0* (kerkschip) en T_* (tuin) bij 0.

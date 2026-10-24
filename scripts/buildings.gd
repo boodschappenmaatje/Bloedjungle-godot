@@ -139,6 +139,7 @@ func make_node(kind: String) -> StaticBody3D:
 	var body := BuildingBody.new()
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
+	body.set_meta("impact_material", {"zandzak": "dirt", "muur": "concrete", "kazerne": "wood", "garage": "metal", "helipad": "concrete"}.get(kind, "concrete"))
 	var sz: Vector3 = DEFS[kind].size
 	if kind != "garage" and kind != "helipad":
 		var cs := CollisionShape3D.new()

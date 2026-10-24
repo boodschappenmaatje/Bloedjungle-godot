@@ -64,6 +64,7 @@ func _solid(pos: Vector3, size: Vector3) -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
+	body.set_meta("impact_material", "wood")
 	add_child(body)
 	if size != Vector3.ZERO:
 		_add_box(body, pos, size)

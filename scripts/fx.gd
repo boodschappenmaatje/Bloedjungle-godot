@@ -2,12 +2,24 @@ class_name Fx
 ## Effecten: bloed, stof, mondingsflits met licht, plekken op de grond (decals), explosies, vuur en rook.
 
 const MAX_DECALS := 70
+const MAX_CASINGS := 36
+const MAX_MUZZLE_SMOKE := 12
+const MAX_ROCKET_TRAILS := 3
 
 static var _muzzle_meshes := {}
+static var _muzzle_smoke_mesh: QuadMesh
+static var _muzzle_smoke_mat: StandardMaterial3D
+static var _muzzle_smoke_live := 0
+static var _rocket_trails_live := 0
 static var _soft: GradientTexture2D
 static var _tex := {}
 static var _mats := {}
 static var _decals: Array = []
+
+
+## Kleine telling voor tests/debug; heeft geen invloed op het spelverloop.
+static func combat_counts() -> Dictionary:
+	return {"casings": _casings, "pooled_casings": _casing_pool.size(), "muzzle_smoke": _muzzle_smoke_live, "rocket_trails": _rocket_trails_live, "flash_lights": _flash_lights}
 
 
 ## Zachte ronde vlek: de basis van vuur en rook.
@@ -155,10 +167,11 @@ static func _flash_quad(parent: Node, pos: Vector3, size: float, life: float, co
 ## Uitgeworpen huls: vliegt in een boogje weg, stuitert niet maar blijft even liggen.
 static var _casing_mesh: Mesh
 static var _casings := 0
+static var _casing_pool: Array[MeshInstance3D] = []
 
 
-static func casing(parent: Node, pos: Vector3) -> void:
-	if _casings >= 36:
+static func casing(parent: Node, pos: Vector3, eject_right := Vector3.RIGHT, forward := Vector3.FORWARD) -> void:
+	if _casings >= MAX_CASINGS or not _near_camera(parent, pos, 42.0):
 		return
 	if _casing_mesh == null:
 		# het echte hulsmodel uit bron/wapens; terugval op een blokje
@@ -176,16 +189,30 @@ static func casing(parent: Node, pos: Vector3) -> void:
 		mat.roughness = 0.35
 		bx.material = mat
 		_casing_mesh = bx
-	var c := MeshInstance3D.new()
-	c.mesh = _casing_mesh
-	c.scale = Vector3.ONE * 1.8  # iets groter dan echt, anders zie je ze niet
+	var c: MeshInstance3D
+	while not _casing_pool.is_empty() and c == null:
+		var candidate: MeshInstance3D = _casing_pool.pop_back()
+		if is_instance_valid(candidate):
+			c = candidate
+	if c == null:
+		c = MeshInstance3D.new()
+		c.mesh = _casing_mesh
+		c.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		c.tree_exiting.connect(_on_casing_tree_exiting.bind(c))
+	if c.get_parent() != parent:
+		if c.get_parent() != null:
+			c.reparent(parent)
+		else:
+			parent.add_child(c)
+	c.visible = true
+	c.scale = Vector3.ONE * 1.45
 	c.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	parent.add_child(c)
 	c.global_position = pos
+	c.set_meta("casing_active", true)
 	_casings += 1
-	c.tree_exited.connect(func(): _casings -= 1)
-	var a := randf() * TAU
-	var v := Vector3(cos(a), 0.0, sin(a)) * randf_range(1.2, 2.6) + Vector3.UP * randf_range(2.0, 3.2)
+	var side := eject_right.normalized() if eject_right.length() > 0.01 else Vector3.RIGHT
+	var fwd := forward.normalized() if forward.length() > 0.01 else Vector3.FORWARD
+	var v := side * randf_range(1.25, 2.1) + fwd * randf_range(-0.45, 0.45) + Vector3.UP * randf_range(2.0, 2.8)
 	var g := 9.8
 	var y0 := maxf(pos.y - 0.03, 0.0)
 	var d := (v.y + sqrt(v.y * v.y + 2.0 * g * y0)) / g
@@ -194,9 +221,37 @@ static func casing(parent: Node, pos: Vector3) -> void:
 	tw.tween_method(func(t: float):
 		c.global_position = pos + Vector3(v.x * t, v.y * t - 0.5 * g * t * t, v.z * t)
 		c.rotation = spin * t, 0.0, d, d)
-	tw.tween_interval(9.0)
-	tw.tween_property(c, "scale", Vector3.ZERO, 1.0)
-	tw.tween_callback(c.queue_free)
+	tw.tween_interval(0.9)
+	tw.tween_property(c, "scale", Vector3.ZERO, 0.28)
+	tw.tween_callback(_recycle_casing.bind(c))
+
+
+static func _recycle_casing(c: MeshInstance3D) -> void:
+	if not is_instance_valid(c) or not c.get_meta("casing_active", false):
+		return
+	c.set_meta("casing_active", false)
+	_casings = maxi(0, _casings - 1)
+	c.visible = false
+	c.scale = Vector3.ONE
+	c.position = Vector3.ZERO
+	if _casing_pool.size() < MAX_CASINGS:
+		_casing_pool.append(c)
+	else:
+		c.queue_free()
+
+
+static func _on_casing_tree_exiting(c: MeshInstance3D) -> void:
+	_casing_pool.erase(c)
+	if is_instance_valid(c) and c.get_meta("casing_active", false):
+		c.set_meta("casing_active", false)
+		_casings = maxi(0, _casings - 1)
+
+
+static func _near_camera(parent: Node, pos: Vector3, max_distance: float) -> bool:
+	if not is_instance_valid(parent) or not parent.is_inside_tree():
+		return true
+	var camera := parent.get_viewport().get_camera_3d()
+	return camera == null or camera.global_position.distance_to(pos) <= max_distance
 
 
 static func _burst(parent: Node, pos: Vector3, dir: Vector3, amount: int, col: Color, size: float, spd: float, mesh_size := Vector3.ZERO) -> void:
@@ -239,22 +294,28 @@ static func _muzzle_triangle(st: SurfaceTool, a: Vector3, ca: Color, b: Vector3,
 	st.add_vertex(c)
 
 
-static func _muzzle_mesh(weapon: String) -> ArrayMesh:
-	if _muzzle_meshes.has(weapon):
-		return _muzzle_meshes[weapon]
+static func _muzzle_mesh(weapon: String, variant: int) -> ArrayMesh:
+	var key := "%s:%d" % [weapon, variant]
+	if _muzzle_meshes.has(key):
+		return _muzzle_meshes[key]
 	var v: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
-	var length: float = v.flash_length
-	var width: float = v.flash_width
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(key)
+	var length: float = v.flash_length * rng.randf_range(0.91, 1.08)
+	var width: float = v.flash_width * rng.randf_range(0.88, 1.12)
 	var hot := Color(1.0, 0.97, 0.78, 0.98)
 	var middle: Color = v.flash_color
 	var fade := Color(middle.r, middle.g * 0.55, middle.b * 0.24, 0.0)
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	# Twee taps toelopende zijden en een smalle hete kern vormen een korte vlam langs de loop.
+	# Onregelmatige, platte flitsvorm met witte kern en warme, snel uitdovende randen.
+	var asymmetry := rng.randf_range(0.78, 1.22)
 	for side in [-1.0, 1.0]:
-		_muzzle_triangle(st, Vector3(0, 0.012, 0), hot, Vector3(side * width * 0.5, 0.012, length * 0.18), middle, Vector3(0, 0.012, length), fade)
-		_muzzle_triangle(st, Vector3(0, 0.012, 0), hot, Vector3(0, 0.012, length), fade, Vector3(side * width * 0.34, 0.012, length * 0.58), Color(middle.r, middle.g, middle.b, 0.55))
-		_muzzle_triangle(st, Vector3(0, 0.018, 0), Color.WHITE, Vector3(side * width * 0.12, 0.018, length * 0.12), hot, Vector3(0, 0.018, length * 0.55), Color(hot.r, hot.g * 0.72, hot.b * 0.4, 0.0))
+		var edge := width * rng.randf_range(0.34, 0.51)
+		var tip := length * rng.randf_range(0.82, 1.08) * (asymmetry if side > 0.0 else 2.0 - asymmetry)
+		_muzzle_triangle(st, Vector3(0, 0.012, 0), hot, Vector3(side * edge, 0.012, length * 0.13), middle, Vector3(side * width * rng.randf_range(0.03, 0.16), 0.012, tip), fade)
+		_muzzle_triangle(st, Vector3(0, 0.012, 0), hot, Vector3(side * width * 0.06, 0.012, length * 0.66), Color(middle.r, middle.g * 0.74, middle.b * 0.42, 0.56), Vector3(side * edge, 0.012, length * 0.13), middle)
+		_muzzle_triangle(st, Vector3(0, 0.018, 0), Color.WHITE, Vector3(side * width * 0.11, 0.018, length * 0.1), hot, Vector3(side * width * 0.025, 0.018, length * 0.57), Color(hot.r, hot.g * 0.72, hot.b * 0.4, 0.0))
 	var m := st.commit()
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -263,16 +324,19 @@ static func _muzzle_mesh(weapon: String) -> ArrayMesh:
 	mat.vertex_color_use_as_albedo = true
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	m.surface_set_material(0, mat)
-	_muzzle_meshes[weapon] = m
+	_muzzle_meshes[key] = m
 	return m
 
 
 static func muzzle(parent: Node, pos: Vector3, weapon := "m1911", angle := 0.0) -> void:
 	var v: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
+	if weapon == "bazooka" or float(v.flash_life) <= 0.0:
+		return
 	var life: float = v.flash_life
 	var f := MeshInstance3D.new()
-	f.mesh = _muzzle_mesh(weapon)
+	f.mesh = _muzzle_mesh(weapon, randi() % 3)
 	f.rotation.y = angle
+	f.scale = Vector3(randf_range(0.9, 1.1), 1.0, randf_range(0.9, 1.12))
 	f.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	parent.add_child(f)
 	f.global_position = pos
@@ -280,10 +344,11 @@ static func muzzle(parent: Node, pos: Vector3, weapon := "m1911", angle := 0.0) 
 	tw.tween_property(f, "scale", Vector3(0.65, 0.65, 0.75), life)
 	parent.get_tree().create_timer(life).timeout.connect(f.queue_free)
 	_flash_quad(parent, pos, randf_range(v.flash_width * 2.2, v.flash_width * 2.8), life, v.flash_color)
+	_muzzle_smoke(parent, pos - Vector3(sin(angle), 0.0, cos(angle)) * 0.045, weapon, angle)
 	if v.flash_particles > 0:
-		_burst(parent, pos, Vector3.UP * 0.2, v.flash_particles, v.flash_color, 0.025, 5.0)
+		_burst(parent, pos, Vector3.UP * 0.2, v.flash_particles, v.flash_color, 0.02, 4.5, Vector3(0.018, 0.025, 0.018))
 	# hooguit twee flitslichten tegelijk: elk licht kost op de telefoon beeldkracht en vertraagt drukke gevechten
-	if _flash_lights < 2:
+	if _flash_lights < 2 and float(v.flash_energy) > 0.0 and _near_camera(parent, pos, 30.0):
 		_flash_lights += 1
 		var l := OmniLight3D.new()
 		l.light_color = v.flash_color
@@ -292,6 +357,76 @@ static func muzzle(parent: Node, pos: Vector3, weapon := "m1911", angle := 0.0) 
 		l.shadow_enabled = false
 		f.add_child(l)
 		l.tree_exited.connect(func(): _flash_lights -= 1)
+
+
+static func _muzzle_smoke(parent: Node, pos: Vector3, weapon: String, angle: float) -> void:
+	if _muzzle_smoke_live >= MAX_MUZZLE_SMOKE or not _near_camera(parent, pos, 30.0):
+		return
+	if _muzzle_smoke_mesh == null:
+		_muzzle_smoke_mesh = QuadMesh.new()
+		_muzzle_smoke_mesh.size = Vector2.ONE
+		_muzzle_smoke_mat = StandardMaterial3D.new()
+		_muzzle_smoke_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		_muzzle_smoke_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		_muzzle_smoke_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		_muzzle_smoke_mat.albedo_texture = soft()
+		_muzzle_smoke_mat.albedo_color = Color(0.42, 0.38, 0.31, 0.28)
+		_muzzle_smoke_mat.no_depth_test = false
+		_muzzle_smoke_mesh.material = _muzzle_smoke_mat
+	var smoke := MeshInstance3D.new()
+	smoke.mesh = _muzzle_smoke_mesh
+	smoke.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(smoke)
+	smoke.global_position = pos
+	var base := 0.12 if weapon != "trench" else 0.17
+	smoke.scale = Vector3.ONE * base * randf_range(0.8, 1.2)
+	smoke.rotation.y = angle
+	_muzzle_smoke_live += 1
+	var duration := 0.2 if weapon != "trench" else 0.28
+	var tw := smoke.create_tween()
+	tw.tween_property(smoke, "scale", Vector3.ONE * base * 1.7, duration)
+	tw.parallel().tween_property(smoke, "transparency", 1.0, duration)
+	tw.parallel().tween_property(smoke, "global_position", pos + Vector3.UP * 0.09 - Vector3(sin(angle), 0.0, cos(angle)) * 0.07, duration)
+	tw.tween_callback(_release_muzzle_smoke.bind(smoke))
+
+
+static func _release_muzzle_smoke(smoke: MeshInstance3D) -> void:
+	if not is_instance_valid(smoke):
+		return
+	_muzzle_smoke_live = maxi(0, _muzzle_smoke_live - 1)
+	smoke.queue_free()
+
+
+static func rocket_launch(parent: Node, pos: Vector3, angle: float, _weapon := "bazooka") -> void:
+	if not _near_camera(parent, pos, 34.0):
+		return
+	var forward := Vector3(sin(angle), 0.0, cos(angle))
+	_muzzle_smoke(parent, pos, "trench", angle)
+	_muzzle_smoke(parent, pos - forward * 0.35, "trench", angle)
+
+
+static func rocket_trail(projectile: Node3D) -> void:
+	if _rocket_trails_live >= MAX_ROCKET_TRAILS:
+		return
+	var p := CPUParticles3D.new()
+	p.name = "RocketExhaust"
+	p.amount = 8
+	p.lifetime = 0.38
+	p.local_coords = false
+	p.direction = Vector3(0.0, 0.0, -1.0)
+	p.spread = 18.0
+	p.initial_velocity_min = 0.15
+	p.initial_velocity_max = 0.55
+	p.gravity = Vector3(0.0, 0.18, 0.0)
+	p.scale_amount_min = 0.12
+	p.scale_amount_max = 0.24
+	p.mesh = _quad()
+	p.mesh.material = _particle_mat(Color(0.42, 0.4, 0.36, 0.5), false)
+	projectile.add_child(p)
+	p.position = Vector3(0.0, 0.0, -0.24)
+	p.emitting = true
+	_rocket_trails_live += 1
+	projectile.tree_exiting.connect(func(): _rocket_trails_live = maxi(0, _rocket_trails_live - 1), CONNECT_ONE_SHOT)
 
 
 static func _particle_mat(col: Color, additive: bool) -> StandardMaterial3D:

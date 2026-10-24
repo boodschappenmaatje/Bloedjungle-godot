@@ -15,6 +15,7 @@ var dmg := 16.0
 var idx := 0
 var fire_t := 0.5
 var _shooting := false
+var _shot_sequence := 0
 var truck: Node = null  # vrachtwagen die hem vervoert; die bepaalt dan waar hij is en wat hij doet
 
 
@@ -46,12 +47,14 @@ func set_level(hp_: float, dmg_: float) -> void:
 func _physics_process(delta: float) -> void:
 	if truck != null:
 		if is_instance_valid(truck):
+			model.set_shoot_pose(false, "thompson", 0.5)
 			truck.ride_step(self, delta)
 			rotation.y = face
 			return
 		truck = null
 	if Game.state != "play" and Game.state != "prep":
 		velocity = Vector3.ZERO
+		model.set_shoot_pose(false, "thompson", 0.5)
 		return
 	fire_t -= delta
 	var target: Node3D = _nearest_enemy()
@@ -79,6 +82,7 @@ func _physics_process(delta: float) -> void:
 	if target != null and fire_t <= 0.0 and absf(angle_difference(face, look)) < 0.35:
 		_shoot()
 	_shooting = target != null
+	model.set_shoot_pose(_shooting, "thompson", 0.5)
 	if moving:
 		model.play("lopen", 0.2, 1.4)
 	elif _shooting:
@@ -117,9 +121,14 @@ func _nearest_enemy() -> Node3D:
 
 func _shoot() -> void:
 	fire_t = 0.5
-	var fwd := Vector3(sin(face), 0, cos(face))
-	var muzzle := global_position + fwd * 0.6 + Vector3.UP * 1.33 * Data.SOLDIER_SCALE
-	Bullet.fire(get_parent(), muzzle, face + randf_range(-0.05, 0.05), 70.0, dmg, 0.6, true)
-	Fx.muzzle(get_parent(), muzzle)
-	Fx.casing(get_parent(), muzzle - Vector3(0, 0.15, 0))
+	_shot_sequence += 1
+	model.shoot_recoil("thompson")
+	var muzzle: Vector3 = model.muzzle_position()
+	var profile: Dictionary = Data.WEAPON_VISUALS["thompson"]
+	var tracer := "thompson" if (_shot_sequence - 1) % int(profile.trail_every) == 0 else ""
+	Bullet.fire(get_parent(), muzzle, face + randf_range(-0.05, 0.05), 70.0, dmg, 0.6, true, false, 0, 0.0, 0.0, 0.0, tracer)
+	Fx.muzzle(get_parent(), muzzle, "thompson", face)
+	if _shot_sequence % int(profile.casing_every) == 0:
+		var axes := model.casing_axes()
+		Fx.casing(get_parent(), model.casing_position(), axes[0], axes[1])
 	Sfx.play("ak", 0.45, global_position)

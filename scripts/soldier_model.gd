@@ -16,6 +16,17 @@ var _base_cols: Array[Color] = []
 var _flash := 0.0
 var _model: Node
 var _band: MeshInstance3D
+var _fire_anim: AnimationPlayer
+var _overlay_clip := ""
+var _shoot_pose := false
+var _shoot_rate := 0.2
+var _hit_pose_time := 0.0
+var _weapon_mount: Node3D
+var _weapon_kind := "m1911"
+var _recoil := 0.0
+var _pump_parts: Array[Node3D] = []
+var _pump_rest: Array[Transform3D] = []
+var _pump_tween: Tween
 
 
 func setup(uniform: Color, gun_kind := "rifle") -> void:
@@ -57,7 +68,72 @@ func setup(uniform: Color, gun_kind := "rifle") -> void:
 			_base_cols.append(m.albedo_color)
 	_attach_gun(model, gun_kind)
 	_model = model
+	_setup_upper_body_animation()
 	play("stil")
+
+
+## Zet alleen de schiet- en geraakt-houding op de romp/armen bovenop de loopanimatie.
+## Daardoor blijven de benen lopen terwijl de handen het wapen blijven richten.
+func _setup_upper_body_animation() -> void:
+	_fire_anim = AnimationPlayer.new()
+	_fire_anim.name = "CombatUpperBody"
+	add_child(_fire_anim)
+	_fire_anim.root_node = _fire_anim.get_path_to(_model)
+	_fire_anim.process_priority = 2  # pas de pose toe nadat de gewone loopanimatie het skelet heeft bijgewerkt
+	var lib := AnimationLibrary.new()
+	var base_lib := anim.get_animation_library("")
+	for source_name in ["schieten", "geraakt"]:
+		if not base_lib.has_animation(source_name):
+			continue
+		var upper := (base_lib.get_animation(source_name) as Animation).duplicate() as Animation
+		for track in range(upper.get_track_count() - 1, -1, -1):
+			var path := str(upper.track_get_path(track))
+			if not _is_upper_body_track(path):
+				upper.remove_track(track)
+		upper.loop_mode = Animation.LOOP_LINEAR if source_name == "schieten" else Animation.LOOP_NONE
+		lib.add_animation("fire" if source_name == "schieten" else "hit", upper)
+	_fire_anim.add_animation_library("", lib)
+
+
+static func _is_upper_body_track(path: String) -> bool:
+	for bone in ["DEF-spine001", "DEF-spine002", "DEF-spine003", "DEF-shoulderL", "DEF-shoulderR", "DEF-upper_armL", "DEF-upper_armR", "DEF-forearmL", "DEF-forearmR", "DEF-handL", "DEF-handR"]:
+		if path.ends_with(":" + bone):
+			return true
+	return false
+
+
+func set_shoot_pose(active: bool, weapon: String, rate: float) -> void:
+	_shoot_pose = active
+	_weapon_kind = weapon
+	_shoot_rate = rate
+	_update_shoot_pose()
+
+
+func _update_shoot_pose() -> void:
+	if _fire_anim == null or _hit_pose_time > 0.0:
+		return
+	if _shoot_pose and _fire_anim.has_animation("fire"):
+		if _overlay_clip != "fire":
+			_fire_anim.play("fire", 0.06)
+			_overlay_clip = "fire"
+		_fire_anim.speed_scale = clampf(_fire_anim.get_animation("fire").length / maxf(_shoot_rate, 0.06), 0.45, 5.0)
+	elif _overlay_clip != "":
+		_fire_anim.stop()
+		_overlay_clip = ""
+
+
+## Korte bovenlichaamshouding bij een treffer; de AI en de loopanimatie blijven doorlopen.
+func hit_reaction(dir: Vector3, strength := 1.0) -> void:
+	if _fire_anim == null or not _fire_anim.has_animation("hit"):
+		return
+	var horizontal := Vector3(dir.x, 0.0, dir.z)
+	if horizontal.length_squared() > 0.01:
+		var local := global_transform.basis.inverse() * horizontal.normalized()
+		_model.rotation.y = clampf(local.x * 0.035, -0.04, 0.04)
+	_hit_pose_time = clampf(0.56 / maxf(strength, 0.7), 0.36, 0.62)
+	_fire_anim.play("hit", 0.035)
+	_fire_anim.speed_scale = _fire_anim.get_animation("hit").length / _hit_pose_time
+	_overlay_clip = "hit"
 
 
 ## Ander uniform (camouflage) voor het mannetje, zonder het model opnieuw te laden.
@@ -206,10 +282,104 @@ func set_gun(kind: String) -> void:
 		return
 	node.get_parent().remove_child(node)
 	holder.queue_free()
+	node.owner = null
 	# het model heeft de loop langs -Z, het mannetje kijkt langs +Z
 	node.transform = Transform3D(_grip_basis * Basis(Vector3.UP, PI) * Basis.from_scale(Vector3.ONE * GUN_SCALE.get(kind, 1.0)), _grip_basis * Vector3(0.0, 0.0, GUN_FWD.get(kind, 0.0)))
-	_hand.add_child(node)
+	if _weapon_mount == null:
+		_weapon_mount = Node3D.new()
+		_weapon_mount.name = "RecoilMount"
+		_hand.add_child(_weapon_mount)
+	_weapon_mount.position = Vector3.ZERO
+	_weapon_mount.rotation = Vector3.ZERO
+	_weapon_mount.add_child(node)
 	_gun = node
+	_weapon_kind = kind
+	_recoil = 0.0
+	_pump_parts.clear()
+	_pump_rest.clear()
+	if kind == "trench":
+		for part: Node3D in _gun.find_children("*", "MeshInstance3D", true, false):
+			if part.name.to_lower().contains("pomp"):
+				_pump_parts.append(part)
+				_pump_rest.append(part.transform)
+
+
+## Terugslag wordt in een eigen wapenhouder gedempt, zonder de loop- of richtbesturing te veranderen.
+func shoot_recoil(kind: String) -> void:
+	if not _weapon_mount:
+		return
+	var profile: Dictionary = Data.WEAPON_VISUALS.get(kind, Data.WEAPON_VISUALS["m1911"])
+	_recoil = minf(1.35, _recoil + float(profile.get("recoil", 0.6)))
+	_weapon_kind = kind
+	if kind == "trench":
+		_pump_shotgun()
+
+
+func _pump_shotgun() -> void:
+	if _pump_parts.is_empty():
+		return
+	if _pump_tween != null and _pump_tween.is_running():
+		_pump_tween.kill()
+	_pump_tween = create_tween().set_parallel()
+	for i in _pump_parts.size():
+		_pump_parts[i].transform = _pump_rest[i]
+		var rearward := _pump_rest[i].origin + _pump_rest[i].basis * Vector3(0.0, 0.0, 0.065)
+		_pump_tween.tween_property(_pump_parts[i], "position", rearward, 0.075)
+	_pump_tween.chain()
+	for i in _pump_parts.size():
+		_pump_tween.tween_property(_pump_parts[i], "position", _pump_rest[i].origin, 0.11)
+
+
+## Loopmonding berekend uit de echte meshgrenzen van het gekozen GLB-wapen.
+func muzzle_position() -> Vector3:
+	if _gun == null:
+		return global_position + Vector3.UP * 1.55 + Vector3.FORWARD * 0.55
+	var inverse := _gun.global_transform.affine_inverse()
+	var min_z := INF
+	var tip_points: Array[Vector3] = []
+	for mi: MeshInstance3D in _gun.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		var box := mi.get_aabb()
+		var relative := inverse * mi.global_transform
+		for x in 2:
+			for y in 2:
+				for z in 2:
+					var corner := Vector3(box.position.x + box.size.x * x, box.position.y + box.size.y * y, box.position.z + box.size.z * z)
+					var point := relative * corner
+					if point.z < min_z - 0.002:
+						min_z = point.z
+						tip_points.clear()
+						tip_points.append(point)
+					elif point.z <= min_z + 0.018:
+						tip_points.append(point)
+	if tip_points.is_empty():
+		return _gun.to_global(Vector3(0.0, 0.0, -0.55))
+	var center := Vector3.ZERO
+	for point in tip_points:
+		center += point
+	center /= tip_points.size()
+	return _gun.to_global(center + Vector3(0.0, 0.0, -0.018))
+
+
+## Uitwerpopening per model: plek en richting zijn gekoppeld aan de gemonteerde wapenmesh.
+func casing_position() -> Vector3:
+	if _gun == null:
+		return muzzle_position() - Vector3.UP * 0.15
+	var local_offset: Vector3 = {
+		"m1911": Vector3(0.035, 0.095, -0.055),
+		"thompson": Vector3(0.045, 0.105, -0.13),
+		"garand": Vector3(0.035, 0.11, -0.16),
+		"trench": Vector3(0.04, 0.105, -0.08),
+		"mg42": Vector3(0.055, 0.13, -0.18),
+	}.get(_weapon_kind, Vector3(0.04, 0.1, -0.1))
+	return _gun.to_global(local_offset)
+
+
+func casing_axes() -> Array[Vector3]:
+	if _gun == null:
+		return [global_transform.basis.x.normalized(), -global_transform.basis.z.normalized()]
+	return [_gun.global_transform.basis.x.normalized(), -_gun.global_transform.basis.z.normalized()]
 
 
 const GUN_FWD := {"bazooka": 0.0}
@@ -239,8 +409,17 @@ func flash() -> void:
 
 
 func _process(delta: float) -> void:
-	if _flash <= 0.0:
-		return
-	_flash -= delta
-	for i in _mats.size():
-		_mats[i].albedo_color = Color(0.9, 0.1, 0.05) if _flash > 0.0 else _base_cols[i]
+	if _recoil > 0.0:
+		_recoil = maxf(0.0, _recoil - delta * 5.5)
+		if _weapon_mount:
+			_weapon_mount.position = Vector3(0.0, 0.0, -_recoil * 0.012)
+			_weapon_mount.rotation.x = -_recoil * 0.035
+	if _hit_pose_time > 0.0:
+		_hit_pose_time = maxf(0.0, _hit_pose_time - delta)
+		if _hit_pose_time <= 0.0:
+			_model.rotation.y = 0.0
+			_update_shoot_pose()
+	if _flash > 0.0:
+		_flash -= delta
+		for i in _mats.size():
+			_mats[i].albedo_color = Color(0.9, 0.1, 0.05) if _flash > 0.0 else _base_cols[i]

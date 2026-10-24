@@ -34,6 +34,8 @@ var flank_left := 7.0
 var gate_z := 0.0  # voorkeurspoort (z) om de bunker van twee kanten te nemen; 0 = klaar of niet van toepassing
 var retreated := false
 var stun_t := 0.0  # geschrokken van een explosie: even stilstaan
+var _shoot_pose_t := 0.0
+var _shot_sequence := 0
 
 
 func setup(kind: String, wave: int) -> void:
@@ -60,6 +62,8 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	slow_t -= delta
+	_shoot_pose_t = maxf(0.0, _shoot_pose_t - delta)
+	model.set_shoot_pose(_shoot_pose_t > 0.0, "mg42" if type == "heavy" else "garand", t.get("rate", 0.2))
 	if dead or Game.state == "over":
 		if not dead:
 			model.play("stil")
@@ -282,25 +286,29 @@ func _shoot(a: float) -> void:
 			fire_t = t.pause
 	else:
 		fire_t = t.rate
-	var fwd := Vector3(sin(a), 0.0, cos(a))
-	var muzzle: Vector3 = global_position + fwd * (0.6 * t.scale) + Vector3.UP * 1.33 * minf(t.scale, 1.2) * Data.SOLDIER_SCALE
+	var muzzle: Vector3 = model.muzzle_position()
 	Game.mark_attack(global_position)
 	var rise := 0.0
 	if _tgt_y > 1.0 and Game.player:
 		var dd := _flat(Game.player.global_position - muzzle).length()
 		rise = (_tgt_y + 1.0 - muzzle.y) / maxf(dd, 3.0)
 	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread * _aim_mult(), Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false, false, 0, 0.0, 0.0, rise)
-	Fx.muzzle(get_parent(), muzzle)
-	if Game.player and _flat(Game.player.global_position - global_position).length() < 30.0:
-		Fx.casing(get_parent(), muzzle - Vector3(0, 0.15, 0))
+	var weapon_kind := "mg42" if type == "heavy" else "garand"
+	model.shoot_recoil(weapon_kind)
+	_shoot_pose_t = 0.24
+	Fx.muzzle(get_parent(), muzzle, weapon_kind, a)
+	_shot_sequence += 1
+	var casing_every: int = int(Data.WEAPON_VISUALS[weapon_kind].get("casing_every", 1))
+	if _shot_sequence % casing_every == 0 and Game.player and _flat(Game.player.global_position - global_position).length() < 30.0:
+		var axes := model.casing_axes()
+		Fx.casing(get_parent(), model.casing_position(), axes[0], axes[1])
 	Sfx.play("ak" if type == "heavy" else "enemy", 1.0, global_position)
 
 
 ## Een trage raket die afgaat waar hij gemikt was (of tegen het eerste dat in de weg staat).
 func _shoot_rocket(a: float, aim: Variant = null) -> void:
 	fire_t = t.rate
-	var fwd := Vector3(sin(a), 0.0, cos(a))
-	var muzzle: Vector3 = global_position + fwd * 1.1 + Vector3.UP * 1.3
+	var muzzle: Vector3 = model.muzzle_position()
 	Game.mark_attack(global_position)
 	var rb: Variant = _rocket_target()
 	var d := 20.0
@@ -378,6 +386,7 @@ func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	hp -= dmg
 	hurt_t = 0.0
 	model.flash()
+	model.hit_reaction(dir, clampf(dmg / 55.0, 0.75, 1.7))
 	Sfx.play("splat", 1.0, global_position)
 	Fx.blood(get_parent(), global_position + Vector3.UP * 1.2, dir)
 	if randf() < 0.5:

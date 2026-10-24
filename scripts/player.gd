@@ -33,6 +33,7 @@ var _stam_wait := 0.0
 var _exhausted := false     # leeg geraakt: pas weer sprinten als er wat bij is
 var _reload_dur := 1.0      # hoe lang het lopende herladen duurt (de herlaadbeweging past zich daaraan aan)
 var _dust_t := 0.0
+var _shot_sequence := 0
 
 const STAIR_FOOT := 1.8      # de klimladder staat aan de +X zijde van de toren (zie bron/wachttoren)
 const STAIR_TOP := 1.3
@@ -71,6 +72,7 @@ func refresh_look() -> void:
 
 func _physics_process(delta: float) -> void:
 	if dead or Game.state == "shop" or Game.state == "menu":
+		model.set_shoot_pose(false, weapon, Game.wstat(weapon).rate)
 		return
 	if driving:
 		return
@@ -83,9 +85,11 @@ func _physics_process(delta: float) -> void:
 	dodge_cd = maxf(0.0, dodge_cd - delta)
 	grenade_cd = maxf(0.0, grenade_cd - delta)
 	if climb >= 0.0:
+		model.set_shoot_pose(false, weapon, w.rate)
 		_climb_step(delta)
 		return
 	if dodge_t > 0.0:
+		model.set_shoot_pose(false, weapon, w.rate)
 		_dodge_step(delta)
 		return
 	# sprint: alleen lopend, niet tijdens schieten en niet op een toren; kost uithoudingsvermogen
@@ -145,6 +149,7 @@ func _physics_process(delta: float) -> void:
 		idle_t += delta
 		if idle_t > 1.4 and ammo < w.mag:
 			_reload(w)  # geen herlaadknop: na even niet schieten vult hij zelf bij
+	model.set_shoot_pose(Game.fire and reload_t <= 0.0, weapon, w.rate)
 	_animate(mv, moving)
 
 
@@ -299,14 +304,25 @@ func _shoot(w: Dictionary) -> void:
 		return
 	fire_t = w.rate
 	ammo -= 1
+	_shot_sequence += 1
+	model.shoot_recoil(weapon)
 	var fwd := Vector3(sin(face), 0.0, cos(face))
-	var muzzle := global_position + fwd * 0.6 + Vector3.UP * 1.33 * Data.SOLDIER_SCALE
+	var muzzle: Vector3 = model.muzzle_position()
 	var over := _hugging_wall(fwd)
+	var profile: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
+	var tracer_every: int = int(profile.get("trail_every", 1))
+	var tracer_weapon := "bazooka" if weapon == "bazooka" else (weapon if tracer_every > 0 and (_shot_sequence - 1) % tracer_every == 0 else "")
 	for i in w.pellets:
 		var a: float = face + (randf() - 0.5) * w.spread * 2.0
-		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0), 0.28 if elev > 1.0 else 0.0, 0.0, weapon)
-	Fx.muzzle(get_parent(), muzzle, weapon, face)
-	Fx.casing(get_parent(), muzzle - Vector3(0, 0.15, 0))
+		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0), 0.28 if elev > 1.0 else 0.0, 0.0, tracer_weapon)
+	if weapon == "bazooka":
+		Fx.rocket_launch(get_parent(), muzzle, face)
+	else:
+		Fx.muzzle(get_parent(), muzzle, weapon, face)
+	var casing_every: int = int(profile.get("casing_every", 1))
+	if casing_every > 0 and (_shot_sequence - 1) % casing_every == 0:
+		var axes := model.casing_axes()
+		Fx.casing(get_parent(), model.casing_position(), axes[0], axes[1])
 	Sfx.play(Data.WEAPON_SND[weapon])
 	Game.changed.emit()
 	if ammo <= 0:
@@ -323,6 +339,7 @@ func equip(id: String) -> void:
 	Game.cur = id
 	model.set_gun(id)
 	ammo = Game.owned[id].ammo
+	_shot_sequence = 0
 	reload_t = 0.0
 	fire_t = 0.3
 	Game.changed.emit()
@@ -365,8 +382,6 @@ func _animate(mv: Vector2, moving: float) -> void:
 	if reload_t > 0.0 and moving < 0.15:
 		# de herlaadbeweging duurt precies zolang als het herladen van dit wapen
 		model.play("herladen", 0.12, maxf(0.5, model.clip_length("herladen")) / _reload_dur)
-	elif Game.fire and moving < 0.15:
-		model.play("schieten", 0.1)
 	elif moving < 0.15:
 		model.play("stil")
 	else:

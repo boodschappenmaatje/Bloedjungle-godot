@@ -34,6 +34,8 @@ var _exhausted := false     # leeg geraakt: pas weer sprinten als er wat bij is
 var _reload_dur := 1.0      # hoe lang het lopende herladen duurt (de herlaadbeweging past zich daaraan aan)
 var _dust_t := 0.0
 var _shot_sequence := 0
+## Alleen de Arcade VFX-labscène vult dit in; de normale game gebruikt null.
+var arcade_vfx_profile: ArcadeVfxProfile
 
 const STAIR_FOOT := 1.8      # de klimladder staat aan de +X zijde van de toren (zie bron/wachttoren)
 const STAIR_TOP := 1.3
@@ -144,7 +146,7 @@ func _physics_process(delta: float) -> void:
 			Game.changed.emit()
 	if Game.fire and climb < 0.0:
 		idle_t = 0.0
-		_shoot(w)
+		_shoot(w, arcade_vfx_profile)
 	else:
 		idle_t += delta
 		if idle_t > 1.4 and ammo < w.mag:
@@ -296,7 +298,7 @@ func _climb_step(delta: float) -> void:
 		position.y = 0.0
 
 
-func _shoot(w: Dictionary) -> void:
+func _shoot(w: Dictionary, arcade_profile: ArcadeVfxProfile = null) -> void:
 	if reload_t > 0.0 or fire_t > 0.0:
 		return
 	if ammo <= 0:
@@ -305,7 +307,8 @@ func _shoot(w: Dictionary) -> void:
 	fire_t = w.rate
 	ammo -= 1
 	_shot_sequence += 1
-	model.shoot_recoil(weapon)
+	var shot_profile := arcade_profile if weapon == "m1911" else null
+	model.shoot_recoil(weapon, shot_profile)
 	var fwd := Vector3(sin(face), 0.0, cos(face))
 	var muzzle: Vector3 = model.muzzle_position()
 	var over := _hugging_wall(fwd)
@@ -325,11 +328,11 @@ func _shoot(w: Dictionary) -> void:
 	for i in w.pellets:
 		var a: float = face + (randf() - 0.5) * w.spread * 2.0
 		var projectile_visual := tracer_weapon if weapon != "trench" or i == 0 else ""
-		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0), 0.28 if elev > 1.0 else 0.0, 0.0, projectile_visual)
+		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0), 0.28 if elev > 1.0 else 0.0, 0.0, projectile_visual, shot_profile)
 	if weapon == "bazooka":
 		Fx.rocket_launch(get_parent(), muzzle, face)
 	else:
-		Fx.muzzle(get_parent(), muzzle, weapon, face)
+		Fx.muzzle(get_parent(), muzzle, weapon, face, shot_profile)
 	var casing_every: int = int(profile.get("casing_every", 1))
 	if casing_every > 0 and (_shot_sequence - 1) % casing_every == 0:
 		var axes := model.casing_axes()

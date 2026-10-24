@@ -14,6 +14,7 @@ static var _mat_e: StandardMaterial3D
 static var _plain_player_bullet: BoxMesh
 static var _plain_enemy_bullet: BoxMesh
 static var _weapon_glows := {}
+static var _arcade_glows := {}
 static var _rocket_body: CylinderMesh
 static var _rocket_nose: CylinderMesh
 static var _rocket_tail: CylinderMesh
@@ -31,6 +32,7 @@ var pierce := 0
 var explosive := 0.0
 var rocket := false  # vijandelijke raket: ontploft op de plek waar hij gemikt was
 var visual_weapon := ""
+var arcade_vfx_profile: ArcadeVfxProfile
 var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
 
 
@@ -43,7 +45,7 @@ func _exit_tree() -> void:
 
 
 ## Maakt een kogel. over_wall: de schutter staat tegen de muur en schiet eroverheen.
-static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false, pierce_ := 0, explosive_ := 0.0, sink_ := 0.0, rise_ := 0.0, visual_weapon := "") -> void:
+static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false, pierce_ := 0, explosive_ := 0.0, sink_ := 0.0, rise_ := 0.0, visual_weapon := "", arcade_profile: ArcadeVfxProfile = null) -> void:
 	if _mesh == null:
 		_mesh = BoxMesh.new()
 		_mesh.size = Vector3(0.05, 0.05, 0.9)
@@ -51,8 +53,11 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 		_mat_e = _tracer(Color(1.0, 0.45, 0.25))
 	var b := Bullet.new()
 	b.visual_weapon = visual_weapon
+	b.arcade_vfx_profile = arcade_profile if by_player and visual_weapon == "m1911" else null
 	if visual_weapon == "bazooka":
 		b._add_rocket_visual()
+	elif b.arcade_vfx_profile != null:
+		b.mesh = _arcade_glow(b.arcade_vfx_profile)
 	elif Data.WEAPON_VISUALS.has(visual_weapon):
 		b.mesh = _weapon_glow(visual_weapon, not by_player)
 	elif by_player:
@@ -193,6 +198,45 @@ static func _weapon_glow(weapon: String, enemy_tracer := false) -> ArrayMesh:
 	return m
 
 
+## De VFX-lab gebruikt dezelfde Bullet-node, maar een apart, instelbaar M1911-profiel.
+static func _arcade_glow(profile: ArcadeVfxProfile) -> ArrayMesh:
+	var key := "%s:%.3f:%.3f:%.3f:%s:%s:%s" % [profile.resource_path, profile.tracer_length, profile.tracer_width, profile.tracer_brightness, profile.tracer_core_color.to_html(true), profile.tracer_edge_color.to_html(true), profile.tracer_tail_color.to_html(true)]
+	if _arcade_glows.has(key):
+		return _arcade_glows[key]
+	var m := ArrayMesh.new()
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var layers := [
+		{"width": profile.tracer_width, "head": profile.tracer_edge_color, "tail": profile.tracer_tail_color},
+		{"width": profile.tracer_width * 0.3, "head": profile.tracer_core_color, "tail": Color(profile.tracer_edge_color.r, profile.tracer_edge_color.g * 0.45, profile.tracer_edge_color.b * 0.08, 0.0)},
+	]
+	for layer: Dictionary in layers:
+		var width: float = layer.width
+		var head: Color = layer.head
+		var tail: Color = layer.tail
+		var z0 := -profile.tracer_length
+		var z1 := 0.18
+		for ang in [0.0, PI * 0.5]:
+			var side := Vector3(cos(ang), sin(ang), 0.0) * width
+			var pts := [Vector3(0, 0, z0) - side * 0.2, Vector3(0, 0, z0) + side * 0.2, Vector3(0, 0, z1) + side, Vector3(0, 0, z1) - side]
+			var cols := [tail, tail, head, head]
+			for i in [0, 1, 2, 0, 2, 3]:
+				var color: Color = cols[i]
+				color = Color(color.r * profile.tracer_brightness, color.g * profile.tracer_brightness, color.b * profile.tracer_brightness, color.a)
+				st.set_color(color)
+				st.add_vertex(pts[i])
+	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, st.commit_to_arrays())
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.vertex_color_use_as_albedo = true
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.surface_set_material(0, mat)
+	_arcade_glows[key] = m
+	return m
+
+
 static func _glow(head: Color, tail: Color, tail_length := 2.0, width := 0.07, head_length := 0.35, ball_size := 0.09) -> ArrayMesh:
 	var m := ArrayMesh.new()
 	var st := SurfaceTool.new()
@@ -279,15 +323,18 @@ func _physics_process(delta: float) -> void:
 			var target_script_path := target_script.resource_path if target_script != null else ""
 			var target_handles_impact := target_script_path in ["res://scripts/enemy.gd", "res://scripts/player.gd"] or c is Barrel or c is Pomp or c is Brandkraan
 			if not target_handles_impact:
-				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
-			c.hit(dmg, dir, from_player)
+				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c), arcade_vfx_profile)
+			if arcade_vfx_profile != null and c is Node and (c as Node).get_script() != null and (c as Node).get_script().resource_path == "res://scripts/enemy.gd":
+				c.call("hit", dmg, dir, from_player, arcade_vfx_profile)
+			else:
+				c.hit(dmg, dir, from_player)
 			if pierce > 0 and c.collision_layer == MASK_ENEMY:
 				pierce -= 1
 				dmg *= 0.85
 				global_position = hit.position + dir * 0.5
 				return
 		else:
-			Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
+			Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c), arcade_vfx_profile)
 		queue_free()
 		return
 	global_position += step

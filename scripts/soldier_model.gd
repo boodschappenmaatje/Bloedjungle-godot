@@ -306,11 +306,12 @@ func set_gun(kind: String) -> void:
 
 
 ## Terugslag wordt in een eigen wapenhouder gedempt, zonder de loop- of richtbesturing te veranderen.
-func shoot_recoil(kind: String) -> void:
+func shoot_recoil(kind: String, arcade_profile: ArcadeVfxProfile = null) -> void:
 	if not _weapon_mount:
 		return
 	var profile: Dictionary = Data.WEAPON_VISUALS.get(kind, Data.WEAPON_VISUALS["m1911"])
-	_recoil = minf(1.35, _recoil + float(profile.get("recoil", 0.6)))
+	var multiplier := arcade_profile.recoil_strength if arcade_profile != null and kind == "m1911" else 1.0
+	_recoil = minf(1.35, _recoil + float(profile.get("recoil", 0.6)) * multiplier)
 	_weapon_kind = kind
 	if kind == "trench":
 		_pump_shotgun()

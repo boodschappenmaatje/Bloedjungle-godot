@@ -1,0 +1,76 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/arcade_vfx_lab.gd" id="1"]
+
+[node name="ArcadeVfxLab" type="Node3D"]
+script = ExtResource("1")
+
+[node name="LabUI" type="CanvasLayer" parent="."]
+layer = 20
+
+[node name="Panel" type="PanelContainer" parent="LabUI"]
+offset_right = 452.0
+offset_bottom = 190.0
+mouse_filter = 1
+
+[node name="Layout" type="VBoxContainer" parent="LabUI/Panel"]
+layout_mode = 2
+mouse_filter = 1
+
+[node name="TargetStatus" type="Label" parent="LabUI/Panel/Layout"]
+layout_mode = 2
+text = "DOEL: VIJAND"
+
+[node name="ReadyStatus" type="Label" parent="LabUI/Panel/Layout"]
+layout_mode = 2
+text = "INITIALISEREN..."
+
+[node name="Targets" type="HBoxContainer" parent="LabUI/Panel/Layout"]
+layout_mode = 2
+
+[node name="Earth" type="Button" parent="LabUI/Panel/Layout/Targets" groups=["hud_button"]]
+custom_minimum_size = Vector2(96, 48)
+layout_mode = 2
+text = "AARDE"
+
+[node name="Concrete" type="Button" parent="LabUI/Panel/Layout/Targets" groups=["hud_button"]]
+custom_minimum_size = Vector2(96, 48)
+layout_mode = 2
+text = "BETON"
+
+[node name="Metal" type="Button" parent="LabUI/Panel/Layout/Targets" groups=["hud_button"]]
+custom_minimum_size = Vector2(96, 48)
+layout_mode = 2
+text = "METAAL"
+
+[node name="Enemy" type="Button" parent="LabUI/Panel/Layout/Targets" groups=["hud_button"]]
+custom_minimum_size = Vector2(96, 48)
+layout_mode = 2
+text = "VIJAND"
+
+[node name="Actions" type="HBoxContainer" parent="LabUI/Panel/Layout"]
+layout_mode = 2
+
+[node name="Single" type="Button" parent="LabUI/Panel/Layout/Actions" groups=["hud_button"]]
+custom_minimum_size = Vector2(104, 48)
+layout_mode = 2
+text = "ÉÉN SCHOT"
+
+[node name="Burst" type="Button" parent="LabUI/Panel/Layout/Actions" groups=["hud_button"]]
+custom_minimum_size = Vector2(104, 48)
+layout_mode = 2
+text = "BURST"
+
+[node name="MoveFire" type="Button" parent="LabUI/Panel/Layout/Actions" groups=["hud_button"]]
+custom_minimum_size = Vector2(104, 48)
+layout_mode = 2
+text = "LOPEN + VUUR"
+
+[node name="Reset" type="Button" parent="LabUI/Panel/Layout/Actions" groups=["hud_button"]]
+custom_minimum_size = Vector2(80, 48)
+layout_mode = 2
+text = "RESET"
+
+[node name="Hint" type="Label" parent="LabUI/Panel/Layout"]
+layout_mode = 2
+text = "1–4 doel · F1 schot · F2 burst · F3 lopen/vuur"

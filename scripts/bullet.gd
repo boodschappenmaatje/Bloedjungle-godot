@@ -188,7 +188,7 @@ static func _weapon_glow(weapon: String, enemy_tracer := false) -> ArrayMesh:
 	var v: Dictionary = Data.WEAPON_VISUALS[weapon]
 	var head: Color = Color(1.0, 0.48, 0.28, 0.94) if enemy_tracer else v.trail_head
 	var tail: Color = Color(0.85, 0.12, 0.035, 0.0) if enemy_tracer else v.trail_tail
-	var m := _glow(head, tail, v.trail_length, v.trail_width, 0.1, 0.022)
+	var m := _glow(head, tail, v.trail_length, v.trail_width, 0.16, 0.028)
 	_weapon_glows[key] = m
 	return m
 

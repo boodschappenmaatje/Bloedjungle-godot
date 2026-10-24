@@ -387,10 +387,11 @@ func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 		return
 	hp -= dmg
 	hurt_t = 0.0
-	model.flash()
+	model.flash(Color(1.0, 0.38, 0.07))
 	model.hit_reaction(dir, clampf(dmg / 55.0, 0.75, 1.7))
 	Sfx.play("splat", 1.0, global_position)
-	Fx.blood(get_parent(), global_position + Vector3.UP * 1.2, dir)
+	Fx.spark(get_parent(), global_position + Vector3.UP * 1.15, -dir)
+	Fx.blood(get_parent(), global_position + Vector3.UP * 1.2, dir, 14, Color(0.18, 0.58, 0.07))
 	if randf() < 0.5:
 		Fx.ground_blood(get_parent(), global_position + dir * 0.6, 0.5)
 	if hp <= 0.0:

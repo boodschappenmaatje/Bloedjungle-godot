@@ -56,6 +56,9 @@ func _run() -> void:
 		if id != "bazooka":
 			_check(float(Data.WEAPON_VISUALS[id].flash_length) >= 0.6 and float(Data.WEAPON_VISUALS[id].flash_width) >= 0.2, "%s mondingsflits is te klein voor een telefoon" % id)
 			_check(float(Data.WEAPON_VISUALS[id].flash_life) <= 0.1, "%s mondingsflits duurt langer dan de overeengekomen 100 ms" % id)
+			var tracer_head: Color = Data.WEAPON_VISUALS[id].trail_head
+			_check(tracer_head.g > tracer_head.b * 1.8, "%s tracer is niet warm geel genoeg voor de combatreferentie" % id)
+			_check(float(Data.WEAPON_VISUALS[id].flash_energy) > 0.0 and float(Data.WEAPON_VISUALS[id].flash_range) >= 3.0, "%s mist de korte warme mondingsgloed" % id)
 		if not game.owned.has(id):
 			game.owned[id] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": Data.WEAPONS[id].mag}
 		if not game.loadout.has(id):
@@ -145,7 +148,10 @@ func _run() -> void:
 	for i in 20:
 		fx.muzzle(main, player.global_position + Vector3.UP, "mg42", PI)
 		fx.impact(main, player.global_position + Vector3(0.0, 0.1, -2.0), Vector3.UP, "dirt")
+	fx.spark(main, player.global_position + Vector3.UP, Vector3.BACK)
+	_check(fx._impact_star_texture != null, "trefferflits gebruikt geen herkenbare stervorm")
 	var fx_counts: Dictionary = fx.combat_counts()
+	_check(int(fx_counts.flash_lights) > 0, "mondingsflits maakt geen warme lichtpuls")
 	_check(int(fx_counts.flash_lights) <= 2, "mondingsvuur maakt te veel dynamische lichten")
 	_check(int(fx_counts.muzzle_flashes) <= 18, "mondingsflits overschrijdt de limiet")
 	_check(int(fx_counts.muzzle_smoke) <= 16, "mondingsrook overschrijdt de limiet")

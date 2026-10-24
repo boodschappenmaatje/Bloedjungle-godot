@@ -14,6 +14,7 @@ var current := ""
 var _mats: Array[StandardMaterial3D] = []
 var _base_cols: Array[Color] = []
 var _flash := 0.0
+var _flash_color := Color(0.9, 0.1, 0.05)
 var _model: Node
 var _band: MeshInstance3D
 var _fire_anim: AnimationPlayer
@@ -403,9 +404,10 @@ func clip_length(clip: String) -> float:
 	return anim.get_animation(clip).length if anim != null and anim.has_animation(clip) else 0.0
 
 
-## Rode flits als hij geraakt wordt.
-func flash() -> void:
+## Korte kleurflits bij een treffer; de kleur kan per doeltype verschillen.
+func flash(color := Color(0.9, 0.1, 0.05)) -> void:
 	_flash = 0.1
+	_flash_color = color
 
 
 func _process(delta: float) -> void:
@@ -422,4 +424,4 @@ func _process(delta: float) -> void:
 	if _flash > 0.0:
 		_flash -= delta
 		for i in _mats.size():
-			_mats[i].albedo_color = Color(0.9, 0.1, 0.05) if _flash > 0.0 else _base_cols[i]
+			_mats[i].albedo_color = _flash_color if _flash > 0.0 else _base_cols[i]

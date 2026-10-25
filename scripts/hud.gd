@@ -2,7 +2,7 @@ extends CanvasLayer
 ## Meldingen en knoppen midden op het scherm (golf-titel, "Start nu", gesneuveld). De balken, punten
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
-const VERSION := "v98"
+const VERSION := "v104"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -126,6 +126,11 @@ func _process(delta: float) -> void:
 		if Game.state == "prep":
 			var seconds := ceili(Game.prep_t)
 			small.text = "%02d:%02d" % [floori(seconds / 60.0), posmod(seconds, 60)]
+			if not Game.routes.is_empty():
+				var names := []
+				for id in Game.routes:
+					names.append(String(AanvalRoutes.LIST[id].naam))
+				small.text += "  ·  VIA " + " + ".join(names)
 		else:
 			small.text = ""
 	var shown: bool = Game.state != "shop" and Game.state != "menu" and Game.state != "over"

@@ -376,7 +376,77 @@ func _enemy_vis(enemy: Node3D) -> float:
 	return clampf(1.0 - (now - last) / RADAR_MEMORY, 0.0, 1.0)
 
 
+## Tijdens de pauze en zolang er nog vijanden komen: de vaste aanvalsroutes van deze golf.
+func _routes_shown() -> bool:
+	if Game.routes.is_empty() or Game.build_mode or Game.editing:
+		return false
+	if Game.state == "prep":
+		return true
+	var main := get_parent().get_parent()
+	return Game.state == "play" and "queue" in main and not main.queue.is_empty()
+
+
+## Grote rode pijl per route: op de plek waar ze bij de basis aankomen, of aan de schermrand als die plek buiten beeld ligt.
+func _draw_route_arrows() -> void:
+	if not _routes_shown():
+		return
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return
+	var pulse := 0.85 + 0.15 * sin(Time.get_ticks_msec() / 260.0)
+	var red := Color(1.0, 0.2, 0.1, pulse)
+	var safe := Rect2(Vector2(70.0, 120.0), size - Vector2(140.0, 270.0))  # buiten de banner, radar en knoppen
+	var font := UI.body(700, 0)
+	for id in Game.routes:
+		var r: Dictionary = AanvalRoutes.LIST[id]
+		var at: Vector3 = r.show
+		var travel := -Vector3(at.x, 0.0, at.z).normalized()  # ze lopen van hier naar de bunker
+		var behind := cam.is_position_behind(at)
+		var p := cam.unproject_position(at)
+		var tip: Vector2
+		var dir: Vector2
+		if not behind and safe.has_point(p):
+			# in beeld: de pijl ligt op de grond en wijst in de looprichting
+			dir = (cam.unproject_position(at + travel * 4.0) - p).normalized()
+			tip = p + dir * 30.0
+		else:
+			var c := size * 0.5
+			var v := (p - c) * (-1.0 if behind else 1.0)
+			if v.length() < 1.0:
+				v = Vector2.UP
+			var k := minf(absf(safe.size.x * 0.5 / v.x) if absf(v.x) > 0.001 else INF, absf(safe.size.y * 0.5 / v.y) if absf(v.y) > 0.001 else INF)
+			dir = v.normalized()
+			tip = c + v * k  # aan de rand: de punt wijst naar buiten, naar waar ze vandaan komen
+		var side := Vector2(-dir.y, dir.x)
+		var base := tip - dir * 40.0
+		_arrows.draw_colored_polygon(PackedVector2Array([tip, base + side * 24.0, base + dir * 10.0, base - side * 24.0]), red)
+		_arrows.draw_line(base + dir * 4.0, base - dir * 22.0, red, 10.0, true)
+		var label: String = r.naam
+		var lw := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
+		var lp := base - dir * 44.0 - Vector2(lw * 0.5, -5.0)
+		lp.x = clampf(lp.x, 6.0, size.x - lw - 6.0)
+		lp.y = clampf(lp.y, 20.0, size.y - 8.0)
+		_arrows.draw_string_outline(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, 5, Color(0, 0, 0, 0.75))
+		_arrows.draw_string(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, Color(1.0, 0.86, 0.8, pulse))
+
+
+## Op de radar: de routes als rode lijnen, met een stip waar ze beginnen.
+func _draw_radar_routes(map: Rect2) -> void:
+	if not _routes_shown():
+		return
+	var col := Color(1.0, 0.25, 0.12, 0.55 + 0.25 * sin(Time.get_ticks_msec() / 260.0))
+	for id in Game.routes:
+		var r: Dictionary = AanvalRoutes.LIST[id]
+		var line := PackedVector2Array()
+		for q in r.pts:
+			line.append(_radar_point(q, map))
+		line.append(_radar_point(r.show, map))
+		_radar.draw_polyline(line, col, 2.0, true)
+		_radar.draw_circle(line[0], 2.5, col)
+
+
 func _draw_radar_attacks(map: Rect2) -> void:
+	_draw_radar_routes(map)
 	var cx := map.position.x + map.size.x * 0.5
 	var cy := map.position.y + map.size.y * 0.5
 	var pulse := 0.65 + 0.35 * sin(Time.get_ticks_msec() / 180.0)
@@ -491,6 +561,7 @@ func _process(delta: float) -> void:
 
 ## Rode pijltjes aan de rand, knipperend, zoals .atk in styles.css.
 func _draw_arrows() -> void:
+	_draw_route_arrows()
 	if Game.state != "play":
 		return
 	var a := 0.675 + 0.325 * cos(Time.get_ticks_msec() / 400.0 * PI)

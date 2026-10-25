@@ -334,6 +334,7 @@ func _ready() -> void:
 	add_child(model)
 	for l in model.find_children("*", "Light3D", true, false):
 		l.visible = false   # lampen pas 's nachts (scheelt op de iPhone)
+	_find_glass()
 	_dak = model.find_child("Dak", true, false)
 	_ver = model.find_child("Verdieping", true, false)
 	for g in spec.groups:
@@ -379,6 +380,36 @@ func _ready() -> void:
 
 func _exit_tree() -> void:
 	all.erase(self)
+
+
+# ---------------------------------------------------------------- avond en nacht
+
+## Materialen die 's avonds en 's nachts licht geven: ramen en lampglas. Deze delen hun materiaal met alle gebouwen van dezelfde
+## soort, dus één poll per gebouw is genoeg en kost niets per beeld.
+const NIGHT_GLOW := {"Glas": [Color(1.0, 0.72, 0.36), 1.4], "LampGlas": [Color(1.0, 0.61, 0.17), 3.0], "Warm lampglas": [Color(1.0, 0.42, 0.1), 3.0], "GlasLood": [Color(0.95, 0.5, 0.2), 1.1]}
+var _glass: Array = []
+var _night_t := randf() * 0.5
+var _night_on := false
+
+
+func _find_glass() -> void:
+	for mi: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
+		if mi.mesh == null:
+			continue
+		for i in mi.mesh.get_surface_count():
+			var m := mi.mesh.surface_get_material(i)
+			if m is StandardMaterial3D and NIGHT_GLOW.has(m.resource_name) and not _glass.has(m):
+				_glass.append(m)
+	_glow(GameSettings.get_value("time") != "day")
+
+
+func _glow(on: bool) -> void:
+	_night_on = on
+	for m: StandardMaterial3D in _glass:
+		var g: Array = NIGHT_GLOW[m.resource_name]
+		m.emission_enabled = on
+		m.emission = g[0]
+		m.emission_energy_multiplier = g[1]
 
 
 func _add_seg(n: Node3D, heel: MeshInstance3D, kapot: MeshInstance3D) -> void:
@@ -742,7 +773,16 @@ func _in_ext(lp: Vector3) -> bool:
 
 func _process(delta: float) -> void:
 	_tick_warn(delta)
+	_night_t -= delta
+	if _night_t <= 0.0:
+		_night_t = 0.5
+		var night: bool = GameSettings.get_value("time") != "day"
+		if night != _night_on:
+			_glow(night)
 	var p = Game.player
+	# ver weg (en niet in dit gebouw) valt er niets te bijwerken: scheelt per gebouw elk beeld
+	if p != null and _inside < 0 and not Game.editing and global_position.distance_squared_to(p.global_position) > 3600.0:
+		return
 	var where := -1
 	if p != null and not p.driving:
 		var lp := to_local(p.global_position)

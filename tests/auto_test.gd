@@ -8,6 +8,7 @@ var Stad
 var A
 var cars: Array = []
 var bad := 0
+var bullets_hp0 := 0.0
 
 
 func check(name: String, ok: bool) -> void:
@@ -36,7 +37,7 @@ func _process(_d: float) -> bool:
 		var a = cars[0]
 		check("spelclips: wissers, knipperen, alarm (deuren/kap/koffer zitten in de glb voor de viewer)", a._anim.get_animation_list().size() == 3)
 		check("blendshape Deuk", a._romp.mesh.get_blend_shape_count() == 1)
-		check("collision op laag van kogels", a.collision_layer == 2 and a.get_node("Shape") != null)
+		check("collision op laag van kogels", (a.collision_layer & 2) != 0 and a.get_node("Shape") != null and (a.collision_layer & 2) != 0)
 		check("wrak staat al verkoold", cars[3].wreck and cars[3]._romp.get_surface_override_material(0) == cars[3]._wrak_mat)
 		check("brandende auto brandt zonder lont", cars[4].burning and cars[4]._fuse == 0.0)
 	if frames == 20:
@@ -49,7 +50,17 @@ func _process(_d: float) -> bool:
 		check("voorruit eruit na de eerste fase", not a._car.get_node("Voorruit").visible)
 		# auto ernaast op 4 m blijft heel zolang er geen explosie is
 		check("buurauto ongedeerd", cars[1].hp == A.HP)
+	if frames == 21:
+		# echte kogels van de speler, vlak naast de auto (borstweringstand: over_wall = true) en van verder weg
+		var a = cars[1]
+		var hp0: float = a.hp
+		var B = load("res://scripts/bullet.gd")
+		for over in [true, false]:
+			B.fire(main, a.global_position + Vector3(-1.9, 1.1, 1.0 if over else -1.0), PI / 2.0, 30.0, 26.0, 1.0, true, over, 0, 0.0, 0.0, 0.0, "")
+		B.fire(main, a.global_position + Vector3(-0.5, 1.1, 0.0), PI / 2.0, 30.0, 26.0, 1.0, true, true, 0, 0.0, 0.0, 0.0, "")   # begint binnen de botsdoos
+		bullets_hp0 = hp0
 	if frames == 30:
+		check("echte kogels (ook met over_wall) raken de auto: hp %.0f van %.0f" % [cars[1].hp, bullets_hp0], cars[1].hp <= bullets_hp0 - 30.0)
 		var a = cars[0]
 		for i in 20:
 			a.hit(26.0, Vector3.RIGHT, true)

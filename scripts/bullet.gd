@@ -7,6 +7,7 @@ const MASK_WALL := 2
 const MASK_PLAYER := 4
 const MASK_ENEMY := 8
 const MASK_BUNKER := 16
+const MASK_VEHICLE := 1024   # auto's en bussen: ook laag 2 (muur), maar kogels die over een borstwering gaan raken ze toch
 
 static var _mesh: BoxMesh
 static var _mat_p: StandardMaterial3D
@@ -70,7 +71,7 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.explosive = explosive_
 	b.sink = sink_
 	b.dir.y = rise_  # schiet omhoog naar iemand op een toren
-	b.mask = (MASK_ENEMY if by_player else MASK_PLAYER) | MASK_BUNKER | (0 if over_wall else MASK_WALL)
+	b.mask = (MASK_ENEMY if by_player else MASK_PLAYER) | MASK_BUNKER | MASK_VEHICLE | (0 if over_wall else MASK_WALL)
 	parent.add_child(b)
 	b.global_position = from
 	b.rotation.y = angle
@@ -94,7 +95,7 @@ static func fire_rocket(parent: Node, from: Vector3, angle: float, damage: float
 	b.from_player = false
 	b.rocket = true
 	b.explosive = 3.2
-	b.mask = MASK_PLAYER | MASK_BUNKER | MASK_WALL
+	b.mask = MASK_PLAYER | MASK_BUNKER | MASK_WALL | MASK_VEHICLE
 	parent.add_child(b)
 	b.global_position = from
 	b.rotation.y = angle
@@ -262,6 +263,13 @@ func _physics_process(delta: float) -> void:
 			k.hit(dmg, dir, from_player)
 			queue_free()
 			return
+	if (mask & MASK_VEHICLE) != 0:
+		for a: Auto in Auto.all:
+			if is_instance_valid(a) and not a.exploded and a.inside(global_position):
+				a.hit(dmg, dir, from_player)
+				Fx.impact(get_parent(), global_position, -dir, "metal")
+				queue_free()
+				return
 	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + step, mask)
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	if hit:

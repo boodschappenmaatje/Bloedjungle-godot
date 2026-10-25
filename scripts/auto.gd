@@ -89,7 +89,7 @@ static func make(k: String, seed_: int) -> Auto:
 
 func _ready() -> void:
 	all.append(self)
-	collision_layer = Barrel.LAYER      # kogels botsen ertegen en roepen hit() aan; je loopt er niet doorheen
+	collision_layer = Barrel.LAYER | Bullet.MASK_VEHICLE      # kogels botsen ertegen en roepen hit() aan; je loopt er niet doorheen
 	collision_mask = 114
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 	set_meta("impact_material", "metal")
@@ -197,6 +197,13 @@ func _surface_named(mi: MeshInstance3D, mat_name: String) -> int:
 
 
 # ---------------------------------------------------------------- schade
+
+## Zit dit punt in de botsdoos? (een kogel die vlak tegen de auto begint, ziet hem anders niet: de straal start erbinnen)
+func inside(p: Vector3) -> bool:
+	var b := _shape.shape as BoxShape3D
+	var l := to_local(p) - _shape.position
+	return absf(l.x) < b.size.x * 0.5 and absf(l.z) < b.size.z * 0.5 and absf(l.y) < b.size.y * 0.5
+
 
 ## Kogel (of mes) geraakt: pantser 0,5x, bij de eerste klap gaat het alarm.
 func hit(dmg: float, dir: Vector3, _from_player: bool) -> void:

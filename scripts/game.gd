@@ -44,6 +44,7 @@ var ecam := Vector3(6.0, -108.0, 1.0)  # editorcamera recht van boven: x, z en z
 var buildings: Array = []
 var allies: Array = []
 var troop_mode := "follow"  # follow of hold
+var order := {"zone": "", "mode": ""}  # bevel van de kaart: soldaten naar een gebied, mode = "aanval" of "verdedig"
 
 # Aanvalsrichting (N/O/Z/W) -> seconden dat de rand nog oplicht; gevuld door vijanden die schieten of steken.
 var attack := {"N": 0.0, "O": 0.0, "Z": 0.0, "W": 0.0}
@@ -131,6 +132,22 @@ func reset() -> void:
 	buildings.clear()
 	allies.clear()
 	troop_mode = "follow"
+	order = {"zone": "", "mode": ""}
+
+
+## Stuurt alle soldaten naar een gebied om het aan te vallen of te verdedigen (kaart.gd).
+func set_order(zone: String, mode: String) -> void:
+	order = {"zone": zone, "mode": mode}
+	if gebieden != null and zone != "":
+		gebieden.ensure_spawned(zone)
+	changed.emit()
+
+
+## Soldaten weer met de speler mee.
+func recall() -> void:
+	order = {"zone": "", "mode": ""}
+	troop_mode = "follow"
+	changed.emit()
 
 
 func can_afford_build(c: int) -> bool:

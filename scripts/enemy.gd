@@ -35,6 +35,7 @@ var gate_z := 0.0  # voorkeurspoort (z) om de bunker van twee kanten te nemen; 0
 var retreated := false
 var zone := ""  # gebied dat hij verdedigt (gebieden.gd); leeg = hoort bij de golf
 var post := Vector3.ZERO  # zijn post in dat gebied
+var _foe: Node3D = null  # tegenstander van een verdediger: speler of soldaat
 var awake := false  # alert: hij valt de speler aan zolang die in of vlak bij het gebied is
 var out_t := 0.0
 var path: Array = []  # vaste aanvalsroute (aanval_routes.gd): deze punten eerst aflopen
@@ -84,6 +85,8 @@ func _physics_process(delta: float) -> void:
 	if zone != "":
 		if _guard_idle(delta, player):
 			return
+		if _foe != null:
+			player = _foe  # vooral een soldaat van jou als de speler er niet is (Ally heeft dead, elev en hit)
 	elif _is_far(player):
 		_far_step(delta)
 		return
@@ -229,29 +232,55 @@ var _far_acc := 0.0
 var _far_n := 0
 
 
-## Verdediger van een gebied. Geeft true terug als hij op zijn post blijft of ernaar teruglopen moet (de rest van de stap slaat hij dan over).
+## Wie hij nu aanvalt: de speler als die in het gebied is, anders een soldaat van jou die dichtbij komt.
+func _guard_foe(player: Variant) -> Node3D:
+	var best: Node3D = null
+	var bd := INF
+	if player != null and not player.dead and Gebieden.inside(zone, player.global_position, 16.0 if awake else 4.0):
+		best = player
+		bd = _flat(player.global_position - global_position).length() - 6.0  # de speler gaat voor
+	for a in Game.allies:
+		if not is_instance_valid(a) or a.dead:
+			continue
+		var d := _flat(a.global_position - global_position).length()
+		if d < (26.0 if awake else 20.0) and _flat(a.global_position - post).length() < 32.0 and d < bd:
+			bd = d
+			best = a
+	return best
+
+
+## Verdediger van een gebied. Geeft true terug als hij op zijn post blijft of ernaar terug moet lopen (de rest van de stap slaat hij dan over).
 func _guard_idle(delta: float, player: Variant) -> bool:
-	var to_player := INF
-	var in_zone := false
-	if player != null and not player.dead:
-		to_player = _flat(player.global_position - global_position).length()
-		in_zone = Gebieden.inside(zone, player.global_position, 16.0 if awake else 4.0)
-	if not awake and in_zone and (to_player < 24.0 or alert_t > 0.0):
-		awake = true
-		out_t = 0.0
+	_foe = _guard_foe(player)
+	var to_foe := INF
+	if _foe != null:
+		to_foe = _flat(_foe.global_position - global_position).length()
+	if not awake and _foe != null:
+		if _foe is Ally:
+			awake = true
+		elif to_foe < 30.0 or alert_t > 0.0:
+			awake = true
+		if awake:
+			out_t = 0.0
 	if awake:
-		if in_zone:
+		if _foe != null:
 			out_t = 0.0
 		else:
 			out_t += delta
 			if out_t > 4.0:
 				awake = false
 				mode = "attack"
-	if awake:
+	if awake and _foe != null:
 		_set_far(false)
 		return false
-	# rustig: ver van de speler niet eens tekenen, anders op zijn post staan
-	var far_away: bool = to_player > 90.0
+	# rustig: ver van speler en soldaten niet eens tekenen, anders op zijn post staan
+	var far_away: bool = false
+	if player != null and not player.dead and _flat(player.global_position - global_position).length() > 90.0:
+		far_away = true
+		for a in Game.allies:
+			if is_instance_valid(a) and _flat(a.global_position - global_position).length() < 60.0:
+				far_away = false
+				break
 	_set_far(far_away)
 	var back := _flat(post - global_position)
 	var vel := Vector3.ZERO
@@ -360,6 +389,8 @@ func _shoot(a: float) -> void:
 	var tracer_weapon := weapon_kind if _shot_sequence % tracer_every == 0 else ""
 	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread * _aim_mult(), Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false, false, 0, 0.0, 0.0, rise, tracer_weapon)
 	model.shoot_recoil(weapon_kind)
+	if _foe is Ally and randf() < 0.45:
+		_foe.hit(t.dmg, Vector3(sin(a), 0.0, cos(a)), true)  # kogels raken soldaten niet zelf, dus dit telt hier
 	_shoot_pose_t = 0.24
 	Fx.muzzle(get_parent(), muzzle, weapon_kind, a)
 	var casing_every: int = int(Data.WEAPON_VISUALS[weapon_kind].get("casing_every", 1))
@@ -449,6 +480,10 @@ func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 		return
 	hp -= dmg
 	hurt_t = 0.0
+	if zone != "":
+		awake = true  # beschoten: wakker, en de buren schrikken mee
+		out_t = 0.0
+		Game.alert(global_position, 14.0, 5.0)
 	model.flash(Color(1.0, 0.38, 0.07))
 	model.hit_reaction(dir, clampf(dmg / 55.0, 0.75, 1.7))
 	Sfx.play("splat", 1.0, global_position)

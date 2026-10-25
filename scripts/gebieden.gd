@@ -8,15 +8,15 @@ extends Node3D
 ## rect = x, z, breedte, diepte van het gebied (m); posts = waar de verdedigers staan; kinds = soorten (om beurten).
 ## base = aantal verdedigers op golf 1, het groeit mee met de golf tot maximaal max.
 const ZONES := {
-	"brugkop": {"naam": "BRUGKOP", "rect": Rect2(-16, -112, 32, 16), "base": 3, "max": 6, "kinds": ["knife", "rifle", "rifle"],
+	"brugkop": {"naam": "BRUGKOP", "rect": Rect2(-12, -112, 28, 16), "base": 3, "max": 6, "kinds": ["knife", "rifle", "rifle"],
 		"posts": [Vector3(5, 0, -100), Vector3(-5, 0, -104), Vector3(4, 0, -109), Vector3(-4, 0, -111), Vector3(9, 0, -105), Vector3(-8, 0, -110)]},
-	"woonwijk": {"naam": "WOONWIJK", "rect": Rect2(-46, -138, 34, 34), "base": 4, "max": 9, "kinds": ["rifle", "rifle", "knife", "rocket"],
+	"woonwijk": {"naam": "WOONWIJK", "rect": Rect2(-46, -138, 32, 33), "base": 4, "max": 9, "kinds": ["rifle", "rifle", "knife", "rocket"],
 		"posts": [Vector3(-30, 0, -112), Vector3(-30, 0, -121), Vector3(-22, 0, -108), Vector3(-38, 0, -108), Vector3(-22, 0, -126), Vector3(-38, 0, -126), Vector3(-30, 0, -131), Vector3(-17, 0, -112), Vector3(-45, 0, -122)]},
 	"industrie": {"naam": "INDUSTRIE", "rect": Rect2(30, -122, 32, 26), "base": 4, "max": 9, "kinds": ["knife", "heavy", "rifle", "rifle"],
 		"posts": [Vector3(34, 0, -100), Vector3(40, 0, -101), Vector3(47, 0, -100), Vector3(36, 0, -119), Vector3(48, 0, -119), Vector3(57, 0, -108), Vector3(58, 0, -115), Vector3(34, 0, -108), Vector3(56, 0, -100)]},
-	"kade": {"naam": "KADE", "rect": Rect2(-72, -105, 52, 11), "base": 4, "max": 8, "kinds": ["knife", "knife", "rifle"],
+	"kade": {"naam": "KADE", "rect": Rect2(-72, -104, 52, 10), "base": 4, "max": 8, "kinds": ["knife", "knife", "rifle"],
 		"posts": [Vector3(-62, 0, -100), Vector3(-54, 0, -99), Vector3(-46, 0, -100), Vector3(-38, 0, -99), Vector3(-30, 0, -100), Vector3(-24, 0, -99), Vector3(-66, 0, -102), Vector3(-34, 0, -102)]},
-	"plein": {"naam": "PLEIN", "rect": Rect2(-16, -147, 32, 23), "base": 5, "max": 10, "kinds": ["rifle", "heavy", "knife", "rifle", "rocket"],
+	"plein": {"naam": "PLEIN", "rect": Rect2(-14, -147, 28, 23), "base": 5, "max": 10, "kinds": ["rifle", "heavy", "knife", "rifle", "rocket"],
 		"posts": [Vector3(-8, 0, -128), Vector3(8, 0, -128), Vector3(-6, 0, -141), Vector3(6, 0, -141), Vector3(0, 0, -143), Vector3(-12, 0, -134), Vector3(12, 0, -134), Vector3(-3, 0, -125), Vector3(3, 0, -125), Vector3(0, 0, -138)]},
 }
 
@@ -94,7 +94,7 @@ func _process(delta: float) -> void:
 		var s: Dictionary = state[id]
 		if s.cleared:
 			continue
-		if not s.spawned and dist_to(id, pos) < SPAWN_DIST and (Game.state == "prep" or Game.state == "play"):
+		if not s.spawned and (Game.state == "prep" or Game.state == "play") and (dist_to(id, pos) < SPAWN_DIST or _ally_near(id)):
 			_plan(id)
 		if not s.queue.is_empty():
 			_spawn_one(id)
@@ -123,6 +123,30 @@ func _process(delta: float) -> void:
 			continue
 		_show(id, id == best)
 	_fade(delta)
+
+
+## Staat een soldaat van jou dichtbij dit gebied? Dan worden de verdedigers ook aangemaakt.
+func _ally_near(id: String) -> bool:
+	for a in Game.allies:
+		if is_instance_valid(a) and dist_to(id, a.global_position) < 40.0:
+			return true
+	return false
+
+
+## Verdedigers meteen aanmaken (als je soldaten erheen stuurt).
+func ensure_spawned(id: String) -> void:
+	if state.has(id) and not state[id].spawned and not state[id].cleared:
+		_plan(id)
+
+
+## Hoeveel verdedigers (nog te komen meegeteld); voor een gebied dat nog niet bezet is: het verwachte aantal.
+func count_of(id: String) -> int:
+	var s: Dictionary = state[id]
+	if s.cleared:
+		return 0
+	if not s.spawned:
+		return garrison_size(id, Game.wave)
+	return alive(id) + s.queue.size()
 
 
 func _plan(id: String) -> void:

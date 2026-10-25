@@ -29,6 +29,7 @@ var _zoom_in_button: Button
 var _zoom_out_button: Button
 var _radar: Control
 var _radar_refresh := 0.0
+var _kaart: Kaart
 ## Contacten op de radar: alleen vijanden die je zelf, je torens, je soldaten of de basis kunnen zien.
 ## Een gezien contact blijft nog even (vervagend) staan.
 const RADAR_SIGHT := 38.0  # m rond de speler
@@ -67,6 +68,12 @@ func _ready() -> void:
 	_build_radar()
 	_menu = PauseMenu.new()
 	add_child(_menu)
+	var kaart_layer := CanvasLayer.new()  # boven alle knoppen
+	kaart_layer.layer = 60
+	kaart_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(kaart_layer)
+	_kaart = Kaart.new()
+	kaart_layer.add_child(_kaart)
 	_fps = _shadowed(UI.label("", UI.body(700, 0), 13, UI.GOOD))
 	_fps.position = Vector2(12, 84)
 	add_child(_fps)
@@ -252,12 +259,20 @@ func _build_radar() -> void:
 	_radar.name = "TacticalRadar"
 	_radar.custom_minimum_size = Vector2(132, 144)
 	_radar.size = _radar.custom_minimum_size
-	_radar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_radar.mouse_filter = Control.MOUSE_FILTER_STOP  # tik op de radar = grote kaart
+	_radar.gui_input.connect(_radar_input)
 	_radar.draw.connect(_draw_radar)
 	add_child(_radar)
 	_menu_button.size = Vector2(36, 34)
 	_menu_button.position = Vector2(_radar.size.x - 38.0, 4.0)
 	_radar.add_child(_menu_button)
+
+
+func _radar_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		if (Game.state == "play" or Game.state == "prep") and not Game.build_mode and not Game.editing:
+			_radar.accept_event()
+			_kaart.open()
 
 
 func _radar_point(world_pos: Vector3, area: Rect2) -> Vector2:
@@ -273,7 +288,7 @@ func _draw_radar() -> void:
 	_radar.draw_style_box(UI.box(Color(0.025, 0.045, 0.035, 0.9), Color(UI.PANEL_LINE, 0.82), 1, 6, 0), bounds)
 	var head := 22.0 if _radar.size.x >= 110.0 else 16.0
 	if head > 6.0:
-		_radar.draw_string(UI.body(700, 0), Vector2(7, 14), "CONTACTEN" if _radar.size.x >= 110.0 else "RADAR", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK_DIM)
+		_radar.draw_string(UI.body(700, 0), Vector2(7, 14), "KAART" if _radar.size.x >= 110.0 else "KAART", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK_DIM)
 	if _radar.size.x >= 88.0:
 		var north_x := _radar.size.x * 0.5
 		_radar.draw_string(UI.body(700, 0), Vector2(north_x - 4.0, 13.0), "N", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK)

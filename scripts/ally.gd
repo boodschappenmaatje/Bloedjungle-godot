@@ -16,6 +16,8 @@ var idx := 0
 var fire_t := 0.5
 var _shooting := false
 var _shot_sequence := 0
+var dead := false   # zoals bij de speler: vijanden mikken op hem en gebruiken dit
+var elev := 0.0
 var truck: Node = null  # vrachtwagen die hem vervoert; die bepaalt dan waar hij is en wat hij doet
 
 
@@ -37,6 +39,21 @@ func setup(hp_: float, dmg_: float, index: int) -> void:
 	model.setup(Color("5a6a36"), "thompson")
 	model.scale = Vector3.ONE * Data.SOLDIER_SCALE
 	rotation.y = face
+
+
+## Geraakt door een vijand (verdediger van een gebied of een mes).
+func hit(dmg_: float, dir: Vector3, _ranged: bool) -> void:
+	if dead:
+		return
+	hp -= dmg_
+	model.flash(Color(1.0, 0.38, 0.07))
+	Fx.blood(get_parent(), global_position + Vector3.UP * 1.2, dir, 8, Color(0.55, 0.05, 0.04))
+	if hp <= 0.0:
+		dead = true
+		Game.allies.erase(self)
+		Game.banner.emit("SOLDAAT GESNEUVELD", "", 1.2)
+		Game.changed.emit()
+		queue_free()
 
 
 func set_level(hp_: float, dmg_: float) -> void:
@@ -62,7 +79,10 @@ func _physics_process(delta: float) -> void:
 	var to_goal := Vector2(goal.x - global_position.x, goal.z - global_position.z)
 	var want := Vector3.ZERO
 	var moving := false
-	if to_goal.length() > (0.6 if Game.troop_mode == "hold" else 2.2):
+	var stop := 0.6 if Game.troop_mode == "hold" else 2.2
+	if Game.order.zone != "":
+		stop = _order_stop()
+	if to_goal.length() > stop:
 		var wp := Route.waypoint(global_position, goal)
 		var d := Vector2(wp.x - global_position.x, wp.z - global_position.z)
 		if d.length() > 0.05:
@@ -91,7 +111,36 @@ func _physics_process(delta: float) -> void:
 		model.play("stil")
 
 
+## Bevel van de kaart: bij aanval loopt hij op de dichtstbijzijnde verdediger af en stopt op schietafstand,
+## bij verdedigen (en als het gebied vrij is) neemt hij een plek in het midden van het gebied.
+func _order_goal() -> Vector3:
+	var id: String = Game.order.zone
+	var c := Gebieden.center(id)
+	if Game.order.mode == "aanval" and Game.gebieden != null and not Game.gebieden.is_cleared(id):
+		var best: Variant = null
+		var bd := INF
+		for g in Game.gebieden.state[id].guards:
+			if is_instance_valid(g) and not g.dead:
+				var d: float = g.global_position.distance_to(global_position)
+				if d < bd:
+					bd = d
+					best = g
+		if best != null:
+			return best.global_position
+	var a := float(idx) * 2.4 + 0.6
+	return c + Vector3(cos(a), 0, sin(a)) * 3.2
+
+
+func _order_stop() -> float:
+	var id: String = Game.order.zone
+	if Game.order.mode == "aanval" and Game.gebieden != null and not Game.gebieden.is_cleared(id):
+		return 9.0
+	return 1.2
+
+
 func _goal() -> Vector3:
+	if Game.order.zone != "":
+		return _order_goal()
 	if Game.troop_mode == "hold":
 		var p: Vector2 = POSTS[idx % POSTS.size()] * (Data.COMPOUND / 14.0)
 		return Vector3(p.x, 0, p.y)

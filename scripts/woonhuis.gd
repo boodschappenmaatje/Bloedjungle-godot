@@ -385,13 +385,9 @@ func _exit_tree() -> void:
 
 # ---------------------------------------------------------------- schaduw: één stuk per heel gebouw
 
-## Een heel gebouw bestaat uit honderden losse stukjes (muurstukken voor het slopen, kozijnen, meubels), en elk stukje
-## kost in de schaduwkaart een eigen tekenopdracht. Zolang het gebouw heel is en je er niet in staat, werpt één
-## samengevoegde vorm (precies dezelfde driehoeken) de schaduw; de stukjes zelf niet. Zo ziet de schaduw er hetzelfde uit,
-## maar tekent de iPhone in de stad een paar honderd keer minder per beeld. Bij schade of binnen: weer de losse stukjes.
-static var _proxy_cache := {}   # soort -> {mesh, n}
-var _proxy: MeshInstance3D
-var _proxy_parts: Array[MeshInstance3D] = []   # stukjes die hun schaduw nu aan _proxy overlaten
+## Zolang het gebouw heel is en je er niet in staat, werpt één samengevoegde vorm de schaduw (zie shadow_proxy.gd).
+## Bij schade of binnen: weer de losse stukjes.
+var _proxy: ShadowProxy
 var _proxy_broken := false
 
 
@@ -403,102 +399,27 @@ func _shadow_proxy() -> void:
 		skip.append(c[0])
 	for pm in pumps:
 		skip.append((pm as Node).get_parent())
-	var parts: Array[MeshInstance3D] = []
-	for mi: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
-		if mi.mesh == null or not mi.is_visible_in_tree() or mi.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_ON:
-			continue
-		if mi.skin != null or skip.any(func(n): return n is Node and (n == mi or (n as Node).is_ancestor_of(mi))):
-			continue
-		if _proxy_ok(mi):
-			parts.append(mi)
-	if parts.size() < 8:
-		return
-	var cached: Dictionary = _proxy_cache.get(kind, {})
-	if cached.is_empty() or int(cached.n) != parts.size():
-		cached = {"mesh": _merge_shadow(parts), "n": parts.size()}
-		_proxy_cache[kind] = cached
-	_proxy = MeshInstance3D.new()
-	_proxy.name = "Schaduw"
-	_proxy.mesh = cached.mesh
-	_proxy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
-	add_child(_proxy)
-	_proxy_parts = parts
-	_proxy_on(true)
+	_proxy = ShadowProxy.make(self, model, kind, skip)
+	_apply_shadow()
 
 
-## Alleen stukjes waarvan elk vlak een gewoon, dicht materiaal heeft: doorzichtig glas werpt in Godot geen schaduw,
-## maar uitgeknipte delen (hekwerk, blad) of eigen shaders moeten hun eigen schaduw blijven tekenen.
-static func _proxy_ok(mi: MeshInstance3D) -> bool:
-	for i in mi.mesh.get_surface_count():
-		if mi.mesh.surface_get_primitive_type(i) != Mesh.PRIMITIVE_TRIANGLES:
-			return false
-		var m := mi.get_active_material(i)
-		if m == null:
-			continue
-		if not (m is BaseMaterial3D):
-			return false
-		var b := m as BaseMaterial3D
-		if b.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA:
-			continue
-		if b.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED or b.cull_mode == BaseMaterial3D.CULL_FRONT \
-				or b.billboard_mode != BaseMaterial3D.BILLBOARD_DISABLED or b.grow or b.use_point_size:
-			return false
-	return true
-
-
-## Alle dichte vlakken samen, in de ruimte van het gebouw: één vlak voor enkelzijdig en één voor dubbelzijdig materiaal.
-func _merge_shadow(parts: Array[MeshInstance3D]) -> ArrayMesh:
-	var inv := global_transform.affine_inverse()
-	var buckets := [[PackedVector3Array(), PackedVector3Array(), PackedInt32Array()], [PackedVector3Array(), PackedVector3Array(), PackedInt32Array()]]
-	for mi in parts:
-		var xf: Transform3D = inv * mi.global_transform
-		var nb := xf.basis.inverse().transposed()
-		for i in mi.mesh.get_surface_count():
-			var m := mi.get_active_material(i) as BaseMaterial3D
-			if m != null and m.transparency == BaseMaterial3D.TRANSPARENCY_ALPHA:
-				continue
-			var two := m != null and m.cull_mode == BaseMaterial3D.CULL_DISABLED
-			var bk: Array = buckets[1 if two else 0]
-			var arr := mi.mesh.surface_get_arrays(i)
-			var v: PackedVector3Array = arr[Mesh.ARRAY_VERTEX]
-			var nrm = arr[Mesh.ARRAY_NORMAL]
-			var idx = arr[Mesh.ARRAY_INDEX]
-			var base: int = (bk[0] as PackedVector3Array).size()
-			for j in v.size():
-				bk[0].append(xf * v[j])
-				bk[1].append((nb * (nrm[j] as Vector3)).normalized() if nrm != null and j < nrm.size() else Vector3.UP)
-			if idx != null and (idx as PackedInt32Array).size() > 0:
-				for k in idx:
-					bk[2].append(base + int(k))
-			else:
-				for k in v.size():
-					bk[2].append(base + k)
-	var out := ArrayMesh.new()
-	for b in 2:
-		var bk: Array = buckets[b]
-		if (bk[2] as PackedInt32Array).is_empty():
-			continue
-		var a := []
-		a.resize(Mesh.ARRAY_MAX)
-		a[Mesh.ARRAY_VERTEX] = bk[0]
-		a[Mesh.ARRAY_NORMAL] = bk[1]
-		a[Mesh.ARRAY_INDEX] = bk[2]
-		out.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, a)
-		if b == 1:
-			var two_mat := StandardMaterial3D.new()
-			two_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-			out.surface_set_material(out.get_surface_count() - 1, two_mat)
-	return out
-
-
-func _proxy_on(on: bool) -> void:
+## Instelling "Gebouwschaduw": laag = geen schaduw van gebouwen, midden = één samengevoegde vorm per heel gebouw (zelfde
+## uiterlijk als hoog), hoog = elk los stukje werpt zelf schaduw (het zwaarst).
+func _apply_shadow() -> void:
 	if _proxy == null:
 		return
-	on = on and not _proxy_broken
-	_proxy.visible = on
-	for mi in _proxy_parts:
-		if is_instance_valid(mi):
-			mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF if on else GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	match GameSettings.get_value("buildshadow"):
+		"low":
+			_proxy.set_mode(0)
+		"high":
+			_proxy.set_mode(2)
+		_:
+			_proxy.set_mode(1 if _inside < 0 and not _proxy_broken else 2)
+
+
+static func apply_shadow_setting() -> void:
+	for h: Woonhuis in all:
+		h._apply_shadow()
 
 
 ## Iets kapot of ingestort: vanaf nu weer de losse stukjes (die laten precies zien wat er nog staat).
@@ -506,7 +427,7 @@ func _shadow_broken() -> void:
 	if _proxy_broken:
 		return
 	_proxy_broken = true
-	_proxy_on(false)
+	_apply_shadow()
 
 
 # ---------------------------------------------------------------- avond en nacht
@@ -947,7 +868,7 @@ func _process(delta: float) -> void:
 
 
 func _apply_view() -> void:
-	_proxy_on(_inside < 0)
+	_apply_shadow()
 	for s in _hidden:
 		_show_seg(s, true)
 	_hidden.clear()

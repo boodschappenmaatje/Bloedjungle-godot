@@ -26,6 +26,8 @@ func _initialize() -> void:
 	GameSettings.set_value("quality", OS.get_environment("BJ_QUALITY") if OS.has_environment("BJ_QUALITY") else "ultra")
 	GameSettings.set_value("treeshadow", OS.get_environment("BJ_TREESHADOW") if OS.has_environment("BJ_TREESHADOW") else "real")
 	GameSettings.set_value("wind", "on")
+	if OS.has_environment("BJ_BUILDSHADOW"):
+		GameSettings.set_value("buildshadow", OS.get_environment("BJ_BUILDSHADOW"))
 	order = spots.keys()
 	if OS.has_environment("BJ_SPOTS"):
 		order = Array(OS.get_environment("BJ_SPOTS").split(","))

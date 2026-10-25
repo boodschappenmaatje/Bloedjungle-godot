@@ -297,6 +297,21 @@ var _hidden: Array = []     # muurstukken die nu voor de camera weg zijn
 var pumps: Array = []       # pompen en olievaten (benzinestation)
 var _covers: Array = []     # [knooppunt, rechthoek]: gaat weg als je eronder staat (luifel)
 var _meubels: Array = []    # {body, group, level}: botsvormen van de inrichting (zie _furniture)
+var _pillars: Dictionary = {}   # regelvoorvoegsel ("M0") -> dragende hoekstukken
+var _warn := 0.0            # > 0: het gebouw kraakt en stort over zoveel seconden in
+var _warn_tick := 0.0
+var _pending: Dictionary = {}   # de instortingsregel die na het kraken wordt uitgevoerd
+
+## Snel slopen (dragende hoeken, kettingreactie, kraken, sterkere explosies). Uit = de oude regels, voor regressietests.
+static var fast := true
+
+const WARN_TIME := 1.5          # kraken voor de instorting: tijd om weg te rennen
+const PILLAR_WEAK := 0.7        # dragende hoeken hebben zo'n deel van de levens van een gewone muur
+const PILLAR_NEED := 2          # zoveel gescheurde hoeken laten de laag instorten
+const SPREAD_SIDE := 0.4        # een weggeslagen muur doet dit deel van de levens van zijn buren af
+const SPREAD_UP := 0.45         # en van de muren erboven (steun weg)
+const BLAST_BOOST := 3.0        # explosies doen zoveel keer zoveel schade aan muren als de ruwe schade
+const BLAST_REACH := 1.5        # en reiken zoveel verder
 
 
 ## Zet een huis neer in de wereld (Level), yaw in radialen.
@@ -346,6 +361,9 @@ func _ready() -> void:
 			pumps.append(Pomp.attach(self, n, heel, kapot))
 			continue
 		_add_seg(n, heel, kapot)
+	for rule: Dictionary in spec.collapse:
+		if fast and int(rule.need) >= 4:
+			_pillars_for(rule.pre)
 	for c in spec.get("covers", []):
 		var cn: Node3D = model.find_child(c[0], true, false)
 		if cn:
@@ -377,10 +395,49 @@ func _add_seg(n: Node3D, heel: MeshInstance3D, kapot: MeshInstance3D) -> void:
 	var hp: float = spec.get("hp", {}).get(kind, HP.get(kind, 200.0))
 	var s := {"name": String(n.name), "node": n, "heel": heel, "kapot": kapot, "body": body, "cs": cs,
 		"shape_heel": sh_heel, "shape_kapot": null, "hp": hp, "max": hp, "staat": 0,
-		"floor": _seg_floor(String(n.name))}
+		"floor": _seg_floor(String(n.name)), "box": _local_box(heel), "pillar": false}
 	body.house = self
 	body.seg = s
 	segs.append(s)
+
+
+## Omhullende van een muurstuk in de ruimte van dit gebouw.
+func _local_box(mi: MeshInstance3D) -> AABB:
+	return (global_transform.affine_inverse() * mi.global_transform) * mi.get_aabb()
+
+
+## Dragende delen van een laag (regelvoorvoegsel zoals "M0"): het muurstuk dat het dichtst bij elke hoek van die laag zit.
+## Zijn er twee van gescheurd, dan zakt de laag in; ze zijn zwakker dan een gewone muur.
+func _pillars_for(pre: String) -> Array:
+	if _pillars.has(pre):
+		return _pillars[pre]
+	var list: Array = segs.filter(func(x): return String(x.name).begins_with(pre))
+	var out: Array = []
+	if not list.is_empty():
+		var lo := Vector2(INF, INF)
+		var hi := Vector2(-INF, -INF)
+		for x in list:
+			var c: Vector3 = (x.box as AABB).get_center()
+			lo = Vector2(minf(lo.x, c.x), minf(lo.y, c.z))
+			hi = Vector2(maxf(hi.x, c.x), maxf(hi.y, c.z))
+		for corner in [lo, hi, Vector2(lo.x, hi.y), Vector2(hi.x, lo.y)]:
+			var best: Dictionary = list[0]
+			var bd := INF
+			for x in list:
+				var c2: Vector3 = (x.box as AABB).get_center()
+				var d := Vector2(c2.x, c2.z).distance_squared_to(corner)
+				if d < bd:
+					bd = d
+					best = x
+			if not out.has(best):
+				out.append(best)
+		for x in out:
+			if not x.pillar:
+				x.pillar = true
+				x.hp *= PILLAR_WEAK
+				x.max *= PILLAR_WEAK
+	_pillars[pre] = out
+	return out
 
 
 func _bullet_impact_material(segment_name: String) -> String:
@@ -684,6 +741,7 @@ func _in_ext(lp: Vector3) -> bool:
 # ---------------------------------------------------------------- zicht: dak, verdieping en de muren voor de camera
 
 func _process(delta: float) -> void:
+	_tick_warn(delta)
 	var p = Game.player
 	var where := -1
 	if p != null and not p.driving:
@@ -765,14 +823,16 @@ static func blast_all(at: Vector3, radius: float, dmg: float) -> void:
 func blast(at: Vector3, radius: float, dmg: float) -> void:
 	if _ruin:
 		return
+	var reach := radius * (BLAST_REACH if fast else 1.0)
+	var boost := BLAST_BOOST if fast else 2.2
 	for s in segs.duplicate():
 		if s.staat >= 2:
 			continue
 		var aabb: AABB = (s.heel as MeshInstance3D).global_transform * (s.heel as MeshInstance3D).get_aabb()
 		var closest := at.clamp(aabb.position, aabb.end)
 		var d := closest.distance_to(at)
-		if d < radius:
-			damage(s, dmg * 2.2 * (1.0 - d / radius), at)
+		if d < reach:
+			damage(s, dmg * boost * (1.0 - d / reach), at)
 	if _dak_heel and _dak.visible and not _ruin:
 		var top := to_global(spec.roof_c)
 		if Vector2(at.x - top.x, at.z - top.z).length() < spec.roof_r and at.y > spec.roof_y:
@@ -790,12 +850,45 @@ func damage(s: Dictionary, dmg: float, from := Vector3.INF) -> void:
 		_set_state(s, 1)
 		_chunks(s, 3)
 		Sfx.play("thud", 0.8, c)
+		if s.pillar:
+			_check_collapse()   # een gescheurde dragende hoek kan het gebouw al laten kraken
 	if s.hp <= 0.0:
 		_set_state(s, 2)
 		_chunks(s, 5)
 		_rubble(s)
 		Sfx.play("thud", 1.0, c)
+		_spread(s)
 		_check_collapse()
+
+
+## Een weggeslagen muurstuk laat het metselwerk eromheen scheuren: buren in dezelfde laag en de muren erboven die erop
+## rustten verliezen levens (kettingreactie). Een dragende hoek doet meer.
+func _spread(s: Dictionary) -> void:
+	if not fast:
+		return
+	var nm := String(s.name)
+	if not (nm.begins_with("M") or nm.begins_with("S")):
+		return
+	var box: AABB = s.box
+	var side := box.grow(0.5)
+	var up := box
+	up.position.y -= 50.0
+	up.size.y += 100.0
+	up = up.grow(0.3)
+	var k := 1.5 if s.pillar else 1.0
+	for n in segs:
+		if n == s or n.staat >= 2:
+			continue
+		var on := String(n.name)
+		if not (on.begins_with("M") or on.begins_with("S")):
+			continue
+		var frac := 0.0
+		if n.floor == s.floor and side.intersects(n.box):
+			frac = SPREAD_SIDE
+		elif n.floor == int(s.floor) + 1 and up.intersects(n.box):
+			frac = SPREAD_UP
+		if frac > 0.0:
+			damage(n, float(n.max) * frac * k, _center(s))
 
 
 func _set_state(s: Dictionary, st: int) -> void:
@@ -925,7 +1018,7 @@ func _roof_state(st: int) -> void:
 ## Te veel muren van een laag weg: alles erboven zakt in. Bij de winkel stort dan het hele gebouw in, bij de kerk
 ## de toren of het schip.
 func _check_collapse() -> void:
-	if _ruin:
+	if _ruin or _warn > 0.0:
 		return
 	for rule: Dictionary in spec.collapse:
 		if rule.has("fall") and int(rule.fall) >= _fall:
@@ -934,16 +1027,118 @@ func _check_collapse() -> void:
 			continue
 		var pre: String = rule.pre
 		var gone := segs.filter(func(x): return String(x.name).begins_with(pre) and x.staat >= 2).size()
-		if gone < int(rule.need):
+		var weak := 0
+		if fast and int(rule.need) >= 4:
+			weak = _pillars_for(pre).filter(func(x): return x.staat >= 1).size()
+		if gone < int(rule.need) and weak < PILLAR_NEED:
 			continue
-		if rule.has("ruin"):
-			if rule.ruin == "all":
-				_ruin_all()
-			else:
-				_ruin_part(rule.ruin)
-		else:
-			_fall_from(int(rule.fall))
+		if not fast:
+			_collapse(rule)
+			return
+		_pending = rule
+		_warn = WARN_TIME
+		_warn_tick = 0.0
+		Game.banner.emit("HET GEBOUW KRAAKT!", "RENNEN!", 1.3)
+		_creak()
 		return
+
+
+## Kraken voor de instorting: stof valt uit de muren, het gebouw trilt en de camera schudt.
+func _creak() -> void:
+	Sfx.play("thud", 0.7, global_position)
+	_shake(0.012)
+	var list := segs.filter(func(x): return x.staat < 2 and String(x.name).begins_with(String(_pending.pre)))
+	for i in mini(3, list.size()):
+		var x: Dictionary = list[randi() % list.size()]
+		Fx.dust(get_parent(), _center(x) + Vector3(randf_range(-0.5, 0.5), randf_range(-0.6, 0.6), 0))
+
+
+func _shake(strength: float) -> void:
+	var p = Game.player
+	if p == null or not is_instance_valid(p) or p.global_position.distance_to(global_position) > 40.0:
+		return
+	var camera: Node = p.get_parent().get_node_or_null("Camera")
+	if camera and camera.has_method("combat_impulse"):
+		camera.call("combat_impulse", strength)
+
+
+func _tick_warn(delta: float) -> void:
+	if _warn <= 0.0:
+		return
+	_warn -= delta
+	_warn_tick += delta
+	if _warn_tick >= 0.3:
+		_warn_tick = 0.0
+		_creak()
+	if _warn <= 0.0:
+		_warn = 0.0
+		var rule := _pending
+		_pending = {}
+		_collapse(rule)
+		_check_collapse()   # meteen de volgende laag als die ook al gescheurd is
+
+
+## De instorting zelf: schokgolf, bedolven vijanden, en dan het gebouw (of een deel of laag) laten zakken.
+func _collapse(rule: Dictionary) -> void:
+	if _ruin:
+		return
+	var c := to_global(spec.get("fall_c", Vector3.ZERO))
+	var span := maxf(float(spec.hx), float(spec.hz))
+	var buried := 0
+	if fast:
+		buried = _bury(rule)
+		Game.note_blast(c, 5.0 + span * 0.6)   # auto's in de buurt raken beschadigd, wie net buiten staat schrikt
+	if rule.has("ruin"):
+		if rule.ruin == "all":
+			_ruin_all()
+		else:
+			_ruin_part(rule.ruin)
+	else:
+		_fall_from(int(rule.fall))
+	if fast:
+		_dust_wave(c, span)
+		_shake(0.05)
+	if buried > 0:
+		Game.add_points(40 * buried)
+		get_tree().create_timer(1.2).timeout.connect(func(): Game.banner.emit("BEDOLVEN x%d" % buried, "+%d punten" % (40 * buried), 1.3))
+
+
+## Vijanden onder het deel dat instort: bij een ruïne is het meestal raak, bij een zakkende verdieping overleven alleen de zwaarsten.
+func _bury(rule: Dictionary) -> int:
+	var n := 0
+	var lethal: bool = rule.has("ruin")
+	for e in Game.enemies.duplicate():
+		if not is_instance_valid(e) or e.dead:
+			continue
+		var lp := to_local(e.global_position)
+		var under := false
+		if rule.has("ruin") and rule.ruin != "all":
+			under = _in_rect(spec.parts[rule.ruin].rect, lp, 0.6)
+		elif rule.has("fall"):
+			var fc: Vector3 = spec.get("fall_c", Vector3.ZERO)
+			var fr: Vector2 = spec.get("fall_r", Vector2(spec.hx, spec.hz))
+			under = absf(lp.x - fc.x) < fr.x and absf(lp.z - fc.z) < fr.y
+		else:
+			under = _in_foot(lp, 0.8)
+		if not under:
+			continue
+		var away: Vector3 = e.global_position - global_position
+		away.y = 0.0
+		e.hit(9999.0 if lethal else 160.0, away.normalized() if away.length() > 0.1 else Vector3.BACK, true)
+		n += 1
+	return n
+
+
+## Een ring stof die in drie golven over de straat rolt.
+func _dust_wave(c: Vector3, span: float) -> void:
+	for w in 3:
+		get_tree().create_timer(0.18 * w).timeout.connect(func():
+			if not is_inside_tree():
+				return
+			for i in 6:
+				var a := TAU * (float(i) / 6.0 + w * 0.08)
+				var r := span + 0.8 + w * 1.6
+				Fx.dust(get_parent(), c + Vector3(cos(a) * r, 0.3, sin(a) * r)))
 
 
 ## Verdieping k en alles erboven zakt in: vloeren kapot, inrichting weg, muren erboven kapot of weg, dak weg.

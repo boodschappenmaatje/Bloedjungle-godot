@@ -13,6 +13,10 @@ const ROWS := [
 	["buildshadow", "Gebouwschaduw", [["low", "Laag"], ["medium", "Midden"], ["high", "Hoog"]]],
 	["hz", "Beeldsnelheid", [["60", "60 fps"], ["120", "120 fps"]]],
 	["fps", "FPS-teller", [["off", "Uit"], ["on", "Aan"]]],
+	["t_sun", "Test: zon-schaduw", [["on", "Aan"], ["off", "Uit"]]],
+	["t_jungle", "Test: jungle (bomen, gras)", [["on", "Aan"], ["off", "Uit"]]],
+	["t_stad", "Test: stad zien", [["on", "Aan"], ["off", "Uit"]]],
+	["t_post", "Test: mist, gloed, scherptediepte", [["on", "Aan"], ["off", "Uit"]]],
 	["perf", "Prestatiemodus", [["off", "Uit"], ["on", "Aan"]]],
 ]
 const NOTES := {

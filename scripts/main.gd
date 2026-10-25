@@ -100,10 +100,37 @@ func _warm_up() -> void:
 	Fx.burning(warm, at + Vector3(2, 0, 0), true)
 	Bullet.fire(warm, at + Vector3.UP, 0.0, 10.0, 0.0, 0.5, true)
 	Bullet.fire_rocket(warm, at + Vector3(0, 1, 2), 0.0, 0.0, 0.4)
-	for _f in 8:
-		await get_tree().process_frame
+	Fx.flame(warm, at + Vector3(-2, 0, 0), 1.5, true)
+	Fx.embers(warm, at + Vector3(-2, 0, 0))
+	Fx.spark(warm, at, Vector3.UP)
+	Fx.casing(warm, at + Vector3.UP)
+	Fx.rocket_launch(warm, at + Vector3(1, 1, 0), 0.0)
+	Fx.wreck(warm, at + Vector3(3, 0, 0))
+	Fx.crater(warm, at + Vector3(0, 0, 2), 1.0, true)  # kraters krijgen hun eigen shader; in de basis zelf komt er geen
+	await _settle(8)
 	warm.queue_free()
 	Game.enemies.clear()
+
+
+## Wacht tot Godot geen nieuwe shader-pipelines meer compileert (minstens min_frames beelden, hooguit ~4 s).
+func _settle(min_frames: int) -> void:
+	var last := -1
+	var calm := 0
+	for f in 240:
+		await get_tree().process_frame
+		var n := _pipeline_compiles()
+		calm = calm + 1 if n == last else 0
+		last = n
+		if f >= min_frames and calm >= 4:
+			return
+
+
+static func _pipeline_compiles() -> int:
+	var n := 0
+	for k in [RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_MESH, RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SURFACE,
+			RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_DRAW, RenderingServer.RENDERING_INFO_PIPELINE_COMPILATIONS_SPECIALIZATION]:
+		n += RenderingServer.get_rendering_info(k)
+	return n
 
 
 func _start_prep() -> void:

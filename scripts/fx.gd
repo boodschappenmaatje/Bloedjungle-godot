@@ -1047,8 +1047,8 @@ static var _crater_mat: ShaderMaterial
 
 ## Een explosie op de grond laat een blijvende krater achter: zwartgeblakerde bodem, opgeworpen rand, wat aardkluiten en kort wat nagloeiende hitte.
 ## Niet in de rivier, op een bouwwerk, de muur of de bunker.
-static func crater(parent: Node, pos: Vector3, scale: float) -> void:
-	if scale < 0.5 or not _crater_ok(pos):
+static func crater(parent: Node, pos: Vector3, scale: float, force := false) -> void:
+	if scale < 0.5 or not (force or _crater_ok(pos)):
 		return
 	var n := 1 + randi() % 3
 	if not _crater_mesh.has(n):

@@ -15,6 +15,7 @@ const DEFS := {
 	"knife": {"f": 900, "d": 0.1, "v": 0.4, "b": 0}, "thud": {"f": 400, "d": 0.15, "v": 0.5, "b": 60},
 	"sentry": {"f": 2500, "d": 0.11, "v": 0.3, "b": 0}, "ping": {"f": 4200, "d": 0.05, "v": 0.18, "b": 0}, "gate": {"f": 520, "d": 0.6, "v": 0.3, "b": 46},
 	"spuit": {"f": 5200, "d": 1.1, "v": 0.5, "b": 0},
+	"claxon": {"f": 900, "d": 0.45, "v": 0.5, "b": 0, "tone": 410.0}, "alarm": {"f": 900, "d": 0.3, "v": 0.45, "b": 0, "tone": 1250.0},
 }
 const VOICES := 20
 const MASTER := 0.6
@@ -82,6 +83,10 @@ func _make(s: Dictionary) -> AudioStreamWAV:
 			var fr: float = s.b * 2.0 * pow(0.25, minf(1.0, t / (s.d * 0.6)))
 			phase += TAU * fr / RATE
 			v += sin(phase) * s.v * 0.9 * (pow(0.001, minf(1.0, t / (s.d * 0.7))) if t < s.d * 0.7 else 0.0)
+		var tone: float = s.get("tone", 0.0)
+		if tone > 0.0:   # toeter en alarm: een toon met een boventoon die aan- en uitzwelt
+			var te := clampf(minf(t * 60.0, (s.d - t) * 40.0), 0.0, 1.0)
+			v = lp * 0.2 * s.v * te + (sin(TAU * tone * t) + 0.5 * sin(TAU * tone * 2.01 * t)) * s.v * 0.5 * te
 		data.encode_s16(i * 2, clampi(roundi(tanh(v * 0.8) * 32000.0), -32768, 32767))
 	var w := AudioStreamWAV.new()
 	w.format = AudioStreamWAV.FORMAT_16_BITS

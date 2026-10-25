@@ -365,26 +365,8 @@ func _prop(kind: String) -> Node3D:
 	elif kind == "lantaarn":
 		return Lantaarn.new()
 	elif kind.begins_with("auto"):
-		_car(root, kind)
+		return Auto.make(kind, int(roundf(float(kind.hash() % 97) + float(get_child_count()) * 3.0)))
 	return root
-
-
-func _car(root: Node3D, kind: String) -> void:
-	var seed_ := absi(int(root.get_instance_id()) % 4)
-	var colors: Array = [Color("8a2a24"), Color("3c5a7c"), Color("c9c2a8"), Color("4a5a3a")]
-	var body_col: Color = colors[seed_]
-	if kind != "auto":
-		body_col = Color("25221f")
-	var body := Kit.flat(body_col, 0.5, 0.3)
-	var glass := Kit.flat(Color("151a1c") if kind == "auto" else Color("0c0c0b"), 0.2)
-	Kit.box(root, Vector3(0, 0.35, 0), Vector3(1.9, 0.7, 4.3), body, 0.0, Kit.LAYER_WALL)
-	Kit.box(root, Vector3(0, 1.0, -0.2), Vector3(1.7, 0.6, 2.2), glass)
-	Kit.box(root, Vector3(0, 1.58, -0.2), Vector3(1.6, 0.06, 2.0), body)
-	for sx in [-1, 1]:
-		for z in [-1.4, 1.4]:
-			Kit.box(root, Vector3(sx * 0.95, 0, z), Vector3(0.28, 0.6, 0.62), Kit.flat(Color("101010"), 0.9))
-	if kind == "autobrand":
-		Fx.burning(root, Vector3.ZERO, true).position = Vector3(0, 0.8, 0)
 
 
 # ---------------------------------------------------------------- wegen

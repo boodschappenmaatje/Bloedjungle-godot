@@ -33,6 +33,8 @@ var alert_t := 0.0
 var flank_left := 7.0
 var gate_z := 0.0  # voorkeurspoort (z) om de bunker van twee kanten te nemen; 0 = klaar of niet van toepassing
 var retreated := false
+var path: Array = []  # vaste aanvalsroute (aanval_routes.gd): deze punten eerst aflopen
+var path_i := 0
 var stun_t := 0.0  # geschrokken van een explosie: even stilstaan
 var _shoot_pose_t := 0.0
 var _shot_sequence := 0
@@ -114,6 +116,8 @@ func _physics_process(delta: float) -> void:
 		move_goal = player.global_position + Vector3(side.x + away.x * 0.3, 0.0, side.y + away.y * 0.3) * 9.0
 		flank_left -= delta
 		flanking = true
+	elif not at_player and rb == null and _route_goal() != null:
+		move_goal = _route_goal()
 	elif not at_player and rb == null and gate_z != 0.0:
 		# om beurten de noord- en zuidpoort nemen, zodat niet iedereen door dezelfde opening komt
 		var gp := Vector3(0.0, 0.0, gate_z)
@@ -216,6 +220,16 @@ var _far_acc := 0.0
 var _far_n := 0
 
 
+## Het volgende punt van de vaste aanvalsroute, of null als hij de route af heeft.
+func _route_goal() -> Variant:
+	while path_i < path.size():
+		var p: Vector3 = path[path_i]
+		if _flat(p - global_position).length() > 3.0:
+			return p
+		path_i += 1
+	return null
+
+
 ## Ver van de speler en ver van de basis: niemand ziet hem, dus hij rekent maar af en toe en loopt rechtstreeks.
 func _is_far(player: Variant) -> bool:
 	if player == null or player.dead or slow_t > 0.0:
@@ -241,7 +255,8 @@ func _far_step(delta: float) -> void:
 	_far_n += 1
 	if _far_n % 4 != 0:
 		return
-	var wp := Route.waypoint(global_position, Vector3.ZERO)
+	var rg: Variant = _route_goal()
+	var wp := Route.waypoint(global_position, rg if rg != null else Vector3.ZERO)
 	var d := _flat(wp - global_position)
 	if d.length() > 0.05:
 		var v: Vector2 = d.normalized() * float(t.speed) * speed_mul * _far_acc

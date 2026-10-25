@@ -109,6 +109,7 @@ func _warm_up() -> void:
 func _start_prep() -> void:
 	Barrel.populate(self)  # opgeblazen vaten komen elke golf terug
 	Game.wave += 1
+	Game.routes = AanvalRoutes.pick(Game.wave)  # de pijlen tonen al tijdens de pauze waar ze vandaan komen
 	Game.state = "prep"
 	Game.prep_t = GameSettings.prep_time()
 	Game.changed.emit()
@@ -123,7 +124,7 @@ func start_wave() -> void:
 	queue = Data.build_wave(Game.wave)
 	spawn_t = 0.5
 	clear_t = -1.0
-	Game.banner.emit("GOLF %d BEGONNEN" % Game.wave, "", 1.5)
+	Game.banner.emit("GOLF %d BEGONNEN" % Game.wave, "Ze komen " + AanvalRoutes.describe(Game.routes), 1.5)
 	Game.changed.emit()
 
 
@@ -154,13 +155,13 @@ func _spawn(kind: String) -> void:
 	if kind == "rocket" and not Game.rocket_seen:
 		Game.rocket_seen = true
 		Game.banner.emit("RAKETWERPERS", "Ze schieten je gebouwen kapot", 2.5)
-	if randf() < 0.4:
-		# ruim een derde komt van voorbij de rivier en moet door het bos en over de brug of door de ondiepte
-		var x := randf_range(-60.0, 60.0)
-		e.position = Vector3(x, 0, Data.river_z(x) - 14.0)
-	else:
+	if Game.routes.is_empty():
 		var a := randf() * TAU
 		e.position = Vector3(cos(a), 0, sin(a)) * Data.SPAWN_R
+	else:
+		# elke vijand loopt een van de vaste routes van deze golf
+		e.path = AanvalRoutes.path_for(Game.routes.pick_random())
+		e.position = AanvalRoutes.spawn_at(e.path)
 	add_child(e)
 
 

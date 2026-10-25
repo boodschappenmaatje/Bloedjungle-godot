@@ -70,6 +70,12 @@
    "deuk": 1,
    "voorruit": false,
    "deurLV": false
+  },
+  {
+   "fase": "ontploffing",
+   "deuk": 1,
+   "voorruit": false,
+   "deurLV": true
   }
  ],
  "errors": [],

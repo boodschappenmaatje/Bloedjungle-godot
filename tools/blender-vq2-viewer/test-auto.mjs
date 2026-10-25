@@ -35,9 +35,9 @@ try{
  }
  await page.click('#top');
  await page.screenshot({path:path.join(out,'auto-viewer-heel.png')});
- const phases=['heel','beschadigd','zwaar','brandend','wrak'];
+ const phases=['heel','beschadigd','zwaar','brandend','wrak','ontploffing'];
  for(let i=0;i<phases.length;i++){
-  await page.selectOption('#phase',String(i));await page.waitForTimeout(250);
+  await page.selectOption('#phase',String(i));await page.waitForTimeout(i===5?500:i>=3?1800:250);
   await page.click('#iso');await page.waitForTimeout(150);
   await page.locator('#stage').screenshot({path:path.join(out,`auto-viewer-${phases[i]}.png`)});
   const st=await page.evaluate(()=>({deuk:window.__VQ2_TEST__.deuk(),voorruit:window.__VQ2_TEST__.node('Voorruit')?.visible,deurLV:window.__VQ2_TEST__.node('DeurLV')?.visible}));

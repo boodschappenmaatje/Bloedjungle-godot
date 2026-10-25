@@ -558,11 +558,14 @@ for p in romp_obj.data.polygons:
 def deuk_kaart(co, nrm):
     """Verplaatsing van een punt door een paar vaste deuken (richting: tegen de normaal in)."""
     d = 0.0
-    for (cx, cy, cz, r, diep) in ((0.25, 1.45, 0.88, 0.55, 0.075), (0.0, -0.3, 1.43, 0.50, 0.06), (-0.92, -0.7, 0.65, 0.45, 0.065),
-                                  (0.55, -1.9, 0.80, 0.35, 0.05), (0.35, 2.12, 0.55, 0.40, 0.09), (0.92, 0.55, 0.70, 0.35, 0.05)):
+    for (cx, cy, cz, r, diep) in ((0.25, 1.45, 0.88, 0.85, 0.36), (0.0, -0.3, 1.43, 0.95, 0.38), (-0.92, -0.7, 0.65, 0.8, 0.30),
+                                  (0.55, -1.9, 0.80, 0.70, 0.28), (0.35, 2.12, 0.55, 0.75, 0.32), (0.92, 0.55, 0.70, 0.7, 0.28)):
         dist = math.sqrt((co.x - cx) ** 2 + (co.y - cy) ** 2 + (co.z - cz) ** 2)
         if dist < r:
-            d += diep * (0.5 + 0.5 * math.cos(math.pi * dist / r)) ** 1.4
+            f = (0.5 + 0.5 * math.cos(math.pi * dist / r)) ** 1.2
+            # kreukels: hoogfrequente variatie zodat het ingedrukte plaatwerk gescheurd en gevouwen oogt
+            k = 0.65 + 0.35 * math.sin(co.x * 21.0 + co.y * 13.0) * math.sin(co.z * 17.0 + co.x * 9.0)
+            d += diep * f * k
     return -nrm * d
 
 

@@ -544,6 +544,7 @@ func enter() -> void:
 				preview.get_parent().remove_child(preview)
 			_stad.add_child(preview)
 	Game.editing = true
+	_stad.view_limit(false)
 	Game.build_mode = true
 	_sync_camera_button()
 	_ui.visible = true
@@ -576,6 +577,8 @@ func exit() -> void:
 	if not Game.editing:
 		return
 	Game.editing = false
+	if is_instance_valid(_stad):
+		_stad.view_limit(true)
 	Game.build_mode = false
 	_ui.visible = false
 	_close_popup()

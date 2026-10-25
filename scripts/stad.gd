@@ -302,6 +302,24 @@ func _make_node(d: Dictionary) -> void:
 	d["node"] = n
 	if n != null:
 		_place_node(d)
+		_limit(n, d.k, not Game.editing)
+
+
+## Zichtafstand per soort (m): ver weg tekent de iPhone geen gebouwen en straatmeubilair. In de editor (hoog boven de stad) uit.
+const VIEW_END := {"gebouw": 130.0, "straat": 70.0, "weg": 0.0}
+
+
+func _limit(n: Node3D, kind: String, on: bool) -> void:
+	var end: float = float(VIEW_END.get(KINDS[kind].cat, 100.0)) if on else 0.0
+	for mi in n.find_children("*", "GeometryInstance3D", true, false):
+		(mi as GeometryInstance3D).visibility_range_end = end
+
+
+## Zet de zichtafstanden aan (spel) of uit (editor).
+func view_limit(on: bool) -> void:
+	for d in items:
+		if d.get("node") != null and is_instance_valid(d.node):
+			_limit(d.node, d.k, on)
 
 
 func _place_node(d: Dictionary) -> void:

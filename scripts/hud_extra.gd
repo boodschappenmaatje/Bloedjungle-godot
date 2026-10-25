@@ -445,7 +445,22 @@ func _draw_radar_routes(map: Rect2) -> void:
 		_radar.draw_circle(line[0], 2.5, col)
 
 
+## Eén dof rood puntje per bezet gebied; het verdwijnt als het gebied vrij is.
+func _draw_radar_zones(map: Rect2) -> void:
+	if Game.gebieden == null:
+		return
+	for id in Gebieden.ZONES:
+		if Game.gebieden.is_cleared(id):
+			continue
+		var r: Rect2 = Gebieden.ZONES[id].rect
+		var a := _radar_point(Vector3(r.position.x, 0, r.position.y), map)
+		var b := _radar_point(Vector3(r.end.x, 0, r.end.y), map)
+		_radar.draw_rect(Rect2(a, b - a).abs(), Color(1.0, 0.25, 0.12, 0.16), true)
+		_radar.draw_circle((a + b) * 0.5, 2.2, Color(1.0, 0.3, 0.15, 0.55))
+
+
 func _draw_radar_attacks(map: Rect2) -> void:
+	_draw_radar_zones(map)
 	_draw_radar_routes(map)
 	var cx := map.position.x + map.size.x * 0.5
 	var cy := map.position.y + map.size.y * 0.5
@@ -523,7 +538,7 @@ func _process(delta: float) -> void:
 	if _fps.visible:
 		_fps.text = "%d FPS · %d%%" % [Engine.get_frames_per_second(), roundi(get_viewport().scaling_3d_scale * 100.0)]
 	var main := get_parent().get_parent()
-	var left: int = Game.enemies.size() + (main.queue.size() if "queue" in main else 0)
+	var left: int = Gebieden.wave_count() + (main.queue.size() if "queue" in main else 0)
 	_enemies.text = "–" if Game.state != "play" else str(left)
 	_points.text = "%s pt" % UI.nl(Game.points)
 	_score.text = "★ %s" % UI.nl(Game.score)

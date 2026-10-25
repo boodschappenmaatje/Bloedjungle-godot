@@ -18,6 +18,7 @@ func _ready() -> void:
 	add_child(Game.builds)
 	Game.gates = Gates.new()
 	add_child(Game.gates)
+	add_child(Gebieden.new())
 	GameSettings.apply_hz()
 	add_child(PerfGovernor.new())
 	Game.state = "menu"
@@ -35,6 +36,7 @@ func _ready() -> void:
 func begin() -> void:
 	await _load_world()
 	Game.reset()
+	Game.gebieden.reset()
 	if Game.player:
 		Game.player.refresh_look()
 	_start_prep()
@@ -137,10 +139,10 @@ func _process(delta: float) -> void:
 		if queue.size():
 			spawn_t -= delta
 			var max_alive := 22 + mini(18, Game.wave * 2)
-			if spawn_t <= 0.0 and Game.enemies.size() < max_alive:
+			if spawn_t <= 0.0 and Gebieden.wave_count() < max_alive:
 				_spawn(queue.pop_front())
 				spawn_t = maxf(0.25, 1.2 - Game.wave * 0.06) * randf_range(0.6, 1.3)
-		elif Game.enemies.is_empty():
+		elif Gebieden.wave_count() == 0:
 			if clear_t < 0.0:
 				clear_t = 1.6
 			clear_t -= delta

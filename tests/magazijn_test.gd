@@ -23,6 +23,7 @@ var bullet_hp_before := 0.0
 
 
 func _initialize() -> void:
+	load("res://scripts/woonhuis.gd").fast = false   # deze test bewaakt de oude regels (muur per muur); sloop_test.gd de nieuwe
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	physics_frame.connect(func() -> void:

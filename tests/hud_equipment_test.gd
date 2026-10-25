@@ -79,7 +79,16 @@ func _run() -> void:
 	game.grenades = 3
 	game.changed.emit()
 	await _frames(2)
-	use_btn.button_down.emit()
+	# granaat: tikken (vinger neer en weer op zonder slepen) gooit recht vooruit
+	var touch := InputEventScreenTouch.new()
+	touch.index = 0
+	touch.position = root.get_final_transform() * use_btn.get_global_rect().get_center()
+	touch.pressed = true
+	root.push_input(touch)
+	touch = touch.duplicate()
+	touch.pressed = false
+	root.push_input(touch)
+	await _frames(1)
 	_check(game.grenades == 2, "GEBRUIK vermindert de bestaande granaatvoorraad niet")
 	var flying := 0
 	for child in main.get_children():

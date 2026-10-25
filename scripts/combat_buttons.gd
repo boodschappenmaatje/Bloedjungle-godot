@@ -9,6 +9,16 @@ var _grenade: ActionBtn
 var _roll: ActionBtn
 var _state := ""
 
+## Granaat richten: knop vasthouden en slepen zet de landingscirkel neer (2-12 m), loslaten gooit.
+## Terug naar de knop slepen breekt de worp af; alleen tikken gooit 7 m recht vooruit.
+const AIM_DEAD := 16.0    # px: binnen deze afstand van het beginpunt telt het als tikken
+const AIM_FULL := 120.0   # px: zo ver slepen = maximaal bereik
+var aim_finger := -2      # vinger die de granaatknop vasthoudt (-1 = muis), -2 = niet aan het richten
+var aim_drag := Vector2.ZERO
+var _aim_start := Vector2.ZERO
+var _aim_out := false     # de duim is al buiten de knop geweest: terugkomen = afbreken
+var _aim_vis: GrenadeAim
+
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -39,10 +49,95 @@ func _player_call(method: String) -> void:
 func _use_equipment() -> void:
 	match Game.equipment_sel:
 		"grenade":
-			_player_call("throw_grenade")
+			pass  # gooien gaat via slepen en loslaten (_input)
 		"mine":
 			if Game.defs != null and is_instance_valid(Game.defs):
 				Game.defs.place_kind("mine")
+
+
+func _input(event: InputEvent) -> void:
+	if Game.equipment_sel != "grenade" or not is_visible_in_tree():
+		if aim_finger != -2:
+			cancel_aim()
+		return
+	if event is InputEventScreenTouch:
+		if event.pressed and aim_finger == -2 and _grenade.get_global_rect().has_point(event.position):
+			_begin_aim(event.index, event.position)
+		elif not event.pressed and event.index == aim_finger:
+			release_aim()
+	elif event is InputEventScreenDrag and event.index == aim_finger:
+		drag_aim(event.position - _aim_start)
+	elif event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed and aim_finger == -2 and _grenade.get_global_rect().has_point(event.position):
+			_begin_aim(-1, event.position)
+		elif not event.pressed and aim_finger == -1:
+			release_aim()
+	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION and aim_finger == -1:
+		drag_aim(event.position - _aim_start)
+
+
+func _begin_aim(finger: int, at: Vector2) -> void:
+	var p = Game.player
+	if _grenade.disabled or p == null or not is_instance_valid(p) or not p.can_throw_grenade():
+		return
+	aim_finger = finger
+	_aim_start = at
+	aim_drag = Vector2.ZERO
+	_aim_out = false
+	_update_aim()
+
+
+func drag_aim(d: Vector2) -> void:
+	aim_drag = d
+	if d.length() > AIM_DEAD:
+		_aim_out = true
+	_update_aim()
+
+
+func release_aim() -> void:
+	var p = Game.player
+	var cancel := _aim_out and aim_drag.length() <= AIM_DEAD
+	if not cancel and p != null and is_instance_valid(p):
+		p.throw_grenade_at(aim_target())
+	cancel_aim()
+	if cancel:
+		Sfx.play("click")
+
+
+func cancel_aim() -> void:
+	aim_finger = -2
+	_aim_out = false
+	if _aim_vis != null and is_instance_valid(_aim_vis):
+		_aim_vis.queue_free()
+	_aim_vis = null
+
+
+## Doelpunt op de grond: schermrichting = wereldrichting (de camera kijkt naar het noorden, net als de richtstick).
+func aim_target() -> Vector3:
+	var p = Game.player
+	var base: Vector3 = p.global_position
+	var l := aim_drag.length()
+	if l <= AIM_DEAD:
+		return base + Vector3(sin(p.face), 0.0, cos(p.face)) * Grenade.TAP_RANGE
+	var dir := Vector3(aim_drag.x, 0.0, aim_drag.y).normalized()
+	var k := clampf((l - AIM_DEAD) / (AIM_FULL - AIM_DEAD), 0.0, 1.0)
+	return base + dir * lerpf(Grenade.MIN_RANGE, Grenade.MAX_RANGE, k)
+
+
+func _update_aim() -> void:
+	var p = Game.player
+	if aim_finger == -2 or p == null or not is_instance_valid(p) or not p.can_throw_grenade():
+		cancel_aim()
+		return
+	if _aim_out and aim_drag.length() <= AIM_DEAD:
+		if _aim_vis != null:
+			_aim_vis.visible = false  # terug op de knop: loslaten breekt af
+		return
+	if _aim_vis == null or not is_instance_valid(_aim_vis):
+		_aim_vis = GrenadeAim.new()
+		p.get_parent().add_child(_aim_vis)
+	var a: Dictionary = p.grenade_aim(aim_target())
+	_aim_vis.show_throw(a.from, a.target, Grenade.RADIUS * float(Progress.bonus().grenade))
 
 
 ## Alles rechts, binnen bereik van de duim die richt: 2x2 raster in de rechteronderhoek.
@@ -78,7 +173,11 @@ func _process(_delta: float) -> void:
 	visible = show
 	var p = Game.player
 	if not show or p == null or not is_instance_valid(p):
+		if aim_finger != -2:
+			cancel_aim()
 		return
+	if aim_finger != -2:
+		_update_aim()  # de speler loopt door tijdens het richten: de boog loopt mee
 	var w: Dictionary = Game.wstat(p.weapon)
 	var reloading: bool = p.reload_t > 0.0
 	var equipment_count: int = Game.grenades if Game.equipment_sel == "grenade" else int(Game.inv.get("mine", 0)) if Game.equipment_sel == "mine" else 0

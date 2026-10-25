@@ -100,8 +100,8 @@ func _run() -> void:
 		await _shots(target, label + ": tankkanon", func() -> void:
 			tank._shoot(tank._aim_point()), 60)
 		tank.queue_free()
-		# granaat van de speler rond de worpafstand (11 m; van dichterbij gaat de boog over een auto heen, zoals echt)
-		for gd in [9.0, 11.0, 13.0]:
+		# granaat van de speler, gericht op de auto (richtcirkel op de auto), dichtbij tot het maximale bereik
+		for gd in [4.0, 7.0, 9.0, 12.0]:
 			await _shots(target, label + ": granaat van %.1f m" % gd, func() -> void:
 				var p = game.player
 				p.global_position = c + Vector3(0, 0, gd)
@@ -109,7 +109,8 @@ func _run() -> void:
 				p.rotation.y = PI
 				p.grenade_cd = 0.0
 				game.grenades = 3
-				p.throw_grenade(), 200)
+				p.hp = game.max_hp()   # van dichtbij raakt de eigen granaat de speler ook
+				p.throw_grenade_at(c), 200)
 		game.player.global_position = Vector3(0, 0, -60)
 
 	# verhouding: kogel tegen explosief

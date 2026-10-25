@@ -84,8 +84,8 @@ func _process(_d: float) -> bool:
 	_stad = Stad.new()
 	_vp.add_child(_stad)
 	# De vuur-FX hebben een parent in de sceneboom nodig; het wrak zelf is dezelfde geometrie.
-	_stad.set_items([{"k": "autowrak" if kind == "autobrand" else kind, "x": 0.0, "z": 0.0, "r": 0, "m": 0}])
-	if kind == "autobrand":
+	_stad.set_items([{"k": "autowrak" if kind == "autobrand" else ("buswrak" if kind == "busbrand" else kind), "x": 0.0, "z": 0.0, "r": 0, "m": 0}])
+	if kind == "autobrand" or kind == "busbrand":
 		load("res://scripts/fx.gd").burning(_stad.items[0].node, Vector3.ZERO, true).position = Vector3(0, 0.8, 0)
 	if kind == "brandkraan":
 		var animation: AnimationPlayer = _stad.items[0].node._anim

@@ -735,7 +735,7 @@ func _chip(tool: String, label: String, icon_kind: String) -> void:
 			_textures[path] = load(path)
 		picture.texture = _textures[path]
 	box.add_child(picture)
-	var short_names := {"winkel": "Winkel + flat", "kerk": "Kerk + toren", "benzine": "Benzine", "autobrand": "Brandende auto"}
+	var short_names := {"winkel": "Winkel + flat", "kerk": "Kerk + toren", "benzine": "Benzine", "autobrand": "Brandende auto", "busbrand": "Brandende bus"}
 	var title := UI.label(short_names.get(tool, label), EUI.font(), 12, EUI.INK)
 	title.name = "Naam"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

@@ -4,8 +4,18 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 
 const $=id=>document.getElementById(id), stage=$('stage'), canvas=$('canvas');
-const names={kazerne:'Kazerne',wachttoren:'Wachttoren',legerjeep:'Legerjeep',jeep:'Speelbare jeep',auto:'Personenauto'};
-const NEW_ONLY=['jeep','auto'];
+const names={kazerne:'Kazerne',wachttoren:'Wachttoren',legerjeep:'Legerjeep',jeep:'Speelbare jeep',auto:'Personenauto',bus:'Stadsbus'};
+const NEW_ONLY=['jeep','auto','bus'];
+const DAMAGED=['auto','bus'];
+// per model: onderdelen die bij schadefases veranderen, waar het vuur begint en wat er bij de ontploffing wegvliegt
+const CFG={
+ auto:{parts:['Voorruit','Achterruit','DeurLV','DeurRV','DeurLA','DeurRA','Motorkap','Kofferklep','Wiel_LV','Wiel_RV','Wiel_LA','Wiel_RA'],
+  phases:[[],[['Voorruit','Achterruit'],['Wiel_LV'],0,.55,0],[['DeurRV','DeurLA'],['Wiel_RA'],.6,.85,0],[[],['Wiel_RV'],0,1,0],[['DeurLV','DeurRA'],[],0,1,0]],hood:'Motorkap',hoodSign:1,rim:.335,flatK:.84,
+  anchor:[0,1,-1.4],cabin:[0,.35,-.15],flames:[46,14],smoke:[30,20],boom:{n:46,s:34,ring:16,flash:160,fl:16,debris:[['DeurLV',[-6,6,1.2],[2,5,3]],['DeurRA',[5,7,-2],[-3,2,6]],['DeurRV',[6,5,2.5],[4,-3,2]],['DeurLA',[-5,5.5,-3],[-2,6,-4]],['Motorkap',[.5,10,-1],[7,1,2]],['Kofferklep',[-.5,8,2],[-5,1,1]],['Wiel_RV',[3,7,-5],[9,0,0]],['Wiel_LA',[-2,6,5],[-8,0,0]]],burnFlat:['Wiel_LV','Wiel_RA'],glass:['Voorruit','Achterruit']}},
+ bus:{parts:['Voorruit','Achterruit','RuitenL','RuitenR','DeurVA','DeurVB','DeurMA','DeurMB','Motorluik','DakluikV','DakluikA','Airco','Wiel_LV','Wiel_RV','Wiel_LA','Wiel_RA'],
+  phases:[[],[['Voorruit','RuitenL','DakluikV'],['Wiel_LV'],0,.5,0],[['Achterruit','RuitenR','DeurVB'],['Wiel_RA'],0,.8,0],[['DeurMA','DakluikA'],['Wiel_RV'],1,1,0],[['DeurVA','DeurMB'],[],0,1,0]],hood:'Motorluik',hoodSign:-1,rim:.5,flatK:.88,
+  anchor:[0,1.4,-5.3],cabin:[0,1.6,1.6],flames:[70,18],smoke:[36,24],boom:{n:110,s:70,ring:24,flash:420,fl:34,debris:[['DeurVA',[7,8,5],[2,5,3]],['DeurVB',[6,7,4],[-3,2,6]],['DeurMA',[8,6,-1],[4,-3,2]],['DeurMB',[7,7,-3],[-2,6,-4]],['Motorluik',[.5,11,-5],[7,1,2]],['Airco',[-1,13,1],[3,2,5]],['DakluikV',[2,12,6],[6,1,2]],['DakluikA',[-3,12,-3],[-5,3,1]],['Wiel_RV',[5,9,-6],[9,0,0]],['Wiel_LA',[-5,8,6],[-8,0,0]],['Wiel_RA',[6,10,2],[7,0,1]]],burnFlat:['Wiel_LV'],glass:['Voorruit','Achterruit','RuitenL','RuitenR']}}
+};
 const loader=new GLTFLoader();
 let renderer;
 try {renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:false,powerPreference:'low-power'});}
@@ -49,7 +59,7 @@ async function load(){
  playing=false;$('play').textContent='Afspelen';$('loading').hidden=false;$('loading').textContent='Echte GLB-materialen laden…';
  $('version').disabled=NEW_ONLY.includes(asset);
  if(NEW_ONLY.includes(asset))$('version').value='v2';
- $('phase-row').hidden=asset!=='auto';
+ $('phase-row').hidden=!DAMAGED.includes(asset);
  const versions=NEW_ONLY.includes(asset)?['v2']:['v1','v2'];
  try{
   const loaded=await Promise.all(versions.map(async v=>[v,makeSlot(await loader.loadAsync(`../../assets/${v==='v1'?'vq2_baseline/':''}${asset}.glb`))]));
@@ -57,7 +67,7 @@ async function load(){
   if(current!==request){disposeSlots(next);return;}
   disposeSlots(slots);slots=next;
   bounds.makeEmpty();for(const s of Object.values(slots))bounds.union(new THREE.Box3().setFromObject(s.root));
-  setCamera(false);setupClips();setupMaterials();shading();if(asset==='auto')applyPhase(0);stats();$('loading').hidden=true;status();dirty=true;
+  setCamera(false);setupClips();setupMaterials();shading();if(DAMAGED.includes(asset))applyPhase(0);stats();$('loading').hidden=true;status();dirty=true;
  }catch(error){if(current!==request)return;$('loading').hidden=false;$('loading').textContent='Het GLB-model kon niet geladen worden. Controleer de verbinding en open de viewer via HTTP(S). '+error.message;}
 }
 
@@ -70,23 +80,20 @@ function setCamera(game){
  controls.update();camera.updateProjectionMatrix();dirty=true;
 }
 
-function status(){const asset=$('asset').value,version=$('version').value;$('status').textContent=`${names[asset]} · ${asset==='jeep'?'ongewijzigde speelbare jeep':asset==='auto'?'nieuwe auto (geen V1)':version==='split'?'V1 links / VQ2 rechts, identieke camera en belichting':version==='v1'?'origineel op vaste baseline':'VQ2 export'} · 360° draaien en zoomen actief.`;}
+function status(){const asset=$('asset').value,version=$('version').value;$('status').textContent=`${names[asset]} · ${asset==='jeep'?'ongewijzigde speelbare jeep':asset==='auto'?'nieuwe auto (geen V1)':asset==='bus'?'nieuwe bus (geen V1)':version==='split'?'V1 links / VQ2 rechts, identieke camera en belichting':version==='v1'?'origineel op vaste baseline':'VQ2 export'} · 360° draaien en zoomen actief.`;}
 const PHASES=['Heel','Beschadigd (ruiten, deuk, band)','Zwaar (deur eraf, kap open)','Brandend (vlammen en rook)','Wrak (verkoold, smeulend)','Ontploffing (speelt af)'];
 function phaseNodes(slot){const o={};slot.root.traverse(n=>{if(n.name)o[n.name]=n;});return o;}
 function applyPhase(p){
- const slot=slots.v2;if(!slot||$('asset').value!=='auto')return;
+ const slot=slots.v2;if(!slot||!DAMAGED.includes($('asset').value))return;const cfg=CFG[$('asset').value];slot.cfg=cfg;
  const n=phaseNodes(slot);slot.phaseRest=slot.phaseRest||{};
  const rest=(k)=>{const x=n[k];if(!x)return null;if(!slot.phaseRest[k])slot.phaseRest[k]={p:x.position.clone(),q:x.quaternion.clone(),s:x.scale.clone()};return slot.phaseRest[k];};
- const parts=['Voorruit','Achterruit','DeurLV','DeurRV','DeurLA','DeurRA','Motorkap','Kofferklep','Wiel_LV','Wiel_RV','Wiel_LA','Wiel_RA'];
+ const parts=cfg.parts;
  for(const k of parts){const r=rest(k);if(!r)continue;const x=n[k];x.visible=true;x.position.copy(r.p);x.quaternion.copy(r.q);x.scale.copy(r.s);}
  fx.rest=rest;const hide=[];const flat=[];let deuk=0,hood=0;const q=p===5?0:p;
- if(q>=1){hide.push('Voorruit','Achterruit');flat.push('Wiel_LV');deuk=.55;}
- if(q>=2){hide.push('DeurRV','DeurLA');flat.push('Wiel_RA');hood=.6;deuk=.85;}
- if(q>=3){flat.push('Wiel_RV');deuk=1;}
- if(q>=4){hide.push('DeurLV','DeurRA');deuk=1;}
+ for(let i=1;i<=q;i++){const [h,f,hd,dk]=cfg.phases[i];hide.push(...h);flat.push(...f);if(hd)hood=hd;deuk=dk;}
  for(const k of hide)if(n[k])n[k].visible=false;
- for(const k of flat){const x=n[k],r=rest(k);if(!x)continue;x.scale.set(r.s.x,r.s.y*.84,r.s.z*.84);x.position.y=r.p.y-.335*.16;}
- if(n.Motorkap&&hood)n.Motorkap.rotateX(hood);
+ for(const k of flat){const x=n[k],r=rest(k);if(!x)continue;x.scale.set(r.s.x,r.s.y*cfg.flatK,r.s.z*cfg.flatK);x.position.y=r.p.y-cfg.rim*(1-cfg.flatK);}
+ if(n[cfg.hood]&&hood)n[cfg.hood].rotateX(cfg.hoodSign*(cfg.hood==='Motorkap'?hood:1));
  slot.root.traverse(o=>{if(!o.isMesh)return;if(o.morphTargetInfluences&&o.morphTargetInfluences.length)o.morphTargetInfluences[0]=deuk;
   if(!o.userData.lakOriginal&&o.userData.original&&!Array.isArray(o.userData.original)&&o.userData.original.name==='Lak')o.userData.lakOriginal=o.userData.original;
   if(o.userData.lakOriginal){const wr=slot.wrakMaterial;if(wr)o.userData.original=q>=3?wr:o.userData.lakOriginal;}});
@@ -114,51 +121,51 @@ function worldOf(node,fallback){if(!node)return fallback.clone();const v=new THR
 function startFx(slot,p,n,rest){
  clearFx();fx.slot=slot;fx.phase=p;fx.nodes=n;fx.rest=rest;
  slot.root.updateMatrixWorld(true);
- const hood=worldOf(n.Motorkap,new THREE.Vector3(0,1,-1.4));
- fx.anchor.copy(hood);fx.anchor.y=hood.y-.05;
- fx.cabin.set(0,hood.y+.35,hood.z*-.15);
- if(p===3||p===4){fx.light=new THREE.PointLight(0xff7a22,p===3?14:5,7);fx.light.position.copy(fx.anchor).add(new THREE.Vector3(0,.6,0));slot.scene.add(fx.light);}
+ const cfg=slot.cfg;fx.cfg=cfg;const big=cfg===CFG.bus;
+ const hood=worldOf(n[cfg.hood],new THREE.Vector3(...cfg.anchor));
+ fx.anchor.copy(hood);fx.anchor.y=hood.y-(big?.1:.05);
+ fx.cabin.set(cfg.cabin[0],big?cfg.cabin[1]:hood.y+cfg.cabin[1],big?cfg.cabin[2]:hood.z*cfg.cabin[2]);
+ if(p===3||p===4){fx.light=new THREE.PointLight(0xff7a22,p===3?(big?22:14):(big?8:5),big?11:7);fx.light.position.copy(fx.anchor).add(new THREE.Vector3(0,.6,0));slot.scene.add(fx.light);}
  if(p===5)startBoom(slot,n,rest);
  shading();dirty=true;
 }
 function startBoom(slot,n,rest){
  const base=fx.anchor.clone();base.y=.5;base.z=0;
- const flash=new THREE.PointLight(0xffc070,160,16);flash.position.set(0,1.4,0);slot.scene.add(flash);fx.light=flash;
+ const bc=fx.cfg.boom,big=fx.cfg===CFG.bus;const flash=new THREE.PointLight(0xffc070,bc.flash,bc.fl);flash.position.set(0,big?2.6:1.4,0);slot.scene.add(flash);fx.light=flash;
  const ringMat=new THREE.MeshBasicMaterial({color:0xffcf9a,transparent:true,opacity:.8,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
- const ring=new THREE.Mesh(new THREE.RingGeometry(.85,1,48),ringMat);ring.rotation.x=-Math.PI/2;ring.position.y=-.1;slot.scene.add(ring);
+ const ring=new THREE.Mesh(new THREE.RingGeometry(.88,1,64),ringMat);ring.rotation.x=-Math.PI/2;ring.position.y=-.1;slot.scene.add(ring);
  const debris=[];
  const fly=(k,v,spin)=>{const x=n[k];if(!x||!rest(k))return;debris.push({x,r:rest(k),v:new THREE.Vector3(...v),w:new THREE.Vector3(...spin),off:new THREE.Vector3()});};
- fly('DeurLV',[-6,6,1.2],[2,5,3]);fly('DeurRA',[5,7,-2],[-3,2,6]);fly('DeurRV',[6,5,2.5],[4,-3,2]);fly('DeurLA',[-5,5.5,-3],[-2,6,-4]);
- fly('Motorkap',[.5,10,-1],[7,1,2]);fly('Kofferklep',[-.5,8,2],[-5,1,1]);fly('Wiel_RV',[3,7,-5],[9,0,0]);fly('Wiel_LA',[-2,6,5],[-8,0,0]);
- fx.boom={t:0,ring,ringMat,flash,debris,extra:[ring],burnt:false,burst:false};
+ for(const [k,v,sp] of bc.debris)fly(k,v,sp);
+ fx.boom={t:0,ring,ringMat,flash,debris,extra:[ring],burnt:false,burst:false,bc};
  // vuurbal: veel grote vlammen die uit elkaar vliegen
- for(let i=0;i<46;i++){const d=new THREE.Vector3(Math.random()-.5,Math.random()*.9,Math.random()-.5).normalize().multiplyScalar(2.5+Math.random()*5);puff('f',new THREE.Vector3((Math.random()-.5)*1.2,.5+Math.random()*.8,(Math.random()-.5)*2),d,.7+Math.random()*.7,1.2,4.5+Math.random()*2,{up:2.5});}
- for(let i=0;i<34;i++){const d=new THREE.Vector3(Math.random()-.5,.4+Math.random()*.9,Math.random()-.5).multiplyScalar(4);puff('s',new THREE.Vector3((Math.random()-.5)*1.4,.6+Math.random(),(Math.random()-.5)*2.2),d,2.2+Math.random()*1.8,1.4,4.2+Math.random()*2,{up:1.6});}
+ for(let i=0;i<bc.n;i++){const d=new THREE.Vector3(Math.random()-.5,Math.random()*.9,Math.random()-.5).normalize().multiplyScalar((big?3:2.5)+Math.random()*(big?8:5));puff('f',new THREE.Vector3((Math.random()-.5)*(big?2:1.2),(big?.8:.5)+Math.random()*(big?1.8:.8),(Math.random()-.5)*(big?10:2)),d,.7+Math.random()*(big?.9:.7),big?2:1.2,(big?7:4.5)+Math.random()*(big?3.5:2),{up:big?3:2.5});}
+ for(let i=0;i<bc.s;i++){const d=new THREE.Vector3(Math.random()-.5,.4+Math.random()*.9,Math.random()-.5).multiplyScalar(big?5:4);puff('s',new THREE.Vector3((Math.random()-.5)*(big?2:1.4),(big?1:.6)+Math.random()*(big?1.5:1),(Math.random()-.5)*(big?9:2.2)),d,(big?2.6:2.2)+Math.random()*(big?2.4:1.8),big?2.5:1.4,(big?8:4.2)+Math.random()*(big?3:2),{up:big?2:1.6});}
 }
 function stepBoom(dt){
  const b=fx.boom;b.t+=dt;const t=b.t;
- b.flash.intensity=Math.max(0,160*Math.exp(-t*3.2));
- const rs=1+t*16;b.ring.scale.setScalar(rs);b.ringMat.opacity=Math.max(0,.8-t*.9);
+ b.flash.intensity=Math.max(0,b.bc.flash*Math.exp(-t*(b.bc.flash>200?2.6:3.2)));
+ const rs=1+t*b.bc.ring;b.ring.scale.setScalar(rs);b.ringMat.opacity=Math.max(0,.8-t*.9);
  if(!b.burnt&&t>.35){b.burnt=true;const slot=fx.slot;slot.root.traverse(o=>{if(!o.isMesh)return;if(o.morphTargetInfluences&&o.morphTargetInfluences.length)o.morphTargetInfluences[0]=1;if(o.userData.lakOriginal&&slot.wrakMaterial)o.userData.original=slot.wrakMaterial;});
-  for(const k of ['Wiel_LV','Wiel_RA']){const x=fx.nodes[k],r=fx.rest(k);if(x){x.scale.set(r.s.x,r.s.y*.84,r.s.z*.84);x.position.y=r.p.y-.335*.16;}}
-  if(fx.nodes.Voorruit)fx.nodes.Voorruit.visible=false;if(fx.nodes.Achterruit)fx.nodes.Achterruit.visible=false;shading();}
+  const c=fx.cfg;for(const k of c.boom.burnFlat){const x=fx.nodes[k],r=fx.rest(k);if(x){x.scale.set(r.s.x,r.s.y*c.flatK,r.s.z*c.flatK);x.position.y=r.p.y-c.rim*(1-c.flatK);}}
+  for(const k of c.boom.glass)if(fx.nodes[k])fx.nodes[k].visible=false;shading();}
  for(const d of b.debris){d.v.y-=14*dt;d.off.addScaledVector(d.v,dt);const y=d.r.p.y+d.off.y;if(y<-.1&&d.v.y<0){d.off.y=-.1-d.r.p.y;d.v.multiplyScalar(.35);d.v.y=Math.abs(d.v.y)*.3;d.w.multiplyScalar(.5);}
   d.x.position.copy(d.r.p).add(d.off);d.x.rotateX(d.w.x*dt);d.x.rotateY(d.w.y*dt);d.x.rotateZ(d.w.z*dt);}
  if(t>1.6&&!b.burst){b.burst=true;fx.phase=4;fx.light.color.set(0xff7a22);}
- if(fx.phase===4&&t>1.6){fx.light.intensity=5;}
+ if(fx.phase===4&&t>1.6){fx.light.intensity=fx.cfg===CFG.bus?8:5;}
 }
 function stepFx(dt){
  if(!fx.slot||!slots.v2||fx.slot!==slots.v2)return false;
  const p=fx.phase;let any=fx.list.length>0;
  if(fx.boom){stepBoom(dt);any=true;}
  if(p===3||p===4){
-  any=true;const flames=p===3?46:14,smoke=p===3?30:20;
+  any=true;const big=fx.cfg===CFG.bus,flames=fx.cfg.flames[p===3?0:1],smoke=fx.cfg.smoke[p===3?0:1];
   fx.acc.f+=dt*flames;while(fx.acc.f>1){fx.acc.f--;
    const at=Math.random()<.7?fx.anchor:fx.cabin;const j=at===fx.anchor?.45:.35;
    puff('f',new THREE.Vector3(at.x+(Math.random()-.5)*j*2,at.y+Math.random()*.2,at.z+(Math.random()-.5)*j*1.5),new THREE.Vector3((Math.random()-.5)*.3,0,(Math.random()-.5)*.3),.55+Math.random()*.4,.5,p===3?1.9:1.1,{up:1.7});}
   fx.acc.s+=dt*smoke;while(fx.acc.s>1){fx.acc.s--;
    puff('s',new THREE.Vector3(fx.anchor.x+(Math.random()-.5)*.8,fx.anchor.y+.7,fx.anchor.z+(Math.random()-.5)*.8),new THREE.Vector3((Math.random()-.5)*.5+.35,0,(Math.random()-.5)*.5),3.4+Math.random()*1.4,.9,p===3?3.4:2.6,{up:1.1});}
-  if(fx.light)fx.light.intensity=(p===3?14:5)*(.8+.2*Math.sin(performance.now()*.03)+.15*Math.random());
+  if(fx.light)fx.light.intensity=(fx.cfg===CFG.bus?(p===3?22:8):(p===3?14:5))*(.8+.2*Math.sin(performance.now()*.03)+.15*Math.random());
  }
  if(fx.boom&&fx.boom.t>1.6){ // na de klap smeult het wrak door
   fx.acc.f+=dt*10;while(fx.acc.f>1){fx.acc.f--;puff('f',new THREE.Vector3(fx.anchor.x+(Math.random()-.5)*.8,fx.anchor.y,fx.anchor.z+(Math.random()-.5)*.8),new THREE.Vector3(0,0,0),.5+Math.random()*.4,.5,1.2,{up:1.6});}
@@ -177,7 +184,7 @@ function setupClips(){
  const enabled=clips.length>0;for(const id of ['clips','play','restart','scrub','speed'])$(id).disabled=!enabled;
  if(!enabled){$('clips').add(new Option('Geen animaties in dit model',''));$('animation-status').textContent='Geen animaties in dit model.';$('time').textContent='—';clipName='';return;}
  for(const c of clips)$('clips').add(new Option(c.name.replace(/-loop$/,''),c.name));
- $('animation-status').textContent=$('asset').value==='auto'?'Echte GLB-clips uit Blender: deuren, motorkap, kofferklep, ruitenwissers, knipperlichten en alarm. Vuur, rook, ontploffing en vliegende onderdelen zijn Godot-effecten; zie de Godot-demo.':'Originele GLB-clips: wielrotatie, sturen, vering, MG-terugslag en bemanning worden echt geanimeerd. Kies een clip en speel af; gebruik de tijdlijn voor details.';
+ $('animation-status').textContent=DAMAGED.includes($('asset').value)?'Echte GLB-clips uit Blender'+($('asset').value==='bus'?': voordeur, middendeur, motorluik, knielen, lichten, ruitenwissers, knipperlichten en alarm':': deuren, motorkap, kofferklep, ruitenwissers, knipperlichten en alarm')+'. Vuur, rook, ontploffing en vliegende onderdelen zijn Godot-effecten; zie de Godot-demo.':'Originele GLB-clips: wielrotatie, sturen, vering, MG-terugslag en bemanning worden echt geanimeerd. Kies een clip en speel af; gebruik de tijdlijn voor details.';
  selectClip(clips[0].name);
 }
 function selectClip(name){
@@ -213,7 +220,7 @@ function shading(){
 }
 function stats(){
  const name=$('asset').value;
- if(name==='auto'&&slots.v2){let tri=0,meshes=0;const mats=new Set(),imgs=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh)return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const v of Object.values(m))if(v?.isTexture&&v.image)imgs.add(v.image.width+'×'+v.image.height);}});$('stats').textContent=`${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · texturen ${[...imgs].join(', ')} · schade via shape key Deuk en verkoold materiaal. Geen iPhone-FPS gemeten.`;return;}
+ if(DAMAGED.includes(name)&&slots.v2){let tri=0,meshes=0;const mats=new Set(),imgs=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh)return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const v of Object.values(m))if(v?.isTexture&&v.image)imgs.add(v.image.width+'×'+v.image.height);}});$('stats').textContent=`${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · texturen ${[...imgs].join(', ')} · schade via shape key Deuk en verkoold materiaal. Geen iPhone-FPS gemeten.`;return;}
  if(!report)return;
  const entry=report.assets[name==='jeep'?'playable_jeep':name];
  const text=e=>`${e.triangles.toLocaleString('nl')} driehoeken · ${e.material_surfaces} materiaalsurfaces · ${e.images.length} texturebeelden`;

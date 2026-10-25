@@ -43,6 +43,9 @@ const KINDS := {
 	"auto": {"cat": "straat", "name": "Auto", "hx": 1.0, "hz": 2.2, "snap": 0.5, "cost": 1.0, "h": 1.5, "spacing": 5.5, "road": true},
 	"autowrak": {"cat": "straat", "name": "Autowrak", "hx": 1.0, "hz": 2.2, "snap": 0.5, "cost": 1.0, "h": 1.5, "spacing": 5.5, "road": true},
 	"autobrand": {"cat": "straat", "name": "Brandende auto", "hx": 1.0, "hz": 2.2, "snap": 0.5, "cost": 4.0, "h": 1.5, "spacing": 7.0, "road": true},
+	"bus": {"cat": "straat", "name": "Bus", "hx": 1.3, "hz": 5.3, "snap": 0.5, "cost": 3.0, "h": 3.1, "spacing": 12.0, "road": true},
+	"buswrak": {"cat": "straat", "name": "Buswrak", "hx": 1.3, "hz": 5.3, "snap": 0.5, "cost": 3.0, "h": 2.8, "spacing": 12.0, "road": true},
+	"busbrand": {"cat": "straat", "name": "Brandende bus", "hx": 1.3, "hz": 5.3, "snap": 0.5, "cost": 6.0, "h": 3.1, "spacing": 14.0, "road": true},
 	"brandkraan": {"cat": "straat", "name": "Brandkraan", "hx": 0.25, "hz": 0.25, "snap": 0.5, "cost": 0.3, "h": 0.8, "spacing": 12.0, "road": true},
 	"container": {"cat": "straat", "name": "Vuilcontainer", "hx": 0.95, "hz": 0.5, "snap": 0.5, "cost": 0.7, "h": 1.2, "spacing": 5.0, "road": true},
 	"bord": {"cat": "straat", "name": "Verkeersbord", "hx": 0.3, "hz": 0.3, "snap": 0.5, "cost": 0.3, "h": 2.5, "spacing": 8.0, "road": true},
@@ -58,7 +61,7 @@ const KINDS := {
 const ORDER := {
 	"weg": ["weg_recht", "weg_bocht", "weg_t", "weg_kruis", "weg_steeg", "weg_zebra", "stoep", "plein"],
 	"gebouw": ["woonhuis", "winkel", "kerk", "benzine", "magazijn", "hotel", "blok1", "blok2", "blok3", "blok4"],
-	"straat": ["lantaarn", "bankje", "bushokje", "prullenbak", "brandkraan", "container", "bord", "stoplicht", "auto", "autowrak", "autobrand", "zandzakken", "puin", "hek", "boom", "struik"],
+	"straat": ["lantaarn", "bankje", "bushokje", "prullenbak", "brandkraan", "container", "bord", "stoplicht", "auto", "autowrak", "autobrand", "bus", "buswrak", "busbrand", "zandzakken", "puin", "hek", "boom", "struik"],
 }
 
 ## Gebouwen met een eigen sloopmodel (woonhuis.gd): zoveel mogen er tegelijk actief zijn.
@@ -364,6 +367,8 @@ func _prop(kind: String) -> Node3D:
 		return Brandkraan.new()
 	elif kind == "lantaarn":
 		return Lantaarn.new()
+	elif kind in ["bus", "buswrak", "busbrand"]:
+		return Bus.make(kind, int(roundf(float(kind.hash() % 97) + float(get_child_count()) * 3.0)))
 	elif kind.begins_with("auto"):
 		return Auto.make(kind, int(roundf(float(kind.hash() % 97) + float(get_child_count()) * 3.0)))
 	return root

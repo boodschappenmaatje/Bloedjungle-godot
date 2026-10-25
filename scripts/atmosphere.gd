@@ -114,6 +114,7 @@ func apply_settings() -> void:
 	_env.adjustment_saturation = 1.1 if weather == "clear" else 0.85
 	_apply_quality(quality)
 	_apply_trees()
+	Woonhuis.apply_shadow_setting()
 	_set_rain(weather == "rain")
 	Sfx.rain(weather == "rain")
 
@@ -159,7 +160,7 @@ func _process(_d: float) -> void:
 const QUALITY := {
 	"low": {"shadow": false, "dist": 40.0, "atlas": 1024, "glow": false, "dof": false, "scale": 0.6, "grass": 0.2, "fern": 0.5, "bush_shadow": false, "ssao": false},
 	"high": {"shadow": true, "dist": 40.0, "atlas": 1024, "glow": false, "dof": false, "scale": 0.8, "grass": 0.45, "fern": 0.7, "bush_shadow": false, "ssao": false},
-	"ultra": {"shadow": true, "dist": 80.0, "atlas": 4096, "glow": true, "dof": true, "scale": 1.0, "grass": 1.0, "fern": 1.0, "bush_shadow": true, "ssao": true},
+	"ultra": {"shadow": true, "dist": 55.0, "atlas": 4096, "glow": true, "dof": true, "scale": 1.0, "grass": 1.0, "fern": 1.0, "bush_shadow": true, "ssao": true},
 }
 
 

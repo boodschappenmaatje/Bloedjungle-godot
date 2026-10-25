@@ -10,6 +10,7 @@ const ROWS := [
 	["weather", "Weer", [["clear", "Helder"], ["rain", "Regen"], ["mist", "Mist"]]],
 	["wind", "Bomen bewegen", [["off", "Uit"], ["on", "Aan"]]],
 	["treeshadow", "Boomschaduw", [["fake", "Vast"], ["real", "Echt"], ["off", "Uit"]]],
+	["buildshadow", "Gebouwschaduw", [["low", "Laag"], ["medium", "Midden"], ["high", "Hoog"]]],
 	["hz", "Beeldsnelheid", [["60", "60 fps"], ["120", "120 fps"]]],
 	["fps", "FPS-teller", [["off", "Uit"], ["on", "Aan"]]],
 	["perf", "Prestatiemodus", [["off", "Uit"], ["on", "Aan"]]],
@@ -18,6 +19,9 @@ const NOTES := {
 	"low": "Laag: geen schaduwen en een lichtere afbeelding, voor oudere telefoons.",
 	"high": "Hoog: schaduwen dichtbij en minder gras, blijft vloeiend op 60 beeld per seconde.",
 	"120": "120 fps: voor ProMotion-schermen (iPhone Pro, iPad Pro). Kost meer batterij; op een gewoon scherm blijft het 60.",
+	"low_b": "Gebouwschaduw laag: gebouwen werpen geen schaduw. Haalt 60 fps (geschat, nog niet op een iPhone gemeten).",
+	"medium_b": "Gebouwschaduw midden: één schaduw per heel gebouw, ziet er hetzelfde uit als hoog. Haalt 60 fps (geschat, nog niet op een iPhone gemeten).",
+	"high_b": "Gebouwschaduw hoog: elk stukje van een gebouw werpt zelf schaduw. Het zwaarst; in de stad kan het onder 60 fps komen.",
 	"ultra": "Ultra gebruikt de volle kracht van nieuwe iPhones: scherpere pixels, alle schaduwen en dubbel zoveel gras.",
 }
 
@@ -392,7 +396,7 @@ func _refresh() -> void:
 	for key in _segs:
 		for b in _segs[key]:
 			UI.seg_state(b, GameSettings.get_value(key) == b.get_meta("v"))
-	_note.text = NOTES[GameSettings.get_value("quality")]
+	_note.text = NOTES[GameSettings.get_value("quality")] + "\n" + NOTES[GameSettings.get_value("buildshadow") + "_b"]
 	if GameSettings.get_value("hz") == "120":
 		_note.text += "\n" + NOTES["120"]
 

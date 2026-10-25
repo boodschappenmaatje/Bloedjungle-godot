@@ -46,6 +46,7 @@ var burning := false
 var exploded := false
 var wreck := false
 var driven := false
+var _shadow: ShadowProxy   # tot het voertuig schade krijgt, bestuurd wordt of wrak is
 var _fuse := 0.0
 var _speed := 0.0
 var _steer := 0.0
@@ -121,6 +122,10 @@ func _ready() -> void:
 	_vis_lamps(false)   # de verlichte lenzen kosten elk een draw call: alleen zichtbaar als ze iets doen
 	for mi in _model.find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).visibility_range_end = 90.0   # ver weg tekent de iPhone geen auto's
+	if kind == "auto":
+		_shadow = ShadowProxy.make(self, _model, "auto_" + kind, [], 4)   # een heel, geparkeerd voertuig: één schaduwvorm
+		if _shadow != null:
+			_shadow.set_mode(1)
 	if kind == "autowrak":
 		_make_wreck(true)
 	elif kind == "autobrand":
@@ -252,9 +257,17 @@ static func catch_blast(at: Vector3, radius: float) -> void:
 			a.take(BLAST_DAMAGE * (1.0 - clampf(d / (radius + 0.5), 0.0, 1.0) * 0.7))
 
 
+## Schade, instappen of wrak: weer de losse stukjes (die laten precies zien wat er nog staat).
+func _shadow_loose() -> void:
+	if _shadow != null:
+		_shadow.set_mode(2)
+		_shadow = null
+
+
 func take(dmg: float) -> void:
 	if exploded or wreck:
 		return
+	_shadow_loose()
 	hp -= dmg
 	if hp <= 0.0:
 		explode()
@@ -430,6 +443,7 @@ func _start_fire(with_fuse: bool) -> void:
 
 
 func explode() -> void:
+	_shadow_loose()
 	if exploded:
 		return
 	exploded = true
@@ -540,6 +554,7 @@ func _shockwave(parent: Node, at: Vector3) -> void:
 
 ## Verkoold wrak: zwart materiaal op de lak, deuk helemaal, dak ingezakt; blijft staan met een lagere botsvorm.
 func _make_wreck(quiet: bool) -> void:
+	_shadow_loose()
 	wreck = true
 	_romp.set_surface_override_material(0, _wrak_mat)
 	if _romp.mesh.get_blend_shape_count() > 0:
@@ -649,6 +664,7 @@ static func _pressed() -> void:
 
 
 func _enter() -> void:
+	_shadow_loose()
 	var p = Game.player
 	if p == null or p.dead or driven or exploded or wreck or Bus.driven_car != null:
 		return

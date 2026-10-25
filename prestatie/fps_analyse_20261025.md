@@ -46,3 +46,21 @@ komen (Apache, vrachtwagen, kazerne, ...) staan al in de warm-up.
 ## Wat nodig is van de iPhone
 Zet in Instellingen de prestatiemeting aan en speel een golf in de stad. De overlay toont "GPU ... · render-CPU ..." en
 het rapport per golf staat in de app. Als render-CPU het grootst is, zijn 1-3 de juiste weg; is GPU het grootst, dan 2 en 5.
+
+## v108: voorstellen uit dit rapport uitgevoerd (Dennis' akkoord 2026-10-25)
+- Schaduwafstand Ultra 80 → 55 m.
+- Geparkeerde, hele auto's en bussen werpen hun schaduw met één samengevoegde vorm (`scripts/shadow_proxy.gd`); bij schade, instappen of wrak weer de losse stukjes.
+- Nieuwe instelling **Gebouwschaduw** (Instellingen): Laag = geen schaduw van gebouwen, Midden (standaard) = één vorm per heel gebouw, Hoog = losse stukjes zoals v106.
+
+Draw calls per beeld (in beeld + schaduw), sandbox, Ultra:
+
+| plek | v106 | v107 | v108 Midden | Gebouwschaduw Laag | Gebouwschaduw Hoog |
+|---|---|---|---|---|---|
+| jungle-basis | 249 | 249 | 233 | 233 | 233 |
+| straat bij de bus | 724 | 497 | 367 | 475 (zonder afstandswinst) | 708 |
+| plein | 909 | 424 | 385 | 407 | 902 |
+| woonwijk | 697 | 397 | 371 | 389 | 697 |
+
+(Laag en Hoog zijn gemeten vóór de afstandswinst van 55 m, Midden erna.
+Welke stand 60 fps haalt: Laag en Midden liggen onder de ~490 draw calls waarmee de jungle op 22 oktober op 60 fps stond; Hoog (700-900) niet.
+Dit is een schatting uit draw calls; de echte iPhone-meting moet nog.

@@ -17,6 +17,7 @@ const ROWS := [
 	["t_jungle", "Test: jungle (bomen, gras)", [["on", "Aan"], ["off", "Uit"]]],
 	["t_stad", "Test: stad zien", [["on", "Aan"], ["off", "Uit"]]],
 	["t_post", "Test: mist, gloed, scherptediepte", [["on", "Aan"], ["off", "Uit"]]],
+	["t_res", "Test: 3D-beeld klein (30%)", [["auto", "Uit"], ["small", "Aan"]]],
 	["perf", "Prestatiemodus", [["off", "Uit"], ["on", "Aan"]]],
 ]
 const NOTES := {

@@ -26,6 +26,10 @@ func _process(delta: float) -> void:
 		var table: Dictionary = (load("res://scripts/atmosphere.gd") as GDScript).get("QUALITY")
 		_cap = table[q].scale
 		vp.scaling_3d_scale = _cap
+	if GameSettings.get_value("t_res") == "small":
+		vp.scaling_3d_scale = 0.3   # test: helpt dit, dan is de GPU het knelpunt; helpt het niet, dan de processor
+		get_tree().root.set_meta("res_scale", 0.3)
+		return
 	# de eerste seconden (laden, shaders) tellen niet mee
 	if Time.get_ticks_msec() < maxi(4000, grace_until) or Game.state == "menu":
 		return

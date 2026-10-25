@@ -1,10 +1,10 @@
 class_name Bus
 extends CharacterBody3D
-## Stadsbus (assets/bus.glb, bron/bus/maak_bus.py), gebouwd zoals de personenauto (auto.gd) maar zwaarder: 1600 hp, kogels doen maar 0,35x,
+## Stadsbus (assets/bus.glb, bron/bus/maak_bus.py), gebouwd zoals de personenauto (auto.gd) maar zwaarder: 1600 hp, kogels doen 0,9x,
 ## trager en logger in de bocht, en een veel grotere ontploffing. Loop je erheen, dan verschijnt IN en kun je rijden (linker stick sturen en gas,
 ## rechter stick = claxon). Voorkant is -Z. De voordeur zwaait open, de bus knielt even bij het instappen.
 ##
-## Schade: kogels doen weinig (pantser 0,5x), ontploffingen veel. Per fase gaat er meer kapot: voorruit, achterruit, banden plat,
+## Schade: kogels doen 0,9x, ontploffingen veel meer. Per fase gaat er meer kapot: voorruit, achterruit, banden plat,
 ## deuren en kap eraf, rook uit de motor, dan brand. Onder 30% brandt hij en ontploft na enkele seconden vanzelf; op 0 meteen.
 ## De ontploffing is groot: vuurbal, schokgolf, rondvliegende deuren, kap en wielen, schade aan alles binnen 9 m (ook jou),
 ## kettingreactie naar andere auto's, vaten en pompen. Het verkoolde wrak blijft staan (met collision) en brandt nog even na.
@@ -12,7 +12,7 @@ extends CharacterBody3D
 
 const MODEL := preload("res://assets/bus.glb")
 const HP := 1600.0
-const BULLET_ARMOR := 0.35           # kogels doen een derde: een bus kapotschieten duurt lang
+const BULLET_ARMOR := 0.9            # v95: Thompson ~10 s tot brand, MG 42 ~4 s (was 0,35x: veel te lang)
 const BLAST_DAMAGE := 900.0          # ontploffing vlakbij; neemt af met de afstand
 const BLAST_RADIUS := 14.0           # straal van de ontploffing van de bus zelf (auto: 9 m)
 const BLAST_HURT := 620.0            # schade aan vijanden, jou en gebouwen in die straal
@@ -219,7 +219,7 @@ func blast_dist(at: Vector3) -> float:
 	return Vector3(maxf(absf(l.x) - h.x, 0.0), maxf(absf(l.y) - h.y, 0.0), maxf(absf(l.z) - h.z, 0.0)).length()
 
 
-## Kogel (of mes) geraakt: pantser 0,5x, bij de eerste klap gaat het alarm.
+## Kogel (of mes) geraakt: maal BULLET_ARMOR, bij de eerste klap gaat het alarm.
 func hit(dmg: float, dir: Vector3, _from_player: bool) -> void:
 	if exploded or wreck:
 		return

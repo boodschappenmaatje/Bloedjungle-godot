@@ -53,6 +53,7 @@ func _run() -> void:
 	var action_btn: Script = load("res://scripts/action_btn.gd")
 	var sticks: Control = main.get_node("Hud/Sticks")
 	_check(sticks.get("_last_touch_hud_visible"), "vaste mobiele joysticks worden na de start niet getekend")
+	GameSettings.set_value("fps", "on")
 	for s in SIZES:
 		root.size = s
 		root.content_scale_factor = 1.0
@@ -83,6 +84,14 @@ func _run() -> void:
 				var b: Rect2 = (buttons[j] as Control).get_global_rect()
 				if a.intersects(b):
 					_check(false, "%s: overlap %s en %s" % [s, _label(buttons[i]), _label(buttons[j])])
+		# de fps-teller staat aan in de instellingen: tijdens spelen zichtbaar, in beeld en zonder iets af te dekken
+		var fps_label: Label = main.get_node("Hud/HudExtra")._fps
+		_check(fps_label.is_visible_in_tree(), "%s: fps-teller onzichtbaar terwijl hij aan staat" % s)
+		var fr := Rect2(fps_label.global_position, fps_label.get_minimum_size())
+		_check(Rect2(Vector2.ZERO, view).encloses(fr), "%s: fps-teller buiten beeld (%s)" % [s, fr])
+		for b in buttons:
+			if fr.intersects((b as Control).get_global_rect()):
+				_check(false, "%s: fps-teller overlapt %s" % [s, _label(b)])
 		# de contextknoppen staan onder de wapenbalk in landschap en portret.
 		for slot in 3:
 			var context_y: float = view.y - 126.0 if view.x < view.y else view.y - 68.0
@@ -132,6 +141,7 @@ func _run() -> void:
 	hud.call("_process", 3.1)
 	_check(banner.visible and hud.get_node("BannerPlate/Banner/Big").text == "GOLF 2", "golfbanner keert niet terug bij de volgende voorbereiding")
 	_check(start_wave.visible and shop_button.visible, "voorbereidingsknoppen keren niet terug na de overwinningsmelding")
+	GameSettings.set_value("fps", "off")
 	main.queue_free()
 	await process_frame
 	if failures.is_empty():

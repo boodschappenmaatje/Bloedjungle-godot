@@ -4,6 +4,8 @@ extends Control
 ## punten en score met pauzeknop rechtsboven, munitie rechtsonder, rode rand bij schade en
 ## aanvalspijltjes aan de kant waar de aanval vandaan komt.
 
+const HUD_SCRIPT := preload("res://scripts/hud.gd")  # voor het versienummer achter de fps-teller
+
 var _hp_bar: ProgressBar
 var _base_bar: ProgressBar
 var _enemies: Label
@@ -487,7 +489,9 @@ func _layout() -> void:
 		_top_right.position = Vector2(safe.x, safe.y + _status_panel.size.y + 7.0 + 34.0 + 4.0)
 	else:
 		_top_right.position = Vector2(size.x - safe.z - _radar.size.x - _top_right.size.x, safe.y + 4.0)
-	_fps.position = Vector2(safe.x, safe.y + _status_panel.size.y + 46.0)
+	# onder de TACTISCH-knoppen (liggend) of onder de punten (staand), zodat hij niets afdekt
+	var below := _top_right.position.y + _top_right.size.y if size.x < size.y else _camera_controls.position.y + 34.0
+	_fps.position = Vector2(safe.x + 4.0, below + 6.0)
 	_arrows.queue_redraw()
 
 
@@ -519,9 +523,10 @@ func _process(delta: float) -> void:
 		if _radar_refresh <= 0.0:
 			_radar_refresh = 0.12
 			_radar.queue_redraw()
-	_fps.visible = GameSettings.get_value("fps") == "on" and StadEditor.debug_enabled and not Game.editing
+	# alleen de instelling telt; vroeger ook StadEditor.debug_enabled (F3), en die kun je op de iPhone niet aanzetten
+	_fps.visible = GameSettings.get_value("fps") == "on" and not Game.editing
 	if _fps.visible:
-		_fps.text = "%d FPS · %d%%" % [Engine.get_frames_per_second(), roundi(get_viewport().scaling_3d_scale * 100.0)]
+		_fps.text = "%d FPS · %d%% · %s" % [Engine.get_frames_per_second(), roundi(get_viewport().scaling_3d_scale * 100.0), HUD_SCRIPT.VERSION]
 	var main := get_parent().get_parent()
 	var left: int = Game.enemies.size() + (main.queue.size() if "queue" in main else 0)
 	_enemies.text = "–" if Game.state != "play" else str(left)
@@ -561,7 +566,6 @@ func _process(delta: float) -> void:
 
 ## Rode pijltjes aan de rand, knipperend, zoals .atk in styles.css.
 func _draw_arrows() -> void:
-	_draw_route_arrows()
 	if Game.state != "play":
 		return
 	var a := 0.675 + 0.325 * cos(Time.get_ticks_msec() / 400.0 * PI)

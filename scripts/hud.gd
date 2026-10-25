@@ -2,7 +2,7 @@ extends CanvasLayer
 ## Meldingen en knoppen midden op het scherm (golf-titel, "Start nu", gesneuveld). De balken, punten
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
-const VERSION := "v104"
+const VERSION := "v106"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -117,7 +117,7 @@ func _layout_wave_banner() -> void:
 
 
 func _process(delta: float) -> void:
-	info.visible = GameSettings.get_value("fps") == "on" and StadEditor.debug_enabled and not Game.editing
+	info.visible = false  # de versie staat nu achter de fps-teller (HudExtra); hier zat hij onder de TACTISCH-knoppen
 	if _banner_t > 0.0:
 		_banner_t -= delta
 	var temporary_banner := _banner_t > 0.0

@@ -185,11 +185,38 @@ func _surface_named(mi: MeshInstance3D, mat_name: String) -> int:
 
 # ---------------------------------------------------------------- schade
 
-## Zit dit punt in de botsdoos? (een kogel die vlak tegen de auto begint, ziet hem anders niet: de straal start erbinnen)
-func inside(p: Vector3) -> bool:
-	var b := _shape.shape as BoxShape3D
-	var l := to_local(p) - _shape.position
-	return absf(l.x) < b.size.x * 0.5 and absf(l.z) < b.size.z * 0.5 and absf(l.y) < b.size.y * 0.5
+## Waar raakt het stuk kogelbaan van a naar b de auto? Geeft 0..1 langs de baan, of -1 als hij mist.
+## Kogels vliegen op schouderhoogte (1,6-1,7 m), net boven het dak van de botsdoos: daarom telt alles tot Bullet.HIT_TOP
+## boven de grond als raak, zoals je het van bovenaf ziet. Begint de baan in de doos, dan is het meteen raak (0).
+func segment_hit(a: Vector3, b: Vector3) -> float:
+	var box := _shape.shape as BoxShape3D
+	var la := to_local(a)
+	var lb := to_local(b)
+	var lo := Vector3(_shape.position.x - box.size.x * 0.5, -0.3, _shape.position.z - box.size.z * 0.5)
+	var hi := Vector3(_shape.position.x + box.size.x * 0.5, maxf(_shape.position.y + box.size.y * 0.5, Bullet.HIT_TOP), _shape.position.z + box.size.z * 0.5)
+	var t0 := 0.0
+	var t1 := 1.0
+	var d := lb - la
+	for i in 3:
+		if absf(d[i]) < 0.000001:
+			if la[i] < lo[i] or la[i] > hi[i]:
+				return -1.0
+			continue
+		var ta := (lo[i] - la[i]) / d[i]
+		var tb := (hi[i] - la[i]) / d[i]
+		t0 = maxf(t0, minf(ta, tb))
+		t1 = minf(t1, maxf(ta, tb))
+		if t0 > t1:
+			return -1.0
+	return t0
+
+
+## Afstand van een punt tot de botsdoos (0 als het erin ligt).
+func blast_dist(at: Vector3) -> float:
+	var box := _shape.shape as BoxShape3D
+	var l := to_local(at) - _shape.position
+	var h := box.size * 0.5
+	return Vector3(maxf(absf(l.x) - h.x, 0.0), maxf(absf(l.y) - h.y, 0.0), maxf(absf(l.z) - h.z, 0.0)).length()
 
 
 ## Kogel (of mes) geraakt: pantser 0,5x, bij de eerste klap gaat het alarm.
@@ -207,9 +234,9 @@ static func catch_blast(at: Vector3, radius: float) -> void:
 	for a: Bus in all.duplicate():
 		if not is_instance_valid(a) or a.exploded or a.wreck:
 			continue
-		var d := a.global_position.distance_to(at)
-		if d < radius + 1.5:
-			a.take(BLAST_DAMAGE * (1.0 - clampf(d / (radius + 1.5), 0.0, 1.0) * 0.7))
+		var d := a.blast_dist(at)   # vanaf de carrosserie, niet het midden: een knal bij de kont van een lange bus telt ook
+		if d < radius + 0.5:
+			a.take(BLAST_DAMAGE * (1.0 - clampf(d / (radius + 0.5), 0.0, 1.0) * 0.7))
 
 
 func take(dmg: float) -> void:

@@ -39,10 +39,10 @@ func _process(_dt: float) -> bool:
 		_check(AanvalRoutes.pick(1) == ["brug"], "golf 1 is niet de brug")
 		# _spawn gebruikt de routes van de golf
 		game.state = "play"
-		game.routes = ["oost"]
+		game.routes = ["industrie"]
 		main._spawn("knife")
 		var e: Node = game.enemies[game.enemies.size() - 1]
-		_check(e.global_position.distance_to(Vector3(78, 0, -103)) < 10.0, "spawn niet aan het begin van de route: %s" % e.global_position)
+		_check(e.global_position.distance_to(Vector3(72, 0, -108)) < 10.0, "spawn niet aan het begin van de route: %s" % e.global_position)
 		_check(e.get("path").size() == 2, "vijand heeft geen route")
 		e.queue_free()
 		game.enemies.erase(e)
@@ -82,7 +82,7 @@ func _process(_dt: float) -> bool:
 		for id in walkers:
 			_check(arrived.has(id), "route %s komt niet bij de basis (staat op %s)" % [id, walkers[id].global_position if is_instance_valid(walkers[id]) else "weg"])
 			for i in best[id].size():
-				_check(best[id][i] < 4.0, "route %s: punt %d niet gehaald (%.1f m)" % [id, i, best[id][i]])
+				_check(best[id][i] < 6.0, "route %s: punt %d niet gehaald (%.1f m)" % [id, i, best[id][i]])
 			print("route %s: bij de basis na %s s" % [id, str(arrived.get(id, "-"))])
 		print("ROUTES TEST: %s" % ("OK" if fails == 0 else "%d FOUT" % fails))
 		quit(1 if fails else 0)

@@ -7,12 +7,14 @@ class_name AanvalRoutes
 ## pts: punten die de vijand afloopt (noordkant voor de stadsroutes, de rivier steekt hij daarna zelf over).
 ## show: waar de pijl op wijst, op de plek waar ze bij de basis aankomen.
 const LIST := {
-	"brug": {"naam": "BRUG", "uitleg": "door de hoofdstraat en over de brug", "stad": true,
-		"pts": [Vector3(0, 0, -132), Vector3(0, 0, -118), Vector3(0, 0, -104)], "show": Vector3(0, 0, -82)},
+	"brug": {"naam": "HOOFDSTRAAT", "uitleg": "van het plein door de hoofdstraat en over de brug", "stad": true,
+		"pts": [Vector3(52, 0, -126), Vector3(16, 0, -126), Vector3(0, 0, -121), Vector3(0, 0, -104)], "show": Vector3(0, 0, -82)},
+	"wijk": {"naam": "WOONWIJK", "uitleg": "door de woonwijk en het steegje naar de brug", "stad": true,
+		"pts": [Vector3(-62, 0, -126), Vector3(-30, 0, -126), Vector3(-30, 0, -110), Vector3(-8, 0, -108), Vector3(0, 0, -104)], "show": Vector3(-12, 0, -82)},
 	"kade": {"naam": "KADE", "uitleg": "langs de kade naar de brug", "stad": true,
-		"pts": [Vector3(-80, 0, -98.5), Vector3(-45, 0, -100.5), Vector3(-6, 0, -101.5)], "show": Vector3(-6, 0, -82)},
-	"oost": {"naam": "ONDIEPTE", "uitleg": "door de zijstraat en de ondiepte", "stad": true,
-		"pts": [Vector3(78, 0, -103), Vector3(44, 0, -102)], "show": Vector3(38, 0, -80)},
+		"pts": [Vector3(-80, 0, -99.5), Vector3(-45, 0, -100.5), Vector3(-6, 0, -101.5)], "show": Vector3(-24, 0, -82)},
+	"industrie": {"naam": "INDUSTRIE", "uitleg": "langs de wegversperring en de ondiepte", "stad": true,
+		"pts": [Vector3(72, 0, -108), Vector3(60, 0, -108)], "show": Vector3(40, 0, -80)},
 	"moeras": {"naam": "MOERAS", "uitleg": "door het moeras in het westen", "stad": false,
 		"pts": [Vector3(-64, 0, -14), Vector3(-40, 0, -10)], "show": Vector3(-38, 0, -10)},
 	"jungle": {"naam": "JUNGLE", "uitleg": "door de jungle in het oosten", "stad": false,
@@ -21,9 +23,10 @@ const LIST := {
 		"pts": [Vector3(6, 0, 64), Vector3(0, 0, 42)], "show": Vector3(0, 0, 40)},
 }
 
+
 ## De eerste golven staan vast, zodat je de routes een voor een leert kennen.
-const FIRST := [["brug"], ["oost"], ["brug", "moeras"], ["kade", "jungle"]]
-const CITY := ["brug", "kade", "oost"]
+const FIRST := [["brug"], ["wijk"], ["brug", "moeras"], ["kade", "jungle"]]
+const CITY := ["brug", "wijk", "kade", "industrie"]
 const OTHER := ["moeras", "jungle", "zuid"]
 const SPREAD := 2.2  # m zijwaartse spreiding, zodat ze niet in een rij lopen
 

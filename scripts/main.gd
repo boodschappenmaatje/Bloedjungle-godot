@@ -124,7 +124,7 @@ func start_wave() -> void:
 	queue = Data.build_wave(Game.wave)
 	spawn_t = 0.5
 	clear_t = -1.0
-	Game.banner.emit("GOLF %d BEGONNEN" % Game.wave, "Ze komen " + AanvalRoutes.describe(Game.routes), 2.5)
+	Game.banner.emit("GOLF %d BEGONNEN" % Game.wave, "Ze komen " + AanvalRoutes.describe(Game.routes), 1.5)
 	Game.changed.emit()
 
 

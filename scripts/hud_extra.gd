@@ -393,9 +393,9 @@ func _draw_route_arrows() -> void:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
 		return
-	var pulse := 0.7 + 0.3 * sin(Time.get_ticks_msec() / 260.0)
+	var pulse := 0.85 + 0.15 * sin(Time.get_ticks_msec() / 260.0)
 	var red := Color(1.0, 0.2, 0.1, pulse)
-	var safe := Rect2(Vector2.ZERO, size).grow(-46.0)
+	var safe := Rect2(Vector2(70.0, 120.0), size - Vector2(140.0, 270.0))  # buiten de banner, radar en knoppen
 	var font := UI.body(700, 0)
 	for id in Game.routes:
 		var r: Dictionary = AanvalRoutes.LIST[id]
@@ -408,7 +408,7 @@ func _draw_route_arrows() -> void:
 		if not behind and safe.has_point(p):
 			# in beeld: de pijl ligt op de grond en wijst in de looprichting
 			dir = (cam.unproject_position(at + travel * 4.0) - p).normalized()
-			tip = p + dir * 22.0
+			tip = p + dir * 30.0
 		else:
 			var c := size * 0.5
 			var v := (p - c) * (-1.0 if behind else 1.0)
@@ -418,12 +418,12 @@ func _draw_route_arrows() -> void:
 			dir = v.normalized()
 			tip = c + v * k  # aan de rand: de punt wijst naar buiten, naar waar ze vandaan komen
 		var side := Vector2(-dir.y, dir.x)
-		var base := tip - dir * 30.0
-		_arrows.draw_colored_polygon(PackedVector2Array([tip, base + side * 17.0, base + dir * 8.0, base - side * 17.0]), red)
-		_arrows.draw_line(base + dir * 4.0, base - dir * 16.0, red, 7.0, true)
+		var base := tip - dir * 40.0
+		_arrows.draw_colored_polygon(PackedVector2Array([tip, base + side * 24.0, base + dir * 10.0, base - side * 24.0]), red)
+		_arrows.draw_line(base + dir * 4.0, base - dir * 22.0, red, 10.0, true)
 		var label: String = r.naam
 		var lw := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15).x
-		var lp := base - dir * 34.0 - Vector2(lw * 0.5, -5.0)
+		var lp := base - dir * 44.0 - Vector2(lw * 0.5, -5.0)
 		lp.x = clampf(lp.x, 6.0, size.x - lw - 6.0)
 		lp.y = clampf(lp.y, 20.0, size.y - 8.0)
 		_arrows.draw_string_outline(font, lp, label, HORIZONTAL_ALIGNMENT_LEFT, -1, 15, 5, Color(0, 0, 0, 0.75))

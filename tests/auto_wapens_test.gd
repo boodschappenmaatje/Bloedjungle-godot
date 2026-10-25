@@ -120,7 +120,7 @@ func _run() -> void:
 	_heal(car)
 	game.note_blast(car.global_position + Vector3(0, 0.5, 2.5), 4.8)
 	var blast_dmg: float = car.HP - car.hp
-	_check("pistoolkogel doet %.0f, raketontploffing ernaast %.0f (kogel < 5%% van explosief)" % [bullet_dmg, blast_dmg], bullet_dmg > 0.0 and bullet_dmg < blast_dmg * 0.05)
+	_check("pistoolkogel doet %.0f, raketontploffing ernaast %.0f (kogel < 10%% van explosief)" % [bullet_dmg, blast_dmg], bullet_dmg > 0.0 and bullet_dmg < blast_dmg * 0.1)
 	print("AUTO WAPENS TEST KLAAR, fouten: ", failures)
 	quit(1 if failures > 0 else 0)
 

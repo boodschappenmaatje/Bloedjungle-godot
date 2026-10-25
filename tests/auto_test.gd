@@ -42,11 +42,11 @@ func _process(_d: float) -> bool:
 		check("brandende auto brandt zonder lont", cars[4].burning and cars[4]._fuse == 0.0)
 	if frames == 20:
 		var a = cars[0]
-		# 10 kogels van 26: halve schade
-		for i in 12:
+		# 6 kogels van 26: volle schade (v95)
+		for i in 6:
 			a.hit(26.0, Vector3.RIGHT, true)
-		check("12 pistoolkogels: hp %.0f (verwacht 544)" % a.hp, absf(a.hp - 544.0) < 1.0)
-		check("nog niet in brand na 12 kogels", not a.burning and a.stage == 1)
+		check("6 pistoolkogels: hp %.0f (verwacht 544)" % a.hp, absf(a.hp - 544.0) < 1.0)
+		check("nog niet in brand na 6 kogels", not a.burning and a.stage == 1)
 		check("voorruit eruit na de eerste fase", not a._car.get_node("Voorruit").visible)
 		# auto ernaast op 4 m blijft heel zolang er geen explosie is
 		check("buurauto ongedeerd", cars[1].hp == A.HP)
@@ -62,14 +62,14 @@ func _process(_d: float) -> bool:
 	if frames == 30:
 		check("echte kogels (ook met over_wall) raken de auto: hp %.0f van %.0f" % [cars[1].hp, bullets_hp0], cars[1].hp <= bullets_hp0 - 30.0)
 		var a = cars[0]
-		for i in 20:
+		for i in 10:
 			a.hit(26.0, Vector3.RIGHT, true)
-		check("na 30 kogels: hp %.0f, stage %d, deuk %.2f" % [a.hp, a.stage, a._blend], a.stage >= 3 and a._blend > 0.2)
+		check("na 16 kogels: hp %.0f, stage %d, deuk %.2f" % [a.hp, a.stage, a._blend], a.stage >= 3 and a._blend > 0.2)
 		check("banden plat", a._flat.size() >= 2)
 		check("deur eraf", a._gone.size() >= 1)
-		for i in 20:
+		for i in 10:
 			a.hit(26.0, Vector3.RIGHT, true)
-		check("na 50 kogels brandt hij: hp %.0f" % a.hp, a.burning and not a.exploded)
+		check("na 26 kogels brandt hij: hp %.0f" % a.hp, a.burning and not a.exploded)
 	if frames == 60:
 		var a = cars[0]
 		print("lont: ", a._fuse)

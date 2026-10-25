@@ -59,13 +59,13 @@ func _process(_d: float) -> bool:
 		check("buurbus op 7 m ongedeerd (buiten schade)", buses[2].hp == B.HP)
 	if frames == 30:
 		var a = buses[0]
-		for i in 100:
+		for i in 21:
 			a.hit(26.0, Vector3.RIGHT, true)
-		check("na 130 kogels: hp %.0f, stage %d, deuk %.2f" % [a.hp, a.stage, a._blend], a.stage >= 3 and a._blend > 0.2)
+		check("na 51 kogels: hp %.0f, stage %d, deuk %.2f" % [a.hp, a.stage, a._blend], a.stage >= 3 and a._blend > 0.2)
 		check("banden plat", a._flat.size() >= 2)
 		check("ruiten eruit", not a._car.get_node("Voorruit").visible and not a._car.get_node("RuitenR").visible)
 		check("deur eraf", a._gone.size() >= 1)
-		check("na 130 kogels brandt hij (onder 30%%): hp %.0f" % a.hp, a.burning and not a.exploded)
+		check("na 51 kogels brandt hij (onder 30%%): hp %.0f" % a.hp, a.burning and not a.exploded)
 	if frames == 800:
 		var a = buses[0]
 		check("zelf ontploft na de lont", a.exploded and a.wreck)

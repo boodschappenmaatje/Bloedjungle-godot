@@ -3,7 +3,7 @@ extends CharacterBody3D
 ## Personenauto in de stad (assets/auto.glb, bron/auto/maak_auto.py). Hij staat geparkeerd; loop je erheen, dan verschijnt INSTAPPEN en
 ## kun je er zelf mee rijden (linker stick sturen en gas, rechter stick = claxon). Voorkant is -Z.
 ##
-## Schade: kogels doen weinig (pantser 0,5x), ontploffingen veel. Per fase gaat er meer kapot: voorruit, achterruit, banden plat,
+## Schade: kogels doen gewone schade, ontploffingen veel meer. Per fase gaat er meer kapot: voorruit, achterruit, banden plat,
 ## deuren en kap eraf, rook uit de motor, dan brand. Onder 30% brandt hij en ontploft na enkele seconden vanzelf; op 0 meteen.
 ## De ontploffing is groot: vuurbal, schokgolf, rondvliegende deuren, kap en wielen, schade aan alles binnen 9 m (ook jou),
 ## kettingreactie naar andere auto's, vaten en pompen. Het verkoolde wrak blijft staan (met collision) en brandt nog even na.
@@ -11,7 +11,7 @@ extends CharacterBody3D
 
 const MODEL := preload("res://assets/auto.glb")
 const HP := 700.0
-const BULLET_ARMOR := 0.5            # kogels doen de helft: een auto kapotschieten duurt lang
+const BULLET_ARMOR := 1.0            # v95: Thompson ~3 s tot brand, pistool ~5,5 s (was 0,5x: veel te lang)
 const BLAST_DAMAGE := 560.0          # ontploffing vlakbij; neemt af met de afstand
 const BLAST_RADIUS := 9.0            # straal van de ontploffing van de auto zelf
 const BLAST_HURT := 380.0            # schade aan vijanden, jou en gebouwen in die straal
@@ -232,7 +232,7 @@ func blast_dist(at: Vector3) -> float:
 	return Vector3(maxf(absf(l.x) - h.x, 0.0), maxf(absf(l.y) - h.y, 0.0), maxf(absf(l.z) - h.z, 0.0)).length()
 
 
-## Kogel (of mes) geraakt: pantser 0,5x, bij de eerste klap gaat het alarm.
+## Kogel (of mes) geraakt: maal BULLET_ARMOR, bij de eerste klap gaat het alarm.
 func hit(dmg: float, dir: Vector3, _from_player: bool) -> void:
 	if exploded or wreck:
 		return

@@ -1,0 +1,96 @@
+{
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "clips": {
+  "VoordeurOpen": {
+   "duration": 1.2000000476837158,
+   "moved": [
+    "DeurVA"
+   ]
+  },
+  "MiddendeurOpen": {
+   "duration": 1.2000000476837158,
+   "moved": [
+    "DeurMB"
+   ]
+  },
+  "MotorluikOpen": {
+   "duration": 1.2000000476837158,
+   "moved": [
+    "Motorluik"
+   ]
+  },
+  "Knielen": {
+   "duration": 1.2000000476837158,
+   "moved": [
+    "Carrosserie"
+   ]
+  },
+  "LichtenAan": {
+   "duration": 0.4000000059604645,
+   "moved": [
+    "LichtKopR"
+   ]
+  },
+  "Ruitenwissers": {
+   "duration": 1.3333333730697632,
+   "moved": [
+    "WisserL"
+   ]
+  },
+  "Knipperen": {
+   "duration": 1,
+   "moved": [
+    "LichtKnipVL"
+   ]
+  },
+  "Alarm": {
+   "duration": 1,
+   "moved": [
+    "LichtKopR",
+    "LichtKnipVL",
+    "LichtAchterL"
+   ]
+  }
+ },
+ "phases": [
+  {
+   "fase": "heel",
+   "deuk": 0,
+   "voorruit": true,
+   "deurLV": true
+  },
+  {
+   "fase": "beschadigd",
+   "deuk": 0.5,
+   "voorruit": false,
+   "deurLV": true
+  },
+  {
+   "fase": "zwaar",
+   "deuk": 0.8,
+   "voorruit": false,
+   "deurLV": true
+  },
+  {
+   "fase": "brandend",
+   "deuk": 1,
+   "voorruit": false,
+   "deurLV": true
+  },
+  {
+   "fase": "wrak",
+   "deuk": 1,
+   "voorruit": false,
+   "deurLV": false
+  },
+  {
+   "fase": "ontploffing",
+   "deuk": 1,
+   "voorruit": false,
+   "deurLV": true
+  }
+ ],
+ "errors": [],
+ "stats": "10.883 driehoeken · 77 meshes · 17 materialen · texturen 2048×2048, 256×256, 512×64, 1024×1024, 512×512 · schade via shape key Deuk en verkoold materiaal. Geen iPhone-FPS gemeten.",
+ "ok": true
+}

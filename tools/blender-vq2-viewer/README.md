@@ -42,3 +42,7 @@ Three.js 0.180.0 is pinned; its MIT license is in `THREE-LICENSE.txt`.
 ## Personenauto
 
 De viewer bevat ook `assets/auto.glb` (Personenauto, bron `bron/auto/`): zes echte GLB-clips (deuren, motorkap, kofferklep, ruitenwissers, knipperlichten, alarm) en een keuzelijst **Schadefase** (heel, beschadigd, zwaar, brandend, wrak) die de echte shape key `Deuk`, het verkoolde materiaal en losse onderdelen gebruikt. Brand, rook, ontploffing en vliegende onderdelen zijn Godot-effecten: zie `scenes/auto_demo.tscn` en `tests/auto_foto.gd`. Test: `node test-auto.mjs` (Chromium; zet `CHROMIUM=` als het pad afwijkt).
+
+## Stadsbus
+
+De viewer bevat ook `assets/bus.glb` (Stadsbus, bron `bron/bus/`): acht echte GLB-clips (voordeur, middendeur, motorluik, knielen, lichten, ruitenwissers, knipperlichten, alarm) en de keuzelijst **Schadefase** (heel, beschadigd, zwaar, brandend, wrak, ontploffing). Brand, rook, ontploffing en vliegende onderdelen zijn viewer-voorbeelden; de echte effecten zitten in Godot (`scenes/bus_demo.tscn`, `tests/bus_foto.gd`). Test: `node test-bus.mjs`. Een los telefoonbestand met knoppen per onderdeel maak je met `python3 tools/bus-viewer/bouw.py uit.html`.

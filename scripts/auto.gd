@@ -555,7 +555,7 @@ func _physics_process(delta: float) -> void:
 	_check -= delta
 	if _check <= 0.0 and not driven:
 		_check = 0.2
-		if p != null and not p.dead and live and not exploded and not wreck and driven_car == null \
+		if p != null and not p.dead and live and not exploded and not wreck and driven_car == null and Bus.driven_car == null \
 				and p.global_position.distance_to(global_position) < BOARD_DIST:
 			_cand = self
 			_cand_ms = Time.get_ticks_msec()
@@ -623,7 +623,7 @@ static func _pressed() -> void:
 
 func _enter() -> void:
 	var p = Game.player
-	if p == null or p.dead or driven or exploded or wreck:
+	if p == null or p.dead or driven or exploded or wreck or Bus.driven_car != null:
 		return
 	driven = true
 	driven_car = self

@@ -270,6 +270,12 @@ func _physics_process(delta: float) -> void:
 				Fx.impact(get_parent(), global_position, -dir, "metal")
 				queue_free()
 				return
+		for b: Bus in Bus.all:
+			if is_instance_valid(b) and not b.exploded and b.inside(global_position):
+				b.hit(dmg, dir, from_player)
+				Fx.impact(get_parent(), global_position, -dir, "metal")
+				queue_free()
+				return
 	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + step, mask)
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	if hit:

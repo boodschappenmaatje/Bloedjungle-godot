@@ -14,6 +14,7 @@ var base_hp := Data.BASE_HP
 var rocket_seen := false
 var base_max := Data.BASE_HP
 var prep_t := 0.0
+var routes: Array = []  # vaste aanvalsroutes van de komende of lopende golf (AanvalRoutes)
 var bonus := 0  # bonus van de laatste overleefde golf, getoond in de wapenkamer
 
 # Wat je bezit: per wapen de upgradeniveaus en de kogels in het magazijn, en de uitrusting-upgrades.

@@ -8,6 +8,7 @@ const MASK_PLAYER := 4
 const MASK_ENEMY := 8
 const MASK_BUNKER := 16
 const MASK_VEHICLE := 1024   # auto's en bussen: ook laag 2 (muur), maar kogels die over een borstwering gaan raken ze toch
+const HIT_TOP := 2.4         # tot deze hoogte raakt een kogel een auto of bus (de kogel vliegt op 1,6-1,7 m, het autodak is 1,5 m)
 
 static var _mesh: BoxMesh
 static var _mat_p: StandardMaterial3D
@@ -263,21 +264,15 @@ func _physics_process(delta: float) -> void:
 			k.hit(dmg, dir, from_player)
 			queue_free()
 			return
-	if (mask & MASK_VEHICLE) != 0:
-		for a: Auto in Auto.all:
-			if is_instance_valid(a) and not a.exploded and a.inside(global_position):
-				a.hit(dmg, dir, from_player)
-				Fx.impact(get_parent(), global_position, -dir, "metal")
-				queue_free()
-				return
-		for b: Bus in Bus.all:
-			if is_instance_valid(b) and not b.exploded and b.inside(global_position):
-				b.hit(dmg, dir, from_player)
-				Fx.impact(get_parent(), global_position, -dir, "metal")
-				queue_free()
-				return
 	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + step, mask)
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	if (mask & MASK_VEHICLE) != 0:
+		# auto's en bussen apart: de botsdoos is lager dan de kogelbaan, en een snelle kogel kan er in één stap overheen springen
+		var v := vehicle_on_path(global_position, global_position + step)
+		if not v.is_empty() and (not hit or global_position.distance_to(v.pos) <= global_position.distance_to(hit.position) + 0.01):
+			_hit_vehicle(v)
+			queue_free()
+			return
 	if hit:
 		var c: Object = hit.collider
 		if rocket:
@@ -305,6 +300,39 @@ func _physics_process(delta: float) -> void:
 		queue_free()
 		return
 	global_position += step
+
+
+## De eerste auto of bus op het stuk baan van a naar b: {car, pos}, of leeg.
+static func vehicle_on_path(a: Vector3, b: Vector3) -> Dictionary:
+	var best := 2.0
+	var found: Node3D = null
+	var mid := (a + b) * 0.5
+	var reach := a.distance_to(b) * 0.5 + 6.0   # 6 m: ruim een halve bus; verder weg hoeft de doos niet bekeken te worden
+	for list: Array in [Auto.all, Bus.all]:
+		for v: Node3D in list:
+			if not is_instance_valid(v):
+				continue
+			var gp := v.global_position
+			if Vector2(gp.x - mid.x, gp.z - mid.z).length_squared() > reach * reach:
+				continue
+			var t: float = v.segment_hit(a, b)
+			if t >= 0.0 and t < best:
+				best = t
+				found = v
+	if found == null:
+		return {}
+	return {"car": found, "pos": a.lerp(b, best)}
+
+
+func _hit_vehicle(v: Dictionary) -> void:
+	var at: Vector3 = v.pos
+	if rocket:
+		_boom_enemy(at)
+	elif explosive > 0.0:
+		_explode(at)
+	else:
+		v.car.hit(dmg, dir, from_player)
+		Fx.impact(get_parent(), at, -dir, "metal")
 
 
 func _impact_material(collider: Object) -> String:

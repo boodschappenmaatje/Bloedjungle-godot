@@ -55,7 +55,12 @@ func _physics_process(delta: float) -> void:
 	# muren en de bunker houden hem tegen
 	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + step, Bullet.MASK_WALL | Bullet.MASK_BUNKER)
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
-	if hit:
+	# auto's en bussen: net als bij kogels telt de carrosserie tot Bullet.HIT_TOP, dan stuitert hij ertegen en valt ernaast
+	var v := Bullet.vehicle_on_path(global_position, global_position + step)
+	if not v.is_empty() and (not hit or global_position.distance_to(v.pos) < global_position.distance_to(hit.position)):
+		global_position = global_position.lerp(v.pos, 0.9) - Vector3(step.x, 0.0, step.z).normalized() * 0.15
+		vel = Vector3(-vel.x * 0.3, minf(vel.y, 0.0) * 0.35, -vel.z * 0.3)
+	elif hit:
 		global_position = hit.position + hit.normal * 0.15
 		var n: Vector3 = hit.normal
 		vel = vel.bounce(n) * 0.35

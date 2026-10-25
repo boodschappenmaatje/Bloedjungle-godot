@@ -255,6 +255,12 @@ func _aim_point() -> Vector3:
 	var q := PhysicsRayQueryParameters3D.create(from, from + fwd * best, Kit.LAYER_WALL | Kit.LAYER_BUNKER | 8)
 	q.exclude = [get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	# auto's en bussen zijn lager dan de loop: zoek ze op ooghoogte, zodat de granaat óp de auto valt en niet erachter
+	var low := Vector3(from.x, 1.0, from.z)
+	var v := Bullet.vehicle_on_path(low, low + fwd * best)
+	if not v.is_empty() and v.car != self and (not hit or from.distance_to(hit.position) > low.distance_to(v.pos)):
+		var vp: Vector3 = v.pos
+		return Vector3(vp.x, 0.8, vp.z)
 	if hit:
 		var at: Vector3 = hit.position
 		return Vector3(at.x, clampf(at.y, 0.0, 5.0), at.z)

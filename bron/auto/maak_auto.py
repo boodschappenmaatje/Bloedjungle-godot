@@ -136,22 +136,22 @@ def rubber_textures(size=512):
 
 
 def wreck_textures(size=1024):
-    """Uitgebrand wrak: roet, as, oranje roest en geblakerde lak. Hergebruikt dezelfde UV-indeling als de lak."""
+    """Uitgebrand wrak: roet, as en een beetje doorgebrande roest. Hergebruikt dezelfde UV-indeling als de lak."""
     y, x = np.mgrid[0:size, 0:size]
     v = 1 - y / size
-    n1, n2, n3 = fbm(size, 64, 50), fbm(size, 16, 51), fbm(size, 4, 52)
-    base = 0.035 + 0.05 * n1
+    n1, n2, n3, fine = fbm(size, 128, 50), fbm(size, 32, 51), fbm(size, 8, 52), fbm(size, 4, 55, 2)
+    base = (0.028 + 0.035 * n1) * (0.75 + 0.5 * fine)
     img = np.repeat(base[..., None], 3, axis=2)
-    ash = sm(n2, 0.55, 0.8) * (0.4 + 0.6 * sm(v, 0.3, 1.0))
-    img = img * (1 - ash[..., None]) + np.array([0.28, 0.27, 0.26])[None, None, :] * ash[..., None]
-    rust = sm(fbm(size, 32, 53), 0.5, 0.75) * 0.9
-    img = img * (1 - rust[..., None]) + np.array([0.30, 0.13, 0.05])[None, None, :] * rust[..., None] * (0.5 + n3[..., None])
-    bare = sm(fbm(size, 16, 54), 0.78, 0.86)
-    img = img * (1 - bare[..., None]) + np.array([0.11, 0.095, 0.085])[None, None, :] * bare[..., None]
-    h = 0.55 * n3 + 0.3 * n2 + 0.2 * rust
-    rough = np.clip(0.8 + 0.2 * n2 - 0.25 * bare, 0, 1)
-    orm = np.stack([np.ones_like(h) * 0.7, rough, bare * 0.5 + rust * 0.15], axis=2)
-    return (save_img("auto_wrak", img), save_img("auto_wrak_n", normal_from_height(h, 5.0), True),
+    ash = sm(n2, 0.6, 0.85) * (0.2 + 0.5 * sm(v, 0.4, 1.0)) * 0.55
+    img = img * (1 - ash[..., None]) + np.array([0.15, 0.145, 0.14])[None, None, :] * ash[..., None]
+    rust = sm(fbm(size, 64, 53), 0.58, 0.8) * sm(0.6 - v, -0.2, 0.5) * 0.5
+    img = img * (1 - rust[..., None]) + np.array([0.20, 0.09, 0.045])[None, None, :] * rust[..., None] * (0.6 + 0.8 * n3[..., None])
+    bare = sm(fbm(size, 16, 54), 0.78, 0.88) * 0.6
+    img = img * (1 - bare[..., None]) + np.array([0.075, 0.07, 0.065])[None, None, :] * bare[..., None]
+    h = 0.4 * n3 + 0.3 * n2 + 0.3 * fine + 0.2 * rust
+    rough = np.clip(0.8 + 0.2 * n2 - 0.3 * bare, 0, 1)
+    orm = np.stack([np.ones_like(h) * 0.7, rough, bare * 0.4 + rust * 0.1], axis=2)
+    return (save_img("auto_wrak", img), save_img("auto_wrak_n", normal_from_height(h, 3.0), True),
             save_img("auto_wrak_orm", orm, True))
 
 

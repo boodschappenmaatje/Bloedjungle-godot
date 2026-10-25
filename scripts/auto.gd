@@ -118,6 +118,9 @@ func _ready() -> void:
 	for n in _car.get_children():
 		if String(n.name).begins_with("Licht"):
 			_tail.append(n)
+	_vis_lamps(false)   # de verlichte lenzen kosten elk een draw call: alleen zichtbaar als ze iets doen
+	for mi in _model.find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).visibility_range_end = 90.0   # ver weg tekent de iPhone geen auto's
 	if kind == "autowrak":
 		_make_wreck(true)
 	elif kind == "autobrand":
@@ -134,33 +137,40 @@ func _exit_tree() -> void:
 		driven_car = null
 
 
-static var _stripped := false
+static var _lib: AnimationLibrary
 static var _hood_q := Quaternion.IDENTITY
 const CLIP_NODES := {"Ruitenwissers": "Wisser", "Knipperen": "LichtKnip", "Alarm": "Licht"}
 
 
 ## De Blender-export keyt in elke clip ook alle andere bewegende onderdelen (op hun rustpositie). Dat zou bij het afspelen van een
-## clip een afgebroken deur of de opengesprongen kap weer terugzetten, dus per clip blijven alleen de eigen sporen over.
+## clip een afgebroken deur of de opengesprongen kap weer terugzetten, dus de auto's krijgen één gedeelde bibliotheek waarin per clip
+## alleen de eigen sporen zitten. DeurenOpen, KapOpen en KofferOpen blijven in de glb zelf (viewer en demo); in het spel staat de kap
+## met de stand uit KapOpen en bewegen deuren in code.
 func _strip_clips() -> void:
-	if _stripped or _anim == null:
+	if _anim == null:
 		return
-	_stripped = true
-	# DeurenOpen, KapOpen en KofferOpen zijn voor de viewer; in het spel zetten we de kap met deze stand en bewegen deuren in code
-	var kap := _anim.get_animation("KapOpen")
-	for i in kap.get_track_count():
-		if kap.track_get_type(i) == Animation.TYPE_ROTATION_3D and String(kap.track_get_path(i)).contains("Motorkap"):
-			_hood_q = kap.rotation_track_interpolate(i, 0.45)   # klemt half open
-	var lib := _anim.get_animation_library("")
-	for clip in ["DeurenOpen", "KapOpen", "KofferOpen"]:
-		lib.remove_animation(clip)
-	for clip in CLIP_NODES:
-		if not _anim.has_animation(clip):
-			continue
-		var a := _anim.get_animation(clip)
-		for i in range(a.get_track_count() - 1, -1, -1):
-			var leaf := String(a.track_get_path(i)).get_slice("/", String(a.track_get_path(i)).get_slice_count("/") - 1).get_slice(":", 0)
-			if not leaf.begins_with(CLIP_NODES[clip]):
-				a.remove_track(i)
+	if _lib == null:
+		var src := _anim.get_animation_library("")
+		var kap := src.get_animation("KapOpen")
+		for i in kap.get_track_count():
+			if kap.track_get_type(i) == Animation.TYPE_ROTATION_3D and String(kap.track_get_path(i)).contains("Motorkap"):
+				_hood_q = kap.rotation_track_interpolate(i, 0.45)   # klemt half open
+		_lib = AnimationLibrary.new()
+		for clip in CLIP_NODES:
+			var a := src.get_animation(clip).duplicate() as Animation
+			for i in range(a.get_track_count() - 1, -1, -1):
+				var path := String(a.track_get_path(i))
+				var leaf := path.get_slice("/", path.get_slice_count("/") - 1).get_slice(":", 0)
+				if not leaf.begins_with(CLIP_NODES[clip]):
+					a.remove_track(i)
+			_lib.add_animation(clip, a)
+	_anim.remove_animation_library("")
+	_anim.add_animation_library("", _lib)
+
+
+func _vis_lamps(on: bool) -> void:
+	for n in _tail:
+		(n as Node3D).visible = on
 
 
 func _paint() -> void:
@@ -217,6 +227,7 @@ func take(dmg: float) -> void:
 		return
 	if not driven and _alarm <= 0.0:
 		_alarm = 14.0
+		_vis_lamps(true)
 		if _anim != null and _anim.has_animation("Alarm"):
 			_anim.play("Alarm")
 	var f := hp / HP
@@ -517,6 +528,7 @@ func _make_wreck(quiet: bool) -> void:
 			p.set_surface_override_material(_surface_named(p, "Lak"), _wrak_mat)
 	for n in _tail:
 		(n as Node3D).scale = Vector3.ONE * 0.001
+	_vis_lamps(false)
 	var b := _shape.shape as BoxShape3D
 	b.size = Vector3(1.95, 1.0, 4.4)
 	_shape.position.y = 0.5
@@ -615,6 +627,7 @@ func _enter() -> void:
 	p.collision_mask = 0
 	p.velocity = Vector3.ZERO
 	_door_wave("DeurLV")
+	_vis_lamps(true)
 	_lights(GameSettings.get_value("time") != "day")
 	if _anim != null:
 		_anim.stop()
@@ -631,6 +644,10 @@ func _exit_player(blasted: bool) -> void:
 		driven_car = null
 	remove_from_group("voertuigen")
 	_lights(false)
+	for n in _tail:
+		(n as Node3D).scale = Vector3.ONE * 0.001
+	if _alarm <= 0.0:
+		_vis_lamps(false)
 	if _exhaust != null:
 		_exhaust.emitting = false
 	if _anim != null:
@@ -720,6 +737,7 @@ func _alarm_tick(delta: float) -> void:
 		_anim.stop()
 		for n in _tail:
 			(n as Node3D).scale = Vector3.ONE * 0.001
+		_vis_lamps(false)
 
 
 func _drive(delta: float, live: bool) -> void:

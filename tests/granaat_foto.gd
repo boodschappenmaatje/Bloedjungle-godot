@@ -66,22 +66,34 @@ func _process(_d: float) -> bool:
 	if frames == 100:
 		game.player.global_position = Vector3(0.0, 0, -100.0)
 		game.player.face = PI
+	var c := Vector2.ZERO
+	if btn != null:
+		c = btn.get_global_rect().get_center()
 	if frames == 150:
-		var c := btn.get_global_rect().get_center()
 		_touch(true, c)
 	if frames == 152:
-		_drag(btn.get_global_rect().get_center() + Vector2(-50, -70))   # naar linksboven: vrij veld
-	if frames == 170:
+		_drag(c + Vector2(-50, -70))   # naar linksboven: vrij veld
+	if frames == 160:
+		var aim = btn.get_parent()._aim_vis
+		for off in [Vector3(1.2, 0, 0.5), Vector3(-1.8, 0, -1.0), Vector3(0.4, 0, 2.2)]:
+			var e = load("res://scenes/enemy.tscn").instantiate()
+			e.setup("knife", 1)
+			e.position = aim.land + off
+			main.add_child(e)
+	if frames == 180:
 		_shot("vrij")
-		_drag(btn.get_global_rect().get_center() + Vector2(95, -28))   # naar rechts: de auto staat in de weg
-	if frames == 190:
-		_shot("auto_rood")
-		_drag(btn.get_global_rect().get_center() + Vector2(-50, -70))
+		_drag(c + Vector2(95, -28))   # naar rechts: de auto staat in de weg
 	if frames == 200:
-		_touch(false, btn.get_global_rect().get_center() + Vector2(-50, -70))
-	if frames == 240:
+		_shot("auto_rood")
+		_drag(c + Vector2(-26, -30))  # kort: jij staat zelf in de straal
+	if frames == 220:
+		_shot("zelf")
+		_drag(c + Vector2(-50, -70))
+	if frames == 230:
+		_touch(false, c + Vector2(-50, -70))
+	if frames == 270:
 		_shot("worp")
-	if frames == 330:
+	if frames == 360:
 		_shot("boem")
 		quit()
 	return false

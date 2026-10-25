@@ -1,0 +1,6 @@
+"""Bouwt de telefoonviewer (één HTML-bestand met het GLB ingebed): python3 tools/auto-viewer/bouw.py uit.html"""
+import base64, sys, pathlib
+d = pathlib.Path(__file__).parent
+t = (d / "sjabloon.html").read_text().replace("__FX__", (d / "effecten.js").read_text())
+glb = base64.b64encode((d / "../../assets/auto.glb").read_bytes()).decode()
+pathlib.Path(sys.argv[1]).write_text(t.replace("__GLB__", glb))

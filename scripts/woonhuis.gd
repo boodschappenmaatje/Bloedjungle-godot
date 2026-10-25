@@ -743,6 +743,9 @@ func _in_ext(lp: Vector3) -> bool:
 func _process(delta: float) -> void:
 	_tick_warn(delta)
 	var p = Game.player
+	# ver weg (en niet in dit gebouw) valt er niets te bijwerken: scheelt per gebouw elk beeld
+	if p != null and _inside < 0 and not Game.editing and global_position.distance_squared_to(p.global_position) > 3600.0:
+		return
 	var where := -1
 	if p != null and not p.driving:
 		var lp := to_local(p.global_position)

@@ -561,7 +561,6 @@ func _process(delta: float) -> void:
 
 ## Rode pijltjes aan de rand, knipperend, zoals .atk in styles.css.
 func _draw_arrows() -> void:
-	_draw_route_arrows()
 	if Game.state != "play":
 		return
 	var a := 0.675 + 0.325 * cos(Time.get_ticks_msec() / 400.0 * PI)

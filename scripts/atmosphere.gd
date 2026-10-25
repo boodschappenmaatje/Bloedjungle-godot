@@ -117,6 +117,28 @@ func apply_settings() -> void:
 	Woonhuis.apply_shadow_setting()
 	_set_rain(weather == "rain")
 	Sfx.rain(weather == "rain")
+	_apply_diagnose()
+
+
+## Test-schakelaars (Instellingen): zet onderdelen even uit om te zien welke de fps drukken. Standaard alles aan.
+func _apply_diagnose() -> void:
+	if GameSettings.get_value("t_sun") == "off":
+		_sun.shadow_enabled = false
+	var jungle: bool = GameSettings.get_value("t_jungle") == "on"
+	for g in ["foliage_palm", "foliage_bush", "foliage_fern", "foliage_grass", "foliage_rock", "treeshadow"]:
+		for n: Node3D in get_tree().get_nodes_in_group(g):
+			n.visible = jungle and (g != "treeshadow" or n.visible)
+	if Stad.current != null and is_instance_valid(Stad.current):
+		Stad.current.visible = GameSettings.get_value("t_stad") == "on"
+	if GameSettings.get_value("t_post") == "off":
+		_env.fog_enabled = false
+		_env.glow_enabled = false
+		_env.ssao_enabled = false
+		var cam := get_viewport().get_camera_3d()
+		if cam and cam.attributes is CameraAttributesPractical:
+			(cam.attributes as CameraAttributesPractical).dof_blur_far_enabled = false
+	else:
+		_env.fog_enabled = true
 
 
 func _set_rain(on: bool) -> void:

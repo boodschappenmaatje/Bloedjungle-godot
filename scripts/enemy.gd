@@ -33,6 +33,10 @@ var alert_t := 0.0
 var flank_left := 7.0
 var gate_z := 0.0  # voorkeurspoort (z) om de bunker van twee kanten te nemen; 0 = klaar of niet van toepassing
 var retreated := false
+var zone := ""  # gebied dat hij verdedigt (gebieden.gd); leeg = hoort bij de golf
+var post := Vector3.ZERO  # zijn post in dat gebied
+var awake := false  # alert: hij valt de speler aan zolang die in of vlak bij het gebied is
+var out_t := 0.0
 var path: Array = []  # vaste aanvalsroute (aanval_routes.gd): deze punten eerst aflopen
 var path_i := 0
 var stun_t := 0.0  # geschrokken van een explosie: even stilstaan
@@ -77,7 +81,10 @@ func _physics_process(delta: float) -> void:
 			model.play("stil", 0.15)
 		return
 	var player = Game.player
-	if _is_far(player):
+	if zone != "":
+		if _guard_idle(delta, player):
+			return
+	elif _is_far(player):
 		_far_step(delta)
 		return
 	_set_far(false)
@@ -92,6 +99,8 @@ func _physics_process(delta: float) -> void:
 	mode_t -= delta
 	cover_cd -= delta
 	var at_player := to_player < (20.0 if melee else 16.0) + (10.0 if alert_t > 0.0 else 0.0)
+	if zone != "":
+		at_player = player != null and not player.dead  # wakker: hij houdt zijn aandacht bij de speler
 	var tactical := not melee and type != "heavy"
 	# raketwerpers gaan eerst achter een gebouw aan (rocketTower in 18-enemies.js)
 	var rb: Variant = _rocket_target() if t.get("rocket", false) else null
@@ -218,6 +227,44 @@ var _tgt_y := 0.0
 var _far := false
 var _far_acc := 0.0
 var _far_n := 0
+
+
+## Verdediger van een gebied. Geeft true terug als hij op zijn post blijft of ernaar teruglopen moet (de rest van de stap slaat hij dan over).
+func _guard_idle(delta: float, player: Variant) -> bool:
+	var to_player := INF
+	var in_zone := false
+	if player != null and not player.dead:
+		to_player = _flat(player.global_position - global_position).length()
+		in_zone = Gebieden.inside(zone, player.global_position, 16.0 if awake else 4.0)
+	if not awake and in_zone and (to_player < 24.0 or alert_t > 0.0):
+		awake = true
+		out_t = 0.0
+	if awake:
+		if in_zone:
+			out_t = 0.0
+		else:
+			out_t += delta
+			if out_t > 4.0:
+				awake = false
+				mode = "attack"
+	if awake:
+		_set_far(false)
+		return false
+	# rustig: ver van de speler niet eens tekenen, anders op zijn post staan
+	var far_away: bool = to_player > 90.0
+	_set_far(far_away)
+	var back := _flat(post - global_position)
+	var vel := Vector3.ZERO
+	if back.length() > 1.2 and not far_away:
+		vel = Vector3(back.x, 0.0, back.y).normalized() * t.speed * speed_mul * 0.6
+		face += angle_difference(face, atan2(back.x, back.y)) * minf(1.0, delta * 10.0)
+	velocity = vel
+	if not far_away:
+		move_and_slide()
+		position.y = 0.0
+		rotation.y = face
+		_animate(vel.length(), vel.length() > 0.3)
+	return true
 
 
 ## Het volgende punt van de vaste aanvalsroute, of null als hij de route af heeft.

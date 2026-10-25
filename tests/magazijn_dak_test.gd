@@ -70,6 +70,8 @@ func _process(_d: float) -> bool:
 		frames = 603
 	if t == 700:
 		_check(granaat_laag > 4.9, "granaat van het dak blijft op het dak (laagste %.2f m)" % granaat_laag)
+		if is_instance_valid(granaat):
+			granaat.queue_free()  # klaar met de granaat: zijn puin mag de val-test hieronder niet beïnvloeden
 		# het gat in het kapotte dak: daar zak je door
 		h._roof_state(1)
 		_check(h._floor_local(Vector3(-1.0, 5.4, 0.0), 5.4) < 1.0, "door het gat in het kapotte dak val je naar binnen")

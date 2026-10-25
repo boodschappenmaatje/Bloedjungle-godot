@@ -808,6 +808,6 @@ func _soldier_cards() -> void:
 			Game.player.hp += 25.0)
 	_tiered("Kogelvrij vest", "8% minder schade per niveau.", "armor", 5, 350, "Koop", func(): pass)
 	_tiered("Conditie", "7% sneller lopen.", "speed", 4, 300, "Train", func(): pass)
-	_plain_card("Handgranaat", "Gooi 11 meter ver, grote ontploffing. Werp ze met de granaatknop (G).", "%d / %d" % [Game.grenades, Game.GRENADE_MAX], 0, 0, "Koop · 120", Game.points >= 120 and Game.grenades < Game.GRENADE_MAX, func():
+	_plain_card("Handgranaat", "Gooi 2 tot 12 meter, precies waar je wilt: houd de granaatknop vast, sleep de cirkel en laat los (G = naar de muis).", "%d / %d" % [Game.grenades, Game.GRENADE_MAX], 0, 0, "Koop · 120", Game.points >= 120 and Game.grenades < Game.GRENADE_MAX, func():
 		if Game.grenades < Game.GRENADE_MAX and Game.buy(120):
 			Game.grenades += 1)

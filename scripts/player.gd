@@ -203,13 +203,42 @@ func _dodge_step(delta: float) -> void:
 		Fx.dust(get_parent(), global_position)
 
 
+## Toets G / alleen tikken: op een computer naar de muiscursor, op de telefoon 7 m recht vooruit.
 func throw_grenade() -> void:
-	if not _can_act() or climb >= 0.0 or dodge_t > 0.0 or grenade_cd > 0.0 or Game.grenades <= 0:
+	var target := global_position + Vector3(sin(face), 0.0, cos(face)) * Grenade.TAP_RANGE
+	if not UI.is_touch_platform():
+		var cam := get_viewport().get_camera_3d()
+		if cam != null:
+			var mp := get_viewport().get_mouse_position()
+			var hit = Plane(Vector3.UP, global_position.y).intersects_ray(cam.project_ray_origin(mp), cam.project_ray_normal(mp))
+			if hit != null:
+				target = hit
+	throw_grenade_at(target)
+
+
+func can_throw_grenade() -> bool:
+	return _can_act() and climb < 0.0 and dodge_t <= 0.0 and grenade_cd <= 0.0 and Game.grenades > 0
+
+
+## Waar het richten begint: de hand van de speler, en het doelpunt begrensd op bereik en gebouw.
+func grenade_aim(target: Vector3) -> Dictionary:
+	var home = Grenade.find_home(global_position, global_position)
+	var t := Grenade.clamp_target(global_position, target, home)
+	var d := Vector3(t.x - global_position.x, 0.0, t.z - global_position.z).normalized()
+	return {"from": global_position + d * 0.5 + Vector3.UP * (1.6 + elev), "target": t}
+
+
+## Gooit naar een punt op de grond (richtcirkel van de granaatknop of de muis).
+func throw_grenade_at(target: Vector3) -> void:
+	if not can_throw_grenade():
 		return
 	Game.grenades -= 1
 	grenade_cd = 0.5
-	var fwd := Vector3(sin(face), 0.0, cos(face))
-	Grenade.throw_from(get_parent(), global_position + fwd * 0.5 + Vector3.UP * 1.6 + Vector3.UP * elev, face, 11.0, global_position)
+	var a := grenade_aim(target)
+	var t: Vector3 = a.target
+	face = atan2(t.x - global_position.x, t.z - global_position.z)
+	rotation.y = face
+	Grenade.throw_at(get_parent(), a.from, t, global_position)
 	Sfx.play("knife")
 	Game.changed.emit()
 

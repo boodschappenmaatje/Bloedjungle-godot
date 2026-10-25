@@ -80,7 +80,7 @@ func _place() -> void:
 
 func _process(_delta: float) -> void:
 	var on := enabled()
-	visible = on and StadEditor.debug_enabled and not Game.editing
+	visible = on and not Game.editing   # vroeger ook StadEditor.debug_enabled (F3): dat kun je op de iPhone niet aanzetten
 	if _gpu_on != on:
 		_gpu_on = on
 		RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), on)

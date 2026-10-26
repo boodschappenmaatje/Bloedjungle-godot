@@ -54,7 +54,7 @@ func _process(_d: float) -> bool:
 		push_error("FAIL diagnose: na %.0f s nog geen rapport" % secs)
 	else:
 		var body := FileAccess.get_file_as_string("user://test_prestatie/" + found)
-		for need in ["basis (alles aan)", "zon-schaduw uit", "jungle onzichtbaar", "HUD en menu's uit", "kaal beeld", "Grootste winst"]:
+		for need in ["basis (alles aan)", "zon-schaduw uit", "jungle onzichtbaar", "HUD en menu's uit", "kaal beeld", "Grootste winst", "vsync uit", "content scale"]:
 			if not body.contains(need):
 				fails += 1
 				push_error("FAIL diagnose: rapport mist '%s'" % need)

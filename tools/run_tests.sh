@@ -9,7 +9,7 @@ TESTS=("$@")
 bad=0
 for t in "${TESTS[@]}"; do
   fixed="--fixed-fps 60"
-  [ "$t" = "kwaliteit_regel_test" ] && fixed=""   # meet echte tijd (beeldsnelheid vastgezet op 20), dus zonder vaste stap
+  [ "$t" = "kwaliteit_regel_test" -o "$t" = "diagnoserun_test" ] && fixed=""   # meet echte tijd (beeldsnelheid vastgezet op 20), dus zonder vaste stap
   out=$(timeout "${TEST_TIMEOUT:-170}" "$GODOT" --headless --path . -s "tests/$t.gd" $fixed 2>&1)
   code=$?
   if [ $code -ne 0 ] || echo "$out" | grep -qE "SCRIPT ERROR|Parse Error|SHADER ERROR|FAIL"; then

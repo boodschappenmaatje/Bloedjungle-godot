@@ -20,6 +20,7 @@ func _ready() -> void:
 	add_child(Game.gates)
 	GameSettings.apply_hz()
 	add_child(PerfGovernor.new())
+	add_child(Diagnose.new())
 	Game.state = "menu"
 	if Progress.autostart:
 		Progress.autostart = false

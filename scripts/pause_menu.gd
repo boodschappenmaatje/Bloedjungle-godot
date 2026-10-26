@@ -16,6 +16,7 @@ const ROWS := [
 	["t_sun", "Test: zon-schaduw", [["on", "Aan"], ["off", "Uit"]]],
 	["t_jungle", "Test: jungle (bomen, gras)", [["on", "Aan"], ["off", "Uit"]]],
 	["t_stad", "Test: stad zien", [["on", "Aan"], ["off", "Uit"]]],
+	["city_cull", "Test: stad buiten beeld niet tekenen", [["on", "Aan"], ["off", "Uit"]]],
 	["t_post", "Test: mist, gloed, scherptediepte", [["on", "Aan"], ["off", "Uit"]]],
 	["t_res", "Test: 3D-beeld klein (30%)", [["auto", "Uit"], ["small", "Aan"]]],
 	["perf", "Prestatiemodus", [["off", "Uit"], ["on", "Aan"]]],
@@ -404,6 +405,8 @@ func _refresh() -> void:
 	_note.text = NOTES[GameSettings.get_value("quality")] + "\n" + NOTES[GameSettings.get_value("buildshadow") + "_b"]
 	if GameSettings.get_value("hz") == "120":
 		_note.text += "\n" + NOTES["120"]
+	if GameSettings.get_value("t_stad") != "on":
+		_note.text += "\nLET OP: stad zien staat UIT. Zet STAD ZIEN op AAN om de culling-test te vergelijken."
 
 
 func _apply() -> void:

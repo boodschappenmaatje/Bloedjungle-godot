@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cikcneekax66k"
+path.s3tc="res://.godot/imported/orm.png-84776cd099800cdb3a0c69a5f5ad8d0f.s3tc.ctex"
 path.etc2="res://.godot/imported/orm.png-84776cd099800cdb3a0c69a5f5ad8d0f.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/vq2/canvas/orm.png"
-dest_files=["res://.godot/imported/orm.png-84776cd099800cdb3a0c69a5f5ad8d0f.etc2.ctex"]
+dest_files=["res://.godot/imported/orm.png-84776cd099800cdb3a0c69a5f5ad8d0f.s3tc.ctex", "res://.godot/imported/orm.png-84776cd099800cdb3a0c69a5f5ad8d0f.etc2.ctex"]
 
 [params]
 

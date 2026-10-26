@@ -13,6 +13,7 @@ var _place: Button
 var _more: Button
 var _open := false
 var _equipment_panel: Panel
+var _was_driving := false
 var _equipment_prev: Button
 var _equipment_next: Button
 var _equipment_slots: Array[EquipmentSlot] = []
@@ -249,6 +250,14 @@ func _equipment_stock(item: String) -> int:
 			return 0
 
 
+func _process(_delta: float) -> void:
+	# in/uit een voertuig stappen verandert niets aan Game.changed: de uitrustingskiezer volgt dat zelf
+	var d: bool = Game.player != null and is_instance_valid(Game.player) and Game.player.driving
+	if d != _was_driving:
+		_was_driving = d
+		_sync()
+
+
 func _sync() -> void:
 	var total := 0
 	for k in Game.inv:
@@ -260,7 +269,8 @@ func _sync() -> void:
 		Game.defs.cycle()
 	var show := total > 0 and not Game.build_mode and (Game.state == "play" or Game.state == "prep")
 	var active := not Game.build_mode and (Game.state == "play" or Game.state == "prep")
-	_equipment_panel.visible = active and not Game.editing
+	var driving: bool = Game.player != null and is_instance_valid(Game.player) and Game.player.driving
+	_equipment_panel.visible = active and not Game.editing and not driving
 	for slot in _equipment_slots:
 		slot.stock = _equipment_stock(slot.item)
 		slot.selected = slot.item == Game.equipment_sel

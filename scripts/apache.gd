@@ -237,6 +237,7 @@ func _update_button(p, live: bool) -> void:
 			what = "in"
 	_btn_what = what
 	_btn.visible = what != ""
+	_btn.dock(2)
 	if what == "in":
 		_btn.kind = "enter"
 		_btn.set_caption("IN")

@@ -283,9 +283,10 @@ func _layout() -> void:
 
 func _process(_delta: float) -> void:
 	var show := (Game.state == "play" or Game.state == "prep") and not Game.build_mode
-	visible = show
 	var p = Game.player
-	if not show or p == null or not is_instance_valid(p):
+	var driving: bool = p != null and is_instance_valid(p) and p.driving
+	visible = show and not driving  # in een voertuig: alleen de voertuigknoppen (UIT e.d.), geen granaat/herlaad/sprint/rol
+	if not show or p == null or not is_instance_valid(p) or driving:
 		if aim_finger != -2:
 			cancel_aim()
 		return

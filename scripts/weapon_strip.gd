@@ -300,7 +300,8 @@ func _set_weapon(id: String) -> void:
 
 
 func _process(delta: float) -> void:
-	visible = (Game.state == "play" or Game.state == "prep") and not Game.build_mode
+	var driving: bool = Game.player != null and is_instance_valid(Game.player) and Game.player.driving
+	visible = (Game.state == "play" or Game.state == "prep") and not Game.build_mode and not driving
 	if not visible:
 		return
 	if _open_t > 0.0:

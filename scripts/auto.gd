@@ -627,6 +627,7 @@ func _keep_button(p) -> void:
 		return
 	var recent := Time.get_ticks_msec() - _cand_ms < 450 and is_instance_valid(_cand) and not _cand.exploded
 	_btn.visible = driven_car != null or recent
+	_btn.dock(2)
 	if driven_car != null:
 		_btn.kind = "exit"
 		_btn.set_caption("UIT")

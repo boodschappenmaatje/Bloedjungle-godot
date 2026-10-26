@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ds26bsdrn6b0y"
+path.s3tc="res://.godot/imported/base_color.jpg-088406cac3d2ca86428628140f2fa83b.s3tc.ctex"
 path.etc2="res://.godot/imported/base_color.jpg-088406cac3d2ca86428628140f2fa83b.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/terrain/grass/base_color.jpg"
-dest_files=["res://.godot/imported/base_color.jpg-088406cac3d2ca86428628140f2fa83b.etc2.ctex"]
+dest_files=["res://.godot/imported/base_color.jpg-088406cac3d2ca86428628140f2fa83b.s3tc.ctex", "res://.godot/imported/base_color.jpg-088406cac3d2ca86428628140f2fa83b.etc2.ctex"]
 
 [params]
 

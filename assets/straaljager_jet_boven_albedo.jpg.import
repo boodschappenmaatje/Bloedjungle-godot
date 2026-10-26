@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dyf2d6tcwidm1"
+path.s3tc="res://.godot/imported/straaljager_jet_boven_albedo.jpg-ec01210f57974cb5e8c6199476cf1f47.s3tc.ctex"
 path.etc2="res://.godot/imported/straaljager_jet_boven_albedo.jpg-ec01210f57974cb5e8c6199476cf1f47.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/straaljager_jet_boven_albedo.jpg"
-dest_files=["res://.godot/imported/straaljager_jet_boven_albedo.jpg-ec01210f57974cb5e8c6199476cf1f47.etc2.ctex"]
+dest_files=["res://.godot/imported/straaljager_jet_boven_albedo.jpg-ec01210f57974cb5e8c6199476cf1f47.s3tc.ctex", "res://.godot/imported/straaljager_jet_boven_albedo.jpg-ec01210f57974cb5e8c6199476cf1f47.etc2.ctex"]
 
 [params]
 

@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bjcgfeoig3cla"
+path.s3tc="res://.godot/imported/bus_bus_rubber_n.jpg-63a713e57fb36d9d37d7e41335033116.s3tc.ctex"
 path.etc2="res://.godot/imported/bus_bus_rubber_n.jpg-63a713e57fb36d9d37d7e41335033116.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/bus_bus_rubber_n.jpg"
-dest_files=["res://.godot/imported/bus_bus_rubber_n.jpg-63a713e57fb36d9d37d7e41335033116.etc2.ctex"]
+dest_files=["res://.godot/imported/bus_bus_rubber_n.jpg-63a713e57fb36d9d37d7e41335033116.s3tc.ctex", "res://.godot/imported/bus_bus_rubber_n.jpg-63a713e57fb36d9d37d7e41335033116.etc2.ctex"]
 
 [params]
 

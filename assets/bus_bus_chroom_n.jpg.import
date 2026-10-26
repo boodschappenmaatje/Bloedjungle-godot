@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b2vy4n0j21xsk"
+path.s3tc="res://.godot/imported/bus_bus_chroom_n.jpg-66d65251152719d89ffef895bb30d06d.s3tc.ctex"
 path.etc2="res://.godot/imported/bus_bus_chroom_n.jpg-66d65251152719d89ffef895bb30d06d.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/bus_bus_chroom_n.jpg"
-dest_files=["res://.godot/imported/bus_bus_chroom_n.jpg-66d65251152719d89ffef895bb30d06d.etc2.ctex"]
+dest_files=["res://.godot/imported/bus_bus_chroom_n.jpg-66d65251152719d89ffef895bb30d06d.s3tc.ctex", "res://.godot/imported/bus_bus_chroom_n.jpg-66d65251152719d89ffef895bb30d06d.etc2.ctex"]
 
 [params]
 

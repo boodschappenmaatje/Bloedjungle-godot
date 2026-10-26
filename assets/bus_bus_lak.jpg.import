@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cq10r8uuhr25p"
+path.s3tc="res://.godot/imported/bus_bus_lak.jpg-01248d7b7312af2115dd3b7db582a2bc.s3tc.ctex"
 path.etc2="res://.godot/imported/bus_bus_lak.jpg-01248d7b7312af2115dd3b7db582a2bc.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/bus_bus_lak.jpg"
-dest_files=["res://.godot/imported/bus_bus_lak.jpg-01248d7b7312af2115dd3b7db582a2bc.etc2.ctex"]
+dest_files=["res://.godot/imported/bus_bus_lak.jpg-01248d7b7312af2115dd3b7db582a2bc.s3tc.ctex", "res://.godot/imported/bus_bus_lak.jpg-01248d7b7312af2115dd3b7db582a2bc.etc2.ctex"]
 
 [params]
 

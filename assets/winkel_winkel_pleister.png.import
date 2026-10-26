@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://k7mwj7kd8f8h"
+path.s3tc="res://.godot/imported/winkel_winkel_pleister.png-e710a7416f764e7592054923b6e94b9a.s3tc.ctex"
 path.etc2="res://.godot/imported/winkel_winkel_pleister.png-e710a7416f764e7592054923b6e94b9a.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/winkel_winkel_pleister.png"
-dest_files=["res://.godot/imported/winkel_winkel_pleister.png-e710a7416f764e7592054923b6e94b9a.etc2.ctex"]
+dest_files=["res://.godot/imported/winkel_winkel_pleister.png-e710a7416f764e7592054923b6e94b9a.s3tc.ctex", "res://.godot/imported/winkel_winkel_pleister.png-e710a7416f764e7592054923b6e94b9a.etc2.ctex"]
 
 [params]
 

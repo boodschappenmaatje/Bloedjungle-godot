@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dg3r0xpx0vn48"
+path.s3tc="res://.godot/imported/kerk_kerk_planken.png-130b568cd1f2c2e848e66563248f7d0a.s3tc.ctex"
 path.etc2="res://.godot/imported/kerk_kerk_planken.png-130b568cd1f2c2e848e66563248f7d0a.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/kerk_kerk_planken.png"
-dest_files=["res://.godot/imported/kerk_kerk_planken.png-130b568cd1f2c2e848e66563248f7d0a.etc2.ctex"]
+dest_files=["res://.godot/imported/kerk_kerk_planken.png-130b568cd1f2c2e848e66563248f7d0a.s3tc.ctex", "res://.godot/imported/kerk_kerk_planken.png-130b568cd1f2c2e848e66563248f7d0a.etc2.ctex"]
 
 [params]
 

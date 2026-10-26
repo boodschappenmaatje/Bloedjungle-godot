@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://sm5tnq04piqc"
+path.s3tc="res://.godot/imported/albedo.jpg-f6a2baaee86d40a3bde365c6d5b815d5.s3tc.ctex"
 path.etc2="res://.godot/imported/albedo.jpg-f6a2baaee86d40a3bde365c6d5b815d5.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/vq2/roof/albedo.jpg"
-dest_files=["res://.godot/imported/albedo.jpg-f6a2baaee86d40a3bde365c6d5b815d5.etc2.ctex"]
+dest_files=["res://.godot/imported/albedo.jpg-f6a2baaee86d40a3bde365c6d5b815d5.s3tc.ctex", "res://.godot/imported/albedo.jpg-f6a2baaee86d40a3bde365c6d5b815d5.etc2.ctex"]
 
 [params]
 

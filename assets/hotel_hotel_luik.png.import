@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bwrkgw66opocq"
+path.s3tc="res://.godot/imported/hotel_hotel_luik.png-5f9771b1e2f8cd9f4665c136579987d8.s3tc.ctex"
 path.etc2="res://.godot/imported/hotel_hotel_luik.png-5f9771b1e2f8cd9f4665c136579987d8.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/hotel_hotel_luik.png"
-dest_files=["res://.godot/imported/hotel_hotel_luik.png-5f9771b1e2f8cd9f4665c136579987d8.etc2.ctex"]
+dest_files=["res://.godot/imported/hotel_hotel_luik.png-5f9771b1e2f8cd9f4665c136579987d8.s3tc.ctex", "res://.godot/imported/hotel_hotel_luik.png-5f9771b1e2f8cd9f4665c136579987d8.etc2.ctex"]
 
 [params]
 

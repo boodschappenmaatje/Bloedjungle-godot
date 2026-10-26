@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://hco6s8rxexyb"
+path.s3tc="res://.godot/imported/bus_bus_plastic_orm.jpg-73cd3eb42370c66baf2a776fb5d86229.s3tc.ctex"
 path.etc2="res://.godot/imported/bus_bus_plastic_orm.jpg-73cd3eb42370c66baf2a776fb5d86229.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/bus_bus_plastic_orm.jpg"
-dest_files=["res://.godot/imported/bus_bus_plastic_orm.jpg-73cd3eb42370c66baf2a776fb5d86229.etc2.ctex"]
+dest_files=["res://.godot/imported/bus_bus_plastic_orm.jpg-73cd3eb42370c66baf2a776fb5d86229.s3tc.ctex", "res://.godot/imported/bus_bus_plastic_orm.jpg-73cd3eb42370c66baf2a776fb5d86229.etc2.ctex"]
 
 [params]
 

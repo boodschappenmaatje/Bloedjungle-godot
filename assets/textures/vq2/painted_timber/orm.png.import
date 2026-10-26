@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://lkl6em1s2713"
-path.s3tc="res://.godot/imported/orm.png-36ac4dc2fc7b4be224fc8627ca653399.s3tc.ctex"
 path.etc2="res://.godot/imported/orm.png-36ac4dc2fc7b4be224fc8627ca653399.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/vq2/painted_timber/orm.png"
-dest_files=["res://.godot/imported/orm.png-36ac4dc2fc7b4be224fc8627ca653399.s3tc.ctex", "res://.godot/imported/orm.png-36ac4dc2fc7b4be224fc8627ca653399.etc2.ctex"]
+dest_files=["res://.godot/imported/orm.png-36ac4dc2fc7b4be224fc8627ca653399.etc2.ctex"]
 
 [params]
 

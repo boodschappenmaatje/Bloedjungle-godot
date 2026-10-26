@@ -49,6 +49,7 @@ var attack := {"N": 0.0, "O": 0.0, "Z": 0.0, "W": 0.0}
 
 # Killstreak (luchtsteun): kills op rij binnen deze golf, beloningen die klaarstaan (opsparen kan), en wie de laatste treffer deed
 var streak := 0
+var streak_sel := ""             # door de speler gekozen beloning (leeg of niet meer klaarstaand = de nieuwste)
 var streak_bank: Array = []     # ids uit Streak.LADDER die klaarstaan, oudste eerst
 var streak_given := {}          # id -> true: deze streak al uitgereikt
 var streak_t := -100.0          # tijd (s) van de laatste streak-kill: de teller komt dan even in beeld
@@ -140,6 +141,7 @@ func reset() -> void:
 	troop_mode = "follow"
 	streak = 0
 	streak_bank.clear()
+	streak_sel = ""
 	streak_given.clear()
 	streak_t = -100.0
 	hit_src = "speler"
@@ -176,17 +178,32 @@ func streak_fill() -> void:
 			streak_bank.push_front(r.id)
 
 
-## Gebruikt de beloning die als laatste klaar kwam. Geeft het id terug, of "" als er niets klaarstaat.
-func streak_take() -> String:
+## De beloning die de luchtsteun-knop nu toont: je keuze, of anders de nieuwste die klaarstaat. "" als er niets klaarstaat.
+func streak_current() -> String:
 	if streak_test():
 		streak_fill()
-		var t: String = streak_bank.pop_back()
-		streak_bank.push_front(t)    # onbeperkt: hij gaat achteraan, zodat de knop afwisselend alle beloningen geeft
-		changed.emit()
-		return t
 	if streak_bank.is_empty():
 		return ""
-	var id: String = streak_bank.pop_back()
+	return streak_sel if streak_bank.has(streak_sel) else String(streak_bank.back())
+
+
+## Andere beloningen (één per soort) waaruit de speler kan kiezen.
+func streak_others() -> Array:
+	var cur := streak_current()
+	var out: Array = []
+	for id in streak_bank:
+		if id != cur and not out.has(id):
+			out.append(id)
+	return out
+
+
+## Gebruikt de gekozen beloning. Geeft het id terug, of "" als er niets klaarstaat. In de testmodus raakt hij niet op.
+func streak_take() -> String:
+	var id := streak_current()
+	if id == "":
+		return ""
+	if not streak_test():
+		streak_bank.erase(id)
 	changed.emit()
 	return id
 

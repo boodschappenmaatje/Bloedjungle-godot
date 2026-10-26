@@ -39,6 +39,7 @@ static func make(k: String, cap: String) -> ActionBtn:
 		"herlaad": "Actief wapen herladen",
 		"sprint": "Sprinten · balk toont uithoudingsvermogen",
 		"rol": "Ontwijkrol · afkoeling wordt rond de knop getoond",
+		"lucht2": "Andere luchtsteun · tik om deze te kiezen",
 		"lucht": "Luchtsteun · tik om te gebruiken, napalm: vasthouden en slepen om de strook te richten",
 	}.get(k, cap)
 	b.add_to_group("hud_button")
@@ -142,6 +143,8 @@ func _draw() -> void:
 			if not disabled:
 				var pulse := 0.55 + 0.45 * sin(Time.get_ticks_msec() / 260.0)
 				draw_arc(size * 0.5, size.x * 0.5 - 1.5, 0, TAU, 32, Color(UI.BRASS, 0.35 + 0.65 * pulse), 2.6, true)
+		"lucht2":
+			Streak.draw_icon(self, reward, c + Vector2(0, 1), 0.85, Color(col, 0.75))
 		"granaat":
 			match equipment_kind:
 				"mine":

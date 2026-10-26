@@ -116,7 +116,12 @@ func _refresh_city_render_visibility() -> void:
 		visible = true
 		return
 	# Dit verandert NOOIT de physics/process-mode: enkel de visuele hele stadsboom.
-	visible = _city_footprint.grow(CITY_CULL_MARGIN).intersects(footprint, true)
+	visible = _footprints_overlap(_city_footprint, footprint)
+
+
+## Veilig te testen zonder een GPU of echte iPhone.
+static func _footprints_overlap(city: Rect2, on_screen: Rect2) -> bool:
+	return city.grow(CITY_CULL_MARGIN).intersects(on_screen, true)
 
 
 ## Projecteer de vier schermhoeken op de wereldgrond. Bij een onbruikbare

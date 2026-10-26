@@ -107,11 +107,15 @@ jobs:
           PY
           mkdir -p build
           "$GODOT_BIN" --headless --path . --export-release "iOS" build/Bloedjungle-ios.zip
-          test -s build/Bloedjungle-ios.zip
-          unzip -tq build/Bloedjungle-ios.zip
-          mkdir -p build/ios-project
-          unzip -q build/Bloedjungle-ios.zip -d build/ios-project
-          XCODEPROJ="$(find build/ios-project -name '*.xcodeproj' -type d -print -quit)"
+          # When application/export_project_only is true, Godot 4.7
+          # writes an Xcode project directly under build/, not a ZIP.
+          # Handle either layout without relying on an assumed archive.
+          if [[ -s build/Bloedjungle-ios.zip ]]; then
+            unzip -tq build/Bloedjungle-ios.zip
+            mkdir -p build/ios-project
+            unzip -q build/Bloedjungle-ios.zip -d build/ios-project
+          fi
+          XCODEPROJ="$(find build -name '*.xcodeproj' -type d -print -quit)"
           test -n "$XCODEPROJ"
           test -s "$XCODEPROJ/project.pbxproj"
           xcodebuild -list -project "$XCODEPROJ" -json | tee build/xcode-list.json

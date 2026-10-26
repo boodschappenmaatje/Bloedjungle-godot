@@ -405,6 +405,8 @@ func _refresh() -> void:
 	_note.text = NOTES[GameSettings.get_value("quality")] + "\n" + NOTES[GameSettings.get_value("buildshadow") + "_b"]
 	if GameSettings.get_value("hz") == "120":
 		_note.text += "\n" + NOTES["120"]
+	if GameSettings.get_value("t_stad") != "on":
+		_note.text += "\nLET OP: stad zien staat UIT. Zet STAD ZIEN op AAN om de culling-test te vergelijken."
 
 
 func _apply() -> void:

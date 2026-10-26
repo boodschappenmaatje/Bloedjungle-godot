@@ -85,6 +85,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Godot requires a 10-character team ID even for an unsigned Xcode
+          # project. Use a dummy value only in this ephemeral CI checkout.
+          # The actual iOS build is unsigned (CODE_SIGNING_ALLOWED=NO);
+          # AltStore performs signing on the user's device later.
+          python3 - <<'PY'
+          from pathlib import Path
+          preset = Path("export_presets.cfg")
+          source = preset.read_text()
+          needle = 'application/app_store_team_id=""'
+          assert source.count(needle) == 1, "Expected exactly one blank iOS Team ID"
+          preset.write_text(source.replace(needle, 'application/app_store_team_id="AAAAAAAAAA"'))
+          PY
           mkdir -p build
           "$GODOT_BIN" --headless --path . --export-release "iOS" build/Bloedjungle-ios.zip
           test -s build/Bloedjungle-ios.zip

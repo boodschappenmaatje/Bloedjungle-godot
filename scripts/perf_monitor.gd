@@ -276,7 +276,7 @@ static func device_header() -> String:
 	var t := "# Prestatiemeting Bloedjungle\n\n"
 	t += "- toestel: %s · %s · %s\n" % [OS.get_name(), OS.get_model_name(), RenderingServer.get_video_adapter_name()]
 	t += "- Godot %s · renderer %s · venster %dx%d\n" % [Engine.get_version_info().string, RenderingServer.get_current_rendering_method(), size_.x, size_.y]
-	t += "- instellingen: grafiek %s · tijd %s · weer %s · Hz-keuze %s · schermsnelheid gemeld %.0f · bomen bewegen %s · boomschaduw %s\n\n" % [GameSettings.get_value("quality"), GameSettings.get_value("time"), GameSettings.get_value("weather"), GameSettings.get_value("hz"), DisplayServer.screen_get_refresh_rate(), GameSettings.get_value("wind"), GameSettings.get_value("treeshadow")]
+	t += "- instellingen: grafiek %s · tijd %s · weer %s · Hz-keuze %s · schermsnelheid gemeld %.0f · eigen limiet %d · kwaliteitstrap %d · bomen bewegen %s · boomschaduw %s\n\n" % [GameSettings.get_value("quality"), GameSettings.get_value("time"), GameSettings.get_value("weather"), GameSettings.get_value("hz"), DisplayServer.screen_get_refresh_rate(), Engine.max_fps, Atmosphere.tier, GameSettings.get_value("wind"), GameSettings.get_value("treeshadow")]
 	return t
 
 

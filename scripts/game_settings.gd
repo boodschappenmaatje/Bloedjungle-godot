@@ -39,9 +39,11 @@ static func target_fps() -> float:
 	return 120.0 if observed_peak > 90.0 else 60.0
 
 
+## Geen eigen beeldsnelheidsgrens: het scherm (vsync) bepaalt het tempo. Een eigen grens van 60 naast vsync blijft telkens
+## net na de verversing van het scherm wakker en mist dan elk beeld; het spel zat daardoor vast op ~30 fps terwijl de
+## processor bijna niets deed (22 okt, zonder grens: 60 fps; daarna met grens: 29-31 fps).
 static func apply_hz() -> void:
-	# 60: begrenzen op 60; 120: geen eigen grens, het scherm (vsync) bepaalt het tempo
-	Engine.max_fps = 0 if get_value("hz") == "120" else 60
+	Engine.max_fps = 0
 
 
 static func prep_time() -> float:

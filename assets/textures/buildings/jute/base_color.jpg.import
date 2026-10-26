@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bi7yl01k102dd"
+path.s3tc="res://.godot/imported/base_color.jpg-3406e7d7ee962e02535d6ba81669ed04.s3tc.ctex"
 path.etc2="res://.godot/imported/base_color.jpg-3406e7d7ee962e02535d6ba81669ed04.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/buildings/jute/base_color.jpg"
-dest_files=["res://.godot/imported/base_color.jpg-3406e7d7ee962e02535d6ba81669ed04.etc2.ctex"]
+dest_files=["res://.godot/imported/base_color.jpg-3406e7d7ee962e02535d6ba81669ed04.s3tc.ctex", "res://.godot/imported/base_color.jpg-3406e7d7ee962e02535d6ba81669ed04.etc2.ctex"]
 
 [params]
 

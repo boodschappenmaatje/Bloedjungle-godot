@@ -227,5 +227,16 @@ func _run() -> void:
 				_check(false, "%s: luchtsteun-knop overlapt %s %s" % [size, b.get("kind") if b.get("kind") != null else b.name, b.get_global_rect()])
 	game.streak_bank.clear()
 
+	# 8. testschakelaar: alles staat klaar en raakt niet op
+	var old_t: String = GameSettings.get_value("t_streak")
+	GameSettings.set_value("t_streak", "on")
+	var seen := {}
+	for i in 6:
+		seen[game.streak_take()] = true
+	_check(seen.has("truck") and seen.has("napalm"), "testmodus: beide beloningen moeten beschikbaar zijn (%s)" % str(seen.keys()))
+	_check(game.streak_bank.size() == 2, "testmodus: de bank mag niet leeg raken (%d)" % game.streak_bank.size())
+	GameSettings.set_value("t_streak", old_t)
+	game.streak_bank.clear()
+
 	print("TEST OK" if failures.is_empty() else "TEST MISLUKT")
 	quit(0 if failures.is_empty() else 1)

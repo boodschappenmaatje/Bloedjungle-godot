@@ -165,8 +165,25 @@ func streak_reset() -> void:
 	changed.emit()
 
 
+## Testschakelaar (Instellingen): alle beloningen staan altijd klaar en raken niet op.
+func streak_test() -> bool:
+	return GameSettings.get_value("t_streak") == "on"
+
+
+func streak_fill() -> void:
+	for r in Streak.LADDER:
+		if not streak_bank.has(r.id):
+			streak_bank.push_front(r.id)
+
+
 ## Gebruikt de beloning die als laatste klaar kwam. Geeft het id terug, of "" als er niets klaarstaat.
 func streak_take() -> String:
+	if streak_test():
+		streak_fill()
+		var t: String = streak_bank.pop_back()
+		streak_bank.push_front(t)    # onbeperkt: hij gaat achteraan, zodat de knop afwisselend alle beloningen geeft
+		changed.emit()
+		return t
 	if streak_bank.is_empty():
 		return ""
 	var id: String = streak_bank.pop_back()

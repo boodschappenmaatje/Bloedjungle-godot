@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ufyn8k4lwj6t"
+path.s3tc="res://.godot/imported/woonhuis_woonhuis_binnen.png-4f077e05b9e08fb5fbfcf5e2556861ad.s3tc.ctex"
 path.etc2="res://.godot/imported/woonhuis_woonhuis_binnen.png-4f077e05b9e08fb5fbfcf5e2556861ad.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/woonhuis_woonhuis_binnen.png"
-dest_files=["res://.godot/imported/woonhuis_woonhuis_binnen.png-4f077e05b9e08fb5fbfcf5e2556861ad.etc2.ctex"]
+dest_files=["res://.godot/imported/woonhuis_woonhuis_binnen.png-4f077e05b9e08fb5fbfcf5e2556861ad.s3tc.ctex", "res://.godot/imported/woonhuis_woonhuis_binnen.png-4f077e05b9e08fb5fbfcf5e2556861ad.etc2.ctex"]
 
 [params]
 

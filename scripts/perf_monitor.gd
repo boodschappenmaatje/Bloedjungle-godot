@@ -75,7 +75,7 @@ func _label(c: Color, size_: int) -> Label:
 func _place() -> void:
 	var x := size.x * 0.5 - GRAPH.x * 0.5
 	_text.position = Vector2(x, 4.0 + GRAPH.y + 4.0)
-	_spike_text.position = Vector2(x, 4.0 + GRAPH.y + 4.0 + 62.0)
+	_spike_text.position = Vector2(x, 4.0 + GRAPH.y + 4.0 + 82.0)
 
 
 func _process(_delta: float) -> void:
@@ -149,6 +149,19 @@ static func stats_of(samples: PackedFloat32Array) -> Dictionary:
 	return {"avg": sum / samples.size(), "p95": sorted[mini(sorted.size() - 1, int(sorted.size() * 0.95))], "worst": sorted[sorted.size() - 1]}
 
 
+## Dit toont de daadwerkelijke diagnose voor de A/B-test, niet alleen de culling-knop.
+## Als 'Stad zien' uit staat zijn culling aan/uit metingen ongeldig.
+static func city_render_status() -> String:
+	var city: Stad = Stad.current
+	if city == null or not is_instance_valid(city):
+		return "stad: nog niet geladen"
+	if GameSettings.get_value("t_stad") != "on":
+		return "stad: HANDMATIG UIT (culling-test ongeldig)"
+	if GameSettings.get_value("city_cull") != "on":
+		return "stad: CULLING UIT (controlemeting)"
+	return "stad: AUTO ZICHTBAAR" if city.visible else "stad: AUTO VERBORGEN"
+
+
 func _refresh_text() -> void:
 	var st := stats_of(frames)
 	avg = st.avg
@@ -161,6 +174,7 @@ func _refresh_text() -> void:
 	t += "GPU %s · render-CPU %.1f · proces %.1f · fysica %.1f ms\n" % ["%.1f" % gpu if gpu > 0.0 else "n.b.", cpu, Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0]
 	t += "draw calls %d · objecten %d · driehoeken %dk · videogeh. %d MB\n" % [Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1000, Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0]
 	t += "vijanden %d · kogels %d · vaten %d · nodes %d · %s" % [Game.enemies.size(), bullets_live, Game.barrels.size(), Performance.get_monitor(Performance.OBJECT_NODE_COUNT), Game.state]
+	t += "\n" + city_render_status()
 	_text.text = t
 	var lines := PackedStringArray()
 	for s in spikes:

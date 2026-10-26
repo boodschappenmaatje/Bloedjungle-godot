@@ -1,3 +1,4 @@
+class_name Atmosphere
 extends Node3D
 ## Lucht, zon, mist en kleur van het beeld: warme middagzon laag boven de jungle, heiige verte,
 ## filmische kleuren en een zachte gloed. Alles in code, zodat je het hier makkelijk kunt bijstellen.
@@ -118,6 +119,46 @@ func apply_settings() -> void:
 	_set_rain(weather == "rain")
 	Sfx.rain(weather == "rain")
 	_apply_diagnose()
+	_apply_tier()
+
+
+## Automatische kwaliteitstrap (PerfGovernor): haalt het spel het doel niet, ook niet op de laagste resolutie, dan gaan de
+## duurste onderdelen stap voor stap uit tot het wel lukt. 0 = zoals de gekozen grafiek, 4 = zon-schaduw ook uit.
+## Wordt teruggezet als je de grafiekstand verandert.
+static var tier := 0
+const TIER_MAX := 4
+
+
+func _apply_tier() -> void:
+	if tier >= 1:
+		_env.glow_enabled = false
+		_env.ssao_enabled = false
+		_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
+		RenderingServer.directional_shadow_atlas_set_size(1024, true)
+		var cam := get_viewport().get_camera_3d()
+		if cam and cam.attributes is CameraAttributesPractical:
+			(cam.attributes as CameraAttributesPractical).dof_blur_far_enabled = false
+	if tier >= 2:
+		_sun.directional_shadow_max_distance = minf(_sun.directional_shadow_max_distance, 28.0)
+		for kind in ["bush", "fern", "palm", "rock"]:
+			for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("foliage_" + kind):
+				n.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if tier >= 3:
+		for kind in ["grass", "fern"]:
+			for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("foliage_" + kind):
+				n.multimesh.visible_instance_count = roundi(n.multimesh.visible_instance_count * 0.5)
+	if tier >= 4:
+		_sun.shadow_enabled = false
+
+
+## Eén stap lager; false als er niets meer te winnen valt.
+func step_down() -> bool:
+	if tier >= TIER_MAX:
+		return false
+	tier += 1
+	PerfMonitor.note("kwaliteit lager (trap %d)" % tier)
+	apply_settings()
+	return true
 
 
 ## Test-schakelaars (Instellingen): zet onderdelen even uit om te zien welke de fps drukken. Standaard alles aan.

@@ -16,6 +16,14 @@ var _acc := 0.0
 var _frames := 0
 var _good := 0.0
 var _hold := 0.0  # na een verlaging eerst even wachten voor we weer omhoog proberen
+var _low := 0.0   # seconden op de laagste resolutie en toch onder het doel
+var _tier_wait := 0.0
+const TIER_RATIO := 0.88  # van het doel: 53 bij 60 fps; daaronder gaat een onderdeel uit
+const TIER_AFTER := 3.0   # zoveel seconden achter elkaar
+const TIER_GAIN := 3.0    # een trap moet minstens zoveel fps opleveren
+var _fps_at_step := 0.0
+var _nogain := 0          # trappen achter elkaar zonder winst: dan ligt het niet aan het tekenen (bijvoorbeeld een 30 fps-limiet van iOS)
+var _frozen := false
 
 
 func _process(delta: float) -> void:
@@ -23,6 +31,13 @@ func _process(delta: float) -> void:
 	var q: String = GameSettings.get_value("quality")
 	if q != _quality:
 		_quality = q
+		_frozen = false
+		_nogain = 0
+		if Atmosphere.tier > 0:
+			Atmosphere.tier = 0   # een nieuwe keuze begint weer bij de gekozen grafiek
+			var atm0 := get_tree().get_first_node_in_group("atmosphere")
+			if atm0 != null:
+				atm0.apply_settings()
 		var table: Dictionary = (load("res://scripts/atmosphere.gd") as GDScript).get("QUALITY")
 		_cap = table[q].scale
 		vp.scaling_3d_scale = _cap
@@ -45,6 +60,25 @@ func _process(delta: float) -> void:
 	GameSettings.observed_peak = maxf(60.0, maxf(fps, GameSettings.observed_peak - 0.5))
 	var s := vp.scaling_3d_scale
 	var target := GameSettings.target_fps()
+	# op de laagste resolutie en nog steeds te traag: de duurste onderdelen uit (trap voor trap, nooit terug omhoog)
+	_tier_wait -= 0.5
+	if s <= MIN_SCALE + 0.01 and fps < target * TIER_RATIO:
+		_low += 0.5
+		if _low >= TIER_AFTER and _tier_wait <= 0.0 and not _frozen:
+			_low = 0.0
+			_tier_wait = 4.0
+			if Atmosphere.tier > 0:
+				_nogain = _nogain + 1 if fps < _fps_at_step + TIER_GAIN else 0
+				if _nogain >= 2:
+					_frozen = true   # twee trappen zonder winst: verder lager zetten heeft geen zin
+					PerfMonitor.note("kwaliteit blijft op trap %d: geen winst" % Atmosphere.tier)
+			if not _frozen:
+				var atm := get_tree().get_first_node_in_group("atmosphere")
+				if atm != null:
+					_fps_at_step = fps
+					atm.step_down()
+	else:
+		_low = 0.0
 	if fps < target * DOWN_RATIO:
 		_good = 0.0
 		vp.scaling_3d_scale = maxf(MIN_SCALE, s - (0.08 if fps < target * 0.75 else 0.04))

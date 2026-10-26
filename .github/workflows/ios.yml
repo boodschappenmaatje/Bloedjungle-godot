@@ -46,10 +46,20 @@ jobs:
           cp -R "$RUNNER_TEMP/templates/templates/." "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable/"
           test -s "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable/ios.zip"
           xcodebuild -version
+      # On a pristine checkout Godot initially parses autoloads before imported
+      # GLB scenes exist. First pass builds .godot/imported; only the second
+      # pass is used for strict parser validation.
+      - name: Prime Godot asset import cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/first-import.log"
+          test -d .godot/imported
+          echo "Initial asset import finished. Strict validation follows on a fresh Godot process."
       - name: Import and validate project
         shell: bash
         run: |
-          set -o pipefail
+          set -euo pipefail
           "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/import.log"
           "$GODOT_BIN" --headless --path . --quit-after 10 2>&1 | tee "$RUNNER_TEMP/startup.log"
           if grep -E '(^| )(SCRIPT ERROR|Parse Error|Failed loading resource)' "$RUNNER_TEMP/import.log" "$RUNNER_TEMP/startup.log"; then
@@ -66,6 +76,7 @@ jobs:
         with:
           name: godot-diagnostics-${{ github.sha }}
           path: |
+            ${{ runner.temp }}/first-import.log
             ${{ runner.temp }}/import.log
             ${{ runner.temp }}/startup.log
           if-no-files-found: ignore

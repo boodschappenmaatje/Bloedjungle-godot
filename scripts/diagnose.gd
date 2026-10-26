@@ -104,7 +104,10 @@ const NAMES := [
 	"basis (alles aan)", "zon-schaduw uit", "jungle onzichtbaar", "stad onzichtbaar", "nabewerking uit (mist, gloed, kleur, tonemap)",
 	"HUD en menu's uit", "3D-resolutie 25%", "fysica uit", "alle scripts uit (geen _process)", "hele 3D-wereld uit (alleen HUD)",
 	"3D en HUD uit (kaal beeld, ondergrens)",
+	"kaal + vsync uit", "kaal + vsync adaptief", "kaal + vsync mailbox", "kaal + vsync uit + limiet 60 fps",
+	"kaal + beeld half formaat (content scale)", "kaal + geluid uit",
 ]
+const KAAL_FIRST := 11   # vanaf hier meten we het platform (kaal beeld met één aanpassing)
 var _mem := {}
 
 
@@ -144,8 +147,40 @@ func _apply(i: int) -> void:
 		9:
 			vp.disable_3d = true
 		10:
-			vp.disable_3d = true
-			_hide_nodes(_hud_layers())
+			_kaal_on()
+		11:
+			_kaal_on()
+			_mem.vsync = DisplayServer.window_get_vsync_mode()
+			DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+		12:
+			_kaal_on()
+			_mem.vsync = DisplayServer.window_get_vsync_mode()
+			DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ADAPTIVE)
+		13:
+			_kaal_on()
+			_mem.vsync = DisplayServer.window_get_vsync_mode()
+			DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_MAILBOX)
+		14:
+			_kaal_on()
+			_mem.vsync = DisplayServer.window_get_vsync_mode()
+			DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
+			Engine.max_fps = 60
+		15:
+			_kaal_on()
+			var w := get_window()
+			_mem.cmode = w.content_scale_mode
+			_mem.csize = w.content_scale_size
+			w.content_scale_size = Vector2i(DisplayServer.window_get_size() / 2)
+			w.content_scale_mode = Window.CONTENT_SCALE_MODE_VIEWPORT
+		16:
+			_kaal_on()
+			_mem.mute = AudioServer.is_bus_mute(0)
+			AudioServer.set_bus_mute(0, true)
+
+
+func _kaal_on() -> void:
+	get_viewport().disable_3d = true
+	_hide_nodes(_hud_layers())
 
 
 func _undo(i: int) -> void:
@@ -176,6 +211,21 @@ func _undo(i: int) -> void:
 		9:
 			vp.disable_3d = false
 		10:
+			vp.disable_3d = false
+			_restore_vis()
+		11, 12, 13, 14:
+			DisplayServer.window_set_vsync_mode(_mem.vsync)
+			Engine.max_fps = 0
+			vp.disable_3d = false
+			_restore_vis()
+		15:
+			var w := get_window()
+			w.content_scale_mode = _mem.cmode
+			w.content_scale_size = _mem.csize
+			vp.disable_3d = false
+			_restore_vis()
+		16:
+			AudioServer.set_bus_mute(0, _mem.mute)
 			vp.disable_3d = false
 			_restore_vis()
 
@@ -222,7 +272,11 @@ func _run() -> void:
 			keep.append(_times[k])
 		_undo(i)
 		await get_tree().process_frame
-		rows.append({"name": NAMES[i], "med": _median(keep), "p95": _p95(keep), "proc": proc / maxi(n, 1), "phys": phys / maxi(n, 1), "draw": draw / maxi(n, 1), "n": keep.size()})
+		var fast := 0
+		for v in keep:
+			if v <= 18.5:
+				fast += 1
+		rows.append({"name": NAMES[i], "fast": 100.0 * fast / maxi(keep.size(), 1), "med": _median(keep), "p95": _p95(keep), "proc": proc / maxi(n, 1), "phys": phys / maxi(n, 1), "draw": draw / maxi(n, 1), "n": keep.size()})
 	PerfGovernor.paused = false
 	var body := _markdown(rows)
 	var saved := _save(body)
@@ -238,12 +292,14 @@ func _markdown(rows: Array) -> String:
 	var t := PerfMonitor.device_header()
 	t += "## Diagnose-run · %s\n\n" % Time.get_datetime_string_from_system().replace("T", " ")
 	t += "Per fase gaat één onderdeel uit; **winst** = hoeveel ms het beeld korter wordt (basis %.1f ms). Staat de winst bij alles dicht bij 0, dan ligt het niet aan het tekenen maar aan iets buiten het spel (scherm/iOS/Xogot).\n\n" % base
-	t += "| fase | mediaan ms | p95 ms | fps | winst ms | proces ms | fysica ms | draw calls |\n|---|---|---|---|---|---|---|---|\n"
+	t += "| fase | mediaan ms | p95 ms | fps | winst ms | beelden ≤18,5 ms | proces ms | fysica ms | draw calls |\n|---|---|---|---|---|---|---|---|---|\n"
 	for r in rows:
-		t += "| %s | %.1f | %.1f | %.0f | %+.1f | %.1f | %.1f | %.0f |\n" % [r.name, r.med, r.p95, 1000.0 / maxf(r.med, 0.001), base - r.med, r.proc, r.phys, r.draw]
-	var best := rows.slice(1, rows.size() - 2)
+		t += "| %s | %.1f | %.1f | %.0f | %+.1f | %.0f%% | %.1f | %.1f | %.0f |\n" % [r.name, r.med, r.p95, 1000.0 / maxf(r.med, 0.001), base - r.med, r.fast, r.proc, r.phys, r.draw]
+	var best := rows.slice(1, KAAL_FIRST - 1)
 	best.sort_custom(func(a, b): return a.med < b.med)
-	t += "\nGrootste winst: **%s** (%+.1f ms). Ondergrens (kaal beeld): %.1f ms = %.0f fps.\n" % [best[0].name, base - best[0].med, rows[-1].med, 1000.0 / maxf(rows[-1].med, 0.001)]
+	var plat := rows.slice(KAAL_FIRST)
+	plat.sort_custom(func(a, b): return a.med < b.med)
+	t += "\nGrootste winst in het spel: **%s** (%+.1f ms). Ondergrens (kaal beeld): %.1f ms = %.0f fps. Beste platform-aanpassing: **%s** (%.1f ms).\n" % [best[0].name, base - best[0].med, rows[KAAL_FIRST - 1].med, 1000.0 / maxf(rows[KAAL_FIRST - 1].med, 0.001), plat[0].name, plat[0].med]
 	return t
 
 

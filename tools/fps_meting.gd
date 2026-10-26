@@ -101,6 +101,9 @@ func _sample() -> void:
 	_add("sdraw", vp.get_render_info(S, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME))
 	_add("sobj", vp.get_render_info(S, Viewport.RENDER_INFO_OBJECTS_IN_FRAME))
 	_add("stri", vp.get_render_info(S, Viewport.RENDER_INFO_PRIMITIVES_IN_FRAME))
+	_add("pdraw", Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
+	_add("pobj", Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME))
+	_add("ptri", Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))
 	_add("proc", Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0)
 	_add("phys", Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0)
 	_add("rcpu", RenderingServer.viewport_get_measured_render_time_cpu(root.get_viewport_rid()))
@@ -128,9 +131,9 @@ func _report() -> void:
 			proc += 1
 		if x.is_physics_processing():
 			phys += 1
-	print("PLEK %-11s draw %4d obj %4d tri %6dk | schaduw draw %4d obj %4d tri %6dk | lichten %d (schaduw %d) deeltjes %d | _process %d _physics %d | script %.2f ms fysica %.2f ms render-cpu %.2f ms | nodes %d" % [
+	print("PLEK %-11s draw %4d obj %4d tri %6dk | schaduw draw %4d obj %4d tri %6dk | lichten %d (schaduw %d) deeltjes %d | _process %d _physics %d | script %.2f ms fysica %.2f ms render-cpu %.2f ms | overlay-teller: draw %d obj %d tri %dk | nodes %d" % [
 		order[idx], acc.draw / n, acc.obj / n, acc.tri / n / 1000.0, acc.sdraw / n, acc.sobj / n, acc.stri / n / 1000.0,
-		lights, shadow_lights, parts, proc, phys, acc.proc / n, acc.phys / n, acc.rcpu / n, Performance.get_monitor(Performance.OBJECT_NODE_COUNT)])
+		lights, shadow_lights, parts, proc, phys, acc.proc / n, acc.phys / n, acc.rcpu / n, acc.pdraw / n, acc.pobj / n, acc.ptri / n / 1000.0, Performance.get_monitor(Performance.OBJECT_NODE_COUNT)])
 
 
 func _all(n: Node, cls: String) -> Array:

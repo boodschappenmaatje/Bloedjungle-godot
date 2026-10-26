@@ -302,7 +302,10 @@ func _make_node(d: Dictionary) -> void:
 	d["node"] = n
 	if n != null:
 		_place_node(d)
-		_limit(n, d.k, not Game.editing)
+		# During the first headless/editor frame the autoload may not have finished
+		# restoring its script properties yet. Treat that brief startup window as
+		# normal gameplay and apply the usual distance limits.
+		_limit(n, d.k, Game.get("editing") != true)
 
 
 ## Zichtafstand per soort (m): ver weg tekent de iPhone geen gebouwen en straatmeubilair. In de editor (hoog boven de stad) uit.

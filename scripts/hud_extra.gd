@@ -495,7 +495,8 @@ func _layout() -> void:
 	_radar.position = Vector2(size.x - safe.z - _radar.size.x, safe.y + 8.0)
 	_menu_button.position = Vector2(_radar.size.x - 38.0, 4.0)
 	if size.x < size.y:
-		_top_right.position = Vector2(safe.x, safe.y + _status_panel.size.y + 7.0 + 34.0 + 4.0)
+		# staand: rechts, onder de radar (x volgt in _process uit de breedte van de tekst)
+		_top_right.position = Vector2(safe.x, _radar.position.y + _radar.size.y + 4.0)
 	else:
 		_top_right.position = Vector2(size.x - safe.z - _radar.size.x - _top_right.size.x, safe.y + 4.0)
 	# onder de TACTISCH-knoppen (liggend) of onder de punten (staand), zodat hij niets afdekt
@@ -558,7 +559,11 @@ func _process(delta: float) -> void:
 		var low: bool = p.reload_t <= 0.0 and p.ammo <= w.mag * 0.25
 		_ammo.add_theme_color_override("font_color", Color8(255, 90, 58) if low else (UI.INK_DIM if p.reload_t > 0.0 else UI.BRASS))
 	_top_right.reset_size()
-	_top_right.position.x = size.x - 12.0 - _top_right.size.x
+	if size.x < size.y:
+		_top_right.position.x = size.x - 12.0 - _top_right.size.x
+	else:
+		# liggend: links van de radar, anders staat de radar over de punten
+		_top_right.position.x = size.x - UI.safe_margins(size).z - _radar.size.x - 6.0 - _top_right.size.x
 	_weapon_t = maxf(0.0, _weapon_t - delta)
 	_weapon.modulate.a = clampf(_weapon_t / 0.3, 0.0, 1.0)
 	_hurt_a = maxf(0.0, _hurt_a - delta)

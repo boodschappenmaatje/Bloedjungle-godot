@@ -92,6 +92,11 @@ func _run() -> void:
 		for b in buttons:
 			if fr.intersects((b as Control).get_global_rect()):
 				_check(false, "%s: fps-teller overlapt %s" % [s, _label(b)])
+		# de puntentelling (rechtsboven) mag niet achter de radar of de pauzeknop verdwijnen
+		var extra := main.get_node("Hud/HudExtra")
+		var pts_rect: Rect2 = (extra._top_right as Control).get_global_rect()
+		_check(Rect2(Vector2.ZERO, view).encloses(pts_rect), "%s: puntentelling buiten beeld (%s)" % [s, pts_rect])
+		_check(not pts_rect.intersects((extra._radar as Control).get_global_rect()), "%s: puntentelling overlapt de radar (%s)" % [s, pts_rect])
 		# de contextknoppen staan in landschap boven de wapenbalk (die onderin staat), in portret eronder.
 		for slot in 3:
 			var context_y: float = view.y - 126.0 if view.x < view.y else view.y - action_btn.get("WEAPON_BAR_FROM_BOTTOM") - 8.0 - action_btn.get("SIZE").y

@@ -255,10 +255,8 @@ func _process(delta: float) -> void:
 		button_x = safe.x + 8.0
 		_btn.position = Vector2(button_x, size.y - safe.w - 316.0)
 	else:
-		var card_width := minf(220.0, maxf(150.0, size.x - safe.x - safe.z - 100.0))
-		var weapon_left := (size.x - (100.0 + card_width)) * 0.5
-		button_x = maxf(safe.x + 8.0, minf(maxf(safe.x + 164.0, size.x * 0.2), weapon_left - 94.0))
-		_btn.position = Vector2(button_x, size.y - safe.w - 90.0)
+		# boven de linkerjoystick (zone 152 hoog, onderin): daar staat verder niets, en hij blijft vrij van de wapenbalk
+		_btn.position = Vector2(safe.x + 8.0, size.y - safe.w - 152.0 - 8.0 - _btn.size.y)
 	if Game.build_mode and Game.state != "prep":
 		_exit()
 	if _msg_t > 0.0:

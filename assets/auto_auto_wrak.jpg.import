@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d335nmc1bc04o"
+path.s3tc="res://.godot/imported/auto_auto_wrak.jpg-76887852c45fdd46a4b6729245cb3fbf.s3tc.ctex"
 path.etc2="res://.godot/imported/auto_auto_wrak.jpg-76887852c45fdd46a4b6729245cb3fbf.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/auto_auto_wrak.jpg"
-dest_files=["res://.godot/imported/auto_auto_wrak.jpg-76887852c45fdd46a4b6729245cb3fbf.etc2.ctex"]
+dest_files=["res://.godot/imported/auto_auto_wrak.jpg-76887852c45fdd46a4b6729245cb3fbf.s3tc.ctex", "res://.godot/imported/auto_auto_wrak.jpg-76887852c45fdd46a4b6729245cb3fbf.etc2.ctex"]
 
 [params]
 

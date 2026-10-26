@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dmcukgu4f6quw"
+path.s3tc="res://.godot/imported/straat_straat_asfalt.png-9fa21c50ef83d42d18cc67cc0d9c3f9c.s3tc.ctex"
 path.etc2="res://.godot/imported/straat_straat_asfalt.png-9fa21c50ef83d42d18cc67cc0d9c3f9c.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/straat_straat_asfalt.png"
-dest_files=["res://.godot/imported/straat_straat_asfalt.png-9fa21c50ef83d42d18cc67cc0d9c3f9c.etc2.ctex"]
+dest_files=["res://.godot/imported/straat_straat_asfalt.png-9fa21c50ef83d42d18cc67cc0d9c3f9c.s3tc.ctex", "res://.godot/imported/straat_straat_asfalt.png-9fa21c50ef83d42d18cc67cc0d9c3f9c.etc2.ctex"]
 
 [params]
 

@@ -19,6 +19,7 @@ const ROWS := [
 	["t_post", "Test: mist, gloed, scherptediepte", [["on", "Aan"], ["off", "Uit"]]],
 	["t_res", "Test: 3D-beeld klein (30%)", [["auto", "Uit"], ["small", "Aan"]]],
 	["perf", "Prestatiemodus", [["off", "Uit"], ["on", "Aan"]]],
+	["t_streak", "Test: alle killstreaks, onbeperkt", [["off", "Uit"], ["on", "Aan"]]],
 	["diag", "Diagnose-run (30 s, start zelf in het spel)", [["off", "Uit"], ["on", "Aan"]]],
 ]
 const NOTES := {

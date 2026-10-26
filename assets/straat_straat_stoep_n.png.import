@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cgggtk83v7ybm"
+path.s3tc="res://.godot/imported/straat_straat_stoep_n.png-7d98dad2614641e069f694910b9418bc.s3tc.ctex"
 path.etc2="res://.godot/imported/straat_straat_stoep_n.png-7d98dad2614641e069f694910b9418bc.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/straat_straat_stoep_n.png"
-dest_files=["res://.godot/imported/straat_straat_stoep_n.png-7d98dad2614641e069f694910b9418bc.etc2.ctex"]
+dest_files=["res://.godot/imported/straat_straat_stoep_n.png-7d98dad2614641e069f694910b9418bc.s3tc.ctex", "res://.godot/imported/straat_straat_stoep_n.png-7d98dad2614641e069f694910b9418bc.etc2.ctex"]
 
 [params]
 

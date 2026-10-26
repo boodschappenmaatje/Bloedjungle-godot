@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://tmpyb6l1qrce"
+path.s3tc="res://.godot/imported/straaljager_jet_donker_normal.jpg-1bff3cda5f4b66e4d9f1f175a9babd61.s3tc.ctex"
 path.etc2="res://.godot/imported/straaljager_jet_donker_normal.jpg-1bff3cda5f4b66e4d9f1f175a9babd61.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/straaljager_jet_donker_normal.jpg"
-dest_files=["res://.godot/imported/straaljager_jet_donker_normal.jpg-1bff3cda5f4b66e4d9f1f175a9babd61.etc2.ctex"]
+dest_files=["res://.godot/imported/straaljager_jet_donker_normal.jpg-1bff3cda5f4b66e4d9f1f175a9babd61.s3tc.ctex", "res://.godot/imported/straaljager_jet_donker_normal.jpg-1bff3cda5f4b66e4d9f1f175a9babd61.etc2.ctex"]
 
 [params]
 

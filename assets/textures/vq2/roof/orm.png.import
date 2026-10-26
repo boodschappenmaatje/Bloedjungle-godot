@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c0rd7psqgh1ao"
+path.s3tc="res://.godot/imported/orm.png-9cd3a91034103a706654cb912cab4369.s3tc.ctex"
 path.etc2="res://.godot/imported/orm.png-9cd3a91034103a706654cb912cab4369.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/vq2/roof/orm.png"
-dest_files=["res://.godot/imported/orm.png-9cd3a91034103a706654cb912cab4369.etc2.ctex"]
+dest_files=["res://.godot/imported/orm.png-9cd3a91034103a706654cb912cab4369.s3tc.ctex", "res://.godot/imported/orm.png-9cd3a91034103a706654cb912cab4369.etc2.ctex"]
 
 [params]
 

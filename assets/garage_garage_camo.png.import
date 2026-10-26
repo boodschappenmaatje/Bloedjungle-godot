@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dlrsxvnop14q1"
+path.s3tc="res://.godot/imported/garage_garage_camo.png-38a5743d3010cfbe206a4cc61826268c.s3tc.ctex"
 path.etc2="res://.godot/imported/garage_garage_camo.png-38a5743d3010cfbe206a4cc61826268c.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/garage_garage_camo.png"
-dest_files=["res://.godot/imported/garage_garage_camo.png-38a5743d3010cfbe206a4cc61826268c.etc2.ctex"]
+dest_files=["res://.godot/imported/garage_garage_camo.png-38a5743d3010cfbe206a4cc61826268c.s3tc.ctex", "res://.godot/imported/garage_garage_camo.png-38a5743d3010cfbe206a4cc61826268c.etc2.ctex"]
 
 [params]
 

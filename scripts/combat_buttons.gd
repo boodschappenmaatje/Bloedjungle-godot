@@ -108,6 +108,8 @@ func _air_input(event: InputEvent) -> void:
 
 
 func _air_id() -> String:
+	if Game.streak_test():
+		Game.streak_fill()
 	return String(Game.streak_bank.back()) if not Game.streak_bank.is_empty() else ""
 
 
@@ -292,7 +294,7 @@ func _process(_delta: float) -> void:
 	if _air.visible:
 		_air.reward = rid
 		_air.set_caption(String(Streak.reward(rid).kort))
-		_air.badge = "×%d" % Game.streak_bank.size() if Game.streak_bank.size() > 1 else ""
+		_air.badge = "∞" if Game.streak_test() else "×%d" % Game.streak_bank.size() if Game.streak_bank.size() > 1 else ""
 		_air.queue_redraw()  # de gloeiende ring pulseert
 	var w: Dictionary = Game.wstat(p.weapon)
 	var reloading: bool = p.reload_t > 0.0

@@ -31,12 +31,13 @@ static var observed_peak := 60.0
 ## Meldt het scherm zijn snelheid niet, dan gaan we uit van 60 tot het spel echt boven de ~90 fps komt.
 ## (Eerder gold dan 120 als doel; op een scherm dat 60 haalt zette de resolutieregelaar het beeld daardoor voor altijd op 50%.)
 static func target_fps() -> float:
-	if get_value("hz") != "120":
-		return 60.0
+	var requested := clampf(float(get_value("hz")), 30.0, 120.0)
 	var r := DisplayServer.screen_get_refresh_rate()
 	if r > 0.0:
-		return clampf(r, 60.0, 120.0)
-	return 120.0 if observed_peak > 90.0 else 60.0
+		return minf(requested, clampf(r, 30.0, 120.0))
+	if requested <= 60.0:
+		return requested
+	return requested if observed_peak >= requested * 0.75 else 60.0
 
 
 ## Geen eigen beeldsnelheidsgrens: het scherm (vsync) bepaalt het tempo. Een eigen grens van 60 naast vsync blijft telkens

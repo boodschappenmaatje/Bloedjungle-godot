@@ -1,0 +1,58 @@
+name: iOS unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feature/native-ios-complete]
+    paths-ignore: ["docs/**", "*.md"]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: macos-14
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Install pinned Godot 4.7.0 and export templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=4.7.0
+          curl -fL "https://github.com/godotengine/godot/releases/download/${VERSION}-stable/Godot_v${VERSION}-stable_macos.universal.zip" -o /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          GODOT="$(find /tmp/godot -name Godot -type f | head -1)"
+          chmod +x "$GODOT"
+          echo "GODOT_BIN=$GODOT" >> "$GITHUB_ENV"
+          curl -fL "https://github.com/godotengine/godot/releases/download/${VERSION}-stable/Godot_v${VERSION}-stable_export_templates.tpz" -o /tmp/templates.tpz
+          mkdir -p "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable"
+          unzip -q /tmp/templates.tpz -d /tmp/templates
+          cp -R /tmp/templates/templates/. "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable/"
+          xcodebuild -version
+      - name: Import and validate project
+        run: |
+          "$GODOT_BIN" --headless --editor --path . --import
+          "$GODOT_BIN" --headless --path . --quit
+      - name: Export iOS project
+        run: |
+          mkdir -p build
+          "$GODOT_BIN" --headless --path . --export-release "iOS" build/ios
+          test -f build/ios/Bloedjungle.xcodeproj/project.pbxproj
+          xcodebuild -project build/ios/Bloedjungle.xcodeproj -scheme Bloedjungle -configuration Release -sdk iphoneos -derivedDataPath build/derived CODE_SIGNING_ALLOWED=NO build
+          APP="$(find build/derived/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -type d | head -1)"
+          test -n "$APP"
+          mkdir -p build/Payload
+          cp -R "$APP" build/Payload/
+          (cd build && /usr/bin/zip -qry Bloedjungle.ipa Payload)
+          test -s build/Bloedjungle.ipa
+          unzip -l build/Bloedjungle.ipa | grep -E 'Payload/.+\.app/' | head
+          unzip -l build/Bloedjungle.ipa | grep -q 'Payload/.+\.app/'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bloedjungle-ios-unsigned-${{ github.sha }}
+          path: build/Bloedjungle.ipa
+          if-no-files-found: error
+          retention-days: 30

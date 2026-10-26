@@ -1,6 +1,6 @@
 extends SceneTree
-## Test: killstreak (luchtsteun). Kills van de speler tellen, die van soldaten en luchtsteun niet; bij 10 staat Versterking klaar,
-## bij 16 Napalm; de dogtag-teller en de luchtsteun-knop verschijnen; de truck rijdt aan en zet 4 soldaten af; napalm verbrandt
+## Test: killstreak (luchtsteun). Kills van de speler tellen, die van soldaten en luchtsteun niet; bij 5 staat Versterking klaar,
+## bij 12 Napalm; de dogtag-teller en de luchtsteun-knop verschijnen; de truck rijdt aan en zet 4 soldaten af; napalm verbrandt
 ## vijanden in de strook zonder je streak te verhogen; einde van de golf zet de teller op nul, maar bewaart wat klaarstaat.
 ## Draaien: godot --headless --path . -s tests/killstreak_test.gd --fixed-fps 60
 
@@ -64,14 +64,14 @@ func _run() -> void:
 	_kill(_enemy(far), "soldaat")
 	_kill(_enemy(far), "lucht")
 	_check(game.streak == 0, "kills van soldaten en luchtsteun mogen de streak niet verhogen (streak=%d)" % game.streak)
-	for i in 9:
+	for i in 4:
 		_kill(_enemy(far), "speler")
-	_check(game.streak == 9 and game.streak_bank.is_empty(), "9 kills: nog geen beloning (streak=%d)" % game.streak)
+	_check(game.streak == 4 and game.streak_bank.is_empty(), "4 kills: nog geen beloning (streak=%d)" % game.streak)
 
 	print('stap 1 klaar')
-	# 2. 10 kills: versterking klaar, teller en knop zichtbaar
+	# 2. 5 kills: versterking klaar, teller en knop zichtbaar
 	_kill(_enemy(far), "speler")
-	_check(game.streak_bank == ["truck"], "10 kills: versterking klaar (bank=%s)" % str(game.streak_bank))
+	_check(game.streak_bank == ["truck"], "5 kills: versterking klaar (bank=%s)" % str(game.streak_bank))
 	await _frames(8)
 	var hud: Node = main.get_node("Hud")
 	var tag := hud.find_child("StreakHud", true, false) as Control
@@ -122,12 +122,8 @@ func _run() -> void:
 	_check(game.streak == before, "kills van de versterking mogen je streak niet verhogen (%d -> %d)" % [before, game.streak])
 
 	print('stap 4 klaar')
-	# 5. na het blijf-tijdstip vertrekt alles weer
-	for n in main.get_children():
-		if _is(n, "versterking"):
-			n._state = "vechten"
-			n._t = streak_script.TRUCK_STAY
-	for f in 60 * 20:
+	# 5. de truck rijdt weg, de soldaten blijven bij de speler
+	for f in 60 * 25:
 		await process_frame
 		var still := false
 		for n in main.get_children():
@@ -139,15 +135,19 @@ func _run() -> void:
 	for a in game.allies:
 		if is_instance_valid(a) and a.get("helper"):
 			left += 1
-	_check(left == 0, "na het vertrek mogen er geen helpers meer zijn (%d)" % left)
+	_check(left == 4, "de soldaten moeten bij de speler blijven na het vertrek van de truck (%d)" % left)
+	for a in game.allies.duplicate():
+		if is_instance_valid(a) and a.get("helper"):
+			a.queue_free()
+	game.allies.clear()
 
 	print('stap 5 klaar')
 	# 6. nog 6 kills: napalm klaar; napalm brandt vijanden in de strook en telt niet mee
 	game.streak_reset()
 	game.streak_bank.clear()
-	for i in 16:
+	for i in 12:
 		_kill(_enemy(far), "speler")
-	_check(game.streak_bank.has("napalm"), "16 kills: napalm klaar (bank=%s)" % str(game.streak_bank))
+	_check(game.streak_bank.has("napalm"), "12 kills: napalm klaar (bank=%s)" % str(game.streak_bank))
 	var center := Vector3(30, 0, 20)
 	var dir := Vector3(1, 0, 0)
 	var burning: Array = []

@@ -5,12 +5,11 @@ extends RefCounted
 ## Kills van jezelf en van jouw voertuigen tellen; kills van soldaten en van luchtsteun tellen niet (Game.hit_src).
 
 const LADDER := [
-	{"id": "truck", "kills": 10, "naam": "VERSTERKING", "kort": "TRUCK", "klaar": "VERSTERKING KLAAR"},
-	{"id": "napalm", "kills": 16, "naam": "NAPALM-AANVAL", "kort": "NAPALM", "klaar": "NAPALM KLAAR"},
+	{"id": "truck", "kills": 5, "naam": "VERSTERKING", "kort": "TRUCK", "klaar": "VERSTERKING KLAAR"},
+	{"id": "napalm", "kills": 12, "naam": "NAPALM-AANVAL", "kort": "NAPALM", "klaar": "NAPALM KLAAR"},
 ]
 
 const TRUCK_SOLDIERS := 4
-const TRUCK_STAY := 60.0     # s dat de versterking blijft
 const NAPALM_LENGTH := 20.0  # m lengte van de brandstrook
 const NAPALM_WIDTH := 5.0    # m breed
 const NAPALM_RANGE_MIN := 8.0

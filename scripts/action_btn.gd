@@ -9,6 +9,7 @@ const GAP := 62.0
 var kind := ""
 var caption := ""
 var equipment_kind := "grenade"
+var reward := ""   # luchtsteun-knop: id van de beloning die klaarstaat (Streak.LADDER)
 var bar := -1.0  # 0..1 toont een smalle sterktebalk onder de knop, -1 verbergt hem
 var open_state := false
 var badge := ""  # klein getal rechtsboven, bijv. "×3"
@@ -27,6 +28,7 @@ static func make(k: String, cap: String) -> ActionBtn:
 		"herlaad": "Actief wapen herladen",
 		"sprint": "Sprinten · balk toont uithoudingsvermogen",
 		"rol": "Ontwijkrol · afkoeling wordt rond de knop getoond",
+		"lucht": "Luchtsteun · tik om te gebruiken, napalm: vasthouden en slepen om de strook te richten",
 	}.get(k, cap)
 	b.add_to_group("hud_button")
 	b.custom_minimum_size = SIZE
@@ -124,6 +126,11 @@ func _draw() -> void:
 			# gebogen pijl: een koprol
 			draw_arc(c, 11.0, PI * 0.15, PI * 1.75, 16, col, w)
 			draw_colored_polygon(PackedVector2Array([c + Vector2(-13, 2), c + Vector2(-5, 3), c + Vector2(-9, 11)]), col)
+		"lucht":
+			Streak.draw_icon(self, reward, c + Vector2(0, 1), 1.0, col)
+			if not disabled:
+				var pulse := 0.55 + 0.45 * sin(Time.get_ticks_msec() / 260.0)
+				draw_arc(size * 0.5, size.x * 0.5 - 1.5, 0, TAU, 32, Color(UI.BRASS, 0.35 + 0.65 * pulse), 2.6, true)
 		"granaat":
 			match equipment_kind:
 				"mine":

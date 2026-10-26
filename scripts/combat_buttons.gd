@@ -7,6 +7,7 @@ var _reload: ActionBtn
 var _sprint: ActionBtn
 var _grenade: ActionBtn
 var _roll: ActionBtn
+var _air: ActionBtn          # luchtsteun (killstreak): staat naast GEBRUIK en verschijnt alleen als er een beloning klaarstaat
 var _state := ""
 
 ## Granaat richten: knop vasthouden en slepen zet de landingscirkel neer (2-12 m), loslaten gooit.
@@ -19,6 +20,13 @@ var _aim_start := Vector2.ZERO
 var _aim_out := false     # de duim is al buiten de knop geweest: terugkomen = afbreken
 var _aim_vis: GrenadeAim
 
+## Luchtsteun gebruiken: tikken voert een beloning meteen uit; bij napalm zet vasthouden en slepen de strook neer (8-30 m).
+var air_finger := -2
+var air_drag := Vector2.ZERO
+var _air_start := Vector2.ZERO
+var _air_out := false
+var _air_vis: NapalmAim
+
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -27,6 +35,7 @@ func _ready() -> void:
 	_sprint = _make("sprint", "SPRINT", func(): _player_call("toggle_sprint"))
 	_grenade = _make("granaat", "GEBRUIK", _use_equipment)
 	_roll = _make("rol", "ROL", func(): _player_call("request_dodge"))
+	_air = _make("lucht", "STEUN", func(): pass)  # de aanraking loopt via _input (tik of slepen)
 	resized.connect(_layout)
 	_layout()
 
@@ -56,6 +65,7 @@ func _use_equipment() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	_air_input(event)
 	if Game.equipment_sel != "grenade" or not is_visible_in_tree():
 		if aim_finger != -2:
 			cancel_aim()
@@ -74,6 +84,102 @@ func _input(event: InputEvent) -> void:
 			release_aim()
 	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION and aim_finger == -1:
 		drag_aim(event.position - _aim_start)
+
+
+func _air_input(event: InputEvent) -> void:
+	if not is_visible_in_tree() or not _air.visible:
+		if air_finger != -2:
+			cancel_air()
+		return
+	if event is InputEventScreenTouch:
+		if event.pressed and air_finger == -2 and _air.get_global_rect().has_point(event.position):
+			_begin_air(event.index, event.position)
+		elif not event.pressed and event.index == air_finger:
+			release_air()
+	elif event is InputEventScreenDrag and event.index == air_finger:
+		drag_air(event.position - _air_start)
+	elif event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed and air_finger == -2 and _air.get_global_rect().has_point(event.position):
+			_begin_air(-1, event.position)
+		elif not event.pressed and air_finger == -1:
+			release_air()
+	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION and air_finger == -1:
+		drag_air(event.position - _air_start)
+
+
+func _air_id() -> String:
+	return String(Game.streak_bank.back()) if not Game.streak_bank.is_empty() else ""
+
+
+func _begin_air(finger: int, at: Vector2) -> void:
+	var p = Game.player
+	if _air_id() == "" or p == null or not is_instance_valid(p) or p.dead or p.driving:
+		return
+	air_finger = finger
+	_air_start = at
+	air_drag = Vector2.ZERO
+	_air_out = false
+	_update_air()
+
+
+func drag_air(d: Vector2) -> void:
+	air_drag = d
+	if d.length() > AIM_DEAD:
+		_air_out = true
+	_update_air()
+
+
+func release_air() -> void:
+	var id := _air_id()
+	var cancel := _air_out and air_drag.length() <= AIM_DEAD
+	var p = Game.player
+	if not cancel and id != "" and p != null and is_instance_valid(p):
+		var a := air_aim()
+		Game.streak_take()
+		Streak.use(id, p.get_parent(), a.target, a.dir)
+	cancel_air()
+	if cancel:
+		Sfx.play("click")
+
+
+func cancel_air() -> void:
+	air_finger = -2
+	_air_out = false
+	if _air_vis != null and is_instance_valid(_air_vis):
+		_air_vis.queue_free()
+	_air_vis = null
+
+
+## Midden en vliegrichting van de napalmstrook: schermrichting = wereldrichting, net als bij de granaat.
+func air_aim() -> Dictionary:
+	var p = Game.player
+	var base: Vector3 = p.global_position
+	var l := air_drag.length()
+	if l <= AIM_DEAD:
+		var f := Vector3(sin(p.face), 0.0, cos(p.face))
+		return {"target": base + f * Streak.NAPALM_TAP, "dir": f}
+	var d := Vector3(air_drag.x, 0.0, air_drag.y).normalized()
+	var k := clampf((l - AIM_DEAD) / (AIM_FULL - AIM_DEAD), 0.0, 1.0)
+	return {"target": base + d * lerpf(Streak.NAPALM_RANGE_MIN, Streak.NAPALM_RANGE_MAX, k), "dir": d}
+
+
+func _update_air() -> void:
+	var p = Game.player
+	if air_finger == -2 or _air_id() == "" or p == null or not is_instance_valid(p):
+		cancel_air()
+		return
+	if _air_id() != "napalm":
+		return   # de truck heeft geen richtcirkel: loslaten gebruikt hem meteen
+	if _air_out and air_drag.length() <= AIM_DEAD:
+		if _air_vis != null:
+			_air_vis.visible = false
+		return
+	if _air_vis == null or not is_instance_valid(_air_vis):
+		_air_vis = NapalmAim.new()
+		p.get_parent().add_child(_air_vis)
+	_air_vis.visible = true
+	var a := air_aim()
+	_air_vis.show_strip(a.target, a.dir)
 
 
 func _begin_aim(finger: int, at: Vector2) -> void:
@@ -140,7 +246,7 @@ func _update_aim() -> void:
 	_aim_vis.show_throw(a.from, a.target, Grenade.RADIUS * float(Progress.bonus().grenade))
 
 
-## Alles rechts, binnen bereik van de duim die richt: 2x2 raster in de rechteronderhoek.
+## Alles rechts, binnen bereik van de duim die richt: 2x2 raster in de rechteronderhoek, plus de luchtsteun-knop boven GEBRUIK.
 ## Onder: sprint + rol, boven: granaat + herlaad. De wisselknop (shop.gd) staat links van het raster.
 func _layout() -> void:
 	var safe := UI.safe_margins(size)
@@ -164,7 +270,8 @@ func _layout() -> void:
 	_roll.position = Vector2(x1, y1)
 	_grenade.position = Vector2(x0, y0)
 	_reload.position = Vector2(x1, y0)
-	for b in [_reload, _sprint, _grenade, _roll]:
+	_air.position = Vector2(x0, y0 - g)   # boven GEBRUIK: links ervan staat de wapenstrip, erboven de uitrustingskiezer
+	for b in [_reload, _sprint, _grenade, _roll, _air]:
 		b.size = ActionBtn.SIZE
 
 
@@ -178,6 +285,15 @@ func _process(_delta: float) -> void:
 		return
 	if aim_finger != -2:
 		_update_aim()  # de speler loopt door tijdens het richten: de boog loopt mee
+	if air_finger != -2:
+		_update_air()
+	var rid := _air_id()
+	_air.visible = rid != "" and not p.driving and not p.dead
+	if _air.visible:
+		_air.reward = rid
+		_air.set_caption(String(Streak.reward(rid).kort))
+		_air.badge = "×%d" % Game.streak_bank.size() if Game.streak_bank.size() > 1 else ""
+		_air.queue_redraw()  # de gloeiende ring pulseert
 	var w: Dictionary = Game.wstat(p.weapon)
 	var reloading: bool = p.reload_t > 0.0
 	var equipment_count: int = Game.grenades if Game.equipment_sel == "grenade" else int(Game.inv.get("mine", 0)) if Game.equipment_sel == "mine" else 0

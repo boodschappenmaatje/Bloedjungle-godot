@@ -38,6 +38,10 @@ var path_i := 0
 var stun_t := 0.0  # geschrokken van een explosie: even stilstaan
 var _shoot_pose_t := 0.0
 var _shot_sequence := 0
+var burn_t := 0.0          # > 0: staat in brand (napalm), rent wild rond en valt aan het eind dood
+var _burn_fx: Node3D
+var _burn_dir := Vector3.ZERO
+var _burn_turn := 0.0
 
 
 func setup(kind: String, wave: int) -> void:
@@ -69,6 +73,12 @@ func _physics_process(delta: float) -> void:
 	if dead or Game.state == "over":
 		if not dead:
 			model.play("stil")
+		return
+	if burn_t > 0.0:
+		burn_t -= delta
+		_burn_step(delta)
+		if burn_t <= 0.0:
+			_burn_die()
 		return
 	if stun_t > 0.0:
 		stun_t -= delta
@@ -418,11 +428,54 @@ func _aim_mult() -> float:
 	return b.enemySpread * (b.nightSpread if GameSettings.get_value("time") == "night" else 1.0)
 
 
-func _die(dir: Vector3) -> void:
+## Napalm: hij vat vlam, rent secs seconden panisch rond en valt dan dood neer.
+func ignite(secs := 5.0) -> void:
+	if dead or burn_t > 0.0:
+		return
+	burn_t = secs
+	stun_t = 0.0
+	_burn_turn = 0.0
+	_burn_fx = Fx.flame(self, Vector3(0.0, 0.05, 0.0), 2.1, false)
+	model.flash(Color(1.0, 0.45, 0.1))
+	Sfx.play("hurt", 0.8, global_position)
+	Game.alert(global_position, 14.0, 4.0)   # de buren schrikken van een brandende maat
+
+
+func _burn_step(delta: float) -> void:
+	_burn_turn -= delta
+	if _burn_turn <= 0.0:
+		_burn_turn = randf_range(0.4, 0.9)
+		var a := randf() * TAU
+		_burn_dir = Vector3(sin(a), 0.0, cos(a))
+	velocity = _burn_dir * 5.8 * speed_mul
+	move_and_slide()
+	position.y = 0.0
+	var flat := Data.clamp_world(Vector2(global_position.x, global_position.z))
+	global_position = Vector3(flat.x, 0.0, flat.y)
+	face += angle_difference(face, atan2(_burn_dir.x, _burn_dir.z)) * minf(1.0, delta * 8.0)
+	rotation.y = face
+	model.play("brand_rennen", 0.1)
+
+
+func _burn_die() -> void:
+	hp = 0.0
+	velocity = Vector3.ZERO
+	Game.hit_src = "lucht"   # een brandende vijand telt niet voor je eigen streak
+	_die(_burn_dir, "brand_val")
+	Game.hit_src = "speler"
+	if _burn_fx != null and is_instance_valid(_burn_fx):
+		get_tree().create_timer(3.5).timeout.connect(func():
+			if is_instance_valid(_burn_fx):
+				_burn_fx.queue_free())
+
+
+func _die(dir: Vector3, clip := "") -> void:
 	dead = true
 	Game.enemies.erase(self)
 	Game.alert(global_position, 12.0, 5.0)  # de buren in de buurt zijn gewaarschuwd en zoeken de speler
 	Game.kills += 1
+	if Game.hit_src == "speler":
+		Game.streak_kill()  # soldaten en luchtsteun tellen niet mee voor je eigen streak
 	Sfx.play("thud", 1.0, global_position)
 	Progress.stats.kills += 1
 	if Progress.stats.kills % 25 == 0:
@@ -435,7 +488,9 @@ func _die(dir: Vector3) -> void:
 	if type == "heavy":
 		Fx.explosion(get_parent(), global_position, 0.8)
 	var blast: Dictionary = Game.blast_near(global_position)
-	if blast.is_empty():
+	if clip != "":
+		model.play(clip, 0.1)
+	elif blast.is_empty():
 		model.play("dood1" if randf() < 0.5 else "dood2", 0.08)
 	else:
 		_fling(blast)

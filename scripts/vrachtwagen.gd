@@ -31,6 +31,7 @@ const CLIMB_T := 1.3        # s om het trapje op te klimmen
 
 var driven := false
 var goals: Array = []
+var goal_speed := 2.5   # m/s waarmee hij naar zijn doelpunten rijdt: stapvoets uit de garage, hard bij de versterking
 var _speed := 0.0
 var _steer := 0.0
 var _yaw_rate := 0.0
@@ -225,6 +226,25 @@ func _toggle() -> void:
 			_eng_player.pitch_scale = 1.0
 			_eng_player.play()
 		_load()
+
+
+## Versterking uit de luchtsteun: de truck rijdt met draaiende motor naar een punt (versterking.gd regelt de rest).
+func start_convoy(goal: Vector3, speed: float) -> void:
+	goal_speed = speed
+	goals = [goal]
+	if _engine == "uit":
+		_engine = "aan"
+		_engine_t = 0.0
+		_eng_player.stream = _snd.engine
+		_eng_player.play()
+
+
+func open_for_unloading() -> void:
+	_open_klep()
+
+
+func rear_point() -> Vector3:
+	return _bp(0.0, BAK_Y0 - 1.1, 0.0)
 
 
 func _troops_button() -> void:
@@ -573,7 +593,7 @@ func _drive(delta: float, live: bool) -> void:
 		else:
 			want_steer = clampf(atan(2.0 * WHEELBASE * sin(alpha) / maxf(to.length(), 3.0)), -MAX_STEER, MAX_STEER)
 			# de motor staat uit: hij rolt rustig de garage uit en komt recht tot stilstand
-			want_speed = clampf(to.length() * 0.5, 0.6, 2.5)
+			want_speed = clampf(to.length() * 0.5, 0.6, goal_speed)
 	elif driven and live and can_go and mv.length() > 0.15:
 		# hij draait naar waar je de stick duwt; ligt dat achter hem, dan rijdt hij achteruit
 		var want := atan2(-mv.x, -mv.y)

@@ -46,3 +46,7 @@ De viewer bevat ook `assets/auto.glb` (Personenauto, bron `bron/auto/`): zes ech
 ## Stadsbus
 
 De viewer bevat ook `assets/bus.glb` (Stadsbus, bron `bron/bus/`): acht echte GLB-clips (voordeur, middendeur, motorluik, knielen, lichten, ruitenwissers, knipperlichten, alarm) en de keuzelijst **Schadefase** (heel, beschadigd, zwaar, brandend, wrak, ontploffing). Brand, rook, ontploffing en vliegende onderdelen zijn viewer-voorbeelden; de echte effecten zitten in Godot (`scenes/bus_demo.tscn`, `tests/bus_foto.gd`). Test: `node test-bus.mjs`. Een los telefoonbestand met knoppen per onderdeel maak je met `python3 tools/bus-viewer/bouw.py uit.html`.
+
+## Straaljager (napalm-luchtsteun)
+
+De viewer bevat ook `assets/straaljager.glb` (bron `bron/straaljager/`): drie echte GLB-clips (Vliegen-loop, Bocht, Aanval) met bewegende rolroeren, naverbranders en romp. `node test-straaljager.mjs` controleert dat elke clip de verwachte nodes echt beweegt. Het loslaten van de bommen en de napalm-vlam zijn Godot-effecten (`scripts/napalm_aanval.gd`, test `tests/killstreak_test.gd`). Geen iPhone/Safari/Xogot-meting uitgevoerd.

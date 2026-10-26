@@ -16,6 +16,8 @@ var idx := 0
 var fire_t := 0.5
 var _shooting := false
 var _shot_sequence := 0
+var recall = null    # Vector3 als de versterking naar de truck terug moet lopen
+var helper := false  # versterking uit de luchtsteun: volgt altijd de speler en blijft los van de kazerne
 var truck: Node = null  # vrachtwagen die hem vervoert; die bepaalt dan waar hij is en wat hij doet
 
 
@@ -62,7 +64,7 @@ func _physics_process(delta: float) -> void:
 	var to_goal := Vector2(goal.x - global_position.x, goal.z - global_position.z)
 	var want := Vector3.ZERO
 	var moving := false
-	if to_goal.length() > (0.6 if Game.troop_mode == "hold" else 2.2):
+	if to_goal.length() > (0.6 if Game.troop_mode == "hold" and not helper else 2.2):
 		var wp := Route.waypoint(global_position, goal)
 		var d := Vector2(wp.x - global_position.x, wp.z - global_position.z)
 		if d.length() > 0.05:
@@ -92,7 +94,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _goal() -> Vector3:
-	if Game.troop_mode == "hold":
+	if recall != null:
+		return recall
+	if Game.troop_mode == "hold" and not helper:
 		var p: Vector2 = POSTS[idx % POSTS.size()] * (Data.COMPOUND / 14.0)
 		return Vector3(p.x, 0, p.y)
 	var a := float(idx) * 2.4 + 0.6
@@ -126,7 +130,8 @@ func _shoot() -> void:
 	var muzzle: Vector3 = model.muzzle_position()
 	var profile: Dictionary = Data.WEAPON_VISUALS["thompson"]
 	var tracer := "thompson" if (_shot_sequence - 1) % int(profile.trail_every) == 0 else ""
-	Bullet.fire(get_parent(), muzzle, face + randf_range(-0.05, 0.05), 70.0, dmg, 0.6, true, false, 0, 0.0, 0.0, 0.0, tracer)
+	var b := Bullet.fire(get_parent(), muzzle, face + randf_range(-0.05, 0.05), 70.0, dmg, 0.6, true, false, 0, 0.0, 0.0, 0.0, tracer)
+	b.src = "soldaat"
 	Fx.muzzle(get_parent(), muzzle, "thompson", face)
 	if _shot_sequence % int(profile.casing_every) == 0:
 		var axes := model.casing_axes()

@@ -354,6 +354,57 @@ for f in (0, 2, 4, 6, 8, 11, 13, 15, 16, 18, 20, 22, 24, 28, 34, 40):
     key(f)
 finish(act)
 
+# =====================================================================================================
+# BRAND_RENNEN: in brand gestoken door napalm (lus van 16 beelden = 0,53 s). De rennende lus van het mannetje, maar de armen
+# slaan wild boven het hoofd, de romp helt achterover en de kop schudt van links naar rechts.
+# BRAND_VAL: na het rennen bezwijkt hij (1 s): de knieën knikken, hij valt voorover, blijft liggen en trilt na.
+# =====================================================================================================
+FIRE_FRAMES = 16
+act = new_action("brand_rennen", FIRE_FRAMES)
+for f in range(FIRE_FRAMES + 1):
+    apply(BASE_RUN[f % 16])
+    ph = 2 * math.pi * f / FIRE_FRAMES
+    for n in SPINE:
+        rot(n, X, -9.0)
+    rot("DEF-neck", Z, 18.0 * math.sin(ph * 2), pivot=head_of("DEF-neck"))
+    rot("DEF-head", X, -14.0)
+    for s_, sign in (("L", 1.0), ("R", -1.0)):
+        ua = f"DEF-upper_arm{s_}"
+        fa = f"DEF-forearm{s_}"
+        side_ph = ph + (0.0 if s_ == "L" else math.pi)
+        rot(ua, X, -150.0 + 22.0 * math.sin(side_ph), pivot=head_of(ua))       # handen hoog, om en om slaand
+        rot(ua, Z, sign * (28.0 + 18.0 * math.cos(side_ph)), pivot=head_of(ua))
+        rot(fa, X, -35.0 + 30.0 * math.sin(side_ph + 1.2), pivot=head_of(fa))
+    key(f if f < FIRE_FRAMES else FIRE_FRAMES)
+finish(act)
+
+FALL_FRAMES = 32
+f_pitch = {0: -4.0, 6: 8.0, 12: 34.0, 18: 82.0, 21: 94.0, 24: 90.0, 32: 90.0}      # romp voorover, uiteindelijk plat op de buik
+f_drop = {0: 0.0, 6: -0.22, 12: -0.42, 18: -0.62, 21: -0.78, 24: -0.76, 32: -0.76}
+f_thigh = {0: 10.0, 6: 55.0, 12: 62.0, 18: 38.0, 24: 14.0, 32: 10.0}
+f_shin = {0: 25.0, 6: 105.0, 12: 120.0, 18: 70.0, 24: 20.0, 32: 16.0}               # eerst op de knieën, dan uitgestrekt
+f_arm = {0: -150.0, 6: -120.0, 12: -80.0, 18: -150.0, 21: -170.0, 24: -165.0, 32: -165.0}   # armen vooruit gestrekt op de grond
+act = new_action("brand_val", FALL_FRAMES)
+for f in (0, 3, 6, 9, 12, 15, 18, 21, 24, 26, 28, 30, 32):
+    apply(BASE_STIL)
+    twitch = math.sin(f * 1.9) * (1.0 - smooth(min(1.0, max(0.0, (f - 22) / 10.0)))) * (f >= 22)
+    for n in SPINE:
+        rot(n, X, 6.0 * min(1.0, f / 12.0))
+    rot("DEF-neck", X, 10.0 + 8.0 * twitch)
+    for s_, sign in (("L", 1.0), ("R", -1.0)):
+        ua = f"DEF-upper_arm{s_}"
+        rot(ua, X, keyed(f_arm, f) + 7.0 * twitch, pivot=head_of(ua))
+        rot(ua, Z, sign * (30.0 + 10.0 * twitch), pivot=head_of(ua))
+    rot("DEF-thighL", X, keyed(f_thigh, f))
+    rot("DEF-thighR", X, keyed(f_thigh, f) * 0.8)
+    rot("DEF-shinL", X, keyed(f_shin, f))
+    rot("DEF-shinR", X, keyed(f_shin, f) * 0.85)
+    pivot = head_of(HIPS) + Vector((0, 0, 0.05))
+    rot(HIPS, X, keyed(f_pitch, f), pivot=pivot)
+    shift(HIPS, (0, 0, keyed(f_drop, f)))
+    key(f)
+finish(act)
+
 scene.frame_start, scene.frame_end = 0, 40
 bpy.ops.object.mode_set(mode='OBJECT')
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(out, "acties.blend"))
@@ -363,7 +414,7 @@ for o in list(bpy.data.objects):
     if o.type == 'MESH':
         bpy.data.objects.remove(o)
 for a in list(bpy.data.actions):
-    if a.name not in ("rollen", "sprinten", "herladen", "explosie_dood"):
+    if a.name not in ("rollen", "sprinten", "herladen", "explosie_dood", "brand_rennen", "brand_val"):
         bpy.data.actions.remove(a)
 bpy.ops.export_scene.gltf(filepath=os.path.join(out, "acties.glb"), export_format='GLB', export_animation_mode='ACTIONS', export_force_sampling=True, export_apply=False)
 print("KLAAR", sorted(a.name for a in bpy.data.actions))

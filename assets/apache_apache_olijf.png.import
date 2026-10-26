@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dakh73mg1h5tq"
-path.s3tc="res://.godot/imported/apache_apache_olijf.png-fbb6155ca0d61fa2faa9fce64043496b.s3tc.ctex"
 path.etc2="res://.godot/imported/apache_apache_olijf.png-fbb6155ca0d61fa2faa9fce64043496b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/apache_apache_olijf.png"
-dest_files=["res://.godot/imported/apache_apache_olijf.png-fbb6155ca0d61fa2faa9fce64043496b.s3tc.ctex", "res://.godot/imported/apache_apache_olijf.png-fbb6155ca0d61fa2faa9fce64043496b.etc2.ctex"]
+dest_files=["res://.godot/imported/apache_apache_olijf.png-fbb6155ca0d61fa2faa9fce64043496b.etc2.ctex"]
 
 [params]
 

@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d3j7h5lxquj4v"
-path.s3tc="res://.godot/imported/vrachtwagen_vrachtwagen_olijf.png-a8e26ae054bf178f1565501856f16d80.s3tc.ctex"
 path.etc2="res://.godot/imported/vrachtwagen_vrachtwagen_olijf.png-a8e26ae054bf178f1565501856f16d80.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/vrachtwagen_vrachtwagen_olijf.png"
-dest_files=["res://.godot/imported/vrachtwagen_vrachtwagen_olijf.png-a8e26ae054bf178f1565501856f16d80.s3tc.ctex", "res://.godot/imported/vrachtwagen_vrachtwagen_olijf.png-a8e26ae054bf178f1565501856f16d80.etc2.ctex"]
+dest_files=["res://.godot/imported/vrachtwagen_vrachtwagen_olijf.png-a8e26ae054bf178f1565501856f16d80.etc2.ctex"]
 
 [params]
 
@@ -39,4 +38,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

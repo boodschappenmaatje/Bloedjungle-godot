@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://347huqvypw4t"
-path.s3tc="res://.godot/imported/normal_gl.jpg-2adadfcd98047c01568266380601c866.s3tc.ctex"
 path.etc2="res://.godot/imported/normal_gl.jpg-2adadfcd98047c01568266380601c866.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/buildings/corrugated_iron/normal_gl.jpg"
-dest_files=["res://.godot/imported/normal_gl.jpg-2adadfcd98047c01568266380601c866.s3tc.ctex", "res://.godot/imported/normal_gl.jpg-2adadfcd98047c01568266380601c866.etc2.ctex"]
+dest_files=["res://.godot/imported/normal_gl.jpg-2adadfcd98047c01568266380601c866.etc2.ctex"]
 
 [params]
 

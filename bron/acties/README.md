@@ -14,3 +14,7 @@ Alle houdingen zijn opgebouwd op de bestaande houdingen van het mannetje (`stil`
     python3 render.py uit/acties.blend rollen 0,2,4,6,8,10,12,14 uit/ zij   # contactblad met een voorbeeldgeweer
 
 `scripts/soldier_model.gd` haalt de animaties uit dit bestand en hangt ze aan elk mannetje.
+
+## Brandende soldaat (napalm)
+
+`brand_rennen` (16 frames, loop: paniekrennen met armen omhoog) en `brand_val` (32 frames: knikken, voorover vallen, trillen). Gebruikt door `Enemy.ignite()`: brandende vijanden rennen 5 s en vallen dan. `acties.glb` bevat geen mesh, dus de viewer kan ze niet tonen; zie de Godot-test `tests/killstreak_test.gd`.

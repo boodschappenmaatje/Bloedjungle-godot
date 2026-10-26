@@ -1,0 +1,36 @@
+{
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "clips": {
+  "Vliegen": {
+   "duration": 2,
+   "moved": [
+    "AileronL",
+    "AileronR",
+    "Naverbrander_L",
+    "Body"
+   ]
+  },
+  "Bocht": {
+   "duration": 3,
+   "moved": [
+    "AileronL",
+    "AileronR",
+    "Naverbrander_L",
+    "Body"
+   ]
+  },
+  "Aanval": {
+   "duration": 3,
+   "moved": [
+    "AileronL",
+    "AileronR",
+    "Naverbrander_L",
+    "Body"
+   ]
+  }
+ },
+ "phases": [],
+ "errors": [],
+ "stats": "3.956 driehoeken · 98 meshes · 10 materialen · texturen 1024×1024, 512×512 · schade via shape key Deuk en verkoold materiaal. Geen iPhone-FPS gemeten.",
+ "ok": true
+}

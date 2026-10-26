@@ -47,6 +47,14 @@ var troop_mode := "follow"  # follow of hold
 # Aanvalsrichting (N/O/Z/W) -> seconden dat de rand nog oplicht; gevuld door vijanden die schieten of steken.
 var attack := {"N": 0.0, "O": 0.0, "Z": 0.0, "W": 0.0}
 
+# Killstreak (luchtsteun): kills op rij binnen deze golf, beloningen die klaarstaan (opsparen kan), en wie de laatste treffer deed
+var streak := 0
+var streak_bank: Array = []     # ids uit Streak.LADDER die klaarstaan, oudste eerst
+var streak_given := {}          # id -> true: deze streak al uitgereikt
+var streak_t := -100.0          # tijd (s) van de laatste streak-kill: de teller komt dan even in beeld
+var streak_air := {"truck": 0, "napalm": 0}  # beloningen die je dit spel hebt gebruikt (voor de samenvatting)
+var hit_src := "speler"         # wie schiet er nu: speler, soldaat of lucht; alleen speler-kills tellen voor de streak
+
 var player  # de speler (player.gd)
 var defs  # verdediging die je neerzet (defenses.gd)
 var enemies: Array = []
@@ -130,6 +138,40 @@ func reset() -> void:
 	buildings.clear()
 	allies.clear()
 	troop_mode = "follow"
+	streak = 0
+	streak_bank.clear()
+	streak_given.clear()
+	streak_t = -100.0
+	hit_src = "speler"
+
+
+## Een vijand is door jou (of jouw voertuig) gevallen: de streak loopt op en een beloning kan klaarstaan.
+func streak_kill() -> void:
+	streak += 1
+	streak_t = Time.get_ticks_msec() / 1000.0
+	for r in Streak.LADDER:
+		if streak >= int(r.kills) and not streak_given.has(r.id):
+			streak_given[r.id] = true
+			streak_bank.append(r.id)
+			Sfx.play("buy")
+			banner.emit(String(r.klaar), "Tik op de luchtsteun-knop", 1.5)
+	changed.emit()
+
+
+## Einde van de golf: de teller begint opnieuw. Wat klaarstaat blijft beschikbaar tot je het gebruikt.
+func streak_reset() -> void:
+	streak = 0
+	streak_given.clear()
+	changed.emit()
+
+
+## Gebruikt de beloning die als laatste klaar kwam. Geeft het id terug, of "" als er niets klaarstaat.
+func streak_take() -> String:
+	if streak_bank.is_empty():
+		return ""
+	var id: String = streak_bank.pop_back()
+	changed.emit()
+	return id
 
 
 func can_afford_build(c: int) -> bool:

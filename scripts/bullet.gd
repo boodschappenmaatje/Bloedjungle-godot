@@ -34,6 +34,7 @@ var explosive := 0.0
 var rocket := false  # vijandelijke raket: ontploft op de plek waar hij gemikt was
 var visual_weapon := ""
 var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
+var src := "speler"  # wie schoot: "speler" of "soldaat" (alleen kills van de speler tellen voor de killstreak)
 
 
 func _enter_tree() -> void:
@@ -45,7 +46,7 @@ func _exit_tree() -> void:
 
 
 ## Maakt een kogel. over_wall: de schutter staat tegen de muur en schiet eroverheen.
-static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false, pierce_ := 0, explosive_ := 0.0, sink_ := 0.0, rise_ := 0.0, visual_weapon := "") -> void:
+static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: float, lifetime: float, by_player: bool, over_wall := false, pierce_ := 0, explosive_ := 0.0, sink_ := 0.0, rise_ := 0.0, visual_weapon := "") -> Bullet:
 	if _mesh == null:
 		_mesh = BoxMesh.new()
 		_mesh.size = Vector3(0.05, 0.05, 0.9)
@@ -78,6 +79,7 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.rotation.y = angle
 	if visual_weapon == "bazooka":
 		Fx.rocket_trail(b)
+	return b
 
 
 ## Vijandelijke raket (18-enemies.js): traag; ontploft waar hij gemikt was of tegen de eerste muur, speler of bunker.
@@ -289,7 +291,9 @@ func _physics_process(delta: float) -> void:
 			var target_handles_impact := target_script_path in ["res://scripts/enemy.gd", "res://scripts/player.gd"] or c is Barrel or c is Pomp or c is Brandkraan
 			if not target_handles_impact:
 				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
+			Game.hit_src = src
 			c.hit(dmg, dir, from_player)
+			Game.hit_src = "speler"
 			if pierce > 0 and c.collision_layer == MASK_ENEMY:
 				pierce -= 1
 				dmg *= 0.85

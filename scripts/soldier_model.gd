@@ -45,13 +45,15 @@ func setup(uniform: Color, gun_kind := "rifle") -> void:
 	# rollen, sprinten en de nieuwe herlaadbeweging (die de oude, trage lus vervangt) komen uit bron/acties
 	if not lib.has_animation("rollen"):
 		var ap: AnimationPlayer = ACTIONS.instantiate().find_child("AnimationPlayer", true, false)
-		for n in ["rollen", "sprinten", "herladen", "explosie_dood"]:
+		for n in ["rollen", "sprinten", "herladen", "explosie_dood", "brand_rennen", "brand_val"]:
 			if lib.has_animation(n):
 				lib.remove_animation(n)
 			lib.add_animation(n, ap.get_animation(n))
 		lib.get_animation("herladen").loop_mode = Animation.LOOP_NONE
 		lib.get_animation("rollen").loop_mode = Animation.LOOP_NONE
 		lib.get_animation("explosie_dood").loop_mode = Animation.LOOP_NONE
+		lib.get_animation("brand_rennen").loop_mode = Animation.LOOP_LINEAR   # in brand door napalm: wild rennen, daarna brand_val
+		lib.get_animation("brand_val").loop_mode = Animation.LOOP_NONE
 	for n in LOOPS:
 		if anim.has_animation(n):
 			anim.get_animation(n).loop_mode = Animation.LOOP_LINEAR

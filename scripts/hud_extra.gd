@@ -30,6 +30,7 @@ var _camera_button: Button
 var _zoom_in_button: Button
 var _zoom_out_button: Button
 var _radar: Control
+var _streak: StreakHud
 var _radar_refresh := 0.0
 ## Contacten op de radar: alleen vijanden die je zelf, je torens, je soldaten of de basis kunnen zien.
 ## Een gezien contact blijft nog even (vervagend) staan.
@@ -67,6 +68,9 @@ func _ready() -> void:
 	_build_ammo()
 	_build_camera_controls()
 	_build_radar()
+	_streak = StreakHud.new()
+	_streak.name = "StreakHud"
+	add_child(_streak)
 	_menu = PauseMenu.new()
 	add_child(_menu)
 	_fps = _shadowed(UI.label("", UI.body(700, 0), 13, UI.GOOD))
@@ -483,6 +487,11 @@ func _layout() -> void:
 	_status_panel.size = Vector2(minf(size.x * 0.42, 232.0), 52.0)
 	_top_right.reset_size()
 	_camera_controls.position = Vector2(safe.x, safe.y + _status_panel.size.y + 7.0)
+	# killstreak-teller: liggend rechts naast de balken, staand eronder (daar staan de TACTISCH-knoppen niet)
+	if size.x < size.y:
+		_streak.position = Vector2(safe.x + 2.0, safe.y + _status_panel.size.y + 5.0)
+	else:
+		_streak.position = Vector2(safe.x + _status_panel.size.x + 8.0, safe.y + 8.0)
 	_radar.position = Vector2(size.x - safe.z - _radar.size.x, safe.y + 8.0)
 	_menu_button.position = Vector2(_radar.size.x - 38.0, 4.0)
 	if size.x < size.y:

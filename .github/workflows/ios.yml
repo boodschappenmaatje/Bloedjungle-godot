@@ -51,9 +51,21 @@ jobs:
         run: |
           set -o pipefail
           "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/import.log"
-          if grep -E '(^| )(SCRIPT ERROR|ERROR):' "$RUNNER_TEMP/import.log"; then echo "Godot import logged errors" >&2; exit 1; fi
           "$GODOT_BIN" --headless --path . --quit 2>&1 | tee "$RUNNER_TEMP/startup.log"
-          if grep -E '(^| )(SCRIPT ERROR|ERROR):' "$RUNNER_TEMP/startup.log"; then echo "Godot startup logged errors" >&2; exit 1; fi
+          if grep -E '(^| )(SCRIPT ERROR|ERROR):' "$RUNNER_TEMP/import.log" "$RUNNER_TEMP/startup.log"; then
+            echo "Godot import/startup logged errors; see the retained diagnostics artifact" >&2
+            exit 1
+          fi
+      - name: Retain Godot diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-diagnostics-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/import.log
+            ${{ runner.temp }}/startup.log
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Export iOS project
         shell: bash
         run: |

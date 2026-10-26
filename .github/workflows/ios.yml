@@ -95,7 +95,15 @@ jobs:
           source = preset.read_text()
           needle = 'application/app_store_team_id=""'
           assert source.count(needle) == 1, "Expected exactly one blank iOS Team ID"
-          preset.write_text(source.replace(needle, 'application/app_store_team_id="AAAAAAAAAA"'))
+          source = source.replace(needle, 'application/app_store_team_id="AAAAAAAAAA"')
+          # Godot 4.7 normally archives/signs as part of --export-release.
+          # Only generate the Xcode project; our next step builds unsigned.
+          if 'application/export_project_only=' in source:
+              import re
+              source = re.sub(r'application/export_project_only=(true|false)', 'application/export_project_only=true', source)
+          else:
+              source += '\napplication/export_project_only=true\n'
+          preset.write_text(source)
           PY
           mkdir -p build
           "$GODOT_BIN" --headless --path . --export-release "iOS" build/Bloedjungle-ios.zip

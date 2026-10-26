@@ -17,39 +17,70 @@ jobs:
       - uses: actions/checkout@v4
         with:
           lfs: true
-      - name: Install pinned Godot 4.7.0 and export templates
+      - name: Install pinned Godot 4.7.2 and export templates
         shell: bash
         run: |
           set -euo pipefail
-          VERSION=4.7.0
-          curl -fL "https://github.com/godotengine/godot/releases/download/${VERSION}-stable/Godot_v${VERSION}-stable_macos.universal.zip" -o /tmp/godot.zip
-          unzip -q /tmp/godot.zip -d /tmp/godot
-          GODOT="$(find /tmp/godot -name Godot -type f | head -1)"
+          VERSION=4.7.2
+          RELEASE="https://github.com/godotengine/godot/releases/download/${VERSION}-stable"
+          echo "Disk space before downloads:"
+          df -h "$RUNNER_TEMP" "$GITHUB_WORKSPACE"
+          AVAILABLE_KB="$(df -Pk "$RUNNER_TEMP" | awk 'NR==2 {print $4}')"
+          if (( AVAILABLE_KB < 8000000 )); then echo "Need at least 8 GB free for templates, import and Xcode build" >&2; exit 1; fi
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 900 "$RELEASE/Godot_v${VERSION}-stable_macos.universal.zip" --output "$RUNNER_TEMP/godot.zip"
+          test -s "$RUNNER_TEMP/godot.zip"
+          unzip -tq "$RUNNER_TEMP/godot.zip"
+          mkdir -p "$RUNNER_TEMP/godot"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          GODOT="$(find "$RUNNER_TEMP/godot" -name Godot -type f -print -quit)"
+          test -n "$GODOT"
           chmod +x "$GODOT"
+          "$GODOT" --version | grep -F "${VERSION}.stable"
           echo "GODOT_BIN=$GODOT" >> "$GITHUB_ENV"
-          curl -fL "https://github.com/godotengine/godot/releases/download/${VERSION}-stable/Godot_v${VERSION}-stable_export_templates.tpz" -o /tmp/templates.tpz
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 1800 "$RELEASE/Godot_v${VERSION}-stable_export_templates.tpz" --output "$RUNNER_TEMP/templates.tpz"
+          test -s "$RUNNER_TEMP/templates.tpz"
+          unzip -tq "$RUNNER_TEMP/templates.tpz"
           mkdir -p "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable"
-          unzip -q /tmp/templates.tpz -d /tmp/templates
-          cp -R /tmp/templates/templates/. "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable/"
+          mkdir -p "$RUNNER_TEMP/templates"
+          unzip -q "$RUNNER_TEMP/templates.tpz" -d "$RUNNER_TEMP/templates"
+          cp -R "$RUNNER_TEMP/templates/templates/." "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable/"
+          test -s "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable/ios.zip"
           xcodebuild -version
       - name: Import and validate project
+        shell: bash
         run: |
-          "$GODOT_BIN" --headless --editor --path . --import
-          "$GODOT_BIN" --headless --path . --quit
+          set -o pipefail
+          "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/import.log"
+          if grep -E '(^| )(SCRIPT ERROR|ERROR):' "$RUNNER_TEMP/import.log"; then echo "Godot import logged errors" >&2; exit 1; fi
+          "$GODOT_BIN" --headless --path . --quit 2>&1 | tee "$RUNNER_TEMP/startup.log"
+          if grep -E '(^| )(SCRIPT ERROR|ERROR):' "$RUNNER_TEMP/startup.log"; then echo "Godot startup logged errors" >&2; exit 1; fi
       - name: Export iOS project
+        shell: bash
         run: |
+          set -euo pipefail
           mkdir -p build
-          "$GODOT_BIN" --headless --path . --export-release "iOS" build/ios
-          test -f build/ios/Bloedjungle.xcodeproj/project.pbxproj
-          xcodebuild -project build/ios/Bloedjungle.xcodeproj -scheme Bloedjungle -configuration Release -sdk iphoneos -derivedDataPath build/derived CODE_SIGNING_ALLOWED=NO build
-          APP="$(find build/derived/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -type d | head -1)"
+          "$GODOT_BIN" --headless --path . --export-release "iOS" build/Bloedjungle-ios.zip
+          test -s build/Bloedjungle-ios.zip
+          unzip -tq build/Bloedjungle-ios.zip
+          mkdir -p build/ios-project
+          unzip -q build/Bloedjungle-ios.zip -d build/ios-project
+          XCODEPROJ="$(find build/ios-project -name '*.xcodeproj' -type d -print -quit)"
+          test -n "$XCODEPROJ"
+          test -s "$XCODEPROJ/project.pbxproj"
+          xcodebuild -list -project "$XCODEPROJ" -json | tee build/xcode-list.json
+          SCHEME="$(/usr/bin/python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["project"]["schemes"][0])' build/xcode-list.json)"
+          test -n "$SCHEME"
+          echo "Building $XCODEPROJ with scheme $SCHEME"
+          xcodebuild -project "$XCODEPROJ" -scheme "$SCHEME" -configuration Release -sdk iphoneos -derivedDataPath build/derived CODE_SIGNING_ALLOWED=NO build
+          APP="$(find build/derived/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -type d -print -quit)"
           test -n "$APP"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
           mkdir -p build/Payload
           cp -R "$APP" build/Payload/
           (cd build && /usr/bin/zip -qry Bloedjungle.ipa Payload)
           test -s build/Bloedjungle.ipa
-          unzip -l build/Bloedjungle.ipa | grep -E 'Payload/.+\.app/' | head
-          unzip -l build/Bloedjungle.ipa | grep -q 'Payload/.+\.app/'
+          unzip -tq build/Bloedjungle.ipa
+          unzip -l build/Bloedjungle.ipa | grep -E 'Payload/[^/]+\.app/Info.plist'
       - uses: actions/upload-artifact@v4
         with:
           name: bloedjungle-ios-unsigned-${{ github.sha }}

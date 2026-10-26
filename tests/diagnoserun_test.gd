@@ -26,6 +26,9 @@ func _snapshot() -> Dictionary:
 func _initialize() -> void:
 	var PM: GDScript = load("res://scripts/perf_monitor.gd")
 	PM.set("report_dir", "user://test_prestatie")
+	DirAccess.make_dir_recursive_absolute("user://test_prestatie")
+	for f in DirAccess.get_files_at("user://test_prestatie"):
+		DirAccess.remove_absolute("user://test_prestatie/" + f)   # alleen een rapport van deze run telt
 	GameSettings.set_value("diag", "on")
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
@@ -64,6 +67,7 @@ func _process(_d: float) -> bool:
 		if GameSettings.get_value("diag") != "off":
 			fails += 1
 			push_error("FAIL diagnose: instelling staat nog aan")
+	GameSettings.set_value("diag", "off")   # nooit aan laten staan: dan start de run in elke volgende test
 	print("KLAAR, fouten: ", fails)
 	quit(1 if fails > 0 else 0)
 	return true

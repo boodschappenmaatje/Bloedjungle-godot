@@ -5,6 +5,7 @@ extends Node
 ## ingestelde grafiek-stand. Zo blijft het spelen soepel op elk toestel en tijdens drukke golven.
 
 static var grace_until := 0  # ms; na het laden tellen de eerste paar seconden niet mee
+static var paused := false   # de diagnose-run zet de regelaar even stil
 
 const MIN_SCALE := 0.5
 const DOWN_RATIO := 0.93  # van het doel; 56 bij 60 fps, 112 bij 120
@@ -27,6 +28,8 @@ var _frozen := false
 
 
 func _process(delta: float) -> void:
+	if paused:
+		return
 	var vp := get_viewport()
 	var q: String = GameSettings.get_value("quality")
 	if q != _quality:

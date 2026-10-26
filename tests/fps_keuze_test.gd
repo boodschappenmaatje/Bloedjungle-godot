@@ -31,6 +31,8 @@ func _initialize() -> void:
 			if hz > 60:
 				gs.set("observed_peak", float(hz))
 				_check(float(gs.call("target_fps")) == float(hz), "keuze %d wordt niet gehaald terwijl het spel dat tempo draait" % hz)
+	_check(gs.call("default_hz", "iOS") == "120", "op iOS is de standaard geen 120")
+	_check(gs.call("default_hz", "Windows") == "60" and gs.call("default_hz", "Linux") == "60", "buiten iOS is de standaard geen 60")
 	gs.call("apply_hz")
 	_check(Engine.max_fps == 0, "er staat een eigen beeldsnelheidsgrens (%d)" % Engine.max_fps)
 	var rows: Array = load("res://scripts/pause_menu.gd").get("ROWS")

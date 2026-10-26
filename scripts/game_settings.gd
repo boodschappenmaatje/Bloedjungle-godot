@@ -47,6 +47,12 @@ static func apply_hz() -> void:
 	Engine.max_fps = 0
 
 
+## Standaard beeldsnelheid: op iPhone en iPad 120 (het doel volgt het scherm en de gemeten snelheid, zie target_fps; een scherm
+## dat 60 Hz is blijft 60). Elders 60. Wie zelf een keuze maakt in Instellingen houdt die.
+static func default_hz(os_name: String) -> String:
+	return "120" if os_name == "iOS" else "60"
+
+
 static func prep_time() -> float:
 	return float(get_value("prep"))
 
@@ -56,6 +62,7 @@ static func _load() -> void:
 		return
 	_loaded = true
 	values = DEFAULTS.duplicate()
+	values["hz"] = default_hz(OS.get_name())  # een opgeslagen keuze hieronder gaat altijd voor
 	var cf := ConfigFile.new()
 	if cf.load(PATH) == OK:
 		for k in DEFAULTS:

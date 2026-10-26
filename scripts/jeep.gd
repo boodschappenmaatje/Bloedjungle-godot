@@ -149,6 +149,7 @@ func _physics_process(delta: float) -> void:
 	if _btn:
 		var near: bool = p != null and not p.dead and live and (driven or p.global_position.distance_to(global_position) < BOARD_DIST)
 		_btn.visible = near
+		_btn.dock(2)
 	_drive(delta, live)
 	_animate(delta)
 	if driven and p != null:

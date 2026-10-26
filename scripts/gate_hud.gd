@@ -1,6 +1,7 @@
 class_name GateHud
 extends Control
-## Knop om de poort te openen en sluiten zodra je erbij staat (toets E), en bij een beschadigde poort een
+## De poort opent vanzelf voor jou en je soldaten. Zodra je erbij staat zweeft er een label boven de poort zelf: tik erop
+## (of druk E) om hem te vergrendelen (SLUIT) of weer vrij te geven (OPEN). Bij een beschadigde poort staat er een
 ## knop die je ingedrukt houdt om hem te repareren (updateGateRepair in 05b-gates.js).
 
 var _btn: ActionBtn
@@ -26,6 +27,24 @@ func _mk(kind: String, cap: String) -> ActionBtn:
 	var b := ActionBtn.make(kind, cap)
 	add_child(b)
 	return b
+
+
+## Zet het label boven de poort in de wereld (schermpositie van de poort), binnen het beeld. False als de poort niet in beeld is.
+func _place_on_gate(g: Dictionary) -> bool:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return false
+	var at: Vector3 = Game.gates.pos_of(g) + Vector3(0.0, 3.2, 0.0)
+	if cam.is_position_behind(at):
+		return false
+	var local := get_global_transform_with_canvas().affine_inverse() * cam.unproject_position(at)
+	var safe := UI.safe_margins(size)
+	var s := ActionBtn.SIZE
+	_btn.size = s
+	_btn.position = Vector2(
+		clampf(local.x - s.x * 0.5, safe.x + 4.0, maxf(safe.x + 4.0, size.x - safe.z - s.x - 4.0)),
+		clampf(local.y - s.y * 0.5, safe.y + 4.0, maxf(safe.y + 4.0, size.y - safe.w - s.y - 4.0)))
+	return true
 
 
 func _toggle() -> void:
@@ -71,11 +90,10 @@ func _process(delta: float) -> void:
 				fixable = x
 	_fix.visible = fixable != null
 	if g != null:
-		var open: bool = g.user_open or g.open > 0.5
-		_btn.open_state = open
-		_btn.set_caption("SLUIT" if open else "OPEN")
+		_btn.open_state = g.locked
+		_btn.set_caption("OPEN" if g.locked else "SLUIT")
 		_btn.bar = -1.0 if g.hp >= g.max_hp else g.hp / g.max_hp
-		_btn.place(3 if driving else 1, size)
+		_btn.visible = _place_on_gate(g)
 		_btn.queue_redraw()
 	if fixable != null:
 		_fix.place(0, size)

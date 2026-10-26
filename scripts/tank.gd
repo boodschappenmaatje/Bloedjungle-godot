@@ -99,6 +99,7 @@ func _physics_process(delta: float) -> void:
 	if pl != null and pl.dead and driven:
 		_toggle()
 	_btn.visible = pl != null and not pl.dead and live and (driven or pl.global_position.distance_to(global_position) < BOARD_DIST)
+	_btn.dock(2)
 	collision_mask = 0 if not goals.is_empty() else 50
 	if driven:
 		_drive_driven(delta, live)

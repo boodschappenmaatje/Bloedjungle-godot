@@ -58,6 +58,11 @@ static func make(k: String, cap: String) -> ActionBtn:
 	return b
 
 
+## Voor knoppen in een eigen CanvasLayer (voertuigen): zelfde plek als place(), met de schermgrootte van de viewport.
+func dock(i: int) -> void:
+	place(i, get_viewport().get_visible_rect().size)
+
+
 func place(i: int, parent_size: Vector2) -> void:
 	size = SIZE
 	var safe := UI.safe_margins(parent_size)

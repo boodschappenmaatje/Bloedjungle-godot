@@ -553,6 +553,9 @@ func _physics_process(delta: float) -> void:
 		_btn.visible = near
 		_btn_troops.visible = driven and live
 		_btn_zeil.visible = driven and live
+		_btn.dock(2)
+		_btn_troops.dock(1)
+		_btn_zeil.dock(0)
 		var cap := "LOSSEN" if not _riders.is_empty() else "LADEN"
 		_btn_troops.set_caption(cap)
 		_btn_zeil.open_state = _zeil_dicht

@@ -9,6 +9,7 @@ const C := Data.COMPOUND
 const G := Data.GATE_GAP
 const HP := 900.0
 const REACH := 4.4
+const ALLY_REACH := 4.6
 const SLIDE_T := 2.5
 const TAKE := {"bullet": 0.25, "melee": 0.5, "explosive": 1.0}
 
@@ -23,7 +24,7 @@ func max_hp() -> float:
 func _ready() -> void:
 	add_to_group("gates")
 	for sz in [-1.0, 1.0]:
-		var g := {"name": "noord" if sz < 0.0 else "zuid", "sz": sz, "open": 0.0, "hold": 0.0, "user_open": false,
+		var g := {"name": "noord" if sz < 0.0 else "zuid", "sz": sz, "open": 0.0, "hold": 0.0, "user_open": false, "locked": false,
 			"hp": HP, "max_hp": HP, "broken": false, "moving": false}
 		var root := Node3D.new()
 		root.position = Vector3(0, 0, sz * C)
@@ -159,10 +160,17 @@ func near_player() -> Variant:
 	return null
 
 
+## De poort gaat vanzelf open voor jou (te voet of in een voertuig) en voor je soldaten; vijanden openen hem niet.
+## Tik je op het label op de poort, dan wordt hij vergrendeld (blijft dicht voor jou, bv. tijdens een aanval) of weer ontgrendeld.
 func toggle(g: Dictionary) -> void:
 	if g.broken or (Game.state != "play" and Game.state != "prep"):
 		return
-	g.user_open = not g.user_open
+	if g.locked:
+		g.locked = false
+		g.user_open = true
+	else:
+		g.locked = true
+		g.user_open = false
 	Sfx.play("click")
 	Game.changed.emit()
 
@@ -260,9 +268,12 @@ func _physics_process(delta: float) -> void:
 		if g.user_open and (not live or Game.player == null or Game.player.global_position.distance_to(pos_of(g)) > keep):
 			g.user_open = false  # sluit vanzelf zodra jij en je soldaten er niet meer doorheen gaan
 		var friend: bool = live and g.user_open
+		if live and not friend and not g.locked and near_player() == g:
+			friend = true  # jij, te voet of in een voertuig
 		if live and not friend:
+			# je soldaten openen de poort altijd zelf, ook als je er niet bij bent of hij vergrendeld is
 			for a in Game.allies:
-				if is_instance_valid(a) and a.global_position.distance_to(pos_of(g)) < 3.6:
+				if is_instance_valid(a) and a.global_position.distance_to(pos_of(g)) < ALLY_REACH:
 					friend = true
 					break
 		g.hold = 0.9 if friend else g.hold - delta

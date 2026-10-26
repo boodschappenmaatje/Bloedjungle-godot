@@ -92,9 +92,9 @@ func _run() -> void:
 		for b in buttons:
 			if fr.intersects((b as Control).get_global_rect()):
 				_check(false, "%s: fps-teller overlapt %s" % [s, _label(b)])
-		# de contextknoppen staan onder de wapenbalk in landschap en portret.
+		# de contextknoppen staan in landschap boven de wapenbalk (die onderin staat), in portret eronder.
 		for slot in 3:
-			var context_y: float = view.y - 126.0 if view.x < view.y else view.y - 68.0
+			var context_y: float = view.y - 126.0 if view.x < view.y else view.y - action_btn.get("WEAPON_BAR_FROM_BOTTOM") - 8.0 - action_btn.get("SIZE").y
 			var ctx := Rect2(Vector2(view.x * 0.5 + float(action_btn.call("slot_x", slot)), context_y), action_btn.get("SIZE"))
 			for b in buttons:
 				if ctx.intersects((b as Control).get_global_rect()):

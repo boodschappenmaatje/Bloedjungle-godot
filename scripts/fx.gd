@@ -737,27 +737,64 @@ static func explosion(parent: Node, pos: Vector3, scale := 1.0, chunks: Array = 
 	_debris(parent, pos, scale, chunks)
 	crater(parent, pos, scale)
 	# vonkenregen: lichtstrepen die langs hun vliegrichting wijzen, en aarde die wegspat
-	var sparks := _spray(48, 1.2, Vector3(0.025, 0.24, 0.025), Color(1.0, 0.8, 0.35), 6.0 * scale, 15.0 * scale, 72.0, 16.0, true)
-	var dirt := _spray(30, 1.3, Vector3(0.11, 0.11, 0.11), Color(0.2, 0.14, 0.09), 3.0 * scale, 8.0 * scale, 80.0, 18.0, false)
-	for p in [sparks, dirt]:
-		p.one_shot = true
-		p.explosiveness = 0.95
-		parent.add_child(p)
-		p.global_position = pos + Vector3.UP * 0.3
-		p.emitting = true
-		parent.get_tree().create_timer(4.5).timeout.connect(p.queue_free)
-	var l := OmniLight3D.new()
-	l.light_color = Color(1.0, 0.6, 0.25)
-	l.light_energy = 9.0
-	l.omni_range = 15.0 * scale
-	l.shadow_enabled = false
-	parent.add_child(l)
-	l.global_position = pos + Vector3.UP * 1.2
-	var tw := l.create_tween()
-	tw.tween_property(l, "light_energy", 3.5, 0.12)
-	tw.tween_property(l, "light_energy", 0.0, 0.9)
-	tw.tween_callback(l.queue_free)
+	spray_once(parent, "vonken", pos + Vector3.UP * 0.3, 6.0 * scale, 15.0 * scale, 0.95, 1.3,
+		func(): return _spray(48, 1.2, Vector3(0.025, 0.24, 0.025), Color(1.0, 0.8, 0.35), 0.0, 0.0, 72.0, 16.0, true))
+	spray_once(parent, "aarde", pos + Vector3.UP * 0.3, 3.0 * scale, 8.0 * scale, 0.95, 1.4,
+		func(): return _spray(30, 1.3, Vector3(0.11, 0.11, 0.11), Color(0.2, 0.14, 0.09), 0.0, 0.0, 80.0, 18.0, false))
+	# lichtflits: hooguit MAX_BLAST_LIGHTS tegelijk (elke extra lamp kost elk object eromheen een lichtberekening)
+	if _blast_lights < MAX_BLAST_LIGHTS:
+		_blast_lights += 1
+		var l := OmniLight3D.new()
+		l.light_color = Color(1.0, 0.6, 0.25)
+		l.light_energy = 9.0
+		l.omni_range = 15.0 * scale
+		l.shadow_enabled = false
+		l.tree_exited.connect(func(): _blast_lights = maxi(0, _blast_lights - 1))
+		parent.add_child(l)
+		l.global_position = pos + Vector3.UP * 1.2
+		var tw := l.create_tween()
+		tw.tween_property(l, "light_energy", 3.5, 0.12)
+		tw.tween_property(l, "light_energy", 0.0, 0.9)
+		tw.tween_callback(l.queue_free)
 	decal(parent, Vector3(pos.x, 0.0, pos.z), Vector3.UP, "scorch", 3.6 * scale, 80.0)
+
+
+const MAX_BLAST_LIGHTS := 3
+static var _blast_lights := 0
+static var _spray_pools := {}  # sleutel -> [CPUParticles3D, ...] die klaar zijn
+
+
+## Eenmalige deeltjeswolk (vonken, aarde, stof) uit een pool: geen nieuwe node, mesh en materiaal per explosie.
+## make maakt de wolk de eerste keer; vmin/vmax = snelheid (hangt van de grootte van de knal af); hold = hoe lang hij
+## bezet blijft (iets langer dan zijn levensduur).
+static func spray_once(parent: Node, key: String, pos: Vector3, vmin: float, vmax: float, explosiveness: float, hold: float, make: Callable) -> void:
+	if not is_instance_valid(parent) or not parent.is_inside_tree():
+		return
+	var pool: Array = _spray_pools.get(key, [])
+	_spray_pools[key] = pool
+	var p: CPUParticles3D = null
+	while not pool.is_empty() and p == null:
+		var c = pool.pop_back()
+		if is_instance_valid(c):
+			p = c
+	if p == null:
+		p = make.call()
+		p.one_shot = true
+		parent.add_child(p)
+	elif p.get_parent() != parent:
+		p.reparent(parent, false)
+	p.explosiveness = explosiveness
+	p.initial_velocity_min = vmin
+	p.initial_velocity_max = vmax
+	p.global_position = pos
+	p.visible = true
+	p.restart()
+	p.emitting = true
+	parent.get_tree().create_timer(hold).timeout.connect(func():
+		if is_instance_valid(p):
+			p.emitting = false
+			p.visible = false
+			pool.append(p))
 
 
 ## Blijvende rook of vuur op een plek (bijvoorbeeld op een beschadigde bunker). Geeft de knoop terug.
@@ -936,48 +973,21 @@ static func _chunk(name: String) -> Mesh:
 
 
 ## Rondvliegende brokstukken uit Blender: elk stuk vliegt in een boog, tolt om alle assen en blijft even liggen.
+## Via Puin (MultiMesh): alle stukken van één soort samen zijn één draw call, zonder node of tween per stuk.
 static func _debris(parent: Node, pos: Vector3, scale: float, names: Array) -> void:
 	var count := 8 + roundi(8.0 * scale)
 	for i in count:
 		var mesh := _chunk(names[i % names.size()])
 		if mesh == null:
 			continue
-		var mi := MeshInstance3D.new()
-		mi.mesh = mesh
-		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		var sc := randf_range(0.8, 1.5) * (0.7 + 0.4 * scale)
-		mi.scale = Vector3.ONE * sc
-		parent.add_child(mi)
 		var a := randf() * TAU
 		var out := randf_range(2.5, 7.0) * scale
 		var v := Vector3(cos(a) * out, randf_range(4.5, 9.0) * (0.6 + 0.4 * scale), sin(a) * out)
 		var spin := Vector3(randf_range(-9.0, 9.0), randf_range(-9.0, 9.0), randf_range(-9.0, 9.0))
-		var start := pos + Vector3(0.0, 0.5, 0.0)
-		var g := 18.0
-		var t_land := (v.y + sqrt(v.y * v.y + 2.0 * g * start.y)) / g
-		mi.global_position = start
 		var rest := Vector3(randf() * TAU, randf() * TAU, randf() * TAU)
-		var trail: CPUParticles3D = null
-		if sc > 1.0 and i % 2 == 0:
-			trail = _smoke_trail()  # grotere stukken trekken een rookspoor
-			mi.add_child(trail)
-		var tw := mi.create_tween()
-		tw.tween_method(_fly.bind(mi, start, v, spin, rest, g, t_land), 0.0, t_land, t_land)
-		if trail != null:
-			tw.tween_callback(func():
-				if is_instance_valid(trail):
-					trail.emitting = false)
-		tw.tween_interval(5.0)  # brokstukken blijven even liggen
-		tw.tween_property(mi, "scale", Vector3.ZERO, 0.5)
-		tw.tween_callback(mi.queue_free)
-
-
-static func _fly(t: float, mi: MeshInstance3D, start: Vector3, v: Vector3, spin: Vector3, rest: Vector3, g: float, t_land: float) -> void:
-	if not is_instance_valid(mi):
-		return
-	var p := start + Vector3(v.x * t, v.y * t - 0.5 * g * t * t, v.z * t)
-	mi.global_position = Vector3(p.x, maxf(p.y, 0.03), p.z)
-	mi.rotation = rest + spin * minf(t, t_land)
+		# grotere stukken trekken een rookspoor; blijven 5 s liggen en krimpen dan weg
+		Puin.toss(parent, mesh, pos + Vector3(0.0, 0.5, 0.0), v, 18.0, 0.03, rest, spin, Vector3.ONE * sc, 5.0, false, null, sc > 1.0 and i % 2 == 0)
 
 
 ## Opstijgende vonken (brandend vat): kleine lichtstrepen die omhoog vliegen en terugvallen. Geeft de knoop terug.

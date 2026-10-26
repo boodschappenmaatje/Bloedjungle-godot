@@ -28,7 +28,10 @@ func _process(_d: float) -> bool:
 		for n in root.find_children("*", "", true, false):
 			if n.get_script() and String(n.get_script().resource_path).ends_with("touch_sticks.gd"):
 				n.set_process(false)
-		huis = get_nodes_in_group("huis")[0]
+		# de stad heeft meer gebouwen: neem het woonhuis dat het dichtst bij HUIS_POS staat
+		for h in get_nodes_in_group("huis"):
+			if h.kind == "woonhuis" and (huis == null or h.global_position.distance_to(Data.HUIS_POS) < huis.global_position.distance_to(Data.HUIS_POS)):
+				huis = h
 		print("huis op ", huis.global_position, " muurstukken ", huis.segs.size(), " deuren ", huis.doors.size())
 		game.player.global_position = Data.HUIS_POS + Vector3(1.0, 0, 7.0)
 		move = Vector2(0, -1)

@@ -285,6 +285,7 @@ var _dak_kapot: Node3D
 var _ver: Node3D           # eerste verdieping (Verdieping)
 var _groups: Array = []     # Begane, Verdieping, (Verdieping2): per laag
 var _puin: Dictionary = {}
+var _piles: Array[Vector3] = []   # waar al een puinhoop ligt
 var _collapsed := false     # er is iets ingestort
 var _fall := 99             # laagste laag die is ingestort
 var _ruin := false          # het hele gebouw ligt plat
@@ -312,6 +313,7 @@ const SPREAD_SIDE := 0.4        # een weggeslagen muur doet dit deel van de leve
 const SPREAD_UP := 0.45         # en van de muren erboven (steun weg)
 const BLAST_BOOST := 3.0        # explosies doen zoveel keer zoveel schade aan muren als de ruwe schade
 const BLAST_REACH := 1.5        # en reiken zoveel verder
+const PILE_GAP := 1.6           # puinhopen dichter bij elkaar dan dit worden er één (een hoop is ~1,2-1,9 m breed)
 
 
 ## Zet een huis neer in de wereld (Level), yaw in radialen.
@@ -537,8 +539,18 @@ static func _seg_floor(nm: String) -> int:
 
 
 ## Botsvorm van alleen het metselwerk (pleister/binnen/baksteen): kozijnen, luiken en vensterbanken zitten niet in de weg.
+static var _shape_cache := {}   # mesh -> botsvorm: gebouwen van dezelfde soort delen hun muurmodellen
+
+
 func _wall_shape(mi: MeshInstance3D) -> Shape3D:
 	var src := mi.mesh
+	if not _shape_cache.has(src):
+		_shape_cache[src] = _make_wall_shape(src)
+	return _shape_cache[src]
+
+
+## Botsvorm van een kapotte muur: alleen de stenen lagen (geen kozijnen of glas), anders het hele model.
+static func _make_wall_shape(src: Mesh) -> Shape3D:
 	var keep := ArrayMesh.new()
 	for i in src.get_surface_count():
 		var m := src.surface_get_material(i)
@@ -821,6 +833,8 @@ func _in_ext(lp: Vector3) -> bool:
 # ---------------------------------------------------------------- zicht: dak, verdieping en de muren voor de camera
 
 func _process(delta: float) -> void:
+	if not _spread_q.is_empty():
+		_drain_spread(SPREAD_PER_FRAME)
 	_tick_warn(delta)
 	_night_t -= delta
 	if _night_t <= 0.0:
@@ -939,16 +953,53 @@ func damage(s: Dictionary, dmg: float, from := Vector3.INF) -> void:
 	if s.staat == 0 and s.hp < s.max * 0.55:
 		_set_state(s, 1)
 		_chunks(s, 3)
-		Sfx.play("thud", 0.8, c)
+		_thud(c, 0.8)
 		if s.pillar:
 			_check_collapse()   # een gescheurde dragende hoek kan het gebouw al laten kraken
 	if s.hp <= 0.0:
 		_set_state(s, 2)
 		_chunks(s, 5)
 		_rubble(s)
-		Sfx.play("thud", 1.0, c)
-		_spread(s)
+		_thud(c, 1.0)
+		if spread_now:
+			_spread(s)
+		else:
+			_spread_q.append(s)   # de buren scheuren de komende beelden mee (zie _drain_spread)
 		_check_collapse()
+
+
+## Kettingreactie over een paar beelden verdeeld: een granaat kon in één beeld tientallen muurstukken laten bezwijken
+## (brokken, puin, stof, botsvormen), goed voor een hapering. Nu per beeld hooguit SPREAD_PER_FRAME stappen; dat oogt als
+## een korte domino; de schade is dezelfde, alleen iets later. spread_now = alles in hetzelfde beeld (tests die tellen).
+const SPREAD_PER_FRAME := 3
+static var spread_now := false
+var _spread_q: Array = []
+
+
+func _drain_spread(budget: int) -> void:
+	while not _spread_q.is_empty() and budget > 0:
+		budget -= 1
+		_spread(_spread_q.pop_front())
+		_check_collapse()
+
+
+## Eén dreun per gebouw per beeld: bij een kettingreactie gaan tientallen stukken tegelijk, dat klinkt als één klap
+## (en scheelt tientallen geluidsstarts in hetzelfde beeld).
+var _thud_frame := -1
+
+
+func _thud(at: Vector3, vol: float) -> void:
+	var f := Engine.get_process_frames()
+	if f == _thud_frame:
+		return
+	_thud_frame = f
+	Sfx.play("thud", vol, at)
+
+
+## Warm-up (laadscherm): botsvormen van alle kapotte muren alvast maken, zodat de eerste kettingreactie niet hapert.
+func warm_shapes() -> void:
+	for s in segs:
+		_wall_shape(s.kapot)
 
 
 ## Een weggeslagen muurstuk laat het metselwerk eromheen scheuren: buren in dezelfde laag en de muren erboven die erop
@@ -1025,29 +1076,26 @@ func _outward(s: Dictionary) -> Vector3:
 	return o.normalized()
 
 
-## Brokken die wegvliegen en blijven liggen.
+## Brokken die wegvliegen en blijven liggen. Via Puin (MultiMesh): alle brokken van één soort zijn samen één draw call.
 func _chunks(s: Dictionary, n: int) -> void:
 	var c := _center(s)
 	var out := _outward(s)
 	for i in n:
-		var src: Node3D = _puin.get("Brok%d" % (i % 4))
+		var src := _puin.get("Brok%d" % (i % 4)) as MeshInstance3D
 		if src == null:
 			return
-		var m: Node3D = src.duplicate()
-		m.visible = true
-		get_parent().add_child(m)
-		m.global_position = c + Vector3(randf_range(-0.6, 0.6), randf_range(-0.5, 0.8), randf_range(-0.6, 0.6))
-		m.rotation = Vector3(randf() * TAU, randf() * TAU, randf() * TAU)
-		var land := m.global_position + out * randf_range(1.0, 3.2) + Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
+		var p0 := c + Vector3(randf_range(-0.6, 0.6), randf_range(-0.5, 0.8), randf_range(-0.6, 0.6))
+		var land := p0 + out * randf_range(1.0, 3.2) + Vector3(randf_range(-1, 1), 0, randf_range(-1, 1))
 		land.y = 0.12
-		var tw := m.create_tween()
-		var top := (m.global_position + land) * 0.5 + Vector3.UP * randf_range(0.8, 1.8)
-		var p0 := m.global_position
-		tw.tween_method(func(t: float) -> void:
-			m.global_position = p0.lerp(top, t).lerp(top.lerp(land, t), t)
-			m.rotate_x(0.15), 0.0, 1.0, 0.55)
-		tw.tween_interval(25.0)
-		tw.tween_callback(m.queue_free)
+		var top := (p0 + land) * 0.5 + Vector3.UP * randf_range(0.8, 1.8)
+		Puin.throw(get_parent(), src.mesh, p0, top, land, 0.55, Vector3(randf() * TAU, randf() * TAU, randf() * TAU),
+			Vector3(9.0, 0.0, 0.0), src.scale, 25.0, src.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, _brok_mat(src))
+
+
+static func _brok_mat(src: MeshInstance3D) -> Material:
+	if src.material_override != null or src.get_surface_override_material_count() == 0:
+		return src.material_override
+	return src.get_surface_override_material(0)
 
 
 ## Puinhoop aan de voet van een weggeslagen muur: blijft liggen als dekking (houdt kogels tegen).
@@ -1066,6 +1114,12 @@ func _pile(at: Vector3, kind: String, sc: float) -> void:
 	var src: Node3D = _puin.get(kind)
 	if src == null:
 		return
+	# ligt er vlakbij al een hoop, dan geen tweede erbovenop: scheelt per hoop 4 draw calls, schaduw en een botsvorm
+	# (een granaat met kettingreactie maakte er ~35 tegelijk, grotendeels over elkaar heen)
+	for q: Vector3 in _piles:
+		if Vector2(q.x - at.x, q.z - at.z).length() < PILE_GAP:
+			return
+	_piles.append(at)
 	var m: Node3D = src.duplicate()
 	m.visible = true
 	add_child(m)
@@ -1083,6 +1137,22 @@ func _pile(at: Vector3, kind: String, sc: float) -> void:
 	cs.position.y = b.size.y * 0.5
 	body.add_child(cs)
 	m.add_child(body)
+
+
+## Warm-up (laadscherm): de brokken en een puinhoop van dit soort gebouw één keer in beeld, zodat de eerste sloop niet hapert.
+func warm_puin(parent: Node3D, at: Vector3) -> void:
+	for i in 4:
+		var src := _puin.get("Brok%d" % i) as MeshInstance3D
+		if src:
+			Puin.throw(parent, src.mesh, at, at + Vector3.UP, at + Vector3(0.3 * i, 0, 0), 0.3, Vector3.ZERO, Vector3.ZERO, src.scale, 0.5,
+				src.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, _brok_mat(src))
+	for kind_ in ["PuinGroot", "PuinKlein"]:
+		var p: Node3D = _puin.get(kind_)
+		if p:
+			var m: Node3D = p.duplicate()
+			m.visible = true
+			parent.add_child(m)
+			m.global_position = at
 
 
 func _roof_state(st: int) -> void:
@@ -1292,6 +1362,7 @@ func _ruin_all() -> void:
 	for c in get_children():
 		if c is StaticBody3D or (c is Node3D and c != model):
 			c.queue_free()   # losse puinhopen en de relingen
+	_piles.clear()
 	var ruine: Node3D = model.find_child("Ruine", true, false)
 	if ruine:
 		ruine.visible = true

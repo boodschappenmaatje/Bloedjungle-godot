@@ -1,6 +1,7 @@
 extends SceneTree
-## Test: de kwaliteitstrap in PerfGovernor. Beeldsnelheid vastgezet op 20 fps (kan nooit sneller): de resolutie zakt naar 50%,
-## daarna gaat er per ~4 s een onderdeel uit, en na twee trappen zonder winst stopt het (trap 2). Duurt ~30 s echte tijd.
+## Test: PerfGovernor bij een tempo dat niet door tekenen komt. Beeldsnelheid vastgezet op 20 fps (kan nooit sneller, ook niet met
+## minder pixels): de resolutie zakt een paar stappen, merkt dat het niets oplevert, springt terug naar de gekozen stand en de
+## kwaliteitstrap blijft op 0 (platform-limiet). Duurt ~25 s echte tijd.
 ## Draaien: godot --headless --path . -s tests/kwaliteit_regel_test.gd   (zonder --fixed-fps)
 
 var main: Node
@@ -22,17 +23,21 @@ func _process(_d: float) -> bool:
 		main.begin()
 		return false
 	var secs := (Time.get_ticks_msec() - t0) / 1000.0
-	if secs > 40.0:
+	if secs > 25.0:
 		var A: GDScript = load("res://scripts/atmosphere.gd")
 		var tier: int = A.get("tier")
 		var scale := root.get_viewport().scaling_3d_scale
 		print("na %.0f s: resolutie %.2f, trap %d, fps %d, staat %s" % [secs, scale, tier, Engine.get_frames_per_second(), root.get_node("Game").state])
-		if scale > 0.51:
+		var P: GDScript = load("res://scripts/perf_governor.gd")
+		if scale < 0.95:
 			fails += 1
-			push_error("KWALITEIT REGEL: resolutie zakte niet naar 50%")
-		if tier != 2:
+			push_error("KWALITEIT REGEL: resolutie bleef laag (%.2f) terwijl minder pixels niets oplevert" % scale)
+		if tier != 0:
 			fails += 1
-			push_error("KWALITEIT REGEL: verwacht trap 2 (twee trappen, dan stoppen zonder winst), kreeg %d" % tier)
+			push_error("KWALITEIT REGEL: verwacht trap 0 bij een platform-limiet, kreeg %d" % tier)
+		if not P.get("platform_limited"):
+			fails += 1
+			push_error("KWALITEIT REGEL: platform-limiet niet herkend")
 		print("KLAAR, fouten: ", fails)
 		quit(1 if fails > 0 else 0)
 		return true

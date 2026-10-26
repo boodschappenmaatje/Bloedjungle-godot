@@ -25,6 +25,15 @@ const TIER_GAIN := 3.0    # een trap moet minstens zoveel fps opleveren
 var _fps_at_step := 0.0
 var _nogain := 0          # trappen achter elkaar zonder winst: dan ligt het niet aan het tekenen (bijvoorbeeld een 30 fps-limiet van iOS)
 var _frozen := false
+## Platform-limiet: lagere resolutie levert niets op (de diagnose-run op de iPhone liet zien dat zelfs een kaal beeld 19-26 ms
+## duurt, door het tempo van iOS/Xogot). Dan blijft de resolutie op de gekozen stand in plaats van voor niets te zakken.
+const PLAT_DROP := 0.16   # zoveel resolutie omlaag...
+const PLAT_GAIN := 4.0    # ...zonder minstens zoveel fps winst = het ligt niet aan het tekenen
+const PLAT_HOLD := 45.0   # seconden vasthouden voor we het opnieuw proberen
+static var platform_limited := false
+var _ref_scale := -1.0
+var _ref_fps := 0.0
+var _plat_hold := 0.0
 
 
 func _process(delta: float) -> void:
@@ -63,6 +72,12 @@ func _process(delta: float) -> void:
 	GameSettings.observed_peak = maxf(60.0, maxf(fps, GameSettings.observed_peak - 0.5))
 	var s := vp.scaling_3d_scale
 	var target := GameSettings.target_fps()
+	if _plat_hold > 0.0:
+		_plat_hold -= 0.5
+		platform_limited = _plat_hold > 0.0
+		_low = 0.0
+		get_tree().root.set_meta("res_scale", vp.scaling_3d_scale)
+		return
 	# op de laagste resolutie en nog steeds te traag: de duurste onderdelen uit (trap voor trap, nooit terug omhoog)
 	_tier_wait -= 0.5
 	if s <= MIN_SCALE + 0.01 and fps < target * TIER_RATIO:
@@ -84,6 +99,20 @@ func _process(delta: float) -> void:
 		_low = 0.0
 	if fps < target * DOWN_RATIO:
 		_good = 0.0
+		if _ref_scale < 0.0:
+			_ref_scale = s
+			_ref_fps = fps
+		elif fps >= _ref_fps + PLAT_GAIN:
+			_ref_scale = s   # het helpt: opnieuw tellen vanaf hier
+			_ref_fps = fps
+		elif s <= _ref_scale - PLAT_DROP:
+			_plat_hold = PLAT_HOLD
+			platform_limited = true
+			_ref_scale = -1.0
+			vp.scaling_3d_scale = _cap
+			PerfMonitor.note("platform-limiet: minder pixels helpt niet, resolutie terug")
+			get_tree().root.set_meta("res_scale", _cap)
+			return
 		vp.scaling_3d_scale = maxf(MIN_SCALE, s - (0.08 if fps < target * 0.75 else 0.04))
 		_hold = 8.0
 	elif fps >= target * UP_RATIO and s < _cap and _hold <= 0.0:
@@ -93,4 +122,6 @@ func _process(delta: float) -> void:
 			vp.scaling_3d_scale = minf(_cap, s + 0.03)
 	else:
 		_good = 0.0
+	if fps >= target * DOWN_RATIO:
+		_ref_scale = -1.0
 	get_tree().root.set_meta("res_scale", vp.scaling_3d_scale)

@@ -16,11 +16,28 @@ Godot meet FPS en frametime, renderstatistieken en door Godot gerapporteerd vide
 
 De repository moet voor GitHub Actions toegankelijk zijn voor de persoon die de artifact downloadt. Er is geen ingebouwde GitHub-token of private repository download in de app.
 
-## Updatefundament
+## Updates zonder nieuwe IPA (OTA)
 
-Code- en enginewijzigingen vereisen een volledige IPA-installatie. Externe PCK's zijn nog niet automatisch geactiveerd: resources kunnen verwijzingen of scripts bevatten en Godot kan bij runtime niet veilig aantonen dat een willekeurige PCK compatibel is. Laat automatische PCK-download en -activering uit totdat een distributieserver publiek of geauthenticeerd via een passend gebruikersaccount beschikbaar is en integratie-/rollbacktests slagen. Deel geen repositorytoken in de app.
+De app kan resources en GDScript-wijzigingen (wapens, modellen, texturen, balans, menu's) via een **patch-PCK** binnenhalen uit de GitHub-release `updates` van deze repository. Bij het starten van het hoofdmenu verschijnt het updatescherm als er een nieuwere patch is; er wordt **niets gedownload of gewijzigd zonder dat jij op "Download en installeer" tikt**. Daarna de app helemaal afsluiten en opnieuw openen.
 
-Voor toekomstige resource-only patches is het beoogde manifest versie, minimale gameversie, platform, SHA-256, bestandsgrootte en HTTPS-download-URL. Download naar een tijdelijke map onder `user://`, valideer schema, compatibiliteit, grootte en hash, laad resources pas na volledige verificatie, behoud de laatst bekende werkende versie en herstel die bij laadfout. Externe GDScript/code is uitgesloten. Tot die implementatie getest is, controleert de app geen externe updatebron.
+**Eenmalig instellen (token):** de repository is privé, dus de app heeft een alleen-lezen token nodig.
+1. GitHub → Settings → Developer settings → Fine-grained tokens → Generate new token.
+2. Repository access: *Only select repositories* → alleen `Bloedjungle-godot`. Permissions: *Contents: Read-only* (verder niets). Kies een verloopdatum.
+3. In de app: Hoofdmenu of Pauze → **Updates** → token plakken → Opslaan. Het token blijft alleen op het toestel (`user://ota/token.cfg`) en zit niet in de IPA of de broncode.
+
+**Hoe het werkt**
+- `ota.yml` bouwt bij elke push naar `main` of `feature/native-ios-complete` een basis-PCK (de commit uit `ota/basis.txt`) en een patch-PCK (alleen het verschil met de huidige commit) en zet `manifest.json` + `patch-<versie>.pck` in de release `updates`.
+- De app controleert grootte en SHA-256, en dat de patch bij de geïnstalleerde IPA hoort (`base`). Een patch voor een andere IPA wordt geweigerd.
+- Crashbeveiliging: als de app twee keer na het laden van een patch niet stabiel is geworden (20 s), wordt de patch automatisch uitgeschakeld. Handmatig kan met "Terugdraaien naar de app-versie".
+
+**Beperkingen**
+- Engine-, iOS-native code, app-icoon en Info.plist vragen nog steeds een nieuwe IPA.
+- Na een nieuwe IPA: zet `ota/basis.txt` op de commit van die IPA, anders groeit de patch mee.
+- AltStore-ondertekening verloopt nog steeds na 7 dagen; vernieuwen blijft nodig.
+
+## Updatefundament (oud, vervangen door OTA hierboven)
+
+Deel het token nooit via de broncode of IPA.
 
 ## Validatie en beperkingen
 

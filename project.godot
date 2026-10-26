@@ -27,6 +27,7 @@ general/ios/session_category=3
 
 [autoload]
 
+Updater="*res://scripts/updater.gd"
 Game="*res://scripts/game.gd"
 Sfx="*res://scripts/sfx.gd"
 

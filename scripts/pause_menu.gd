@@ -74,6 +74,8 @@ func _ready() -> void:
 	_build_menu()
 	_build_pause()
 	_build_settings()
+	# een nieuwe update meldt zich vanzelf, maar alleen in het hoofdmenu (nooit midden in het spel); de speler bevestigt zelf
+	Updater.update_beschikbaar.connect(func(_m): if Game.state == "menu": UpdatePanel.open(self))
 	_build_gear()
 	_build_wheel()
 	_build_over()
@@ -253,6 +255,7 @@ func _build_menu() -> void:
 	row.add_child(_button("Uitrusting", "secondary", func(): _open_gear("menu")))
 	row.add_child(_button("Instellingen", "secondary", func(): _open_settings("menu")))
 	row.add_child(_button("Stadseditor", "secondary", _open_stad_editor))
+	row.add_child(_button("Updates", "secondary", func(): UpdatePanel.open(self)))
 	left.add_child(row)
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 12)
@@ -328,6 +331,7 @@ func _build_pause() -> void:
 	v.add_child(_mute_btn)
 	v.add_child(_button("Instellingen", "secondary", func(): _open_settings("pause")))
 	v.add_child(_button("Stadseditor", "secondary", _open_stad_editor))
+	v.add_child(_button("Updates", "secondary", func(): UpdatePanel.open(self)))
 	v.add_child(_button("Stoppen", "secondary", func():
 		get_tree().paused = false
 		_show("")

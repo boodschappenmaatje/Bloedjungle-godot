@@ -15,6 +15,17 @@ var open_state := false
 var badge := ""  # klein getal rechtsboven, bijv. "×3"
 
 
+## Afstand van de onderrand tot de bovenkant van de wapenbalk in landschap (balk is 64 hoog).
+const WEAPON_BAR_FROM_BOTTOM := 82.0
+
+
+## Linkerrand van het rechter actiecluster (Gebruik/Herlaad/Sprint/Rol) op aanraakapparaten; zelfde som als CombatButtons._layout.
+static func cluster_left(view: Vector2) -> float:
+	var safe := UI.safe_margins(view)
+	var stick_edge_x := view.x - safe.z - (76.0 if view.x < 880.0 else 86.0) - 76.0
+	return stick_edge_x - 10.0 - SIZE.x * 2.0 - 8.0
+
+
 static func slot_x(i: int) -> float:
 	return (i - 1) * GAP - SIZE.x * 0.5  # relatief aan het midden van het scherm
 
@@ -51,9 +62,9 @@ func place(i: int, parent_size: Vector2) -> void:
 	var safe := UI.safe_margins(parent_size)
 	var y := parent_size.y - 126.0 - maxf(0.0, safe.w - 12.0)
 	if parent_size.x >= parent_size.y:
-		# In landschap staat de wapenbalk midden onderin; contextacties komen er net onder.
-		var weapon_y := parent_size.y - 140.0 - maxf(0.0, safe.w - 12.0)
-		y = weapon_y + 64.0 + 8.0
+		# In landschap staat de wapenbalk onderin; contextacties komen er net boven.
+		var weapon_y := parent_size.y - WEAPON_BAR_FROM_BOTTOM - maxf(0.0, safe.w - 12.0)
+		y = weapon_y - 8.0 - SIZE.y
 	position = Vector2(parent_size.x * 0.5 + slot_x(i), y)
 
 

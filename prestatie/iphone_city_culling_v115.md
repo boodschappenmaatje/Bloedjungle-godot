@@ -17,11 +17,16 @@ De nieuwe stad is aanwezig in de scene tree, ook buiten beeld. Bestaande zichtaf
 
 ## A/B-test op dezelfde iPhone
 
-1. Gebruik dezelfde build **v115-test**, hetzelfde dagdeel/weer, dezelfde grafiekstand, **60 FPS** en dezelfde plek met **0 vijanden** tijdens voorbereiden. Zet **Test: 3D-beeld klein** uit (automatische stand).
-2. Prestatiemodus en FPS-teller aan. Herstart de missie en blijf stil staan; meet na 8–10 seconden. Noteer gemiddelde FPS, render-CPU, GPU indien beschikbaar, draw calls, 3D-resolutie, nodes en p95.
-3. Zet **Test: stad buiten beeld niet tekenen = Uit**, herhaal op dezelfde plek en met dezelfde golffase. Herhaal vervolgens met **Aan**. Een A–B–A-volgorde verkleint de kans dat opwarming/thermiek tot een verkeerde conclusie leidt.
-4. Herhaal één keer dichter bij de stad en met **8 vijanden**. Controleer op pop-in, doorschijnende gebouwen, ontbrekende schaduwen, onbereikbare voertuigen en afwijkende botsingen.
-5. Laat de stadseditor actief, voeg een gebouw toe, verplaats het en verlaat de editor; controleer of de stad volledig zichtbaar blijft bij terugkeer.
+**Belangrijke correctie (screenshots van 26 oktober):** bij de twee eerdere v115-test-screenshots stond zowel bij culling Aan als bij culling Uit de schakelaar **Test: stad zien = Uit**. De stad was dus in beide gevallen al gedwongen verborgen. Deze screenshots zijn **geen geldige A/B-vergelijking**; de 35 versus 31 FPS is niet aan city culling toe te schrijven.
+
+1. Haal de nieuwe branchversie **v115b-test** op in Xogot. Zet eerst verplicht **Test: stad zien = Aan**. Zet **Test: 3D-beeld klein (30%) = Uit**. Houd zon/jungle/nabewerking constant (bij voorkeur alle drie Aan), dag/helder/Hoog/60 FPS.
+2. Zet Prestatiemodus en FPS-teller Aan. Kies dezelfde positie met **0 vijanden** tijdens voorbereiden; laat de speler stilstaan en meet na minstens 10 seconden. De overlay toont nu expliciet **stad: AUTO VERBORGEN**, **AUTO ZICHTBAAR**, **CULLING UIT** of **HANDMATIG UIT (test ongeldig)**.
+3. Zet **Test: stad buiten beeld niet tekenen = Aan**, meet. Zet alleen deze instelling **Uit**, meet op dezelfde plek; daarna nogmaals **Aan** (A–B–A). Doe het liefst na een nieuwe missie waarbij dezelfde golffase wordt gebruikt; noteer FPS, frametijd, p95, draw calls, nodes, 3D-resolutie, status en screenshot.
+4. Als de overlay **AUTO ZICHTBAAR** meldt, zal de culling op die plek **geen verschil** maken: de stad ligt binnen de veiligheidsmarge. Test dan ook een plek verder van de stad waarop de overlay **AUTO VERBORGEN** toont; beweeg niet tijdens de metingen.
+5. Doe apart een tweede reeks met **8 vijanden**, weer met dezelfde golffase/positie. Controleer bij het benaderen van de stad op pop-in, ontbrekende schaduwen, zichtbare gebouwen en correcte botsingen.
+6. Open de stadseditor, voeg een gebouw toe, verplaats het en verlaat de editor; controleer ook bij terugkeer de zichtbaarheid.
+
+De v115b-overlay toont de echte **zichtbaarheidsstatus**, niet de FPS-oorzaak. Ook als de stad automatisch verborgen wordt, kunnen andere bottlenecks zoals jungle, shadows, GPU of iOS-framepresentatie overheersen.
 
 **Acceptatie:** alleen als de FPS aantoonbaar verbetert, zonder zichtbaar kwaliteitsverlies of regressies, kan deze branch naar main. Als de stad nog altijd 25–35 FPS haalt, is aanvullend GPU-/renderprofielonderzoek nodig; verander niet blindelings de shader- of textuurkwaliteit.
 

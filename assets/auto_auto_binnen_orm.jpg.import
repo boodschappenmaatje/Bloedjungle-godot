@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dgl0m3dsy1vpw"
-path.s3tc="res://.godot/imported/auto_auto_binnen_orm.jpg-27a8bea19a223432d509b4eb0098ca03.s3tc.ctex"
 path.etc2="res://.godot/imported/auto_auto_binnen_orm.jpg-27a8bea19a223432d509b4eb0098ca03.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/auto_auto_binnen_orm.jpg"
-dest_files=["res://.godot/imported/auto_auto_binnen_orm.jpg-27a8bea19a223432d509b4eb0098ca03.s3tc.ctex", "res://.godot/imported/auto_auto_binnen_orm.jpg-27a8bea19a223432d509b4eb0098ca03.etc2.ctex"]
+dest_files=["res://.godot/imported/auto_auto_binnen_orm.jpg-27a8bea19a223432d509b4eb0098ca03.etc2.ctex"]
 
 [params]
 

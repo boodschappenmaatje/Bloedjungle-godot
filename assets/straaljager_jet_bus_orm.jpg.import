@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bxsoxlyr7vqlq"
-path.s3tc="res://.godot/imported/straaljager_jet_bus_orm.jpg-259b62f1b3baee9efa25c7e5491eb559.s3tc.ctex"
 path.etc2="res://.godot/imported/straaljager_jet_bus_orm.jpg-259b62f1b3baee9efa25c7e5491eb559.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/straaljager_jet_bus_orm.jpg"
-dest_files=["res://.godot/imported/straaljager_jet_bus_orm.jpg-259b62f1b3baee9efa25c7e5491eb559.s3tc.ctex", "res://.godot/imported/straaljager_jet_bus_orm.jpg-259b62f1b3baee9efa25c7e5491eb559.etc2.ctex"]
+dest_files=["res://.godot/imported/straaljager_jet_bus_orm.jpg-259b62f1b3baee9efa25c7e5491eb559.etc2.ctex"]
 
 [params]
 

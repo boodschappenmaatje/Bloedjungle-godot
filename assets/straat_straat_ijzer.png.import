@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dxo8g80rd67a"
-path.s3tc="res://.godot/imported/straat_straat_ijzer.png-c111181c80f0d0c90fc4711da0a6e62f.s3tc.ctex"
 path.etc2="res://.godot/imported/straat_straat_ijzer.png-c111181c80f0d0c90fc4711da0a6e62f.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/straat_straat_ijzer.png"
-dest_files=["res://.godot/imported/straat_straat_ijzer.png-c111181c80f0d0c90fc4711da0a6e62f.s3tc.ctex", "res://.godot/imported/straat_straat_ijzer.png-c111181c80f0d0c90fc4711da0a6e62f.etc2.ctex"]
+dest_files=["res://.godot/imported/straat_straat_ijzer.png-c111181c80f0d0c90fc4711da0a6e62f.etc2.ctex"]
 
 [params]
 

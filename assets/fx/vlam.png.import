@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://2hgp13i0hrou"
-path.s3tc="res://.godot/imported/vlam.png-004ccd723695539df6f77ab124ff62cf.s3tc.ctex"
 path.etc2="res://.godot/imported/vlam.png-004ccd723695539df6f77ab124ff62cf.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/fx/vlam.png"
-dest_files=["res://.godot/imported/vlam.png-004ccd723695539df6f77ab124ff62cf.s3tc.ctex", "res://.godot/imported/vlam.png-004ccd723695539df6f77ab124ff62cf.etc2.ctex"]
+dest_files=["res://.godot/imported/vlam.png-004ccd723695539df6f77ab124ff62cf.etc2.ctex"]
 
 [params]
 

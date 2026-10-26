@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bobqyvwr4elu1"
-path.s3tc="res://.godot/imported/base_color.jpg-34c50c018866ff7c2f7d4d31b7175ba7.s3tc.ctex"
 path.etc2="res://.godot/imported/base_color.jpg-34c50c018866ff7c2f7d4d31b7175ba7.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/terrain/river_sand/base_color.jpg"
-dest_files=["res://.godot/imported/base_color.jpg-34c50c018866ff7c2f7d4d31b7175ba7.s3tc.ctex", "res://.godot/imported/base_color.jpg-34c50c018866ff7c2f7d4d31b7175ba7.etc2.ctex"]
+dest_files=["res://.godot/imported/base_color.jpg-34c50c018866ff7c2f7d4d31b7175ba7.etc2.ctex"]
 
 [params]
 

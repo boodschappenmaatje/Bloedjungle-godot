@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bn0wgc4e4n80r"
-path.s3tc="res://.godot/imported/auto_auto_plastic_n.jpg-4aa8218f3ab6a8938c33041fef5fb717.s3tc.ctex"
 path.etc2="res://.godot/imported/auto_auto_plastic_n.jpg-4aa8218f3ab6a8938c33041fef5fb717.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/auto_auto_plastic_n.jpg"
-dest_files=["res://.godot/imported/auto_auto_plastic_n.jpg-4aa8218f3ab6a8938c33041fef5fb717.s3tc.ctex", "res://.godot/imported/auto_auto_plastic_n.jpg-4aa8218f3ab6a8938c33041fef5fb717.etc2.ctex"]
+dest_files=["res://.godot/imported/auto_auto_plastic_n.jpg-4aa8218f3ab6a8938c33041fef5fb717.etc2.ctex"]
 
 [params]
 

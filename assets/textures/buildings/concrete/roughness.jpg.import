@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://1wgp4wdlhugt"
-path.s3tc="res://.godot/imported/roughness.jpg-ad006dc825e6b0e438385b04a96d5de5.s3tc.ctex"
 path.etc2="res://.godot/imported/roughness.jpg-ad006dc825e6b0e438385b04a96d5de5.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/buildings/concrete/roughness.jpg"
-dest_files=["res://.godot/imported/roughness.jpg-ad006dc825e6b0e438385b04a96d5de5.s3tc.ctex", "res://.godot/imported/roughness.jpg-ad006dc825e6b0e438385b04a96d5de5.etc2.ctex"]
+dest_files=["res://.godot/imported/roughness.jpg-ad006dc825e6b0e438385b04a96d5de5.etc2.ctex"]
 
 [params]
 

@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b2qleyclidq6e"
-path.s3tc="res://.godot/imported/winkel_winkel_luik.png-6a684e521dbb5898dcc3fc7da42f195a.s3tc.ctex"
 path.etc2="res://.godot/imported/winkel_winkel_luik.png-6a684e521dbb5898dcc3fc7da42f195a.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/winkel_winkel_luik.png"
-dest_files=["res://.godot/imported/winkel_winkel_luik.png-6a684e521dbb5898dcc3fc7da42f195a.s3tc.ctex", "res://.godot/imported/winkel_winkel_luik.png-6a684e521dbb5898dcc3fc7da42f195a.etc2.ctex"]
+dest_files=["res://.godot/imported/winkel_winkel_luik.png-6a684e521dbb5898dcc3fc7da42f195a.etc2.ctex"]
 
 [params]
 

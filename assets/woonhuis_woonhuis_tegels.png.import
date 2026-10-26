@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dk7p3j5v587u5"
-path.s3tc="res://.godot/imported/woonhuis_woonhuis_tegels.png-ef9e7943d2826b17a5012354554f7655.s3tc.ctex"
 path.etc2="res://.godot/imported/woonhuis_woonhuis_tegels.png-ef9e7943d2826b17a5012354554f7655.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/woonhuis_woonhuis_tegels.png"
-dest_files=["res://.godot/imported/woonhuis_woonhuis_tegels.png-ef9e7943d2826b17a5012354554f7655.s3tc.ctex", "res://.godot/imported/woonhuis_woonhuis_tegels.png-ef9e7943d2826b17a5012354554f7655.etc2.ctex"]
+dest_files=["res://.godot/imported/woonhuis_woonhuis_tegels.png-ef9e7943d2826b17a5012354554f7655.etc2.ctex"]
 
 [params]
 

@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dnj676rwkbyal"
-path.s3tc="res://.godot/imported/auto_auto_chroom_orm.jpg-bd133aa1d17ae15646f28936ca95cdf1.s3tc.ctex"
 path.etc2="res://.godot/imported/auto_auto_chroom_orm.jpg-bd133aa1d17ae15646f28936ca95cdf1.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/auto_auto_chroom_orm.jpg"
-dest_files=["res://.godot/imported/auto_auto_chroom_orm.jpg-bd133aa1d17ae15646f28936ca95cdf1.s3tc.ctex", "res://.godot/imported/auto_auto_chroom_orm.jpg-bd133aa1d17ae15646f28936ca95cdf1.etc2.ctex"]
+dest_files=["res://.godot/imported/auto_auto_chroom_orm.jpg-bd133aa1d17ae15646f28936ca95cdf1.etc2.ctex"]
 
 [params]
 

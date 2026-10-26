@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://4e3ltkofai05"
-path.s3tc="res://.godot/imported/straaljager_jet_onder_normal.jpg-8548a8f15aa33524a20c64c5d691fd90.s3tc.ctex"
 path.etc2="res://.godot/imported/straaljager_jet_onder_normal.jpg-8548a8f15aa33524a20c64c5d691fd90.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/straaljager_jet_onder_normal.jpg"
-dest_files=["res://.godot/imported/straaljager_jet_onder_normal.jpg-8548a8f15aa33524a20c64c5d691fd90.s3tc.ctex", "res://.godot/imported/straaljager_jet_onder_normal.jpg-8548a8f15aa33524a20c64c5d691fd90.etc2.ctex"]
+dest_files=["res://.godot/imported/straaljager_jet_onder_normal.jpg-8548a8f15aa33524a20c64c5d691fd90.etc2.ctex"]
 
 [params]
 

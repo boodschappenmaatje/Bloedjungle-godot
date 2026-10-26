@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dbxx6ki2q0lev"
-path.s3tc="res://.godot/imported/auto_auto_rubber_n.jpg-11d887d7811959deb579fec331e9e234.s3tc.ctex"
 path.etc2="res://.godot/imported/auto_auto_rubber_n.jpg-11d887d7811959deb579fec331e9e234.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/auto_auto_rubber_n.jpg"
-dest_files=["res://.godot/imported/auto_auto_rubber_n.jpg-11d887d7811959deb579fec331e9e234.s3tc.ctex", "res://.godot/imported/auto_auto_rubber_n.jpg-11d887d7811959deb579fec331e9e234.etc2.ctex"]
+dest_files=["res://.godot/imported/auto_auto_rubber_n.jpg-11d887d7811959deb579fec331e9e234.etc2.ctex"]
 
 [params]
 

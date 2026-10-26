@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bwro10p4wx0s1"
-path.s3tc="res://.godot/imported/winkel_winkel_tegels.png-d05c17672fe65d7730b7f7fb6f217518.s3tc.ctex"
 path.etc2="res://.godot/imported/winkel_winkel_tegels.png-d05c17672fe65d7730b7f7fb6f217518.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/winkel_winkel_tegels.png"
-dest_files=["res://.godot/imported/winkel_winkel_tegels.png-d05c17672fe65d7730b7f7fb6f217518.s3tc.ctex", "res://.godot/imported/winkel_winkel_tegels.png-d05c17672fe65d7730b7f7fb6f217518.etc2.ctex"]
+dest_files=["res://.godot/imported/winkel_winkel_tegels.png-d05c17672fe65d7730b7f7fb6f217518.etc2.ctex"]
 
 [params]
 

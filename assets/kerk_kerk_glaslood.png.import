@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://crslxxv8gjlvf"
-path.s3tc="res://.godot/imported/kerk_kerk_glaslood.png-c2e994ffb24604da27b1c494e9c7ea5b.s3tc.ctex"
 path.etc2="res://.godot/imported/kerk_kerk_glaslood.png-c2e994ffb24604da27b1c494e9c7ea5b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/kerk_kerk_glaslood.png"
-dest_files=["res://.godot/imported/kerk_kerk_glaslood.png-c2e994ffb24604da27b1c494e9c7ea5b.s3tc.ctex", "res://.godot/imported/kerk_kerk_glaslood.png-c2e994ffb24604da27b1c494e9c7ea5b.etc2.ctex"]
+dest_files=["res://.godot/imported/kerk_kerk_glaslood.png-c2e994ffb24604da27b1c494e9c7ea5b.etc2.ctex"]
 
 [params]
 

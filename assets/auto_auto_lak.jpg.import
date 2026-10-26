@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c1unfmbx2y77"
-path.s3tc="res://.godot/imported/auto_auto_lak.jpg-027402c199b1d1f2da19a69d515f7d63.s3tc.ctex"
 path.etc2="res://.godot/imported/auto_auto_lak.jpg-027402c199b1d1f2da19a69d515f7d63.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/auto_auto_lak.jpg"
-dest_files=["res://.godot/imported/auto_auto_lak.jpg-027402c199b1d1f2da19a69d515f7d63.s3tc.ctex", "res://.godot/imported/auto_auto_lak.jpg-027402c199b1d1f2da19a69d515f7d63.etc2.ctex"]
+dest_files=["res://.godot/imported/auto_auto_lak.jpg-027402c199b1d1f2da19a69d515f7d63.etc2.ctex"]
 
 [params]
 

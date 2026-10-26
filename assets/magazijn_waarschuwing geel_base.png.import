@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dhfbwbj0664ti"
-path.s3tc="res://.godot/imported/magazijn_waarschuwing geel_base.png-65be9be9b320576761e1bf1d5e6614b2.s3tc.ctex"
 path.etc2="res://.godot/imported/magazijn_waarschuwing geel_base.png-65be9be9b320576761e1bf1d5e6614b2.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/magazijn_waarschuwing geel_base.png"
-dest_files=["res://.godot/imported/magazijn_waarschuwing geel_base.png-65be9be9b320576761e1bf1d5e6614b2.s3tc.ctex", "res://.godot/imported/magazijn_waarschuwing geel_base.png-65be9be9b320576761e1bf1d5e6614b2.etc2.ctex"]
+dest_files=["res://.godot/imported/magazijn_waarschuwing geel_base.png-65be9be9b320576761e1bf1d5e6614b2.etc2.ctex"]
 
 [params]
 

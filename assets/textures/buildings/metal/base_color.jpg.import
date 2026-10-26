@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dovk6qynmu27y"
-path.s3tc="res://.godot/imported/base_color.jpg-840bd81f2c1829d60a284a1be3e4016a.s3tc.ctex"
 path.etc2="res://.godot/imported/base_color.jpg-840bd81f2c1829d60a284a1be3e4016a.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/buildings/metal/base_color.jpg"
-dest_files=["res://.godot/imported/base_color.jpg-840bd81f2c1829d60a284a1be3e4016a.s3tc.ctex", "res://.godot/imported/base_color.jpg-840bd81f2c1829d60a284a1be3e4016a.etc2.ctex"]
+dest_files=["res://.godot/imported/base_color.jpg-840bd81f2c1829d60a284a1be3e4016a.etc2.ctex"]
 
 [params]
 

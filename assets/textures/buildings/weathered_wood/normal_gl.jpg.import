@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://couxpho32ex5k"
-path.s3tc="res://.godot/imported/normal_gl.jpg-e1aa307a8802435393077687c3d87ae5.s3tc.ctex"
 path.etc2="res://.godot/imported/normal_gl.jpg-e1aa307a8802435393077687c3d87ae5.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/buildings/weathered_wood/normal_gl.jpg"
-dest_files=["res://.godot/imported/normal_gl.jpg-e1aa307a8802435393077687c3d87ae5.s3tc.ctex", "res://.godot/imported/normal_gl.jpg-e1aa307a8802435393077687c3d87ae5.etc2.ctex"]
+dest_files=["res://.godot/imported/normal_gl.jpg-e1aa307a8802435393077687c3d87ae5.etc2.ctex"]
 
 [params]
 

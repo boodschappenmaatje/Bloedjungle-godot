@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://be85blbavbfj5"
-path.s3tc="res://.godot/imported/auto_auto_velg_n.jpg-594ab3dc9f4bf555b21d8fb3c247d9df.s3tc.ctex"
 path.etc2="res://.godot/imported/auto_auto_velg_n.jpg-594ab3dc9f4bf555b21d8fb3c247d9df.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/auto_auto_velg_n.jpg"
-dest_files=["res://.godot/imported/auto_auto_velg_n.jpg-594ab3dc9f4bf555b21d8fb3c247d9df.s3tc.ctex", "res://.godot/imported/auto_auto_velg_n.jpg-594ab3dc9f4bf555b21d8fb3c247d9df.etc2.ctex"]
+dest_files=["res://.godot/imported/auto_auto_velg_n.jpg-594ab3dc9f4bf555b21d8fb3c247d9df.etc2.ctex"]
 
 [params]
 

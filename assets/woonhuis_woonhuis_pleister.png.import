@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bglgktunsb1my"
-path.s3tc="res://.godot/imported/woonhuis_woonhuis_pleister.png-133008f024e5258ad2c153ecc1ecee11.s3tc.ctex"
 path.etc2="res://.godot/imported/woonhuis_woonhuis_pleister.png-133008f024e5258ad2c153ecc1ecee11.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/woonhuis_woonhuis_pleister.png"
-dest_files=["res://.godot/imported/woonhuis_woonhuis_pleister.png-133008f024e5258ad2c153ecc1ecee11.s3tc.ctex", "res://.godot/imported/woonhuis_woonhuis_pleister.png-133008f024e5258ad2c153ecc1ecee11.etc2.ctex"]
+dest_files=["res://.godot/imported/woonhuis_woonhuis_pleister.png-133008f024e5258ad2c153ecc1ecee11.etc2.ctex"]
 
 [params]
 

@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b5jroy818qwfw"
-path.s3tc="res://.godot/imported/hotel_hotel_pleister.png-1fcc80a660ff6cf03889505f8b720df2.s3tc.ctex"
 path.etc2="res://.godot/imported/hotel_hotel_pleister.png-1fcc80a660ff6cf03889505f8b720df2.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/hotel_hotel_pleister.png"
-dest_files=["res://.godot/imported/hotel_hotel_pleister.png-1fcc80a660ff6cf03889505f8b720df2.s3tc.ctex", "res://.godot/imported/hotel_hotel_pleister.png-1fcc80a660ff6cf03889505f8b720df2.etc2.ctex"]
+dest_files=["res://.godot/imported/hotel_hotel_pleister.png-1fcc80a660ff6cf03889505f8b720df2.etc2.ctex"]
 
 [params]
 

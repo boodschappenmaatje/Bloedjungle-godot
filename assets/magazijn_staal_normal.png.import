@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://fbkoqbiy0fn3"
-path.s3tc="res://.godot/imported/magazijn_staal_normal.png-e4752de6bd5d5f0f6ee8fdd2754b7662.s3tc.ctex"
 path.etc2="res://.godot/imported/magazijn_staal_normal.png-e4752de6bd5d5f0f6ee8fdd2754b7662.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/magazijn_staal_normal.png"
-dest_files=["res://.godot/imported/magazijn_staal_normal.png-e4752de6bd5d5f0f6ee8fdd2754b7662.s3tc.ctex", "res://.godot/imported/magazijn_staal_normal.png-e4752de6bd5d5f0f6ee8fdd2754b7662.etc2.ctex"]
+dest_files=["res://.godot/imported/magazijn_staal_normal.png-e4752de6bd5d5f0f6ee8fdd2754b7662.etc2.ctex"]
 
 [params]
 

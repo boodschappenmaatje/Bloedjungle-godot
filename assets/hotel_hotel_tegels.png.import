@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://buxb6nusc6qsg"
-path.s3tc="res://.godot/imported/hotel_hotel_tegels.png-795587e4d55472133ff8b85cde947da5.s3tc.ctex"
 path.etc2="res://.godot/imported/hotel_hotel_tegels.png-795587e4d55472133ff8b85cde947da5.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/hotel_hotel_tegels.png"
-dest_files=["res://.godot/imported/hotel_hotel_tegels.png-795587e4d55472133ff8b85cde947da5.s3tc.ctex", "res://.godot/imported/hotel_hotel_tegels.png-795587e4d55472133ff8b85cde947da5.etc2.ctex"]
+dest_files=["res://.godot/imported/hotel_hotel_tegels.png-795587e4d55472133ff8b85cde947da5.etc2.ctex"]
 
 [params]
 

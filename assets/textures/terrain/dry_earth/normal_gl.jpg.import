@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dbh8agxkkrgts"
-path.s3tc="res://.godot/imported/normal_gl.jpg-374d9677ab81e6ba072e85292a93004e.s3tc.ctex"
 path.etc2="res://.godot/imported/normal_gl.jpg-374d9677ab81e6ba072e85292a93004e.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/terrain/dry_earth/normal_gl.jpg"
-dest_files=["res://.godot/imported/normal_gl.jpg-374d9677ab81e6ba072e85292a93004e.s3tc.ctex", "res://.godot/imported/normal_gl.jpg-374d9677ab81e6ba072e85292a93004e.etc2.ctex"]
+dest_files=["res://.godot/imported/normal_gl.jpg-374d9677ab81e6ba072e85292a93004e.etc2.ctex"]
 
 [params]
 

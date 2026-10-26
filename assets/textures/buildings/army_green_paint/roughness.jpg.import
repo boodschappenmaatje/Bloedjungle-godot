@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://c721ntln6xgkb"
-path.s3tc="res://.godot/imported/roughness.jpg-cd94f98b1ba40bd35aca23a7843cb9a0.s3tc.ctex"
 path.etc2="res://.godot/imported/roughness.jpg-cd94f98b1ba40bd35aca23a7843cb9a0.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/buildings/army_green_paint/roughness.jpg"
-dest_files=["res://.godot/imported/roughness.jpg-cd94f98b1ba40bd35aca23a7843cb9a0.s3tc.ctex", "res://.godot/imported/roughness.jpg-cd94f98b1ba40bd35aca23a7843cb9a0.etc2.ctex"]
+dest_files=["res://.godot/imported/roughness.jpg-cd94f98b1ba40bd35aca23a7843cb9a0.etc2.ctex"]
 
 [params]
 

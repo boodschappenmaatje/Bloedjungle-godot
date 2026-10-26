@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bair4yrateelp"
-path.s3tc="res://.godot/imported/straatmeubilair_sm_beton.png-ef32a026379c6119ce1881adb614e030.s3tc.ctex"
 path.etc2="res://.godot/imported/straatmeubilair_sm_beton.png-ef32a026379c6119ce1881adb614e030.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/straatmeubilair_sm_beton.png"
-dest_files=["res://.godot/imported/straatmeubilair_sm_beton.png-ef32a026379c6119ce1881adb614e030.s3tc.ctex", "res://.godot/imported/straatmeubilair_sm_beton.png-ef32a026379c6119ce1881adb614e030.etc2.ctex"]
+dest_files=["res://.godot/imported/straatmeubilair_sm_beton.png-ef32a026379c6119ce1881adb614e030.etc2.ctex"]
 
 [params]
 

@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://t5d5sbfa0j72"
-path.s3tc="res://.godot/imported/garage_garage_plaat.png-fab8543332cbc38a93ed32398345546e.s3tc.ctex"
 path.etc2="res://.godot/imported/garage_garage_plaat.png-fab8543332cbc38a93ed32398345546e.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/garage_garage_plaat.png"
-dest_files=["res://.godot/imported/garage_garage_plaat.png-fab8543332cbc38a93ed32398345546e.s3tc.ctex", "res://.godot/imported/garage_garage_plaat.png-fab8543332cbc38a93ed32398345546e.etc2.ctex"]
+dest_files=["res://.godot/imported/garage_garage_plaat.png-fab8543332cbc38a93ed32398345546e.etc2.ctex"]
 
 [params]
 

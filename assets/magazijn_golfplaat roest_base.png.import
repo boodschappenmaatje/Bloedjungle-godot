@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://8ysogyhd33g3"
-path.s3tc="res://.godot/imported/magazijn_golfplaat roest_base.png-1d9efaa39d568d6c2d2b9acc9fe40a78.s3tc.ctex"
 path.etc2="res://.godot/imported/magazijn_golfplaat roest_base.png-1d9efaa39d568d6c2d2b9acc9fe40a78.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/magazijn_golfplaat roest_base.png"
-dest_files=["res://.godot/imported/magazijn_golfplaat roest_base.png-1d9efaa39d568d6c2d2b9acc9fe40a78.s3tc.ctex", "res://.godot/imported/magazijn_golfplaat roest_base.png-1d9efaa39d568d6c2d2b9acc9fe40a78.etc2.ctex"]
+dest_files=["res://.godot/imported/magazijn_golfplaat roest_base.png-1d9efaa39d568d6c2d2b9acc9fe40a78.etc2.ctex"]
 
 [params]
 

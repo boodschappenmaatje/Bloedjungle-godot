@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cbvmqatkuco8a"
-path.s3tc="res://.godot/imported/straatmeubilair_sm_bord.png-053f7c9edfa1d9763b7b0df5d70f3db5.s3tc.ctex"
 path.etc2="res://.godot/imported/straatmeubilair_sm_bord.png-053f7c9edfa1d9763b7b0df5d70f3db5.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/straatmeubilair_sm_bord.png"
-dest_files=["res://.godot/imported/straatmeubilair_sm_bord.png-053f7c9edfa1d9763b7b0df5d70f3db5.s3tc.ctex", "res://.godot/imported/straatmeubilair_sm_bord.png-053f7c9edfa1d9763b7b0df5d70f3db5.etc2.ctex"]
+dest_files=["res://.godot/imported/straatmeubilair_sm_bord.png-053f7c9edfa1d9763b7b0df5d70f3db5.etc2.ctex"]
 
 [params]
 

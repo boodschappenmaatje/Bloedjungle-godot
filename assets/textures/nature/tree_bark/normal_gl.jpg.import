@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bpk7p4o3uv2uc"
-path.s3tc="res://.godot/imported/normal_gl.jpg-4bf16a371e38f05b80cb75b9da901760.s3tc.ctex"
 path.etc2="res://.godot/imported/normal_gl.jpg-4bf16a371e38f05b80cb75b9da901760.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/nature/tree_bark/normal_gl.jpg"
-dest_files=["res://.godot/imported/normal_gl.jpg-4bf16a371e38f05b80cb75b9da901760.s3tc.ctex", "res://.godot/imported/normal_gl.jpg-4bf16a371e38f05b80cb75b9da901760.etc2.ctex"]
+dest_files=["res://.godot/imported/normal_gl.jpg-4bf16a371e38f05b80cb75b9da901760.etc2.ctex"]
 
 [params]
 

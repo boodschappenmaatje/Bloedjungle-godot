@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b3nhhp5gj2uxh"
-path.s3tc="res://.godot/imported/explosie_vuur2.png-5ea1d66549c21d580940c3c5c228e393.s3tc.ctex"
 path.etc2="res://.godot/imported/explosie_vuur2.png-5ea1d66549c21d580940c3c5c228e393.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/fx/explosie_vuur2.png"
-dest_files=["res://.godot/imported/explosie_vuur2.png-5ea1d66549c21d580940c3c5c228e393.s3tc.ctex", "res://.godot/imported/explosie_vuur2.png-5ea1d66549c21d580940c3c5c228e393.etc2.ctex"]
+dest_files=["res://.godot/imported/explosie_vuur2.png-5ea1d66549c21d580940c3c5c228e393.etc2.ctex"]
 
 [params]
 

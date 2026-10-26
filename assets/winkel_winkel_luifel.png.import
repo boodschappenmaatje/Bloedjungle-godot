@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d0o1osve5y41m"
-path.s3tc="res://.godot/imported/winkel_winkel_luifel.png-e2569809f9594244e011d71e6463918b.s3tc.ctex"
 path.etc2="res://.godot/imported/winkel_winkel_luifel.png-e2569809f9594244e011d71e6463918b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/winkel_winkel_luifel.png"
-dest_files=["res://.godot/imported/winkel_winkel_luifel.png-e2569809f9594244e011d71e6463918b.s3tc.ctex", "res://.godot/imported/winkel_winkel_luifel.png-e2569809f9594244e011d71e6463918b.etc2.ctex"]
+dest_files=["res://.godot/imported/winkel_winkel_luifel.png-e2569809f9594244e011d71e6463918b.etc2.ctex"]
 
 [params]
 

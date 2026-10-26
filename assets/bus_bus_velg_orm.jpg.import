@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b2h7fsx5tphvj"
-path.s3tc="res://.godot/imported/bus_bus_velg_orm.jpg-8fe472d5ffa62705387ac2a5c9c563d1.s3tc.ctex"
 path.etc2="res://.godot/imported/bus_bus_velg_orm.jpg-8fe472d5ffa62705387ac2a5c9c563d1.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/bus_bus_velg_orm.jpg"
-dest_files=["res://.godot/imported/bus_bus_velg_orm.jpg-8fe472d5ffa62705387ac2a5c9c563d1.s3tc.ctex", "res://.godot/imported/bus_bus_velg_orm.jpg-8fe472d5ffa62705387ac2a5c9c563d1.etc2.ctex"]
+dest_files=["res://.godot/imported/bus_bus_velg_orm.jpg-8fe472d5ffa62705387ac2a5c9c563d1.etc2.ctex"]
 
 [params]
 

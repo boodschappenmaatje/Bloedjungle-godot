@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dbpg3hkilmouk"
-path.s3tc="res://.godot/imported/straat_straat_keien.png-ace44bc610c81b0cd568c25f4a468fb5.s3tc.ctex"
 path.etc2="res://.godot/imported/straat_straat_keien.png-ace44bc610c81b0cd568c25f4a468fb5.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/straat_straat_keien.png"
-dest_files=["res://.godot/imported/straat_straat_keien.png-ace44bc610c81b0cd568c25f4a468fb5.s3tc.ctex", "res://.godot/imported/straat_straat_keien.png-ace44bc610c81b0cd568c25f4a468fb5.etc2.ctex"]
+dest_files=["res://.godot/imported/straat_straat_keien.png-ace44bc610c81b0cd568c25f4a468fb5.etc2.ctex"]
 
 [params]
 

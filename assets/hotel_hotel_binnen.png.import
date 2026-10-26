@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://m42roe8yh6by"
-path.s3tc="res://.godot/imported/hotel_hotel_binnen.png-3cb365ec5c6f13e56455828478f3d40b.s3tc.ctex"
 path.etc2="res://.godot/imported/hotel_hotel_binnen.png-3cb365ec5c6f13e56455828478f3d40b.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/hotel_hotel_binnen.png"
-dest_files=["res://.godot/imported/hotel_hotel_binnen.png-3cb365ec5c6f13e56455828478f3d40b.s3tc.ctex", "res://.godot/imported/hotel_hotel_binnen.png-3cb365ec5c6f13e56455828478f3d40b.etc2.ctex"]
+dest_files=["res://.godot/imported/hotel_hotel_binnen.png-3cb365ec5c6f13e56455828478f3d40b.etc2.ctex"]
 
 [params]
 

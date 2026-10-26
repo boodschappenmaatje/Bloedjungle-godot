@@ -3,17 +3,16 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cnw4gdgpa8a8t"
-path.s3tc="res://.godot/imported/roughness.jpg-f595c4c85a6f4038d601289a8245d6c3.s3tc.ctex"
 path.etc2="res://.godot/imported/roughness.jpg-f595c4c85a6f4038d601289a8245d6c3.etc2.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"imported_formats": ["etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/nature/rock_material/roughness.jpg"
-dest_files=["res://.godot/imported/roughness.jpg-f595c4c85a6f4038d601289a8245d6c3.s3tc.ctex", "res://.godot/imported/roughness.jpg-f595c4c85a6f4038d601289a8245d6c3.etc2.ctex"]
+dest_files=["res://.godot/imported/roughness.jpg-f595c4c85a6f4038d601289a8245d6c3.etc2.ctex"]
 
 [params]
 

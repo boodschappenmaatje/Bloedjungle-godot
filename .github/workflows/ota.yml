@@ -61,14 +61,20 @@ jobs:
         run: |
           set -euo pipefail
           BASE="$(tr -d '[:space:]' < ota/basis.txt)"
+          # Zelfde map en dezelfde importcache als de basis: een aparte map geeft voor elk model een ander
+          # .scn en dan zit alles (13 MB) in de patch. Hier wisselt alleen de checkout van commit.
+          cd "$RUNNER_TEMP/basis"
+          git checkout --force --detach "$GITHUB_SHA"
           printf '{"base":"%s","commit":"%s","gebouwd":%s}\n' "$BASE" "$GITHUB_SHA" "$(date +%s)" > build_info.json
           "$GODOT_BIN" --headless --editor --path . --import || true
           "$GODOT_BIN" --headless --editor --path . --import
-          mkdir -p out
           # let op: --patches moet VOOR --export-patch staan
           "$GODOT_BIN" --headless --path . --patches "$RUNNER_TEMP/base.pck" --export-patch "iOS" "$RUNNER_TEMP/patch.pck"
           test -s "$RUNNER_TEMP/patch.pck"
           ls -l "$RUNNER_TEMP/patch.pck"
+      - name: Prepare output folder
+        shell: bash
+        run: mkdir -p out
       - name: Write manifest
         shell: bash
         run: |

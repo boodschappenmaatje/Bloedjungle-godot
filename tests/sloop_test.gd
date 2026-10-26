@@ -22,6 +22,7 @@ var base_banners := 0
 func _initialize() -> void:
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
+	load("res://scripts/woonhuis.gd").set("spread_now", true)   # telt granaten/kogels tot het kraken: kettingreactie meteen
 	for k in KINDS:
 		trials.append({"kind": k, "weapon": "pistool"})
 		trials.append({"kind": k, "weapon": "granaat"})

@@ -107,6 +107,20 @@ func _warm_up() -> void:
 	Fx.rocket_launch(warm, at + Vector3(1, 1, 0), 0.0)
 	Fx.wreck(warm, at + Vector3(3, 0, 0))
 	Fx.crater(warm, at + Vector3(0, 0, 2), 1.0, true)  # kraters krijgen hun eigen shader; in de basis zelf komt er geen
+	# wrakken en brandende auto's/bussen (zwart wrakmateriaal, deuk-vorm): vroeger pas bij de eerste ontploffing
+	var k := 0
+	for v in [Auto.make("autowrak", 1), Auto.make("autobrand", 2), Bus.make("buswrak", 3)]:
+		v.position = base + Vector3(-6.0 + k * 4.0, 0, -13.0)
+		warm.add_child(v)
+		v.process_mode = Node.PROCESS_MODE_DISABLED
+		k += 1
+	# puin van elk soort gebouw: rondvliegende brokken (MultiMesh) en een puinhoop
+	var soorten := {}
+	for h in Woonhuis.all:
+		if is_instance_valid(h) and not soorten.has(h.kind):
+			soorten[h.kind] = true
+			h.warm_puin(warm, at + Vector3(-3.0 + soorten.size() * 1.5, 0, 1.5))
+			h.warm_shapes()
 	await _settle(8)
 	warm.queue_free()
 	Game.enemies.clear()

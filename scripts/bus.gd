@@ -556,13 +556,8 @@ func _shockwave(parent: Node, at: Vector3) -> void:
 	tw.parallel().tween_property(m, "albedo_color:a", 0.0, 0.55)
 	tw.tween_callback(ring.queue_free)
 	# stofwolk langs de grond
-	var dust := Fx._spray(60, 1.4, Vector3(0.22, 0.22, 0.22), Color(0.5, 0.45, 0.38, 0.7), 5.0, BLAST_RADIUS * 1.2, 90.0, 0.5, false)
-	dust.one_shot = true
-	dust.explosiveness = 1.0
-	parent.add_child(dust)
-	dust.global_position = Vector3(at.x, 0.3, at.z)
-	dust.emitting = true
-	get_tree().create_timer(2.5).timeout.connect(dust.queue_free)
+	Fx.spray_once(parent, "bus_stof", Vector3(at.x, 0.3, at.z), 5.0, BLAST_RADIUS * 1.2, 1.0, 1.8,
+		func(): return Fx._spray(60, 1.4, Vector3(0.22, 0.22, 0.22), Color(0.5, 0.45, 0.38, 0.7), 0.0, 0.0, 90.0, 0.5, false))
 
 
 ## Verkoold wrak: zwart materiaal op de lak, deuk helemaal, dak ingezakt; blijft staan met een lagere botsvorm.

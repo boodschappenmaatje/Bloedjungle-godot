@@ -77,6 +77,90 @@ static var _parts := {}   # straatset: objectnaam -> {mesh, surfaces: [{mat, a (
 var items: Array = []
 var _roads: MeshInstance3D
 
+# Alleen de TEKENKANT van de verre stad mag tijdelijk verborgen worden.
+# De gebouw-nodes, scripts, colliders, damage- en slooptoestand blijven intact.
+# De marge vangt hoge gebouwen, schaduwen en beweging van de camera op.
+const CITY_CULL_MARGIN := 40.0
+const CITY_CULL_INTERVAL := 0.3
+var _city_footprint := Rect2()
+var _has_city_footprint := false
+var _city_cull_timer := 0.0
+
+
+func _process(delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
+	_city_cull_timer -= delta
+	if _city_cull_timer > 0.0:
+		return
+	_city_cull_timer = CITY_CULL_INTERVAL
+	_refresh_city_render_visibility()
+
+
+func _refresh_city_render_visibility() -> void:
+	# De bestaande diagnose-optie blijft de hoogste prioriteit houden.
+	if GameSettings.get_value("t_stad") == "off":
+		visible = false
+		return
+	# Tijdens edit/build of zonder een betrouwbare camera alles blijven tonen.
+	if GameSettings.get_value("city_cull") != "on" or Game.editing or Game.build_mode \
+			or (Game.state != "prep" and Game.state != "play") or not _has_city_footprint:
+		visible = true
+		return
+	var camera := get_viewport().get_camera_3d()
+	if camera == null:
+		visible = true
+		return
+	var footprint: Variant = _camera_ground_footprint(camera)
+	if footprint == null:
+		visible = true
+		return
+	# Dit verandert NOOIT de physics/process-mode: enkel de visuele hele stadsboom.
+	visible = _city_footprint.grow(CITY_CULL_MARGIN).intersects(footprint, true)
+
+
+## Projecteer de vier schermhoeken op de wereldgrond. Bij een onbruikbare
+## projectie (bijv. camera horizontaal, onder de grond) niet cullen.
+static func _camera_ground_footprint(camera: Camera3D) -> Variant:
+	var size_: Vector2 = camera.get_viewport().get_visible_rect().size
+	if size_.x <= 0.0 or size_.y <= 0.0:
+		return null
+	var points := [Vector2.ZERO, Vector2(size_.x, 0), Vector2(0, size_.y), size_]
+	var box := Rect2()
+	var first := true
+	for uv: Vector2 in points:
+		var origin: Vector3 = camera.project_ray_origin(uv)
+		var direction: Vector3 = camera.project_ray_normal(uv)
+		if direction.y >= -0.02:
+			return null
+		var t: float = -origin.y / direction.y
+		if t < 0.0 or t > 3000.0:
+			return null
+		var hit: Vector3 = origin + direction * t
+		if first:
+			box = Rect2(Vector2(hit.x, hit.z), Vector2.ZERO)
+			first = false
+		else:
+			box = box.expand(Vector2(hit.x, hit.z))
+	return box
+
+
+func _rebuild_city_footprint() -> void:
+	_has_city_footprint = false
+	for d in items:
+		var k: Dictionary = KINDS[d.k]
+		# Cirkel om de voetafdruk blijft conservatief bij draaien/spiegelen.
+		var radius := Vector2(float(k.hx), float(k.hz)).length() + 1.0
+		var corner := Vector2(float(d.x) - radius, float(d.z) - radius)
+		var item_rect := Rect2(corner, Vector2(radius * 2.0, radius * 2.0))
+		if not _has_city_footprint:
+			_city_footprint = item_rect
+			_has_city_footprint = true
+		else:
+			_city_footprint = _city_footprint.merge(item_rect)
+	# Na editor-mutaties direct opnieuw beoordelen, niet op de volgende timer wachten.
+	_city_cull_timer = 0.0
+
 
 # ---------------------------------------------------------------- opbouwen
 
@@ -149,6 +233,7 @@ func _update_rects() -> void:
 	for d in items:
 		if KINDS[d.k].cat != "straat":
 			rects.append(rect_of(d))
+	_rebuild_city_footprint()
 
 
 ## Ligt p binnen margin meter van een weg of gebouw? De jungle laat die plekken vrij.

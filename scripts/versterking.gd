@@ -1,7 +1,7 @@
 class_name Versterking
 extends Node3D
 ## Killstreak VERSTERKING: de legertruck rijdt hard het veld op, stopt bij de speler, de laadklep gaat open en vier soldaten springen
-## eruit en vechten TRUCK_STAY seconden mee. Daarna lopen ze terug, de truck rijdt weg. Zit de speler dan zelf in de truck, dan blijft hij staan.
+## eruit en blijven bij de speler. De truck rijdt direct daarna weg (zit de speler zelf in de truck, dan blijft hij staan).
 ## De soldaten (Ally met helper = true) tellen niet mee voor je streak (Game.hit_src = "soldaat" via hun kogels).
 
 const TRUCK := preload("res://scenes/vrachtwagen.tscn")
@@ -70,28 +70,8 @@ func _physics_process(delta: float) -> void:
 			if _t > 0.9 and _spawned < Streak.TRUCK_SOLDIERS and fmod(_t - 0.9, 0.5) < delta:
 				_drop_soldier()
 			if _spawned >= Streak.TRUCK_SOLDIERS and _t > 0.9 + Streak.TRUCK_SOLDIERS * 0.5 + 0.6:
-				_state = "vechten"
-				_t = 0.0
-		"vechten":
-			if _t >= Streak.TRUCK_STAY:
-				_state = "terug"
-				_t = 0.0
-				Game.banner.emit("VERSTERKING VERTREKT", "", 1.2)
-				for a in crew:
-					if is_instance_valid(a):
-						a.recall = truck.rear_point()
-		"terug":
-			var left := 0
-			for a in crew.duplicate():
-				if not is_instance_valid(a):
-					crew.erase(a)
-					continue
-				if a.global_position.distance_to(truck.rear_point()) < 2.2 or _t > 9.0:
-					_free_ally(a)
-					crew.erase(a)
-				else:
-					left += 1
-			if left == 0:
+				# de soldaten blijven bij de speler (helper volgt hem altijd); de truck rijdt weg
+				crew.clear()
 				if truck.driven:
 					queue_free()      # de speler zit zelf in de truck: hij blijft
 					return

@@ -7,6 +7,7 @@ var _reload: ActionBtn
 var _sprint: ActionBtn
 var _grenade: ActionBtn
 var _roll: ActionBtn
+var _air2: ActionBtn         # kiezer: de andere beloning die klaarstaat (tik om te wisselen)
 var _air: ActionBtn          # luchtsteun (killstreak): staat naast GEBRUIK en verschijnt alleen als er een beloning klaarstaat
 var _state := ""
 
@@ -35,6 +36,10 @@ func _ready() -> void:
 	_sprint = _make("sprint", "SPRINT", func(): _player_call("toggle_sprint"))
 	_grenade = _make("granaat", "GEBRUIK", _use_equipment)
 	_roll = _make("rol", "ROL", func(): _player_call("request_dodge"))
+	_air2 = _make("lucht2", "WISSEL", func():
+		Game.streak_sel = String(_air2.reward)
+		Sfx.play("click")
+		Game.changed.emit())
 	_air = _make("lucht", "STEUN", func(): pass)  # de aanraking loopt via _input (tik of slepen)
 	resized.connect(_layout)
 	_layout()
@@ -108,9 +113,7 @@ func _air_input(event: InputEvent) -> void:
 
 
 func _air_id() -> String:
-	if Game.streak_test():
-		Game.streak_fill()
-	return String(Game.streak_bank.back()) if not Game.streak_bank.is_empty() else ""
+	return Game.streak_current()
 
 
 func _begin_air(finger: int, at: Vector2) -> void:
@@ -272,8 +275,9 @@ func _layout() -> void:
 	_roll.position = Vector2(x1, y1)
 	_grenade.position = Vector2(x0, y0)
 	_reload.position = Vector2(x1, y0)
+	_air2.position = Vector2(x1, y0 - g)   # rechts van de luchtsteun-knop
 	_air.position = Vector2(x0, y0 - g)   # boven GEBRUIK: links ervan staat de wapenstrip, erboven de uitrustingskiezer
-	for b in [_reload, _sprint, _grenade, _roll, _air]:
+	for b in [_reload, _sprint, _grenade, _roll, _air, _air2]:
 		b.size = ActionBtn.SIZE
 
 
@@ -291,10 +295,17 @@ func _process(_delta: float) -> void:
 		_update_air()
 	var rid := _air_id()
 	_air.visible = rid != "" and not p.driving and not p.dead
+	var others: Array = Game.streak_others()
+	_air2.visible = _air.visible and not others.is_empty() and air_finger == -2
+	if _air2.visible:
+		_air2.reward = others[0]
+		_air2.set_caption(String(Streak.reward(others[0]).kort))
+		_air2.queue_redraw()
 	if _air.visible:
 		_air.reward = rid
 		_air.set_caption(String(Streak.reward(rid).kort))
-		_air.badge = "∞" if Game.streak_test() else "×%d" % Game.streak_bank.size() if Game.streak_bank.size() > 1 else ""
+		var n := Game.streak_bank.count(rid)
+		_air.badge = "∞" if Game.streak_test() else "×%d" % n if n > 1 else ""
 		_air.queue_redraw()  # de gloeiende ring pulseert
 	var w: Dictionary = Game.wstat(p.weapon)
 	var reloading: bool = p.reload_t > 0.0

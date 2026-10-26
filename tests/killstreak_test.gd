@@ -202,7 +202,7 @@ func _run() -> void:
 	_check(game.streak == 0 and game.streak_bank.has("truck"), "einde golf: teller 0, maar wat klaarstaat blijft")
 
 	# 8. de luchtsteun-knop overlapt geen andere knop op liggende en staande iPhones
-	game.streak_bank = ["napalm"]
+	game.streak_bank = ["truck", "napalm"]   # twee beloningen: ook de kiezer mag niets overlappen
 	game.changed.emit()
 	for size in [Vector2i(932, 430), Vector2i(844, 390), Vector2i(430, 932)]:
 		root.size = size
@@ -223,19 +223,49 @@ func _run() -> void:
 		var r: Rect2 = a2.get_global_rect()
 		_check(Rect2(Vector2.ZERO, view).encloses(r), "%s: luchtsteun-knop valt buiten beeld %s" % [size, r])
 		for b in btns:
+			if b.get("kind") == "lucht2":
+				_check(b.is_visible_in_tree() and Rect2(Vector2.ZERO, view).encloses(b.get_global_rect()), "%s: kiezer niet in beeld" % size)
+				for o in btns:
+					if o != b and o.get_global_rect().intersects(b.get_global_rect()):
+						_check(false, "%s: kiezer overlapt %s" % [size, o.get("kind") if o.get("kind") != null else o.name])
+		for b in btns:
 			if b != a2 and b.get_global_rect().intersects(r):
 				_check(false, "%s: luchtsteun-knop overlapt %s %s" % [size, b.get("kind") if b.get("kind") != null else b.name, b.get_global_rect()])
 	game.streak_bank.clear()
 
-	# 8. testschakelaar: alles staat klaar en raakt niet op
+	# 9. kiezen: met twee beloningen kies je welke de knop gebruikt
+	game.streak_bank.clear()
+	game.streak_sel = ""
+	game.streak_bank.append("truck")
+	game.streak_bank.append("napalm")
+	_check(game.streak_current() == "napalm", "standaard de nieuwste (%s)" % game.streak_current())
+	_check(game.streak_others() == ["truck"], "kiezer toont de andere beloning (%s)" % str(game.streak_others()))
+	game.streak_sel = "truck"
+	_check(game.streak_current() == "truck", "keuze truck wordt gevolgd")
+	await _frames(6)
+	var chooser: Control = null
+	for b in get_nodes_in_group("hud_button"):
+		if b is Button and b.get("kind") == "lucht2":
+			chooser = b
+	_check(chooser != null and chooser.is_visible_in_tree() and chooser.get("reward") == "napalm", "de kiezer moet de andere beloning (napalm) tonen")
+	var used: String = game.streak_take()
+	_check(used == "truck" and game.streak_bank == ["napalm"], "gekozen beloning wordt gebruikt en de andere blijft (%s, %s)" % [used, str(game.streak_bank)])
+	_check(game.streak_current() == "napalm" and game.streak_others().is_empty(), "daarna blijft napalm over zonder kiezer")
+	game.streak_bank.clear()
+
+	# 10. testschakelaar: alles staat klaar en raakt niet op
 	var old_t: String = GameSettings.get_value("t_streak")
 	GameSettings.set_value("t_streak", "on")
 	var seen := {}
-	for i in 6:
+	for i in 4:
 		seen[game.streak_take()] = true
-	_check(seen.has("truck") and seen.has("napalm"), "testmodus: beide beloningen moeten beschikbaar zijn (%s)" % str(seen.keys()))
 	_check(game.streak_bank.size() == 2, "testmodus: de bank mag niet leeg raken (%d)" % game.streak_bank.size())
+	game.streak_sel = "truck"
+	_check(game.streak_take() == "truck", "testmodus: gekozen beloning wordt gebruikt")
+	game.streak_sel = "napalm"
+	_check(game.streak_take() == "napalm", "testmodus: napalm kiesbaar")
 	GameSettings.set_value("t_streak", old_t)
+	game.streak_sel = ""
 	game.streak_bank.clear()
 
 	print("TEST OK" if failures.is_empty() else "TEST MISLUKT")

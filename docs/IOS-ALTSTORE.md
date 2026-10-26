@@ -2,7 +2,7 @@
 
 ## Reproduceerbare CI-build
 
-`.github/workflows/ios.yml` gebruikt Godot 4.7.0 exporttemplates op `macos-14`, importeert het project, exporteert de iOS Xcode-projectbestanden en bouwt arm64 met Xcode. De workflow verpakt de app zonder Apple-ondertekening als IPA-artifact. De IPA is bedoeld voor sideloading en AltStore Classic ondertekent hem tijdens installatie. De workflow heeft geen secrets nodig. Hij draait handmatig via Actions en bij wijzigingen aan de game op `main` of deze featurebranch.
+`.github/workflows/ios.yml` gebruikt Godot **4.7.2** (editor en exporttemplates, vastgepind) op `macos-26` met Xcode 26, importeert het project, exporteert de iOS Xcode-projectbestanden en bouwt arm64 met Xcode. De workflow verpakt de app zonder Apple-ondertekening als IPA-artifact. De IPA is bedoeld voor sideloading en AltStore Classic ondertekent hem tijdens installatie. De workflow heeft geen secrets nodig. Hij draait handmatig via Actions en bij wijzigingen aan de game op `main` of deze featurebranch.
 
 Godot meet FPS en frametime, renderstatistieken en door Godot gerapporteerd videogeheugen. CPU- en GPU-tijd zijn geen betrouwbare Godot-monitors; gebruik Instruments (Time Profiler, Metal System Trace en Allocations) op een echte iPhone voor die metingen. iOS kan ProMotion beperken door Low Power Mode, thermische toestand en systeembeleid. Een keuze van 90/120 garandeert die framerate niet.
 
@@ -24,4 +24,15 @@ Voor toekomstige resource-only patches is het beoogde manifest versie, minimale 
 
 ## Validatie en beperkingen
 
-De CI controleert import, headless startup, aanwezigheid van het Xcode-project, Xcode-build en IPA-inhoud. Lokale regressietests staan in `tests/`. Een macOS runner is vereist voor iOS-export/Xcode; Linux kan geen equivalent leveren. De echte IPA-artifact ontstaat pas wanneer de workflow op GitHub uitgevoerd is. Installatie, touchscreen en FPS moeten daarna nog op een echte iPhone worden gecontroleerd.
+De CI controleert import, headless startup, aanwezigheid van het Xcode-project, Xcode-build en IPA-inhoud. Lokale regressietests staan in `tests/`. Een macOS runner is vereist voor iOS-export/Xcode; Linux kan geen equivalent leveren. De workflow is op GitHub geslaagd (run #12 en latere runs op deze branch) en levert de IPA als artifact `bloedjungle-ios-unsigned-<commit>` (ongeveer 110 MB, bewaard 30 dagen).
+
+### Wat aan de IPA is gecontroleerd (uit het artifact van run #12)
+- Geldig ZIP/IPA-bestand met `Payload/Bloedjungle-ios.app`; **niet ondertekend** (geen `_CodeSignature` of `embedded.mobileprovision`), zoals AltStore wil.
+- `CFBundleIdentifier` `nl.boodschappenmaatje.bloedjungle`, weergavenaam Bloedjungle, versie 1.0 (1), minimaal iOS 15.0, arm64, gebouwd met de iPhoneOS 26.5 SDK (Xcode 26.6).
+- Alleen liggend (landscape) en `CADisableMinimumFrameDurationOnPhone` staat aan, zodat iOS meer dan 60 Hz mag tonen.
+- Het app-icoon zit erin. Het uitvoerbestand is 86 MB; `Bloedjungle-ios.pck` is 137 MB en bevat de volledige game (scènes, scripts, modellen, shaders, effecten).
+
+### Wat nog niet is gecontroleerd
+- Installatie via AltStore, opstarten, touchbediening en echte FPS op een iPhone (dit moet op het toestel).
+- Of iOS 90 of 120 Hz echt toestaat: dat hangt af van Low Power Mode, temperatuur en het toestel. Het spel zet zelf geen grens (`Engine.max_fps = 0`).
+- Het automatisch laden van PCK-updates is niet gebouwd (zie Updatefundament).

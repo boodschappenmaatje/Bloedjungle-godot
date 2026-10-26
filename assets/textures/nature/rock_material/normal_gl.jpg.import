@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://dp08wy6ft7uig"
+path.s3tc="res://.godot/imported/normal_gl.jpg-75ba3f7fc619a6a6c0d467d0b33df7b1.s3tc.ctex"
 path.etc2="res://.godot/imported/normal_gl.jpg-75ba3f7fc619a6a6c0d467d0b33df7b1.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/textures/nature/rock_material/normal_gl.jpg"
-dest_files=["res://.godot/imported/normal_gl.jpg-75ba3f7fc619a6a6c0d467d0b33df7b1.etc2.ctex"]
+dest_files=["res://.godot/imported/normal_gl.jpg-75ba3f7fc619a6a6c0d467d0b33df7b1.s3tc.ctex", "res://.godot/imported/normal_gl.jpg-75ba3f7fc619a6a6c0d467d0b33df7b1.etc2.ctex"]
 
 [params]
 

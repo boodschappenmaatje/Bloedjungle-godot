@@ -3,16 +3,17 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://6an85a4ol3u0"
+path.s3tc="res://.godot/imported/straaljager_jet_staal_orm.jpg-fad3f42458805a17a17170171186df40.s3tc.ctex"
 path.etc2="res://.godot/imported/straaljager_jet_staal_orm.jpg-fad3f42458805a17a17170171186df40.etc2.ctex"
 metadata={
-"imported_formats": ["etc2_astc"],
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/straaljager_jet_staal_orm.jpg"
-dest_files=["res://.godot/imported/straaljager_jet_staal_orm.jpg-fad3f42458805a17a17170171186df40.etc2.ctex"]
+dest_files=["res://.godot/imported/straaljager_jet_staal_orm.jpg-fad3f42458805a17a17170171186df40.s3tc.ctex", "res://.godot/imported/straaljager_jet_staal_orm.jpg-fad3f42458805a17a17170171186df40.etc2.ctex"]
 
 [params]
 

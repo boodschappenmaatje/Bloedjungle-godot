@@ -1,0 +1,148 @@
+name: iOS unsigned IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feature/native-ios-complete]
+    paths-ignore: ["docs/**", "*.md"]
+
+permissions:
+  contents: read
+
+jobs:
+  export:
+    runs-on: macos-26
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Write build info (base commit for over-the-air updates)
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="$(tr -d '[:space:]' < ota/basis.txt)"
+          test -n "$BASE"
+          printf '{"base":"%s","commit":"%s","gebouwd":%s}\n' "$BASE" "$GITHUB_SHA" "$(date +%s)" > build_info.json
+          cat build_info.json
+      - name: Install pinned Godot 4.7.2 and export templates
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=4.7.2
+          RELEASE="https://github.com/godotengine/godot/releases/download/${VERSION}-stable"
+          echo "Disk space before downloads:"
+          df -h "$RUNNER_TEMP" "$GITHUB_WORKSPACE"
+          AVAILABLE_KB="$(df -Pk "$RUNNER_TEMP" | awk 'NR==2 {print $4}')"
+          if (( AVAILABLE_KB < 8000000 )); then echo "Need at least 8 GB free for templates, import and Xcode build" >&2; exit 1; fi
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 900 "$RELEASE/Godot_v${VERSION}-stable_macos.universal.zip" --output "$RUNNER_TEMP/godot.zip"
+          test -s "$RUNNER_TEMP/godot.zip"
+          unzip -tq "$RUNNER_TEMP/godot.zip"
+          mkdir -p "$RUNNER_TEMP/godot"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          GODOT="$(find "$RUNNER_TEMP/godot" -name Godot -type f -print -quit)"
+          test -n "$GODOT"
+          chmod +x "$GODOT"
+          "$GODOT" --version | grep -F "${VERSION}.stable"
+          echo "GODOT_BIN=$GODOT" >> "$GITHUB_ENV"
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 1800 "$RELEASE/Godot_v${VERSION}-stable_export_templates.tpz" --output "$RUNNER_TEMP/templates.tpz"
+          test -s "$RUNNER_TEMP/templates.tpz"
+          unzip -tq "$RUNNER_TEMP/templates.tpz"
+          mkdir -p "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable"
+          mkdir -p "$RUNNER_TEMP/templates"
+          unzip -q "$RUNNER_TEMP/templates.tpz" -d "$RUNNER_TEMP/templates"
+          cp -R "$RUNNER_TEMP/templates/templates/." "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable/"
+          test -s "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable/ios.zip"
+          xcodebuild -version
+      # On a pristine checkout Godot initially parses autoloads before imported
+      # GLB scenes exist. First pass builds .godot/imported; only the second
+      # pass is used for strict parser validation.
+      - name: Prime Godot asset import cache
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/first-import.log"
+          test -d .godot/imported
+          echo "Initial asset import finished. Strict validation follows on a fresh Godot process."
+      - name: Import and validate project
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/import.log"
+          "$GODOT_BIN" --headless --path . --quit-after 10 2>&1 | tee "$RUNNER_TEMP/startup.log"
+          if grep -E '(^| )(SCRIPT ERROR|Parse Error|Failed loading resource)' "$RUNNER_TEMP/import.log" "$RUNNER_TEMP/startup.log"; then
+            echo "Godot import/startup logged errors; see the retained diagnostics artifact" >&2
+            exit 1
+          fi
+          # Godot 4.7.2 reports a known renderer shutdown leak after headless startup.
+          # Keep it visible in the log while failing on all other engine errors.
+          unexpected="$(grep -E '(^| )ERROR:' "$RUNNER_TEMP/import.log" "$RUNNER_TEMP/startup.log" | grep -Fv 'resources still in use at exit' || true)"
+          if [[ -n "$unexpected" ]]; then printf '%s\n' "$unexpected"; exit 1; fi
+      - name: Retain Godot diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: godot-diagnostics-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/first-import.log
+            ${{ runner.temp }}/import.log
+            ${{ runner.temp }}/startup.log
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Export iOS project
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Godot requires a 10-character team ID even for an unsigned Xcode
+          # project. Use a dummy value only in this ephemeral CI checkout.
+          # The actual iOS build is unsigned (CODE_SIGNING_ALLOWED=NO);
+          # AltStore performs signing on the user's device later.
+          python3 - <<'PY'
+          from pathlib import Path
+          preset = Path("export_presets.cfg")
+          source = preset.read_text()
+          needle = 'application/app_store_team_id=""'
+          assert source.count(needle) == 1, "Expected exactly one blank iOS Team ID"
+          source = source.replace(needle, 'application/app_store_team_id="AAAAAAAAAA"')
+          # Godot 4.7 normally archives/signs as part of --export-release.
+          # Only generate the Xcode project; our next step builds unsigned.
+          if 'application/export_project_only=' in source:
+              import re
+              source = re.sub(r'application/export_project_only=(true|false)', 'application/export_project_only=true', source)
+          else:
+              source += '\napplication/export_project_only=true\n'
+          preset.write_text(source)
+          PY
+          mkdir -p build
+          "$GODOT_BIN" --headless --path . --export-release "iOS" build/Bloedjungle-ios.zip
+          # When application/export_project_only is true, Godot 4.7
+          # writes an Xcode project directly under build/, not a ZIP.
+          # Handle either layout without relying on an assumed archive.
+          if [[ -s build/Bloedjungle-ios.zip ]]; then
+            unzip -tq build/Bloedjungle-ios.zip
+            mkdir -p build/ios-project
+            unzip -q build/Bloedjungle-ios.zip -d build/ios-project
+          fi
+          XCODEPROJ="$(find build -name '*.xcodeproj' -type d -print -quit)"
+          test -n "$XCODEPROJ"
+          test -s "$XCODEPROJ/project.pbxproj"
+          xcodebuild -list -project "$XCODEPROJ" -json | tee build/xcode-list.json
+          SCHEME="$(/usr/bin/python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["project"]["schemes"][0])' build/xcode-list.json)"
+          test -n "$SCHEME"
+          echo "Building $XCODEPROJ with scheme $SCHEME"
+          xcodebuild -project "$XCODEPROJ" -scheme "$SCHEME" -configuration Release -sdk iphoneos -derivedDataPath build/derived CODE_SIGNING_ALLOWED=NO build
+          APP="$(find build/derived/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -type d -print -quit)"
+          test -n "$APP"
+          /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
+          mkdir -p build/Payload
+          cp -R "$APP" build/Payload/
+          (cd build && /usr/bin/zip -qry Bloedjungle.ipa Payload)
+          test -s build/Bloedjungle.ipa
+          unzip -tq build/Bloedjungle.ipa
+          unzip -l build/Bloedjungle.ipa | grep -E 'Payload/[^/]+\.app/Info.plist'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: bloedjungle-ios-unsigned-${{ github.sha }}
+          path: build/Bloedjungle.ipa
+          if-no-files-found: error
+          retention-days: 30

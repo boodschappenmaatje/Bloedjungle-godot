@@ -11,7 +11,7 @@ const ROWS := [
 	["wind", "Bomen bewegen", [["off", "Uit"], ["on", "Aan"]]],
 	["treeshadow", "Boomschaduw", [["fake", "Vast"], ["real", "Echt"], ["off", "Uit"]]],
 	["buildshadow", "Gebouwschaduw", [["low", "Laag"], ["medium", "Midden"], ["high", "Hoog"]]],
-	["hz", "Beeldsnelheid", [["60", "60 fps"], ["120", "120 fps"]]],
+	["hz", "Beeldsnelheid", [["30", "30 fps"], ["60", "60 fps"], ["90", "90 fps"], ["120", "120 fps"]]],
 	["fps", "FPS-teller", [["off", "Uit"], ["on", "Aan"]]],
 	["t_sun", "Test: zon-schaduw", [["on", "Aan"], ["off", "Uit"]]],
 	["t_jungle", "Test: jungle (bomen, gras)", [["on", "Aan"], ["off", "Uit"]]],
@@ -25,6 +25,8 @@ const NOTES := {
 	"low": "Laag: geen schaduwen en een lichtere afbeelding, voor oudere telefoons.",
 	"high": "Hoog: schaduwen dichtbij en minder gras, blijft vloeiend op 60 beeld per seconde.",
 	"120": "120 fps: voor ProMotion-schermen (iPhone Pro, iPad Pro). Kost meer batterij; op een gewoon scherm blijft het 60.",
+	"30": "30 fps: lager energieverbruik.",
+	"90": "90 fps: werkt alleen als het scherm deze verversingssnelheid ondersteunt.",
 	"low_b": "Gebouwschaduw laag: gebouwen werpen geen schaduw. Haalt 60 fps (geschat, nog niet op een iPhone gemeten).",
 	"medium_b": "Gebouwschaduw midden: één schaduw per heel gebouw, ziet er hetzelfde uit als hoog. Haalt 60 fps (geschat, nog niet op een iPhone gemeten).",
 	"high_b": "Gebouwschaduw hoog: elk stukje van een gebouw werpt zelf schaduw. Het zwaarst; in de stad kan het onder 60 fps komen.",
@@ -72,6 +74,8 @@ func _ready() -> void:
 	_build_menu()
 	_build_pause()
 	_build_settings()
+	# een nieuwe update meldt zich vanzelf, maar alleen in het hoofdmenu (nooit midden in het spel); de speler bevestigt zelf
+	Updater.update_beschikbaar.connect(func(_m): if Game.state == "menu": UpdatePanel.open(self))
 	_build_gear()
 	_build_wheel()
 	_build_over()
@@ -251,6 +255,7 @@ func _build_menu() -> void:
 	row.add_child(_button("Uitrusting", "secondary", func(): _open_gear("menu")))
 	row.add_child(_button("Instellingen", "secondary", func(): _open_settings("menu")))
 	row.add_child(_button("Stadseditor", "secondary", _open_stad_editor))
+	row.add_child(_button("Updates", "secondary", func(): UpdatePanel.open(self)))
 	left.add_child(row)
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 12)
@@ -326,6 +331,7 @@ func _build_pause() -> void:
 	v.add_child(_mute_btn)
 	v.add_child(_button("Instellingen", "secondary", func(): _open_settings("pause")))
 	v.add_child(_button("Stadseditor", "secondary", _open_stad_editor))
+	v.add_child(_button("Updates", "secondary", func(): UpdatePanel.open(self)))
 	v.add_child(_button("Stoppen", "secondary", func():
 		get_tree().paused = false
 		_show("")

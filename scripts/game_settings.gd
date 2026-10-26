@@ -31,12 +31,13 @@ static var observed_peak := 60.0
 ## Meldt het scherm zijn snelheid niet, dan gaan we uit van 60 tot het spel echt boven de ~90 fps komt.
 ## (Eerder gold dan 120 als doel; op een scherm dat 60 haalt zette de resolutieregelaar het beeld daardoor voor altijd op 50%.)
 static func target_fps() -> float:
-	if get_value("hz") != "120":
-		return 60.0
+	var requested := clampf(float(get_value("hz")), 30.0, 120.0)
 	var r := DisplayServer.screen_get_refresh_rate()
 	if r > 0.0:
-		return clampf(r, 60.0, 120.0)
-	return 120.0 if observed_peak > 90.0 else 60.0
+		return minf(requested, clampf(r, 30.0, 120.0))
+	if requested <= 60.0:
+		return requested
+	return requested if observed_peak >= requested * 0.75 else 60.0
 
 
 ## Geen eigen beeldsnelheidsgrens: het scherm (vsync) bepaalt het tempo. Een eigen grens van 60 naast vsync blijft telkens
@@ -44,6 +45,12 @@ static func target_fps() -> float:
 ## processor bijna niets deed (22 okt, zonder grens: 60 fps; daarna met grens: 29-31 fps).
 static func apply_hz() -> void:
 	Engine.max_fps = 0
+
+
+## Standaard beeldsnelheid: op iPhone en iPad 120 (het doel volgt het scherm en de gemeten snelheid, zie target_fps; een scherm
+## dat 60 Hz is blijft 60). Elders 60. Wie zelf een keuze maakt in Instellingen houdt die.
+static func default_hz(os_name: String) -> String:
+	return "120" if os_name == "iOS" else "60"
 
 
 static func prep_time() -> float:
@@ -55,6 +62,7 @@ static func _load() -> void:
 		return
 	_loaded = true
 	values = DEFAULTS.duplicate()
+	values["hz"] = default_hz(OS.get_name())  # een opgeslagen keuze hieronder gaat altijd voor
 	var cf := ConfigFile.new()
 	if cf.load(PATH) == OK:
 		for k in DEFAULTS:

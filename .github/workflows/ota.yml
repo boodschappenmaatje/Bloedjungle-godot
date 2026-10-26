@@ -1,0 +1,104 @@
+name: OTA update patch
+
+# Bouwt na elke wijziging een patch (.pck) met alleen de bestanden die sinds de basis-commit (ota/basis.txt) zijn gewijzigd of toegevoegd,
+# en zet die met een manifest in de GitHub-release "updates". De app (scripts/updater.gd) haalt ze op met een alleen-lezen token
+# dat de gebruiker zelf invult. Er zijn geen extra secrets nodig: de ingebouwde GITHUB_TOKEN publiceert de release.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, feature/native-ios-complete]
+    paths-ignore: ["docs/**", "*.md"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ota-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: true
+      - name: Install Godot 4.7.2 (Linux editor, same version as the iOS build)
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=4.7.2
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 900 \
+            "https://github.com/godotengine/godot/releases/download/${VERSION}-stable/Godot_v${VERSION}-stable_linux.x86_64.zip" --output "$RUNNER_TEMP/godot.zip"
+          unzip -tq "$RUNNER_TEMP/godot.zip"
+          mkdir -p "$RUNNER_TEMP/godot"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          GODOT="$(find "$RUNNER_TEMP/godot" -name 'Godot_v*' -type f -print -quit)"
+          chmod +x "$GODOT"
+          "$GODOT" --version | grep -F "${VERSION}.stable"
+          echo "GODOT_BIN=$GODOT" >> "$GITHUB_ENV"
+      - name: Export the base pack (the commit the installed IPA was built from)
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="$(tr -d '[:space:]' < ota/basis.txt)"
+          test -n "$BASE"
+          git cat-file -e "$BASE^{commit}"
+          git worktree add "$RUNNER_TEMP/basis" "$BASE"
+          # dezelfde exportinstellingen als nu, zodat alleen echte inhoudsverschillen in de patch komen
+          cp export_presets.cfg "$RUNNER_TEMP/basis/export_presets.cfg"
+          cd "$RUNNER_TEMP/basis"
+          "$GODOT_BIN" --headless --editor --path . --import || true
+          "$GODOT_BIN" --headless --editor --path . --import
+          "$GODOT_BIN" --headless --path . --export-pack "iOS" "$RUNNER_TEMP/base.pck"
+          test -s "$RUNNER_TEMP/base.pck"
+          ls -l "$RUNNER_TEMP/base.pck"
+      - name: Export the patch (only files that differ from the base)
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="$(tr -d '[:space:]' < ota/basis.txt)"
+          printf '{"base":"%s","commit":"%s","gebouwd":%s}\n' "$BASE" "$GITHUB_SHA" "$(date +%s)" > build_info.json
+          "$GODOT_BIN" --headless --editor --path . --import || true
+          "$GODOT_BIN" --headless --editor --path . --import
+          mkdir -p out
+          # let op: --patches moet VOOR --export-patch staan
+          "$GODOT_BIN" --headless --path . --patches "$RUNNER_TEMP/base.pck" --export-patch "iOS" "$RUNNER_TEMP/patch.pck"
+          test -s "$RUNNER_TEMP/patch.pck"
+          ls -l "$RUNNER_TEMP/patch.pck"
+      - name: Write manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="$(tr -d '[:space:]' < ota/basis.txt)"
+          VERSIE="$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}"
+          NAME="patch-${VERSIE}.pck"
+          cp "$RUNNER_TEMP/patch.pck" "out/$NAME"
+          python3 - "$NAME" "$VERSIE" "$BASE" <<'PY'
+          import hashlib, json, os, sys, time
+          name, versie, base = sys.argv[1:4]
+          path = os.path.join("out", name)
+          data = open(path, "rb").read()
+          m = {"schema": 1, "versie": versie, "commit": os.environ["GITHUB_SHA"], "base": base, "gebouwd": int(time.time()),
+               "pck": {"naam": name, "grootte": len(data), "sha256": hashlib.sha256(data).hexdigest()}}
+          json.dump(m, open("out/manifest.json", "w"), indent=1)
+          print(json.dumps(m, indent=1))
+          PY
+          echo "PATCH_NAME=$NAME" >> "$GITHUB_ENV"
+      - name: Publish to the "updates" release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          gh release view updates >/dev/null 2>&1 || gh release create updates --title "OTA updates" --notes "Automatisch gebouwd door .github/workflows/ota.yml. Niet handmatig wijzigen." --prerelease --target "$GITHUB_SHA"
+          # eerst het patchbestand, dan pas het manifest: de app ziet nooit een manifest zonder bestand
+          gh release upload updates "out/$PATCH_NAME" --clobber
+          gh release upload updates out/manifest.json --clobber
+          for n in $(gh release view updates --json assets -q '.assets[].name'); do
+            case "$n" in manifest.json|"$PATCH_NAME") ;; *) gh release delete-asset updates "$n" -y ;; esac
+          done
+          gh release view updates --json assets -q '.assets[] | "\(.name)  \(.size) bytes"'

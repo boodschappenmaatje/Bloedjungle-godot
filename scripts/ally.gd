@@ -7,6 +7,7 @@ const POSTS := [Vector2(-5, -12.7), Vector2(5, -12.7), Vector2(-5, 12.7), Vector
 	Vector2(-12.7, 5), Vector2(12.7, 5), Vector2(-8.5, -12.7), Vector2(8.5, -12.7), Vector2(-8.5, 12.7), Vector2(8.5, 12.7)]
 const SPEED := 4.6
 const RANGE := 16.0
+const TeamOrderRules = preload("res://scripts/team_command_controller.gd")
 
 var model: SoldierModel
 var face := 0.0
@@ -22,6 +23,17 @@ var guard := false   # wacht van de basis (Patrouille): loopt in de pauze heen e
 var _leg := 0        # welk eindpunt van de wandellijn hij nu heeft
 var _wait_t := -1.0  # blijft even staan op het eindpunt (en kijkt rond)
 var truck: Node = null  # vrachtwagen die hem vervoert; die bepaalt dan waar hij is en wat hij doet
+var command := "follow"
+var command_target := Vector3.ZERO
+var command_enemy: Node3D
+var command_hold_position := Vector3.ZERO
+
+func set_command(order: String, target: Vector3, enemy: Node3D = null) -> void:
+	if helper or guard or truck != null: return
+	if order == "hold": command_hold_position = global_position
+	command = order
+	command_target = target
+	command_enemy = enemy if is_instance_valid(enemy) else null
 
 
 var _stuck_t := 0.0
@@ -67,7 +79,11 @@ func _physics_process(delta: float) -> void:
 		model.set_shoot_pose(false, "thompson", 0.5)
 		return
 	fire_t -= delta
-	var target: Node3D = _nearest_enemy()
+	if command_enemy != null and (not is_instance_valid(command_enemy) or command_enemy.get("dead") == true):
+		command_enemy = null
+		if Game.squad_order == "attack" and (not is_instance_valid(Game.squad_target_enemy) or Game.squad_target_enemy.get("dead") == true):
+			Game.squad_target_enemy = null
+	var target: Node3D = command_enemy if is_instance_valid(command_enemy) else _nearest_enemy()
 	var goal := _goal()
 	var to_goal := Vector2(goal.x - global_position.x, goal.z - global_position.z)
 	var want := Vector3.ZERO
@@ -130,7 +146,12 @@ func _goal() -> Vector3:
 			var q: Vector2 = POSTS[(idx * 4 + 1) % POSTS.size()] * (Data.COMPOUND / 14.0)
 			return Vector3(q.x, 0, q.y)
 		return Patrouille.line(idx)[_leg % 2]
-	if Game.troop_mode == "hold" and not helper:
+	if not helper and command in ["hold", "defend", "move", "attack"]:
+		var enemy_valid := is_instance_valid(command_enemy)
+		var enemy_position := command_enemy.global_position if enemy_valid else Vector3.ZERO
+		var follow_position := Game.player.global_position + Vector3(cos(float(idx) * 2.4 + 0.6), 0.0, sin(float(idx) * 2.4 + 0.6)) * 2.8
+		return TeamOrderRules.soldier_goal(command, command_target, enemy_position, enemy_valid, idx, command_hold_position, follow_position)
+	if Game.troop_mode == "hold" and not helper and command == "follow":
 		var p: Vector2 = POSTS[idx % POSTS.size()] * (Data.COMPOUND / 14.0)
 		return Vector3(p.x, 0, p.y)
 	var a := float(idx) * 2.4 + 0.6

@@ -43,6 +43,9 @@ var ecam := Vector3(6.0, -108.0, 1.0)  # editorcamera recht van boven: x, z en z
 var buildings: Array = []
 var allies: Array = []
 var troop_mode := "follow"  # follow of hold
+var squad_order := "follow" # follow, defend, attack, move
+var squad_target := Vector3.ZERO
+var squad_target_enemy: Node3D
 
 # Aanvalsrichting (N/O/Z/W) -> seconden dat de rand nog oplicht; gevuld door vijanden die schieten of steken.
 var attack := {"N": 0.0, "O": 0.0, "Z": 0.0, "W": 0.0}
@@ -109,6 +112,10 @@ var fire := false
 
 
 func reset() -> void:
+	if is_inside_tree():
+		var team_commands := get_tree().get_first_node_in_group("team_commands")
+		if team_commands != null:
+			team_commands.cancel_input()
 	state = "prep"
 	wave = 0
 	rocket_seen = false
@@ -140,6 +147,9 @@ func reset() -> void:
 	buildings.clear()
 	allies.clear()
 	troop_mode = "follow"
+	squad_order = "follow"
+	squad_target = Vector3.ZERO
+	squad_target_enemy = null
 	streak = 0
 	streak_bank.clear()
 	streak_sel = ""

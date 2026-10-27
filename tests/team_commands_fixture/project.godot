@@ -1,0 +1,18 @@
+; Minimal project for asset-independent squad input tests.
+config_version=5
+
+[application]
+config/name="Bloedjungle Team Command Tests"
+config/features=PackedStringArray("4.7")
+run/main_scene="res://adapter_parse_test.tscn"
+
+[display]
+window/size/viewport_width=1024
+window/size/viewport_height=640
+
+[autoload]
+Game="*res://stubs/game.gd"
+UI="*res://stubs/ui.gd"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"

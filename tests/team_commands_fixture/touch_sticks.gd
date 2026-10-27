@@ -1,0 +1,1 @@
+../../scripts/touch_sticks.gd

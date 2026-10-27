@@ -17,6 +17,7 @@ static var info := ""  # voor de fps-teller: wat de sticks nu zien (om te kijken
 
 
 func _ready() -> void:
+	add_to_group("touch_sticks")
 	get_viewport().size_changed.connect(_clear)  # bij draaien van het scherm zijn alle vingers weg
 	# ook tijdens pauze of een menu loslaten van je vinger zien, anders blijft er een "spook-stick" hangen
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -34,6 +35,9 @@ func _clear() -> void:
 	Game.move = Vector2.ZERO
 	Game.aim = NAN
 	Game.fire = false
+	var team := get_tree().get_first_node_in_group("team_commands")
+	if team != null:
+		team.cancel_input()
 	queue_redraw()
 
 
@@ -47,6 +51,12 @@ func _anchor(aim: bool) -> Vector2:
 
 
 func _input(event: InputEvent) -> void:
+	var team := get_tree().get_first_node_in_group("team_commands")
+	if team != null and team.handle_pointer_event(event):
+		return
+	if team != null and team.is_modal() and (event is InputEventScreenTouch or event is InputEventScreenDrag or event is InputEventMouseButton or event is InputEventMouseMotion):
+		get_viewport().set_input_as_handled()
+		return
 	if event is InputEventScreenTouch or event is InputEventScreenDrag:
 		_events += 1
 	if Game.build_mode:
@@ -66,11 +76,10 @@ func _input(event: InputEvent) -> void:
 					return  # gameplay-touch buiten de twee thumb-zones blijft vrij
 				aim = right_d < left_d
 				origin = right_anchor if aim else left_anchor
-			# een nieuwe vinger op deze kant wint: de oude is waarschijnlijk al weg (loslaten gemist), anders
-			# blijft de stick "vast" en doet de nieuwe aanraking niets
-			for k in _sticks.keys():
-				if _sticks[k].aim == aim:
-					_sticks.erase(k)
+			# Houd iedere touch aan zijn eigen vinger-ID; een tweede vinger mag de eerste stick niet overnemen.
+			for held in _sticks.values():
+				if held.aim == aim:
+					return
 			var d: Vector2 = event.position - origin
 			if d.length() > STICK_R:
 				d = d.normalized() * STICK_R
@@ -105,6 +114,16 @@ func _on_button(p: Vector2) -> bool:
 		if rect.has_point(p):
 			return true
 	return false
+
+
+func blocks_team_target_hud(p: Vector2) -> bool:
+	return _on_button(p)
+
+
+func blocks_team_target_joystick(p: Vector2) -> bool:
+	if not UI.is_touch_platform():
+		return false
+	return p.distance_to(_anchor(false)) <= ANCHOR_R or p.distance_to(_anchor(true)) <= ANCHOR_R
 
 
 func _process(_delta: float) -> void:

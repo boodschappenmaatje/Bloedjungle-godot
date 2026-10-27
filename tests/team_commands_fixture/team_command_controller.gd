@@ -1,0 +1,1 @@
+../../scripts/team_command_controller.gd

@@ -28,13 +28,14 @@ func _ready() -> void:
 	var weapon_strip: Control = load("res://scripts/weapon_strip.gd").new()
 	add_child(weapon_strip)
 	add_child(CombatButtons.new())
-	add_child(load("res://scripts/team_commands.gd").new())
 	add_child(load("res://scripts/perf_monitor.gd").new())
 	add_child(Shop.new())
 	add_child(PlaceHud.new())
 	add_child(BuildMode.new())
 	add_child(StadEditor.new())
 	add_child(GateHud.new())
+	# Last in this CanvasLayer so modal TEAM input blocks taps from reaching other HUD buttons.
+	add_child(load("res://scripts/team_commands.gd").new())
 	_style()
 	# schermtekst en sticks schalen mee met de schermgrootte: op een telefoon staat 1 punt = meerdere pixels
 	get_window().size_changed.connect(_rescale)

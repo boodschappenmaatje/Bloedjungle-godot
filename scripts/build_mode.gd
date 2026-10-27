@@ -385,8 +385,16 @@ func _fill_panel() -> void:
 		else:
 			_act(row, "Max", "", false, func(): pass)
 		_act(row, ORDERS[Game.troop_mode], "soldaten", true, func():
-			Game.troop_mode = "hold" if Game.troop_mode == "follow" else "follow"
-			Game.changed.emit())
+			var team := get_tree().get_first_node_in_group("team_commands")
+			if team != null:
+				team.toggle_follow_hold()
+			else:
+				Game.troop_mode = "hold" if Game.troop_mode == "follow" else "follow"
+				Game.squad_order = Game.troop_mode
+				for soldier in Game.allies:
+					if is_instance_valid(soldier) and not soldier.helper and not soldier.guard and soldier.truck == null:
+						soldier.set_command(Game.troop_mode, Vector3.ZERO)
+				Game.changed.emit())
 		tip = ("Niveau %d: %d soldaten, %ds training, sterker." % [b.lv + 1, nx.max, nx.time] if nx else "Volledig opgewaardeerd.") + (" Je soldaten bewaken de muur." if Game.troop_mode == "hold" else " Je soldaten lopen met je mee.")
 	elif b.kind == "garage":
 		var have: Array = []

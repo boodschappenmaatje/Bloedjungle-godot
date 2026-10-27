@@ -18,4 +18,9 @@ for t in "${TESTS[@]}"; do
     echo "OK   $t"
   fi
 done
+if GODOT="$GODOT" tests/run_team_commands_tests.sh >/tmp/bloedjungle-team-tests.log 2>&1; then
+  echo "OK   team_commands (assetvrije controller en invoeradapter)"
+else
+  echo "FOUT team_commands"; cat /tmp/bloedjungle-team-tests.log; bad=1
+fi
 exit $bad

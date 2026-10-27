@@ -7,6 +7,7 @@ const POSTS := [Vector2(-5, -12.7), Vector2(5, -12.7), Vector2(-5, 12.7), Vector
 	Vector2(-12.7, 5), Vector2(12.7, 5), Vector2(-8.5, -12.7), Vector2(8.5, -12.7), Vector2(-8.5, 12.7), Vector2(8.5, 12.7)]
 const SPEED := 4.6
 const RANGE := 16.0
+const TeamOrderRules = preload("res://scripts/team_command_controller.gd")
 
 var model: SoldierModel
 var face := 0.0
@@ -26,12 +27,10 @@ var command := "follow"
 var command_target := Vector3.ZERO
 var command_enemy: Node3D
 var command_hold_position := Vector3.ZERO
-var command_arrived := false
 
 func set_command(order: String, target: Vector3, enemy: Node3D = null) -> void:
 	if helper or guard or truck != null: return
 	if order == "hold": command_hold_position = global_position
-	command_arrived = false
 	command = order
 	command_target = target
 	command_enemy = enemy if is_instance_valid(enemy) else null
@@ -82,11 +81,11 @@ func _physics_process(delta: float) -> void:
 	fire_t -= delta
 	if command_enemy != null and (not is_instance_valid(command_enemy) or command_enemy.get("dead") == true):
 		command_enemy = null
+		if Game.squad_order == "attack" and (not is_instance_valid(Game.squad_target_enemy) or Game.squad_target_enemy.get("dead") == true):
+			Game.squad_target_enemy = null
 	var target: Node3D = command_enemy if is_instance_valid(command_enemy) else _nearest_enemy()
 	var goal := _goal()
 	var to_goal := Vector2(goal.x - global_position.x, goal.z - global_position.z)
-	if command in ["move", "attack"] and command_enemy == null and to_goal.length() <= 0.8:
-		command_arrived = true
 	var want := Vector3.ZERO
 	var moving := false
 	var patrolling := guard and Game.state == "prep"
@@ -147,16 +146,11 @@ func _goal() -> Vector3:
 			var q: Vector2 = POSTS[(idx * 4 + 1) % POSTS.size()] * (Data.COMPOUND / 14.0)
 			return Vector3(q.x, 0, q.y)
 		return Patrouille.line(idx)[_leg % 2]
-	if not helper and command == "hold":
-		return command_hold_position
-	if not helper and command == "defend":
-		return command_target + Vector3(cos(float(idx)*TAU/4.0),0.0,sin(float(idx)*TAU/4.0))*3.0
-	if not helper and command == "move":
-		return command_target + (Vector3((idx%2)*1.6-0.8,0.0,(idx/2%2)*1.6-0.8) if not command_arrived else Vector3.ZERO)
-	if not helper and command == "attack":
-		if is_instance_valid(command_enemy):
-			return command_enemy.global_position + Vector3(cos(float(idx)*2.4),0,sin(float(idx)*2.4))*3.0
-		return command_target + Vector3((idx%2)*1.8-0.9,0.0,(idx/2%2)*1.8-0.9)
+	if not helper and command in ["hold", "defend", "move", "attack"]:
+		var enemy_valid := is_instance_valid(command_enemy)
+		var enemy_position := command_enemy.global_position if enemy_valid else Vector3.ZERO
+		var follow_position := Game.player.global_position + Vector3(cos(float(idx) * 2.4 + 0.6), 0.0, sin(float(idx) * 2.4 + 0.6)) * 2.8
+		return TeamOrderRules.soldier_goal(command, command_target, enemy_position, enemy_valid, idx, command_hold_position, follow_position)
 	if Game.troop_mode == "hold" and not helper and command == "follow":
 		var p: Vector2 = POSTS[idx % POSTS.size()] * (Data.COMPOUND / 14.0)
 		return Vector3(p.x, 0, p.y)

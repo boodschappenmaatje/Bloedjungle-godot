@@ -112,6 +112,10 @@ var fire := false
 
 
 func reset() -> void:
+	if is_inside_tree():
+		var team_commands := get_tree().get_first_node_in_group("team_commands")
+		if team_commands != null:
+			team_commands.cancel_input()
 	state = "prep"
 	wave = 0
 	rocket_seen = false

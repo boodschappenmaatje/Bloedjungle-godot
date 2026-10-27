@@ -244,6 +244,7 @@ static func area_damage(at: Vector3, radius: float, dmg: float) -> void:
 	if Game.builds:
 		Game.builds.blast(at, radius, dmg, true)
 	Wachtpost.blast(at, radius, dmg)
+	Generator.blast(at, radius, dmg)
 	if Game.gates:
 		for i in Game.gates.list.size():
 			var gt: Dictionary = Game.gates.list[i]

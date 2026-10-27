@@ -22,6 +22,7 @@ func _ready() -> void:
 	add_child(PerfGovernor.new())
 	add_child(JungleGeluid.new())
 	add_child(Wachtpost.new())
+	add_child(Generator.new())
 	add_child(Patrouille.new())
 	add_child(Diagnose.new())
 	Game.state = "menu"

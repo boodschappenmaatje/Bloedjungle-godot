@@ -384,6 +384,7 @@ func _boom_enemy(at: Vector3) -> void:
 	if Game.builds:
 		Game.builds.blast(at, r, dmg, false)
 	Wachtpost.blast(at, r, dmg)
+	Generator.blast(at, r, dmg)
 	if Game.gates:
 		for i in Game.gates.list.size():
 			var g: Dictionary = Game.gates.list[i]

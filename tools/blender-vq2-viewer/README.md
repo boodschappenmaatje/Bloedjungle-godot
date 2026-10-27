@@ -58,3 +58,7 @@ Model **Soldaat** vergelijkt de oude pop (`assets/soldaat.glb`, V1) met het real
 ## Poortwachtpost
 
 De viewer bevat ook `assets/wachtpost.glb` (bron `bron/wachtpost/`): slagboom met de echte GLB-clip `Open` (arm 82° omhoog) en het wachthuisje, te tonen samen of apart. Het wachthuisje heeft geen clips. Test: `node test-wachtpost.mjs`. Geen iPhone/Safari-meting uitgevoerd.
+
+## Generator
+
+De viewer bevat ook `assets/generator.glb` (bron `bron/generator/`): dieselgenerator met de echte GLB-clip `Draaien` (koelventilator) en het zwartgeblakerde wrak, samen of apart. Rook, vuur, explosie, geluid en trilling zijn Godot-effecten (`scripts/generator.gd`, `tests/generator_test.gd`, opnames `tests/generator_foto.gd`). Test: `node test-generator.mjs`. Geen iPhone/Safari-meting uitgevoerd.

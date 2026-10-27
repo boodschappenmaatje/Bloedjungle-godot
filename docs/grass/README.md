@@ -1,7 +1,7 @@
 # Blender 3D-gras — drie hoogtes, vier varianten en echte 2K PBR
 
 Branch: `feature/blender-grass-2k-three-heights`. Gestart vanaf main `ad6f47a`
-(v126), daarna bijgewerkt met main `1397831` (v128: nieuwe palmen/rotsen en wapenclips). De verworpen, vlakker geworden belichting/grond uit PR #91 is **niet**
+(v126), daarna bijgewerkt met main `1397831` (v128: nieuwe palmen/rotsen en wapenclips), en vervolgens main `1b8d80c` (v130: natuurbotsingen, plankwortels en lianen). De verworpen, vlakker geworden belichting/grond uit PR #91 is **niet**
 meegenomen. De bestaande levendige gamebelichting, grond, HUD en modellen blijven staan.
 
 ## Wat daadwerkelijk is gemaakt
@@ -187,3 +187,5 @@ node test-grass.mjs
 De game-dev CLI is niet geïnstalleerd; native Blender, Python/Pillow/Numpy en Godot
 zijn rechtstreeks gebruikt. Er zijn geen betaalde providers of tool-wrapperreceipts
 geclaimd. Werk staat op een featurebranch met Draft PR; **niet automatisch mergen**.
+
+Laatste main-controle: de wijzigingen uit v129/v130 zijn behouden en de gras-, jungle- en wapencliptests slagen opnieuw. De volledige set van 68 tests betreft v128; de native beelden leggen diezelfde v128-wereld vast. De grasmodellen zelf zijn daarna niet gewijzigd.

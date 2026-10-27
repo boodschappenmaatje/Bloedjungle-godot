@@ -1,5 +1,5 @@
 {
-  "base_main": "1397831590f4721348b6fc502c78afad16c0891d",
+  "base_main": "1b8d80c",
   "original_start": "ad6f47a",
   "blender": "4.3.2",
   "godot": "4.6.3",
@@ -88,7 +88,8 @@
       "wapen_clips_test",
       "winkel_test"
     ],
-    "execution_note": "50 passed before a local imported-texture cache mismatch interrupted the run. Remaining 18 rerun after native reimport: 17 passed. New-main MG42 clip test then passed with faithful 60Hz weapon import. Logs retained; not claimed as one uninterrupted run."
+    "execution_note": "50 passed before a local imported-texture cache mismatch interrupted the run. Remaining 18 rerun after native reimport: 17 passed. New-main MG42 clip test then passed with faithful 60Hz weapon import. Logs retained; not claimed as one uninterrupted run.",
+    "base_main": "1397831590f4721348b6fc502c78afad16c0891d"
   },
   "physical_iphone_xogot": "NOT RUN",
   "physical_safari_metal": "NOT RUN",
@@ -117,5 +118,15 @@
     "New main weapon GLB includes AnimationPlayer; weapon icon visibility loop skips non-Node3D children.",
     "Import weapons at the source 60Hz so the short MG42 mechanical clip keeps its peak keyframes. No weapon stats or original GLB bytes changed."
   ],
-  "hosting": "PASS: owner-private preview deployed; see hosting-result.json"
+  "hosting": "PASS: owner-private preview deployed; see hosting-result.json",
+  "latest_main_compatibility": {
+    "passed": [
+      "grass_3d_test",
+      "jungle_test",
+      "wapen_clips_test"
+    ],
+    "base_main": "1b8d80c",
+    "note": "Also preserved later v129 nature collisions and v130 buttress-root/liana trees; grass assets unchanged."
+  },
+  "godot_capture_base_main": "1397831"
 }

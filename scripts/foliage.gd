@@ -440,7 +440,7 @@ static func ram(body: CharacterBody3D, speed: float, min_palm: float, min_boom :
 			continue
 		var boom := String(best["vn"]).begins_with("Boom")
 		if speed >= (min_boom if boom else min_palm):
-			fell(best, body.global_position, false)
+			fell(best, body.global_position)
 		elif boom and speed > 3.0:
 			var cur = body.get("_speed")
 			if cur != null:
@@ -450,11 +450,11 @@ static func ram(body: CharacterBody3D, speed: float, min_palm: float, min_boom :
 			Sfx.play("thud", 0.7, hit)
 
 
-## Tank: alles wat binnen zijn rompvlak komt gaat plat, ook als hij draait of heel langzaam rijdt (draaien wordt niet door de
-## natuurkunde tegengehouden, dus daar zou een stam anders dwars door de romp heen staan). half = halve breedte en lengte van de romp.
-static func crush(body: Node3D, half: Vector2) -> void:
+## Staat er een boom (nog overeind) echt in het rompvlak van dit voertuig? Voor draaien: de natuurkunde houdt draaien niet tegen,
+## dus de aanroeper draait terug en velt de boom (hij botst eerst, dan valt hij). half = halve breedte en lengte van de romp.
+static func hull_tree(body: Node3D, half: Vector2) -> Dictionary:
 	if _reg.is_empty() or not is_instance_valid(_root):
-		return
+		return {}
 	var p := body.global_position
 	var inv := body.global_transform.affine_inverse()
 	var reach := half.length() + 2.0
@@ -466,9 +466,10 @@ static func crush(body: Node3D, half: Vector2) -> void:
 				if e["felled"]:
 					continue
 				var local: Vector3 = inv * (e["xf"].origin as Vector3)
-				var m := 0.6 if String(e["vn"]).begins_with("Boom") else 0.35   # stamdikte
+				var m := 0.5 if String(e["vn"]).begins_with("Boom") else 0.24   # stamstraal min een rand, zodat alleen echt overlappen telt
 				if absf(local.x) < half.x + m and absf(local.z) < half.y + m:
-					fell(e, p, false)
+					return e
+	return {}
 
 
 ## Eén boom omver: weg uit de MultiMesh (voet, ver-variant, nepschaduw) en uit de botsing, en een vallende boom ervoor in de plaats.

@@ -582,7 +582,7 @@ func _drive(delta: float, live: bool) -> void:
 	var want_steer := 0.0
 	var pivot := 0.0
 	var mv := Game.move
-	collision_mask = 0 if not goals.is_empty() else 50
+	collision_mask = 0 if not goals.is_empty() else 178
 	var can_go := _engine == "aan" and not _busy() and not (_klep_open and _klep_t < 1.0)
 	if not driven and not goals.is_empty():
 		# uit de garage naar zijn parkeerplek: sturen naar het volgende punt
@@ -633,6 +633,7 @@ func _drive(delta: float, live: bool) -> void:
 	rotation.y += _yaw_rate * delta
 	velocity = -global_transform.basis.z * _speed
 	move_and_slide()
+	Foliage.ram(self, absf(_speed), 5.0)   # tegen een boom aan: hij valt om
 	global_position.y = 0.0
 	if get_slide_collision_count() > 0:
 		_speed *= 0.6

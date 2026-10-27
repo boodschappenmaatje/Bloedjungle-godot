@@ -55,20 +55,32 @@ func _process(_d: float) -> bool:
 			t_hit = frames
 			print("gevelde palm na ", frames - 100, " beelden, tank op ", tank.global_position, " snelheid ", tank.get("_speed"))
 	if frames == 401:
-		# stilstaand en een stam binnen de romp (zoals bij draaien): ook die gaat plat
+		# een stam vlak naast de rechterkant van de romp, tank draait naar hem toe: hij botst (draait niet erdoorheen), dan valt hij
 		var f: Dictionary = {}
 		for key in F.get("_reg"):
 			for en: Dictionary in F.get("_reg")[key]:
 				if f.is_empty() and not en["felled"] and (en["xf"].origin - tank.global_position).length() > 40.0:
 					f = en
-		tank.global_position = f["xf"].origin + Vector3(1.0, 0, 0.5)
-		game.move = Vector2.ZERO
+		tank.global_position = f["xf"].origin + Vector3(-3.0, 0, -2.6)
+		tank.rotation.y = -PI / 2.0
+		tank.set("_speed", 0.0)
 		e = f
-	if frames == 406:
-		_check(e["felled"], "stam in de romp van een stilstaande tank gaat plat")
+		_check(F.call("hull_tree", tank, Vector2(1.95, 3.5)).is_empty(), "vlak ernaast is nog niet in de romp")
+	if frames > 401 and frames < 560:
+		game.move = Vector2(0, 1)   # naar rechts draaien, de stam in
+		_check(F.call("hull_tree", tank, Vector2(1.95, 3.5)).is_empty(), "de romp komt nooit in een staande stam (frame %d)" % frames)
+	if frames == 560:
+		_check(e["felled"], "de stam waar de tank tegenaan draait valt om")
 		print("BOOM VAL TANK TEST ", "OK" if fails == 0 else "%d FOUT(EN)" % fails)
 		quit(1 if fails > 0 else 0)
 		return true
 	if frames == 400:
-		_check(e["felled"], "de tank velt de palm op zijn pad (tank op " + str(tank.global_position) + ")")
+		# de eerste boom op zijn pad (die kan een andere zijn dan e) valt, en blijft dan als stam voor de tank liggen
+		var n := 0
+		for key in F.get("_reg"):
+			for en: Dictionary in F.get("_reg")[key]:
+				if en["felled"] and absf(en["xf"].origin.z - 44.2) < 4.0 and en["xf"].origin.x > -80.0 and en["xf"].origin.x < -60.0:
+					n += 1
+		_check(n >= 1, "de tank velt een boom op zijn pad (tank op " + str(tank.global_position) + ")")
+		_check(tank.global_position.x < e["xf"].origin.x or e["felled"], "de tank komt niet voorbij de boom zonder hem te vellen")
 	return false

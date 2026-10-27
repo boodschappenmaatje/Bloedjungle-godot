@@ -108,7 +108,18 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 
 
 var _parts := {}   # naam -> MeshInstance3D (VQ2)
-var pose: SoldierPose   # benen los van de romp draaien en treffers per richting (alleen VQ2)
+var pose: SoldierPose   # benen los van de romp draaien, treffers per richting en wapen vasthouden (alleen VQ2)
+var _palm_r := Vector3.ZERO   # midden van de rechterhandpalm in de ruimte van DEF-handR
+const HOLD_CLIPS := ["stil", "lopen", "rennen", "schieten", "geraakt"]   # hierin houdt hij het wapen met beide handen vast
+
+
+## Geeft SoldierPose het wapen en de stand van de wapenknoop in de hand door.
+func _sync_hold() -> void:
+	if pose == null:
+		return
+	pose.gun_n = _gun.transform if _gun != null else Transform3D.IDENTITY
+	pose.weapon = String(GUN_OF.get(_weapon_kind, "")).to_lower() if _gun != null else ""
+	pose.hold = current in HOLD_CLIPS
 
 
 func _setup_pose() -> void:
@@ -117,6 +128,11 @@ func _setup_pose() -> void:
 	pose.name = "SoldierPose"
 	skel.add_child(pose)
 	pose.setup_skeleton(skel)
+	_palm_r = pose.palm_offset("R")
+	pose.palm_l = pose.palm_offset("L")
+	if _gun != null:   # het wapen hing al in de hand: zet het op de handpalm
+		_gun.transform.origin += _palm_r
+	_sync_hold()
 
 
 ## Draaiing van de benen t.o.v. de romp (radialen, + = naar rechts van het gezicht). 0 = benen kijken mee met de romp.
@@ -419,6 +435,9 @@ func set_gun(kind: String) -> void:
 	_weapon_mount.add_child(node)
 	_gun = node
 	_weapon_kind = kind
+	if pose != null:
+		node.transform.origin += _palm_r
+		_sync_hold()
 	_recoil = 0.0
 	_pump_parts.clear()
 	_pump_rest.clear()
@@ -519,8 +538,10 @@ func play(clip: String, blend := 0.18, speed := 1.0) -> void:
 			anim.speed_scale = speed
 		return
 	current = clip
-	if pose != null and not clip in LOCOMOTION:
-		pose.leg_yaw = 0.0   # alleen bij lopen draaien de benen los van de romp
+	if pose != null:
+		if not clip in LOCOMOTION:
+			pose.leg_yaw = 0.0   # alleen bij lopen draaien de benen los van de romp
+		pose.hold = clip in HOLD_CLIPS
 	anim.play(clip, blend)
 	anim.speed_scale = speed
 
@@ -537,6 +558,8 @@ func flash(color := Color(0.9, 0.1, 0.05)) -> void:
 
 
 func _process(delta: float) -> void:
+	if pose != null:
+		pose.recoil = _recoil
 	if _recoil > 0.0:
 		_recoil = maxf(0.0, _recoil - delta * 5.5)
 		if _weapon_mount:

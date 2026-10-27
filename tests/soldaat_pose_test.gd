@@ -71,8 +71,35 @@ func _run() -> void:
 	for _i in 120:
 		await process_frame
 	_check(not m.pose.is_kicking(), "kick dooft niet uit")
+	await _check_holds()
 	if failures.is_empty():
 		print("SOLDAAT POSE TEST OK")
 	else:
 		print("SOLDAAT POSE TEST FAIL: ", failures.size())
 	quit(1 if not failures.is_empty() else 0)
+
+
+## Elk wapen wordt met twee handen vastgehouden: beide polsen bereiken hun greep, de loop wijst recht vooruit en zit voor de borst.
+func _check_holds() -> void:
+	for kind in ["m1911", "thompson", "garand", "trench", "mg42", "bazooka"]:
+		var m := SoldierModel.new()
+		root.add_child(m)
+		m.setup(Color("4b5a2c"), kind, "speler:uniform")
+		m.play("stil", 0.0)
+		for _i in 20:
+			await process_frame
+		var gap: Dictionary = m.pose.reach_gap
+		_check(gap.R < 0.02, "%s: rechterhand reikt %.3f m te kort" % [kind, gap.R])
+		_check(gap.L < 0.06, "%s: linkerhand reikt %.3f m te kort" % [kind, gap.L])
+		var muzzle := m.muzzle_position() - m.global_position
+		_check(muzzle.z > 0.5 and absf(muzzle.x) < 0.3, "%s: loop wijst niet recht vooruit (monding %s)" % [kind, muzzle])
+		_check(muzzle.y > 1.0 and muzzle.y < 1.9, "%s: monding niet op borst-/schouderhoogte (%.2f)" % [kind, muzzle.y])
+		# tijdens het herladen speelt de animatie (geen IK) en tijdens het schieten blijft het wapen vast
+		m.play("herladen", 0.0)
+		_check(not m.pose.hold, "%s: wapen wordt tijdens herladen vastgehouden" % kind)
+		m.play("schieten", 0.0)
+		m.shoot_recoil(kind)
+		for _i in 6:
+			await process_frame
+		_check(m.pose.hold and m.pose.reach_gap.R < 0.04, "%s: schieten verliest de greep (%.3f)" % [kind, m.pose.reach_gap.R])
+		m.queue_free()

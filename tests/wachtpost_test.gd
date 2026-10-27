@@ -96,8 +96,13 @@ func _process(_d: float) -> bool:
 		var p0: Dictionary = inst.posts[0]
 		var body: Node = p0.hut_body
 		var hp0: float = p0.hut_hp
+		game.hit_src = "soldaat"
 		body.call("hit", 20.0, Vector3.RIGHT, true)
-		_check(is_equal_approx(p0.hut_hp, hp0), "eigen kogels beschadigen het huisje niet")
+		_check(is_equal_approx(p0.hut_hp, hp0), "kogels van soldaten beschadigen het huisje niet")
+		game.hit_src = "speler"
+		body.call("hit", 20.0, Vector3.RIGHT, true)
+		_check(p0.hut_hp < hp0, "jouw eigen kogels beschadigen het huisje wel")
+		hp0 = p0.hut_hp
 		body.call("hit", 20.0, Vector3.RIGHT, false)
 		_check(p0.hut_hp < hp0, "vijandelijke kogels beschadigen het huisje")
 		for i in 40:

@@ -1,0 +1,158 @@
+OK   ai_test
+OK   animatie_test
+OK   auto_raken_test
+OK   auto_spel_test
+OK   auto_test
+OK   auto_wapens_test
+OK   beeldsnelheid_test
+OK   benzine_test
+OK   besturing_test
+OK   bouw_test
+OK   brandkraan_test
+OK   brug_test
+OK   bus_test
+OK   camera_test
+OK   combat_visuals_test
+OK   diagnose_test
+OK   diagnoserun_test
+OK   explosie_test
+OK   fps_keuze_test
+OK   fx_test
+OK   granaat_richten_test
+OK   granaat_test
+OK   grass_3d_test
+OK   heli_test
+OK   hotel_test
+OK   hud_equipment_test
+OK   hud_layout_test
+OK   huis_test
+OK   jungle_test
+OK   kerk_test
+OK   killstreak_test
+OK   kwaliteit_regel_test
+OK   kwaliteit_test
+OK   loadout_test
+OK   magazijn_dak_test
+OK   magazijn_test
+OK   meubels_test
+OK   ota_test
+OK   perf_test
+OK   poort_auto_test
+OK   poort_test
+OK   raket_test
+OK   rivier_test
+OK   routes_test
+OK   schade_test
+OK   schaduw_test
+OK   sloop_test
+OK   smoke_test
+OK   soldaat_pose_test
+OK   soldaat_ragdoll_test
+FOUT soldaat_vq2_test (exit 124)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'.
+FOUT stad_editor_2_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT stad_editor_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT stad_editor_view_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT stad_lijn_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT stad_menu_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT stad_nacht_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT stad_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT stad_zicht_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT stick_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT tank_mik_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT tank_pantser_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT truck_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT vat_test (exit 1)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT ver_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT vq2_test (exit 1)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+FOUT wapen_clips_test (exit 124)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'.
+FOUT winkel_test (exit 0)
+     SCRIPT ERROR: Parse Error: Could not preload resource file "res://assets/soldaat_vq2.glb".
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "SCENE_V2" constant because the value doesn't have a set type.
+     SCRIPT ERROR: Parse Error: Cannot infer the type of "model" variable because the value doesn't have a set type.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+     SCRIPT ERROR: Compile Error: Failed to compile depended scripts.

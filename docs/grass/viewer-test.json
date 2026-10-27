@@ -1,0 +1,81 @@
+{
+  "browser": "Chromium SwiftShader WebGL, emulated touch; not physical Safari",
+  "families": [
+    {
+      "family": "short",
+      "lods": [
+        {
+          "lod": 0,
+          "triangles": 1840,
+          "actual_2k_pbr": true
+        },
+        {
+          "lod": 1,
+          "triangles": 552,
+          "actual_2k_pbr": true
+        },
+        {
+          "lod": 2,
+          "triangles": 168,
+          "actual_2k_pbr": true
+        }
+      ],
+      "four_variants": true,
+      "old_new_comparison": true,
+      "orbit": true
+    },
+    {
+      "family": "medium",
+      "lods": [
+        {
+          "lod": 0,
+          "triangles": 3024,
+          "actual_2k_pbr": true
+        },
+        {
+          "lod": 1,
+          "triangles": 648,
+          "actual_2k_pbr": true
+        },
+        {
+          "lod": 2,
+          "triangles": 168,
+          "actual_2k_pbr": true
+        }
+      ],
+      "four_variants": true,
+      "old_new_comparison": true,
+      "orbit": true
+    },
+    {
+      "family": "tall",
+      "lods": [
+        {
+          "lod": 0,
+          "triangles": 4752,
+          "actual_2k_pbr": true
+        },
+        {
+          "lod": 1,
+          "triangles": 1056,
+          "actual_2k_pbr": true
+        },
+        {
+          "lod": 2,
+          "triangles": 168,
+          "actual_2k_pbr": true
+        }
+      ],
+      "four_variants": true,
+      "old_new_comparison": true,
+      "orbit": true
+    }
+  ],
+  "errors": [],
+  "mobile_viewports": [
+    "390x844",
+    "844x390"
+  ],
+  "touch_pinch": true,
+  "pass": true
+}

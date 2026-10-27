@@ -1,0 +1,33 @@
+{
+  "native_blender_open": "PASS",
+  "source": "bron/gras/gras.blend",
+  "sha256": "3d869e16756316b690a0833c0e8ff909f816f6f8d9b926aaf9dd325a284dbb8d",
+  "editable_mesh_objects": 36,
+  "packed_images": [
+    {
+      "name": "albedo.jpg",
+      "size": [
+        2048,
+        2048
+      ],
+      "packed": true
+    },
+    {
+      "name": "normal.png",
+      "size": [
+        2048,
+        2048
+      ],
+      "packed": true
+    },
+    {
+      "name": "orm.png",
+      "size": [
+        2048,
+        2048
+      ],
+      "packed": true
+    }
+  ],
+  "actual_uv_and_pinned_root_color_data": "PASS"
+}

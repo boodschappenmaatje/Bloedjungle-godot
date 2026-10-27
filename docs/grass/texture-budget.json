@@ -1,0 +1,34 @@
+{
+	"note": "Imported desktop image payload including mipmaps, shared by all grass. Not measured iPhone resident VRAM or total GPU memory.",
+	"textures": [
+		{
+			"compressed": true,
+			"file": "albedo.jpg",
+			"format": 17,
+			"height": 2048,
+			"image_payload_bytes": 2796216,
+			"mipmaps": 11,
+			"width": 2048
+		},
+		{
+			"compressed": true,
+			"file": "normal.png",
+			"format": 21,
+			"height": 2048,
+			"image_payload_bytes": 5592432,
+			"mipmaps": 11,
+			"width": 2048
+		},
+		{
+			"compressed": true,
+			"file": "orm.png",
+			"format": 17,
+			"height": 2048,
+			"image_payload_bytes": 2796216,
+			"mipmaps": 11,
+			"width": 2048
+		}
+	],
+	"total_image_payload_bytes": 11184864,
+	"total_image_payload_mib": 10.6667175292969
+}

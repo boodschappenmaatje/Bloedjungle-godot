@@ -1,0 +1,20 @@
+OK   soldaat_vq2_test
+OK   stad_editor_2_test
+OK   stad_editor_test
+OK   stad_editor_view_test
+OK   stad_lijn_test
+OK   stad_menu_test
+OK   stad_nacht_test
+OK   stad_test
+OK   stad_zicht_test
+OK   stick_test
+OK   tank_mik_test
+OK   tank_pantser_test
+OK   truck_test
+OK   vat_test
+OK   ver_test
+OK   vq2_test
+FOUT wapen_clips_test (exit 1)
+     FAIL  mg42: MG42_Repeergreep schuift 0.000 m naar achteren (verwacht 0.030)
+     WAPENCLIPS TEST FAIL: 1
+OK   winkel_test

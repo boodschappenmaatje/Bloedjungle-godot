@@ -2,7 +2,7 @@ extends CanvasLayer
 ## Meldingen en knoppen midden op het scherm (golf-titel, "Start nu", gesneuveld). De balken, punten
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
-const VERSION := "v125"
+const VERSION := "v126"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big

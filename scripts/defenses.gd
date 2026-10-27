@@ -245,20 +245,13 @@ func place_kind(kind: String) -> void:
 func _bag_wall(root: Node3D) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(root.position.x * 13.0 + root.position.z * 7.0)
-	var mat: StandardMaterial3D = Kit.canvas()
-	var bag := SphereMesh.new()
-	bag.radius = 0.5
-	bag.height = 1.0
-	bag.radial_segments = 8
-	bag.rings = 4
 	for layer in 3:
 		for i in 4 - (layer % 2):
 			var mi := MeshInstance3D.new()
-			mi.mesh = bag
-			mi.material_override = mat
+			mi.mesh = Kit.prop_mesh(Kit.BAGS[rng.randi() % 3])
 			mi.position = Vector3(-1.2 + i * 0.82 + (layer % 2) * 0.41, 0.17 + layer * 0.27, rng.randf_range(-0.04, 0.04))
-			mi.scale = Vector3(0.88, 0.34, 0.52)
-			mi.rotation.y = rng.randf_range(-0.1, 0.1)
+			mi.scale = Vector3.ONE * 1.4
+			mi.rotation.y = rng.randf_range(-0.1, 0.1) + (PI if rng.randf() < 0.5 else 0.0)
 			root.add_child(mi)
 	Kit.collider(root, Vector3(0, 0.4, 0), Vector3(3.0, 0.8, 0.6), Kit.LAYER_WALL)
 

@@ -25,6 +25,7 @@ var _streams := {}
 var _players: Array[AudioStreamPlayer] = []
 var _next := 0
 var _rain: AudioStreamPlayer
+var _jet: AudioStreamPlayer
 
 
 func _ready() -> void:
@@ -54,6 +55,68 @@ func play(name: String, vol := 1.0, pos = null) -> void:
 	p.pitch_scale = randf_range(0.88, 1.14)
 	p.volume_db = linear_to_db(maxf(0.001, vol * MASTER))
 	p.play()
+
+
+## Straaljager: een lus van turbinegeluid (brullende ruis, gillende turbine, diepe dreun) die jet_set elke beeld luider/zachter
+## en hoger/lager zet (afstand en dopplereffect). jet_on start hem, jet_off stopt hem.
+func jet_on() -> void:
+	if _jet == null:
+		_jet = AudioStreamPlayer.new()
+		_jet.stream = _make_jet()
+		add_child(_jet)
+	_jet.volume_db = -80.0
+	_jet.play()
+
+
+func jet_set(vol: float, pitch: float) -> void:
+	if _jet == null or not _jet.playing:
+		return
+	_jet.volume_db = linear_to_db(maxf(0.0005, vol * MASTER))
+	_jet.pitch_scale = clampf(pitch, 0.5, 1.6)
+
+
+func jet_off() -> void:
+	if _jet != null:
+		_jet.stop()
+
+
+func _make_jet() -> AudioStreamWAV:
+	var n := RATE * 2                # 2 s lus: hele aantallen perioden van de turbinetonen, ruis met overvloeiing
+	var fade := 2400
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 90210
+	var raw := PackedFloat32Array()
+	raw.resize(n + fade)
+	var lp1 := 0.0
+	var lp2 := 0.0
+	var lp3 := 0.0
+	for i in n + fade:
+		var w := rng.randf_range(-1.0, 1.0)
+		lp1 += 0.30 * (w - lp1)          # brul (tot ~1,6 kHz)
+		lp2 += 0.06 * (w - lp2)          # laag brommen
+		lp3 += 0.012 * (w - lp3)         # diepe dreun
+		var hiss := w - lp1              # sissende hoge ruis
+		raw[i] = lp1 * 1.1 + lp2 * 2.2 + lp3 * 5.0 + hiss * 0.45
+	var data := PackedByteArray()
+	data.resize(n * 2)
+	for i in n:
+		var t := float(i) / RATE
+		var v: float = raw[i]
+		if i < fade:   # lusnaad: het eind (raw[n+i]) loopt over in het begin
+			var k := float(i) / fade
+			v = lerpf(raw[n + i], raw[i], k)
+		var am := 1.0 + 0.18 * sin(TAU * 5.0 * t / 2.0) + 0.08 * sin(TAU * 13.0 * t / 2.0)
+		var whine := sin(TAU * 1760.0 * t) * 0.16 + sin(TAU * 2640.0 * t + 1.0) * 0.12 + sin(TAU * 3520.0 * t) * 0.07
+		var out := (v * 0.55 + whine) * am
+		data.encode_s16(i * 2, clampi(roundi(tanh(out * 1.6) * 31000.0), -32768, 32767))   # zacht afkappen: hard en overweldigend
+	var w := AudioStreamWAV.new()
+	w.format = AudioStreamWAV.FORMAT_16_BITS
+	w.mix_rate = RATE
+	w.data = data
+	w.loop_mode = AudioStreamWAV.LOOP_FORWARD
+	w.loop_begin = 0
+	w.loop_end = n
+	return w
 
 
 func rain(on: bool) -> void:

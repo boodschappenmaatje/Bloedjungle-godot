@@ -143,9 +143,10 @@ func _nearest_enemy() -> Node3D:
 	var best: Node3D = null
 	var bd := RANGE
 	var from := global_position + Vector3.UP * 1.4
-	for e: Node3D in Game.enemies:
-		if not is_instance_valid(e):
+	for ev in Game.enemies:   # niet getypeerd: een al vrijgegeven vijand mag in de lijst staan
+		if not is_instance_valid(ev):
 			continue
+		var e: Node3D = ev
 		var d := (e.global_position - global_position)
 		d.y = 0.0
 		var l := d.length()

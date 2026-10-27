@@ -73,6 +73,53 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 		mat.set_shader_parameter("view_e2", e[2])
 
 
+const PUSH_MAX := 8
+const PUSH_RANGE := 24.0   # verder dan dit van de speler (buiten beeld) hoeft niets te buigen
+const PUSH_R_SOLDIER := 1.1
+const PUSH_R_VEHICLE := 2.1
+static var _push_busy := false
+static var push_enabled := true   # uit = niets buigt (alleen voor tests en foto's)
+
+
+## Wie er door de struiken, varens en het gras loopt: de speler en de PUSH_MAX dichtstbijzijnde soldaten, vijanden en
+## voertuigen buigen het lage blad opzij (alleen een shader-effect, geen botsing). active = false: niets buigt (bouwmodus, menu).
+static func update_pushers(player: Node3D, tree: SceneTree, active := true) -> void:
+	var list := PackedVector4Array()
+	list.resize(PUSH_MAX)
+	if active and push_enabled and player != null:
+		var c := player.global_position
+		var found: Array = []   # [afstand², Vector4]
+		var add := func(n, r: float) -> void:
+			if not is_instance_valid(n) or not n is Node3D or n.get("dead") == true:
+				return
+			var pos: Vector3 = (n as Node3D).global_position
+			var d2 := pos.distance_squared_to(c)
+			if d2 < PUSH_RANGE * PUSH_RANGE:
+				found.append([d2, Vector4(pos.x, pos.z, r, 1.0)])
+		add.call(player, PUSH_R_SOLDIER)
+		for e in Game.enemies:
+			add.call(e, PUSH_R_SOLDIER)
+		for a in Game.allies:
+			add.call(a, PUSH_R_SOLDIER)
+		for v in tree.get_nodes_in_group("voertuigen"):
+			add.call(v, PUSH_R_VEHICLE)
+		found.sort_custom(func(a, b): return a[0] < b[0])
+		for i in mini(found.size(), PUSH_MAX):
+			list[i] = found[i][1]
+	var any := false
+	for v in list:
+		if v.w > 0.0:
+			any = true
+			break
+	if not any and not _push_busy:
+		return   # niets te buigen en de materialen staan al leeg
+	_push_busy = any
+	for k in _mats:
+		if k != "bark":
+			_mats[k].set_shader_parameter("pushers", list)
+	GrassField.set_pushers(list)
+
+
 ## Zet de wind in alle bladeren aan of uit.
 static func set_wind(on: bool) -> void:
 	for k in _mats:

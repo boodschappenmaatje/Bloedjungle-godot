@@ -6,8 +6,8 @@ uniform sampler2D normal_tex : hint_normal, repeat_disable, filter_linear_mipmap
 uniform sampler2D orm_tex : repeat_disable, filter_linear_mipmap;
 uniform float wind = 0.0;
 uniform float normal_strength = 0.35;
-uniform vec3 player_position = vec3(0.0);
-uniform float player_bend = 0.0;
+uniform float player_bend = 0.0;  // 1 = gras buigt voor wie erdoorheen loopt (uit in de bouwmodus)
+uniform vec4 pushers[8];          // zoals in foliage.gdshader: x/y = positie (x, z), z = straal, w = kracht
 varying vec3 blade_color;
 
 void vertex() {
@@ -19,10 +19,19 @@ void vertex() {
 	float amount = tip * wind * clamp(VERTEX.y, 0.1, 1.4);
 	VERTEX.x += gust * 0.075 * amount;
 	VERTEX.z += sin(TIME * 1.1 + phase * 0.8) * 0.045 * amount;
-	// Small local visual bend around the player; roots remain pinned, no AI effect.
-	vec2 away = wp.xz - player_position.xz;
-	float influence = (1.0 - smoothstep(0.15, 0.75, length(away))) * tip * player_bend;
-	vec2 push = away / max(length(away), 0.05) * 0.16 * influence;
+	// Gras buigt weg van speler, soldaten, vijanden en voertuigen; wortels blijven vast, geen AI-effect.
+	vec2 push = vec2(0.0);
+	for (int i = 0; i < 8; i++) {
+		vec4 pu = pushers[i];
+		if (pu.w <= 0.0) {
+			continue;
+		}
+		vec2 away = wp.xz - pu.xy;
+		float d = length(away);
+		float influence = (1.0 - smoothstep(pu.z * 0.2, pu.z, d)) * pu.w;
+		push += away / max(d, 0.05) * 0.16 * (pu.z / 0.85) * influence;
+	}
+	push *= tip * player_bend;
 	// Convert a world-space push into the local basis (rotation/scale may vary per tuft).
 	VERTEX += transpose(MODEL_NORMAL_MATRIX) * vec3(push.x, 0.0, push.y);
 	blade_color = COLOR.rgb;

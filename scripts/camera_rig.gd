@@ -148,6 +148,7 @@ func _process(delta: float) -> void:
 			_build_cam(delta, portrait)
 		# geen bladdithering in het overzicht: de fade loopt rustig naar 0
 		Foliage.update_visibility_focus(p.global_position, global_position, delta, false)
+		Foliage.update_pushers(p, get_tree(), false)
 		return
 	_editor_active = false
 	if _fog0 >= 0.0 and env:
@@ -189,6 +190,7 @@ func _process(delta: float) -> void:
 	look_at(focus, Vector3.UP)
 	# Alleen de zichtlijn naar de speler en naar de dichtstbijzijnde vijanden wordt uit de bladeren gehouden.
 	Foliage.update_visibility_focus(p.global_position, global_position, delta, true, _nearby_enemies(p))
+	Foliage.update_pushers(p, get_tree())
 
 
 ## De (hoogstens) drie vijanden het dichtst bij de speler, voor de jungle-zichtlijn.

@@ -76,8 +76,13 @@ static func set_wind(on: bool) -> void:
 
 static func set_focus(pos: Vector3, active: bool) -> void:
 	if _material:
-		_material.set_shader_parameter("player_position", pos)
 		_material.set_shader_parameter("player_bend", 1.0 if active else 0.0)
+
+
+## Wie er door het gras loopt (zie Foliage.update_pushers).
+static func set_pushers(list: PackedVector4Array) -> void:
+	if _material:
+		_material.set_shader_parameter("pushers", list)
 
 
 static func spawn(parent: Node3D, existing_positions: Array) -> GrassField:

@@ -44,6 +44,11 @@ var _burn_dir := Vector3.ZERO
 var _burn_turn := 0.0
 
 
+var _stuck_t := 0.0  # hoe lang hij tegen iets aan loopt zonder vooruit te komen
+var _detour_t := 0.0  # nog zo lang opzij omlopen
+var _detour_side := 1.0
+
+
 func setup(kind: String, wave: int) -> void:
 	type = kind
 	t = Data.ETYPES[kind]
@@ -216,8 +221,19 @@ func _physics_process(delta: float) -> void:
 	elif not melee and mode == "attack" and dist < range_ * 0.6:
 		# te dichtbij: zijwaarts uitwijken terwijl hij schiet
 		vel = Vector3(cos(look), 0.0, -sin(look)) * strafe * t.speed * 0.4
+	# een stam of rots recht in de weg: even opzij omlopen in plaats van ertegenaan duwen
+	if _detour_t > 0.0:
+		_detour_t -= delta
+		vel = vel.rotated(Vector3.UP, _detour_side * 1.1)
 	velocity = vel
 	move_and_slide()
+	if want_move and vel.length() > 0.5 and get_real_velocity().length() < vel.length() * 0.3:
+		_stuck_t += delta
+		if _stuck_t > 0.25 and _detour_t <= 0.0:
+			_detour_t = 0.9
+			_detour_side = 1.0 if randf() < 0.5 else -1.0
+	else:
+		_stuck_t = 0.0
 	position.y = 0.0
 	face += angle_difference(face, look) * minf(1.0, delta * 10.0)
 	rotation.y = face

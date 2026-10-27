@@ -21,12 +21,17 @@ var helper := false  # versterking uit de luchtsteun: volgt altijd de speler en 
 var truck: Node = null  # vrachtwagen die hem vervoert; die bepaalt dan waar hij is en wat hij doet
 
 
+var _stuck_t := 0.0
+var _detour_t := 0.0
+var _detour_side := 1.0
+
+
 func setup(hp_: float, dmg_: float, index: int) -> void:
 	hp = hp_
 	dmg = dmg_
 	idx = index
 	collision_layer = 0
-	collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_WATER
+	collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_WATER | Kit.LAYER_NATURE
 	var col := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()
 	cap.radius = 0.4
@@ -70,8 +75,19 @@ func _physics_process(delta: float) -> void:
 		if d.length() > 0.05:
 			want = Vector3(d.x, 0, d.y).normalized() * SPEED * (1.0 if to_goal.length() > 5.0 else 0.6)
 			moving = true
+	# een stam of rots recht in de weg: even opzij omlopen
+	if _detour_t > 0.0:
+		_detour_t -= delta
+		want = want.rotated(Vector3.UP, _detour_side * 1.1)
 	velocity = want
 	move_and_slide()
+	if moving and get_real_velocity().length() < want.length() * 0.3:
+		_stuck_t += delta
+		if _stuck_t > 0.25 and _detour_t <= 0.0:
+			_detour_t = 0.9
+			_detour_side = 1.0 if randf() < 0.5 else -1.0
+	else:
+		_stuck_t = 0.0
 	position.y = 0.0
 	var look := face
 	if target != null:

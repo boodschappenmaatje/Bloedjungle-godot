@@ -166,7 +166,7 @@ func _drive(delta: float, live: bool) -> void:
 	var want_steer := 0.0
 	var pivot := 0.0
 	var mv := Game.move
-	collision_mask = 0 if not goals.is_empty() else 50
+	collision_mask = 0 if not goals.is_empty() else 178
 	if not driven and not goals.is_empty():
 		# uit de garage naar zijn parkeerplek: sturen naar het volgende punt
 		var to: Vector3 = goals[0] - global_position

@@ -14,6 +14,8 @@ const STRIP_KEEP := {
 ## Afstand (m, vanaf de camera, gemeten tot het midden van een vak van 36 m) waarboven een soort niet meer getekend wordt.
 const VIS_END := {"palm": 140.0, "bush": 95.0, "fern": 85.0, "grass": 55.0}
 const PALM_NEAR := 62.0  # dichterbij: volledige palm; verder: de simpele palm
+## Stam of rots waar je niet doorheen loopt: straal in meters bij schaal 1 (laag Kit.LAYER_NATURE: mensen, voertuigen, kogels en granaten).
+const COLLIDE_R := {"palm": 0.32, "rock": 0.45}
 const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.5], "bush": [1.1, 1.8, 0.45], "rock": [0.5, 1.2, 0.4]}  # hoogte, breedte, sterkte
 
 
@@ -223,6 +225,8 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 		if kind == "palm" or kind == "rock":
 			for t in xf:
 				trees.append(Vector2(t.origin.x, t.origin.z))
+		if COLLIDE_R.has(kind):
+			_collide(parent, xf, COLLIDE_R[kind], "wood" if kind == "palm" else "concrete")
 		if kind == "rock":
 			var rm := Kit.rock().duplicate() as StandardMaterial3D
 			rm.vertex_color_use_as_albedo = true
@@ -273,6 +277,31 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 						far.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 				if SHADOW_KINDS.has(kind):
 					_blobs(parent, kind, [cells[key][0]])
+
+
+## Onzichtbare ronde zuilen op de plek van stammen en rotsen, per vak van 36 m één lichaam (goedkoop voor de natuurkunde).
+static func _collide(parent: Node3D, xforms: Array, radius: float, impact: String) -> void:
+	var bodies := {}
+	var shapes := {}
+	for xt: Transform3D in xforms:
+		var key := Vector2i(floori(xt.origin.x / 36.0), floori(xt.origin.z / 36.0))
+		if not bodies.has(key):
+			var b := StaticBody3D.new()
+			b.collision_layer = Kit.LAYER_NATURE
+			b.set_meta("impact_material", impact)
+			b.collision_mask = 0
+			parent.add_child(b)
+			bodies[key] = b
+		var r := snappedf(radius * xt.basis.x.length(), 0.05)
+		if not shapes.has(r):
+			var cyl := CylinderShape3D.new()
+			cyl.radius = r
+			cyl.height = 2.2
+			shapes[r] = cyl
+		var cs := CollisionShape3D.new()
+		cs.shape = shapes[r]
+		cs.position = Vector3(xt.origin.x, 1.1, xt.origin.z)
+		bodies[key].add_child(cs)
 
 
 ## Vaste nepschaduwen (platte ovalen) voor één vak bomen.

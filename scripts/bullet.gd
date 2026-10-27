@@ -7,6 +7,7 @@ const MASK_WALL := 2
 const MASK_PLAYER := 4
 const MASK_ENEMY := 8
 const MASK_BUNKER := 16
+const MASK_NATURE := 128   # stammen en rotsen: stoppen ook kogels die over een muur vliegen
 const MASK_VEHICLE := 1024   # auto's en bussen: ook laag 2 (muur), maar kogels die over een borstwering gaan raken ze toch
 const HIT_TOP := 2.4         # tot deze hoogte raakt een kogel een auto of bus (de kogel vliegt op 1,6-1,7 m, het autodak is 1,5 m)
 
@@ -78,7 +79,7 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.explosive = explosive_
 	b.sink = sink_
 	b.dir.y = rise_  # schiet omhoog naar iemand op een toren
-	b.mask = (MASK_ENEMY if by_player else MASK_PLAYER) | MASK_BUNKER | MASK_VEHICLE | (0 if over_wall else MASK_WALL)
+	b.mask = (MASK_ENEMY if by_player else MASK_PLAYER) | MASK_BUNKER | MASK_VEHICLE | MASK_NATURE | (0 if over_wall else MASK_WALL)
 	parent.add_child(b)
 	b.global_position = from
 	b.rotation.y = angle
@@ -103,7 +104,7 @@ static func fire_rocket(parent: Node, from: Vector3, angle: float, damage: float
 	b.from_player = false
 	b.rocket = true
 	b.explosive = 3.2
-	b.mask = MASK_PLAYER | MASK_BUNKER | MASK_WALL | MASK_VEHICLE
+	b.mask = MASK_PLAYER | MASK_BUNKER | MASK_WALL | MASK_VEHICLE | MASK_NATURE
 	parent.add_child(b)
 	b.global_position = from
 	b.rotation.y = angle

@@ -84,7 +84,7 @@ static func predict(world: World3D, from: Vector3, target: Vector3) -> Dictionar
 	for i in 60:
 		vel.y -= GRAVITY * dt
 		var nxt := pos + vel * dt
-		var q := PhysicsRayQueryParameters3D.create(pos, nxt, Bullet.MASK_WALL | Bullet.MASK_BUNKER)
+		var q := PhysicsRayQueryParameters3D.create(pos, nxt, Bullet.MASK_WALL | Bullet.MASK_BUNKER | Bullet.MASK_NATURE)
 		var hit := space.intersect_ray(q)
 		var v := Bullet.vehicle_on_path(pos, nxt)
 		if not v.is_empty():
@@ -129,7 +129,7 @@ func _physics_process(delta: float) -> void:
 	vel.y -= GRAVITY * delta
 	var step := vel * delta
 	# muren en de bunker houden hem tegen
-	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + step, Bullet.MASK_WALL | Bullet.MASK_BUNKER)
+	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + step, Bullet.MASK_WALL | Bullet.MASK_BUNKER | Bullet.MASK_NATURE)
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	# auto's en bussen: net als bij kogels telt de carrosserie tot Bullet.HIT_TOP, dan stuitert hij ertegen en valt ernaast
 	var v := Bullet.vehicle_on_path(global_position, global_position + step)

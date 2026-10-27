@@ -1,0 +1,17 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:364)
+OpenGL API 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 19.1.7, 256 bits)
+
+WARNING: Screen-space AA is only available when using the Forward+ or Mobile renderer.
+     at: viewport_set_screen_space_aa (servers/rendering/renderer_viewport.cpp:1400)
+WARNING: Depth of field blur is only available when using the Forward+ or Mobile renderer.
+     at: camera_attributes_set_dof_blur (servers/rendering/storage/camera_attributes_storage.cpp:70)
+     GDScript backtrace (most recent call first):
+         [0] _ready (res://scripts/camera_rig.gd:57)
+         [1] _run (res://tests/grass_3d_test.gd:57)
+GRASS 3D TEST PASS: 12 Blender tufts, 3 LODs, 2K shared maps, pinned roots, zones, foliage RNG and gameplay preserved
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 11 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:810)

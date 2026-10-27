@@ -222,7 +222,7 @@ func _build_ui() -> void:
 	panel.add_child(row)
 	asset_picker = OptionButton.new()
 	for asset in ASSETS:
-		asset_picker.add_item(asset.capitalize())
+		asset_picker.add_item({"grass_short": "Gras kort", "grass_medium": "Gras middelhoog", "grass_tall": "Gras hoog", "grass_all": "Alle grashoogtes"}.get(asset, asset.capitalize()))
 	row.add_child(asset_picker)
 	version_picker = OptionButton.new()
 	version_picker.add_item("Nieuw VQ2")

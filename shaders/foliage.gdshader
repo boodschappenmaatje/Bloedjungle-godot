@@ -61,20 +61,20 @@ void vertex() {
 			}
 			vec2 away = base_pos.xz - pu.xy;
 			float d = length(away);
-			float influence = (1.0 - smoothstep(pu.z * 0.3, pu.z, d)) * pu.w;
-			push += away / max(d, 0.05) * influence * pu.z * 0.85;
+			float influence = (1.0 - smoothstep(pu.z * 0.45, pu.z, d)) * pu.w;
+			push += away / max(d, 0.05) * influence * pu.z * 1.1;
 			shake += influence;
 		}
 		float w = COLOR.a * low;
 		push *= w;
 		float len = length(push);
-		if (len > 0.6) {
-			push *= 0.6 / len;
-			len = 0.6;
+		if (len > 1.1) {
+			push *= 1.1 / len;
+			len = 1.1;
 		}
 		shake = min(shake, 1.0) * w;
-		vec2 rustle = vec2(sin(TIME * 17.0 + ph * 3.0 + base_pos.y * 4.0), cos(TIME * 14.0 + ph * 2.0)) * 0.045 * shake;
-		VERTEX += transpose(MODEL_NORMAL_MATRIX) * vec3(push.x + rustle.x, -len * 0.4, push.y + rustle.y);
+		vec2 rustle = vec2(sin(TIME * 11.0 + ph * 3.0 + base_pos.y * 4.0), cos(TIME * 9.0 + ph * 2.0)) * 0.13 * shake;
+		VERTEX += transpose(MODEL_NORMAL_MATRIX) * vec3(push.x + rustle.x, -min(len * 0.7, base_pos.y * 0.85), push.y + rustle.y);
 	}
 	vcol = COLOR.rgb;
 	world_leaf = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;

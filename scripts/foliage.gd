@@ -75,8 +75,8 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 
 const PUSH_MAX := 8
 const PUSH_RANGE := 24.0   # verder dan dit van de speler (buiten beeld) hoeft niets te buigen
-const PUSH_R_SOLDIER := 1.1
-const PUSH_R_VEHICLE := 2.1
+const PUSH_R_SOLDIER := 1.7
+const PUSH_R_VEHICLE := 3.0
 static var _push_busy := false
 static var push_enabled := true   # uit = niets buigt (alleen voor tests en foto's)
 

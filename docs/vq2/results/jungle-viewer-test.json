@@ -12,7 +12,9 @@
   "Boom1": "Boom1: 1.002 driehoeken · 3 mesh · 3 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.",
   "Boom1_far": "Boom1_far: 228 driehoeken · 3 mesh · 3 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.",
   "Boom2": "Boom2: 1.002 driehoeken · 3 mesh · 3 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.",
-  "Boom2_far": "Boom2_far: 228 driehoeken · 3 mesh · 3 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten."
+  "Boom2_far": "Boom2_far: 228 driehoeken · 3 mesh · 3 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.",
+  "Stomp1": "Stomp1: 110 driehoeken · 1 mesh · 1 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.",
+  "Stomp2": "Stomp2: 230 driehoeken · 1 mesh · 1 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten."
  },
  "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
  "clips": {},

@@ -285,6 +285,75 @@ for name, seed, h in (("Boom1", 41, 11.0), ("Boom2", 53, 13.5)):
     jungle_tree(name, seed, h)
     jungle_tree(name + "_far", seed, h, far=True)
 
+
+# ---------- stronken: wat er blijft staan als een boom omvalt (Foliage.fell) ----------
+def stump(name, seed, base_r, top_r, height, flare, fins):
+    """Afgebroken stam met splinterrand: elke kolom heeft een eigen hoogte, bovenop pas houtkleurig hart. Schors via Boom_Stam."""
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    lay = color_layer(bm)
+    uvl = bm.loops.layers.uv.new("UVMap")
+    segs, sides = 5, 10
+    ang0 = rnd.random() * math.tau
+    ztop = [height * (0.62 + 0.55 * rnd.random() ** 2.2) for _ in range(sides)]
+    for j in (rnd.randrange(sides), rnd.randrange(sides)):   # een paar lange splinters
+        ztop[j] = height * rnd.uniform(1.12, 1.3)
+        for nb in (j - 1, j + 1):   # de buren breken ook hoog af: een brede splinter, geen naald
+            ztop[nb % sides] = max(ztop[nb % sides], ztop[j] * 0.82)
+    def ring(i, j):
+        t = i / segs
+        r = (base_r * (1 - t) + top_r * t) * (1.0 + flare * math.exp(-t * 4.5)) * (1.0 - 0.14 * t * t) * (1.0 + 0.05 * math.sin(j * 2.3 + seed))
+        a = ang0 + math.tau * j / sides
+        return Vector((math.cos(a) * r, math.sin(a) * r, ztop[j % sides] * t)), t
+    for i in range(segs):
+        shade = 0.9 + 0.1 * math.sin(i * 1.9 + seed)
+        for j in range(sides):
+            pts = []
+            for ii, jj in ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)):
+                p, t = ring(ii, jj)
+                pts.append((p, (jj / sides * 2.0, p.z / 1.4)))
+            quad(bm, lay, uvl, pts, (0.46 * shade, 0.40 * shade, 0.32 * shade, 0.0), 0)
+    # gebroken bovenvlak: licht hout, het midden iets lager
+    pale = (0.80, 0.64, 0.42, 0.0)
+    mid = Vector((0, 0, sum(ztop) / sides * 0.82))
+    cv = bm.verts.new(mid)
+    cv[lay] = (0.62, 0.46, 0.28, 0.0)
+    for j in range(sides):
+        p0, _ = ring(segs, j)
+        p1, _ = ring(segs, j + 1)
+        v0, v1 = bm.verts.new(p0), bm.verts.new(p1)
+        v0[lay] = v1[lay] = pale
+        f = bm.faces.new([v0, v1, cv])
+        f.material_index = 0
+        for loop, uv in zip(f.loops, ((j / sides * 2.0, 0.3), ((j + 1) / sides * 2.0, 0.3), (0.5, 0.0))):
+            loop[uvl].uv = uv
+    # plankwortels die bij de voet blijven (jungleboom)
+    for k in range(fins):
+        a = ang0 + math.tau * (k + rnd.uniform(-0.15, 0.15)) / fins
+        d = Vector((math.cos(a), math.sin(a), 0))
+        side = Vector((-d.y, d.x, 0))
+        reach = rnd.uniform(1.3, 1.8)
+        hmax = rnd.uniform(0.6, 1.0)
+        th = 0.07
+        steps = 4
+        prof = [(0.22 + reach * s / steps, hmax * (1 - s / steps) ** 1.8 + 0.05) for s in range(steps + 1)]
+        for s in range(steps):
+            (r0, z0), (r1, z1) = prof[s], prof[s + 1]
+            for sg in (-1, 1):
+                o = side * th * sg
+                quad(bm, lay, uvl, [(d * r0 + o + Vector((0, 0, -0.05)), (r0, 0.0)), (d * r1 + o + Vector((0, 0, -0.05)), (r1, 0.0)),
+                                    (d * r1 + o + Vector((0, 0, z1)), (r1, z1 / 1.4)), (d * r0 + o + Vector((0, 0, z0)), (r0, z0 / 1.4))],
+                     (0.42, 0.37, 0.30, 0.0), 0)
+            quad(bm, lay, uvl, [(d * r0 + side * -th + Vector((0, 0, z0)), (r0, 0.0)), (d * r1 + side * -th + Vector((0, 0, z1)), (r1, 0.0)),
+                                (d * r1 + side * th + Vector((0, 0, z1)), (r1, 0.1)), (d * r0 + side * th + Vector((0, 0, z0)), (r0, 0.1))],
+                 (0.42, 0.37, 0.30, 0.0), 0)
+    bm.normal_update()
+    return make_obj(name, bm, [B_STAM])
+
+
+stump("Stomp1", 7, 0.25, 0.22, 0.9, 0.35, 0)    # palm (ook voor de verdorde palmen)
+stump("Stomp2", 19, 0.38, 0.32, 1.5, 0.4, 5)   # jungleboom, op schaal 0,75 gezet door Foliage
+
 bpy.ops.object.select_all(action="DESELECT")
 bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "jungle.glb"), export_format="GLB", export_apply=True,
                           export_yup=True, export_animations=False, export_vertex_color="ACTIVE", export_materials="EXPORT")

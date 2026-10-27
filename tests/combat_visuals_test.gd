@@ -88,12 +88,11 @@ func _run() -> void:
 			_check(spawned[0].get("mesh") is ArrayMesh, "shotgun mist de ene zichtbare tracer door de hagelspreiding")
 			_check(not (spawned[1].get("mesh") is ArrayMesh), "shotgun tekent een volledige lichtstaart achter iedere hagelkorrel")
 		if id == "trench":
-			var pumps: Array = player.get("model").get("_pump_parts")
-			_check(not pumps.is_empty(), "Winchester-model heeft geen afzonderlijk pompdeel")
-			if not pumps.is_empty():
-				var pump: Node3D = pumps[0]
+			var pump := (player.get("model").get("_gun") as Node3D).find_child("Trench_Pomp", true, false) as Node3D
+			_check(pump != null and player.get("model").get("_gun_anim") != null, "Winchester-model heeft geen afzonderlijk pompdeel met clip")
+			if pump != null:
 				var initial := pump.position
-				await _frames(2)
+				await _frames(14)   # de pomp schuift pas na de terugslag (clip Trench_schot)
 				_check(pump.position.distance_to(initial) > 0.001, "Winchester-pomp beweegt niet na schot")
 		if id == "bazooka":
 			var camera: Camera3D = main.get_node("Camera")

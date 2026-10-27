@@ -142,6 +142,7 @@ func _physics_process(delta: float) -> void:
 		reload_t -= delta
 		if reload_t <= 0.0:
 			ammo = w.mag
+			model.gun_reset()
 			Game.changed.emit()
 	if Game.fire and climb < 0.0:
 		idle_t = 0.0
@@ -335,7 +336,7 @@ func _shoot(w: Dictionary) -> void:
 	fire_t = w.rate
 	ammo -= 1
 	_shot_sequence += 1
-	model.shoot_recoil(weapon)
+	model.shoot_recoil(weapon, ammo <= 0)
 	var fwd := Vector3(sin(face), 0.0, cos(face))
 	var muzzle: Vector3 = model.muzzle_position()
 	var over := _hugging_wall(fwd)

@@ -15,7 +15,7 @@ for name in ('kazerne','wachttoren','legerjeep'):
     for folder in ('assets','assets/vq2_baseline'):
         shutil.copy2(ROOT/folder/(name+'.glb'),dest/folder/(name+'.glb'))
 shutil.copy2(ROOT/'assets/jeep.glb',dest/'assets/jeep.glb')
-for name in ('auto','bus','straaljager','soldaat','soldaat_vq2','klimmen','zitten','acties'):
+for name in ('auto','bus','straaljager','soldaat','soldaat_vq2','klimmen','zitten','acties','wapens','jungle'):
     path=ROOT/'assets'/(name+'.glb')
     if path.exists():shutil.copy2(path,dest/'assets'/path.name)
 if (ROOT/'assets/grass').exists():

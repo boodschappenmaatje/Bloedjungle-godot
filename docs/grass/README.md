@@ -1,7 +1,7 @@
 # Blender 3D-gras — drie hoogtes, vier varianten en echte 2K PBR
 
 Branch: `feature/blender-grass-2k-three-heights`. Gestart vanaf main `ad6f47a`
-(v126). De verworpen, vlakker geworden belichting/grond uit PR #91 is **niet**
+(v126), daarna bijgewerkt met main `1397831` (v128: nieuwe palmen/rotsen en wapenclips). De verworpen, vlakker geworden belichting/grond uit PR #91 is **niet**
 meegenomen. De bestaande levendige gamebelichting, grond, HUD en modellen blijven staan.
 
 ## Wat daadwerkelijk is gemaakt

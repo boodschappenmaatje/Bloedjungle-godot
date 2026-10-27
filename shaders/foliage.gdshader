@@ -4,9 +4,10 @@ render_mode cull_disabled, diffuse_lambert_wrap;
 // vertexkleur zegt hoe hard een punt in de wind beweegt (0 = vast, 1 = losse bladpunt).
 // Wat in de textuur doorzichtig is wordt weggeknipt, zo krijgen palmtakken hun bladpunten.
 
-uniform sampler2D tex : source_color, filter_linear_mipmap, repeat_disable;
-uniform sampler2D nrm : hint_normal, filter_linear_mipmap, repeat_disable;
+uniform sampler2D tex : source_color, filter_linear_mipmap, repeat_enable;
+uniform sampler2D nrm : hint_normal, filter_linear_mipmap, repeat_enable;
 uniform bool use_tex = true;
+uniform bool tile = false;  // schors herhaalt zich; bladeren niet (rand vastgeklemd)
 uniform float nrm_depth = 1.0;
 uniform float sway = 0.14;
 uniform float wind = 0.0;  // 0 = bomen staan stil, 1 = ze bewegen (instelling "Bomen bewegen")
@@ -48,8 +49,9 @@ void vertex() {
 }
 
 void fragment() {
+	vec2 uv = tile ? UV : clamp(UV, 0.0, 1.0);
 	vec3 base = pow(vcol, vec3(2.2));  // vertexkleuren zijn sRGB gekozen, de shader rekent lineair
-	vec4 t = use_tex ? texture(tex, UV) : vec4(1.0);
+	vec4 t = use_tex ? texture(tex, uv) : vec4(1.0);
 	if (t.a < cut) discard;
 	if (fade_sightline) {
 		float hide = sight_hide(world_leaf, view_player, view_camera, 2.6);
@@ -63,7 +65,7 @@ void fragment() {
 		}
 	}
 	if (use_tex) {
-		NORMAL_MAP = texture(nrm, UV).rgb;
+		NORMAL_MAP = texture(nrm, uv).rgb;
 		NORMAL_MAP_DEPTH = nrm_depth;
 	}
 	ALBEDO = base * t.rgb * tint;

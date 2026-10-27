@@ -41,9 +41,7 @@ var _hit_pose_time := 0.0
 var _weapon_mount: Node3D
 var _weapon_kind := "m1911"
 var _recoil := 0.0
-var _pump_parts: Array[Node3D] = []
-var _pump_rest: Array[Transform3D] = []
-var _pump_tween: Tween
+var _gun_anim: AnimationPlayer   # echte GLB-clips van de bewegende wapendelen (slede, hendel, pomp), zie bron/wapens
 var v2 := false
 var look := ""
 var _uniform := Color.WHITE
@@ -421,6 +419,7 @@ func set_gun(kind: String) -> void:
 	if node == null:
 		holder.queue_free()
 		return
+	_gun_anim = _gun_player(holder, node, GUN_OF[kind])
 	node.get_parent().remove_child(node)
 	holder.queue_free()
 	node.owner = null
@@ -439,39 +438,61 @@ func set_gun(kind: String) -> void:
 		node.transform.origin += _palm_r
 		_sync_hold()
 	_recoil = 0.0
-	_pump_parts.clear()
-	_pump_rest.clear()
-	if kind == "trench":
-		for part: Node3D in _gun.find_children("*", "MeshInstance3D", true, false):
-			if part.name.to_lower().contains("pomp"):
-				_pump_parts.append(part)
-				_pump_rest.append(part.transform)
+
+
+## Zet de clips van één wapen ("<wapen>_schot", "<wapen>_leeg") in een eigen speler op het wapen. De paden in het GLB
+## beginnen bij de scènewortel; hier loopt de speler vanaf het wapen zelf, dus het voorvoegsel valt weg.
+func _gun_player(holder: Node, gun: Node3D, gun_name: String) -> AnimationPlayer:
+	var src := holder.find_child("AnimationPlayer", true, false) as AnimationPlayer
+	if src == null:
+		return null
+	var lib := AnimationLibrary.new()
+	for clip in src.get_animation_list():
+		if not String(clip).begins_with(gun_name + "_"):
+			continue
+		var a := src.get_animation(clip).duplicate() as Animation
+		for t in range(a.get_track_count() - 1, -1, -1):   # de clip bevat ook de (stilstaande) delen van de andere wapens
+			var path := String(a.track_get_path(t))
+			if path.begins_with(gun_name + "/"):
+				a.track_set_path(t, NodePath(path.substr(gun_name.length() + 1)))
+			elif path.begins_with(gun_name + "_") or path == gun_name:
+				pass
+			else:
+				a.remove_track(t)
+		a.loop_mode = Animation.LOOP_NONE
+		lib.add_animation(String(clip).trim_prefix(gun_name + "_"), a)
+	if lib.get_animation_list().is_empty():
+		return null
+	var player := AnimationPlayer.new()
+	player.name = "WapenClips"
+	gun.add_child(player)
+	player.root_node = NodePath("..")
+	player.add_animation_library("", lib)
+	return player
+
+
+## Speelt een wapenclip: bij een schot schuift de slede, hendel of pomp mee; "leeg" laat de slede open staan.
+func _gun_clip(clip: String) -> void:
+	if _gun_anim != null and _gun_anim.has_animation(clip):
+		_gun_anim.play(clip)
+
+
+## Brengt de wapendelen terug in rust (na het herladen).
+func gun_reset() -> void:
+	if _gun_anim != null and _gun_anim.has_animation("schot"):
+		_gun_anim.play("schot")
+		_gun_anim.seek(0.0, true)
+		_gun_anim.pause()
 
 
 ## Terugslag wordt in een eigen wapenhouder gedempt, zonder de loop- of richtbesturing te veranderen.
-func shoot_recoil(kind: String) -> void:
+func shoot_recoil(kind: String, empty := false) -> void:
 	if not _weapon_mount:
 		return
 	var profile: Dictionary = Data.WEAPON_VISUALS.get(kind, Data.WEAPON_VISUALS["m1911"])
 	_recoil = minf(1.35, _recoil + float(profile.get("recoil", 0.6)))
 	_weapon_kind = kind
-	if kind == "trench":
-		_pump_shotgun()
-
-
-func _pump_shotgun() -> void:
-	if _pump_parts.is_empty():
-		return
-	if _pump_tween != null and _pump_tween.is_running():
-		_pump_tween.kill()
-	_pump_tween = create_tween().set_parallel()
-	for i in _pump_parts.size():
-		_pump_parts[i].transform = _pump_rest[i]
-		var rearward := _pump_rest[i].origin + _pump_rest[i].basis * Vector3(0.0, 0.0, 0.065)
-		_pump_tween.tween_property(_pump_parts[i], "position", rearward, 0.075)
-	_pump_tween.chain()
-	for i in _pump_parts.size():
-		_pump_tween.tween_property(_pump_parts[i], "position", _pump_rest[i].origin, 0.11)
+	_gun_clip("leeg" if empty and _gun_anim != null and _gun_anim.has_animation("leeg") else "schot")
 
 
 ## Loopmonding berekend uit de echte meshgrenzen van het gekozen GLB-wapen.

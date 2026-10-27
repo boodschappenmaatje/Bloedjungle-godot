@@ -925,6 +925,30 @@ static func flame(parent: Node3D, local_pos: Vector3, height: float, light := tr
 	return root
 
 
+const NAPALM_FLAME := preload("res://shaders/napalm_vlam.gdshader")
+static var _napalm_flame_mat: ShaderMaterial
+
+
+## Realistische vlamtong (shader met stromende ruis) met de voet op local_pos; de breedte w en hoogte h zijn in meters.
+## Zet de instance-parameter "grow" (0..1) om hem te laten groeien en doven. Draait om de verticale as mee met de camera.
+static func napalm_flame(parent: Node3D, local_pos: Vector3, w: float, h: float) -> MeshInstance3D:
+	if _napalm_flame_mat == null:
+		_napalm_flame_mat = ShaderMaterial.new()
+		_napalm_flame_mat.shader = NAPALM_FLAME
+	var quad := QuadMesh.new()
+	quad.size = Vector2(w, h)
+	quad.center_offset = Vector3(0.0, h * 0.5, 0.0)
+	var mi := MeshInstance3D.new()
+	mi.mesh = quad
+	mi.material_override = _napalm_flame_mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
+	mi.position = local_pos
+	mi.set_instance_shader_parameter("seed", randf() * 10.0)
+	mi.set_instance_shader_parameter("grow", 1.0)
+	return mi
+
+
 const WRECK_BURN_TIME := 9.0
 const WRECK_STAY := 4.0
 

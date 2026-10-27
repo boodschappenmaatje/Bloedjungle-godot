@@ -433,8 +433,8 @@ static func _muzzle_mesh(weapon: String, variant: int) -> ArrayMesh:
 	var v: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash(key)
-	var length: float = v.flash_length * rng.randf_range(0.91, 1.08)
-	var width: float = v.flash_width * rng.randf_range(0.88, 1.12)
+	var length: float = v.flash_length * 0.62 * rng.randf_range(0.91, 1.08)
+	var width: float = v.flash_width * 0.7 * rng.randf_range(0.88, 1.12)
 	var hot := Color(1.0, 0.9, 0.48, 0.98)
 	var middle: Color = v.flash_color
 	var fade := Color(middle.r, middle.g * 0.55, middle.b * 0.24, 0.0)
@@ -464,7 +464,7 @@ static func muzzle(parent: Node, pos: Vector3, weapon := "m1911", angle := 0.0) 
 	var v: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
 	if weapon == "bazooka" or float(v.flash_life) <= 0.0:
 		return
-	_show_muzzle_flash(parent, pos, _muzzle_mesh(weapon, randi() % 3), angle, v.flash_life, v.flash_width * 1.55, weapon, v.flash_particles, v.flash_color, v.flash_energy, v.flash_range)
+	_show_muzzle_flash(parent, pos, _muzzle_mesh(weapon, randi() % 3), angle, v.flash_life, v.flash_width * 0.9, weapon, v.flash_particles, v.flash_color, v.flash_energy, v.flash_range)
 
 
 static func _show_muzzle_flash(parent: Node, pos: Vector3, flash_mesh: ArrayMesh, angle: float, life: float, glow_size: float, smoke_style: String, particles: int, color: Color, light_energy: float, light_range: float) -> void:

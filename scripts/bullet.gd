@@ -16,6 +16,9 @@ static var _mat_e: StandardMaterial3D
 static var _plain_player_bullet: BoxMesh
 static var _plain_enemy_bullet: BoxMesh
 static var _weapon_glows := {}
+const TRAIL_START := 0.12
+var _trail_len := 0.0
+var _travel := 0.0
 static var _rocket_body: CylinderMesh
 static var _rocket_nose: CylinderMesh
 static var _rocket_tail: CylinderMesh
@@ -58,6 +61,8 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 		b._add_rocket_visual()
 	elif Data.WEAPON_VISUALS.has(visual_weapon):
 		b.mesh = _weapon_glow(visual_weapon, not by_player)
+		b._trail_len = float(Data.WEAPON_VISUALS[visual_weapon].trail_length)
+		b.scale.z = TRAIL_START
 	elif by_player:
 		b.mesh = _plain_bullet_mesh()
 		b.scale = Vector3.ONE * 0.35
@@ -260,6 +265,10 @@ func _physics_process(delta: float) -> void:
 		dir.y = -sink if global_position.y > 1.3 else 0.0
 	var flat_speed := Vector2(dir.x, dir.z).length()
 	rotation = Vector3(-atan2(dir.y, maxf(flat_speed, 0.001)), atan2(dir.x, dir.z), 0.0)
+	if _trail_len > 0.0 and scale.z < 1.0:
+		# het spoor groeit uit de loopmond: zo loopt het nooit dwars door de schutter
+		_travel += speed * delta
+		scale.z = clampf(_travel / _trail_len, TRAIL_START, 1.0)
 	var step := dir * speed * delta
 	for k: Brandkraan in Brandkraan.all:   # schiet je er tegenaan, dan begint de kogel in de botsvorm en ziet de straal hem niet
 		if is_instance_valid(k) and not k.sprayed and (mask & Barrel.LAYER) != 0 and k.inside(global_position):

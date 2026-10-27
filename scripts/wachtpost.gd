@@ -16,7 +16,7 @@ const HUT_HP := 450.0
 const BOOM_HP := 120.0
 const HUT_COST := 300
 const BOOM_COST := 100
-const HUT_TAKE := {"bullet": 0.3, "melee": 0.5, "explosive": 1.0}
+const HUT_TAKE := {"bullet": 0.5, "melee": 0.5, "explosive": 1.0}
 const BOOM_TAKE := {"bullet": 1.0, "melee": 1.0, "explosive": 1.0}
 
 static var inst: Wachtpost = null

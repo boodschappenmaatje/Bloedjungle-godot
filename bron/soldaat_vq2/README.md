@@ -89,3 +89,9 @@ Elk wapen wordt nu echt vastgehouden, in plaats van aan de hand te hangen in é�
   blijven de GLB-clip volgen. Terugslag duwt het wapen naar achteren en omhoog, de armen veren mee.
 - `tests/wapen_foto.gd` maakt de beelden (alle 9 wapens, `WAPEN_ONE=<wapen>` voor vier kanten dichtbij); `tests/soldaat_pose_test.gd`
   controleert per wapen dat beide polsen hun greep bereiken en de loop recht vooruit staat.
+
+## Schietanimatie A+B (v125)
+- A: het kogelspoor groeit uit de loopmond (`Bullet.TRAIL_START`), loopt dus niet meer door de schutter; vuurflits en gloed kleiner (`Fx._muzzle_mesh`, `Fx.muzzle`).
+- B: grotere terugslag (wapen 6 cm / 11° per schot) en schouderruk: romp tilt achterover en draait mee, gekoppeld aan `recoil` (`SoldierPose._process_modification`).
+- Demo: `tests/schiet_foto.gd` (spelcamera, `SCHIET_WEAPON`); beeld `docs/vq2/renders/schieten-voor-na.png` (rij 1+3 voor, rij 2+4 na; pistool boven, Garand onder).
+- Niet gemeten op iPhone/Xogot. `soldaat_pose_test` "kick dooft niet uit" en `auto_wapens_test` (7) falen ook zonder deze wijziging.

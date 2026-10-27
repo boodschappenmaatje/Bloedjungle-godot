@@ -563,8 +563,8 @@ func _process(delta: float) -> void:
 	if _recoil > 0.0:
 		_recoil = maxf(0.0, _recoil - delta * 5.5)
 		if _weapon_mount:
-			_weapon_mount.position = Vector3(0.0, 0.0, -_recoil * 0.025)
-			_weapon_mount.rotation.x = -_recoil * 0.09
+			_weapon_mount.position = Vector3(0.0, 0.0, -_recoil * 0.06)
+			_weapon_mount.rotation.x = -_recoil * 0.2
 	if _hit_pose_time > 0.0:
 		_hit_pose_time = maxf(0.0, _hit_pose_time - delta)
 		if _hit_pose_time <= 0.0:

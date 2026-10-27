@@ -120,6 +120,11 @@ func _process_modification() -> void:
 		_rotate_bone(_spine[0], Vector3.UP, -_leg * 0.4)
 		_rotate_bone(_spine[1], Vector3.UP, -_leg * 0.3)
 		_rotate_bone(_spine[2], Vector3.UP, -_leg * 0.3)
+	if recoil > 0.0:
+		# schouderruk: romp tilt achterover en draait licht mee, zodat het ook vanuit de bovencamera te zien is
+		for i in 3:
+			_rotate_bone(_spine[i], Vector3.RIGHT, -recoil * 0.07 * (i + 1) / 3.0 * 1.0)
+			_rotate_bone(_spine[i], Vector3.UP, recoil * 0.05)
 	var k := _kick_value()
 	if k > 0.001:
 		var axis := Vector3.UP.cross(Vector3(_kick_dir.x, 0.0, _kick_dir.y)).normalized()
@@ -142,8 +147,8 @@ func _gun_transform() -> Transform3D:
 		pos = shoulder + chest * (spec["pocket"] as Vector3) - basis * Vector3(b.x, b.z, -b.y)
 	else:
 		pos = shoulder + (spec["grip"] as Vector3)
-	pos.z -= recoil * 0.022
-	basis = Basis(Vector3.RIGHT, -recoil * 0.045) * basis
+	pos.z -= recoil * 0.06
+	basis = Basis(Vector3.RIGHT, -recoil * 0.12) * basis
 	return Transform3D(basis, pos)
 
 

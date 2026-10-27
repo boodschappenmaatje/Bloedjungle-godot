@@ -2,7 +2,7 @@ class_name GameSettings
 ## Instellingen uit het web-menu (grafiek, tijd, bouwtijd, weer, fps-teller); blijven bewaard op het apparaat.
 
 const PATH := "user://instellingen.cfg"
-const DEFAULTS := {"quality": "high", "time": "day", "prep": "60", "weather": "clear", "fps": "off", "perf": "off", "hz": "60", "sound": "on", "wind": "off", "treeshadow": "fake", "buildshadow": "medium", "t_sun": "on", "t_jungle": "on", "t_stad": "on", "t_post": "on", "t_res": "auto", "diag": "off", "t_streak": "off"}
+const DEFAULTS := {"quality": "high", "time": "day", "prep": "60", "weather": "clear", "fps": "off", "perf": "off", "hz": "60", "sound": "on", "wind": "off", "treeshadow": "fake", "buildshadow": "medium", "t_sun": "on", "t_jungle": "on", "t_stad": "on", "t_post": "on", "t_res": "auto", "diag": "off", "t_streak": "off", "soldaat": "vq2"}
 
 static var values := {}
 static var _loaded := false

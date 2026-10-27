@@ -60,7 +60,7 @@ func setup(kind: String, wave: int) -> void:
 
 
 func _ready() -> void:
-	model.setup(t.color, "" if type == "knife" else t.get("gun", type))
+	model.setup(t.color, "" if type == "knife" else t.get("gun", type), "vijand:" + type)
 	model.scale = Vector3.ONE * t.scale * Data.SOLDIER_SCALE
 	(shape.shape as CapsuleShape3D).radius = t.r
 	Game.enemies.append(self)

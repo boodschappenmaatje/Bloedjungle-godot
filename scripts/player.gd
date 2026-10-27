@@ -63,9 +63,10 @@ func _ready() -> void:
 ## Kleur en hoofdband volgens de gekozen uitrusting; ook gebruikt als je in het menu iets anders kiest.
 func refresh_look() -> void:
 	if model.anim == null:
-		model.setup(Progress.item("camo").col, weapon)
+		model.setup(Progress.item("camo").col, weapon, "speler:" + str(Progress.item("top").id))
 	else:
 		model.set_uniform(Progress.item("camo").col)
+		model.set_top(str(Progress.item("top").id))
 	model.set_band(Progress.item("band").color)
 	hp = Game.max_hp()
 

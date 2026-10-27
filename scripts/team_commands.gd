@@ -238,7 +238,7 @@ func _try_select_world(screen: Vector2) -> void:
 		return
 	var from := camera.project_ray_origin(screen)
 	var direction := camera.project_ray_normal(screen)
-	var mask: int = Bullet.MASK_ENEMY | Bullet.MASK_WALL | Bullet.MASK_BUNKER | Bullet.MASK_GROUND
+	var mask: int = Bullet.MASK_ENEMY | Bullet.MASK_WALL | Bullet.MASK_BUNKER | Kit.LAYER_GROUND
 	var query := PhysicsRayQueryParameters3D.create(from, from + direction * 250.0, mask)
 	var hit: Dictionary = get_viewport().world_3d.direct_space_state.intersect_ray(query)
 	if hit.is_empty():

@@ -29,7 +29,7 @@ void vertex() {
 		vec2 away = wp.xz - pu.xy;
 		float d = length(away);
 		float influence = (1.0 - smoothstep(pu.z * 0.2, pu.z, d)) * pu.w;
-		push += away / max(d, 0.05) * 0.16 * (pu.z / 0.85) * influence;
+		push += away / max(d, 0.05) * 0.3 * (pu.z / 1.1) * influence;
 	}
 	push *= tip * player_bend;
 	// Convert a world-space push into the local basis (rotation/scale may vary per tuft).

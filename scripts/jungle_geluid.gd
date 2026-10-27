@@ -8,9 +8,9 @@ extends Node
 
 const MAP := "res://assets/geluid/jungle/"
 const MASTER := 0.6
-const BG_VOL := 0.32
-const WATER_VOL := 0.34
-const CALL_VOL := 0.55
+const BG_VOL := 0.13
+const WATER_VOL := 0.16
+const CALL_VOL := 0.22
 const CALM_RECOVER := 18.0   # seconden om na een schot weer helemaal tot rust te komen
 const FADE := 1.2            # seconden voor in- en uitfaden van een lus
 const BASE_ZONE := 0.18      # zo hard klinkt de jungle midden op de basis (1 = in het bos)

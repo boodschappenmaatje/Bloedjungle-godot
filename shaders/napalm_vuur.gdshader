@@ -8,7 +8,8 @@ uniform vec4 imp_t = vec4(-1.0);
 uniform float wave_speed = 7.0;
 uniform float max_reach = 5.0;
 uniform float half_width = 2.5;
-uniform float fade = 1.0;
+uniform float fade = 1.0;   // 1 = brandt, loopt naar 0 als het vuur dooft
+uniform float after = 1.0;  // 1 -> 0: hoe zichtbaar de verkoolde grond nog is
 
 varying vec2 local;
 
@@ -43,6 +44,6 @@ void fragment() {
 	float edge = 1.0 - smoothstep(0.55, 1.0, across + (f - 0.5) * 0.5);
 	float inten = cov * edge * (0.25 + 0.75 * f);
 	vec3 col = mix(vec3(0.55, 0.08, 0.01), vec3(0.95, 0.5, 0.08), clamp(f * f * 1.8, 0.0, 1.0));
-	ALBEDO = col;
-	ALPHA = clamp(inten * 1.1, 0.0, 0.85) * fade;
+	ALBEDO = mix(vec3(0.02, 0.016, 0.012), col, fade);   // dooft naar verkoold zwart
+	ALPHA = clamp(inten * 1.1, 0.0, 0.85) * mix(after * 0.95, 1.0, fade);
 }

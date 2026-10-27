@@ -188,12 +188,22 @@ func _run() -> void:
 	_check(burning[0].model.current == "brand_val", "na het rennen valt hij met brand_val (%s)" % burning[0].model.current)
 	_check(not safe.dead and safe.burn_t <= 0.0, "een vijand buiten de strook mag niet branden")
 	_check(game.streak == streak0, "napalm-kills mogen je streak niet verhogen (%d -> %d)" % [streak0, game.streak])
-	await _frames(60 * 10)
-	var left_n := 0
-	for n in main.get_children():
-		if _is(n, "napalm_aanval"):
-			left_n += 1
-	_check(left_n == 0, "de napalm-aanval moet na het doven zichzelf opruimen")
+	# na het vuur blijven rook en een verkoolde strook nog even; daarna ruimt hij zichzelf op
+	var saw_smolder := false
+	var gone := false
+	for f in 60 * 40:
+		await process_frame
+		var found := false
+		for n in main.get_children():
+			if _is(n, "napalm_aanval"):
+				found = true
+				if n._after_t >= 0.0 and n._smokes.size() >= 7 and n._carpet != null and is_instance_valid(n._carpet):
+					saw_smolder = true
+		if not found:
+			gone = true
+			break
+	_check(saw_smolder, "na het vuur moeten er rookpluimen en een verkoolde strook blijven")
+	_check(gone, "de napalm-aanval moet zichzelf na de rook opruimen")
 
 	print('stap 6 klaar')
 	# 7. einde golf: teller nul, bank blijft

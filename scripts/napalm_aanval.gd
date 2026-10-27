@@ -19,6 +19,8 @@ const CARPET := preload("res://shaders/napalm_vuur.gdshader")
 const WAVE_SPEED := 7.0   # m/s waarmee het vuur vanaf een inslag langs de strook uitrolt
 const REACH := 5.0        # m die het vuur vanaf een inslag bereikt: de vier inslagen overlappen, de uiteinden steken een stuk door
 const FLAME_STEP := 1.8   # m tussen de vlammen langs de strook
+const AFTER_TIME := 16.0  # s dat er na het vuur nog rook en een verkoolde strook blijven
+const SMOKE_LIFE := 6.5   # s dat een rookpluim omhoog trekt
 const FADE_TIME := 2.0    # s waarin het vuur aan het eind dooft
 
 var center := Vector3.ZERO
@@ -35,6 +37,8 @@ var _carpet_mat: ShaderMaterial
 var _flames: Array = []       # [{s, lane, h, node, die}] vlammen die meekomen met de vuurgolf
 var _first_hit := -1.0
 var _passed := false
+var _smokes: Array = []       # rookpluimen: blijven nog even na het vuur
+var _after_t := -1.0          # s sinds het vuur uit is (< 0: het brandt nog)
 
 
 func start(target: Vector3, d: Vector3) -> void:
@@ -103,23 +107,47 @@ func _physics_process(delta: float) -> void:
 		# vanaf de eerste inslag brandt het: wie in een brandende strook staat of erin loopt, vat vlam
 		_burn_t = maxf(_burn_t, 0.0) + delta
 		_tick -= delta
-		if _tick <= 0.0:
+		if _tick <= 0.0 and _after_t < 0.0:
 			_tick = TICK
 			_burn_damage()
 		var all_hit := true
 		for b in _bombs:
 			if not b.hit:
 				all_hit = false
-		if all_hit and _burn_t > BURN_TIME and jet == null:
-			for f in _fires:
-				if is_instance_valid(f):
-					f.queue_free()
-			for f in _flames:
-				if f.node != null and is_instance_valid(f.node):
-					f.node.queue_free()
+		if all_hit and _burn_t > BURN_TIME and jet == null and _after_t < 0.0:
+			_start_smolder()
+	if _after_t >= 0.0:
+		_after_t += delta
+		if _after_t > AFTER_TIME - SMOKE_LIFE - 1.0:
+			for sm in _smokes:   # geen nieuwe rook meer; wat er hangt trekt nog weg
+				if is_instance_valid(sm):
+					for c in sm.get_children():
+						if c is CPUParticles3D:
+							c.emitting = false
+		if _after_t > AFTER_TIME:
+			for sm in _smokes:
+				if is_instance_valid(sm):
+					sm.queue_free()
 			if _carpet != null:
 				_carpet.queue_free()
 			queue_free()
+
+
+## Het vuur is uit: lampen, vonken en vlammen weg; er blijven rook en een verkoolde strook, die langzaam verdwijnen.
+func _start_smolder() -> void:
+	_after_t = 0.0
+	for f in _fires:
+		if is_instance_valid(f):
+			f.queue_free()
+	for f in _flames:
+		if f.node != null and is_instance_valid(f.node):
+			f.node.queue_free()
+	# extra pluimen tussen de inslagen, zodat de hele strook rookt
+	for i in _bombs.size() - 1:
+		var mid: Vector3 = ((_bombs[i].at as Vector3) + (_bombs[i + 1].at as Vector3)) * 0.5
+		_smokes.append(_smolder(get_parent(), mid))
+	for b in _bombs:
+		_smokes.append(_smolder(get_parent(), b.at))
 
 
 func _release(b: Dictionary) -> void:
@@ -171,7 +199,7 @@ func _impact(b: Dictionary) -> void:
 		_make_carpet()
 	_fires.append(_impact_light(parent, at))
 	_fires.append(_embers(parent, at))
-	_fires.append(_smoke(parent, at))
+	_smokes.append(_smoke(parent, at))
 	Game.alert(at, 16.0, 4.0)
 
 
@@ -237,6 +265,7 @@ func _update_carpet(_delta: float) -> void:
 	var since := _t - _first_hit
 	var left := BURN_TIME - since
 	_carpet_mat.set_shader_parameter("fade", clampf(left / FADE_TIME, 0.0, 1.0))
+	_carpet_mat.set_shader_parameter("after", 1.0 if _after_t < 0.0 else clampf(1.0 - _after_t / AFTER_TIME, 0.0, 1.0))
 	for f in _flames:
 		if f.node == null:
 			if left <= FADE_TIME:
@@ -251,9 +280,6 @@ func _update_carpet(_delta: float) -> void:
 			# groeit in en krimpt aan het eind weg, de ene vlam eerder dan de andere
 			var g := minf((_t - float(f.born)) / 0.9, 1.0) * clampf(left / (FADE_TIME * (0.5 + 0.5 * float(f.die))), 0.0, 1.0)
 			(f.node as GeometryInstance3D).set_instance_shader_parameter("grow", g)
-	if left <= 0.0:
-		_carpet.queue_free()
-		_carpet = null
 
 
 ## Eén vlamtong op wereldpositie pos; hij begint ingeklapt en groeit in (grow).
@@ -299,6 +325,24 @@ func _smoke(parent: Node, at: Vector3) -> Node3D:
 	parent.add_child(root)
 	root.global_position = at + Vector3(0, 2.4, 0)
 	var sm := Fx._puff(7, 4.0, 3.2, false, Fx._ramp([Color(0.1, 0.09, 0.08, 0.0), Color(0.14, 0.13, 0.12, 0.34), Color(0.2, 0.19, 0.18, 0.0)], [0.0, 0.25, 1.0]), Vector2(1.0, 2.0), 2.4)
+	root.add_child(sm)
+	sm.emitting = true
+	return root
+
+
+## Nablussende rook: dunne grijze pluimen die breder worden, met de wind meedrijven en uitdoven. Geen vuur meer, wel zichtbaar.
+func _smolder(parent: Node, at: Vector3) -> Node3D:
+	var root := Node3D.new()
+	parent.add_child(root)
+	root.global_position = at + Vector3(0, 0.4, 0)
+	var g := 0.5
+	var sm := Fx._puff(22, SMOKE_LIFE, 3.0, false, Fx._ramp([Color(g, g, g, 0.0), Color(g, g, g, 0.8), Color(g + 0.05, g + 0.05, g + 0.05, 0.6), Color(g + 0.1, g + 0.1, g + 0.1, 0.0)], [0.0, 0.12, 0.65, 1.0]), Vector2(0.9, 1.8), 1.0)
+	var grow := Curve.new()
+	grow.max_value = 4.0
+	grow.add_point(Vector2(0.0, 0.5))
+	grow.add_point(Vector2(1.0, 2.6))
+	sm.scale_amount_curve = grow
+	sm.gravity = Vector3(0.4, 0.5, 0.12)
 	root.add_child(sm)
 	sm.emitting = true
 	return root

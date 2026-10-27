@@ -136,6 +136,12 @@ LOOD = mat("Lood", (0.38, 0.38, 0.40), 0.4, 0.9)
 X_ROT = lambda a: (a, 0, 0)
 
 
+def deel(root, name):
+    """Bewegend onderdeel (slede, hendel, pomp): een eigen knoop onder het wapen, die in een echte clip beweegt.
+    Zijn delen worden apart samengevoegd, zodat ze los van de rest van het wapen kunnen schuiven."""
+    return empty(f"{root.name}_{name}", root)
+
+
 def finish(root):
     """Voegt alle delen met hetzelfde materiaal samen: een wapen kost zo maar een paar tekenopdrachten."""
     groups = {}
@@ -143,13 +149,13 @@ def finish(root):
         if o.type == "MESH":
             groups.setdefault(o.data.materials[0].name, []).append(o)
     for name, parts in groups.items():
-        for p in parts:
-            bevel(p, 0.0025) if False else None
         target = parts[0]
         if len(parts) > 1:
             join(target, parts[1:])
         target.name = f"{root.name}_{name}"
         target.data.name = target.name
+    for sub in [o for o in root.children if o.type == "EMPTY"]:
+        finish(sub)
 
 
 def ring(root, y, r, depth, material, rot=0):
@@ -159,9 +165,11 @@ def ring(root, y, r, depth, material, rot=0):
 # ---------- M1911 ----------
 def m1911():
     r = empty("M1911")
-    box("Slede", (0.03, 0.2, 0.036), BRUIN, r, (0, 0.06, 0.092))
+    sl = deel(r, "Slede")
+    box("Slede", (0.03, 0.2, 0.036), BRUIN, sl, (0, 0.06, 0.092))
     for i in range(5):
-        box("Groef", (0.032, 0.006, 0.03), STAAL, r, (0, -0.02 - i * 0.011, 0.094))
+        box("Groef", (0.032, 0.006, 0.03), STAAL, sl, (0, -0.02 - i * 0.011, 0.094))
+    box("Uitwerppoort", (0.004, 0.05, 0.016), STAAL, sl, (0.0155, 0.04, 0.098))
     box("Frame", (0.026, 0.17, 0.022), BRUIN, r, (0, 0.04, 0.063))
     cyl("Loop", 0.008, 0.008, 0.03, STAAL, "Y", 8, r, (0, 0.17, 0.09))
     box("Greep", (0.028, 0.045, 0.1), BRUIN, r, (0, 0, 0), X_ROT(-0.2))
@@ -171,8 +179,8 @@ def m1911():
     box("BeugelOnder", (0.008, 0.07, 0.007), BRUIN, r, (0, 0.03, 0.02))
     box("Trekker", (0.006, 0.008, 0.022), STAAL, r, (0, 0.025, 0.045))
     box("Hamer", (0.008, 0.016, 0.02), STAAL, r, (0, -0.045, 0.117), X_ROT(0.3))
-    box("Korrel", (0.005, 0.01, 0.01), STAAL, r, (0, 0.155, 0.116))
-    box("Kimmen", (0.014, 0.01, 0.01), STAAL, r, (0, -0.03, 0.116))
+    box("Korrel", (0.005, 0.01, 0.01), STAAL, sl, (0, 0.155, 0.116))
+    box("Kimmen", (0.014, 0.01, 0.01), STAAL, sl, (0, -0.03, 0.116))
     box("Magazijn", (0.024, 0.04, 0.012), STAAL, r, (0, -0.012, -0.056), X_ROT(-0.2))
     finish(r)
     return r
@@ -195,7 +203,9 @@ def thompson():
     box("Beugel", (0.01, 0.07, 0.008), BRUIN, r, (0, 0.07, 0.03))
     cyl("Trommel", 0.072, 0.072, 0.048, BRUIN, "X", 16, r, (0, 0.17, 0.0))
     cyl("Trommelkap", 0.03, 0.03, 0.052, STAAL, "X", 10, r, (0, 0.17, 0.0))
-    box("Repeerknop", (0.03, 0.03, 0.025), STAAL, r, (0.04, 0.19, 0.12))
+    kn = deel(r, "Repeerknop")
+    box("Repeerknop", (0.03, 0.03, 0.025), STAAL, kn, (0.04, 0.19, 0.12))
+    box("Repeersteel", (0.036, 0.014, 0.012), STAAL, kn, (0.026, 0.19, 0.112))
     box("Korrel", (0.006, 0.012, 0.02), STAAL, r, (0, 0.5, 0.115))
     box("Kimmen", (0.03, 0.02, 0.025), STAAL, r, (0, 0.27, 0.13))
     finish(r)
@@ -209,7 +219,10 @@ def garand():
     box("Kolfplaat", (0.044, 0.014, 0.11), BRUIN, r, (0, -0.445, 0.03))
     box("Pols", (0.036, 0.3, 0.07), HOUT, r, (0, 0.0, 0.03))
     box("Huis", (0.036, 0.34, 0.052), BRUIN, r, (0, 0.27, 0.062))
-    box("Sluiting", (0.03, 0.05, 0.02), STAAL, r, (0, 0.2, 0.1))
+    sl = deel(r, "Sluiting")
+    box("Sluiting", (0.03, 0.05, 0.02), STAAL, sl, (0, 0.2, 0.1))
+    box("Spanhendel", (0.016, 0.034, 0.014), STAAL, sl, (0.03, 0.2, 0.094))
+    box("Hendelsteel", (0.03, 0.012, 0.01), STAAL, sl, (0.019, 0.2, 0.097))
     box("Magazijn", (0.026, 0.05, 0.03), STAAL, r, (0, 0.2, 0.035))
     box("Voorhout", (0.04, 0.4, 0.04), HOUT, r, (0, 0.62, 0.058))
     box("Handbeschermer", (0.034, 0.34, 0.026), HOUT, r, (0, 0.66, 0.088))
@@ -239,9 +252,10 @@ def trench():
     cyl("Hitteschild", 0.026, 0.026, 0.28, STAAL, "Y", 12, r, (0, 0.62, 0.108))
     for i in range(6):
         box("Gat", (0.012, 0.018, 0.012), BRUIN, r, (0, 0.5 + i * 0.045, 0.133))
-    cyl("Pomp", 0.032, 0.032, 0.17, POMP_HOUT, "Y", 12, r, (0, 0.42, 0.052))
+    pp = deel(r, "Pomp")
+    cyl("Pomp", 0.032, 0.032, 0.17, POMP_HOUT, "Y", 12, pp, (0, 0.42, 0.052))
     for i in range(4):
-        cyl("Groefje", 0.034, 0.034, 0.006, POMP_HOUT_D, "Y", 12, r, (0, 0.37 + i * 0.03, 0.052))
+        cyl("Groefje", 0.034, 0.034, 0.006, POMP_HOUT_D, "Y", 12, pp, (0, 0.37 + i * 0.03, 0.052))
     box("Beugel", (0.008, 0.1, 0.008), BRUIN, r, (0, 0.12, 0.04))
     box("Trekker", (0.006, 0.008, 0.026), STAAL, r, (0, 0.1, 0.05))
     box("Bajonetpen", (0.012, 0.03, 0.014), STAAL, r, (0, 0.88, 0.07))
@@ -261,6 +275,9 @@ def mg42():
         box("Koelgat", (0.083, 0.03, 0.022), STAAL, r, (0, 0.5 + i * 0.058, 0.115))
     cyl("Mondingsversterker", 0.046, 0.034, 0.07, STAAL, "Y", 12, r, (0, 0.94, 0.115))
     cyl("Loop", 0.014, 0.014, 0.1, STAAL, "Y", 8, r, (0, 1.0, 0.115))
+    gr = deel(r, "Repeergreep")
+    box("Repeergreep", (0.016, 0.04, 0.022), STAAL, gr, (0.044, 0.2, 0.128))
+    box("Repeerslede", (0.02, 0.1, 0.01), STAAL, gr, (0.036, 0.2, 0.128))
     box("Kolf", (0.05, 0.34, 0.1), HOUT_D, r, (0, -0.26, 0.06), X_ROT(0.1))
     box("Kolfplaat", (0.05, 0.012, 0.11), BRUIN, r, (0, -0.435, 0.05))
     box("Pistoolgreep", (0.034, 0.04, 0.1), HOUT_D, r, (0, 0.0, 0.0), X_ROT(-0.2))
@@ -336,13 +353,48 @@ def raket():
 for fn in (m1911, thompson, garand, trench, mg42, bazooka, huls, raket):
     fn()
 
+
+# ---------- echte clips voor de bewegende delen (60 beelden per seconde) ----------
+# Elke clip beweegt een of meer delen langs de looprichting (Blender Y); terug = negatief. Tijden in beelden.
+scene.render.fps = 60
+CLIPS = {
+    # naam: {deel: [(beeld, verschuiving in meters), ...]}
+    # let op de volgorde: de laatste NLA-spoor wint in de rustpose; "schot" moet de rustpose bepalen, dus "leeg" eerst
+    "M1911_leeg": {"M1911_Slede": [(0, -0.0335), (3, -0.034)]},   # leeg magazijn: de slede blijft open staan
+    "M1911_schot": {"M1911_Slede": [(0, 0.0), (3, -0.034), (10, 0.0)]},
+    "Thompson_schot": {"Thompson_Repeerknop": [(0, 0.0), (1, -0.022), (4, 0.0)]},
+    "Garand_schot": {"Garand_Sluiting": [(0, 0.0), (4, -0.045), (14, 0.0)]},
+    "Trench_schot": {"Trench_Pomp": [(0, 0.0), (8, 0.0), (13, -0.07), (18, -0.07), (24, 0.0)]},
+    "MG42_schot": {"MG42_Repeergreep": [(0, 0.0), (1, -0.03), (3, 0.0)]},
+}
+for clip_name, parts in CLIPS.items():
+    for part_name, keys in parts.items():
+        obj = bpy.data.objects[part_name]
+        base = Vector(obj.location)
+        obj.animation_data_create()
+        act = bpy.data.actions.new(clip_name)
+        obj.animation_data.action = act
+        for frame, dy in keys:
+            obj.location = base + Vector((0, dy, 0))
+            obj.keyframe_insert("location", frame=frame + 1)
+        obj.location = base
+        track = obj.animation_data.nla_tracks.new()
+        track.name = clip_name
+        track.strips.new(clip_name, 1, act)
+        obj.animation_data.action = None
+scene.frame_start = 1
+scene.frame_end = 30
+scene.frame_set(1)
+
 bpy.ops.object.select_all(action="DESELECT")
 bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "wapens.glb"), export_format="GLB", export_apply=True,
-                          export_yup=True, export_animations=False)
+                          export_yup=True, export_animations=True,
+                          export_animation_mode="NLA_TRACKS", export_force_sampling=True)
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "wapens.blend"))
-for root in [o for o in scene.objects if o.type == "EMPTY"]:
+for root in [o for o in scene.objects if o.type == "EMPTY" and o.parent is None]:
     tris = 0
-    for o in root.children:
+    meshes = [o for o in root.children_recursive if o.type == "MESH"]
+    for o in meshes:
         o.data.calc_loop_triangles()
         tris += len(o.data.loop_triangles)
-    print("TRIS", root.name, tris, "delen", len(root.children))
+    print("TRIS", root.name, tris, "delen", len(meshes))

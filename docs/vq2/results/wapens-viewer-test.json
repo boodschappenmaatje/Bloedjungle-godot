@@ -1,0 +1,29 @@
+{
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "clips": {
+  "M1911_schot": {
+   "duration": 0.18333333730697632,
+   "moved_m": 0.0329
+  },
+  "Thompson_schot": {
+   "duration": 0.0833333358168602,
+   "moved_m": 0.0214
+  },
+  "Garand_schot": {
+   "duration": 0.25,
+   "moved_m": 0.0449
+  },
+  "Trench_schot": {
+   "duration": 0.4166666567325592,
+   "moved_m": 0.07
+  },
+  "MG42_schot": {
+   "duration": 0.06666667014360428,
+   "moved_m": 0.0294
+  }
+ },
+ "errors": [],
+ "bazooka": "geen clips, Play uitgeschakeld",
+ "stats": "Garand: 264 driehoeken · 5 meshes · 4 materialen · geen texturen (vlakke PBR-waarden, kleine prop). Geen iPhone-FPS gemeten.",
+ "ok": true
+}

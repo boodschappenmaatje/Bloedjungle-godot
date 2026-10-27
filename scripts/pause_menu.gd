@@ -5,6 +5,7 @@ extends CanvasLayer
 
 const ROWS := [
 	["soldaat", "Mannetjes (na nieuw spel)", [["vq2", "Realistisch"], ["v1", "Oud model"]]],
+	["ragdoll", "Doodsval vijanden", [["on", "Ragdoll"], ["off", "Animatie"]]],
 	["quality", "Grafiek", [["low", "Laag"], ["high", "Hoog"], ["ultra", "Ultra"]]],
 	["time", "Tijd", [["day", "Dag"], ["dusk", "Avond"], ["night", "Nacht"]]],
 	["prep", "Bouwtijd tussen golven", [["60", "1 min"], ["120", "2 min"], ["300", "5 min"], ["600", "10 min"]]],

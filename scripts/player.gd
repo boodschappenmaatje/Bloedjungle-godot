@@ -418,6 +418,9 @@ func _aim_assist(a: float) -> float:
 	return a if is_nan(best) else a + angle_difference(a, best) * 0.6
 
 
+var _back := false   # loopt achteruit (zie _animate)
+
+
 func _animate(mv: Vector2, moving: float) -> void:
 	var run_mul := SPRINT_MUL if sprinting else 1.0
 	if reload_t > 0.0 and moving < 0.15:
@@ -426,10 +429,16 @@ func _animate(mv: Vector2, moving: float) -> void:
 	elif moving < 0.15:
 		model.play("stil")
 	else:
-		# achteruit lopen als hij de andere kant op kijkt dan hij loopt
-		var back := cos(atan2(mv.x, mv.y) - face) < -0.3
+		# de romp en het wapen kijken naar het richtpunt, de benen draaien naar de looprichting (zijwaarts, schuin, achteruit);
+		# kijkt hij meer dan ~105 graden van de looprichting weg, dan loopt hij achteruit (met hysterese tegen heen-en-weer)
+		var rel := angle_difference(face, atan2(mv.x, mv.y))
+		_back = absf(rel) > (1.31 if _back else 1.83)
+		var back := _back
 		var spd := moving * Data.PLAYER_SPEED * run_mul
-		if back:
+		var leg := rel - signf(rel) * PI if back else rel
+		if back and model.v2:
+			model.play("lopen", 0.2, -spd / 2.4)   # VQ2: de loopcyclus achterstevoren, wapen blijft in de aanslag
+		elif back:
 			model.play("achteruit", 0.2, spd / 2.0)
 		elif sprinting and model.anim.has_animation("sprinten"):
 			model.play("sprinten", 0.15, clampf(spd / (Data.PLAYER_SPEED * SPRINT_MUL), 0.7, 1.3))
@@ -441,6 +450,8 @@ func _animate(mv: Vector2, moving: float) -> void:
 			model.play("rennen", 0.2, spd / 6.0)
 		else:
 			model.play("lopen", 0.2, spd / 2.4)
+		if not sprinting:
+			model.set_leg_yaw(leg)
 
 
 func hit(dmg: float, dir: Vector3, from_player: bool, heavy := false) -> void:
@@ -456,6 +467,7 @@ func hit(dmg: float, dir: Vector3, from_player: bool, heavy := false) -> void:
 	var cover := 0.45 if Game.defs and Game.defs.in_trench(global_position) else 1.0  # in een loopgraaf mis je ruim de helft
 	hp -= dmg * (1.0 - 0.08 * Game.upg.armor) * Progress.bonus().taken * cover
 	model.flash()
+	model.flinch(dir, clampf(dmg / 25.0, 0.5, 1.4))   # romp en hoofd duwen mee met de kogel, zonder de schietpose te onderbreken
 	Sfx.play("hurt", 0.7)
 	if in_tank:
 		Fx.explosion(get_parent(), global_position + Vector3.UP * 0.5, 0.8)

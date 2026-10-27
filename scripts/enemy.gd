@@ -491,7 +491,11 @@ func _die(dir: Vector3, clip := "") -> void:
 	if clip != "":
 		model.play(clip, 0.1)
 	elif blast.is_empty():
-		model.play("dood1" if randf() < 0.5 else "dood2", 0.08)
+		var flat := Vector3(dir.x, 0.0, dir.z).normalized()
+		# VQ2: de ragdoll valt vanuit de pose van dat moment en krijgt de klap van de kogel mee; anders de gewone sterfanimatie
+		var ragdoll := GameSettings.get_value("ragdoll") == "on" and SoldierRagdoll.start(model, flat * 0.8, flat * 3.2 + Vector3(0, 0.7, 0))
+		if not ragdoll:
+			model.play("dood1" if randf() < 0.5 else "dood2", 0.08)
 	else:
 		_fling(blast)
 	get_tree().create_timer(8.0).timeout.connect(queue_free)

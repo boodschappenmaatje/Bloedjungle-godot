@@ -63,3 +63,16 @@ In Godot ASTC met mipmaps (`tools/textuur_import.py`). Materiaalsurfaces per man
 - `tests/soldaat_foto.gd`: voor/na met de echte spelcamera (bovenste rij v1, onderste VQ2), ingezoomd, lopend, schietend.
 - Viewer: `tools/blender-vq2-viewer/` (model *Soldaat*, keuzelijst *Rol / uitrusting*), test `node test-soldaat.mjs`.
 - Beelden in `docs/vq2/renders/soldaat-*.png`. Geen iPhone-FPS gemeten.
+
+## Fase 2: animaties in code (geen nieuwe GLB-clips)
+De clips in de glb zijn ongewijzigd. Wat erbij kwam, draait in Godot en is dus niet in de Blender-viewer te zien; de demo is
+`tests/soldaat_anim_foto.gd` (beelden `docs/vq2/renders/soldaat-anim-*.png`).
+- `scripts/soldier_pose.gd` (`SoldierPose`, een `SkeletonModifier3D` onder het skelet): **benen los van de romp**. De speler richt
+  met de romp en het wapen, de benen draaien naar de looprichting (voor, schuin, zijwaarts, schuin achter, achteruit = de
+  loopcyclus achterstevoren, wapen blijft in de aanslag; hysterese bij ~75/105 graden). Ook de **trefferduw per richting**:
+  romp en hoofd gaan een stuk mee met de kogel en veren terug (`SoldierModel.flinch` voor de speler, `hit_reaction` voor vijanden).
+- `scripts/soldier_ragdoll.gd` (`SoldierRagdoll`): vijanden die door een kogel sterven vallen als **ragdoll** (11 `PhysicalBone3D`
+  met kegelgewrichten, botst alleen met grond, muur en bunker). Maximaal 6 tegelijk, daarna de gewone sterfclip. Explosie- en
+  napalmdoden houden hun eigen clip. Instelling *Doodsval vijanden*: Ragdoll / Animatie.
+- Tests: `tests/soldaat_pose_test.gd` (richting van de benen, romp blijft vooruit, trefferduw per richting) en
+  `tests/soldaat_ragdoll_test.gd` (valt, blijft boven de grond, begrensd aantal). iPhone-fps niet gemeten.

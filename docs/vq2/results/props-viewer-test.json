@@ -1,0 +1,13 @@
+{
+ "stats": {
+  "Zandzak1": "Zandzak1: 168 driehoeken · 1 meshes · 1 materialen · 3 texturen (gedeelde 1K-VQ2-sets). Geen iPhone-FPS gemeten.",
+  "Zandzak2": "Zandzak2: 168 driehoeken · 1 meshes · 1 materialen · 3 texturen (gedeelde 1K-VQ2-sets). Geen iPhone-FPS gemeten.",
+  "Zandzak3": "Zandzak3: 168 driehoeken · 1 meshes · 1 materialen · 3 texturen (gedeelde 1K-VQ2-sets). Geen iPhone-FPS gemeten.",
+  "Kist_Hout": "Kist_Hout: 336 driehoeken · 1 meshes · 1 materialen · 3 texturen (gedeelde 1K-VQ2-sets). Geen iPhone-FPS gemeten.",
+  "Kist_Munitie": "Kist_Munitie: 572 driehoeken · 2 meshes · 2 materialen · 6 texturen (gedeelde 1K-VQ2-sets). Geen iPhone-FPS gemeten."
+ },
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "clips": {},
+ "errors": [],
+ "ok": true
+}

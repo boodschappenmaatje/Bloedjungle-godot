@@ -286,17 +286,36 @@ static func scatter(parent: Node3D, mesh: Mesh, mat: Material, xforms: Array, co
 	return inst
 
 
-## Rij zandzakken langs een lijn: twee lagen, een beetje scheef en wisselend van kleur.
+## De echte props uit assets/props.glb (bron/props/maak_props.py): Zandzak1-3, Kist_Hout, Kist_Munitie.
+static var _props := {}
+const BAGS := ["Zandzak1", "Zandzak2", "Zandzak3"]
+
+
+static func prop_mesh(name: String) -> Mesh:
+	if _props.is_empty():
+		var root := (load("res://assets/props.glb") as PackedScene).instantiate()
+		for mi in root.find_children("*", "MeshInstance3D", true, false):
+			_props[String(mi.name)] = (mi as MeshInstance3D).mesh
+		root.free()
+	return _props[name]
+
+
+## Een prop als los object (mesh uit props.glb), met de onderkant op pos.y.
+static func prop(parent: Node3D, name: String, pos: Vector3, scale: float, yaw := 0.0) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	mi.mesh = prop_mesh(name)
+	mi.position = pos
+	mi.rotation.y = yaw
+	mi.scale = Vector3.ONE * scale
+	parent.add_child(mi)
+	return mi
+
+
+## Rij zandzakken langs een lijn: twee lagen, een beetje scheef, drie vormen en kleuren.
 static func sandbags(parent: Node3D, from: Vector3, to: Vector3, courses := 2, seed_ := 1) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
-	var bag := SphereMesh.new()
-	bag.radius = 0.5
-	bag.height = 1.0
-	bag.radial_segments = 8
-	bag.rings = 4
-	var xf: Array = []
-	var cols: Array = []
+	var xf: Array = [[], [], []]
 	var len := from.distance_to(to)
 	var dir := (to - from) / maxf(len, 0.01)
 	var yaw := atan2(dir.x, dir.z) + PI / 2.0
@@ -305,10 +324,8 @@ static func sandbags(parent: Node3D, from: Vector3, to: Vector3, courses := 2, s
 		for i in n:
 			var p := from + dir * (0.3 + i * 0.6 + (0.3 if c % 2 else 0.0))
 			p.y = 0.12 + c * 0.2
-			var b := Basis.from_euler(Vector3(0, yaw + rng.randf_range(-0.12, 0.12), 0)).scaled(Vector3(0.62, 0.24, 0.38))
-			xf.append(Transform3D(b, p))
-			var v := rng.randf_range(0.85, 1.1)
-			cols.append(Color(v, v, v * 0.95))
-	var m: StandardMaterial3D = canvas().duplicate()
-	m.vertex_color_use_as_albedo = true  # de kleurtjes per zak
-	scatter(parent, bag, m, xf, cols)
+			var b := Basis.from_euler(Vector3(0, yaw + rng.randf_range(-0.12, 0.12) + (PI if rng.randf() < 0.5 else 0.0), 0)).scaled(Vector3(1.0, 1.2, 1.0))
+			xf[rng.randi() % 3].append(Transform3D(b, p))
+	for v in 3:
+		if not xf[v].is_empty():
+			scatter(parent, prop_mesh(BAGS[v]), null, xf[v])

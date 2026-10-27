@@ -16,6 +16,7 @@ static func build(root: Node3D) -> void:
 			_tower(root, Vector3(sx * (C - 1.8), 0, sz * (C - 1.8)))
 	Kit.sandbags(root, Vector3(-C + 0.7, 0, 3.0), Vector3(-C + 0.7, 0, 8.0), 2, 3)
 	Kit.sandbags(root, Vector3(C - 0.7, 0, -3.0), Vector3(C - 0.7, 0, -8.0), 2, 4)
+	_crates(root, Vector3(-C + 6.5, 0, -C + 5.5))  # voorraadhoek bij de noordwesthoek
 
 
 ## Borstwering met een palenrij en een rand erop; open bij de twee poorten.
@@ -132,12 +133,20 @@ static func _hut(root: Node3D, pos: Vector3, yaw: float) -> void:
 static func _crates(root: Node3D, pos: Vector3) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = int(pos.x * 10.0 + pos.z)
-	var wood := Kit.wood()
 	for i in 5:
 		var s := rng.randf_range(0.7, 1.0)
 		var p := pos + Vector3(rng.randf_range(-1.0, 1.0), 0, rng.randf_range(-0.8, 0.8))
-		Kit.box(root, p, Vector3(s, s * 0.85, s), wood, rng.randf() * PI)
+		var yaw := rng.randf() * PI
+		Kit.prop(root, "Kist_Hout", p, s, yaw)
+		Kit.collider(root, p + Vector3(0, s * 0.45, 0), Vector3(s, s * 0.9, s) * 1.1, Kit.LAYER_WALL)
 		if i < 2:
-			Kit.box(root, p + Vector3(0, s * 0.85, 0), Vector3(s * 0.85, s * 0.7, s * 0.85), wood, rng.randf() * PI)
+			Kit.prop(root, "Kist_Hout", p + Vector3(0, s * 0.91, 0), s * 0.85, rng.randf() * PI)
+		elif i == 2:
+			Kit.prop(root, "Kist_Munitie", p + Vector3(0, s * 0.91, 0), 1.5, rng.randf() * PI)
+	Kit.collider(root, pos + Vector3(0.15, 0.3, 1.5), Vector3(1.4, 0.6, 0.7), Kit.LAYER_WALL)
+	Kit.prop(root, "Kist_Munitie", pos + Vector3(-0.2, 0, 1.4), 1.5, 0.4)
+	Kit.prop(root, "Kist_Munitie", pos + Vector3(0.5, 0, 1.55), 1.5, -0.2)
+	Kit.prop(root, "Kist_Munitie", pos + Vector3(0.5, 0.45, 1.55), 1.5, -0.1)
+	Kit.collider(root, pos + Vector3(2.4, 0.45, 0.9), Vector3(2.0, 0.9, 0.7), Kit.LAYER_WALL)
 	for i in 3:
 		Kit.cylinder(root, pos + Vector3(1.7 + i * 0.7, 0, 0.9), 0.3, 0.9, Kit.olive() if i != 1 else Kit.rust(), 10)

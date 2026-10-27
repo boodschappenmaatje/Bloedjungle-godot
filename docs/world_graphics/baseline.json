@@ -1,0 +1,19 @@
+{
+  "base_commit": "045507250d582cf1e805013979239a516d88706d",
+  "engine": "Godot 4.6.3",
+  "capture": "Actual main scene; four deterministic views, high quality, seed 2702026, normal 58deg/28m/45FOV camera",
+  "observations": [
+    "Ground mud_tex actually binds gravel_rock albedo",
+    "Dry-earth roughness is incorrectly used as a height map",
+    "Ground specular disabled and roughness fixed to 1.0",
+    "Only dry-earth normals present; no grass/mud roughness response",
+    "Warm sun, saturated grading and green vignette combine into a yellow/green wash",
+    "High quality uses orthogonal 1024 shadow atlas and normal bias 1.2; contact shadows are weak"
+  ],
+  "preserve": [
+    "Current main vehicle HUD/gate changes",
+    "Collision, river/trench/helipad holes, path layout and terrain height",
+    "Camera, models, gameplay, saved settings and adaptive performance governor"
+  ],
+  "performance_limit": "Fixed-step captures on llvmpipe software rendering are not an iPhone FPS benchmark."
+}

@@ -1,0 +1,132 @@
+{
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "clips": {
+  "achteruit": {
+   "duration": 1.375,
+   "rotation_in_clip_rad": 0.58,
+   "pose_vs_stil_rad": 0.765
+  },
+  "dood1": {
+   "duration": 3.417,
+   "rotation_in_clip_rad": 1.161,
+   "pose_vs_stil_rad": 1.126
+  },
+  "dood2": {
+   "duration": 2.958,
+   "rotation_in_clip_rad": 0.563,
+   "pose_vs_stil_rad": 1.29
+  },
+  "geraakt": {
+   "duration": 2.292,
+   "rotation_in_clip_rad": 0.456,
+   "pose_vs_stil_rad": 0.972
+  },
+  "lopen": {
+   "duration": 1.292,
+   "rotation_in_clip_rad": 0.333,
+   "pose_vs_stil_rad": 1.064
+  },
+  "rennen": {
+   "duration": 0.667,
+   "rotation_in_clip_rad": 0.716,
+   "pose_vs_stil_rad": 0.949
+  },
+  "schieten": {
+   "duration": 0.25,
+   "rotation_in_clip_rad": 0.033,
+   "pose_vs_stil_rad": 0.033
+  },
+  "steken": {
+   "duration": 3.25,
+   "rotation_in_clip_rad": 0.298,
+   "pose_vs_stil_rad": 1.432
+  },
+  "stil": {
+   "duration": 3.083,
+   "rotation_in_clip_rad": 0.041,
+   "pose_vs_stil_rad": 0.041
+  },
+  "klimmen": {
+   "duration": 0.667,
+   "rotation_in_clip_rad": 2.85,
+   "pose_vs_stil_rad": 2.396
+  },
+  "zitten": {
+   "duration": 2,
+   "rotation_in_clip_rad": 0.001,
+   "pose_vs_stil_rad": 1.137
+  },
+  "brand_rennen": {
+   "duration": 0.533,
+   "rotation_in_clip_rad": 0.721,
+   "pose_vs_stil_rad": 2.753
+  },
+  "brand_val": {
+   "duration": 1.067,
+   "rotation_in_clip_rad": 0.619,
+   "pose_vs_stil_rad": 2.273
+  },
+  "explosie_dood": {
+   "duration": 1.333,
+   "rotation_in_clip_rad": 2.006,
+   "pose_vs_stil_rad": 2.007
+  },
+  "herladen": {
+   "duration": 1.2,
+   "rotation_in_clip_rad": 0.245,
+   "pose_vs_stil_rad": 0.438
+  },
+  "rollen": {
+   "duration": 0.5,
+   "rotation_in_clip_rad": 1.309,
+   "pose_vs_stil_rad": 1.92
+  },
+  "sprinten": {
+   "duration": 0.533,
+   "rotation_in_clip_rad": 0.93,
+   "pose_vs_stil_rad": 0.95
+  }
+ },
+ "looks": {
+  "eigen": [
+   "Helm",
+   "Koppel",
+   "Laarzen",
+   "Lijf_Uniform",
+   "Rugzak",
+   "Vest"
+  ],
+  "speler:bloot": [
+   "Hoofdband",
+   "Koppel",
+   "Laarzen",
+   "Lijf_Bloot"
+  ],
+  "vijand:knife": [
+   "Bandana",
+   "Laarzen_V",
+   "Lijf_Vijand"
+  ],
+  "vijand:rifle": [
+   "Boonie",
+   "Borsttuig",
+   "Laarzen_V",
+   "Lijf_Vijand"
+  ],
+  "vijand:rocket": [
+   "Laarzen_V",
+   "Lijf_Vijand",
+   "Pet",
+   "Raketzak"
+  ],
+  "vijand:heavy": [
+   "Laarzen_V",
+   "Lijf_Vijand",
+   "Patroongordels",
+   "Staalhelm"
+  ]
+ },
+ "errors": [],
+ "stats": "V1 (pop zonder uitrusting): 13.744 driehoeken · 2 materialen · texturen geen. VQ2 (deze look): 9.966 driehoeken · 3 materialen · texturen 1024×1024. Geen iPhone-FPS gemeten.",
+ "ok": true
+}

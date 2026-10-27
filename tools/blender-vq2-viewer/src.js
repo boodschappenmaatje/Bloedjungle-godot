@@ -4,9 +4,31 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 
 const $=id=>document.getElementById(id), stage=$('stage'), canvas=$('canvas');
-const names={kazerne:'Kazerne',wachttoren:'Wachttoren',legerjeep:'Legerjeep',jeep:'Speelbare jeep',auto:'Personenauto',bus:'Stadsbus',straaljager:'Straaljager (napalm)'};
+const names={kazerne:'Kazerne',wachttoren:'Wachttoren',legerjeep:'Legerjeep',jeep:'Speelbare jeep',auto:'Personenauto',bus:'Stadsbus',straaljager:'Straaljager (napalm)',soldaat:'Soldaat (mannetjes)'};
 const NEW_ONLY=['jeep','auto','bus','straaljager'];
 const DAMAGED=['auto','bus'];
+// soldaat: V1 = oude pop, VQ2 = realistisch lichaam; zelfde skelet en clips. Looks = SoldierModel.LOOKS in Godot.
+const FILES={soldaat:{v1:'soldaat.glb',v2:'soldaat_vq2.glb'}};
+const EXTRA_CLIPS={soldaat:['klimmen.glb','zitten.glb','acties.glb']};
+const LOOKS={eigen:['Lijf_Uniform','Helm','Vest','Koppel','Rugzak','Laarzen'],'speler:bloot':['Lijf_Bloot','Hoofdband','Koppel','Laarzen'],'speler:mouwloos':['Lijf_Mouwloos','Hoofdband','Koppel','Laarzen'],'speler:uniform':['Lijf_Uniform','Hoofdband','Koppel','Laarzen'],'speler:vest':['Lijf_Uniform','Hoofdband','Vest','Koppel','Laarzen'],'vijand:knife':['Lijf_Vijand','Bandana','Laarzen_V'],'vijand:rifle':['Lijf_Vijand','Boonie','Borsttuig','Laarzen_V'],'vijand:rocket':['Lijf_Vijand','Pet','Raketzak','Laarzen_V'],'vijand:heavy':['Lijf_Vijand','Staalhelm','Patroongordels','Laarzen_V']};
+const LOOK_COLOR={eigen:'5a6a36','speler:bloot':'4b5a2c','speler:mouwloos':'4b5a2c','speler:uniform':'4b5a2c','speler:vest':'4b5a2c','vijand:knife':'4c5056','vijand:rifle':'8c7b52','vijand:rocket':'5a4a3a','vijand:heavy':'3e4a2b'};
+const ALL_PARTS=new Set(Object.values(LOOKS).flat());
+// zelfde formule als SoldierModel.uniform_tint()
+function uniformTint(hex){const c=[0,2,4].map(i=>parseInt(hex.slice(i,i+2),16)/255);const mx=Math.max(...c,1e-3);const lum=.3*c[0]+.59*c[1]+.11*c[2];const k=.42*Math.min(Math.max(mx/.35,.45),1);return c.map(v=>(lum/mx+(v/mx-lum/mx)*.85)*k);}
+function glbPath(asset,v){const f=FILES[asset];return f?`../../assets/${f[v]}`:`../../assets/${v==='v1'?'vq2_baseline/':''}${asset}.glb`;}
+function applyLook(){
+ if($('asset').value!=='soldaat')return;const look=$('look').value,keep=new Set(LOOKS[look]);
+ for(const [v,slot] of Object.entries(slots))slot.root.traverse(o=>{
+  if(o.name==='Icosphere')o.visible=false;
+  if(v==='v2'&&ALL_PARTS.has(o.name))o.visible=keep.has(o.name);
+  if(!o.isMesh)return;
+  for(const m of [].concat(o.userData.original)){
+   if(m.name?.endsWith('_Kleding')){const t=uniformTint(LOOK_COLOR[look]);m.color.setRGB(t[0],t[1],t[2],THREE.SRGBColorSpace);}
+   if(m.name==='Hoofdband')m.color.setRGB(.75,.08,.06,THREE.SRGBColorSpace);
+   if(v==='v1'&&m.name==='M_Main'){const t=LOOK_COLOR[look];m.color.setRGB(parseInt(t.slice(0,2),16)/255,parseInt(t.slice(2,4),16)/255,parseInt(t.slice(4,6),16)/255,THREE.SRGBColorSpace);}
+  }});
+ shading();stats();dirty=true;
+}
 // per model: onderdelen die bij schadefases veranderen, waar het vuur begint en wat er bij de ontploffing wegvliegt
 const CFG={
  auto:{parts:['Voorruit','Achterruit','DeurLV','DeurRV','DeurLA','DeurRA','Motorkap','Kofferklep','Wiel_LV','Wiel_RV','Wiel_LA','Wiel_RA'],
@@ -62,12 +84,15 @@ async function load(){
  $('phase-row').hidden=!DAMAGED.includes(asset);
  const versions=NEW_ONLY.includes(asset)?['v2']:['v1','v2'];
  try{
-  const loaded=await Promise.all(versions.map(async v=>[v,makeSlot(await loader.loadAsync(`../../assets/${v==='v1'?'vq2_baseline/':''}${asset}.glb`))]));
+  $('look-row').hidden=asset!=='soldaat';
+  const loaded=await Promise.all(versions.map(async v=>[v,makeSlot(await loader.loadAsync(glbPath(asset,v)))]));
+  // extra clips met hetzelfde skelet (klimmen, zitten, rollen, sprinten, herladen, explosie- en branddood), zoals SoldierModel.setup()
+  for(const file of EXTRA_CLIPS[asset]||[]){const g=await loader.loadAsync(`../../assets/${file}`);for(const [,slot] of loaded){for(const c of g.animations){slot.clips=slot.clips.filter(x=>x.name!==c.name);slot.clips.push(c);}}}
   const next=Object.fromEntries(loaded);
   if(current!==request){disposeSlots(next);return;}
   disposeSlots(slots);slots=next;
   bounds.makeEmpty();for(const s of Object.values(slots))bounds.union(new THREE.Box3().setFromObject(s.root));
-  setCamera(false);setupClips();setupMaterials();shading();if(DAMAGED.includes(asset))applyPhase(0);stats();$('loading').hidden=true;status();dirty=true;
+  setCamera(false);setupClips();setupMaterials();shading();if(DAMAGED.includes(asset))applyPhase(0);applyLook();stats();$('loading').hidden=true;status();dirty=true;
  }catch(error){if(current!==request)return;$('loading').hidden=false;$('loading').textContent='Het GLB-model kon niet geladen worden. Controleer de verbinding en open de viewer via HTTP(S). '+error.message;}
 }
 
@@ -80,7 +105,7 @@ function setCamera(game){
  controls.update();camera.updateProjectionMatrix();dirty=true;
 }
 
-function status(){const asset=$('asset').value,version=$('version').value;$('status').textContent=`${names[asset]} · ${asset==='jeep'?'ongewijzigde speelbare jeep':asset==='auto'?'nieuwe auto (geen V1)':asset==='bus'?'nieuwe bus (geen V1)':asset==='straaljager'?'nieuwe straaljager voor de napalm-luchtsteun (geen V1)':version==='split'?'V1 links / VQ2 rechts, identieke camera en belichting':version==='v1'?'origineel op vaste baseline':'VQ2 export'} · 360° draaien en zoomen actief.`;}
+function status(){const asset=$('asset').value,version=$('version').value;$('status').textContent=`${names[asset]} · ${asset==='jeep'?'ongewijzigde speelbare jeep':asset==='auto'?'nieuwe auto (geen V1)':asset==='bus'?'nieuwe bus (geen V1)':asset==='straaljager'?'nieuwe straaljager voor de napalm-luchtsteun (geen V1)':asset==='soldaat'&&version==='split'?'V1 oude pop links / VQ2 realistisch rechts, zelfde skelet, clip en camera':version==='split'?'V1 links / VQ2 rechts, identieke camera en belichting':version==='v1'?'origineel op vaste baseline':'VQ2 export'} · 360° draaien en zoomen actief.`;}
 const PHASES=['Heel','Beschadigd (ruiten, deuk, band)','Zwaar (deur eraf, kap open)','Brandend (vlammen en rook)','Wrak (verkoold, smeulend)','Ontploffing (speelt af)'];
 function phaseNodes(slot){const o={};slot.root.traverse(n=>{if(n.name)o[n.name]=n;});return o;}
 function applyPhase(p){
@@ -184,7 +209,7 @@ function setupClips(){
  const enabled=clips.length>0;for(const id of ['clips','play','restart','scrub','speed'])$(id).disabled=!enabled;
  if(!enabled){$('clips').add(new Option('Geen animaties in dit model',''));$('animation-status').textContent='Geen animaties in dit model.';$('time').textContent='—';clipName='';return;}
  for(const c of clips)$('clips').add(new Option(c.name.replace(/-loop$/,''),c.name));
- $('animation-status').textContent=$('asset').value==='straaljager'?'Echte GLB-clips uit Blender: Vliegen (loop), Bocht en Aanval (neus omlaag, rolroeren, naverbranders). De napalm-vlam en het loslaten van de bommen zijn Godot-effecten; zie de Godot-demo.':DAMAGED.includes($('asset').value)?'Echte GLB-clips uit Blender'+($('asset').value==='bus'?': voordeur, middendeur, motorluik, knielen, lichten, ruitenwissers, knipperlichten en alarm':': deuren, motorkap, kofferklep, ruitenwissers, knipperlichten en alarm')+'. Vuur, rook, ontploffing en vliegende onderdelen zijn Godot-effecten; zie de Godot-demo.':'Originele GLB-clips: wielrotatie, sturen, vering, MG-terugslag en bemanning worden echt geanimeerd. Kies een clip en speel af; gebruik de tijdlijn voor details.';
+ $('animation-status').textContent=$('asset').value==='soldaat'?`Echte GLB-clips op het DEF-skelet (${clips.length}): de tien uit soldaat.glb plus klimmen, zitten en de acties (rollen, sprinten, herladen, explosie- en branddood) uit hun eigen glb, net als in Godot. Beide modellen spelen dezelfde clip. Wapen, terugslag en de schiet-/trefferhouding op het bovenlijf zijn Godot (SoldierModel).`:$('asset').value==='straaljager'?'Echte GLB-clips uit Blender: Vliegen (loop), Bocht en Aanval (neus omlaag, rolroeren, naverbranders). De napalm-vlam en het loslaten van de bommen zijn Godot-effecten; zie de Godot-demo.':DAMAGED.includes($('asset').value)?'Echte GLB-clips uit Blender'+($('asset').value==='bus'?': voordeur, middendeur, motorluik, knielen, lichten, ruitenwissers, knipperlichten en alarm':': deuren, motorkap, kofferklep, ruitenwissers, knipperlichten en alarm')+'. Vuur, rook, ontploffing en vliegende onderdelen zijn Godot-effecten; zie de Godot-demo.':'Originele GLB-clips: wielrotatie, sturen, vering, MG-terugslag en bemanning worden echt geanimeerd. Kies een clip en speel af; gebruik de tijdlijn voor details.';
  selectClip(clips[0].name);
 }
 function selectClip(name){
@@ -221,6 +246,7 @@ function shading(){
 function stats(){
  const name=$('asset').value;
  if((DAMAGED.includes(name)||name==='straaljager')&&slots.v2){let tri=0,meshes=0;const mats=new Set(),imgs=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh)return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const v of Object.values(m))if(v?.isTexture&&v.image)imgs.add(v.image.width+'×'+v.image.height);}});$('stats').textContent=`${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · texturen ${[...imgs].join(', ')} · schade via shape key Deuk en verkoold materiaal. Geen iPhone-FPS gemeten.`;return;}
+ if(name==='soldaat'){const count=slot=>{let tri=0;const mats=new Set(),imgs=new Set();slot.root.traverse(o=>{if(!o.isMesh)return;let p=o,vis=true;while(p){if(!p.visible)vis=false;p=p.parent;}if(!vis)return;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original)){mats.add(m.uuid);for(const v of Object.values(m))if(v?.isTexture&&v.image)imgs.add(v.image.width+'×'+v.image.height);}});return `${Math.round(tri).toLocaleString('nl')} driehoeken · ${mats.size} materialen · texturen ${[...imgs].join(', ')||'geen'}`;};$('stats').textContent=(slots.v1?`V1 (pop zonder uitrusting): ${count(slots.v1)}. `:'')+(slots.v2?`VQ2 (deze look): ${count(slots.v2)}. `:'')+'Geen iPhone-FPS gemeten.';return;}
  if(!report)return;
  const entry=report.assets[name==='jeep'?'playable_jeep':name];
  const text=e=>`${e.triangles.toLocaleString('nl')} driehoeken · ${e.material_surfaces} materiaalsurfaces · ${e.images.length} texturebeelden`;
@@ -244,7 +270,7 @@ function loop(){
  if(dirty&&slots.v2){render();dirty=false;}
 }
 $('boom').onclick=()=>{$('phase').value='5';applyPhase(5);};
-$('phase').addEventListener('change',()=>applyPhase(Number($('phase').value)));$('asset').addEventListener('change',load);$('version').addEventListener('change',()=>{setupMaterials();status();dirty=true;});$('shading').addEventListener('change',shading);
+$('phase').addEventListener('change',()=>applyPhase(Number($('phase').value)));$('look').addEventListener('change',applyLook);$('asset').addEventListener('change',load);$('version').addEventListener('change',()=>{setupMaterials();status();dirty=true;});$('shading').addEventListener('change',shading);
 $('iso').onclick=()=>setCamera(false);$('top').onclick=()=>setCamera(true);
 $('rotate').onclick=()=>{rotating=!rotating;$('rotate').setAttribute('aria-pressed',String(rotating));dirty=true;};
 $('full').onclick=async()=>{const fallback=()=>{stage.scrollIntoView({behavior:'smooth'});$('status').textContent='Safari ondersteunt hier geen fullscreen. Draai je iPhone naar liggend voor een grotere weergave.';};if(stage.requestFullscreen){try{await stage.requestFullscreen();}catch{fallback();}}else fallback();};
@@ -256,5 +282,7 @@ window.__VQ2_READY__=true;
 // Bounded read-only browser verification hook; never changes model files.
 window.__VQ2_TEST__={node:n=>{let r=null;slots.v2?.root.traverse(o=>{if(o.name===n)r=o;});return r;},deuk:()=>{let v=null;slots.v2?.root.traverse(o=>{if(o.isMesh&&o.morphTargetInfluences?.length&&v===null)v=o.morphTargetInfluences[0];});return v;},ready:()=>!!slots.v2&&$('loading').hidden,clips:()=>slots.v2?.clips.map(c=>c.name)||[],
  sample:()=>{const out={};slots.v2?.root.traverse(o=>{if(/WielLV|StuurLV|MG$|Body$|Geschut$/.test(o.name)){out[o.name]={position:o.position.toArray(),quaternion:o.quaternion.toArray(),scale:o.scale.toArray()};}});return out;},
- loaded:()=>({asset:$('asset').value,version:$('version').value,materials:materials.map(m=>m.name),camera:camera.position.toArray(),target:controls.target.toArray(),playing})};
+ visible:()=>{const o=[];slots.v2?.root.traverse(x=>{if(ALL_PARTS.has(x.name)&&x.visible)o.push(x.name);});return o.sort();},
+ bone:n=>{let r=null;slots.v2?.root.traverse(o=>{if(o.isBone&&o.name===n)r=o.quaternion.toArray();});return r;},
+ loaded:()=>({asset:$('asset').value,look:$('look').value,version:$('version').value,materials:materials.map(m=>m.name),camera:camera.position.toArray(),target:controls.target.toArray(),playing})};
 resize();loop();load();

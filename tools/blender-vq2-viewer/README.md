@@ -50,3 +50,7 @@ De viewer bevat ook `assets/bus.glb` (Stadsbus, bron `bron/bus/`): acht echte GL
 ## Straaljager (napalm-luchtsteun)
 
 De viewer bevat ook `assets/straaljager.glb` (bron `bron/straaljager/`): drie echte GLB-clips (Vliegen-loop, Bocht, Aanval) met bewegende rolroeren, naverbranders en romp. `node test-straaljager.mjs` controleert dat elke clip de verwachte nodes echt beweegt. Het loslaten van de bommen en de napalm-vlam zijn Godot-effecten (`scripts/napalm_aanval.gd`, test `tests/killstreak_test.gd`). Geen iPhone/Safari/Xogot-meting uitgevoerd.
+
+## Soldaat (mannetjes)
+
+Model **Soldaat** vergelijkt de oude pop (`assets/soldaat.glb`, V1) met het realistische mannetje (`assets/soldaat_vq2.glb`, bron `bron/soldaat_vq2/`). De keuzelijst **Rol / uitrusting** toont dezelfde looks als het spel (eigen soldaat, speler met bloot/mouwloos/uniform/vest, vijand mes/geweer/raket/zwaar), met dezelfde uniformtint als `SoldierModel.uniform_tint()`. Alle 17 echte clips spelen op beide modellen: de tien uit `soldaat.glb` plus klimmen, zitten en de acties uit hun eigen glb, zoals in Godot. Wapen, terugslag en de bovenlijfhouding bij schieten/treffers zijn Godot (`tests/soldaat_foto.gd`). Test: `node test-soldaat.mjs`. Geen iPhone/Safari-meting uitgevoerd.

@@ -1,9 +1,24 @@
 class_name SoldierModel
 extends Node3D
-## Het geanimeerde mannetje (Quaternius-pop met de Mixamo-geweeranimaties uit assets/soldaat.glb),
-## gebruikt door de speler en de vijanden. Kleurt het uniform en hangt een wapen in de rechterhand.
+## Het geanimeerde mannetje (VQ2: realistisch lichaam uit assets/soldaat_vq2.glb; v1: Quaternius-pop uit assets/soldaat.glb,
+## beide met de Mixamo-geweeranimaties), gebruikt door de speler, bondgenoten en vijanden. Kleurt het uniform en hangt een
+## wapen in de rechterhand.
 
 const SCENE := preload("res://assets/soldaat.glb")
+## VQ2-mannetje (bron/soldaat_vq2): realistisch MakeHuman-lichaam op hetzelfde DEF-skelet met dezelfde clips, vier
+## lichaamsvarianten en uitrusting per type. Instelling "soldaat" = "v1" valt terug op het oude model.
+const SCENE_V2 := preload("res://assets/soldaat_vq2.glb")
+const LOOKS := {
+	"eigen": ["Lijf_Uniform", "Helm", "Vest", "Koppel", "Rugzak", "Laarzen"],
+	"speler:bloot": ["Lijf_Bloot", "Hoofdband", "Koppel", "Laarzen"],
+	"speler:mouwloos": ["Lijf_Mouwloos", "Hoofdband", "Koppel", "Laarzen"],
+	"speler:uniform": ["Lijf_Uniform", "Hoofdband", "Koppel", "Laarzen"],
+	"speler:vest": ["Lijf_Uniform", "Hoofdband", "Vest", "Koppel", "Laarzen"],
+	"vijand:knife": ["Lijf_Vijand", "Bandana", "Laarzen_V"],
+	"vijand:rifle": ["Lijf_Vijand", "Boonie", "Borsttuig", "Laarzen_V"],
+	"vijand:rocket": ["Lijf_Vijand", "Pet", "Raketzak", "Laarzen_V"],
+	"vijand:heavy": ["Lijf_Vijand", "Staalhelm", "Patroongordels", "Laarzen_V"],
+}
 const LOOPS := ["stil", "lopen", "rennen", "achteruit", "schieten", "klimmen", "zitten", "sprinten"]  # herladen en rollen spelen één keer
 const CLIMB := preload("res://assets/klimmen.glb")  # klim-animatie uit bron/klimmen
 const SIT := preload("res://assets/zitten.glb")  # zitten in de vrachtwagen, uit bron/zitten
@@ -28,10 +43,18 @@ var _recoil := 0.0
 var _pump_parts: Array[Node3D] = []
 var _pump_rest: Array[Transform3D] = []
 var _pump_tween: Tween
+var v2 := false
+var look := ""
+var _uniform := Color.WHITE
 
 
-func setup(uniform: Color, gun_kind := "rifle") -> void:
-	var model := SCENE.instantiate()
+## uniform = kleur van het uniform; look = sleutel uit LOOKS ("eigen" voor bondgenoten en wachten,
+## "speler:<bovenlijf>" voor de speler, "vijand:<type>" voor vijanden).
+func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
+	v2 = GameSettings.get_value("soldaat") != "v1"
+	look = look_ if LOOKS.has(look_) else "eigen"
+	_uniform = uniform
+	var model := (SCENE_V2 if v2 else SCENE).instantiate()
 	add_child(model)
 	anim = model.find_child("AnimationPlayer", true, false)
 	# de klim-animatie komt uit een eigen glb met hetzelfde skelet en wordt aan dit mannetje gehangen
@@ -57,6 +80,13 @@ func setup(uniform: Color, gun_kind := "rifle") -> void:
 	for n in LOOPS:
 		if anim.has_animation(n):
 			anim.get_animation(n).loop_mode = Animation.LOOP_LINEAR
+	if v2:
+		_model = model
+		_setup_v2(uniform)
+		_attach_gun(model, gun_kind)
+		_setup_upper_body_animation()
+		play("stil")
+		return
 	# eigen kopie van de materialen, zodat elk mannetje een eigen kleur en rode flits kan hebben
 	for mi: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
 		for s in mi.mesh.get_surface_count():
@@ -73,6 +103,56 @@ func setup(uniform: Color, gun_kind := "rifle") -> void:
 	_model = model
 	_setup_upper_body_animation()
 	play("stil")
+
+
+var _parts := {}   # naam -> MeshInstance3D (VQ2)
+
+
+## VQ2: toont alleen het lichaam en de uitrusting van deze look. Ongebruikte delen worden weggegooid, behalve bij de
+## speler (die kan in het menu van bovenlijf wisselen). Kledingmaterialen ("*_Kleding") krijgen de uniformtint.
+func _setup_v2(uniform: Color) -> void:
+	var keep: Array = LOOKS[look]
+	var player := look.begins_with("speler")
+	for mi: MeshInstance3D in _model.find_children("*", "MeshInstance3D", true, false):
+		var used := false
+		for k in LOOKS:
+			if (k == look or (player and k.begins_with("speler"))) and mi.name in LOOKS[k]:
+				used = true
+		if not used:
+			mi.queue_free()
+			continue
+		_parts[str(mi.name)] = mi
+		mi.visible = mi.name in keep
+		for s in mi.mesh.get_surface_count():
+			var src := mi.get_active_material(s)
+			var m: StandardMaterial3D = src.duplicate() if src is StandardMaterial3D else StandardMaterial3D.new()
+			mi.set_surface_override_material(s, m)
+			_mats.append(m)
+			_base_cols.append(m.albedo_color)
+	set_uniform(uniform)
+
+
+## Kleurtoon van de uniformkleur met beperkte verzadiging en helderheid. De VQ2-kledingtextuur is bijna neutraal
+## (camouflage in grijstinten met een zweem kleur), dus de tint bepaalt de camouflagesoort; zelfde formule als
+## bron/soldaat_vq2/render_soldaat.py.
+static func uniform_tint(c: Color) -> Color:
+	var mx := maxf(maxf(c.r, c.g), maxf(c.b, 0.001))
+	var lum := 0.3 * c.r + 0.59 * c.g + 0.11 * c.b
+	var k := 0.42 * clampf(mx / 0.35, 0.45, 1.0)
+	var f := func(v: float) -> float: return (lum / mx + (v / mx - lum / mx) * 0.85) * k
+	return Color(f.call(c.r), f.call(c.g), f.call(c.b))
+
+
+## Speler: ander bovenlijf (bloot, mouwloos, uniform, vest) zonder het model opnieuw te laden.
+func set_top(top: String) -> void:
+	if not v2 or not look.begins_with("speler"):
+		return
+	var key := "speler:" + top
+	if not LOOKS.has(key):
+		return
+	look = key
+	for n in _parts:
+		(_parts[n] as MeshInstance3D).visible = n in LOOKS[key]
 
 
 ## Zet alleen de schiet- en geraakt-houding op de romp/armen bovenop de loopanimatie.
@@ -187,6 +267,16 @@ func _tint(c: Color, joints: bool) -> Color:
 
 
 func set_uniform(c: Color) -> void:
+	_uniform = c
+	if v2:
+		for i in _mats.size():
+			var nm := _mats[i].resource_name
+			if nm.ends_with("_Kleding"):
+				_mats[i].albedo_color = uniform_tint(c)
+			elif nm != "Hoofdband":
+				_mats[i].albedo_color = Color.WHITE
+			_base_cols[i] = _mats[i].albedo_color
+		return
 	var i := 0
 	for m in _mats:
 		m.albedo_color = _tint(c, m.resource_name == "M_Joints")
@@ -196,6 +286,12 @@ func set_uniform(c: Color) -> void:
 
 ## Hoofdband om het voorhoofd, in de kleur van de gekozen band.
 func set_band(c: Color) -> void:
+	if v2:
+		for i in _mats.size():
+			if _mats[i].resource_name == "Hoofdband":
+				_mats[i].albedo_color = c
+				_base_cols[i] = c
+		return
 	if _band == null:
 		var skel: Skeleton3D = _model.find_children("*", "Skeleton3D", true, false)[0]
 		var bone := skel.find_bone("DEF-head")
@@ -234,7 +330,8 @@ func _attach_gun(model: Node, gun_kind := "rifle") -> void:
 	anim.seek(0.05, true)
 	var pose := skel.get_bone_global_pose(skel.find_bone("DEF-handR"))
 	_grip_basis = pose.basis.orthonormalized().inverse()
-	_attach_gear(skel)
+	if not v2:   # het VQ2-model heeft de uitrusting al in de glb
+		_attach_gear(skel)
 	set_gun(gun_kind)
 
 

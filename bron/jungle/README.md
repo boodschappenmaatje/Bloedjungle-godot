@@ -44,3 +44,6 @@ de boom moet binnen 0,55 x de straal liggen, hoogstens `FELL_MAX` (6) per knal. 
 laat hem als lage stam liggen: een balk op de natuurlaag (dekking, kogels en voertuigen stuiten erop). Alleen de val is code; de modellen zijn echte Blender-meshes.
 Tests: `tests/boom_val_test.gd`, opnames `tests/boom_val_foto.gd` (spelcamera, vaste volgorde van beelden), viewer: Stronk palm / Stronk jungleboom, `tools/blender-vq2-viewer/test-jungle.mjs`.
 Geen iPhone/Xogot-meting gedaan.
+
+Voertuigen (v136): `Foliage.ram(body, snelheid, min)` na `move_and_slide` van tank (vanaf 1,5 m/s), bus (4), jeep (6) en auto (7): de geraakte boom valt van het voertuig af; stronk en stam krijgen dan geen botsing (platgereden, geen haken).
+De legertruck botst niet met bomen (maskers) en valt hier buiten. Test: `tests/boom_val_ram_test.gd`.

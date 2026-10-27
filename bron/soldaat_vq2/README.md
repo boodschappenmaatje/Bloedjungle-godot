@@ -95,3 +95,6 @@ Elk wapen wordt nu echt vastgehouden, in plaats van aan de hand te hangen in é�
 - B: grotere terugslag (wapen 6 cm / 11° per schot) en schouderruk: romp tilt achterover en draait mee, gekoppeld aan `recoil` (`SoldierPose._process_modification`).
 - Demo: `tests/schiet_foto.gd` (spelcamera, `SCHIET_WEAPON`); beeld `docs/vq2/renders/schieten-voor-na.png` (rij 1+3 voor, rij 2+4 na; pistool boven, Garand onder).
 - Niet gemeten op iPhone/Xogot. `soldaat_pose_test` "kick dooft niet uit" en `auto_wapens_test` (7) falen ook zonder deze wijziging.
+
+## Vuurflits (v126)
+Dennis' opname: een grote ronde oranje gloed hing als bal om de loop en verborg hand en wapen, en de flits zat 24 cm boven de loop. Nu: gloed 3x kleiner en zwakker (`Fx.muzzle`/`_show_muzzle_flash`), flits 10 cm boven de loopmond, schijnsel de helft zo fel. Beeld: `docs/vq2/renders/vuurflits-na.png` (pistool, Garand, MG42). Niet op iPhone gemeten.

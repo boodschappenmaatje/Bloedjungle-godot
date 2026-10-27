@@ -464,7 +464,7 @@ static func muzzle(parent: Node, pos: Vector3, weapon := "m1911", angle := 0.0) 
 	var v: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
 	if weapon == "bazooka" or float(v.flash_life) <= 0.0:
 		return
-	_show_muzzle_flash(parent, pos, _muzzle_mesh(weapon, randi() % 3), angle, v.flash_life, v.flash_width * 0.9, weapon, v.flash_particles, v.flash_color, v.flash_energy, v.flash_range)
+	_show_muzzle_flash(parent, pos, _muzzle_mesh(weapon, randi() % 3), angle, v.flash_life, v.flash_width * 0.28, weapon, v.flash_particles, v.flash_color, v.flash_energy, v.flash_range)
 
 
 static func _show_muzzle_flash(parent: Node, pos: Vector3, flash_mesh: ArrayMesh, angle: float, life: float, glow_size: float, smoke_style: String, particles: int, color: Color, light_energy: float, light_range: float) -> void:
@@ -498,7 +498,7 @@ static func _show_muzzle_flash(parent: Node, pos: Vector3, flash_mesh: ArrayMesh
 	f.rotation.y = angle
 	f.scale = Vector3(randf_range(0.94, 1.08), 1.0, randf_range(0.92, 1.1))
 	# Hef de flits net boven de loop uit; zo valt hij vanuit de gameplaycamera niet weg in de grond of het geweermodel.
-	f.global_position = pos + Vector3.UP * 0.24
+	f.global_position = pos + Vector3.UP * 0.1
 	var warm_light := f.get_node_or_null("WarmMuzzleLight") as OmniLight3D
 	if warm_light == null and _flash_lights < MAX_FLASH_LIGHTS:
 		warm_light = OmniLight3D.new()
@@ -512,8 +512,8 @@ static func _show_muzzle_flash(parent: Node, pos: Vector3, flash_mesh: ArrayMesh
 		if old_light_tween != null and old_light_tween.is_valid():
 			old_light_tween.kill()
 		warm_light.light_color = Color(1.0, 0.55, 0.12)
-		warm_light.omni_range = light_range
-		warm_light.light_energy = light_energy
+		warm_light.omni_range = light_range * 0.7
+		warm_light.light_energy = light_energy * 0.5
 		var light_tween := f.create_tween()
 		light_tween.tween_property(warm_light, "light_energy", 0.0, maxf(life, 0.2)).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 		f.set_meta("light_tween", light_tween)
@@ -523,7 +523,7 @@ static func _show_muzzle_flash(parent: Node, pos: Vector3, flash_mesh: ArrayMesh
 	var release_tween := f.create_tween()
 	release_tween.tween_interval(maxf(life, 0.2 if warm_light != null else life))
 	release_tween.tween_callback(_release_muzzle_flash.bind(f))
-	_flash_quad(parent, pos + Vector3.UP * 0.3, glow_size, life * 0.85, Color(1.0, 0.58, 0.12, 0.76))
+	_flash_quad(parent, pos + Vector3.UP * 0.12, glow_size, life * 0.7, Color(1.0, 0.62, 0.18, 0.3))
 	_muzzle_smoke(parent, pos - Vector3(sin(angle), 0.0, cos(angle)) * 0.05, smoke_style, angle)
 	if particles > 0:
 		_burst(parent, pos, Vector3.UP * 0.2, particles, color, 0.025, 4.8, Vector3(0.025, 0.035, 0.025))

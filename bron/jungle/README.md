@@ -13,6 +13,7 @@ Knopen (elk op de oorsprong, voet op y = 0, een mesh per knoop):
 | `Boom1` / `Boom2` | 1002 / 1002 | jungleboom (11 / 13,5 m): rechte stam met 4-5 plankwortels, brede kroon, twee zijtakken met eigen bladerbos, 7 lianen |
 | `Boom1_far` / `Boom2_far` | 228 / 228 | verre variant |
 | `Rots1` / `Rots2` / `Rots3` | 270 / 256 / 270 | icosfeer met ruis-vervorming, platte onderkant, hoeken vlakker gemaakt; steen en mos in de vertexkleuren |
+| `Stomp1` / `Stomp2` | 110 / 230 | stronk van een omgevallen palm (0,9 m) of jungleboom (1,5 m, met vijf lage plankwortels): splinterrand met lange splinters, licht hout op de breuk (vertexkleur), schors via `Boom_Stam` |
 
 Palmen hebben twee oppervlakken: 0 = stam (UV: u rond, v langs de stam, voor de schorstextuur), 1 = kroon (UV zoals `Foliage._frond`: u langs het blad, v over de breedte).
 De vertex-alfa is het windgewicht voor `shaders/foliage.gdshader` (stam 0-0,04, blad 0 aan de basis tot 1 aan de punt).
@@ -35,3 +36,11 @@ Bomen hebben drie oppervlakken (stam, blad, lianen; materiaal op naam: `Boom_Sta
 Een op de vijf plekken van de palmen (`Foliage.PALM_POOL`) krijgt een jungleboom, op 0,75 geschaald; dichtheid per gebied volgt dus de palmen (dicht = veel, open plek = bijna geen).
 Stammen en rotsen blokkeren sinds v129 mensen, voertuigen, kogels en granaten (laag `natuur` = 128, `Foliage._collide`); bomen hebben straal 0,6 m, palmen 0,3 m.
 Meting (lavapipe): basis 62k driehoeken / 66 draw, stadsrand 79k / 161; voor jungleboom (v129) 61k / 64 en 79k / 161. Geen iPhone-meting.
+
+## Omvallende bomen (v135)
+Een grote ontploffing vlakbij velt palmen en jungle­bomen (`Game.note_blast` -> `Foliage.fell_near`): straal vanaf `Foliage.FELL_MIN_R` (3 m: tankgranaat, raket, granaat, vat, brandend voertuig),
+de boom moet binnen 0,55 x de straal liggen, hoogstens `FELL_MAX` (6) per knal. De staande boom verdwijnt uit zijn MultiMesh (ook de verre variant en de nepschaduw) en uit de hellijst;
+`Stomp1`/`Stomp2` blijft staan met een lage botszuil. `scripts/boom_val.gd` laat de boom van de knal af kantelen (versnellend, klap met stof, bladeren en een dreun, korte terugveer) en
+laat hem als lage stam liggen: een balk op de natuurlaag (dekking, kogels en voertuigen stuiten erop). Alleen de val is code; de modellen zijn echte Blender-meshes.
+Tests: `tests/boom_val_test.gd`, opnames `tests/boom_val_foto.gd` (spelcamera, vaste volgorde van beelden), viewer: Stronk palm / Stronk jungleboom, `tools/blender-vq2-viewer/test-jungle.mjs`.
+Geen iPhone/Xogot-meting gedaan.

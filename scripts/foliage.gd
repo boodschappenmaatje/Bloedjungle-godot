@@ -257,6 +257,8 @@ static func grass() -> ArrayMesh:
 
 ## Zet de hele jungle neer: buiten de muur, met het pad vanaf de poorten vrij.
 static var trees := PackedVector2Array()  # plekken van palmen en rotsen, voor de landing van de heli
+static var _root: Node3D  # waar de jungle in hangt (de vallende bomen komen er ook in)
+static var _reg := {}  # vak (36 m) -> palmen en bomen die nog kunnen omvallen (zie fell_near)
 
 
 static func has_tree_near(x: float, z: float, r: float) -> bool:
@@ -269,6 +271,8 @@ static func has_tree_near(x: float, z: float, r: float) -> bool:
 
 static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 	trees.clear()
+	_reg.clear()
+	_root = parent
 	logs(parent)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
@@ -315,22 +319,27 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 				cells[key][1].append(cols[i])
 			for key in cells:
 				# palmen: elke plek een van de vormen uit PALM_POOL (palmen en jungleboom)
-				var groups := {}  # vorm -> [transforms, kleuren]
+				var groups := {}  # vorm -> [transforms, kleuren, plek in het vak]
 				for i in cells[key][0].size():
 					var vn: String = PALM_POOL[i % PALM_POOL.size()] if kind == "palm" else ""
 					if not groups.has(vn):
-						groups[vn] = [[], []]
+						groups[vn] = [[], [], []]
 					var xt: Transform3D = cells[key][0][i]
 					if vn.begins_with("Boom"):
 						xt.basis = xt.basis.scaled(Vector3.ONE * BOOM_SCALE)
 					groups[vn][0].append(xt)
 					groups[vn][1].append(cells[key][1][i])
+					groups[vn][2].append(i)
+				var blob: MultiMeshInstance3D = null
+				if SHADOW_KINDS.has(kind):
+					blob = _blobs(parent, kind, [cells[key][0]])
 				for vn in groups:
 					var vx: Array = groups[vn][0]
 					var vc: Array = groups[vn][1]
 					var mesh: Mesh = jungle_mesh(vn) if kind == "palm" else meshes[kind]
+					var shapes: Array = []
 					if kind == "palm":
-						_collide(parent, vx, BOOM_COLLIDE_R if vn.begins_with("Boom") else COLLIDE_R["palm"], "wood")
+						shapes = _collide(parent, vx, BOOM_COLLIDE_R if vn.begins_with("Boom") else COLLIDE_R["palm"], "wood")
 					var inst := Kit.scatter(parent, mesh, null, vx, vc, kind != "grass")
 					inst.add_to_group("foliage_" + kind)  # de grafiekinstelling dunt gras en struiken uit
 					# vakken die ver weg liggen worden niet meer getekend; ver weg staan palmen als simpeler model
@@ -346,14 +355,18 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 						far.visibility_range_end = VIS_END["palm"]
 						far.visibility_range_end_margin = 16.0
 						far.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
-				if SHADOW_KINDS.has(kind):
-					_blobs(parent, kind, [cells[key][0]])
+						if not _reg.has(key):
+							_reg[key] = []
+						for k in vx.size():
+							_reg[key].append({"xf": vx[k], "vn": vn, "mm": inst.multimesh, "far": far.multimesh, "blob": blob.multimesh,
+								"idx": k, "blob_idx": groups[vn][2][k], "shape": shapes[k], "col": vc[k], "felled": false})
 
 
 ## Onzichtbare ronde zuilen op de plek van stammen en rotsen, per vak van 36 m één lichaam (goedkoop voor de natuurkunde).
-static func _collide(parent: Node3D, xforms: Array, radius: float, impact: String) -> void:
+static func _collide(parent: Node3D, xforms: Array, radius: float, impact: String) -> Array:
 	var bodies := {}
 	var shapes := {}
+	var out: Array = []
 	for xt: Transform3D in xforms:
 		var key := Vector2i(floori(xt.origin.x / 36.0), floori(xt.origin.z / 36.0))
 		if not bodies.has(key):
@@ -373,16 +386,79 @@ static func _collide(parent: Node3D, xforms: Array, radius: float, impact: Strin
 		cs.shape = shapes[r]
 		cs.position = Vector3(xt.origin.x, 1.1, xt.origin.z)
 		bodies[key].add_child(cs)
+		out.append(cs)
+	return out
+
+
+const FELL_MIN_R := 3.0    # kleinste ontploffing (straal in m) die een boom velt: tankgranaat, raket, granaat, vat, voertuig
+const FELL_REACH := 0.55   # een boom valt als de ontploffing binnen dit deel van de straal (plus de stam) ligt
+const FELL_MAX := 6        # zoveel bomen per ontploffing, zodat een grote knal geen haperingen geeft
+
+
+## Ontploffing (Game.note_blast): bomen en palmen vlakbij vallen om, van de knal af. Een stronk blijft staan, de stam blijft
+## als dekking liggen. Geeft het aantal gevelde bomen.
+static func fell_near(at: Vector3, radius: float) -> int:
+	if _reg.is_empty() or radius < FELL_MIN_R or not is_instance_valid(_root):
+		return 0
+	var reach := radius * FELL_REACH
+	var lo := Vector2i(floori((at.x - reach - 1.0) / 36.0), floori((at.z - reach - 1.0) / 36.0))
+	var hi := Vector2i(floori((at.x + reach + 1.0) / 36.0), floori((at.z + reach + 1.0) / 36.0))
+	var n := 0
+	for cx in range(lo.x, hi.x + 1):
+		for cz in range(lo.y, hi.y + 1):
+			for e: Dictionary in _reg.get(Vector2i(cx, cz), []):
+				if e["felled"] or n >= FELL_MAX:
+					continue
+				var o: Vector3 = e["xf"].origin
+				if Vector2(o.x - at.x, o.z - at.z).length() <= reach + (0.8 if String(e["vn"]).begins_with("Boom") else 0.3):
+					fell(e, at)
+					n += 1
+	return n
+
+
+## Eén boom omver: weg uit de MultiMesh (voet, ver-variant, nepschaduw) en uit de botsing, en een vallende boom ervoor in de plaats.
+static func fell(e: Dictionary, from: Vector3) -> void:
+	var parent := _root
+	e["felled"] = true
+	var xf: Transform3D = e["xf"]
+	var gone := Transform3D(Basis.from_scale(Vector3.ZERO), xf.origin)
+	e["mm"].set_instance_transform(e["idx"], gone)
+	e["far"].set_instance_transform(e["idx"], gone)
+	e["blob"].set_instance_transform(e["blob_idx"], gone)
+	var p := Vector2(xf.origin.x, xf.origin.z)
+	for i in trees.size():
+		if trees[i].is_equal_approx(p):
+			trees.remove_at(i)
+			break
+	var boom := String(e["vn"]).begins_with("Boom")
+	# de hoge zuil van de staande boom wordt een lage zuil om de stronk
+	var stump_col := CylinderShape3D.new()
+	stump_col.radius = ((e["shape"] as CollisionShape3D).shape as CylinderShape3D).radius
+	stump_col.height = 1.3 if boom else 0.8
+	(e["shape"] as CollisionShape3D).set_deferred("shape", stump_col)
+	(e["shape"] as CollisionShape3D).set_deferred("position", Vector3(xf.origin.x, stump_col.height * 0.5, xf.origin.z))
+	# de stronk blijft op de plek (een klein stuk van de oude stam, met splinterrand)
+	var stump := MeshInstance3D.new()
+	stump.mesh = jungle_mesh("Stomp2" if boom else "Stomp1")
+	stump.transform = Transform3D(xf.basis, xf.origin)
+	parent.add_child(stump)
+	var away := Vector3(xf.origin.x - from.x, 0.0, xf.origin.z - from.z)
+	if away.length() < 0.2:
+		away = Vector3.RIGHT.rotated(Vector3.UP, randf() * TAU)
+	var fall = load("res://scripts/boom_val.gd").new()
+	parent.add_child(fall)
+	fall.start(jungle_mesh(e["vn"]), xf, away.normalized(), boom, e["col"])
 
 
 ## Vaste nepschaduwen (platte ovalen) voor één vak bomen.
-static func _blobs(parent: Node3D, kind: String, lists: Array) -> void:
+static func _blobs(parent: Node3D, kind: String, lists: Array) -> MultiMeshInstance3D:
 	var q := PlaneMesh.new()
 	q.size = Vector2.ONE
 	var inst := Kit.scatter(parent, q, _shadow_mat(kind), lists[0], [], false)
 	inst.add_to_group("treeshadow")
 	inst.visibility_range_end = 100.0
 	inst.extra_cull_margin = 30.0  # de schaduw valt tot ver buiten de boom
+	return inst
 
 
 static func _scatter(rng: RandomNumberGenerator, count: int, r_min: float, r_max: float, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:

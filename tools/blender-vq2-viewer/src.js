@@ -15,12 +15,14 @@ function applyGun(){
  setCamera(false);setupClips();stats();dirty=true;
 }
 // jungle: palmen en rotsen staan in één glb op de oorsprong; de keuzelijst laat er één zien. Geen clips: de wind is een Godot-shader.
-const JUNGLE_NODES=['Palm1','Palm1_far','Palm2','Palm2_far','Palm3','Palm3_far','Rots1','Rots2','Rots3','Boom1','Boom1_far','Boom2','Boom2_far'];
+const JUNGLE_NODES=['Palm1','Palm1_far','Palm2','Palm2_far','Palm3','Palm3_far','Rots1','Rots2','Rots3','Boom1','Boom1_far','Boom2','Boom2_far','Stomp1','Stomp2'];
 function applyJungle(){
  if($('asset').value!=='jungle'||!slots.v2)return;const g=$('plant').value;
  slots.v2.root.traverse(o=>{if(JUNGLE_NODES.includes(o.name))o.visible=o.name===g;});
  // zonder de Godot-shaders: vaste schors- en bladkleur, rotsen houden hun vertexkleuren (steen en mos)
  slots.v2.root.traverse(o=>{if(!o.isMesh)return;for(const m of [].concat(o.material)){if(m.name.startsWith('Palm_Stam')||m.name.startsWith('Boom_Stam')){m.vertexColors=false;m.color.set(0x5a4030);m.needsUpdate=true;}else if(m.name.startsWith('Boom_Liaan')){m.vertexColors=false;m.color.set(0x2c4a1c);m.side=THREE.DoubleSide;m.needsUpdate=true;}else if(m.name.startsWith('Palm_Blad')||m.name.startsWith('Boom_Blad')){m.vertexColors=false;m.color.set(0x3b6a2a);m.side=THREE.DoubleSide;m.needsUpdate=true;}}});
+ // stronken: de vertexkleuren (schors, licht hout op de breuk) blijven zichtbaar, op een eigen kopie van het schorsmateriaal
+ slots.v2.root.traverse(o=>{if(o.isMesh&&o.name.startsWith('Stomp')&&!o.userData.stumpMat){o.material=[].concat(o.material)[0].clone();o.material.vertexColors=true;o.material.color.set(0xffffff);o.material.needsUpdate=true;o.userData.stumpMat=true;}});
  bounds.makeEmpty();slots.v2.root.traverse(o=>{if(o.isMesh&&o.visible&&isUnder(o,g))bounds.expandByObject(o);});
  setCamera(false);stats();dirty=true;
 }
@@ -137,7 +139,7 @@ function setCamera(game){
  controls.update();camera.updateProjectionMatrix();dirty=true;
 }
 
-function status(){const asset=$('asset').value,version=$('version').value;$('status').textContent=`${names[asset]} · ${GRASS.includes(asset)?'Blender 3D-sprieten, 2K PBR; V1 = oorspronkelijke 75 cm graskaarten':asset==='jeep'?'ongewijzigde speelbare jeep':asset==='auto'?'nieuwe auto (geen V1)':asset==='bus'?'nieuwe bus (geen V1)':asset==='straaljager'?'nieuwe straaljager voor de napalm-luchtsteun (geen V1)':asset==='wapens'?'alle wapens uit bron/wapens, bewegende delen met echte clips (geen V1)':asset==='props'?'zandzakken (3 vormen) en houten en munitiekist uit bron/props, echte VQ2-PBR-texturen (geen V1)':asset==='jungle'?'palmen, jungleboom (plankwortels, lianen), verre varianten en rotsen uit bron/jungle; schors- en bladtextuur en wind zitten in Godot (geen V1)':asset==='soldaat'&&version==='split'?'V1 oude pop links / VQ2 realistisch rechts, zelfde skelet, clip en camera':version==='split'?'V1 links / VQ2 rechts, identieke camera en belichting':version==='v1'?'origineel op vaste baseline':'VQ2 export'} · 360° draaien en zoomen actief.`;}
+function status(){const asset=$('asset').value,version=$('version').value;$('status').textContent=`${names[asset]} · ${GRASS.includes(asset)?'Blender 3D-sprieten, 2K PBR; V1 = oorspronkelijke 75 cm graskaarten':asset==='jeep'?'ongewijzigde speelbare jeep':asset==='auto'?'nieuwe auto (geen V1)':asset==='bus'?'nieuwe bus (geen V1)':asset==='straaljager'?'nieuwe straaljager voor de napalm-luchtsteun (geen V1)':asset==='wapens'?'alle wapens uit bron/wapens, bewegende delen met echte clips (geen V1)':asset==='props'?'zandzakken (3 vormen) en houten en munitiekist uit bron/props, echte VQ2-PBR-texturen (geen V1)':asset==='jungle'?'palmen, jungleboom (plankwortels, lianen), verre varianten, rotsen en de stronken van omgevallen bomen uit bron/jungle; schors- en bladtextuur en wind zitten in Godot (geen V1)':asset==='soldaat'&&version==='split'?'V1 oude pop links / VQ2 realistisch rechts, zelfde skelet, clip en camera':version==='split'?'V1 links / VQ2 rechts, identieke camera en belichting':version==='v1'?'origineel op vaste baseline':'VQ2 export'} · 360° draaien en zoomen actief.`;}
 const PHASES=['Heel','Beschadigd (ruiten, deuk, band)','Zwaar (deur eraf, kap open)','Brandend (vlammen en rook)','Wrak (verkoold, smeulend)','Ontploffing (speelt af)'];
 function phaseNodes(slot){const o={};slot.root.traverse(n=>{if(n.name)o[n.name]=n;});return o;}
 function applyPhase(p){

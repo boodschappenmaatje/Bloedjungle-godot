@@ -15,7 +15,7 @@ const results={stats:{},browser:'Chromium headless, software WebGL; geen fysieke
 function assert(ok,msg){if(!ok)throw Error(msg);}
 async function scrub(page,time){await page.locator('#scrub').evaluate((e,t)=>{e.value=t;e.dispatchEvent(new Event('input',{bubbles:true}));},String(time));await page.waitForTimeout(100);}
 const pos=(page,n)=>page.evaluate(n=>{const x=window.__VQ2_TEST__.node(n);return x?x.position.toArray():null;},n);
-const PLANTS=['Palm1','Palm1_far','Palm2','Palm2_far','Palm3','Palm3_far','Rots1','Rots2','Rots3','Boom1','Boom1_far','Boom2','Boom2_far'];
+const PLANTS=['Palm1','Palm1_far','Palm2','Palm2_far','Palm3','Palm3_far','Rots1','Rots2','Rots3','Boom1','Boom1_far','Boom2','Boom2_far','Stomp1','Stomp2'];
 try{
  const page=await browser.newPage({viewport:{width:1280,height:1050}});
  page.on('pageerror',e=>results.errors.push(e.message));
@@ -29,7 +29,7 @@ try{
   const st=await page.evaluate(()=>document.getElementById('stats').textContent);
   assert(st.startsWith(p+':'),`${p}: statistiek klopt niet (${st})`);
   results.stats[p]=st;
-  if(['Palm1','Palm1_far','Rots1','Boom1','Boom2'].includes(p)){await page.click('#iso');await page.waitForTimeout(150);await page.locator('#stage').screenshot({path:path.join(out,`jungle-viewer-${p}.png`)});}
+  if(['Palm1','Palm1_far','Rots1','Boom1','Boom2','Stomp1','Stomp2'].includes(p)){await page.click('#iso');await page.waitForTimeout(150);await page.locator('#stage').screenshot({path:path.join(out,`jungle-viewer-${p}.png`)});}
  }
  assert(await page.locator('#play').isDisabled(),'Play-knop actief zonder clip');
  await page.selectOption('#plant','Palm2');await page.click('#top');await page.waitForTimeout(150);await page.locator('#stage').screenshot({path:path.join(out,'jungle-viewer-gamecamera.png')});

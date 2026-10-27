@@ -69,6 +69,7 @@ func note_blast(at: Vector3, radius: float) -> void:
 	Brandkraan.catch_blast(at, radius)   # een kraan vlakbij knalt open
 	Auto.catch_blast(at, radius)         # auto's vlakbij raken beschadigd, of ontploffen
 	Bus.catch_blast(at, radius)          # bussen ook (zwaarder: er is veel nodig)
+	Foliage.fell_near(at, radius)   # bomen vlakbij vallen om
 	blast_at = at
 	blast_r = radius
 	blast_t = Time.get_ticks_msec()

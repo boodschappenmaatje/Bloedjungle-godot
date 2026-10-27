@@ -23,7 +23,13 @@ static func material(kind := "") -> ShaderMaterial:
 		var m := ShaderMaterial.new()
 		m.shader = preload("res://shaders/foliage.gdshader")
 		m.set_shader_parameter("use_tex", kind != "")
-		if kind != "":
+		if kind == "bark":
+			m.set_shader_parameter("tex", load("res://assets/textures/nature/tree_bark/base_color.jpg"))
+			m.set_shader_parameter("nrm", load("res://assets/textures/nature/tree_bark/normal_gl.jpg"))
+			m.set_shader_parameter("tile", true)
+			m.set_shader_parameter("cut", 0.0)
+			m.set_shader_parameter("tint", Vector3(0.55, 0.45, 0.36))
+		elif kind != "":
 			m.set_shader_parameter("tex", LeafTex.get_tex(kind))
 			m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
 		if kind == "grass":
@@ -119,56 +125,24 @@ static func _frond(st: SurfaceTool, origin: Vector3, yaw: float, length: float, 
 					st.add_vertex(v[0])
 
 
-## Verre palm (afstand-niveau): dezelfde vorm met veel minder driehoeken.
-static func palm(far := false) -> ArrayMesh:
-	var mesh := ArrayMesh.new()
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var segs := 4 if far else 10
-	var sides := 4 if far else 7
-	var rings: Array = []
-	var top := Vector3.ZERO
-	for i in segs + 1:
-		var t := float(i) / segs
-		var c := Vector3(0.9 * t * t, 5.4 * t, 0.35 * t * t)
-		top = c
-		var r := lerpf(0.27, 0.13, t) * (1.0 + 0.2 * (1.0 if i % 2 == 0 else 0.0))
-		var ring: Array = []
-		for j in sides:
-			var a := TAU * j / sides
-			ring.append([c + Vector3(cos(a) * r, 0, sin(a) * r), Vector3(cos(a), 0, sin(a))])
-		rings.append(ring)
-	for i in segs:
-		var shade := 0.8 if i % 2 == 0 else 1.0
-		var col := Color(0.5 * shade, 0.38 * shade, 0.26 * shade, 0.04 * i / segs)
-		for j in sides:
-			var p00: Array = rings[i][j]
-			var p01: Array = rings[i][(j + 1) % sides]
-			var p10: Array = rings[i + 1][j]
-			var p11: Array = rings[i + 1][(j + 1) % sides]
-			for tri in [[p00, p10, p11], [p00, p11, p01]]:
-				for v in tri:
-					st.set_color(col)
-					st.set_normal(v[1])
-					st.add_vertex(v[0])
-	st.commit(mesh)
-	mesh.surface_set_material(0, material())
-	# kroon van takken met bladpunten
-	var crown := SurfaceTool.new()
-	crown.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 5
-	var white := Color(0.78, 0.9, 0.7)
-	var dark := Color(0.5, 0.64, 0.42)
-	var n_fronds := 8 if far else 12
-	for k in n_fronds:
-		var yaw := TAU * k / float(n_fronds) + rng.randf_range(-0.2, 0.2)
-		_frond(crown, top + Vector3.UP * 0.05, yaw, rng.randf_range(2.6, 3.4), rng.randf_range(0.65, 0.85), rng.randf_range(0.9, 1.5), rng.randf_range(1.1, 1.9), dark, white, 3 if far else 7)
-	for k in (0 if far else 6):
-		_frond(crown, top + Vector3.UP * 0.1, TAU * k / 6.0 + 0.3, 1.5, 0.45, 1.3, 0.3, dark, white, 4)
-	crown.commit(mesh)
-	mesh.surface_set_material(1, material("palm"))
-	return mesh
+## Palmen en rotsen komen uit assets/jungle.glb (bron/jungle/maak_jungle.py): 3 palmen met een
+## verre variant, 3 rotsen. Stam = schors, kroon = palmblad, rots = steen met mos in de vertexkleuren.
+const PALMS := ["Palm1", "Palm2", "Palm3"]
+const ROCKS := ["Rots1", "Rots2", "Rots3"]
+static var _jungle := {}
+
+
+static func jungle_mesh(name: String) -> Mesh:
+	if _jungle.is_empty():
+		var root := (load("res://assets/jungle.glb") as PackedScene).instantiate()
+		for mi in root.find_children("*", "MeshInstance3D", true, false):
+			_jungle[String(mi.name)] = (mi as MeshInstance3D).mesh
+		root.free()
+	var m: Mesh = _jungle[name]
+	if name.begins_with("Palm"):
+		m.surface_set_material(0, material("bark"))
+		m.surface_set_material(1, material("palm"))
+	return m
 
 
 ## Struik van brede bladeren.
@@ -219,15 +193,6 @@ static func grass() -> ArrayMesh:
 	return m
 
 
-static func rock() -> Mesh:
-	var s := SphereMesh.new()
-	s.radius = 0.5
-	s.height = 0.8
-	s.radial_segments = 7
-	s.rings = 4
-	return s
-
-
 ## Zet de hele jungle neer: buiten de muur, met het pad vanaf de poorten vrij.
 static var trees := PackedVector2Array()  # plekken van palmen en rotsen, voor de landing van de heli
 
@@ -246,7 +211,7 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
 	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
-	var meshes := {"palm": palm(), "bush": bush(), "fern": fern(), "grass": grass(), "rock": rock(), "palm_far": palm(true)}
+	var meshes := {"bush": bush(), "fern": fern(), "grass": grass()}
 	for kind in sets:
 		if step.is_valid():
 			await step.call(kind)
@@ -261,8 +226,13 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 		if kind == "rock":
 			var rm := Kit.rock().duplicate() as StandardMaterial3D
 			rm.vertex_color_use_as_albedo = true
-			var ri := Kit.scatter(parent, meshes[kind], rm, xf, cols)
-			ri.add_to_group("foliage_rock")
+			for v in ROCKS.size():
+				var vx: Array = []
+				var vc: Array = []
+				for i in range(v, xf.size(), ROCKS.size()):
+					vx.append(xf[i])
+					vc.append(cols[i])
+				Kit.scatter(parent, jungle_mesh(ROCKS[v]), rm, vx, vc).add_to_group("foliage_rock")
 			_blobs(parent, kind, [xf])
 		else:
 			# in vakken van 36 m, zodat de camera alleen tekent en laat schaduwen wat in beeld is
@@ -275,21 +245,32 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 				cells[key][0].append(xf[i])
 				cells[key][1].append(cols[i])
 			for key in cells:
-				var inst := Kit.scatter(parent, meshes[kind], null, cells[key][0], cells[key][1], kind != "grass")
-				inst.add_to_group("foliage_" + kind)  # de grafiekinstelling dunt gras en struiken uit
-				# vakken die ver weg liggen worden niet meer getekend; ver weg staan palmen als simpeler model
-				inst.visibility_range_end = VIS_END[kind]
-				inst.visibility_range_end_margin = 16.0
-				inst.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF  # zacht in- en uitdoven i.p.v. ploffen
-				if kind == "palm":
-					inst.visibility_range_end = PALM_NEAR
-					var far := Kit.scatter(parent, meshes["palm_far"], null, cells[key][0], cells[key][1], false)
-					far.add_to_group("foliage_palm")
-					far.visibility_range_begin = PALM_NEAR
-					far.visibility_range_begin_margin = 16.0
-					far.visibility_range_end = VIS_END["palm"]
-					far.visibility_range_end_margin = 16.0
-					far.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+				# palmen: elke palm een van de drie vormen
+				var variants := PALMS.size() if kind == "palm" else 1
+				for v in variants:
+					var vx: Array = []
+					var vc: Array = []
+					for i in range(v, cells[key][0].size(), variants):
+						vx.append(cells[key][0][i])
+						vc.append(cells[key][1][i])
+					if vx.is_empty():
+						continue
+					var mesh: Mesh = jungle_mesh(PALMS[v]) if kind == "palm" else meshes[kind]
+					var inst := Kit.scatter(parent, mesh, null, vx, vc, kind != "grass")
+					inst.add_to_group("foliage_" + kind)  # de grafiekinstelling dunt gras en struiken uit
+					# vakken die ver weg liggen worden niet meer getekend; ver weg staan palmen als simpeler model
+					inst.visibility_range_end = VIS_END[kind]
+					inst.visibility_range_end_margin = 16.0
+					inst.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF  # zacht in- en uitdoven i.p.v. ploffen
+					if kind == "palm":
+						inst.visibility_range_end = PALM_NEAR
+						var far := Kit.scatter(parent, jungle_mesh(PALMS[v] + "_far"), null, vx, vc, false)
+						far.add_to_group("foliage_palm")
+						far.visibility_range_begin = PALM_NEAR
+						far.visibility_range_begin_margin = 16.0
+						far.visibility_range_end = VIS_END["palm"]
+						far.visibility_range_end_margin = 16.0
+						far.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 				if SHADOW_KINDS.has(kind):
 					_blobs(parent, kind, [cells[key][0]])
 

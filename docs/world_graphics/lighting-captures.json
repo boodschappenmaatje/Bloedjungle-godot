@@ -1,0 +1,86 @@
+[
+	{
+		"camera": {
+			"fov": 45.0,
+			"position": "Vector3(0, 23.745346, 14.83774)",
+			"rotation": "Vector3(-1.012291, 0, 0)"
+		},
+		"draw_calls": 423.0,
+		"exposure": 1.0,
+		"file": "res://docs/world_graphics/renders/lighting-base.png",
+		"fps": "Not measured: fixed-step capture on software renderer",
+		"gpu": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"quality": "high",
+		"rendered_primitives": 166294.0,
+		"renderer": "gl_compatibility",
+		"resolution_scale": 0.800000011920929,
+		"scene": "base",
+		"seed": 2702026,
+		"sun_energy": 1.79999995231628,
+		"sun_rotation": "Vector3(-43.999996, -57.999996, 0)",
+		"texture_memory_bytes": 111862633.0
+	},
+	{
+		"camera": {
+			"fov": 45.0,
+			"position": "Vector3(2, 23.745346, -23.16226)",
+			"rotation": "Vector3(-1.012291, 0, 0)"
+		},
+		"draw_calls": 370.0,
+		"exposure": 1.0,
+		"file": "res://docs/world_graphics/renders/lighting-jungle.png",
+		"fps": "Not measured: fixed-step capture on software renderer",
+		"gpu": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"quality": "high",
+		"rendered_primitives": 147460.0,
+		"renderer": "gl_compatibility",
+		"resolution_scale": 0.800000011920929,
+		"scene": "jungle",
+		"seed": 2702026,
+		"sun_energy": 1.79999995231628,
+		"sun_rotation": "Vector3(-43.999996, -57.999996, 0)",
+		"texture_memory_bytes": 111928161.0
+	},
+	{
+		"camera": {
+			"fov": 45.0,
+			"position": "Vector3(0, 23.745346, 24.83774)",
+			"rotation": "Vector3(-1.012291, 0, 0)"
+		},
+		"draw_calls": 517.0,
+		"exposure": 1.0,
+		"file": "res://docs/world_graphics/renders/lighting-jeep.png",
+		"fps": "Not measured: fixed-step capture on software renderer",
+		"gpu": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"quality": "high",
+		"rendered_primitives": 158154.0,
+		"renderer": "gl_compatibility",
+		"resolution_scale": 0.800000011920929,
+		"scene": "jeep",
+		"seed": 2702026,
+		"sun_energy": 1.79999995231628,
+		"sun_rotation": "Vector3(-43.999996, -57.999996, 0)",
+		"texture_memory_bytes": 112102937.0
+	},
+	{
+		"camera": {
+			"fov": 45.0,
+			"position": "Vector3(0, 23.745346, 6.83774)",
+			"rotation": "Vector3(-1.012291, 0, 0)"
+		},
+		"draw_calls": 552.0,
+		"exposure": 1.0,
+		"file": "res://docs/world_graphics/renders/lighting-combat.png",
+		"fps": "Not measured: fixed-step capture on software renderer",
+		"gpu": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"quality": "high",
+		"rendered_primitives": 253172.0,
+		"renderer": "gl_compatibility",
+		"resolution_scale": 0.800000011920929,
+		"scene": "combat",
+		"seed": 2702026,
+		"sun_energy": 1.79999995231628,
+		"sun_rotation": "Vector3(-43.999996, -57.999996, 0)",
+		"texture_memory_bytes": 111909047.0
+	}
+]

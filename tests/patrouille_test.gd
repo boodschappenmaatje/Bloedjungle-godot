@@ -1,5 +1,5 @@
 extends SceneTree
-## Test: drie wachten lopen in de pauze heen en weer binnen de muur en blijven bij hun eindpunt even staan; bij het begin van de golf
+## Test: vier wachten: drie lopen in de pauze heen en weer binnen de muur en blijven bij hun eindpunt even staan; bij het begin van de golf
 ## gaat het alarm (sirene) en rennen ze naar hun post langs de muur. Draaien: godot --headless --path . -s tests/patrouille_test.gd --fixed-fps 60
 
 var main: Node
@@ -37,7 +37,7 @@ func _process(_d: float) -> bool:
 		for n in main.get_children():
 			if n.get_script() and String(n.get_script().resource_path).ends_with("patrouille.gd"):
 				pat = n
-		_check(pat != null and pat.guards.size() == 3, "drie wachten staan er")
+		_check(pat != null and pat.guards.size() == 4, "vier wachten staan er")
 		for g in pat.guards:
 			start_pos.append(g.global_position)
 	if frames > 10 and frames < 1500 and pat != null:
@@ -52,10 +52,14 @@ func _process(_d: float) -> bool:
 			_check(moved[i] > 6.0, "wacht %d patrouilleert (verste afstand %.1f m)" % [i, moved[i]])
 		# de golf begint: alarm
 		main.start_wave()
+	if frames == 1400:
+		var spot: Vector3 = (load("res://scripts/wachtpost.gd") as GDScript).call("guard_spot", -1.0)
+		var gd: float = (pat.guards[3] as Node3D).global_position.distance_to(spot)
+		_check(gd < 2.0, "wacht 3 staat voor het wachthuisje (%.1f m ervandaan)" % gd)
 	if frames == 1500 + 5:
 		_check(pat._sirene != null, "alarm klinkt")
 	if frames == 1500 + 900:
-		for i in 3:
+		for i in 4:
 			var g: Node3D = pat.guards[i]
 			var posts: Array = (load("res://scripts/ally.gd") as GDScript).get_script_constant_map()["POSTS"]
 			var q: Vector2 = posts[(i * 4 + 1) % posts.size()] * (Data.COMPOUND / 14.0)

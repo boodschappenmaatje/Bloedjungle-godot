@@ -1,0 +1,27 @@
+{
+ "stats": {
+  "beide": "Slagboom en wachthuis: 6.760 driehoeken · 14 meshes · 9 materialen · 21 texturen (1K-VQ2-sets en eigen slagboomverf). Geen iPhone-FPS gemeten.",
+  "Slagboom": "Slagboom: 2.088 driehoeken · 6 meshes · 5 materialen · 12 texturen (1K-VQ2-sets en eigen slagboomverf). Geen iPhone-FPS gemeten.",
+  "Wachthuis": "Wachthuis: 4.672 driehoeken · 8 meshes · 8 materialen · 18 texturen (1K-VQ2-sets en eigen slagboomverf). Geen iPhone-FPS gemeten."
+ },
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "clips": {
+  "Open": {
+   "start": [
+    0,
+    0,
+    0,
+    1
+   ],
+   "eind": [
+    0,
+    0,
+    0.656059205532074,
+    0.7547094821929932
+   ],
+   "verschil": 0.7004149622112635
+  }
+ },
+ "errors": [],
+ "ok": true
+}

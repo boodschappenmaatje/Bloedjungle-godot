@@ -7,3 +7,9 @@ Stappen die de basis levendiger maken (keuze van Dennis, 2026-10-27). Elke stap 
 - Pauze (`Game.state == "prep"`): ze wandelen heen en weer langs de binnenkant van de noord-, zuid- en westmuur (`Patrouille.line(i)`), blijven 3 tot 6 s op het eindpunt staan en keren om.
 - Begint een golf: het alarmbestand `assets/geluid/alarm.mp3` (speelt één keer) en de wachten rennen naar hun post langs de muur (`Ally.POSTS`), waar ze op vijanden schieten zoals andere soldaten.
 - Test: `tests/patrouille_test.gd`. Opnames: `tests/patrouille_foto.gd` (spelcamera). Geen nieuwe modellen, dus geen VQ2-assets. Geen iPhone-meting.
+
+## Stap 2: slagboom en wachthuisje bij de poorten (v142)
+
+- Bij de noord- en zuidpoort staan een slagboom en een wachthuisje (`assets/wachtpost.glb`, bron `bron/wachtpost/`, scripts `scripts/wachtpost.gd`). De arm gaat omhoog als de stalen poort open staat of kapot is en zakt weer als de poort dicht gaat.
+- Het wachthuisje heeft botsing, je loopt er niet doorheen. Een vierde wacht staat voor het huisje bij de noordpoort en rent bij het alarm ook naar zijn post.
+- Viewer: `tools/blender-vq2-viewer` (model Poortwachtpost, echte clip Open). Test: `tests/wachtpost_test.gd`.

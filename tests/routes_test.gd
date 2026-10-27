@@ -27,6 +27,9 @@ func _process(_dt: float) -> bool:
 	var game = root.get_node("Game")
 	if frames == 3:
 		main.begin()
+		for n in main.get_children():   # de wachten van de basis zouden de wandelaars neerschieten voor ze aankomen
+			if n.get_script() and String(n.get_script().resource_path).ends_with("patrouille.gd"):
+				n.queue_free()
 		game.player.global_position = Vector3(-150, 0, 60)  # ver weg, zodat niemand op de speler afgaat
 		for n in range(1, 16):
 			var ids: Array = AanvalRoutes.pick(n)
@@ -62,9 +65,10 @@ func _process(_dt: float) -> bool:
 		game.player.hp = 100000.0
 		game.base_hp = game.base_max
 		for id in walkers:
-			var w: Node = walkers[id]
-			if not is_instance_valid(w):
+			var wv = walkers[id]   # niet getypeerd: een wandelaar kan al verwijderd zijn
+			if not is_instance_valid(wv):
 				continue
+			var w: Node = wv
 			var p: Vector3 = w.global_position
 			var pts: Array = AanvalRoutes.LIST[id].pts
 			for i in pts.size():

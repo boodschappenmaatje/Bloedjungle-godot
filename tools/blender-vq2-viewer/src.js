@@ -4,8 +4,8 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 
 const $=id=>document.getElementById(id), stage=$('stage'), canvas=$('canvas');
-const names={kazerne:'Kazerne',wachttoren:'Wachttoren',legerjeep:'Legerjeep',jeep:'Speelbare jeep',auto:'Personenauto',bus:'Stadsbus',straaljager:'Straaljager (napalm)',soldaat:'Soldaat (mannetjes)',wapens:'Wapens (bewegende delen)',jungle:'Jungle (palmen en rotsen)',props:'Props (zandzakken en kisten)'};
-const NEW_ONLY=['jeep','auto','bus','straaljager','wapens','jungle','props'];
+const names={kazerne:'Kazerne',wachttoren:'Wachttoren',legerjeep:'Legerjeep',jeep:'Speelbare jeep',auto:'Personenauto',bus:'Stadsbus',straaljager:'Straaljager (napalm)',soldaat:'Soldaat (mannetjes)',wapens:'Wapens (bewegende delen)',jungle:'Jungle (palmen en rotsen)',props:'Props (zandzakken en kisten)',wachtpost:'Poortwachtpost (slagboom en wachthuis)'};
+const NEW_ONLY=['jeep','auto','bus','straaljager','wapens','jungle','props','wachtpost'];
 // wapens: alle wapens staan in één glb op dezelfde plek (oorsprong = rechterhand); de keuzelijst laat er één zien. Clips heten <wapen>_schot / <wapen>_leeg.
 const GUN_NODES=['M1911','Thompson','Garand','Trench','MG42','Bazooka','Huls','Raket'];
 function applyGun(){
@@ -34,6 +34,15 @@ function applyProp(){
  bounds.makeEmpty();slots.v2.root.traverse(o=>{if(o.isMesh&&o.visible&&isUnder(o,g))bounds.expandByObject(o);});
  setCamera(false);stats();dirty=true;
 }
+// wachtpost: slagboom (clip Open) en wachthuis staan in één glb; de keuzelijst toont beide of één van de twee.
+const POST_NODES=['Slagboom','Wachthuis'];
+function applyWachtpost(){
+ if($('asset').value!=='wachtpost'||!slots.v2)return;const g=$('post').value;
+ slots.v2.root.traverse(o=>{if(POST_NODES.includes(o.name))o.visible=g==='beide'||o.name===g;});
+ bounds.makeEmpty();slots.v2.root.traverse(o=>{if(o.isMesh&&o.visible&&POST_NODES.some(n=>isUnder(o,n)&&(g==='beide'||g===n)))bounds.expandByObject(o);});
+ setCamera(false);stats();dirty=true;
+}
+function shown(o){for(let p=o;p;p=p.parent)if(!p.visible)return false;return true;}
 function isUnder(o,name){for(let p=o;p;p=p.parent)if(p.name===name)return true;return false;}
 const GRASS=['grass_short','grass_medium','grass_tall'];
 Object.assign(names,{grass_short:'Kort 3D-gras',grass_medium:'Middelhoog 3D-gras',grass_tall:'Hoog 3D-gras'});
@@ -117,7 +126,7 @@ async function load(){
  $('grass-row').hidden=!GRASS.includes(asset);
  const versions=NEW_ONLY.includes(asset)?['v2']:['v1','v2'];
  try{
-  $('look-row').hidden=asset!=='soldaat';$('gun-row').hidden=asset!=='wapens';$('plant-row').hidden=asset!=='jungle';$('prop-row').hidden=asset!=='props';
+  $('look-row').hidden=asset!=='soldaat';$('gun-row').hidden=asset!=='wapens';$('plant-row').hidden=asset!=='jungle';$('prop-row').hidden=asset!=='props';$('post-row').hidden=asset!=='wachtpost';
   const grassPath=v=>`../../assets/grass/${v==='v1'?'grass_baseline':asset+'_lod'+$('grass-lod').value}.glb`;
   const loaded=await Promise.all(versions.map(async v=>[v,makeSlot(await loader.loadAsync(GRASS.includes(asset)?grassPath(v):glbPath(asset,v)))]));
   // extra clips met hetzelfde skelet (klimmen, zitten, rollen, sprinten, herladen, explosie- en branddood), zoals SoldierModel.setup()
@@ -126,7 +135,7 @@ async function load(){
   if(current!==request){disposeSlots(next);return;}
   disposeSlots(slots);slots=next;
   bounds.makeEmpty();for(const s of Object.values(slots))bounds.union(new THREE.Box3().setFromObject(s.root));
-  if(asset==='wapens')applyGun();if(asset==='jungle')applyJungle();if(asset==='props')applyProp();setCamera(false);setupClips();setupMaterials();shading();if(DAMAGED.includes(asset))applyPhase(0);applyLook();if(GRASS.includes(asset))grassVariant();stats();$('loading').hidden=true;status();dirty=true;
+  if(asset==='wapens')applyGun();if(asset==='jungle')applyJungle();if(asset==='props')applyProp();if(asset==='wachtpost')applyWachtpost();setCamera(false);setupClips();setupMaterials();shading();if(DAMAGED.includes(asset))applyPhase(0);applyLook();if(GRASS.includes(asset))grassVariant();stats();$('loading').hidden=true;status();dirty=true;
  }catch(error){if(current!==request)return;$('loading').hidden=false;$('loading').textContent='Het GLB-model kon niet geladen worden. Controleer de verbinding en open de viewer via HTTP(S). '+error.message;}
 }
 
@@ -139,7 +148,7 @@ function setCamera(game){
  controls.update();camera.updateProjectionMatrix();dirty=true;
 }
 
-function status(){const asset=$('asset').value,version=$('version').value;$('status').textContent=`${names[asset]} · ${GRASS.includes(asset)?'Blender 3D-sprieten, 2K PBR; V1 = oorspronkelijke 75 cm graskaarten':asset==='jeep'?'ongewijzigde speelbare jeep':asset==='auto'?'nieuwe auto (geen V1)':asset==='bus'?'nieuwe bus (geen V1)':asset==='straaljager'?'nieuwe straaljager voor de napalm-luchtsteun (geen V1)':asset==='wapens'?'alle wapens uit bron/wapens, bewegende delen met echte clips (geen V1)':asset==='props'?'zandzakken (3 vormen) en houten en munitiekist uit bron/props, echte VQ2-PBR-texturen (geen V1)':asset==='jungle'?'palmen, jungleboom (plankwortels, lianen), verre varianten, rotsen en de stronken van omgevallen bomen uit bron/jungle; schors- en bladtextuur en wind zitten in Godot (geen V1)':asset==='soldaat'&&version==='split'?'V1 oude pop links / VQ2 realistisch rechts, zelfde skelet, clip en camera':version==='split'?'V1 links / VQ2 rechts, identieke camera en belichting':version==='v1'?'origineel op vaste baseline':'VQ2 export'} · 360° draaien en zoomen actief.`;}
+function status(){const asset=$('asset').value,version=$('version').value;$('status').textContent=`${names[asset]} · ${GRASS.includes(asset)?'Blender 3D-sprieten, 2K PBR; V1 = oorspronkelijke 75 cm graskaarten':asset==='jeep'?'ongewijzigde speelbare jeep':asset==='auto'?'nieuwe auto (geen V1)':asset==='bus'?'nieuwe bus (geen V1)':asset==='straaljager'?'nieuwe straaljager voor de napalm-luchtsteun (geen V1)':asset==='wapens'?'alle wapens uit bron/wapens, bewegende delen met echte clips (geen V1)':asset==='wachtpost'?'slagboom (echte clip Open: arm 82° omhoog) en wachthuisje uit bron/wachtpost, VQ2-PBR en eigen rood-wit verf (geen V1)':asset==='props'?'zandzakken (3 vormen) en houten en munitiekist uit bron/props, echte VQ2-PBR-texturen (geen V1)':asset==='jungle'?'palmen, jungleboom (plankwortels, lianen), verre varianten, rotsen en de stronken van omgevallen bomen uit bron/jungle; schors- en bladtextuur en wind zitten in Godot (geen V1)':asset==='soldaat'&&version==='split'?'V1 oude pop links / VQ2 realistisch rechts, zelfde skelet, clip en camera':version==='split'?'V1 links / VQ2 rechts, identieke camera en belichting':version==='v1'?'origineel op vaste baseline':'VQ2 export'} · 360° draaien en zoomen actief.`;}
 const PHASES=['Heel','Beschadigd (ruiten, deuk, band)','Zwaar (deur eraf, kap open)','Brandend (vlammen en rook)','Wrak (verkoold, smeulend)','Ontploffing (speelt af)'];
 function phaseNodes(slot){const o={};slot.root.traverse(n=>{if(n.name)o[n.name]=n;});return o;}
 function applyPhase(p){
@@ -281,6 +290,7 @@ function stats(){
  const name=$('asset').value;
  if(GRASS.includes(name)&&slots.v2){const data=grassInfo();$('stats').textContent=`${data.triangles.toLocaleString('nl')} driehoeken · vier varianten per hoogte · LOD ${$('grass-lod').value} · native procedureel opgebouwde 2048×2048 albedo/normal/ORM. Wind in Godot; geen iPhone-FPS gemeten.`;return;}
  if((DAMAGED.includes(name)||name==='straaljager')&&slots.v2){let tri=0,meshes=0;const mats=new Set(),imgs=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh)return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const v of Object.values(m))if(v?.isTexture&&v.image)imgs.add(v.image.width+'×'+v.image.height);}});$('stats').textContent=`${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · texturen ${[...imgs].join(', ')} · schade via shape key Deuk en verkoold materiaal. Geen iPhone-FPS gemeten.`;return;}
+ if(name==='wachtpost'&&slots.v2){let tri=0,meshes=0;const mats=new Set(),texs=new Set(),g=$('post').value;slots.v2.root.traverse(o=>{if(!o.isMesh||!shown(o))return;meshes++;const gm=o.geometry;tri+=(gm.index?gm.index.count:gm.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const k of ['map','normalMap','roughnessMap','metalnessMap'])if(m[k])texs.add(m[k].uuid);}});$('stats').textContent=`${g==='beide'?'Slagboom en wachthuis':g}: ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · ${texs.size} texturen (1K-VQ2-sets en eigen slagboomverf). Geen iPhone-FPS gemeten.`;return;}
  if(name==='props'&&slots.v2){let tri=0,meshes=0;const mats=new Set(),texs=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh||!o.visible||!isUnder(o,$('prop').value))return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const k of ['map','normalMap','roughnessMap','metalnessMap'])if(m[k])texs.add(m[k].uuid);}});$('stats').textContent=`${$('prop').value}: ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · ${texs.size} texturen (gedeelde 1K-VQ2-sets). Geen iPhone-FPS gemeten.`;return;}
  if(name==='jungle'&&slots.v2){let tri=0,meshes=0;const mats=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh||!o.visible||!isUnder(o,$('plant').value))return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material))mats.add(m.uuid);});$('stats').textContent=`${$('plant').value}: ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} mesh · ${mats.size} materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.`;return;}
  if(name==='wapens'&&slots.v2){let tri=0,meshes=0;const mats=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh)return;let p=o,vis=true;while(p){if(!p.visible)vis=false;p=p.parent;}if(!vis)return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material))mats.add(m.uuid);});$('stats').textContent=`${$('gun').value}: ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · geen texturen (vlakke PBR-waarden, kleine prop). Geen iPhone-FPS gemeten.`;return;}
@@ -308,7 +318,7 @@ function loop(){
  if(dirty&&slots.v2){render();dirty=false;}
 }
 $('boom').onclick=()=>{$('phase').value='5';applyPhase(5);};
-$('phase').addEventListener('change',()=>applyPhase(Number($('phase').value)));$('look').addEventListener('change',applyLook);$('gun').addEventListener('change',applyGun);$('plant').addEventListener('change',applyJungle);$('prop').addEventListener('change',applyProp);$('asset').addEventListener('change',load);$('version').addEventListener('change',()=>{setupMaterials();status();dirty=true;});$('shading').addEventListener('change',shading);
+$('phase').addEventListener('change',()=>applyPhase(Number($('phase').value)));$('look').addEventListener('change',applyLook);$('gun').addEventListener('change',applyGun);$('post').addEventListener('change',applyWachtpost);$('plant').addEventListener('change',applyJungle);$('prop').addEventListener('change',applyProp);$('asset').addEventListener('change',load);$('version').addEventListener('change',()=>{setupMaterials();status();dirty=true;});$('shading').addEventListener('change',shading);
 $('iso').onclick=()=>setCamera(false);$('top').onclick=()=>setCamera(true);
 $('rotate').onclick=()=>{rotating=!rotating;$('rotate').setAttribute('aria-pressed',String(rotating));dirty=true;};
 $('full').onclick=async()=>{const fallback=()=>{stage.scrollIntoView({behavior:'smooth'});$('status').textContent='Safari ondersteunt hier geen fullscreen. Draai je iPhone naar liggend voor een grotere weergave.';};if(stage.requestFullscreen){try{await stage.requestFullscreen();}catch{fallback();}}else fallback();};

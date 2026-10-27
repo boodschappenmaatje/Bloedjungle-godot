@@ -416,10 +416,11 @@ static func fell_near(at: Vector3, radius: float) -> int:
 	return n
 
 
-## Voertuig dat tegen een stam rijdt (aanroepen direct na move_and_slide, met de snelheid van vóór de botsing): bij genoeg
-## snelheid valt de geraakte boom om, van het voertuig af. Tank vanaf 1,5 m/s, bus 4, jeep 6, auto 7.
-static func ram(body: CharacterBody3D, speed: float, min_speed: float) -> void:
-	if speed < min_speed or _reg.is_empty() or not is_instance_valid(_root):
+## Voertuig dat tegen een stam rijdt (aanroepen direct na move_and_slide, met de snelheid van vóór de botsing). Gewichtsklassen:
+## een voertuig velt een palm vanaf min_palm m/s en een jungleboom vanaf min_boom m/s (INF = nooit). Een jungleboom die te zwaar
+## is houdt het voertuig tegen: het kaatst terug en raakt beschadigd (als het take() kent). Tank 1,5 / 2,5; bus 4 / 8; jeep 6 / nooit; auto 7 / nooit.
+static func ram(body: CharacterBody3D, speed: float, min_palm: float, min_boom := INF) -> void:
+	if speed < minf(min_palm, min_boom) or _reg.is_empty() or not is_instance_valid(_root):
 		return
 	for i in body.get_slide_collision_count():
 		var hit := body.get_slide_collision(i).get_position()
@@ -435,8 +436,18 @@ static func ram(body: CharacterBody3D, speed: float, min_speed: float) -> void:
 				if d < best_d:
 					best_d = d
 					best = e
-		if not best.is_empty():
+		if best.is_empty():
+			continue
+		var boom := String(best["vn"]).begins_with("Boom")
+		if speed >= (min_boom if boom else min_palm):
 			fell(best, body.global_position, false)
+		elif boom and speed > 3.0:
+			var cur = body.get("_speed")
+			if cur != null:
+				body.set("_speed", -signf(cur) * speed * 0.25)   # te zware boom: terugkaatsen
+			if body.has_method("take"):
+				body.call("take", speed * 1.5)
+			Sfx.play("thud", 0.7, hit)
 
 
 ## Eén boom omver: weg uit de MultiMesh (voet, ver-variant, nepschaduw) en uit de botsing, en een vallende boom ervoor in de plaats.

@@ -68,6 +68,22 @@ func _process(_d: float) -> bool:
 	if frames == 102:
 		_drive(8.0, 6.0, 120)
 		_check(e["felled"], "voertuig op 8 m/s velt de palm")
+	if frames == 103:
+		# jungleboom: een jeep (min_boom = INF) velt hem niet, een tank (2,5) wel
+		var bo: Dictionary = {}
+		for key in F.get("_reg"):
+			for en: Dictionary in F.get("_reg")[key]:
+				if bo.is_empty() and String(en["vn"]).begins_with("Boom") and not en["felled"]:
+					bo = en
+		_spawn(bo["xf"].origin + Vector3(-6, 0, 0))
+		_drive(8.0, 6.0, 120)
+		_check(not bo["felled"], "jeep velt een jungleboom niet")
+		_spawn(bo["xf"].origin + Vector3(-6, 0, 0))
+		for i in 120:
+			car.velocity = Vector3(8, 0, 0)
+			car.move_and_slide()
+			F.call("ram", car, 8.0, 1.5, 2.5)
+		_check(bo["felled"], "tank velt een jungleboom")
 	if frames == 110:
 		var dir := Vector3.ZERO
 		for n in F.get("_root").get_children():

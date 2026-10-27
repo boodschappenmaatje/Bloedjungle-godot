@@ -24,6 +24,9 @@ def mat(name, color):
 M_ROTS = mat("Rots", (0.5, 0.5, 0.48))
 M_STAM = mat("Palm_Stam", (0.5, 0.38, 0.26))
 M_BLAD = mat("Palm_Blad", (0.3, 0.5, 0.2))
+B_STAM = mat("Boom_Stam", (0.42, 0.33, 0.24))
+B_BLAD = mat("Boom_Blad", (0.3, 0.5, 0.2))
+B_LIAAN = mat("Boom_Liaan", (0.2, 0.3, 0.12))
 
 
 def smooth(a, b, x):
@@ -160,6 +163,127 @@ VARIANTS = [("Palm1", 5, 5.4, 0.9, 10, 12), ("Palm2", 17, 6.3, 1.5, 12, 14), ("P
 for name, seed, h, lean, rn, fr in VARIANTS:
     palm(name, seed, h, lean, rn, fr)
     palm(name + "_far", seed, h, lean, rn, fr, far=True)
+
+
+# ---------- jungleboom: hoge stam met plankwortels, brede kroon, lianen ----------
+def quad(bm, lay, uvl, pts, col, midx):
+    """pts = [(co, uv), ...] vier hoeken; kleur col (rgba)."""
+    vs = []
+    for co, uv in pts:
+        v = bm.verts.new(co)
+        v[lay] = col(co) if callable(col) else col
+        vs.append((v, uv))
+    f = bm.faces.new([a for a, _ in vs])
+    f.material_index = midx
+    for loop, (_, uv) in zip(f.loops, vs):
+        loop[uvl].uv = uv
+
+
+def jungle_tree(name, seed, height, far=False):
+    rnd = random.Random(seed)
+    bm = bmesh.new()
+    lay = color_layer(bm)
+    uvl = bm.loops.layers.uv.new("UVMap")
+    segs = 4 if far else 9
+    sides = 5 if far else 8
+    ang0 = rnd.random() * math.tau
+    bend = (rnd.uniform(-0.5, 0.5), rnd.uniform(-0.5, 0.5))
+    def centre(t):
+        return Vector((bend[0] * t * t, bend[1] * t * t, height * t))
+    rings = []
+    for i in range(segs + 1):
+        t = i / segs
+        flare = 1.0 + 0.5 * math.exp(-t * 14)
+        r = (0.36 * (1 - t) + 0.2 * t) * flare * (1.0 + 0.06 * math.sin(i * 2.1 + seed))
+        rings.append((centre(t), r, t))
+    for i in range(segs):
+        shade = 0.9 + 0.1 * math.sin(i * 1.7)
+        for j in range(sides):
+            pts = []
+            for ii, jj in ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1)):
+                c, r, t = rings[ii]
+                a = ang0 + math.tau * jj / sides
+                pts.append((c + Vector((math.cos(a) * r, math.sin(a) * r, 0)), (jj / sides * 2.0, t * height / 1.4)))
+            quad(bm, lay, uvl, pts, (0.50 * shade, 0.45 * shade, 0.38 * shade, 0.02 * i / segs), 0)
+    top = rings[-1][0]
+    # plankwortels: platte, uitlopende platen rond de voet
+    n_fin = 3 if far else rnd.choice((4, 5))
+    for k in range(n_fin):
+        a = ang0 + math.tau * (k + rnd.uniform(-0.15, 0.15)) / n_fin
+        d = Vector((math.cos(a), math.sin(a), 0))
+        side = Vector((-d.y, d.x, 0))
+        reach = rnd.uniform(1.5, 2.1)
+        hmax = rnd.uniform(2.0, 3.0)
+        th = 0.07
+        steps = 3 if far else 5
+        prof = []
+        for s in range(steps + 1):
+            u = s / steps
+            rr = 0.28 + reach * u
+            zt = hmax * (1 - u) ** 1.8 + 0.05
+            prof.append((rr, zt))
+        for s in range(steps):
+            (r0, z0), (r1, z1) = prof[s], prof[s + 1]
+            for sg in (-1, 1):
+                o = side * th * sg
+                quad(bm, lay, uvl, [(d * r0 + o + Vector((0, 0, -0.05)), (r0, 0.0)), (d * r1 + o + Vector((0, 0, -0.05)), (r1, 0.0)),
+                                    (d * r1 + o + Vector((0, 0, z1)), (r1, z1 / 1.4)), (d * r0 + o + Vector((0, 0, z0)), (r0, z0 / 1.4))],
+                     (0.42, 0.37, 0.30, 0.0), 0)
+            quad(bm, lay, uvl, [(d * r0 + side * -th + Vector((0, 0, z0)), (r0, 0.0)), (d * r1 + side * -th + Vector((0, 0, z1)), (r1, 0.0)),
+                                (d * r1 + side * th + Vector((0, 0, z1)), (r1, 0.1)), (d * r0 + side * th + Vector((0, 0, z0)), (r0, 0.1))],
+                 (0.42, 0.37, 0.30, 0.0), 0)
+    leaf0, leaf1 = (0.6, 0.7, 0.55), (1.0, 1.0, 0.9)
+    def clump(origin, count, scale, up):
+        for k in range(count):
+            yaw = math.tau * k / count + rnd.uniform(-0.25, 0.25)
+            frond(bm, lay, uvl, origin, yaw, rnd.uniform(2.0, 3.0) * scale, rnd.uniform(0.9, 1.25) * scale,
+                  rnd.uniform(0.5, 1.2) * scale + up, rnd.uniform(0.7, 1.4) * scale, leaf0, leaf1, 3 if far else 5)
+    anchors = [top]
+    clump(top + Vector((0, 0, 0.1)), 6 if far else 11, 1.0, 0.3)
+    if not far:
+        clump(top + Vector((0, 0, 0.6)), 6, 0.55, 0.6)
+    # twee zijtakken met eigen bladerbos
+    for k in range(1 if far else 2):
+        a = ang0 + math.tau * (k * 0.5 + 0.25) + rnd.uniform(-0.3, 0.3)
+        d = Vector((math.cos(a), math.sin(a), 0))
+        base = centre(0.62 + 0.08 * k)
+        tip = base + d * rnd.uniform(1.8, 2.5) + Vector((0, 0, rnd.uniform(0.9, 1.5)))
+        side = Vector((-d.y, d.x, 0))
+        for wdt in (0.14, 0.14):
+            quad(bm, lay, uvl, [(base + side * wdt, (0, 0)), (base - side * wdt, (1, 0)), (tip - side * 0.05, (1, 1)), (tip + side * 0.05, (0, 1))], (0.4, 0.35, 0.28, 0.0), 0)
+            break
+        anchors.append(tip)
+        clump(tip, 4 if far else 7, 0.7, 0.2)
+    # lianen: dunne hangende linten onder de kroon en de takken
+    for k in range(2 if far else 7):
+        o = anchors[k % len(anchors)] + Vector((rnd.uniform(-0.7, 0.7), rnd.uniform(-0.7, 0.7), -0.4))
+        drop = rnd.uniform(3.0, min(7.0, height * 0.7))
+        w = 0.05
+        sg = 3 if far else 6
+        sway = Vector((rnd.uniform(-0.3, 0.3), rnd.uniform(-0.3, 0.3), 0))
+        for i in range(sg):
+            t0, t1 = i / sg, (i + 1) / sg
+            def pt(t):
+                return o + Vector((0, 0, -drop * t)) + sway * math.sin(t * 3.0)
+            col0 = (0.18, 0.28, 0.10, t0)
+            col1 = (0.18, 0.28, 0.10, t1)
+            p0, p1 = pt(t0), pt(t1)
+            verts = []
+            for p, cc in ((p0 - Vector((w, 0, 0)), col0), (p1 - Vector((w, 0, 0)), col1), (p1 + Vector((w, 0, 0)), col1), (p0 + Vector((w, 0, 0)), col0)):
+                v = bm.verts.new(p)
+                v[lay] = cc
+                verts.append(v)
+            f = bm.faces.new(verts)
+            f.material_index = 2
+            for loop, uv in zip(f.loops, ((0, t0), (0, t1), (1, t1), (1, t0))):
+                loop[uvl].uv = uv
+    bm.normal_update()
+    return make_obj(name, bm, [B_STAM, B_BLAD, B_LIAAN])
+
+
+for name, seed, h in (("Boom1", 41, 11.0), ("Boom2", 53, 13.5)):
+    jungle_tree(name, seed, h)
+    jungle_tree(name + "_far", seed, h, far=True)
 
 bpy.ops.object.select_all(action="DESELECT")
 bpy.ops.export_scene.gltf(filepath=os.path.join(OUT, "jungle.glb"), export_format="GLB", export_apply=True,

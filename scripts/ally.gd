@@ -25,11 +25,14 @@ var truck: Node = null  # vrachtwagen die hem vervoert; die bepaalt dan waar hij
 var command := "follow"
 var command_target := Vector3.ZERO
 var command_enemy: Node3D
+var command_hold_position := Vector3.ZERO
 
 func set_command(order: String, target: Vector3, enemy: Node3D = null) -> void:
+	if helper or guard or truck != null: return
+	if order == "hold": command_hold_position = global_position
 	command = order
 	command_target = target
-	command_enemy = enemy
+	command_enemy = enemy if is_instance_valid(enemy) else null
 
 
 var _stuck_t := 0.0
@@ -75,6 +78,8 @@ func _physics_process(delta: float) -> void:
 		model.set_shoot_pose(false, "thompson", 0.5)
 		return
 	fire_t -= delta
+	if command_enemy != null and (not is_instance_valid(command_enemy) or command_enemy.get("dead") == true):
+		command_enemy = null
 	var target: Node3D = command_enemy if is_instance_valid(command_enemy) else _nearest_enemy()
 	var goal := _goal()
 	var to_goal := Vector2(goal.x - global_position.x, goal.z - global_position.z)
@@ -138,11 +143,13 @@ func _goal() -> Vector3:
 			var q: Vector2 = POSTS[(idx * 4 + 1) % POSTS.size()] * (Data.COMPOUND / 14.0)
 			return Vector3(q.x, 0, q.y)
 		return Patrouille.line(idx)[_leg % 2]
+	if not helper and command == "hold":
+		return command_hold_position
 	if not helper and command in ["defend", "move"]:
-		return command_target + Vector3((idx%2)*1.6-0.8,0.0,(idx/2%2)*1.6-0.8)
+		return command_target + Vector3((idx%2)*1.8-0.9,0.0,(idx/2%2)*1.8-0.9)
 	if not helper and command == "attack" and is_instance_valid(command_enemy):
 		return command_enemy.global_position + Vector3(cos(float(idx)*2.4),0,sin(float(idx)*2.4))*3.0
-	if Game.troop_mode == "hold" and not helper:
+	if Game.troop_mode == "hold" and not helper and command == "follow":
 		var p: Vector2 = POSTS[idx % POSTS.size()] * (Data.COMPOUND / 14.0)
 		return Vector3(p.x, 0, p.y)
 	var a := float(idx) * 2.4 + 0.6

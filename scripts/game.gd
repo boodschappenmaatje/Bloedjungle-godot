@@ -143,6 +143,9 @@ func reset() -> void:
 	buildings.clear()
 	allies.clear()
 	troop_mode = "follow"
+	squad_order = "follow"
+	squad_target = Vector3.ZERO
+	squad_target_enemy = null
 	streak = 0
 	streak_bank.clear()
 	streak_sel = ""

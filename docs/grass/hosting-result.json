@@ -1,5 +1,11 @@
 {
+  "status": "succeeded",
   "url": "https://bloedjungle-vq2-modellen.whole-jam-7898.chatgpt.site/tools/blender-vq2-viewer/?asset=grass_tall",
-  "status": "pending publication of completed grass viewer",
-  "access": "Existing owner-private audience preserved"
+  "deployment_id": "appgdep_6ae0a94ead888191a1e0880702543c7c",
+  "version_id": "appgprj_6add044cb96c8191aa127117aa0cba84~appgver_a73ef3afecc88191bdb7b4c90c049a43",
+  "site_source_commit": "5c4b41becaf783ae853dc2b155594a7dc714a076",
+  "game_viewer_source_commit": "d79d4b4",
+  "access": "Existing owner-private audience preserved",
+  "local_functional_qa": "PASS: all grass variants/LODs/2K maps/mobile pinch and jungle/weapon regression tests",
+  "live_deployment": "Confirmed by native hosting service; no physical iPhone or live interaction test claimed"
 }

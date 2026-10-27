@@ -147,6 +147,8 @@ overlappende LOD's, tall-zonegrenzen, geen grasphysics, behouden boom-/rotsposit
 de windkeuze en opruimen van de warm-up. De GL-run controleert bovendien echte
 MultiMesh-transformreadback; de Dummy-renderer bewaart die niet.
 
+De afronding bevat **68 verschillende geslaagde Godot-tests** op de bijgewerkte main. Een lokale texturecache moest tijdens de run opnieuw worden geïmporteerd; resterende tests zijn herhaald. De korte MG42-clip uit de nieuwe main vereiste een 60Hz-import om de bronkeyframes te behouden. De wapenicoonlus slaat nu de nieuwe AnimationPlayer over bij het verbergen van 3D-onderdelen. Dit zijn import-/typecompatibiliteitsfixes; wapenbalans en GLB-bronbytes zijn behouden. De volledige uitvoeringsvolgorde en logs staan in `verification.json`.
+
 ## Prestaties en beperkingen
 
 De drie gedeelde geïmporteerde desktopbeelden bevatten circa **10,67 MiB**

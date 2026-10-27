@@ -1,0 +1,154 @@
+[
+	{
+		"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"batch_groups": 941,
+		"camera_position": "Vector3(0, 4.85, 58.5)",
+		"camera_rotation": "Vector3(-0.59506965, 0, 0)",
+		"draw_calls": 389.0,
+		"file": "res://docs/grass/renders/grass-plot-old.png",
+		"fov": 45.0,
+		"fps": "Not measured: fixed-step software renderer capture",
+		"grass_counts": {
+			"medium": 2200,
+			"short": 6200,
+			"tall": 1527
+		},
+		"primitives": 289292.0,
+		"renderer": "gl_compatibility",
+		"sha256": "0606e3bb7aa6eed1047dd547e7581bb523cdcfaf9c68dda0006b56daaf6ab9fd",
+		"texture_memory_bytes": 136897709.0
+	},
+	{
+		"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"batch_groups": 941,
+		"camera_position": "Vector3(0, 23.745346, 66.83774)",
+		"camera_rotation": "Vector3(-1.012291, 0, 0)",
+		"draw_calls": 382.0,
+		"file": "res://docs/grass/renders/grass-gamecamera-old.png",
+		"fov": 45.0,
+		"fps": "Not measured: fixed-step software renderer capture",
+		"grass_counts": {
+			"medium": 2200,
+			"short": 6200,
+			"tall": 1527
+		},
+		"primitives": 219568.0,
+		"renderer": "gl_compatibility",
+		"sha256": "c0e8bd9cb53eaae98c9a8709a430e93c37d44820a3fb8610e951682148b42b37",
+		"texture_memory_bytes": 137159845.0
+	},
+	{
+		"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"batch_groups": 941,
+		"camera_position": "Vector3(0, 4.85, 58.5)",
+		"camera_rotation": "Vector3(-0.59506965, 0, 0)",
+		"draw_calls": 384.0,
+		"file": "res://docs/grass/renders/grass-plot-new.png",
+		"fov": 45.0,
+		"fps": "Not measured: fixed-step software renderer capture",
+		"grass_counts": {
+			"medium": 2200,
+			"short": 6200,
+			"tall": 1527
+		},
+		"primitives": 241724.0,
+		"renderer": "gl_compatibility",
+		"sha256": "b1a6d029527d3eb9c9efb19e003cfd39a3bc275e9004e676e4737f5eeca7a618",
+		"texture_memory_bytes": 137094305.0
+	},
+	{
+		"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"batch_groups": 941,
+		"camera_position": "Vector3(0, 23.745346, 66.83774)",
+		"camera_rotation": "Vector3(-1.012291, 0, 0)",
+		"draw_calls": 376.0,
+		"file": "res://docs/grass/renders/grass-gamecamera-new.png",
+		"fov": 45.0,
+		"fps": "Not measured: fixed-step software renderer capture",
+		"grass_counts": {
+			"medium": 2200,
+			"short": 6200,
+			"tall": 1527
+		},
+		"primitives": 238232.0,
+		"renderer": "gl_compatibility",
+		"sha256": "4571213ad941e132757b76bd3b7f20b0ea28017cbe2aaca90de5a4a593a1da90",
+		"texture_memory_bytes": 137094305.0
+	},
+	{
+		"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"batch_groups": 941,
+		"camera_position": "Vector3(-12, 23.745346, -27.16226)",
+		"camera_rotation": "Vector3(-1.012291, 0, 0)",
+		"draw_calls": 369.0,
+		"file": "res://docs/grass/renders/grass-jungle-gamecamera.png",
+		"fov": 45.0,
+		"fps": "Not measured: fixed-step software renderer capture",
+		"grass_counts": {
+			"medium": 2200,
+			"short": 6200,
+			"tall": 1527
+		},
+		"primitives": 655434.0,
+		"renderer": "gl_compatibility",
+		"sha256": "8e8b34969c8f5f96122c12291fbb6d837d1d0e0df1ace37a34dc94c40281f844",
+		"texture_memory_bytes": 137094305.0
+	},
+	{
+		"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"batch_groups": 941,
+		"camera_position": "Vector3(-12, 11.890317, -31.293911)",
+		"camera_rotation": "Vector3(-0.8377581, 0, 0)",
+		"draw_calls": 344.0,
+		"file": "res://docs/grass/renders/grass-jungle-combatcamera.png",
+		"fov": 45.0,
+		"fps": "Not measured: fixed-step software renderer capture",
+		"grass_counts": {
+			"medium": 2200,
+			"short": 6200,
+			"tall": 1527
+		},
+		"primitives": 585640.0,
+		"renderer": "gl_compatibility",
+		"sha256": "6d88c21c40efbbe0dd8714ac732820dfdc654927b23aeddd967abeba454953be",
+		"texture_memory_bytes": 137094305.0
+	},
+	{
+		"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"batch_groups": 941,
+		"camera_position": "Vector3(-12, 11.890317, -31.293911)",
+		"camera_rotation": "Vector3(-0.8377581, 0, 0)",
+		"draw_calls": 344.0,
+		"file": "res://docs/grass/renders/grass-wind-a.png",
+		"fov": 45.0,
+		"fps": "Not measured: fixed-step software renderer capture",
+		"grass_counts": {
+			"medium": 2200,
+			"short": 6200,
+			"tall": 1527
+		},
+		"primitives": 721624.0,
+		"renderer": "gl_compatibility",
+		"sha256": "bc6d5e5837f431d2de3b5c28b6536a8e7167f03e1c326712eafee357319c062b",
+		"texture_memory_bytes": 137094305.0
+	},
+	{
+		"adapter": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"batch_groups": 941,
+		"camera_position": "Vector3(-12, 11.890317, -31.293911)",
+		"camera_rotation": "Vector3(-0.8377581, 0, 0)",
+		"draw_calls": 344.0,
+		"file": "res://docs/grass/renders/grass-wind-b.png",
+		"fov": 45.0,
+		"fps": "Not measured: fixed-step software renderer capture",
+		"grass_counts": {
+			"medium": 2200,
+			"short": 6200,
+			"tall": 1527
+		},
+		"primitives": 721624.0,
+		"renderer": "gl_compatibility",
+		"sha256": "0c2af0ddce30725fc9e4ab22bb5f19c35c63b18b86887bb92f2606039b67ea32",
+		"texture_memory_bytes": 137094305.0
+	}
+]

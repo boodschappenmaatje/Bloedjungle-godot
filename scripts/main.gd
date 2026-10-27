@@ -72,6 +72,11 @@ func _warm_up() -> void:
 	var warm := Node3D.new()
 	add_child(warm)
 	var base: Vector3 = Game.player.global_position if Game.player else Vector3(0, 0, 4)
+	# Prime the shared grass shader/textures under the existing loading screen.
+	# The base camera itself cannot see the exterior grass during normal warm-up.
+	var grass := GrassField.preview("all")
+	grass.position = base + Vector3(0, 0, -4)
+	warm.add_child(grass)
 	var n := 0
 	for path in ["res://assets/soldaat.glb", "res://assets/soldaat_vq2.glb", "res://assets/klimmen.glb", "res://assets/kazerne.glb", "res://assets/garage.glb", "res://assets/helipad.glb", "res://assets/zwaailamp.glb", "res://assets/apache.glb", "res://assets/loopgraaf.glb", "res://assets/poort.glb", "res://assets/wachttoren.glb", "res://assets/vrachtwagen.glb", "res://assets/straaljager.glb"]:
 		if not ResourceLoader.exists(path):

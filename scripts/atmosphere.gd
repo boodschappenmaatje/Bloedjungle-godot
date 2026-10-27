@@ -120,6 +120,8 @@ func apply_settings() -> void:
 	Sfx.rain(weather == "rain")
 	_apply_diagnose()
 	_apply_tier()
+	for field in get_tree().get_nodes_in_group("grass_fields"):
+		field.apply_quality(quality, quality == "ultra" and tier == 0)
 
 
 ## Automatische kwaliteitstrap (PerfGovernor): haalt het spel het doel niet, ook niet op de laagste resolutie, dan gaan de

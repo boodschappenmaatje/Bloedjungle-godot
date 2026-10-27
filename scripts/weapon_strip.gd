@@ -128,7 +128,9 @@ func _render_icons() -> void:
 		if node == null:
 			continue
 		for other in holder.get_children():
-			(other as Node3D).visible = false
+			# New animated weapon GLBs also contain an AnimationPlayer.
+			if other is Node3D:
+				other.visible = false
 		node.visible = true
 		var p := node.get_parent()
 		while p != null and p != holder:

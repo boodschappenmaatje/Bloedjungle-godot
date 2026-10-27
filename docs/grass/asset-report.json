@@ -1,0 +1,315 @@
+{
+  "libraries": [
+    {
+      "family": "short",
+      "lod": 0,
+      "file": "assets/grass/grass_short_lod0.glb",
+      "sha256": "0d9f92586eba6b61b4dacf1f81873946132cb3d974106e84f327289c85c701e8",
+      "triangles_four_variants": 1840,
+      "material_surfaces": 4,
+      "embedded_images": [
+        {
+          "name": "normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "b4a0aca2cfd1f37d9192027d8a09261e5bb1460ad6c0ff6649ddbf5fc9b507ba"
+        },
+        {
+          "name": "orm",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "ddcd3b6d9a6556257a2d4bce2cb6360a971b08642b633d5b52ac28bd157e8ea9"
+        },
+        {
+          "name": "albedo",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "94f7734311fb0b62469ec6943fbf79ba2cdfe7398bc8d2813af84961096a38d8"
+        }
+      ]
+    },
+    {
+      "family": "short",
+      "lod": 1,
+      "file": "assets/grass/grass_short_lod1.glb",
+      "sha256": "0a5c0c2aace32f5734fea85f833c7ab46c94cab7c9ca1d54b5e155ee5df4e059",
+      "triangles_four_variants": 552,
+      "material_surfaces": 4,
+      "embedded_images": [
+        {
+          "name": "normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "b4a0aca2cfd1f37d9192027d8a09261e5bb1460ad6c0ff6649ddbf5fc9b507ba"
+        },
+        {
+          "name": "orm",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "ddcd3b6d9a6556257a2d4bce2cb6360a971b08642b633d5b52ac28bd157e8ea9"
+        },
+        {
+          "name": "albedo",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "94f7734311fb0b62469ec6943fbf79ba2cdfe7398bc8d2813af84961096a38d8"
+        }
+      ]
+    },
+    {
+      "family": "short",
+      "lod": 2,
+      "file": "assets/grass/grass_short_lod2.glb",
+      "sha256": "5342a7efbc55de1b29e4a4aab6c1b53f5b1ce79f26b37923fd21a837d5b2dc06",
+      "triangles_four_variants": 168,
+      "material_surfaces": 4,
+      "embedded_images": [
+        {
+          "name": "normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "b4a0aca2cfd1f37d9192027d8a09261e5bb1460ad6c0ff6649ddbf5fc9b507ba"
+        },
+        {
+          "name": "orm",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "ddcd3b6d9a6556257a2d4bce2cb6360a971b08642b633d5b52ac28bd157e8ea9"
+        },
+        {
+          "name": "albedo",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "94f7734311fb0b62469ec6943fbf79ba2cdfe7398bc8d2813af84961096a38d8"
+        }
+      ]
+    },
+    {
+      "family": "medium",
+      "lod": 0,
+      "file": "assets/grass/grass_medium_lod0.glb",
+      "sha256": "3a931124dcc1a8da0eca2918eadbd7116196cb018e381f9916c5e0848e832807",
+      "triangles_four_variants": 3024,
+      "material_surfaces": 4,
+      "embedded_images": [
+        {
+          "name": "normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "b4a0aca2cfd1f37d9192027d8a09261e5bb1460ad6c0ff6649ddbf5fc9b507ba"
+        },
+        {
+          "name": "orm",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "ddcd3b6d9a6556257a2d4bce2cb6360a971b08642b633d5b52ac28bd157e8ea9"
+        },
+        {
+          "name": "albedo",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "94f7734311fb0b62469ec6943fbf79ba2cdfe7398bc8d2813af84961096a38d8"
+        }
+      ]
+    },
+    {
+      "family": "medium",
+      "lod": 1,
+      "file": "assets/grass/grass_medium_lod1.glb",
+      "sha256": "300e1727d7a405b96dd948e603deaf7c58c4e26a0fee97eedd4b171326523b67",
+      "triangles_four_variants": 648,
+      "material_surfaces": 4,
+      "embedded_images": [
+        {
+          "name": "normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "b4a0aca2cfd1f37d9192027d8a09261e5bb1460ad6c0ff6649ddbf5fc9b507ba"
+        },
+        {
+          "name": "orm",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "ddcd3b6d9a6556257a2d4bce2cb6360a971b08642b633d5b52ac28bd157e8ea9"
+        },
+        {
+          "name": "albedo",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "94f7734311fb0b62469ec6943fbf79ba2cdfe7398bc8d2813af84961096a38d8"
+        }
+      ]
+    },
+    {
+      "family": "medium",
+      "lod": 2,
+      "file": "assets/grass/grass_medium_lod2.glb",
+      "sha256": "ae899e600147fb5f64f5895517542609e01f4312a9c40f06b6a97c48f2e2d11d",
+      "triangles_four_variants": 168,
+      "material_surfaces": 4,
+      "embedded_images": [
+        {
+          "name": "normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "b4a0aca2cfd1f37d9192027d8a09261e5bb1460ad6c0ff6649ddbf5fc9b507ba"
+        },
+        {
+          "name": "orm",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "ddcd3b6d9a6556257a2d4bce2cb6360a971b08642b633d5b52ac28bd157e8ea9"
+        },
+        {
+          "name": "albedo",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "94f7734311fb0b62469ec6943fbf79ba2cdfe7398bc8d2813af84961096a38d8"
+        }
+      ]
+    },
+    {
+      "family": "tall",
+      "lod": 0,
+      "file": "assets/grass/grass_tall_lod0.glb",
+      "sha256": "08fa98d7ac4e5877d1512cf8bf9f213137eed63c07304cb21b2ef216fc12fff4",
+      "triangles_four_variants": 4752,
+      "material_surfaces": 4,
+      "embedded_images": [
+        {
+          "name": "normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "b4a0aca2cfd1f37d9192027d8a09261e5bb1460ad6c0ff6649ddbf5fc9b507ba"
+        },
+        {
+          "name": "orm",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "ddcd3b6d9a6556257a2d4bce2cb6360a971b08642b633d5b52ac28bd157e8ea9"
+        },
+        {
+          "name": "albedo",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "94f7734311fb0b62469ec6943fbf79ba2cdfe7398bc8d2813af84961096a38d8"
+        }
+      ]
+    },
+    {
+      "family": "tall",
+      "lod": 1,
+      "file": "assets/grass/grass_tall_lod1.glb",
+      "sha256": "2b3faaa539ce9d23083c303b4f820d7c66c3c52e7b4e2b24dbaae3c70654e151",
+      "triangles_four_variants": 1056,
+      "material_surfaces": 4,
+      "embedded_images": [
+        {
+          "name": "normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "b4a0aca2cfd1f37d9192027d8a09261e5bb1460ad6c0ff6649ddbf5fc9b507ba"
+        },
+        {
+          "name": "orm",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "ddcd3b6d9a6556257a2d4bce2cb6360a971b08642b633d5b52ac28bd157e8ea9"
+        },
+        {
+          "name": "albedo",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "94f7734311fb0b62469ec6943fbf79ba2cdfe7398bc8d2813af84961096a38d8"
+        }
+      ]
+    },
+    {
+      "family": "tall",
+      "lod": 2,
+      "file": "assets/grass/grass_tall_lod2.glb",
+      "sha256": "40cac453386b46b614e5eddd10915576790a635f951da7a9c2beae0739d6acc5",
+      "triangles_four_variants": 168,
+      "material_surfaces": 4,
+      "embedded_images": [
+        {
+          "name": "normal",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "b4a0aca2cfd1f37d9192027d8a09261e5bb1460ad6c0ff6649ddbf5fc9b507ba"
+        },
+        {
+          "name": "orm",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "ddcd3b6d9a6556257a2d4bce2cb6360a971b08642b633d5b52ac28bd157e8ea9"
+        },
+        {
+          "name": "albedo",
+          "size": [
+            2048,
+            2048
+          ],
+          "sha256": "94f7734311fb0b62469ec6943fbf79ba2cdfe7398bc8d2813af84961096a38d8"
+        }
+      ]
+    }
+  ],
+  "texture_resolution": [
+    2048,
+    2048
+  ],
+  "checks": "PASS"
+}

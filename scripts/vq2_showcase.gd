@@ -3,7 +3,8 @@ extends Node3D
 
 const MAIN := preload("res://scenes/main.tscn")
 const ANCHOR := Vector3(0, 0, 52)
-const ASSETS := ["kazerne", "wachttoren", "legerjeep", "jeep"]
+const ASSETS := ["kazerne", "wachttoren", "legerjeep", "jeep", "grass_short", "grass_medium", "grass_tall", "grass_all"]
+@export var initial_asset := "kazerne"
 var main: Node3D
 var subject: Node3D
 var tower: Node3D
@@ -42,7 +43,7 @@ func _setup() -> void:
 	camera.make_current()
 	_build_ui()
 	is_ready = true
-	select_asset("kazerne", "v2")
+	select_asset(initial_asset, "v2")
 	if "--vq2-capture" in OS.get_cmdline_user_args():
 		await _captures()
 
@@ -102,6 +103,9 @@ func select_asset(asset: String, revision := "v2") -> void:
 				_replace_visual(subject, "legerjeep")
 		"jeep":
 			subject = load("res://scenes/jeep.tscn").instantiate()
+		_:
+			if asset.begins_with("grass_"):
+				subject = GrassField.preview(asset.trim_prefix("grass_"), version == "v1")
 	subject.position = ANCHOR
 	main.add_child(subject)
 	player.global_position = ANCHOR + Vector3(0, 0, 5)
@@ -125,6 +129,8 @@ func select_asset(asset: String, revision := "v2") -> void:
 	clip_pause_button.disabled = demo_anim == null
 	version_picker.disabled = asset == "jeep"
 	info.text = "%s · %s · echte gameplaywereld" % [asset.to_upper(), version.to_upper()]
+	if asset.begins_with("grass_"):
+		info.text = "3D-GRAS · 2K PBR · wind via Godot-shader, geen GLB-clip"
 	preset(false)
 
 
@@ -147,7 +153,7 @@ func preset(game_camera: bool) -> void:
 		camera.global_position = ANCHOR + Vector3(0, sin(a) * 28.0, cos(a) * 28.0)
 		camera.look_at(ANCHOR)
 	else:
-		var h := 8.4 if selected == "wachttoren" else (3.8 if selected == "kazerne" else 2.8)
+		var h := 8.4 if selected == "wachttoren" else (3.8 if selected == "kazerne" else (1.5 if selected.begins_with("grass_") else 2.8))
 		var target := ANCHOR + Vector3(0, h * 0.45, 0)
 		camera.global_position = target + Vector3(1, 0.8, 1.3).normalized() * (h * 2.3 + 3.0)
 		camera.look_at(target)
@@ -205,7 +211,8 @@ func _build_ui() -> void:
 	add_child(ui)
 	var box := PanelContainer.new()
 	ui.add_child(box)
-	box.position = Vector2(18, 14)
+	var safe := UI.safe_margins(get_viewport().get_visible_rect().size, 14.0)
+	box.position = Vector2(safe.x, safe.y)
 	box.add_theme_stylebox_override("panel", UI.box(Color(0.05, 0.07, 0.05, 0.94), UI.BRASS, 1, 6, 8))
 	panel = VBoxContainer.new()
 	box.add_child(panel)
@@ -215,7 +222,7 @@ func _build_ui() -> void:
 	panel.add_child(row)
 	asset_picker = OptionButton.new()
 	for asset in ASSETS:
-		asset_picker.add_item(asset.capitalize())
+		asset_picker.add_item({"grass_short": "Gras kort", "grass_medium": "Gras middelhoog", "grass_tall": "Gras hoog", "grass_all": "Alle grashoogtes"}.get(asset, asset.capitalize()))
 	row.add_child(asset_picker)
 	version_picker = OptionButton.new()
 	version_picker.add_item("Nieuw VQ2")
@@ -228,6 +235,10 @@ func _build_ui() -> void:
 	_button(cameras, "Schuin", func(): preset(false))
 	_button(cameras, "Gamecamera", func(): preset(true))
 	_button(cameras, "Loop zelf", func(): camera.set_process(true))
+	_button(cameras, "Wind", func():
+		var on := GameSettings.get_value("wind") != "on"
+		GameSettings.values["wind"] = "on" if on else "off"
+		Foliage.set_wind(on))
 	clips = OptionButton.new()
 	panel.add_child(clips)
 	clips.item_selected.connect(play_clip)

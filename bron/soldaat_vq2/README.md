@@ -76,3 +76,16 @@ De clips in de glb zijn ongewijzigd. Wat erbij kwam, draait in Godot en is dus n
   napalmdoden houden hun eigen clip. Instelling *Doodsval vijanden*: Ragdoll / Animatie.
 - Tests: `tests/soldaat_pose_test.gd` (richting van de benen, romp blijft vooruit, trefferduw per richting) en
   `tests/soldaat_ragdoll_test.gd` (valt, blijft boven de grond, begrensd aantal). iPhone-fps niet gemeten.
+
+## Wapenhouding (fase 3, in code)
+Elk wapen wordt nu echt vastgehouden, in plaats van aan de hand te hangen in één geweerhouding voor alle wapens
+(`SoldierPose._hold_weapon`, tabel `SoldierPose.HOLDS`):
+- het wapen staat recht vooruit op een vaste plek voor de borst: de kolfplaat in de schoudergroef (Garand, Thompson, trench gun,
+  MG 42, bazooka op de schouder) of met gestrekte armen op ooghoogte (M1911);
+- beide armen krijgen twee-botten-IK: de rechterhand op de greep (oorsprong van het wapenmodel = midden van de handpalm),
+  de linkerhand op de steungreep (voorhout, pomp, voorgreep, bij het pistool om de rechterhand); te ver weg? Dan schuift het
+  sleutelbeen mee naar voren;
+- alleen tijdens stil, lopen, rennen, schieten en geraakt (`SoldierModel.HOLD_CLIPS`); herladen, sprinten, rollen, klimmen en dood
+  blijven de GLB-clip volgen. Terugslag duwt het wapen naar achteren en omhoog, de armen veren mee.
+- `tests/wapen_foto.gd` maakt de beelden (alle 9 wapens, `WAPEN_ONE=<wapen>` voor vier kanten dichtbij); `tests/soldaat_pose_test.gd`
+  controleert per wapen dat beide polsen hun greep bereiken en de loop recht vooruit staat.

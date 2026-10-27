@@ -149,7 +149,7 @@ func _goal() -> Vector3:
 	if not helper and command in ["hold", "defend", "move", "attack"]:
 		var enemy_valid := is_instance_valid(command_enemy)
 		var enemy_position := command_enemy.global_position if enemy_valid else Vector3.ZERO
-		var follow_position := Game.player.global_position + Vector3(cos(float(idx) * 2.4 + 0.6), 0.0, sin(float(idx) * 2.4 + 0.6)) * 2.8
+		var follow_position: Vector3 = Game.player.global_position + Vector3(cos(float(idx) * 2.4 + 0.6), 0.0, sin(float(idx) * 2.4 + 0.6)) * 2.8
 		return TeamOrderRules.soldier_goal(command, command_target, enemy_position, enemy_valid, idx, command_hold_position, follow_position)
 	if Game.troop_mode == "hold" and not helper and command == "follow":
 		var p: Vector2 = POSTS[idx % POSTS.size()] * (Data.COMPOUND / 14.0)

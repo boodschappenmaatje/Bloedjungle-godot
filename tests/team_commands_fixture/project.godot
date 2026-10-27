@@ -13,6 +13,7 @@ window/size/viewport_height=640
 [autoload]
 Game="*res://stubs/game.gd"
 UI="*res://stubs/ui.gd"
+Sfx="*res://stubs/sfx.gd"
 
 [rendering]
 renderer/rendering_method="gl_compatibility"

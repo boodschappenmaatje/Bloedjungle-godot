@@ -20,6 +20,7 @@ const LOOKS := {
 	"vijand:heavy": ["Lijf_Vijand", "Staalhelm", "Patroongordels", "Laarzen_V"],
 }
 const LOOPS := ["stil", "lopen", "rennen", "achteruit", "schieten", "klimmen", "zitten", "sprinten"]  # herladen en rollen spelen één keer
+const LOCOMOTION := ["lopen", "rennen", "achteruit"]
 const CLIMB := preload("res://assets/klimmen.glb")  # klim-animatie uit bron/klimmen
 const SIT := preload("res://assets/zitten.glb")  # zitten in de vrachtwagen, uit bron/zitten
 const ACTIONS := preload("res://assets/acties.glb")  # rollen, sprinten en een nieuwe herlaadbeweging, uit bron/acties
@@ -85,6 +86,7 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 		_setup_v2(uniform)
 		_attach_gun(model, gun_kind)
 		_setup_upper_body_animation()
+		_setup_pose()
 		play("stil")
 		return
 	# eigen kopie van de materialen, zodat elk mannetje een eigen kleur en rode flits kan hebben
@@ -106,6 +108,21 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 
 
 var _parts := {}   # naam -> MeshInstance3D (VQ2)
+var pose: SoldierPose   # benen los van de romp draaien en treffers per richting (alleen VQ2)
+
+
+func _setup_pose() -> void:
+	var skel: Skeleton3D = _model.find_children("*", "Skeleton3D", true, false)[0]
+	pose = SoldierPose.new()
+	pose.name = "SoldierPose"
+	skel.add_child(pose)
+	pose.setup_skeleton(skel)
+
+
+## Draaiing van de benen t.o.v. de romp (radialen, + = naar rechts van het gezicht). 0 = benen kijken mee met de romp.
+func set_leg_yaw(yaw: float) -> void:
+	if pose != null:
+		pose.leg_yaw = yaw
 
 
 ## VQ2: toont alleen het lichaam en de uitrusting van deze look. Ongebruikte delen worden weggegooid, behalve bij de
@@ -205,8 +222,16 @@ func _update_shoot_pose() -> void:
 		_overlay_clip = ""
 
 
+## Alleen de duw van de treffer op romp en hoofd (VQ2), zonder de schiet- of trefferhouding van de armen te overschrijven.
+func flinch(dir: Vector3, strength := 1.0) -> void:
+	if pose != null:
+		pose.kick(dir, strength)
+
+
 ## Korte bovenlichaamshouding bij een treffer; de AI en de loopanimatie blijven doorlopen.
 func hit_reaction(dir: Vector3, strength := 1.0) -> void:
+	if pose != null:
+		pose.kick(dir, strength)
 	if _fire_anim == null or not _fire_anim.has_animation("hit"):
 		return
 	var horizontal := Vector3(dir.x, 0.0, dir.z)
@@ -494,6 +519,8 @@ func play(clip: String, blend := 0.18, speed := 1.0) -> void:
 			anim.speed_scale = speed
 		return
 	current = clip
+	if pose != null and not clip in LOCOMOTION:
+		pose.leg_yaw = 0.0   # alleen bij lopen draaien de benen los van de romp
 	anim.play(clip, blend)
 	anim.speed_scale = speed
 

@@ -46,6 +46,7 @@ func _ready() -> void:
 func play(name: String, vol := 1.0, pos = null) -> void:
 	if not _streams.has(name):
 		return
+	JungleGeluid.verstoor(name, vol)
 	if pos != null and Game.player:
 		var d: float = (pos as Vector3).distance_to(Game.player.global_position)
 		vol *= clampf(1.2 - d / 35.0, 0.05, 1.0)

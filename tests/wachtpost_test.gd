@@ -7,6 +7,8 @@ var game: Node
 var frames := 0
 var fails := 0
 var arm: Array = []
+var enemy: Node
+var enemy_hp := 0.0
 
 
 func _check(ok: bool, msg: String) -> void:
@@ -68,7 +70,53 @@ func _process(_d: float) -> bool:
 		game.gates.list[1].broken = true
 	if frames == 90:
 		_check(_arm_angle(1) > 80.0, "slagboom 1 staat omhoog als de poort kapot is (%.1f)" % _arm_angle(1))
+		# de wacht in het huisje schiet op een vijand die door de poort is gekomen
+		var wp := load("res://scripts/wachtpost.gd") as GDScript
+		var spot: Vector3 = wp.call("hut_pos", -1.0)
+		enemy = load("res://scenes/enemy.tscn").instantiate()
+		enemy.call("setup", "rifle", 1)
+		enemy.position = spot + Vector3(5.0, 0, 0)
+		main.add_child(enemy)
+		enemy.set_physics_process(false)
+		enemy_hp = enemy.get("hp")
+	if frames == 300:
+		var hp_now: float = enemy.get("hp") if is_instance_valid(enemy) else 0.0
+		_check(hp_now < enemy_hp, "de wacht in het huisje schiet op de vijand (hp %.0f van %.0f)" % [hp_now, enemy_hp])
+		var guard: Node3D
+		for n in main.get_children():
+			if n.get_script() and String(n.get_script().resource_path).ends_with("patrouille.gd"):
+				guard = n.guards[3]
+		var hut_pos: Vector3 = wp_static().call("hut_pos", -1.0)
+		_check(guard.global_position.distance_to(hut_pos) < 1.5, "de wacht zit in het huisje (%.1f m van het midden)" % guard.global_position.distance_to(hut_pos))
+		# kogels van de vijand slopen het huisje
+		var inst = main.get_node_or_null("Wachtpost")
+		for n in main.get_children():
+			if n.get_script() and String(n.get_script().resource_path).ends_with("wachtpost.gd"):
+				inst = n
+		var p0: Dictionary = inst.posts[0]
+		var body: Node = p0.hut_body
+		var hp0: float = p0.hut_hp
+		body.call("hit", 20.0, Vector3.RIGHT, true)
+		_check(is_equal_approx(p0.hut_hp, hp0), "eigen kogels beschadigen het huisje niet")
+		body.call("hit", 20.0, Vector3.RIGHT, false)
+		_check(p0.hut_hp < hp0, "vijandelijke kogels beschadigen het huisje")
+		for i in 40:
+			body.call("hit", 50.0, Vector3.RIGHT, false)
+		_check(p0.hut_down, "het huisje gaat kapot")
+		_check((p0.hut_body.get_child(0) as CollisionShape3D).disabled, "een kapot huisje heeft geen botsing meer")
+		_check(game.wachtpost_cost() >= 300, "repareren kost punten (%d)" % game.wachtpost_cost())
+		# explosie slaat de slagboom van de zuidpoort kapot
+		var p1: Dictionary = inst.posts[1]
+		wp_static().call("blast", p1.barrier.global_position, 6.0, 200.0)
+		_check(p1.boom_down, "een ontploffing slaat de slagboom kapot")
+		_check(not (p1.arm as Node3D).visible, "de arm is weg")
+		inst.repair_all()
+		_check(not p0.hut_down and not p1.boom_down and (p1.arm as Node3D).visible and game.wachtpost_cost() == 0, "repareren zet alles terug")
 		print("WACHTPOST TEST ", "OK" if fails == 0 else "%d FOUT(EN)" % fails)
 		quit(1 if fails > 0 else 0)
 		return true
 	return false
+
+
+func wp_static() -> GDScript:
+	return load("res://scripts/wachtpost.gd") as GDScript

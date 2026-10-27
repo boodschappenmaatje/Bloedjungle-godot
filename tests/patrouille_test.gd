@@ -59,7 +59,7 @@ func _process(_d: float) -> bool:
 	if frames == 1500 + 5:
 		_check(pat._sirene != null, "alarm klinkt")
 	if frames == 1500 + 900:
-		for i in 4:
+		for i in 3:   # de vierde wacht blijft in het wachthuisje
 			var g: Node3D = pat.guards[i]
 			var posts: Array = (load("res://scripts/ally.gd") as GDScript).get_script_constant_map()["POSTS"]
 			var q: Vector2 = posts[(i * 4 + 1) % posts.size()] * (Data.COMPOUND / 14.0)

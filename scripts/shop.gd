@@ -783,6 +783,11 @@ func _base_cards() -> void:
 		_plain_card("Poorten repareren", "Zet de stalen schuifpoorten weer als nieuw in de muur. Jij opent ze met de knop bij de poort.", gtag, 0, 0, "Repareer · %s" % UI.nl(gcost), Game.points >= gcost, func():
 			if Game.buy(gcost):
 				Game.gates.repair_all())
+	var wcost: int = Game.wachtpost_cost()
+	if wcost > 0:
+		_plain_card("Wachtposten repareren", "Zet de wachthuisjes en slagbomen bij de poorten weer als nieuw neer.", "", 0, 0, "Repareer · %s" % UI.nl(wcost), Game.points >= wcost, func():
+			if Game.buy(wcost):
+				Wachtpost.inst.repair_all())
 	var gl: int = Game.upg["gate"]
 	_plain_card("Poorten versterken", "Dikker staal: +40%% stevigheid voor beide poorten (nu %d). Tip: houd bij een beschadigde poort de knop ingedrukt." % roundi(Game.gates.max_hp()), "", gl, 5, "Max" if gl >= 5 else "Versterk · %s" % UI.nl(350 * (gl + 1)), gl < 5 and Game.points >= 350 * (gl + 1), func():
 		if Game.buy(350 * (gl + 1)):

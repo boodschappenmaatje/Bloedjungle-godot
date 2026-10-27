@@ -6,14 +6,7 @@ const PANEL_LINE := Color(0.4, 0.4, 0.3)
 const INK := Color(1, 1, 1)
 const INK_DIM := Color(0.5, 0.5, 0.5)
 
-func safe_margins(_size: Vector2) -> Vector4:
-	return Vector4.ZERO
-
-func body(_weight: int) -> Font:
-	return ThemeDB.fallback_font
-
-func is_touch_platform() -> bool:
-	return false
-
-func style_button(_button: Button, _style: String) -> void:
-	pass
+func safe_margins(_size: Vector2) -> Vector4: return Vector4.ZERO
+func body(_weight: int, _tier: int = 0) -> Font: return ThemeDB.fallback_font
+func is_touch_platform() -> bool: return false
+func style_button(_button: Button, _style: String) -> void: pass

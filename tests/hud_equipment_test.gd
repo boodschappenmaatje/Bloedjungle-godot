@@ -51,22 +51,23 @@ func _run() -> void:
 	var selector := hud.find_child("EquipmentSelector", true, false) as Control
 	var next := hud.find_child("EquipmentNext", true, false) as Button
 	var c4 := hud.find_child("Equipment_c4", true, false) as Button
-	_check(selector != null and selector.visible, "uitrustingsbalk staat niet in beeld")
-	_check(next != null and c4 != null and c4.disabled, "C4 moet als niet-beschikbaar staan")
+	_check(selector != null and not selector.visible, "permanente uitrustingsbalk is verborgen")
+	_check(next != null and c4 != null and c4.disabled, "niet-beschikbare C4 blijft disabled in de legacy selector")
 	var use_btn: Button
 	for b in get_nodes_in_group("hud_button"):
 		if b is Button and b.get_script() != null and b.get_script().resource_path == "res://scripts/action_btn.gd" and b.get("kind") == "granaat":
 			use_btn = b
 	_check(use_btn != null and use_btn.get("caption") == "GEBRUIK", "de bestaande granaatknop is niet de GEBRUIK-knop")
-	if use_btn == null or next == null:
+	if use_btn == null:
 		quit(1)
 		return
 	# Pijltjes houden de voorraadselectie bij; C4 heeft geen implementatie of voorraad.
-	next.button_down.emit()
-	_check(game.equipment_sel == "mine", "pijl selecteert de mijn niet")
+	var combat = hud.find_child("CombatButtons", true, false)
+	combat.call("_select_wheel", "equipment", 2)
+	_check(game.equipment_sel == "mine", "radiaal menu selecteert de mijn niet")
 	await _frames(2)
 	var items_before: int = _count_kind(game.defs, "mine")
-	use_btn.button_down.emit()
+	combat.call("_use_equipment")
 	await _frames(2)
 	_check(game.inv.mine == 0, "mijnvoorraad wordt niet precies eenmaal verbruikt")
 	_check(_count_kind(game.defs, "mine") == items_before + 1, "GEBRUIK plaatst geen bestaande landmijn")

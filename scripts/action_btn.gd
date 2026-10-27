@@ -113,6 +113,14 @@ func _draw() -> void:
 				draw_arc(hc, 5.5, PI, TAU, 10, col, 2.4)
 				draw_line(hc + Vector2(-7.5, 0), hc + Vector2(7.5, 0), col, 2.0)
 			draw_line(c + Vector2(-14, 9), c + Vector2(14, 9), col, 2.0)
+		"combined":
+			# Squad above the compact building mark, matching the approved combined access icon.
+			for i in 3:
+				var hc := c + Vector2(-10 + i * 10, -6 - (3 if i == 1 else 0))
+				draw_arc(hc, 5.0, PI, TAU, 10, col, 2.3)
+				draw_line(hc + Vector2(-7, 0), hc + Vector2(7, 0), col, 1.8)
+			draw_rect(Rect2(c + Vector2(-8, 5), Vector2(16, 4)), col)
+			draw_rect(Rect2(c + Vector2(-5, 11), Vector2(10, 4)), col)
 		"zeil":
 			# laadbak met zeil: dicht = boog vol, open = alleen spanten
 			draw_rect(Rect2(c + Vector2(-15, 4), Vector2(30, 7)), col, false, 2.2)

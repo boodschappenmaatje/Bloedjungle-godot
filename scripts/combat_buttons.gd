@@ -28,13 +28,25 @@ var _air_start := Vector2.ZERO
 var _air_out := false
 var _air_vis: NapalmAim
 
+## A held support/equipment button promotes to a four-way selector. The pointer remains owned here,
+## so opening a wheel can never send its release through to the weapon/fire controls.
+const WHEEL_HOLD := 0.42
+var _held_action := ""
+var _held_pointer := -2
+var _held_time := 0.0
+var _hold_origin := Vector2.ZERO
+var _wheel_kind := ""
+var _wheel_sector := -1
+
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	get_viewport().size_changed.connect(_cancel_gesture)
 	_reload = _make("herlaad", "HERLAAD", func(): _player_call("request_reload"))
 	_sprint = _make("sprint", "SPRINT", func(): _player_call("toggle_sprint"))
-	_grenade = _make("granaat", "GEBRUIK", _use_equipment)
+	_grenade = _make("granaat", "GEBRUIK", func(): pass) # release chooses tap-use or a long-press wheel
 	_roll = _make("rol", "ROL", func(): _player_call("request_dodge"))
 	_air2 = _make("lucht2", "WISSEL", func():
 		Game.streak_sel = String(_air2.reward)
@@ -43,6 +55,22 @@ func _ready() -> void:
 	_air = _make("lucht", "STEUN", func(): pass)  # de aanraking loopt via _input (tik of slepen)
 	resized.connect(_layout)
 	_layout()
+
+
+func _cancel_gesture() -> void:
+	_held_pointer = -2
+	_held_action = ""
+	_held_time = 0.0
+	_wheel_kind = ""
+	_wheel_sector = -1
+	cancel_aim()
+	cancel_air()
+	queue_redraw()
+
+
+func _notification(what: int) -> void:
+	if what in [NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_WM_WINDOW_FOCUS_OUT, NOTIFICATION_APPLICATION_PAUSED]:
+		_cancel_gesture()
 
 
 func _make(kind: String, caption: String, action: Callable) -> ActionBtn:
@@ -70,6 +98,20 @@ func _use_equipment() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if get_tree().paused:
+		_cancel_gesture()
+		return
+	if _wheel_kind != "" and ((event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE) or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT)):
+		_wheel_kind = ""
+		_held_pointer = -2
+		_held_action = ""
+		_wheel_sector = -1
+		queue_redraw()
+		get_viewport().set_input_as_handled()
+		return
+	if _wheel_input(event):
+		return
+	_track_wheel_press(event)
 	_air_input(event)
 	if Game.equipment_sel != "grenade" or not is_visible_in_tree():
 		if aim_finger != -2:
@@ -110,6 +152,146 @@ func _air_input(event: InputEvent) -> void:
 			release_air()
 	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION and air_finger == -1:
 		drag_air(event.position - _air_start)
+
+
+func _track_wheel_press(event: InputEvent) -> void:
+	if _held_pointer != -2 or _wheel_kind != "":
+		return
+	var pos := Vector2.ZERO
+	var pointer := -2
+	var pressed := false
+	if event is InputEventScreenTouch:
+		pos = event.position
+		pointer = event.index
+		pressed = event.pressed
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.device != InputEvent.DEVICE_ID_EMULATION:
+		pos = event.position
+		pointer = -1
+		pressed = event.pressed
+	if not pressed:
+		return
+	if _grenade.visible and _grenade.get_global_rect().has_point(pos):
+		_held_action = "equipment"
+	elif _air.visible and _air.get_global_rect().has_point(pos):
+		_held_action = "support"
+	else:
+		return
+	_held_pointer = pointer
+	_held_time = 0.0
+	_hold_origin = pos
+
+
+func _wheel_input(event: InputEvent) -> bool:
+	if _wheel_kind == "":
+		if _held_pointer == -2:
+			return false
+		var pointer := -2
+		var pos := Vector2.ZERO
+		var released := false
+		if event is InputEventScreenTouch:
+			pointer = event.index
+			pos = event.position
+			released = not event.pressed
+		elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.device != InputEvent.DEVICE_ID_EMULATION:
+			pointer = -1
+			pos = event.position
+			released = not event.pressed
+		if pointer == _held_pointer and released:
+			var tap_equipment := _held_action == "equipment" and _held_time < WHEEL_HOLD and Game.equipment_sel == "mine"
+			_held_pointer = -2
+			_held_action = ""
+			if tap_equipment:
+				_use_equipment()
+		return false
+	var pointer := -2
+	var pos := Vector2.ZERO
+	var released := false
+	if event is InputEventScreenTouch:
+		pointer = event.index
+		pos = event.position
+		released = not event.pressed
+	elif event is InputEventScreenDrag:
+		pointer = event.index
+		pos = event.position
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.device != InputEvent.DEVICE_ID_EMULATION:
+		pointer = -1
+		pos = event.position
+		released = not event.pressed
+	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+		pointer = -1
+		pos = event.position
+	if pointer != _held_pointer:
+		if event is InputEventScreenTouch or event is InputEventScreenDrag or event is InputEventMouseButton or event is InputEventMouseMotion:
+			get_viewport().set_input_as_handled()
+			return true
+		return false
+	if not released:
+		_wheel_sector = _sector(pos - _hold_origin)
+		queue_redraw()
+		get_viewport().set_input_as_handled()
+		return true
+	var kind := _wheel_kind
+	var selected := _wheel_sector
+	_wheel_kind = ""
+	_wheel_sector = -1
+	_held_pointer = -2
+	_held_action = ""
+	if selected >= 0:
+		_select_wheel(kind, selected)
+	get_viewport().set_input_as_handled()
+	queue_redraw()
+	return true
+
+
+func _sector(delta: Vector2) -> int:
+	if delta.length() < 28.0:
+		return -1
+	if absf(delta.x) > absf(delta.y):
+		return 1 if delta.x > 0.0 else 3
+	return 2 if delta.y > 0.0 else 0
+
+
+func _select_wheel(kind: String, sector: int) -> void:
+	if kind == "equipment":
+		var choices := ["grenade", "c4", "mine", "smoke"]
+		var item: String = choices[sector]
+		if item == "grenade" and Game.grenades > 0 or item == "mine" and int(Game.inv.get("mine", 0)) > 0:
+			Game.equipment_sel = item
+			Game.changed.emit()
+			Sfx.play("click")
+		return
+	var choices := ["truck", "airstrike", "reinforcement", "napalm"]
+	var reward: String = choices[sector]
+	if reward in ["truck", "napalm"] and Game.streak_bank.has(reward):
+		Game.streak_sel = reward
+		Game.changed.emit()
+		Sfx.play("click")
+
+
+func _draw() -> void:
+	if _wheel_kind == "":
+		return
+	var labels := ["GRANAAT", "C4  ·  N/B", "MIJN", "ROOK  ·  N/B"] if _wheel_kind == "equipment" else ["TRUCK", "LUCHTAANVAL  ·  N/B", "VERSTERKING  ·  N/B", "NAPALM"]
+	var safe := UI.safe_margins(size)
+	var center := Vector2(clampf(_hold_origin.x, safe.x + 96.0, size.x - safe.z - 96.0), clampf(_hold_origin.y, safe.y + 96.0, size.y - safe.w - 96.0))
+	draw_circle(center, 91.0, Color(0.015, 0.02, 0.015, 0.94))
+	draw_arc(center, 91.0, 0.0, TAU, 56, UI.BRASS, 2.0, true)
+	for i in 4:
+		var a := -PI * 0.5 + float(i) * PI * 0.5
+		var p := center + Vector2(cos(a), sin(a)) * 56.0
+		var active := false
+		if _wheel_kind == "equipment":
+			active = (i == 0 and Game.grenades > 0) or (i == 2 and int(Game.inv.get("mine", 0)) > 0)
+		else:
+			active = (i == 0 and Game.streak_bank.has("truck")) or (i == 3 and Game.streak_bank.has("napalm"))
+		var color := UI.BRASS if active else Color(UI.INK_DIM, 0.62)
+		if i == _wheel_sector:
+			draw_circle(p, 27.0, Color(UI.BRASS, 0.17))
+			draw_arc(p, 27.0, 0, TAU, 28, UI.BRASS, 2.0)
+		draw_string(UI.body(700), p + Vector2(-52, 5), labels[i], HORIZONTAL_ALIGNMENT_CENTER, 104, 10, color)
+	draw_circle(center, 16.0, Color(UI.PANEL, 0.98))
+	draw_arc(center, 16.0, 0, TAU, 24, UI.BRASS, 1.5)
+	draw_string(UI.body(700), center + Vector2(-4, 4), "×", HORIZONTAL_ALIGNMENT_CENTER, 8, 12, UI.INK)
 
 
 func _air_id() -> String:
@@ -282,14 +464,31 @@ func _layout() -> void:
 
 
 func _process(_delta: float) -> void:
-	var show := (Game.state == "play" or Game.state == "prep") and not Game.build_mode
+	var show := (Game.state == "play" or Game.state == "prep") and not Game.build_mode and not get_tree().paused
 	var p = Game.player
 	var driving: bool = p != null and is_instance_valid(p) and p.driving
 	visible = show and not driving  # in een voertuig: alleen de voertuigknoppen (UIT e.d.), geen granaat/herlaad/sprint/rol
 	if not show or p == null or not is_instance_valid(p) or driving:
 		if aim_finger != -2:
 			cancel_aim()
+		if air_finger != -2:
+			cancel_air()
+		_wheel_kind = ""
+		_held_pointer = -2
+		_held_action = ""
+		_held_time = 0.0
+		queue_redraw()
 		return
+	if _held_pointer != -2 and _wheel_kind == "":
+		_held_time += _delta
+		if _held_time >= WHEEL_HOLD:
+			_wheel_kind = _held_action
+			_wheel_sector = -1
+			if _held_action == "equipment":
+				cancel_aim()
+			else:
+				cancel_air()
+			queue_redraw()
 	if aim_finger != -2:
 		_update_aim()  # de speler loopt door tijdens het richten: de boog loopt mee
 	if air_finger != -2:
@@ -298,6 +497,7 @@ func _process(_delta: float) -> void:
 	_air.visible = rid != "" and not p.driving and not p.dead
 	var others: Array = Game.streak_others()
 	_air2.visible = _air.visible and not others.is_empty() and air_finger == -2
+	_air2.visible = false # support switching is handled by the support wheel
 	if _air2.visible:
 		_air2.reward = others[0]
 		_air2.set_caption(String(Streak.reward(others[0]).kort))
@@ -321,6 +521,7 @@ func _process(_delta: float) -> void:
 	_sprint.disabled = p.driving
 	_sprint.queue_redraw()
 	_grenade.equipment_kind = Game.equipment_sel
+	_grenade.set_caption("GRANAAT" if Game.equipment_sel == "grenade" else "MIJN" if Game.equipment_sel == "mine" else "UITRUSTING")
 	_grenade.badge = "×%d" % equipment_count
 	_grenade.disabled = equipment_count <= 0 or p.driving
 	_grenade.queue_redraw()

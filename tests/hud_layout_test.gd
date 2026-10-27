@@ -63,14 +63,14 @@ func _run() -> void:
 		var buttons: Array = []
 		_visible_buttons(main.get_node("Hud"), buttons)
 		var equipment := main.get_node("Hud").find_child("EquipmentSelector", true, false) as Control
-		_check(equipment != null and equipment.visible, "%s: uitrustingsselector ontbreekt" % s)
+		_check(equipment != null and not equipment.visible, "%s: oude permanente uitrustingsbalk is nog zichtbaar" % s)
 		for item in ["grenade", "mine", "c4"]:
 			_check(main.get_node("Hud").find_child("Equipment_" + item, true, false) != null, "%s: uitrustingsvak %s ontbreekt" % [s, item])
 		var use_button: Button = null
 		for b in buttons:
 			if b is Button and b.get_script() != null and b.get_script().resource_path == "res://scripts/action_btn.gd" and b.get("kind") == "granaat":
 				use_button = b
-		_check(use_button != null and use_button.get("caption") == "GEBRUIK", "%s: GEBRUIK-knop ontbreekt" % s)
+		_check(use_button != null and use_button.get("caption") in ["GRANAAT", "MIJN"], "%s: compacte uitrustingsknop ontbreekt" % s)
 		_check(buttons.size() >= 10, "%s: te weinig zichtbare knoppen (%d)" % [s, buttons.size()])
 		var names := {}
 		for b in buttons:
@@ -94,6 +94,8 @@ func _run() -> void:
 				_check(false, "%s: fps-teller overlapt %s" % [s, _label(b)])
 		# de puntentelling (rechtsboven) mag niet achter de radar of de pauzeknop verdwijnen
 		var extra := main.get_node("Hud/HudExtra")
+		_check(not extra._zoom_in_button.visible and not extra._zoom_out_button.visible, "%s: losse camera-zoomknoppen blijven zichtbaar op touch" % s)
+		_check(extra._camera_button.visible, "%s: camerawisseling is niet bereikbaar op touch" % s)
 		var pts_rect: Rect2 = (extra._top_right as Control).get_global_rect()
 		_check(Rect2(Vector2.ZERO, view).encloses(pts_rect), "%s: puntentelling buiten beeld (%s)" % [s, pts_rect])
 		_check(not pts_rect.intersects((extra._radar as Control).get_global_rect()), "%s: puntentelling overlapt de radar (%s)" % [s, pts_rect])

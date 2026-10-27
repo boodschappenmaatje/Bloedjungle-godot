@@ -124,6 +124,7 @@ class Card:
 
 
 func _ready() -> void:
+	add_to_group("build_mode")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_btn = BuildIconButton.new()
@@ -246,7 +247,8 @@ func _exit() -> void:
 
 
 func _process(delta: float) -> void:
-	_btn.visible = Game.state == "prep" and not Game.build_mode and Game.player != null
+	# Build access is merged into the BOUW/TEAM action in TeamCommands.
+	_btn.visible = false
 	var safe := UI.safe_margins(size)
 	var portrait := size.x < size.y
 	_btn.size = Vector2(64, 64) if portrait else Vector2(82, 82)

@@ -2,7 +2,7 @@ class_name TeamCommands
 extends Control
 ## HUD adapter for the shared, asset-independent team input controller.
 
-const LABELS := ["VOLGEN", "VERDEDIGEN", "AANVALLEN", "VERPLAATSEN"]
+const LABELS := ["AANVALLEN", "VERPLAATSEN", "VERDEDIGEN", "VOLGEN"]
 const Controller = preload("res://scripts/team_command_controller.gd")
 
 var button: ActionBtn
@@ -17,6 +17,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	button = ActionBtn.make("troepen", "TEAM")
+	button.kind = "combined"
+	button.set_caption("BOUW / TEAM")
 	button.visible = true
 	button.custom_minimum_size = Vector2(58, 58)
 	button.size = button.custom_minimum_size
@@ -33,7 +35,7 @@ func _layout() -> void:
 	var v := get_viewport_rect().size
 	var safe := UI.safe_margins(v)
 	var x := safe.x + 20.0 if v.x < v.y else maxf(safe.x + 100.0, v.x * 0.5 - 210.0)
-	var y := v.y - safe.w - 204.0
+	var y := v.y - safe.w - 220.0
 	button.position = Vector2(clampf(x, safe.x, v.x - safe.z - button.size.x), clampf(y, safe.y, v.y - safe.w - button.size.y))
 
 
@@ -43,7 +45,7 @@ func _process(delta: float) -> void:
 		_last_context = context
 		if Game.state in ["menu", "shop", "over"] or Game.build_mode or get_tree().paused:
 			cancel_input()
-	button.visible = Game.state in ["play", "prep"] and not Game.build_mode and _available() > 0
+	button.visible = (Game.state == "prep" or (Game.state == "play" and _available() > 0)) and not Game.build_mode
 	button.badge = str(_available())
 	mouse_filter = Control.MOUSE_FILTER_STOP if controller.is_modal() else Control.MOUSE_FILTER_IGNORE
 	if controller.advance(delta):
@@ -150,7 +152,12 @@ func _finish_pointer(id: int, pos: Vector2) -> void:
 	var result: Dictionary = controller.release(id, pos, _wheel_center())
 	match result.get("kind", ""):
 		"toggle":
-			toggle_follow_hold()
+			if Game.state == "prep":
+				var build := get_tree().get_first_node_in_group("build_mode")
+				if build != null:
+					build.call("_enter")
+			else:
+				toggle_follow_hold()
 		"issue":
 			_issue(result.order, Vector3.ZERO, null)
 		"target":
@@ -201,13 +208,19 @@ func _draw() -> void:
 	if not controller.wheel_open:
 		return
 	var center := _wheel_center()
+	draw_circle(center, 106.0, Color(0.01, 0.018, 0.012, 0.96))
+	draw_arc(center, 106.0, 0.0, TAU, 64, Color(UI.BRASS, 0.88), 2.2, true)
+	draw_line(center + Vector2(0, -103), center + Vector2(0, 103), Color(UI.BRASS, 0.28), 1.0)
+	draw_line(center + Vector2(-103, 0), center + Vector2(103, 0), Color(UI.BRASS, 0.28), 1.0)
 	for i in 4:
-		var angle: float = TAU * i / 4.0 - PI / 4.0
-		var p := center + Vector2(cos(angle), sin(angle)) * 86.0
-		var rect := Rect2(p - Vector2(52, 24), Vector2(104, 48))
-		draw_rect(rect, UI.PANEL, true)
-		draw_rect(rect, UI.BRASS if i == controller.selected_sector else UI.PANEL_LINE, false, 2.0)
-		draw_string(UI.body(700), p + Vector2(-42, 5), LABELS[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 13, UI.INK)
+		var angle: float = TAU * i / 4.0
+		var p := center + Vector2(cos(angle), sin(angle)) * 62.0
+		draw_circle(p, 37.0, Color(0.12, 0.095, 0.035, 0.98) if i == controller.selected_sector else UI.PANEL)
+		draw_arc(p, 37.0, 0.0, TAU, 40, UI.BRASS if i == controller.selected_sector else Color(UI.BRASS, 0.58), 2.0, true)
+		draw_string(UI.body(700), p + Vector2(-45, 5), LABELS[i], HORIZONTAL_ALIGNMENT_CENTER, 90, 10, UI.INK)
+	draw_circle(center, 17.0, UI.PANEL)
+	draw_arc(center, 17.0, 0.0, TAU, 24, UI.BRASS, 1.6, true)
+	draw_string(UI.body(700), center + Vector2(-4, 5), "×", HORIZONTAL_ALIGNMENT_CENTER, 8, 16, UI.INK)
 
 
 func _wheel_center() -> Vector2:

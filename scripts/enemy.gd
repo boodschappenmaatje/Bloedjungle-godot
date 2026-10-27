@@ -435,7 +435,7 @@ func ignite(secs := 5.0) -> void:
 	burn_t = secs
 	stun_t = 0.0
 	_burn_turn = 0.0
-	_burn_fx = Fx.flame(self, Vector3(0.0, 0.05, 0.0), 2.1, false)
+	_burn_fx = Fx.napalm_flame(self, Vector3(0.0, 0.05, 0.0), 1.7, 2.6)
 	model.flash(Color(1.0, 0.45, 0.1))
 	Sfx.play("hurt", 0.8, global_position)
 	Game.alert(global_position, 14.0, 4.0)   # de buren schrikken van een brandende maat

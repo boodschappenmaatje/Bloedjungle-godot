@@ -11,7 +11,7 @@ const HEIGHT := 13.0      # m boven de grond
 const LEAD := 80.0        # m voor de strook waar het toestel begint
 const FALL_V := 20.0      # m/s vooruitsnelheid van een losgelaten bus
 const GRAVITY := 22.0
-const BURN_TIME := 9.0
+const BURN_TIME := 10.0
 const BURN_RUN := 5.0     # s dat een vijand brandend rondrent voor hij dood neervalt (enemy.gd: ignite)
 const SELF_DPS := 8.0
 const TICK := 0.25
@@ -169,9 +169,9 @@ func _impact(b: Dictionary) -> void:
 	if _first_hit < 0.0:
 		_first_hit = _t
 		_make_carpet()
-	# één vlam met schijnsel op de inslag zelf; de rest van het vuur is het tapijt
-	_fires.append(Fx.flame(parent, at, randf_range(1.6, 2.2), true))
-	_fires.append(Fx.burning(parent, at, false))
+	_fires.append(_impact_light(parent, at))
+	_fires.append(_embers(parent, at))
+	_fires.append(_smoke(parent, at))
 	Game.alert(at, 16.0, 4.0)
 
 
@@ -215,9 +215,10 @@ func _make_carpet() -> void:
 	var n := int(ceil(length / FLAME_STEP))
 	for i in n:
 		var s := -length * 0.5 + (float(i) + 0.5) * FLAME_STEP
-		for lane_sign in [-1.0, 1.0]:   # twee vlammen per stap, links en rechts van de middenlijn
-			var lane: float = lane_sign * randf_range(0.4, 1.5)
-			_flames.append({"s": s + randf_range(-0.4, 0.4), "lane": lane, "h": randf_range(1.0, 1.7), "node": null, "die": randf() * FADE_TIME, "side": side})
+		for lane_sign in [-1.0, 1.0]:   # twee rijen, tegen elkaar verspringend, zodat het één aaneengesloten vuurwand is
+			var lane: float = lane_sign * randf_range(0.7, 1.4)
+			var shift := FLAME_STEP * 0.5 * (0.0 if lane_sign < 0.0 else 1.0)
+			_flames.append({"s": s + shift + randf_range(-0.3, 0.3), "lane": lane, "h": randf_range(3.4, 4.8), "w": randf_range(3.8, 4.6), "node": null, "born": 0.0, "die": randf(), "side": side})
 
 
 ## Vuurgolf: vlammen verschijnen zodra het vuur van een inslag ze bereikt en doven aan het eind.
@@ -243,15 +244,64 @@ func _update_carpet(_delta: float) -> void:
 			for b in _bombs:
 				if b.hit and absf(float(f.s) - float(b.s)) <= REACH and (_t - float(b.t_hit)) * WAVE_SPEED >= absf(float(f.s) - float(b.s)):
 					var pos: Vector3 = center + dir * float(f.s) + (f.side as Vector3) * float(f.lane)
-					f.node = Fx.flame(get_parent(), pos, float(f.h), false)
+					f.node = _make_flame(pos, float(f.w), float(f.h))
+					f.born = _t
 					break
-		elif not is_instance_valid(f.node):
-			continue
-		elif left < float(f.die):
-			f.node.queue_free()
+		elif is_instance_valid(f.node):
+			# groeit in en krimpt aan het eind weg, de ene vlam eerder dan de andere
+			var g := minf((_t - float(f.born)) / 0.9, 1.0) * clampf(left / (FADE_TIME * (0.5 + 0.5 * float(f.die))), 0.0, 1.0)
+			(f.node as GeometryInstance3D).set_instance_shader_parameter("grow", g)
 	if left <= 0.0:
 		_carpet.queue_free()
 		_carpet = null
+
+
+## Eén vlamtong op wereldpositie pos; hij begint ingeklapt en groeit in (grow).
+func _make_flame(pos: Vector3, w: float, h: float) -> MeshInstance3D:
+	var mi := Fx.napalm_flame(get_parent(), Vector3.ZERO, w, h)
+	mi.global_position = pos
+	mi.set_instance_shader_parameter("grow", 0.0)
+	return mi
+
+
+## Flikkerend oranje schijnsel op de inslag: het vuur verlicht de grond, de omgeving en de speler.
+func _impact_light(parent: Node, at: Vector3) -> OmniLight3D:
+	var l := OmniLight3D.new()
+	l.light_color = Color(1.0, 0.5, 0.18)
+	l.light_energy = 4.0
+	l.omni_range = 11.0
+	l.shadow_enabled = false
+	parent.add_child(l)
+	l.global_position = at + Vector3(0, 2.2, 0)
+	var tw := l.create_tween().set_loops()
+	tw.tween_property(l, "light_energy", 2.6, 0.12)
+	tw.tween_property(l, "light_energy", 5.0, 0.17)
+	tw.tween_property(l, "light_energy", 3.4, 0.1)
+	return l
+
+
+## Vonken en brandende druppels die omhoog spatten.
+func _embers(parent: Node, at: Vector3) -> Node3D:
+	var root := Node3D.new()
+	parent.add_child(root)
+	root.global_position = at
+	var e := Fx._puff(14, 1.6, 0.14, true, Fx._ramp([Color(1, 0.9, 0.5, 0.0), Color(1, 0.6, 0.15, 1.0), Color(0.7, 0.12, 0.02, 0.0)], [0.0, 0.15, 1.0]), Vector2(3.0, 7.0), 0.4)
+	e.spread = 70.0
+	e.gravity = Vector3(0, -3.5, 0)
+	root.add_child(e)
+	e.emitting = true
+	return root
+
+
+## Lichte rook: doorschijnend en hoog, zodat de strook zichtbaar blijft.
+func _smoke(parent: Node, at: Vector3) -> Node3D:
+	var root := Node3D.new()
+	parent.add_child(root)
+	root.global_position = at + Vector3(0, 2.4, 0)
+	var sm := Fx._puff(7, 4.0, 3.2, false, Fx._ramp([Color(0.1, 0.09, 0.08, 0.0), Color(0.14, 0.13, 0.12, 0.34), Color(0.2, 0.19, 0.18, 0.0)], [0.0, 0.25, 1.0]), Vector2(1.0, 2.0), 2.4)
+	root.add_child(sm)
+	sm.emitting = true
+	return root
 
 
 func _exit_tree() -> void:

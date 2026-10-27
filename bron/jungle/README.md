@@ -48,3 +48,4 @@ Geen iPhone/Xogot-meting gedaan.
 Voertuigen (v136/v137): `Foliage.ram(body, snelheid, min_palm, min_boom)` na `move_and_slide`, met gewichtsklassen. Tank velt een palm vanaf 1,5 m/s en een jungleboom vanaf 2,5; bus 4 / 8;
 jeep 6 / nooit; auto 7 / nooit. Een te zware jungleboom houdt het voertuig tegen: het kaatst terug (kwart van de snelheid) en auto en bus raken beschadigd. Een geramde boom valt in de rijrichting;
 stronk en stam krijgen dan geen botsing (platgereden, geen haken). De legertruck botst niet met bomen (maskers) en valt hier buiten. Test: `tests/boom_val_ram_test.gd`.
+Tank (v138): `Foliage.crush(tank, halve romp)` elke beeld terwijl hij bestuurd wordt: alles wat in het rompvlak (3,9 x 7 m) komt gaat plat, ook bij draaien of heel langzaam rijden. Draaien wordt door de natuurkunde niet tegengehouden, dus daar stond een stam eerder dwars door de romp. Test: `tests/boom_val_tank_test.gd` (echte tank).

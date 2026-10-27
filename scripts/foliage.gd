@@ -450,6 +450,27 @@ static func ram(body: CharacterBody3D, speed: float, min_palm: float, min_boom :
 			Sfx.play("thud", 0.7, hit)
 
 
+## Tank: alles wat binnen zijn rompvlak komt gaat plat, ook als hij draait of heel langzaam rijdt (draaien wordt niet door de
+## natuurkunde tegengehouden, dus daar zou een stam anders dwars door de romp heen staan). half = halve breedte en lengte van de romp.
+static func crush(body: Node3D, half: Vector2) -> void:
+	if _reg.is_empty() or not is_instance_valid(_root):
+		return
+	var p := body.global_position
+	var inv := body.global_transform.affine_inverse()
+	var reach := half.length() + 2.0
+	var lo := Vector2i(floori((p.x - reach) / 36.0), floori((p.z - reach) / 36.0))
+	var hi := Vector2i(floori((p.x + reach) / 36.0), floori((p.z + reach) / 36.0))
+	for cx in range(lo.x, hi.x + 1):
+		for cz in range(lo.y, hi.y + 1):
+			for e: Dictionary in _reg.get(Vector2i(cx, cz), []):
+				if e["felled"]:
+					continue
+				var local: Vector3 = inv * (e["xf"].origin as Vector3)
+				var m := 0.6 if String(e["vn"]).begins_with("Boom") else 0.35   # stamdikte
+				if absf(local.x) < half.x + m and absf(local.z) < half.y + m:
+					fell(e, p, false)
+
+
 ## Eén boom omver: weg uit de MultiMesh (voet, ver-variant, nepschaduw) en uit de botsing, en een vallende boom ervoor in de plaats.
 static func fell(e: Dictionary, from: Vector3, solid := true) -> void:
 	var parent := _root

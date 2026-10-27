@@ -84,6 +84,11 @@ func note_blast(at: Vector3, radius: float) -> void:
 				e.flinch(at)
 
 
+## Wat het kost om de wachthuisjes en slagbomen te repareren (0 = alles heel).
+func wachtpost_cost() -> int:
+	return Wachtpost.inst.total_repair_cost() if Wachtpost.inst != null else 0
+
+
 ## Was er net (binnen een kwart seconde) een explosie waar iemand op deze plek binnen de straal viel? Geeft {at, r} of een leeg woordenboek.
 func blast_near(pos: Vector3) -> Dictionary:
 	if Time.get_ticks_msec() - blast_t > 250 or pos.distance_to(blast_at) > blast_r + 1.0:

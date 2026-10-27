@@ -43,7 +43,7 @@ def paint_mat():
     return m
 
 
-def flat(name, color, rough=0.6, metal=0.0, emit=None):
+def flat(name, color, rough=0.6, metal=0.0, emit=None, alpha=1.0):
     m = bpy.data.materials.new(name)
     m.use_nodes = True
     p = m.node_tree.nodes["Principled BSDF"]
@@ -53,12 +53,15 @@ def flat(name, color, rough=0.6, metal=0.0, emit=None):
     if emit:
         p.inputs["Emission Color"].default_value = (*emit, 1)
         p.inputs["Emission Strength"].default_value = 1.5
+    if alpha < 1.0:
+        p.inputs["Alpha"].default_value = alpha
+        m.surface_render_method = "BLENDED"
     return m
 
 
 MAT = {"olive": pbr("olive"), "steel": pbr("steel"), "concrete": pbr("concrete"), "roof": pbr("roof"),
        "timber": pbr("timber"), "canvas": pbr("canvas"), "verf": paint_mat(),
-       "glas": flat("Glas", (0.03, 0.05, 0.05), 0.12, 0.0), "reflector": flat("Reflector", (0.9, 0.08, 0.05), 0.25, 0.0, emit=(0.9, 0.1, 0.05))}
+       "glas": flat("Glas", (0.05, 0.08, 0.08), 0.1, 0.0, alpha=0.3), "reflector": flat("Reflector", (0.9, 0.08, 0.05), 0.25, 0.0, emit=(0.9, 0.1, 0.05))}
 FAM = {"olive": "olive", "steel": "steel", "concrete": "concrete", "roof": "roof", "timber": "timber", "canvas": "canvas",
        "verf": "steel", "glas": "steel", "reflector": "steel"}
 

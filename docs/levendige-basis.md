@@ -13,3 +13,8 @@ Stappen die de basis levendiger maken (keuze van Dennis, 2026-10-27). Elke stap 
 - Bij de noord- en zuidpoort staan een slagboom en een wachthuisje (`assets/wachtpost.glb`, bron `bron/wachtpost/`, scripts `scripts/wachtpost.gd`). De arm gaat omhoog als de stalen poort open staat of kapot is en zakt weer als de poort dicht gaat.
 - Het wachthuisje heeft botsing, je loopt er niet doorheen. Een vierde wacht staat voor het huisje bij de noordpoort en rent bij het alarm ook naar zijn post.
 - Viewer: `tools/blender-vq2-viewer` (model Poortwachtpost, echte clip Open). Test: `tests/wachtpost_test.gd`.
+
+### Aanvulling (v143): bewaker en sloop
+
+- In het wachthuisje bij de noordpoort zit een wacht die vijanden in de buurt door het raam neerschiet (hij loopt niet meer naar de muur).
+- Huisje en slagboom kunnen kapot: kogels van vijanden en explosies beschadigen ze (zie `scripts/wachtpost.gd`). Repareren kan in de wapenkamer.

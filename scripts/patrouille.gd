@@ -1,10 +1,11 @@
 class_name Patrouille
 extends Node
 ## Wachten op de basis: drie soldaten lopen tijdens de pauze heen en weer langs de binnenkant van de muur en blijven af en toe
-## staan; een vierde staat voor het wachthuisje bij de noordpoort (zie Wachtpost). Begint een golf, dan gaat het alarm (sirene) en rennen ze naar hun post langs de muur om te schieten (zie Ally, guard).
+## staan; een vierde zit in het wachthuisje bij de noordpoort en schiet door het raam (zie Wachtpost). Begint een golf, dan gaat het alarm (sirene) en rennen ze naar hun post langs de muur om te schieten (zie Ally, guard).
 ## Het zijn gewone Ally-soldaten die niet bij de kazerne horen (niet in Game.allies), dus altijd aanwezig.
 
 const GUARDS := 4
+const HUT_GUARD := 3   # deze wacht zit in het wachthuisje (zie Wachtpost)
 const ALARM_STREAM := preload("res://assets/geluid/alarm.mp3")
 
 ## De wandellijn van wacht i: twee punten langs de binnenkant van de muur (halve breedte van de basis = Data.COMPOUND).
@@ -19,7 +20,7 @@ static func line(i: int) -> Array:
 		2:
 			return [Vector3(-o, 0, -c + 11.0), Vector3(-o, 0, c - 11.0)] # westmuur
 		_:
-			var post := Wachtpost.guard_spot(-1.0)                         # staat voor het wachthuisje bij de noordpoort
+			var post := Wachtpost.guard_spot(Wachtpost.GUARD_SZ)            # zit in het wachthuisje bij de noordpoort
 			return [post, post]
 
 

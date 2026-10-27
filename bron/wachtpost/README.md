@@ -19,6 +19,8 @@ Samen 6.760 driehoeken, 9 materialen, 21 gedeelde afbeeldingen (VQ2-families `ol
 
 **In het spel** (`scripts/wachtpost.gd`): bij elke poort staat de slagboom 2,6 m binnen de muur, het huisje 5 m binnen de muur en 6,3 m naast het midden (noord links, zuid rechts, raam naar de weg). De arm volgt `Gates.list[i].open`: omhoog vanaf 35% open, volledig omhoog bij 100% of als de poort kapot is. Botsing: huisje 2,4 x 2,5 x 2,4 m en de kast van de slagboom (laag muur); de arm zelf heeft geen botsing, de stalen poort blokkeert de weg al. Een vierde wacht (Patrouille) staat voor het huisje bij de noordpoort. Op de plek van het huisje kan geen gebouw geplaatst worden (`Buildings.can_place` ziet de botsing).
 
+**Sloop (v143):** huisje (450 hp, kogels 0,3x, explosie 1x) en slagboom (120 hp, via de kast) krijgen schade van vijandelijke kogels (`PostBody.hit`, eigen kogels niet) en explosies (`Wachtpost.blast`, aangeroepen vanuit vaten, granaten en granaten van een tank). Kapot huisje = laag puin met vuur en geen botsing; kapotte slagboom = arm weg en stukken op de grond. Repareren: kaart "Wachtposten repareren" in de wapenkamer (huisje 300, slagboom 100). De wacht (Patrouille 4, `Ally.guard`) zit in het huisje bij de noordpoort (zijn botsmasker negeert de huismuren zolang het huisje staat), schiet door het raam en rent naar zijn muurpost als het huisje kapot is.
+
 Tests: `tests/wachtpost_test.gd` (aantal, botsing, arm volgt de poort, geen gebouw erop), `tests/patrouille_test.gd`, viewertest `tools/blender-vq2-viewer/test-wachtpost.mjs`, opnames `tests/wachtpost_foto.gd`.
 Opnames in de spelcamera: `docs/vq2/renders/wachtpost-spel-*.png`; Blender: `wachtpost-blender-*.png`.
 Geen iPhone/Xogot-meting gedaan.

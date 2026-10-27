@@ -22,6 +22,7 @@ var helper := false  # versterking uit de luchtsteun: volgt altijd de speler en 
 var guard := false   # wacht van de basis (Patrouille): loopt in de pauze heen en weer langs de muur, rent bij het alarm naar zijn post
 var _leg := 0        # welk eindpunt van de wandellijn hij nu heeft
 var _wait_t := -1.0  # blijft even staan op het eindpunt (en kijkt rond)
+var _full_mask := 0   # botsmasker van setup(); de wacht in het wachthuisje loopt niet tegen de muren van het huisje aan
 var truck: Node = null  # vrachtwagen die hem vervoert; die bepaalt dan waar hij is en wat hij doet
 var command := "follow"
 var command_target := Vector3.ZERO
@@ -47,6 +48,7 @@ func setup(hp_: float, dmg_: float, index: int) -> void:
 	idx = index
 	collision_layer = 0
 	collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_WATER | Kit.LAYER_NATURE
+	_full_mask = collision_mask
 	var col := CollisionShape3D.new()
 	var cap := CapsuleShape3D.new()
 	cap.radius = 0.4
@@ -108,6 +110,8 @@ func _physics_process(delta: float) -> void:
 	if _detour_t > 0.0:
 		_detour_t -= delta
 		want = want.rotated(Vector3.UP, _detour_side * 1.1)
+	if guard and idx == Patrouille.HUT_GUARD:
+		collision_mask = (_full_mask & ~Kit.LAYER_WALL) if Wachtpost.hut_alive(Wachtpost.GUARD_SZ) else _full_mask
 	velocity = want
 	move_and_slide()
 	if moving and get_real_velocity().length() < want.length() * 0.3:
@@ -142,6 +146,8 @@ func _goal() -> Vector3:
 	if recall != null:
 		return recall
 	if guard:
+		if idx == Patrouille.HUT_GUARD and Wachtpost.hut_alive(Wachtpost.GUARD_SZ):
+			return Wachtpost.guard_spot(Wachtpost.GUARD_SZ)   # hij blijft in het wachthuisje en schiet door het raam
 		if Game.state == "play":   # alarm: naar de post langs de muur
 			var q: Vector2 = POSTS[(idx * 4 + 1) % POSTS.size()] * (Data.COMPOUND / 14.0)
 			return Vector3(q.x, 0, q.y)

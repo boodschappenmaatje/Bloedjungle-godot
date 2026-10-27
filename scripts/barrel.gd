@@ -243,6 +243,7 @@ static func area_damage(at: Vector3, radius: float, dmg: float) -> void:
 				e.hit(dmg * (1.0 - d / radius * 0.7), (e.global_position - at).normalized(), true)
 	if Game.builds:
 		Game.builds.blast(at, radius, dmg, true)
+	Wachtpost.blast(at, radius, dmg)
 	if Game.gates:
 		for i in Game.gates.list.size():
 			var gt: Dictionary = Game.gates.list[i]

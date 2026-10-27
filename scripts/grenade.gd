@@ -200,6 +200,7 @@ func _explode() -> void:
 				e.hit(DAMAGE * (1.0 - d / r * 0.7), (e.global_position - at).normalized(), true)
 	if Game.builds:
 		Game.builds.blast(at, r, DAMAGE, true)
+	Wachtpost.blast(at, r, DAMAGE)
 	if Game.gates:
 		for i in Game.gates.list.size():
 			var gt: Dictionary = Game.gates.list[i]

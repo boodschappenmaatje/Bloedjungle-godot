@@ -1,5 +1,5 @@
 extends SceneTree
-## Slagboom en wachthuisje in de echte spelcamera: noordpoort dicht en open, en de zuidpoort. WACHTPOST_OUT = uitvoermap.
+## Slagboom en wachthuisje in de echte spelcamera: noordpoort dicht en open, en de zuidpoort heel en kapot. WACHTPOST_OUT = uitvoermap.
 ## BJ_TOUCH=1 xvfb-run -a -s "-screen 0 1280x720x24" godot --rendering-driver vulkan --path . -s tests/wachtpost_foto.gd --resolution 1280x590 --fixed-fps 60
 var main: Node
 var game: Node
@@ -44,4 +44,11 @@ func _process(_d: float) -> bool:
 		_shot("noord_open")
 	if frames == 420:
 		_shot("zuid_dicht")
-	return frames > 425
+	if frames == 440:   # de zuidpoort: huisje en slagboom kapot geschoten
+		for n in main.get_children():
+			if n.get_script() and String(n.get_script().resource_path).ends_with("wachtpost.gd"):
+				n.damage(n.posts[1], "hut", 9999.0, "explosive")
+				n.damage(n.posts[1], "boom", 9999.0, "explosive")
+	if frames == 560:
+		_shot("zuid_kapot")
+	return frames > 565

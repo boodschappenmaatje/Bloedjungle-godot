@@ -1,5 +1,5 @@
 extends SceneTree
-## Test: een voertuig dat hard genoeg tegen een stam rijdt velt de boom (van het voertuig af, zonder stam met botsing);
+## Test: een voertuig dat hard genoeg tegen een stam rijdt velt de boom (van het voertuig af, met liggende stam als botsing);
 ## te langzaam of niet tegen een boom doet niets. Draaien: godot --headless --path . -s tests/boom_val_ram_test.gd --fixed-fps 60
 
 var main: Node
@@ -89,8 +89,13 @@ func _process(_d: float) -> bool:
 		for n in F.get("_root").get_children():
 			if n.get_script() and String(n.get_script().resource_path).ends_with("boom_val.gd"):
 				dir = n.get("_dir")
-				_check(n.get("_solid") == false, "stam van een geramde boom heeft geen botsing")
+				_check(n.get("_solid") == true, "stam van een geramde boom blijft liggen als botsing (voertuigen kunnen er niet doorheen)")
 		_check(dir.x > 0.9, "valt van het voertuig af (+x): " + str(dir))
+	if frames == 330:
+		# de boom ligt: een voertuig rijdt er niet doorheen (stronk en stam blokkeren)
+		_spawn(spot + Vector3(-6, 0, 0))
+		_drive(8.0, 99.0, 200)
+		_check(car.global_position.x < spot.x - 0.3, "voertuig komt niet door stronk en stam heen (x %.2f, boom x %.2f)" % [car.global_position.x, spot.x])
 		print("BOOM VAL RAM TEST ", "OK" if fails == 0 else "%d FOUT(EN)" % fails)
 		quit(1 if fails > 0 else 0)
 		return true

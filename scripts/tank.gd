@@ -102,8 +102,13 @@ func _physics_process(delta: float) -> void:
 	_btn.dock(2)
 	collision_mask = 0 if not goals.is_empty() else 178
 	if driven:
+		var rot0 := rotation.y
 		_drive_driven(delta, live)
-		Foliage.crush(self, Vector2(1.95, 3.5))   # wat in de romp komt, gaat plat
+		var hit := Foliage.hull_tree(self, Vector2(1.95, 3.5))
+		if not hit.is_empty():   # draaiend tegen een boom aan: botsen (terugdraaien), dan valt hij
+			rotation.y = rot0
+			_speed *= 0.5
+			Foliage.fell(hit, global_position)
 		return
 	_speed = 0.0
 	if goals.is_empty():

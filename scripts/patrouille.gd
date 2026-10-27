@@ -5,8 +5,7 @@ extends Node
 ## Het zijn gewone Ally-soldaten die niet bij de kazerne horen (niet in Game.allies), dus altijd aanwezig.
 
 const GUARDS := 3
-const SIREN_BEEPS := 8
-const SIREN_GAP := 0.42
+const ALARM_STREAM := preload("res://assets/geluid/alarm.mp3")
 
 ## De wandellijn van wacht i: twee punten langs de binnenkant van de muur (halve breedte van de basis = Data.COMPOUND).
 static func line(i: int) -> Array:
@@ -22,8 +21,7 @@ static func line(i: int) -> Array:
 
 
 var guards: Array = []
-var alarm_t := 0.0
-var _beeps := 0
+var _sirene: AudioStreamPlayer
 var _last_state := "menu"
 var _spawned := false
 
@@ -36,18 +34,16 @@ func _process(delta: float) -> void:
 	if _last_state == "prep" and st == "play":
 		alarm()
 	_last_state = st
-	if _beeps > 0:
-		alarm_t -= delta
-		if alarm_t <= 0.0:
-			_beeps -= 1
-			alarm_t = SIREN_GAP
-			Sfx.play("claxon" if _beeps % 2 == 0 else "alarm", 0.4)
 
 
-## Sirene en wachten rennen naar hun post.
+## Het alarmbestand speelt één keer en de wachten rennen naar hun post.
 func alarm() -> void:
-	_beeps = SIREN_BEEPS
-	alarm_t = 0.0
+	if _sirene == null:
+		_sirene = AudioStreamPlayer.new()
+		_sirene.stream = ALARM_STREAM
+		_sirene.volume_db = -3.0
+		add_child(_sirene)
+	_sirene.play()
 
 
 func _spawn() -> void:

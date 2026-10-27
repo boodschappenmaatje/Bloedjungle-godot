@@ -143,8 +143,8 @@ def achter_dag():
     zoem = np.sin(fase(6100 + 40 * np.sin(2 * math.pi * 0.7 * t))) * (0.6 + 0.4 * np.sin(2 * math.pi * 31 * t)) * 0.05
     # bladgeruis in de wind
     blad = biquad_lp(ruis(rng, n), 900) * (0.6 + 0.4 * np.sin(2 * math.pi * 3 * t / L)) * 0.5
-    sig = c1 * 1.0 + c2 * 0.7 + zoem + blad
-    return normaal(lus(sig, int(F * R)), 0.55)
+    sig = biquad_lp(c1 * 0.55 + c2 * 0.4 + zoem * 0.5, 3600) + blad * 1.3
+    return normaal(lus(sig, int(F * R)), 0.4)
 
 
 def _krekel(t, rng, f, periode, pulsen, amp, start):
@@ -195,7 +195,8 @@ def achter_nacht():
         kw = np.sin(fase(f)) * hann(n) * 0.2
         sig[a:a + n] += kw[:len(sig[a:a + n])]
     sig += biquad_lp(ruis(rng, len(t)), 280) * 0.25
-    return normaal(lus(sig, int(F * R)), 0.55)
+    sig = biquad_lp(sig, 4600)
+    return normaal(lus(sig, int(F * R)), 0.4)
 
 
 def achter_water():
@@ -267,7 +268,7 @@ def roep_krijs(rng, kort=False):
         t = np.arange(n) / R
         dr = rng.uniform(900, 1300) * (1 + 0.25 * np.sin(math.pi * t / d))
         ph = fase(dr) + 6.0 * np.sin(2 * math.pi * rng.uniform(60, 95) * t)
-        s = np.tanh(2.8 * (np.sin(ph) + 0.5 * np.sin(2 * ph) + 0.25 * ruis(rng, n)))
+        s = np.tanh(1.4 * (np.sin(ph) + 0.3 * np.sin(2 * ph) + 0.08 * ruis(rng, n)))
         s = biquad_bp(s, rng.uniform(1600, 2300), 1.3) * 2.5 + s * 0.25
         stukken.append(s * omhulsel(n, 0.015, d * 0.4))
     return _rij(stukken, rng.uniform(0.08, 0.2))
@@ -322,8 +323,8 @@ def maak_roepen():
         for v in range(1, VARIANTEN + 1):
             rng = np.random.default_rng(1000 + 37 * i + v)
             s = galm(fn(rng), rng, lengte=1.1 if soort == "brulaap" else 0.7, nat=0.4 if soort == "brulaap" else 0.28)
-            s = biquad_lp(s, 3200) if soort == "brulaap" else s
-            uit[f"roep_{soort}_{v}"] = normaal(s, 0.8)
+            s = biquad_lp(s, 3200 if soort == "brulaap" else 4200)
+            uit[f"roep_{soort}_{v}"] = normaal(s, 0.6)
     return uit
 
 

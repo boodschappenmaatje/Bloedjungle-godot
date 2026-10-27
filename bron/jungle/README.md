@@ -45,5 +45,6 @@ laat hem als lage stam liggen: een balk op de natuurlaag (dekking, kogels en voe
 Tests: `tests/boom_val_test.gd`, opnames `tests/boom_val_foto.gd` (spelcamera, vaste volgorde van beelden), viewer: Stronk palm / Stronk jungleboom, `tools/blender-vq2-viewer/test-jungle.mjs`.
 Geen iPhone/Xogot-meting gedaan.
 
-Voertuigen (v136): `Foliage.ram(body, snelheid, min)` na `move_and_slide` van tank (vanaf 1,5 m/s), bus (4), jeep (6) en auto (7): de geraakte boom valt van het voertuig af; stronk en stam krijgen dan geen botsing (platgereden, geen haken).
-De legertruck botst niet met bomen (maskers) en valt hier buiten. Test: `tests/boom_val_ram_test.gd`.
+Voertuigen (v136/v137): `Foliage.ram(body, snelheid, min_palm, min_boom)` na `move_and_slide`, met gewichtsklassen. Tank velt een palm vanaf 1,5 m/s en een jungleboom vanaf 2,5; bus 4 / 8;
+jeep 6 / nooit; auto 7 / nooit. Een te zware jungleboom houdt het voertuig tegen: het kaatst terug (kwart van de snelheid) en auto en bus raken beschadigd. Een geramde boom valt in de rijrichting;
+stronk en stam krijgen dan geen botsing (platgereden, geen haken). De legertruck botst niet met bomen (maskers) en valt hier buiten. Test: `tests/boom_val_ram_test.gd`.

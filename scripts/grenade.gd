@@ -201,6 +201,7 @@ func _explode() -> void:
 	if Game.builds:
 		Game.builds.blast(at, r, DAMAGE, true)
 	Wachtpost.blast(at, r, DAMAGE)
+	Generator.blast(at, r, DAMAGE)
 	if Game.gates:
 		for i in Game.gates.list.size():
 			var gt: Dictionary = Game.gates.list[i]

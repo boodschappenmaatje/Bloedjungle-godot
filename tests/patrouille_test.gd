@@ -52,7 +52,8 @@ func _process(_d: float) -> bool:
 			_check(moved[i] > 6.0, "wacht %d patrouilleert (verste afstand %.1f m)" % [i, moved[i]])
 		# de golf begint: alarm
 		main.start_wave()
-		_check(pat._beeps > 0 or pat.alarm_t >= 0.0, "alarm klinkt")
+	if frames == 1500 + 5:
+		_check(pat._sirene != null, "alarm klinkt")
 	if frames == 1500 + 900:
 		for i in 3:
 			var g: Node3D = pat.guards[i]

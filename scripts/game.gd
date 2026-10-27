@@ -43,6 +43,9 @@ var ecam := Vector3(6.0, -108.0, 1.0)  # editorcamera recht van boven: x, z en z
 var buildings: Array = []
 var allies: Array = []
 var troop_mode := "follow"  # follow of hold
+var squad_order := "follow" # follow, defend, attack, move
+var squad_target := Vector3.ZERO
+var squad_target_enemy: Node3D
 
 # Aanvalsrichting (N/O/Z/W) -> seconden dat de rand nog oplicht; gevuld door vijanden die schieten of steken.
 var attack := {"N": 0.0, "O": 0.0, "Z": 0.0, "W": 0.0}

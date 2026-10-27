@@ -19,6 +19,14 @@ var _shot_sequence := 0
 var recall = null    # Vector3 als de versterking naar de truck terug moet lopen
 var helper := false  # versterking uit de luchtsteun: volgt altijd de speler en blijft los van de kazerne
 var truck: Node = null  # vrachtwagen die hem vervoert; die bepaalt dan waar hij is en wat hij doet
+var command := "follow"
+var command_target := Vector3.ZERO
+var command_enemy: Node3D
+
+func set_command(order: String, target: Vector3, enemy: Node3D = null) -> void:
+	command = order
+	command_target = target
+	command_enemy = enemy
 
 
 var _stuck_t := 0.0
@@ -64,7 +72,7 @@ func _physics_process(delta: float) -> void:
 		model.set_shoot_pose(false, "thompson", 0.5)
 		return
 	fire_t -= delta
-	var target: Node3D = _nearest_enemy()
+	var target: Node3D = command_enemy if is_instance_valid(command_enemy) else _nearest_enemy()
 	var goal := _goal()
 	var to_goal := Vector2(goal.x - global_position.x, goal.z - global_position.z)
 	var want := Vector3.ZERO
@@ -112,6 +120,10 @@ func _physics_process(delta: float) -> void:
 func _goal() -> Vector3:
 	if recall != null:
 		return recall
+	if not helper and command in ["defend", "move"]:
+		return command_target + Vector3((idx%2)*1.6-0.8,0.0,(idx/2%2)*1.6-0.8)
+	if not helper and command == "attack" and is_instance_valid(command_enemy):
+		return command_enemy.global_position + Vector3(cos(float(idx)*2.4),0,sin(float(idx)*2.4))*3.0
 	if Game.troop_mode == "hold" and not helper:
 		var p: Vector2 = POSTS[idx % POSTS.size()] * (Data.COMPOUND / 14.0)
 		return Vector3(p.x, 0, p.y)

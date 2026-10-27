@@ -1,0 +1,266 @@
+{
+  "license": "CC0-1.0",
+  "resolution": [
+    1024,
+    1024
+  ],
+  "method": "Existing photographic albedo: contrast around image mean and restrained tint. Original normal RGB; original roughness remapped into alpha. No height map claimed; no enlargement in this build.",
+  "linear_packed_channels": "RGB = OpenGL normal; A = roughness; import as data, not normal-only compression",
+  "layers": {
+    "earth": {
+      "source_directory": "assets/textures/terrain/dry_earth",
+      "source_sha256": {
+        "base_color.jpg": "f1c24063da30157a34cb132565e845196bdf8dbd7ea68a64164977afaddab17b",
+        "normal_gl.jpg": "edecdbc3e683ecdc004ee13498672a393f858a324437091c2904e717f732db22",
+        "roughness.jpg": "459f1df7b962f821bada450d57a02a6a4e6fdcb59fb189f497d11b533a21717f"
+      },
+      "prior_manifest_sha256": {
+        "base_color.jpg": "e95092e6a1bd771dd838b802d29065c333ef9f8106df8bc20247a051271a167f",
+        "normal_gl.jpg": "f844891822cf5a23751f072428c0671b13ab9236d949d5834241061d52e60b11",
+        "roughness.jpg": "b677bbe94e7eb20b254e8251b0e40297af2f829b681c76d8ac7c9d9be7c75b88"
+      },
+      "source_effective_resolution": {
+        "base_color.jpg": "512px source resampled to 1K",
+        "normal_gl.jpg": "512px source resampled to 1K",
+        "roughness.jpg": "512px source resampled to 1K"
+      },
+      "source_size_before_prior_repository_conversion": {
+        "base_color.jpg": [
+          512,
+          512
+        ],
+        "normal_gl.jpg": [
+          512,
+          512
+        ],
+        "roughness.jpg": [
+          512,
+          512
+        ]
+      },
+      "source_urls": {
+        "base_color.jpg": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/brown_mud_dry/brown_mud_dry_albedo.ktx2",
+        "normal_gl.jpg": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/brown_mud_dry/brown_mud_dry_normal.ktx2",
+        "roughness.jpg": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/brown_mud_dry/brown_mud_dry_roughness.ktx2"
+      },
+      "albedo_tint": [
+        1.02,
+        1.01,
+        0.97
+      ],
+      "albedo_contrast": 0.72,
+      "roughness_range": [
+        0.7,
+        0.98
+      ],
+      "outputs_sha256": {
+        "earth_albedo.jpg": "c245d5b2ac69b4843eab4de7960f5790cbd290f1e9abc332fd0e5594e29561ee",
+        "earth_normal_roughness.png": "c8d18cf824535b2ccc8c4ba135591831bea93b96e106cdd7c34c43c54a9da32a"
+      }
+    },
+    "gravel": {
+      "source_directory": "assets/textures/terrain/gravel_rock",
+      "source_sha256": {
+        "base_color.jpg": "7c788876a49a4fff7e4d19b13679d6a287f0498edf3cc5bac0ba928c7b7e4326",
+        "normal_gl.jpg": "ce59c5d5dd414ec92c4b008bd9e38cb77c1c712d674ae6c6a3af1f484c7a25d5",
+        "roughness.jpg": "d5826e981409813a83a483e684154427882a809a9bdc87087bbbb1d594e000a9"
+      },
+      "prior_manifest_sha256": {
+        "base_color.jpg": "5fe8c6a62d30c0da6ea5265b48270453ee68cd64ba4880a741623b55c35c25e1",
+        "normal_gl.jpg": "82b16cd994afa803531f7c698b12ed684888f92de78f7a7c9ade4c80853b0da4",
+        "roughness.jpg": "48e21ae397fa4b89a94aee63c25a7121f7e039161efb87b2287470401057356a"
+      },
+      "source_effective_resolution": {
+        "base_color.jpg": "512px source resampled to 1K",
+        "normal_gl.jpg": "512px source resampled to 1K",
+        "roughness.jpg": "512px source resampled to 1K"
+      },
+      "source_size_before_prior_repository_conversion": {
+        "base_color.jpg": [
+          512,
+          512
+        ],
+        "normal_gl.jpg": [
+          512,
+          512
+        ],
+        "roughness.jpg": [
+          512,
+          512
+        ]
+      },
+      "source_urls": {
+        "base_color.jpg": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/rocky_gravel/rocky_gravel_albedo.ktx2",
+        "normal_gl.jpg": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/rocky_gravel/rocky_gravel_normal.ktx2",
+        "roughness.jpg": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/rocky_gravel/rocky_gravel_roughness.ktx2"
+      },
+      "albedo_tint": [
+        0.93,
+        0.98,
+        1.04
+      ],
+      "albedo_contrast": 0.72,
+      "roughness_range": [
+        0.72,
+        0.98
+      ],
+      "outputs_sha256": {
+        "gravel_albedo.jpg": "66fcb59b179c0e824278246b0bc4c8f2bd59a0ddf3abf264aa7788cd73b1e8bb",
+        "gravel_normal_roughness.png": "0a3ddc375a1de2d0cbec801cc37ddee555d2bf0afe0b88c354059430cc908513"
+      }
+    },
+    "mud": {
+      "source_directory": "assets/textures/terrain/mud",
+      "source_sha256": {
+        "base_color.jpg": "369f4aaf8c96f8f1f7dc3d039f77f0440137f13e9b6b1588956a850f1ad4ac25",
+        "normal_gl.jpg": "bb1eac9857f492573cc0ae0e8db8dc936f7ec7f983894ed8463a0dd24b53f1e7",
+        "roughness.jpg": "47da9520860163315d66fec8dfd8ef16342c26ee50e10a87f6767a8efc352065"
+      },
+      "prior_manifest_sha256": {
+        "base_color.jpg": "369f4aaf8c96f8f1f7dc3d039f77f0440137f13e9b6b1588956a850f1ad4ac25",
+        "normal_gl.jpg": "bb1eac9857f492573cc0ae0e8db8dc936f7ec7f983894ed8463a0dd24b53f1e7",
+        "roughness.jpg": "47da9520860163315d66fec8dfd8ef16342c26ee50e10a87f6767a8efc352065"
+      },
+      "source_effective_resolution": {
+        "base_color.jpg": "512px source resampled to 1K",
+        "normal_gl.jpg": "512px source resampled to 1K",
+        "roughness.jpg": "512px source resampled to 1K"
+      },
+      "source_size_before_prior_repository_conversion": {
+        "base_color.jpg": [
+          512,
+          512
+        ],
+        "normal_gl.jpg": [
+          512,
+          512
+        ],
+        "roughness.jpg": [
+          512,
+          512
+        ]
+      },
+      "source_urls": {
+        "base_color.jpg": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/aerial_mud_1/aerial_mud_1_albedo.ktx2",
+        "normal_gl.jpg": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/aerial_mud_1/aerial_mud_1_normal.ktx2",
+        "roughness.jpg": "https://raw.githubusercontent.com/Papyszoo/CC0-Public-Domain-Textures/84af0b4614c22c9028143da786fe6f9889bfee70/packs/polyhaven-textures/textures/aerial_mud_1/aerial_mud_1_roughness.ktx2"
+      },
+      "albedo_tint": [
+        0.92,
+        0.86,
+        0.77
+      ],
+      "albedo_contrast": 0.82,
+      "roughness_range": [
+        0.3,
+        0.74
+      ],
+      "outputs_sha256": {
+        "mud_albedo.jpg": "a6422ea7a268c2a5c5cb2bdacd8c82e5a7c483bc0b9964bf461e8c54fef1085c",
+        "mud_normal_roughness.png": "da2183ffe5474fec7b0c06fa5dbf89c1d067bdf4bcc0c4ec65acfe0ae932fb01"
+      }
+    },
+    "grass": {
+      "source_directory": "assets/textures/terrain/grass",
+      "source_sha256": {
+        "base_color.jpg": "ea9a4394868e1343b968bdb72ca11f6c9d93507ca59b2d775b55f454a9b13716",
+        "normal_gl.jpg": "e12fa2ce2cb12fb2e6c499402190ac2a65add0591956c256813eeca4a56e29af",
+        "roughness.jpg": "c4d957a21a29f9a68ee567f02d2d65fbe32443105484a0befcb5e3398eb2d3cc"
+      },
+      "prior_manifest_sha256": {
+        "base_color.jpg": "ea9a4394868e1343b968bdb72ca11f6c9d93507ca59b2d775b55f454a9b13716",
+        "normal_gl.jpg": "e12fa2ce2cb12fb2e6c499402190ac2a65add0591956c256813eeca4a56e29af",
+        "roughness.jpg": "c4d957a21a29f9a68ee567f02d2d65fbe32443105484a0befcb5e3398eb2d3cc"
+      },
+      "source_effective_resolution": {
+        "base_color.jpg": "See original source dimensions",
+        "normal_gl.jpg": "See original source dimensions",
+        "roughness.jpg": "See original source dimensions"
+      },
+      "source_size_before_prior_repository_conversion": {
+        "base_color.jpg": [
+          2048,
+          2048
+        ],
+        "normal_gl.jpg": [
+          2048,
+          2048
+        ],
+        "roughness.jpg": [
+          2048,
+          2048
+        ]
+      },
+      "source_urls": {
+        "base_color.jpg": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Grass004_2K-JPG/Grass004_2K-JPG_Color.jpg",
+        "normal_gl.jpg": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Grass004_2K-JPG/Grass004_2K-JPG_NormalGL.jpg",
+        "roughness.jpg": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Grass004_2K-JPG/Grass004_2K-JPG_Roughness.jpg"
+      },
+      "albedo_tint": [
+        0.78,
+        0.87,
+        0.77
+      ],
+      "albedo_contrast": 0.82,
+      "roughness_range": [
+        0.78,
+        0.98
+      ],
+      "outputs_sha256": {
+        "grass_albedo.jpg": "28506996cc43d5d4548798509451121ae9dac1edd34e7bcda0ebc750fab96386",
+        "grass_normal_roughness.png": "a4d72040ad42912c6179fece32ac2fbd88485fe48b0d5d76fb26bd531b70f3f7"
+      }
+    },
+    "litter": {
+      "source_directory": "assets/textures/terrain/jungle_ground",
+      "source_sha256": {
+        "base_color.jpg": "892578ac6cbe6e6b514b3946c3c1da6093ed63d3bdc660a8051e23115660ac10",
+        "normal_gl.jpg": "bea9ebb2dedba14923910dd60b8d3b4112d7c96a287d5cc9e14bd76e86a0a939",
+        "roughness.jpg": "3d47037a780fda55072e3ba66b3033c50624c590b97809a030c96d4873dd5ef4"
+      },
+      "prior_manifest_sha256": {
+        "base_color.jpg": "892578ac6cbe6e6b514b3946c3c1da6093ed63d3bdc660a8051e23115660ac10",
+        "normal_gl.jpg": "bea9ebb2dedba14923910dd60b8d3b4112d7c96a287d5cc9e14bd76e86a0a939",
+        "roughness.jpg": "3d47037a780fda55072e3ba66b3033c50624c590b97809a030c96d4873dd5ef4"
+      },
+      "source_effective_resolution": {
+        "base_color.jpg": "See original source dimensions",
+        "normal_gl.jpg": "See original source dimensions",
+        "roughness.jpg": "See original source dimensions"
+      },
+      "source_size_before_prior_repository_conversion": {
+        "base_color.jpg": [
+          2048,
+          2048
+        ],
+        "normal_gl.jpg": [
+          2048,
+          2048
+        ],
+        "roughness.jpg": [
+          2048,
+          2048
+        ]
+      },
+      "source_urls": {
+        "base_color.jpg": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Ground037_2K-JPG/Ground037_2K-JPG_Color.jpg",
+        "normal_gl.jpg": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Ground037_2K-JPG/Ground037_2K-JPG_NormalGL.jpg",
+        "roughness.jpg": "https://raw.githubusercontent.com/petroulacl/fps-buildings-env-kit/1dd8e932402deb82422920df2e7fd079391e55d3/environment/ground-textures/ambientcg/Ground037_2K-JPG/Ground037_2K-JPG_Roughness.jpg"
+      },
+      "albedo_tint": [
+        0.78,
+        0.81,
+        0.7
+      ],
+      "albedo_contrast": 0.78,
+      "roughness_range": [
+        0.76,
+        0.98
+      ],
+      "outputs_sha256": {
+        "litter_albedo.jpg": "bc4370c5f21c6815e766ad4c5e1963457e97b23ac2e9d01b6613541d9e9cdef4",
+        "litter_normal_roughness.png": "c623b83c2f52190de75a3863cb45af8ecc8f417c4da8061fb77e54907ca0dc7e"
+      }
+    }
+  }
+}

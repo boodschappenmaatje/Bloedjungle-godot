@@ -1,8 +1,7 @@
 class_name Atmosphere
 extends Node3D
-## Lucht, zon, mist en kleur van het beeld: warme middagzon laag boven de jungle, heiige verte,
-## filmische kleuren en een zachte gloed. Alles in code, zodat je het hier makkelijk kunt bijstellen.
-# Test synchronisatie iPhone
+## Neutrale middagzon, koeler invullicht en leesbare contactschaduw.
+## De bestaande weer-/tijdkeuze en automatische kwaliteitstrap blijven leidend.
 
 var _sky_mat: ProceduralSkyMaterial
 var _env: Environment
@@ -11,7 +10,7 @@ var _rain: GPUParticles3D
 
 # per tijdstip: zonrichting, zonkleur, zonkracht, omgevingslicht, hemel (boven/horizon/grond), mist, belichting
 const TIMES := {
-	"day": {"rot": Vector3(-33, -38, 0), "col": "ffe2b0", "e": 2.2, "amb": 0.38, "top": "56707a", "hor": "a3b09a", "gnd": "8e9c80", "fog": "7f9078", "exp": 1.0},
+	"day": {"rot": Vector3(-44, -58, 0), "col": "fff2de", "e": 1.8, "amb": 0.52, "top": "647e96", "hor": "b4bfc3", "gnd": "777d6b", "fog": "a4b1b2", "exp": 1.0},
 	"dusk": {"rot": Vector3(-9, -38, 0), "col": "ff8f50", "e": 1.6, "amb": 0.3, "top": "3a3f5c", "hor": "d98a55", "gnd": "8a6a50", "fog": "a87a5c", "exp": 1.0},
 	"night": {"rot": Vector3(-52, -38, 0), "col": "8fa8ff", "e": 0.9, "amb": 0.34, "top": "10182e", "hor": "2c3b5a", "gnd": "141c2a", "fog": "27324a", "exp": 0.95},
 }
@@ -49,12 +48,12 @@ func _ready() -> void:
 	env.glow_hdr_threshold = 1.2
 	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 	env.adjustment_enabled = true
-	env.adjustment_contrast = 1.2
-	env.adjustment_saturation = 1.1
+	env.adjustment_contrast = 1.08
+	env.adjustment_saturation = 0.98
 	# alleen bij de zwaarste renderer (Forward+) actief; de mobiele renderer slaat dit over
 	env.ssao_enabled = true
-	env.ssao_radius = 1.4
-	env.ssao_intensity = 2.0
+	env.ssao_radius = 0.7
+	env.ssao_intensity = 1.2
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
@@ -64,11 +63,12 @@ func _ready() -> void:
 	sun.light_color = Color("ffe2b0")
 	sun.light_energy = 2.2
 	sun.shadow_enabled = true
-	sun.shadow_blur = 1.8  # zachtere randen
-	sun.shadow_opacity = 0.72  # schaduw wordt niet meer pikzwart
+	sun.shadow_blur = 1.1
+	sun.shadow_opacity = 0.82  # contact blijft zichtbaar, hemellicht bewaart de donkere details
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	sun.directional_shadow_max_distance = 80.0
-	sun.shadow_normal_bias = 1.2
+	sun.shadow_bias = 0.10
+	sun.shadow_normal_bias = 0.9  # begrensd: contact verbeteren zonder strepen op vlakke daken
 	add_child(sun)
 	_sky_mat = sky_mat
 	_env = env
@@ -76,7 +76,7 @@ func _ready() -> void:
 	apply_settings()
 	apply_settings.call_deferred()  # nog eens als de camera en de jungle er staan
 
-	# donkere randen en een warme tint over alles, zoals een filmbeeld
+	# Rustige neutrale rand; deze bestaande laag neemt geen touchinput in.
 	var layer := CanvasLayer.new()
 	layer.layer = -1
 	var rect := ColorRect.new()
@@ -87,7 +87,7 @@ func _ready() -> void:
 void fragment() {
 	vec2 d = UV - 0.5;
 	float v = smoothstep(0.35, 0.95, length(d * vec2(1.0, 1.15)));
-	COLOR = vec4(0.03, 0.05, 0.02, v * 0.55);
+	COLOR = vec4(0.025, 0.03, 0.035, v * 0.25);
 }"""
 	var sm := ShaderMaterial.new()
 	sm.shader = sh
@@ -110,16 +110,27 @@ func apply_settings() -> void:
 	_sky_mat.sky_horizon_color = Color(t["hor"])
 	_sky_mat.ground_horizon_color = Color(t["gnd"])
 	_env.fog_light_color = Color(t["fog"]).lerp(Color("9aa59a"), 0.0 if weather == "clear" else 0.35)
-	_env.fog_density = {"clear": 0.0075, "rain": 0.014, "mist": 0.018}[weather]
+	_env.fog_density = {"clear": 0.0032, "rain": 0.011, "mist": 0.018}[weather]
 	_env.tonemap_exposure = t["exp"]
-	_env.adjustment_saturation = 1.1 if weather == "clear" else 0.85
+	_env.adjustment_saturation = 0.98 if weather == "clear" else 0.88
 	_apply_quality(quality)
+	_apply_ground(weather, quality)
 	_apply_trees()
 	Woonhuis.apply_shadow_setting()
 	_set_rain(weather == "rain")
 	Sfx.rain(weather == "rain")
 	_apply_diagnose()
 	_apply_tier()
+
+
+## Alleen visuele materiaalwaarden: regen maakt bestaande aarde donkerder/gladder.
+func _apply_ground(weather: String, quality: String) -> void:
+	for ground in get_tree().get_nodes_in_group("ground"):
+		var material: ShaderMaterial = ground.get_meta("mat", null)
+		if material == null:
+			continue
+		material.set_shader_parameter("wetness", {"clear": 0.0, "rain": 0.75, "mist": 0.25}[weather])
+		material.set_shader_parameter("normal_strength", {"low": 0.48, "high": 0.72, "ultra": 0.9}[quality])
 
 
 ## Automatische kwaliteitstrap (PerfGovernor): haalt het spel het doel niet, ook niet op de laagste resolutie, dan gaan de
@@ -222,7 +233,7 @@ func _process(_d: float) -> void:
 # geen onscherpe verte, minder gras en iets minder pixels. Ultra is het volledige beeld.
 const QUALITY := {
 	"low": {"shadow": false, "dist": 40.0, "atlas": 1024, "glow": false, "dof": false, "scale": 0.6, "grass": 0.2, "fern": 0.5, "bush_shadow": false, "ssao": false},
-	"high": {"shadow": true, "dist": 40.0, "atlas": 1024, "glow": false, "dof": false, "scale": 0.8, "grass": 0.45, "fern": 0.7, "bush_shadow": false, "ssao": false},
+	"high": {"shadow": true, "dist": 45.0, "atlas": 2048, "glow": false, "dof": false, "scale": 0.8, "grass": 0.45, "fern": 0.7, "bush_shadow": false, "ssao": false},
 	"ultra": {"shadow": true, "dist": 55.0, "atlas": 4096, "glow": true, "dof": true, "scale": 1.0, "grass": 1.0, "fern": 1.0, "bush_shadow": true, "ssao": true},
 }
 
@@ -231,7 +242,7 @@ func _apply_quality(q: String) -> void:
 	var c: Dictionary = QUALITY[q]
 	_sun.shadow_enabled = c.shadow
 	_sun.directional_shadow_max_distance = c.dist
-	_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS if q == "ultra" else DirectionalLight3D.SHADOW_ORTHOGONAL
+	_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL if q == "low" else DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	RenderingServer.directional_shadow_atlas_set_size(c.atlas, true)
 	_env.glow_enabled = c.glow
 	_env.ssao_enabled = c.ssao

@@ -1,0 +1,37 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+[   0% ] first_scan_filesystem | Started Project initialization (5 steps)
+[   0% ] first_scan_filesystem | Scanning file structure...
+[  16% ] first_scan_filesystem | Loading global class names...
+[  33% ] first_scan_filesystem | Verifying GDExtensions...
+[  50% ] first_scan_filesystem | Creating autoload scripts...
+[  66% ] first_scan_filesystem | Initializing plugins...
+[  83% ] first_scan_filesystem | Starting file scan...
+[ DONE ] first_scan_filesystem
+
+[   0% ] update_scripts_classes | Started Registering global classes... (3 steps)
+[   0% ] update_scripts_classes |
+[  25% ] update_scripts_classes |
+[  50% ] update_scripts_classes |
+[ DONE ] update_scripts_classes
+
+[   0% ] _update_scan_actions | Started Scanning actions... (10 steps)
+[   0% ] _update_scan_actions | earth_albedo.jpg
+[   9% ] _update_scan_actions | earth_normal_roughness.png
+[  18% ] _update_scan_actions | grass_albedo.jpg
+[  27% ] _update_scan_actions | grass_normal_roughness.png
+[  36% ] _update_scan_actions | gravel_albedo.jpg
+[  45% ] _update_scan_actions | gravel_normal_roughness.png
+[  54% ] _update_scan_actions | litter_albedo.jpg
+[  63% ] _update_scan_actions | litter_normal_roughness.png
+[  72% ] _update_scan_actions | mud_albedo.jpg
+[  81% ] _update_scan_actions | mud_normal_roughness.png
+[ DONE ] _update_scan_actions
+
+[   0% ] loading_editor_layout | Started Loading editor (5 steps)
+[   0% ] loading_editor_layout | Loading editor layout...
+[  16% ] loading_editor_layout | Loading docks...
+[ DONE ] loading_editor_layout
+
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)

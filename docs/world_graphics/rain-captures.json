@@ -1,0 +1,24 @@
+[
+	{
+		"camera": {
+			"fov": 45.0,
+			"position": "Vector3(8, 23.745346, -72.16226)",
+			"rotation": "Vector3(-1.012291, 0, 0)"
+		},
+		"draw_calls": 614.0,
+		"exposure": 1.0,
+		"file": "res://docs/world_graphics/renders/rain-river.png",
+		"fps": "Not measured: fixed-step capture on software renderer",
+		"gpu": "llvmpipe (LLVM 19.1.7, 256 bits)",
+		"quality": "high",
+		"rendered_primitives": 202380.0,
+		"renderer": "gl_compatibility",
+		"resolution_scale": 0.800000011920929,
+		"scene": "river",
+		"seed": 2702026,
+		"sun_energy": 1.08000004291534,
+		"sun_rotation": "Vector3(-43.999996, -57.999996, 0)",
+		"texture_memory_bytes": 117455145.0,
+		"weather": "rain"
+	}
+]

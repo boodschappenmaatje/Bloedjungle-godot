@@ -1,0 +1,314 @@
+{
+  "source": "bron/gras/gras.blend",
+  "units": "metres",
+  "texture_resolution": [
+    2048,
+    2048
+  ],
+  "texture_method": "Original full-resolution procedural PBR, not upscaled photos",
+  "families": {
+    "short": {
+      "0": {
+        "glb": "assets/grass/grass_short_lod0.glb",
+        "variants": [
+          {
+            "name": "Grass_short_01_LOD0",
+            "triangles": 400,
+            "height_m": 0.2439,
+            "vertices": 360,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_short_02_LOD0",
+            "triangles": 440,
+            "height_m": 0.2481,
+            "vertices": 396,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_short_03_LOD0",
+            "triangles": 480,
+            "height_m": 0.2391,
+            "vertices": 432,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_short_04_LOD0",
+            "triangles": 520,
+            "height_m": 0.2471,
+            "vertices": 468,
+            "surfaces": 1
+          }
+        ]
+      },
+      "1": {
+        "glb": "assets/grass/grass_short_lod1.glb",
+        "variants": [
+          {
+            "name": "Grass_short_01_LOD1",
+            "triangles": 120,
+            "height_m": 0.2438,
+            "vertices": 120,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_short_02_LOD1",
+            "triangles": 132,
+            "height_m": 0.2373,
+            "vertices": 132,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_short_03_LOD1",
+            "triangles": 144,
+            "height_m": 0.2355,
+            "vertices": 144,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_short_04_LOD1",
+            "triangles": 156,
+            "height_m": 0.2365,
+            "vertices": 156,
+            "surfaces": 1
+          }
+        ]
+      },
+      "2": {
+        "glb": "assets/grass/grass_short_lod2.glb",
+        "variants": [
+          {
+            "name": "Grass_short_01_LOD2",
+            "triangles": 42,
+            "height_m": 0.2438,
+            "vertices": 56,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_short_02_LOD2",
+            "triangles": 42,
+            "height_m": 0.2428,
+            "vertices": 56,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_short_03_LOD2",
+            "triangles": 42,
+            "height_m": 0.222,
+            "vertices": 56,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_short_04_LOD2",
+            "triangles": 42,
+            "height_m": 0.2466,
+            "vertices": 56,
+            "surfaces": 1
+          }
+        ]
+      }
+    },
+    "medium": {
+      "0": {
+        "glb": "assets/grass/grass_medium_lod0.glb",
+        "variants": [
+          {
+            "name": "Grass_medium_01_LOD0",
+            "triangles": 672,
+            "height_m": 0.6441,
+            "vertices": 576,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_medium_02_LOD0",
+            "triangles": 728,
+            "height_m": 0.6477,
+            "vertices": 624,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_medium_03_LOD0",
+            "triangles": 784,
+            "height_m": 0.6476,
+            "vertices": 672,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_medium_04_LOD0",
+            "triangles": 840,
+            "height_m": 0.6393,
+            "vertices": 720,
+            "surfaces": 1
+          }
+        ]
+      },
+      "1": {
+        "glb": "assets/grass/grass_medium_lod1.glb",
+        "variants": [
+          {
+            "name": "Grass_medium_01_LOD1",
+            "triangles": 144,
+            "height_m": 0.6218,
+            "vertices": 144,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_medium_02_LOD1",
+            "triangles": 156,
+            "height_m": 0.5742,
+            "vertices": 156,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_medium_03_LOD1",
+            "triangles": 168,
+            "height_m": 0.6476,
+            "vertices": 168,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_medium_04_LOD1",
+            "triangles": 180,
+            "height_m": 0.625,
+            "vertices": 180,
+            "surfaces": 1
+          }
+        ]
+      },
+      "2": {
+        "glb": "assets/grass/grass_medium_lod2.glb",
+        "variants": [
+          {
+            "name": "Grass_medium_01_LOD2",
+            "triangles": 42,
+            "height_m": 0.6218,
+            "vertices": 56,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_medium_02_LOD2",
+            "triangles": 42,
+            "height_m": 0.6463,
+            "vertices": 56,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_medium_03_LOD2",
+            "triangles": 42,
+            "height_m": 0.5896,
+            "vertices": 56,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_medium_04_LOD2",
+            "triangles": 42,
+            "height_m": 0.625,
+            "vertices": 56,
+            "surfaces": 1
+          }
+        ]
+      }
+    },
+    "tall": {
+      "0": {
+        "glb": "assets/grass/grass_tall_lod0.glb",
+        "variants": [
+          {
+            "name": "Grass_tall_01_LOD0",
+            "triangles": 1080,
+            "height_m": 1.3483,
+            "vertices": 900,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_tall_02_LOD0",
+            "triangles": 1152,
+            "height_m": 1.3915,
+            "vertices": 960,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_tall_03_LOD0",
+            "triangles": 1224,
+            "height_m": 1.3909,
+            "vertices": 1020,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_tall_04_LOD0",
+            "triangles": 1296,
+            "height_m": 1.368,
+            "vertices": 1080,
+            "surfaces": 1
+          }
+        ]
+      },
+      "1": {
+        "glb": "assets/grass/grass_tall_lod1.glb",
+        "variants": [
+          {
+            "name": "Grass_tall_01_LOD1",
+            "triangles": 240,
+            "height_m": 1.3047,
+            "vertices": 225,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_tall_02_LOD1",
+            "triangles": 256,
+            "height_m": 1.3915,
+            "vertices": 240,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_tall_03_LOD1",
+            "triangles": 272,
+            "height_m": 1.3909,
+            "vertices": 255,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_tall_04_LOD1",
+            "triangles": 288,
+            "height_m": 1.3397,
+            "vertices": 270,
+            "surfaces": 1
+          }
+        ]
+      },
+      "2": {
+        "glb": "assets/grass/grass_tall_lod2.glb",
+        "variants": [
+          {
+            "name": "Grass_tall_01_LOD2",
+            "triangles": 42,
+            "height_m": 1.3047,
+            "vertices": 56,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_tall_02_LOD2",
+            "triangles": 42,
+            "height_m": 1.3263,
+            "vertices": 56,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_tall_03_LOD2",
+            "triangles": 42,
+            "height_m": 1.3131,
+            "vertices": 56,
+            "surfaces": 1
+          },
+          {
+            "name": "Grass_tall_04_LOD2",
+            "triangles": 42,
+            "height_m": 1.3664,
+            "vertices": 56,
+            "surfaces": 1
+          }
+        ]
+      }
+    }
+  }
+}

@@ -42,6 +42,7 @@ static var _fade := 0.0  # 0..1, loopt zacht mee zodat bladeren niet ploffen
 ## active = false (bouwmodus, menu): de zichtlijn-fade loopt rustig terug naar 0.
 ## extras = tot drie wereldposities (vijanden) die ook uit de bladeren moeten blijven.
 static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, delta := 1.0 / 60.0, active := true, extras: Array = []) -> void:
+	GrassField.set_focus(player_pos, active)
 	_fade = move_toward(_fade, 1.0 if active else 0.0, delta / 0.35)
 	if _focus_mats.is_empty():
 		for key in ["palm", "leaf", "fern"]:
@@ -67,6 +68,7 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 static func set_wind(on: bool) -> void:
 	for k in _mats:
 		_mats[k].set_shader_parameter("wind", 1.0 if on else 0.0)
+	GrassField.set_wind(on)
 
 
 ## Richting en lengte van de nepschaduwen volgen de zon (dir = waarheen de schaduw valt, elev = zonhoogte in graden).
@@ -255,6 +257,11 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 		var cols: Array = []
 		_scatter(rng, c[0], c[1], c[2], xf, cols, c[3], c[4], c[5])
 		_strip(rng, kind, xf.size() + STRIP_EXTRA[kind], xf, cols, c[3], c[4], c[5])
+		if kind == "grass":
+			# Keep the original RNG/placement sequence for palms, rocks and all gameplay.
+			# Only grass is replaced by Blender tufts with separate geometric LODs.
+			GrassField.spawn(parent, xf)
+			continue
 		if kind == "palm" or kind == "rock":
 			for t in xf:
 				trees.append(Vector2(t.origin.x, t.origin.z))

@@ -1,0 +1,28 @@
+{
+  "resolution": [
+    2048,
+    2048
+  ],
+  "native_authored_resolution": [
+    2048,
+    2048
+  ],
+  "method": "Original analytic procedural blade pigmentation, veins, epidermal cells and PBR maps; evaluated at full 2048\u00b2, not upscaled photographs.",
+  "seed": 27102026,
+  "atlas_lanes": 8,
+  "license": "CC0-1.0",
+  "author": "Bloedjungle project procedural production",
+  "channels": {
+    "albedo.jpg": "sRGB albedo",
+    "normal.png": "OpenGL tangent normal, linear data",
+    "orm.png": "R ambient occlusion / G roughness / B metallic=0, linear data"
+  },
+  "sources": [
+    "tools/build_grass_textures.py"
+  ],
+  "sha256": {
+    "normal.png": "b4a0aca2cfd1f37d9192027d8a09261e5bb1460ad6c0ff6649ddbf5fc9b507ba",
+    "orm.png": "f17128c8bd6165ef00bd15ab2f85c5b85af5917305d07badedf0df190e4225cc",
+    "albedo.jpg": "94f7734311fb0b62469ec6943fbf79ba2cdfe7398bc8d2813af84961096a38d8"
+  }
+}

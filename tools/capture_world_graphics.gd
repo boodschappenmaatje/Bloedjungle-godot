@@ -5,6 +5,8 @@ extends SceneTree
 var main: Node3D
 var game: Node
 var stage := "before"
+var weather := "clear"
+var view_only := ""
 var records: Array = []
 
 
@@ -12,6 +14,10 @@ func _initialize() -> void:
 	var args := OS.get_cmdline_user_args()
 	if args.has("--stage"):
 		stage = args[args.find("--stage") + 1]
+	if args.has("--weather"):
+		weather = args[args.find("--weather") + 1]
+	if args.has("--view-only"):
+		view_only = args[args.find("--view-only") + 1]
 	call_deferred("_run")
 
 
@@ -21,6 +27,7 @@ func _run() -> void:
 	GameSettings.values = GameSettings.DEFAULTS.duplicate()
 	GameSettings.values["sound"] = "off"
 	GameSettings.values["wind"] = "off"
+	GameSettings.values["weather"] = weather
 	load("res://scripts/perf_governor.gd").set("paused", true)
 	load("res://scripts/atmosphere.gd").set("tier", 0)
 	Progress.autostart = false
@@ -41,6 +48,10 @@ func _run() -> void:
 		if node is GPUParticles3D:
 			node.emitting = false
 	var shots := {"base": Vector3(0, 0, 0), "jungle": Vector3(2, 0, -38), "jeep": Vector3(0, 0, 10), "combat": Vector3(0, 0, -8)}
+	if view_only == "river":
+		shots = {"river": Vector3(8, 0, -87)}
+	elif not view_only.is_empty():
+		shots = {view_only: shots[view_only]}
 	var jeep: Node3D
 	for name in shots:
 		seed(2702026)
@@ -84,7 +95,7 @@ func _run() -> void:
 		records.append({"scene": name, "file": path, "seed": 2702026,
 			"camera": {"position": var_to_str(cam.position), "rotation": var_to_str(cam.rotation), "fov": cam.fov},
 			"sun_rotation": var_to_str(atm._sun.rotation_degrees), "sun_energy": atm._sun.light_energy,
-			"exposure": atm._env.tonemap_exposure, "quality": "high", "resolution_scale": root.scaling_3d_scale,
+			"exposure": atm._env.tonemap_exposure, "quality": "high", "weather": weather, "resolution_scale": root.scaling_3d_scale,
 			"draw_calls": Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME),
 			"rendered_primitives": Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME),
 			"texture_memory_bytes": Performance.get_monitor(Performance.RENDER_TEXTURE_MEM_USED),

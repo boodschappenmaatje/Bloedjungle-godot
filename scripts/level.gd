@@ -62,18 +62,23 @@ func _ground() -> void:
 	var plane := PlaneMesh.new()
 	plane.size = Vector2(SIZE, SIZE)
 	mesh.mesh = plane
+	# Het vlak ligt exact op y=0: het ontvangt schaduw, maar kan niets boven zichzelf
+	# beschaduwen. Uitschakelen voorkomt zelfschaduwstrepen en bespaart een shadow draw.
+	mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	var mat := ShaderMaterial.new()
 	mat.shader = preload("res://shaders/ground.gdshader")
 	mat.set_shader_parameter("noise_a", Kit.noise_tex(0.02, 3))
 	mat.set_shader_parameter("noise_b", Kit.noise_tex(0.045, 8))
-	mat.set_shader_parameter("grass_tex", load("res://assets/textures/terrain/grass/base_color.jpg"))
-	mat.set_shader_parameter("jungle_tex", load("res://assets/textures/terrain/jungle_ground/base_color.jpg"))
-	mat.set_shader_parameter("dirt_tex", load("res://assets/textures/terrain/dry_earth/base_color.jpg"))
-	mat.set_shader_parameter("mud_tex", load("res://assets/textures/terrain/gravel_rock/base_color.jpg"))
-	mat.set_shader_parameter("dirt_height", load("res://assets/textures/terrain/dry_earth/roughness.jpg"))
-	mat.set_shader_parameter("dirt_normal", load("res://assets/textures/terrain/dry_earth/normal_gl.jpg"))
+	# Eén gedeeld kleur- en normal/roughness-paar per ondergrond; geen roughness-als-hoogte.
+	for layer in ["earth", "gravel", "mud", "grass", "litter"]:
+		var path: String = "res://assets/textures/world_ground/" + layer
+		mat.set_shader_parameter(layer + "_tex", load(path + "_albedo.jpg"))
+		mat.set_shader_parameter(layer + "_surface", load(path + "_normal_roughness.png"))
 	mat.set_shader_parameter("compound", Data.COMPOUND)
 	mat.set_shader_parameter("gate_gap", Data.GATE_GAP)
+	# De wereld wordt pas na het menu gebouwd; neem ook dan het gekozen weer/niveau over.
+	mat.set_shader_parameter("wetness", {"clear": 0.0, "rain": 0.75, "mist": 0.25}[GameSettings.get_value("weather")])
+	mat.set_shader_parameter("normal_strength", {"low": 0.48, "high": 0.72, "ultra": 0.9}[GameSettings.get_value("quality")])
 	mesh.material_override = mat
 	body.add_child(mesh)
 	body.add_to_group("ground")

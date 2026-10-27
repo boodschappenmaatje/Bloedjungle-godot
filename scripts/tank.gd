@@ -103,6 +103,7 @@ func _physics_process(delta: float) -> void:
 	collision_mask = 0 if not goals.is_empty() else 178
 	if driven:
 		_drive_driven(delta, live)
+		Foliage.crush(self, Vector2(1.95, 3.5))   # wat in de romp komt, gaat plat
 		return
 	_speed = 0.0
 	if goals.is_empty():

@@ -46,6 +46,7 @@ window/handheld/orientation=4
 3d_physics/layer_4="vijand"
 3d_physics/layer_5="bunker"
 3d_physics/layer_6="tank"
+3d_physics/layer_8="natuur"
 
 [physics]
 

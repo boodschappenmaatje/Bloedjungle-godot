@@ -5,6 +5,7 @@ class_name Kit
 const LAYER_GROUND := 1
 const LAYER_WALL := 2
 const LAYER_BUNKER := 16
+const LAYER_NATURE := 128  # stammen en rotsen: houdt mensen en voertuigen tegen, en kogels en granaten
 const LAYER_WATER := 64  # onzichtbare oever van de rivier: houdt mensen tegen, kogels vliegen erover
 
 static var _mats := {}

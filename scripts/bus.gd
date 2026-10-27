@@ -93,7 +93,7 @@ static func make(k: String, seed_: int) -> Bus:
 func _ready() -> void:
 	all.append(self)
 	collision_layer = Barrel.LAYER | Bullet.MASK_VEHICLE      # kogels botsen ertegen en roepen hit() aan; je loopt er niet doorheen
-	collision_mask = 114
+	collision_mask = 242
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 	set_meta("impact_material", "metal")
 	_shape = CollisionShape3D.new()

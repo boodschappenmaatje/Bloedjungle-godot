@@ -8,7 +8,11 @@
   "Palm3_far": "Palm3_far: 158 driehoeken · 2 mesh · 2 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.",
   "Rots1": "Rots1: 270 driehoeken · 1 mesh · 1 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.",
   "Rots2": "Rots2: 256 driehoeken · 1 mesh · 1 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.",
-  "Rots3": "Rots3: 270 driehoeken · 1 mesh · 1 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten."
+  "Rots3": "Rots3: 270 driehoeken · 1 mesh · 1 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.",
+  "Boom1": "Boom1: 1.002 driehoeken · 3 mesh · 3 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.",
+  "Boom1_far": "Boom1_far: 228 driehoeken · 3 mesh · 3 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.",
+  "Boom2": "Boom2: 1.002 driehoeken · 3 mesh · 3 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.",
+  "Boom2_far": "Boom2_far: 228 driehoeken · 3 mesh · 3 materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten."
  },
  "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
  "clips": {},

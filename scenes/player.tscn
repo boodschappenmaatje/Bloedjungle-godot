@@ -9,7 +9,7 @@ height = 2.15
 
 [node name="Player" type="CharacterBody3D"]
 collision_layer = 4
-collision_mask = 122
+collision_mask = 250
 motion_mode = 1
 script = ExtResource("1")
 

@@ -110,14 +110,15 @@ func _finish(pos: Vector2) -> void:
 	wheel=false; chosen=-1; queue_redraw()
 
 func _sector(pos: Vector2) -> int:
-	var d:=pos-origin
+	var center := _wheel_center()
+	var d:=pos-center
 	if d.length()<24: return -1
 	var angle:=fposmod(atan2(d.y,d.x)+TAU,TAU)
 	return int(floor((angle+PI/4.0)/ (PI/2.0)))%4
 
 func _draw() -> void:
 	if not wheel: return
-	var center:=Vector2(clampf(origin.x, 112.0, size.x-112.0),clampf(origin.y,112.0,size.y-112.0))
+	var center:=_wheel_center()
 	for i in 4:
 		var a:float=TAU*i/4.0-PI/4.0
 		var p:=center+Vector2(cos(a),sin(a))*86.0
@@ -125,6 +126,10 @@ func _draw() -> void:
 		draw_rect(r,UI.PANEL,true)
 		draw_rect(r,UI.BRASS if i==chosen else UI.PANEL_LINE,false,2.0)
 		draw_string(UI.body(700),p+Vector2(-42,5),LABELS[i],HORIZONTAL_ALIGNMENT_LEFT,-1,13,UI.INK)
+
+func _wheel_center() -> Vector2:
+	var safe := UI.safe_margins(size)
+	return Vector2(clampf(origin.x, safe.x+112.0, size.x-safe.z-112.0),clampf(origin.y,safe.y+112.0,size.y-safe.w-112.0))
 
 func _issue(command:String, target:Vector3, enemy:Node3D) -> void:
 	Game.squad_order=command; Game.squad_target=target; Game.squad_target_enemy=enemy if is_instance_valid(enemy) else null

@@ -15,6 +15,7 @@ const STRIP_KEEP := {
 const VIS_END := {"palm": 140.0, "bush": 95.0, "fern": 85.0, "grass": 55.0}
 const PALM_NEAR := 62.0  # dichterbij: volledige palm; verder: de simpele palm
 ## Stam of rots waar je niet doorheen loopt: straal in meters bij schaal 1 (laag Kit.LAYER_NATURE: mensen, voertuigen, kogels en granaten).
+const BOOM_COLLIDE_R := 0.8  # jungleboom: stam met plankwortels (bij schaal 1, voor de 0,75 van BOOM_SCALE)
 const COLLIDE_R := {"palm": 0.32, "rock": 0.45}
 const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.5], "bush": [1.1, 1.8, 0.45], "rock": [0.5, 1.2, 0.4]}  # hoogte, breedte, sterkte
 
@@ -130,6 +131,9 @@ static func _frond(st: SurfaceTool, origin: Vector3, yaw: float, length: float, 
 ## Palmen en rotsen komen uit assets/jungle.glb (bron/jungle/maak_jungle.py): 3 palmen met een
 ## verre variant, 3 rotsen. Stam = schors, kroon = palmblad, rots = steen met mos in de vertexkleuren.
 const PALMS := ["Palm1", "Palm2", "Palm3"]
+## Wat er op een palmplek komt te staan: een op de vijf is een jungleboom (plankwortels, lianen), op 0,75 geschaald.
+const PALM_POOL := ["Palm1", "Palm2", "Palm3", "Palm1", "Boom1", "Palm2", "Palm3", "Boom2", "Palm1", "Palm2"]
+const BOOM_SCALE := 0.75
 const ROCKS := ["Rots1", "Rots2", "Rots3"]
 static var _jungle := {}
 
@@ -141,9 +145,16 @@ static func jungle_mesh(name: String) -> Mesh:
 			_jungle[String(mi.name)] = (mi as MeshInstance3D).mesh
 		root.free()
 	var m: Mesh = _jungle[name]
-	if name.begins_with("Palm"):
-		m.surface_set_material(0, material("bark"))
-		m.surface_set_material(1, material("palm"))
+	for i in m.get_surface_count():
+		var mn := m.surface_get_material(i).resource_name if m.surface_get_material(i) else ""
+		if mn.begins_with("Palm_Stam") or mn.begins_with("Boom_Stam"):
+			m.surface_set_material(i, material("bark"))
+		elif mn.begins_with("Palm_Blad"):
+			m.surface_set_material(i, material("palm"))
+		elif mn.begins_with("Boom_Blad"):
+			m.surface_set_material(i, material("leaf"))
+		elif mn.begins_with("Boom_Liaan"):
+			m.surface_set_material(i, material())
 	return m
 
 
@@ -225,8 +236,8 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 		if kind == "palm" or kind == "rock":
 			for t in xf:
 				trees.append(Vector2(t.origin.x, t.origin.z))
-		if COLLIDE_R.has(kind):
-			_collide(parent, xf, COLLIDE_R[kind], "wood" if kind == "palm" else "concrete")
+		if kind == "rock":
+			_collide(parent, xf, COLLIDE_R[kind], "concrete")
 		if kind == "rock":
 			var rm := Kit.rock().duplicate() as StandardMaterial3D
 			rm.vertex_color_use_as_albedo = true
@@ -249,17 +260,23 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 				cells[key][0].append(xf[i])
 				cells[key][1].append(cols[i])
 			for key in cells:
-				# palmen: elke palm een van de drie vormen
-				var variants := PALMS.size() if kind == "palm" else 1
-				for v in variants:
-					var vx: Array = []
-					var vc: Array = []
-					for i in range(v, cells[key][0].size(), variants):
-						vx.append(cells[key][0][i])
-						vc.append(cells[key][1][i])
-					if vx.is_empty():
-						continue
-					var mesh: Mesh = jungle_mesh(PALMS[v]) if kind == "palm" else meshes[kind]
+				# palmen: elke plek een van de vormen uit PALM_POOL (palmen en jungleboom)
+				var groups := {}  # vorm -> [transforms, kleuren]
+				for i in cells[key][0].size():
+					var vn: String = PALM_POOL[i % PALM_POOL.size()] if kind == "palm" else ""
+					if not groups.has(vn):
+						groups[vn] = [[], []]
+					var xt: Transform3D = cells[key][0][i]
+					if vn.begins_with("Boom"):
+						xt.basis = xt.basis.scaled(Vector3.ONE * BOOM_SCALE)
+					groups[vn][0].append(xt)
+					groups[vn][1].append(cells[key][1][i])
+				for vn in groups:
+					var vx: Array = groups[vn][0]
+					var vc: Array = groups[vn][1]
+					var mesh: Mesh = jungle_mesh(vn) if kind == "palm" else meshes[kind]
+					if kind == "palm":
+						_collide(parent, vx, BOOM_COLLIDE_R if vn.begins_with("Boom") else COLLIDE_R["palm"], "wood")
 					var inst := Kit.scatter(parent, mesh, null, vx, vc, kind != "grass")
 					inst.add_to_group("foliage_" + kind)  # de grafiekinstelling dunt gras en struiken uit
 					# vakken die ver weg liggen worden niet meer getekend; ver weg staan palmen als simpeler model
@@ -268,7 +285,7 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 					inst.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF  # zacht in- en uitdoven i.p.v. ploffen
 					if kind == "palm":
 						inst.visibility_range_end = PALM_NEAR
-						var far := Kit.scatter(parent, jungle_mesh(PALMS[v] + "_far"), null, vx, vc, false)
+						var far := Kit.scatter(parent, jungle_mesh(vn + "_far"), null, vx, vc, false)
 						far.add_to_group("foliage_palm")
 						far.visibility_range_begin = PALM_NEAR
 						far.visibility_range_begin_margin = 16.0

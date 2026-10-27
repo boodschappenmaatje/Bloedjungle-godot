@@ -18,6 +18,9 @@ var _shooting := false
 var _shot_sequence := 0
 var recall = null    # Vector3 als de versterking naar de truck terug moet lopen
 var helper := false  # versterking uit de luchtsteun: volgt altijd de speler en blijft los van de kazerne
+var guard := false   # wacht van de basis (Patrouille): loopt in de pauze heen en weer langs de muur, rent bij het alarm naar zijn post
+var _leg := 0        # welk eindpunt van de wandellijn hij nu heeft
+var _wait_t := -1.0  # blijft even staan op het eindpunt (en kijkt rond)
 var truck: Node = null  # vrachtwagen die hem vervoert; die bepaalt dan waar hij is en wat hij doet
 var command := "follow"
 var command_target := Vector3.ZERO
@@ -77,11 +80,21 @@ func _physics_process(delta: float) -> void:
 	var to_goal := Vector2(goal.x - global_position.x, goal.z - global_position.z)
 	var want := Vector3.ZERO
 	var moving := false
-	if to_goal.length() > (0.6 if Game.troop_mode == "hold" and not helper else 2.2):
+	var patrolling := guard and Game.state == "prep"
+	if patrolling and to_goal.length() <= 0.6:
+		# aangekomen op een eindpunt: even blijven staan, dan terug lopen
+		if _wait_t < 0.0:
+			_wait_t = randf_range(3.0, 6.0)
+		_wait_t -= delta
+		if _wait_t <= 0.0:
+			_wait_t = -1.0
+			_leg += 1
+	elif to_goal.length() > (0.6 if (Game.troop_mode == "hold" and not helper) or guard else 2.2):
 		var wp := Route.waypoint(global_position, goal)
 		var d := Vector2(wp.x - global_position.x, wp.z - global_position.z)
 		if d.length() > 0.05:
-			want = Vector3(d.x, 0, d.y).normalized() * SPEED * (1.0 if to_goal.length() > 5.0 else 0.6)
+			var pace := 0.4 if patrolling else (1.0 if to_goal.length() > 5.0 else 0.6)   # wandelen of rennen
+			want = Vector3(d.x, 0, d.y).normalized() * SPEED * pace
 			moving = true
 	# een stam of rots recht in de weg: even opzij omlopen
 	if _detour_t > 0.0:
@@ -110,7 +123,7 @@ func _physics_process(delta: float) -> void:
 	_shooting = target != null
 	model.set_shoot_pose(_shooting, "thompson", 0.5)
 	if moving:
-		model.play("lopen", 0.2, 1.4)
+		model.play("lopen", 0.2, 0.9 if patrolling else 1.4)
 	elif _shooting:
 		model.play("schieten", 0.1)
 	else:
@@ -120,6 +133,11 @@ func _physics_process(delta: float) -> void:
 func _goal() -> Vector3:
 	if recall != null:
 		return recall
+	if guard:
+		if Game.state == "play":   # alarm: naar de post langs de muur
+			var q: Vector2 = POSTS[(idx * 4 + 1) % POSTS.size()] * (Data.COMPOUND / 14.0)
+			return Vector3(q.x, 0, q.y)
+		return Patrouille.line(idx)[_leg % 2]
 	if not helper and command in ["defend", "move"]:
 		return command_target + Vector3((idx%2)*1.6-0.8,0.0,(idx/2%2)*1.6-0.8)
 	if not helper and command == "attack" and is_instance_valid(command_enemy):

@@ -197,6 +197,7 @@ func _drive_driven(delta: float, live: bool) -> void:
 	if absf(_speed) > 0.01:
 		velocity = -global_transform.basis.z * _speed
 		move_and_slide()
+		Foliage.ram(self, absf(_speed), 1.5)   # tegen een boom aan: hij valt om
 		global_position.y = 0.0
 		if get_slide_collision_count() > 0:
 			_speed *= 0.5

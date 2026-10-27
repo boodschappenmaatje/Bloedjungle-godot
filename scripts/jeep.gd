@@ -204,6 +204,7 @@ func _drive(delta: float, live: bool) -> void:
 	rotation.y += _yaw_rate * delta
 	velocity = -global_transform.basis.z * _speed
 	move_and_slide()
+	Foliage.ram(self, absf(_speed), 6.0)   # tegen een boom aan: hij valt om
 	global_position.y = 0.0
 	if get_slide_collision_count() > 0:
 		_speed *= 0.6

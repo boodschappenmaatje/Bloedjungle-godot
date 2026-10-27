@@ -416,8 +416,31 @@ static func fell_near(at: Vector3, radius: float) -> int:
 	return n
 
 
+## Voertuig dat tegen een stam rijdt (aanroepen direct na move_and_slide, met de snelheid van vóór de botsing): bij genoeg
+## snelheid valt de geraakte boom om, van het voertuig af. Tank vanaf 1,5 m/s, bus 4, jeep 6, auto 7.
+static func ram(body: CharacterBody3D, speed: float, min_speed: float) -> void:
+	if speed < min_speed or _reg.is_empty() or not is_instance_valid(_root):
+		return
+	for i in body.get_slide_collision_count():
+		var hit := body.get_slide_collision(i).get_position()
+		var key := Vector2i(floori(hit.x / 36.0), floori(hit.z / 36.0))
+		var best: Dictionary = {}
+		var best_d := 2.0   # een stam of plankwortel zit binnen ~1,5 m van het raakpunt
+		for k in [key, key + Vector2i(1, 0), key + Vector2i(-1, 0), key + Vector2i(0, 1), key + Vector2i(0, -1)]:
+			for e: Dictionary in _reg.get(k, []):
+				if e["felled"]:
+					continue
+				var o: Vector3 = e["xf"].origin
+				var d := Vector2(o.x - hit.x, o.z - hit.z).length()
+				if d < best_d:
+					best_d = d
+					best = e
+		if not best.is_empty():
+			fell(best, body.global_position, false)
+
+
 ## Eén boom omver: weg uit de MultiMesh (voet, ver-variant, nepschaduw) en uit de botsing, en een vallende boom ervoor in de plaats.
-static func fell(e: Dictionary, from: Vector3) -> void:
+static func fell(e: Dictionary, from: Vector3, solid := true) -> void:
 	var parent := _root
 	e["felled"] = true
 	var xf: Transform3D = e["xf"]
@@ -435,8 +458,11 @@ static func fell(e: Dictionary, from: Vector3) -> void:
 	var stump_col := CylinderShape3D.new()
 	stump_col.radius = ((e["shape"] as CollisionShape3D).shape as CylinderShape3D).radius
 	stump_col.height = 1.3 if boom else 0.8
-	(e["shape"] as CollisionShape3D).set_deferred("shape", stump_col)
-	(e["shape"] as CollisionShape3D).set_deferred("position", Vector3(xf.origin.x, stump_col.height * 0.5, xf.origin.z))
+	if solid:
+		(e["shape"] as CollisionShape3D).set_deferred("shape", stump_col)
+		(e["shape"] as CollisionShape3D).set_deferred("position", Vector3(xf.origin.x, stump_col.height * 0.5, xf.origin.z))
+	else:   # door een voertuig geveld: stronk en stam worden platgereden, het voertuig blijft niet haken
+		(e["shape"] as CollisionShape3D).set_deferred("disabled", true)
 	# de stronk blijft op de plek (een klein stuk van de oude stam, met splinterrand)
 	var stump := MeshInstance3D.new()
 	stump.mesh = jungle_mesh("Stomp2" if boom else "Stomp1")
@@ -447,7 +473,7 @@ static func fell(e: Dictionary, from: Vector3) -> void:
 		away = Vector3.RIGHT.rotated(Vector3.UP, randf() * TAU)
 	var fall = load("res://scripts/boom_val.gd").new()
 	parent.add_child(fall)
-	fall.start(jungle_mesh(e["vn"]), xf, away.normalized(), boom, e["col"])
+	fall.start(jungle_mesh(e["vn"]), xf, away.normalized(), boom, e["col"], solid)
 
 
 ## Vaste nepschaduwen (platte ovalen) voor één vak bomen.

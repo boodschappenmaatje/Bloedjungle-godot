@@ -16,10 +16,12 @@ var _axis := Vector3.RIGHT
 var _landed := false
 var _cracked := false
 var _origin := Vector3.ZERO
+var _solid := true       # false = door een voertuig geveld: de stam krijgt geen botsing
 
 
 ## mesh = de boom (uit jungle_mesh), xf = zijn plek en schaal, dir = richting waarin hij valt (vlak, lengte 1).
-func start(mesh: Mesh, xf: Transform3D, dir: Vector3, boom: bool, col := Color.WHITE) -> void:
+func start(mesh: Mesh, xf: Transform3D, dir: Vector3, boom: bool, col := Color.WHITE, solid := true) -> void:
+	_solid = solid
 	_origin = xf.origin
 	_dir = dir
 	_axis = Vector3.UP.cross(dir).normalized()
@@ -77,6 +79,8 @@ func _land() -> void:
 	Fx._burst(parent, tip + Vector3.UP * 0.8, Vector3.UP, 16, Color(0.24, 0.42, 0.14), 0.12, 3.0, Vector3(0.12, 0.02, 0.12))
 	Fx._burst(parent, _origin + _dir * (_len * 0.5) + Vector3.UP * 0.4, Vector3.UP, 8, Color(0.58, 0.52, 0.42), 0.07, 2.0)
 	Sfx.play("boom", 0.28, tip)
+	if not _solid:
+		return
 	# de liggende stam: een lage balk waar je niet doorheen loopt, maar die ook kogels opvangt (dekking)
 	var body := StaticBody3D.new()
 	body.collision_layer = Kit.LAYER_NATURE

@@ -25,6 +25,9 @@ uniform vec4 view_e1 = vec4(0.0);
 uniform vec4 view_e2 = vec4(0.0);
 uniform float fade_amount = 1.0;
 uniform bool fade_sightline = false;
+// Wie er door de struiken loopt (speler, soldaten, vijanden, voertuigen): tot 8 stuks, x/y = positie op de grond (x, z),
+// z = straal waarbinnen het blad opzij gaat, w = kracht (0 = niet gebruikt). Zet door Foliage.update_pushers.
+uniform vec4 pushers[8];
 varying vec3 vcol;
 varying vec3 world_leaf;
 
@@ -44,6 +47,35 @@ void vertex() {
 	VERTEX.x += sin(TIME * speed + ph + VERTEX.y * 0.9) * sway * m;
 	VERTEX.z += cos(TIME * speed * 0.8 + ph * 1.3) * sway * 0.6 * m;
 	VERTEX.y += sin(TIME * speed * 1.7 + ph) * sway * 0.25 * m;
+	// Struiken en varens buigen weg van wie erdoorheen loopt, en ritselen zolang het duurt. Alleen laag blad
+	// (onder ~2 m): de kronen van palmen en bomen blijven staan. Wortels zitten vast, de bladpunten bewegen het meest.
+	vec3 base_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
+	float low = 1.0 - smoothstep(1.3, 2.3, base_pos.y);
+	if (low > 0.0 && COLOR.a > 0.0) {
+		vec2 push = vec2(0.0);
+		float shake = 0.0;
+		for (int i = 0; i < 8; i++) {
+			vec4 pu = pushers[i];
+			if (pu.w <= 0.0) {
+				continue;
+			}
+			vec2 away = base_pos.xz - pu.xy;
+			float d = length(away);
+			float influence = (1.0 - smoothstep(pu.z * 0.3, pu.z, d)) * pu.w;
+			push += away / max(d, 0.05) * influence * pu.z * 0.85;
+			shake += influence;
+		}
+		float w = COLOR.a * low;
+		push *= w;
+		float len = length(push);
+		if (len > 0.6) {
+			push *= 0.6 / len;
+			len = 0.6;
+		}
+		shake = min(shake, 1.0) * w;
+		vec2 rustle = vec2(sin(TIME * 17.0 + ph * 3.0 + base_pos.y * 4.0), cos(TIME * 14.0 + ph * 2.0)) * 0.045 * shake;
+		VERTEX += transpose(MODEL_NORMAL_MATRIX) * vec3(push.x + rustle.x, -len * 0.4, push.y + rustle.y);
+	}
 	vcol = COLOR.rgb;
 	world_leaf = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }

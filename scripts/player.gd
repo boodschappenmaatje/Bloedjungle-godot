@@ -34,6 +34,8 @@ var _exhausted := false     # leeg geraakt: pas weer sprinten als er wat bij is
 var _reload_dur := 1.0      # hoe lang het lopende herladen duurt (de herlaadbeweging past zich daaraan aan)
 var _dust_t := 0.0
 var _shot_sequence := 0
+# Cumulatieve, begrensde spreiding na langdurig automatisch vuur; rust herstelt de basiskwaliteit.
+var _weapon_bloom := 0.0
 
 const STAIR_FOOT := 1.8      # de klimladder staat aan de +X zijde van de toren (zie bron/wachttoren)
 const STAIR_TOP := 1.3
@@ -138,6 +140,7 @@ func _physics_process(delta: float) -> void:
 	rotation.y = face
 
 	fire_t -= delta
+	_weapon_bloom = maxf(0.0, _weapon_bloom - 0.85 * delta)
 	if reload_t > 0.0:
 		reload_t -= delta
 		if reload_t <= 0.0:
@@ -353,8 +356,13 @@ func _shoot(w: Dictionary) -> void:
 		var camera := get_parent().get_node_or_null("Camera")
 		if camera and camera.has_method("combat_impulse"):
 			camera.call("combat_impulse", camera_impulse)
+	# Het eerste schot van een nieuwe burst blijft even nauwkeurig als voorheen.
+	# Alleen Thompson/MG42 stapelen daarna tijdelijke spreiding op; schade en pierce veranderen niet.
+	var shot_spread: float = float(w.spread) * (1.0 + _weapon_bloom)
+	if w.has("bloom_step"):
+		_weapon_bloom = minf(float(w.get("bloom_max", 0.0)), _weapon_bloom + float(w.bloom_step))
 	for i in w.pellets:
-		var a: float = face + (randf() - 0.5) * w.spread * 2.0
+		var a: float = face + (randf() - 0.5) * shot_spread * 2.0
 		var projectile_visual := tracer_weapon if weapon != "trench" or i == 0 else ""
 		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0), 0.28 if elev > 1.0 else 0.0, 0.0, projectile_visual)
 	if weapon == "bazooka":
@@ -366,6 +374,9 @@ func _shoot(w: Dictionary) -> void:
 		var axes := model.casing_axes()
 		Fx.casing(get_parent(), model.casing_position(), axes[0], axes[1])
 	Sfx.play(Data.WEAPON_SND[weapon])
+	# Laatste Garand-schot werpt de lege clip uit. De audio mag niet elk schot afgaan.
+	if weapon == "garand" and ammo <= 0:
+		Sfx.play("garand_clip", 0.85)
 	Game.changed.emit()
 	if ammo <= 0:
 		_reload(w)
@@ -382,6 +393,7 @@ func equip(id: String) -> void:
 	model.set_gun(id)
 	ammo = Game.owned[id].ammo
 	_shot_sequence = 0
+	_weapon_bloom = 0.0
 	reload_t = 0.0
 	fire_t = 0.3
 	Game.changed.emit()

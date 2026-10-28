@@ -8,6 +8,16 @@
 
 Deze afspraken gelden voor **Codex én Claude Code** bij alle toekomstige 3D-assetwerkzaamheden, ook als de gebruiker alleen een korte opdracht geeft.
 
+### Snelle 3-stappenworkflow: maken → bekijken → mergen
+
+Als de gebruiker korte opdrachten geeft zoals **"voertuig maken"**, **"voertuig bekijken"** en **"voertuig naar main en OTA"**, volg deze efficiënte workflow bij **Codex én Claude Code**, zonder nieuwe projecten of dubbele rondes:
+
+1. **MAKEN:** gebruik de bestaande repo, bron- en assetbibliotheken en laatst goedgekeurde specificatie. Voor een nog niet goedgekeurd nieuw ontwerp: stel uitsluitend noodzakelijke korte ontwerpvragen en vraag één expliciete ontwerpgoedkeuring (zie hierna). Produceer vervolgens het volledige echte Blender-HQ-bronmodel, geoptimaliseerde GLB, afgesproken werkende animaties en gerichte tests. **Voeg de GLB direct toe aan de bestaande interactieve 3D-viewer** zodat een tweede bouwsessie niet nodig is. Maak een featurebranch en Draft PR; rapporteer alleen status, eventuele blokkers en viewerlink indien beschikbaar.
+2. **BEKIJKEN:** de gebruiker wil het model op iPhone kunnen draaien, zoomen en echte clips afspelen. Hergebruik de al gebouwde viewer op dezelfde branch en geef een **werkend geverifieerd** previewadres of leg precies uit hoe de bestaande viewer bereikbaar is; claim geen werkende openbare URL zonder verificatie. Verwerk concrete feedback op dezelfde branch, zonder alles opnieuw te bouwen. De gebruiker keurt de zichtbare kwaliteit expliciet goed.
+3. **MERGEN:** uitsluitend na expliciete instructie **"merge naar main"** én modelgoedkeuring: controleer dat de juiste complete GLB/animaties/Godot-integratie in de PR zitten, dat kritieke tests/CI slagen en dat bestaande gameplay intact is; merge vervolgens naar `main`. **Een push naar `main` kan de gedeelde OTA-update automatisch publiceren**: benoem dit vooraf en voer de merge alleen uit als de gebruiker tevens expliciet OTA-publicatie heeft goedgekeurd, bijvoorbeeld met de korte opdracht **"voertuig naar main en OTA"**. Verifieer de OTA-workflow en het gepubliceerde manifest voordat je zegt dat de update op iPhone klaarstaat.
+
+**Snelheidsregels:** één branch/PR en één assetversie door de volledige cyclus; geen herhaalde brede analyses, exports, headless tests of iPhone-FPS-rondes zonder concrete aanleiding. Geef alleen essentiële goedkeuringsmomenten en blokkerende fouten terug. Bij mislukkende regressies leg uit of ze ook al op `main` bestaan; zet nooit blind veiligheids- of gameplaycontroles uit. **Fase 1 en 2 mogen niet stilzwijgend `main` of de gedeelde OTA-feed wijzigen.**
+
 ### Nieuwe modellen: ontwerp vóór productie
 1. Bij een nieuwe asset (bijv. "maak een straaljager") bespreek je **eerst met de gebruiker** het type en uiterlijk, de rol in de game, interacties/gameplayfuncties, beweegbare onderdelen, afzonderlijke Blender-/glTF-animaties, Godot-gestuurde bewegingen, geluid/VFX, schade/vernietiging en mobile prestatiebudgetten. Bied concrete, beknopte keuzes aan en stel vragen stapsgewijs, niet allemaal tegelijk.
 2. Sla de afspraken op in een versieerbare **Asset Design Specification** bij de asset, met exacte clipnamen, pivots, clipsduur/loopgedrag, triggers, implementatieverantwoordelijkheid Blender versus Godot en acceptatiecriteria.

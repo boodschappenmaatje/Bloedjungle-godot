@@ -47,6 +47,10 @@ Nog niet: winkel, andere wapens kopen, granaten, gebouwen, jeep, gore, geluid. D
 
 Scènes en scripts samen zijn ongeveer 40 KB, ruim onder de 200 KB van Xogot gratis.
 
+## Native bunker asset test
+
+De aparte [3D Asset Test Zone](docs/iphone-asset-test/README.md) test de High Quality Showcase-bunker via de bestaande GitHub PCK-updater, met Godot PBR-import, camera presets en live FPS/geheugenvelden.
+
 ## Testen op je iPhone met Xogot
 
 1. Open Xogot en tik op het download-icoon (pijl omlaag) bovenaan.

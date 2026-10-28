@@ -2,6 +2,8 @@ name: iOS unsigned IPA
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main, feature/native-iphone-asset-test]
   push:
     branches: [main, feature/native-ios-complete]
     paths-ignore: ["docs/**", "*.md"]
@@ -54,9 +56,9 @@ jobs:
           cp -R "$RUNNER_TEMP/templates/templates/." "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable/"
           test -s "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable/ios.zip"
           xcodebuild -version
-      # On a pristine checkout Godot initially parses autoloads before imported
-      # GLB scenes exist. First pass builds .godot/imported; only the second
-      # pass is used for strict parser validation.
+      # On a pristine checkout, preload-dependent scripts (including Bus/Auto
+      # factories called from stad.gd) can fail before GLB loaders exist. The
+      # first pass imports those assets; only the second pass is validated.
       - name: Prime Godot asset import cache
         shell: bash
         run: |
@@ -70,6 +72,10 @@ jobs:
           set -euo pipefail
           "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/import.log"
           "$GODOT_BIN" --headless --path . --quit-after 10 2>&1 | tee "$RUNNER_TEMP/startup.log"
+          "$GODOT_BIN" --headless --path . -s tests/bunker_asset_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/bunker_asset_test.log"
+          "$GODOT_BIN" --headless --path . -s tests/stad_vehicle_factory_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/stad_vehicle_factory_test.log"
+          "$GODOT_BIN" --headless --path . -s tests/smoke_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/smoke_test.log"
+          "$GODOT_BIN" --headless --path . -s tests/ota_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/ota_test.log"
           if grep -E '(^| )(SCRIPT ERROR|Parse Error|Failed loading resource)' "$RUNNER_TEMP/import.log" "$RUNNER_TEMP/startup.log"; then
             echo "Godot import/startup logged errors; see the retained diagnostics artifact" >&2
             exit 1
@@ -87,6 +93,10 @@ jobs:
             ${{ runner.temp }}/first-import.log
             ${{ runner.temp }}/import.log
             ${{ runner.temp }}/startup.log
+            ${{ runner.temp }}/bunker_asset_test.log
+            ${{ runner.temp }}/stad_vehicle_factory_test.log
+            ${{ runner.temp }}/smoke_test.log
+            ${{ runner.temp }}/ota_test.log
           if-no-files-found: ignore
           retention-days: 7
       - name: Export iOS project

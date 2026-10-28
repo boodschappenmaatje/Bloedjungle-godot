@@ -3,11 +3,9 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://bslpdkoi7rr2g"
-path.s3tc="res://.godot/imported/soldaat_vq2_uitrusting_albedo.jpg-8cd7cd26176584d28865770aea4c35dd.s3tc.ctex"
-path.etc2="res://.godot/imported/soldaat_vq2_uitrusting_albedo.jpg-8cd7cd26176584d28865770aea4c35dd.etc2.ctex"
+path="res://.godot/imported/soldaat_vq2_uitrusting_albedo.jpg-8cd7cd26176584d28865770aea4c35dd.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
 "md5": "7d03cce7b955a10a9843374393a4a460"
@@ -16,7 +14,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/soldaat_vq2_uitrusting_albedo.jpg"
-dest_files=["res://.godot/imported/soldaat_vq2_uitrusting_albedo.jpg-8cd7cd26176584d28865770aea4c35dd.s3tc.ctex", "res://.godot/imported/soldaat_vq2_uitrusting_albedo.jpg-8cd7cd26176584d28865770aea4c35dd.etc2.ctex"]
+dest_files=["res://.godot/imported/soldaat_vq2_uitrusting_albedo.jpg-8cd7cd26176584d28865770aea4c35dd.ctex"]
 
 [params]
 

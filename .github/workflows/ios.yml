@@ -73,6 +73,7 @@ jobs:
           "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/import.log"
           "$GODOT_BIN" --headless --path . --quit-after 10 2>&1 | tee "$RUNNER_TEMP/startup.log"
           "$GODOT_BIN" --headless --path . -s tests/bunker_asset_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/bunker_asset_test.log"
+          "$GODOT_BIN" --headless --path . -s tests/bunker_asset_test_zone_v2_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/bunker_asset_test_zone_v2_test.log"
           "$GODOT_BIN" --headless --path . -s tests/stad_vehicle_factory_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/stad_vehicle_factory_test.log"
           "$GODOT_BIN" --headless --path . -s tests/smoke_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/smoke_test.log"
           "$GODOT_BIN" --headless --path . -s tests/ota_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/ota_test.log"
@@ -94,6 +95,7 @@ jobs:
             ${{ runner.temp }}/import.log
             ${{ runner.temp }}/startup.log
             ${{ runner.temp }}/bunker_asset_test.log
+            ${{ runner.temp }}/bunker_asset_test_zone_v2_test.log
             ${{ runner.temp }}/stad_vehicle_factory_test.log
             ${{ runner.temp }}/smoke_test.log
             ${{ runner.temp }}/ota_test.log

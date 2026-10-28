@@ -10,7 +10,7 @@ Voor het maken, aanpassen, verbeteren, exporteren of animeren van 3D-modellen, e
 3. Relevante `bron/<model>/README.md`, bestaande Blender-generator, Godot-scène en spelcode.
 
 ### Gedrag
-- **Nieuwe assets:** eerst beknopt overleg met gebruiker over uiterlijk, functies, bewegende onderdelen, benodigde Blender-clips en Godot-gedrag; leg de specificatie vast; **geen definitieve productie vóór expliciete ontwerpgoedkeuring**.
+- **VERPLICHTE ONTWERPSTOP:** bij **elk nieuw model én ingrijpend visueel herontwerp** (bijvoorbeeld de bestaande speler veranderen in een Rambo-achtige militair) mag je vóór expliciete goedkeuring alleen bestaande bestanden onderzoeken en een ontwerp met keuzes voor uiterlijk, kleding, Poly Haven-materialen, gameplay en animaties voorstellen. **Niet modelleren, texturen baken/downloaden of game-assets aanpassen vóór de gebruiker ná de specificatie zegt: ‘Ontwerp goedgekeurd, bouwen’.** Alleen een reeds goedgekeurd model technisch in de game vervangen is uitgezonderd. Zie de canonieke paragraaf ‘Verplichte ONTWERPSTOP’.
 - **Bestaande assets vervangen:** korte opdracht volstaat; inspecteer bestaande code en behoud gameplayfuncties, animaties, ingangen, colliders, slooplogica en interacties. Maak tests en Draft PR zonder overbodige nieuwe vragen.
 - Gebruik indien beschikbaar de lokale **Bloedjungle 3D Production Pipeline 1.0 High Quality Showcase** op de iMac voor een HQ-bronmodel en aparte geoptimaliseerde Godot-gameversie; beweer niet dat lokaal is uitgevoerd als die toegang ontbreekt.
 - Produceer daadwerkelijk herhaalbare Blender `.blend`/`.py`, echte `.glb` en PBR-kaarten; geen prompt/renders in plaats van assets.

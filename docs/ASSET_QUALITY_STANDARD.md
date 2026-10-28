@@ -25,6 +25,14 @@ Deze afspraken gelden voor **Codex én Claude Code** bij alle toekomstige 3D-ass
 - Op de bestaande iMac zijn **Solid Viewport en Cycles CPU** de betrouwbare route. EEVEE/Material Preview zijn niet bevestigd stabiel; ga er niet stilzwijgend van uit dat zij werken. Indien lokale Blender-toegang ontbreekt, zeg dat expliciet en claim geen lokale productie.
 - Houd de bestaande **VQ2-referenties** als minimale kwaliteitseis; eerdere stijlafspraken, kleuren, top-down leesbaarheid en gameplaybehoud blijven van kracht.
 
+### iPhone-preview als .usdz (voorkeurswerkwijze, sinds 2026-10-28)
+Bij **ieder** Bloedjungle 3D-model (nieuw, verbeterd of vervangen) lever je naast de `.blend`-bron en de geoptimaliseerde Godot-`.glb` ook een **`.usdz`-preview** die de gebruiker kan downloaden en rechtstreeks in de Bestanden-app op iPhone (Quick Look/AR) kan openen, zonder website of extra viewer.
+- **Export:** uit dezelfde Blender-scène/generator als de GLB (`bpy.ops.wm.usd_export` met `.usdz`-extensie, `export_materials`, `generate_preview_surface`, `export_textures`/gepackte textures, `export_animation` waar clips bestaan, meters, Y-up). Zet het stappen in het bestaande exportscript in `bron/<asset>/`, zodat het reproduceerbaar is.
+- **Inhoud:** materialen/PBR-texturen als UsdPreviewSurface. Animaties alleen **waar mogelijk** meenemen (transform- of skeletale Blender-clips); Godot-gestuurde bewegingen en effecten kunnen niet mee en worden expliciet genoemd. Bij meerdere clips: meld welke clip(s) in de USDZ zitten.
+- **Grootte:** houd de preview iPhone-vriendelijk (bij voorkeur ruim onder ~50 MB; textures zo nodig 1K–2K). De USDZ is een kijkbestand en vervangt noch de `.blend` noch de Godot-GLB.
+- **Oplevering:** bewaar in `assets/preview/<asset>.usdz` of een door de gebruiker gewenste map, of in de gedeelde projectmap, en geef **duidelijke downloadlinks**. Gebruik de iCloud Drive-previewmap van de gebruiker alleen wanneer lokale toegang beschikbaar is; verzin geen toegang.
+- **Controle:** valideer de USDZ-structuur (zip, `.usdc`/`.usda` + textures aanwezig, materialen gebonden, animatie-timesamples aanwezig indien gemeld). Meld `PASS / WARNING / NOT RUN`; een weergave op een fysieke iPhone/Quick Look is `NOT RUN` zolang die niet echt is gedaan.
+
 ### Testen, samenwerken en publicatie
 - Gebruik passende Godot-import-, scene-, gameplay- en animatieregressietests. Na een al gevalideerde pipeline **geen eindeloze performancetests**: doe een gerichte check per nieuw model en uitgebreid testen bij duidelijke regressie of zware systeemwijzigingen.
 - Vermeld `PASS / WARNING / NOT RUN`, en claim nooit fysieke iPhone-FPS zonder echte apparaatmeting. Een afzonderlijke Asset Test Zone bewijst niet automatisch gameplay-FPS.
@@ -84,6 +92,7 @@ Een asset is **niet af** zonder:
 - [ ] Nieuwe `.glb`, bewerkbare Blender-bron, herhaalbaar exportscript en bron-/licentieinformatie opgeslagen.
 - [ ] Objectnaam, pivots, metermaat, collisions, gameplay-nodecontracten en eventueel destructie-/bouwgedrag behouden en getest.
 - [ ] Werkelijke driehoeken, materialen, surfaces, texturebronresoluties en geheugen-/prestatie-observaties gerapporteerd.
+- [ ] `.usdz` iPhone-preview (materialen, animaties waar mogelijk) opgeleverd met downloadlink.
 - [ ] 3D-viewer uitgebreid met echte asset, iPhone-vriendelijke besturing en animatie-afspeelfuncties wanneer clips bestaan.
 - [ ] Godot-import en relevante regressietests uitgevoerd; niet-uitgevoerde fysieke iPhone-check expliciet vermeld.
 - [ ] Geen ongewenste wijziging aan unrelated assets, VFX of renderer.

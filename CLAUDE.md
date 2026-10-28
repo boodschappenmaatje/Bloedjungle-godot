@@ -13,7 +13,8 @@ Lees vervolgens [docs/vq2/README.md](docs/vq2/README.md) en de relevante `bron/<
 2. Behoud bestaande Godot-functies, assetpaden, pivots, collision, deuren, dak/klim-/slooplogica, rigs en animatiecontracten. De **statische** `legerjeep.glb` is niet `jeep.glb` met bestuurbare gameplay.
 3. Voeg alle nieuwe/gewijzigde 3D-modellen toe aan de **bestaande** `tools/blender-vq2-viewer/` met 360°/zoom, gamecamera, oud/nieuw waar relevant en **zichtbaar werkende animatiebediening** voor echte GLB-clips. Voor scriptgestuurde animaties ook een Godot-demonstratie. Geen nepclips.
 4. Test echte GLB-uitvoer, Godot-import en regressies; maak voor/na-opnames met identieke camera en belichting; rapporteer triangle/material/texture en performance. Noem niet-uitgevoerde iPhone/Safari/Xogot-metingen expliciet.
-5. Gebruik een **aparte branch + Draft PR** bij game-/modelwijzigingen. **Niet naar main mergen of naar de gedeelde `updates`-OTA publiceren** zonder afzonderlijke expliciete gebruikersgoedkeuring.
+5. Lever bij elk model ook een **`.usdz`-iPhone-preview** (materialen, animaties waar mogelijk) met downloadlinks, naast `.blend` en Godot-`.glb`; zie de standaard, sectie "iPhone-preview als .usdz".
+6. Gebruik een **aparte branch + Draft PR** bij game-/modelwijzigingen. **Niet naar main mergen of naar de gedeelde `updates`-OTA publiceren** zonder afzonderlijke expliciete gebruikersgoedkeuring.
 
 **Voorkom stijlversplintering:** `docs/ASSET_QUALITY_STANDARD.md` is de enige inhoudelijke standaard, ook voor ChatGPT Codex via `AGENTS.md`. Wijzig deze canonieke standaard als de gebruiker een nieuwe versie goedkeurt; schrijf geen zelfstandige tegenstrijdige Claude-stijlregels.
 

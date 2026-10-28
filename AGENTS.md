@@ -18,6 +18,7 @@ Voor het maken, aanpassen, verbeteren, exporteren of animeren van 3D-modellen, e
 - **Behoud de bestaande scenehiërarchie, rigs, animaties, colliders en gameplay**; statische legerjeep is niet de speelbare jeep.
 - Neem elk nieuw/gewijzigd model op in `tools/blender-vq2-viewer/`; 360° draaien en zoom, voor/na bij upgrades, **echte** geanimeerde clips afspelen als aanwezig. Toon anders eerlijk dat er geen clips zijn.
 - Bewijs kwaliteit via echte Blender- en Godot-gamecamera-renders, import- en regressietests; claim geen fysieke iPhone-test zonder meting.
+- Lever bij elk model ook een **`.usdz`-iPhone-preview** (materialen, animaties waar mogelijk) met downloadlinks, naast `.blend` en Godot-`.glb`; zie de canonieke standaard.
 - Werk op een featurebranch + Draft PR; **geen merge naar `main` en geen publicatie naar gedeelde `updates`-OTA zonder afzonderlijke uitdrukkelijke gebruikersgoedkeuring**.
 - Eén bron van waarheid: **wijzig de canonieke standaard**, niet enkel dit korte Codex-bestand. Dezelfde regels gelden voor Claude Code via `CLAUDE.md`.
 

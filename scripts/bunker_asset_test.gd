@@ -429,15 +429,19 @@ func _update_hud() -> void:
 	elif measurement_state == "complete":
 		state_text = "Meting gereed · %d frames" % frame_times_ms.size()
 	var refresh_text := "n/b" if display_refresh_hz <= 0.0 else "%.0f Hz" % display_refresh_hz
-	var capped_text := " · schermlimiet waarschijnlijk" if display_refresh_hz > 0.0 and average >= display_refresh_hz * 0.98 else ""
+	var project_fps_cap := float(ProjectSettings.get_setting("run/max_fps", 0))
+	var refresh_cap_hit := display_refresh_hz > 0.0 and average >= display_refresh_hz * 0.98
+	var project_cap_hit := project_fps_cap > 0.0 and average >= project_fps_cap * 0.98
+	var cap_text := "n/b" if project_fps_cap <= 0.0 else "%.0f FPS" % project_fps_cap
+	var capped_text := " · limiet waarschijnlijk" if refresh_cap_hit or project_cap_hit else ""
 	var values := last_summary
 	var process_text := "n/b" # Godot has no portable actual process-RSS monitor.
 	var godot_text := "n/b" if current_godot_mb <= 0.0 else "%.1f MB (piek %.1f)" % [current_godot_mb, maxf(peak_godot_mb, current_godot_mb)]
 	var gpu_text := "n/b" if current_renderer_mb <= 0.0 else "%.1f MB (piek %.1f)" % [current_renderer_mb, maxf(peak_renderer_mb, current_renderer_mb)]
-	metrics_label.text = "%s\nNu %.1f ms / %.0f FPS · gem %.1f FPS · min/max %.0f/%.0f\n1%% low %.1f FPS · p99 %.2f ms · scherm %s%s\nGodot allocatie %s · renderergeheugen %s · proces-RSS %s\nDrawcalls %s (piek %s) · driehoeken %s (piek %s)\n%0.1f / 30 s gemeten" % [
+	metrics_label.text = "%s\nNu %.1f ms / %.0f FPS · gem %.1f FPS · min/max %.0f/%.0f\n1%% low %.1f FPS · p99 %.2f ms · scherm %s · spelcap %s%s\nGodot allocatie %s · renderergeheugen %s · proces-RSS %s\nDrawcalls %s (piek %s) · renderprimitieven %s (piek %s)\n%0.1f / 30 s gemeten" % [
 		state_text, current_frame_ms, current_fps, float(values.get("average_fps", 0.0)),
 		float(values.get("minimum_fps", 0.0)), float(values.get("maximum_fps", 0.0)),
-		float(values.get("one_percent_low_fps", 0.0)), float(values.get("p99_frame_time_ms", 0.0)), refresh_text, capped_text,
+		float(values.get("one_percent_low_fps", 0.0)), float(values.get("p99_frame_time_ms", 0.0)), refresh_text, cap_text, capped_text,
 		godot_text, gpu_text, process_text,
 		"n/b" if current_draw_calls < 0 else str(current_draw_calls), "n/b" if peak_draw_calls < 0 else str(peak_draw_calls),
 		"n/b" if current_primitives < 0 else str(current_primitives), "n/b" if peak_primitives < 0 else str(peak_primitives), measured_elapsed]
@@ -470,6 +474,8 @@ func _save_metrics() -> void:
 		status_label_set("Nog geen volledige meting · start eerst 30 s")
 		return
 	var refresh_match := display_refresh_hz > 0.0 and float(last_summary.average_fps) >= display_refresh_hz * 0.98
+	var project_fps_cap := float(ProjectSettings.get_setting("run/max_fps", 0))
+	var project_cap_match := project_fps_cap > 0.0 and float(last_summary.average_fps) >= project_fps_cap * 0.98
 	var report := {
 		"schema": 2,
 		"asset": "Bloedjungle_Bunker_HQ_Game",
@@ -497,8 +503,9 @@ func _save_metrics() -> void:
 		"render_primitives_current": current_primitives if current_primitives > 0 else null,
 		"render_primitives_peak": peak_primitives if peak_primitives > 0 else null,
 		"refresh_ceiling_likely": refresh_match,
+		"project_fps_cap_likely": project_cap_match,
 		"frame_times_ms": frame_times_ms,
-		"project_max_fps": ProjectSettings.get_setting("run/max_fps", 0),
+		"project_max_fps": project_fps_cap,
 		"measurement_notes": {
 			"fps": "Per-frame process delta; average FPS is frames divided by elapsed sampled time.",
 			"one_percent_low": "Arithmetic mean FPS of the slowest ceil(1% of frames), ranked by frame time.",
@@ -506,7 +513,8 @@ func _save_metrics() -> void:
 			"godot_static_memory": "Godot-reported allocation, not total process RSS.",
 			"renderer_video_memory": "Godot renderer estimate; may be unavailable and is not a measured physical VRAM allocation.",
 			"process_rss": "Unavailable through the portable Godot API; null is intentional.",
-			"refresh_ceiling": "Average within 2% of reported display refresh suggests a refresh/vsync ceiling; it does not measure uncapped GPU throughput."
+			"refresh_ceiling": "Average within 2% of reported display refresh suggests a refresh/vsync ceiling; it does not measure uncapped GPU throughput.",
+			"project_fps_cap": "Average within 2% of project run/max_fps suggests the application cap is active."
 		}
 	}
 	var file := FileAccess.open("user://bunker_asset_test_v2_latest.json", FileAccess.WRITE)

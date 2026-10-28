@@ -28,7 +28,7 @@ Tik **START 30 S**. De scène warmt eerst 5 seconden op; daarna verzamelt ze de 
 - Minimum en maximum FPS zijn afgeleid van respectievelijk de langste en kortste frame-delta.
 - 1%-low FPS = rekenkundig gemiddelde van de FPS van de traagste `ceil(1% × aantal frames)` frames, gerangschikt op frametime.
 - p99-frametime = nearest-rank 99e percentiel van de frametimes in milliseconden.
-- De gerapporteerde display-refreshrate komt uit Godots display API. Een gemiddelde binnen 2% van die waarde wordt als **waarschijnlijke refresh/vsync-limiet** gemarkeerd; het bewijst geen ongelimiteerde GPU-capaciteit.
+- De gerapporteerde display-refreshrate komt uit Godots display API; ook de projectlimiet (`run/max_fps`, momenteel 120) staat in het rapport. Een gemiddelde binnen 2% van één van beide waarden wordt als **waarschijnlijke limiet** gemarkeerd. Dit bewijst geen ongelimiteerde GPU-capaciteit en maakt zichtbaar wanneer 120 FPS waarschijnlijk door een cap wordt begrensd.
 
 Na een complete opname slaat **BEWAAR JSON** `user://bunker_asset_test_v2_latest.json` op met samenvatting, scenario/profiel, apparaat/renderer, refreshrate en de volledige reeks frametimes.
 

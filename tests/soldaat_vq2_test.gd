@@ -118,6 +118,19 @@ func _run() -> void:
 		has_dark_hair = has_dark_hair or mat.resource_name == "Commando Hair · Short Dark Brown"
 	_check(has_gloves, "volledig gesloten handschoenmateriaal ontbreekt")
 	_check(has_dark_hair, "kort donker haarmateriaal ontbreekt")
+	# HQ v2 has real skinned garment shells and compact individual gear pieces.
+	for part in ["Uniform_Jacket_Shell", "Uniform_Trousers_Shell", "Vest_JungleCommando", "Gloves_Closed", "Hair_Cropped", "Knee_Reinforcements", "Elbow_Reinforcements", "Boot_Sole_L", "Boot_Sole_R", "Boot_Laces_L", "Boot_Laces_R"]:
+		var part_node := commando.find_child(part, true, false) as MeshInstance3D
+		_check(part_node != null and part_node.visible, "HQ Jungle Commando onderdeel %s ontbreekt" % part)
+		if part_node != null:
+			_check(part_node.skin != null and part_node.get_node_or_null(part_node.skeleton) == commando_skel, "%s volgt niet de bestaande rig" % part)
+	# Exercise the actual weapon IK over stationary, locomotion, firing and hit poses.
+	for clip in ["stil", "lopen", "rennen", "schieten", "geraakt"]:
+		commando.play(clip, 0.0)
+		for _i in 10:
+			await process_frame
+		_check(commando.pose.reach_gap["R"] < 0.025 and commando.pose.reach_gap["L"] < 0.025,
+			"HQ wapenhouding bereikt beide handen niet tijdens %s (R %.3f, L %.3f)" % [clip, commando.pose.reach_gap["R"], commando.pose.reach_gap["L"]])
 
 	# hoofdband en flits
 	var pl: SoldierModel = models["speler:bloot"]

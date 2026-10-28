@@ -16,6 +16,9 @@ def args():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument("--source", required=True, type=Path)
     p.add_argument("--output-dir", required=True, type=Path)
+    p.add_argument("--action", default="stil")
+    p.add_argument("--frame", type=int)
+    p.add_argument("--views", action="append", choices=("jungle_commando_3q.png", "jungle_commando_front.png", "jungle_commando_back.png", "jungle_commando_side.png", "jungle_commando_gameplay_topdown.png"))
     return p.parse_args(raw)
 
 
@@ -88,20 +91,32 @@ def main():
         "jungle_commando_front.png": (Vector((0.0, -4.4, 0.8)), (1280, 1600), 48),
         "jungle_commando_back.png": (Vector((0.0, 4.4, 0.85)), (1280, 1600), 48),
         "jungle_commando_side.png": (Vector((4.3, 0.0, 0.82)), (1280, 1600), 48),
-        "jungle_commando_gameplay_topdown.png": (Vector((0.0, -2.2, 5.0)), (1280, 1600), 48),
+        "jungle_commando_gameplay_topdown.png": (Vector((0.0, -14.8, 24.5)), (1920, 1080), 64),
     }
     report = {"status": "PASS", "source": str(opt.source), "engine": "Cycles CPU", "renders": []}
-    action = bpy.data.actions.get("stil")
+    action = bpy.data.actions.get(opt.action)
     rig = bpy.data.objects.get("Rig")
     if rig and action:
         rig.animation_data_create()
         rig.animation_data.action = action
-        scene.frame_set(int((action.frame_range[0] + action.frame_range[1]) / 2))
-    for name, (offset, resolution, samples) in views.items():
+        frame = int((action.frame_range[0] + action.frame_range[1]) / 2) if opt.frame is None else max(int(action.frame_range[0]), min(int(action.frame_range[1]), opt.frame))
+        scene.frame_set(frame)
+        report["action"] = action.name
+        report["frame"] = frame
+    elif opt.action:
+        raise RuntimeError(f"Requested action {opt.action!r} is missing")
+    for name in opt.views or list(views):
+        offset, resolution, samples = views[name]
         output = opt.output_dir / name
         if output.exists():
             raise FileExistsError(output)
-        camera.location = target + offset.normalized() * (height * (3.2 if "topdown" not in name else 3.8))
+        if name == "jungle_commando_gameplay_topdown.png":
+            # Match CameraRig's standard-gameplay profile: 45° FOV, 58° elevation, 28m.
+            camera.data.lens = 36.0 / (2.0 * math.tan(math.radians(45.0) * 0.5))
+            camera.location = target + offset
+        else:
+            camera.data.lens = 55
+            camera.location = target + offset.normalized() * height * 3.2
         aim(camera, target)
         scene.render.resolution_x, scene.render.resolution_y = resolution
         scene.cycles.samples = samples

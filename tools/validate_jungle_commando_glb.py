@@ -9,9 +9,18 @@ import sys
 from pathlib import Path
 
 
-REQUIRED_PARTS = {"Lijf_JungleCommando", "Vest", "Koppel", "Laarzen", "Mag_Pouches", "Radio_Field", "IFAK_Pouch"}
+REQUIRED_PARTS = {
+    "Lijf_JungleCommando", "Uniform_Jacket_Shell", "Uniform_Trousers_Shell", "Hair_Cropped",
+    "Vest_JungleCommando", "Vest_JungleCommando_Details", "Koppel", "Laarzen", "Mag_Pouches",
+    "Radio_Field", "IFAK_Pouch", "Gloves_Closed", "Knee_Reinforcements", "Elbow_Reinforcements",
+    "Boot_Sole_L", "Boot_Sole_R", "Boot_Laces_L", "Boot_Laces_R", "Boot_Eyelets_L", "Boot_Eyelets_R",
+}
 REQUIRED_ANIMATIONS = {"stil", "lopen", "rennen", "achteruit", "schieten", "geraakt", "dood1", "dood2", "steken", "herladen"}
-PBR_MATERIALS = {"JungleCommando_Camo", "Commando Nylon · Olive Drab", "Commando Webbing · Dark Olive", "Commando Hardware · Parkerized Steel", "Commando Hair · Short Dark Brown", "Commando Combat Boots"}
+PBR_MATERIALS = {
+    "JungleCommando_Camo", "Commando Nylon · Olive Drab", "Commando Webbing · Dark Olive",
+    "Commando Hardware · Parkerized Steel", "Commando Hair · Short Dark Brown",
+    "Commando Combat Boot · Matte Leather", "Commando Boot · Rubber Sole",
+}
 
 
 def load_glb(path: Path) -> dict:
@@ -67,8 +76,8 @@ def validate(path: Path) -> dict:
     images = doc.get("images", [])
     if not images or any("bufferView" not in image for image in images):
         raise ValueError("One or more textures are not embedded in the GLB")
-    if default_triangles > 16000:
-        raise ValueError(f"Default player variant exceeds the 16k triangle budget: {default_triangles}")
+    if default_triangles > 36000:
+        raise ValueError(f"Default player variant exceeds the 36k triangle budget: {default_triangles}")
 
     try:
         display_path = str(path.relative_to(Path.cwd()))
@@ -84,7 +93,7 @@ def validate(path: Path) -> dict:
         "materials": sorted(PBR_MATERIALS),
         "embedded_images": len(images),
         "required_meshes_with_uv_normals_and_skinning": sorted(REQUIRED_PARTS),
-        "note": "The seven Godot-merged clips remain loaded from their existing resources and are checked by the Godot soldier regression test.",
+        "note": "The active hero-player budget includes separate uniform shells, carrier, gloves, reinforcements and boot hardware; the other seven Godot-merged clips remain checked by the Godot soldier regression test.",
     }
 
 

@@ -131,6 +131,104 @@ def pbr_material(name, maps, metallic=0.0):
     return mat
 
 
+def skinned_surface(source, name, face_indices, rig, outer_material, inner_material, edge_material,
+                    offset=0.0025, thickness=0.008, fold=None, inner_surface=True):
+    """Create a separately skinned, closed garment layer from selected VQ2 faces.
+
+    The outside follows the source garment, while the inside and hem are real geometry.
+    Vertex weights, UVs and the 53-bone armature contract are copied from the source mesh.
+    """
+    face_indices = sorted(set(face_indices))
+    if not face_indices:
+        raise RuntimeError(f"No source faces selected for {name}")
+    source_mesh = source.data
+    uv_layer = source_mesh.uv_layers.active
+    if uv_layer is None:
+        raise RuntimeError(f"Source mesh {source.name} has no UV map")
+    selected = [source_mesh.polygons[i] for i in face_indices]
+    used_vertices = sorted({v for poly in selected for v in poly.vertices})
+    index = {v: i for i, v in enumerate(used_vertices)}
+    original_normals = {i: source_mesh.vertices[i].normal.normalized() for i in used_vertices}
+    vertices = []
+    for i in used_vertices:
+        v = source_mesh.vertices[i]
+        normal = original_normals[i]
+        amount = fold(v.co, normal) if fold else 0.0
+        vertices.append(v.co + normal * (offset + amount))
+    for i in used_vertices:
+        v = source_mesh.vertices[i]
+        normal = original_normals[i]
+        amount = fold(v.co, normal) * 0.45 if fold else 0.0
+        vertices.append(v.co + normal * (offset - thickness + amount))
+
+    faces = []
+    face_materials = []
+    face_uvs = []
+    edge_counts = {}
+    edge_uv = {}
+    for poly in selected:
+        ids = list(poly.vertices)
+        outer = [index[v] for v in ids]
+        inner = [index[v] + len(used_vertices) for v in reversed(ids)]
+        uv_values = [uv_layer.data[li].uv.copy() for li in range(poly.loop_start, poly.loop_start + poly.loop_total)]
+        faces.append(outer); face_materials.append(0); face_uvs.append(uv_values)
+        if inner_surface:
+            faces.append(inner); face_materials.append(1); face_uvs.append(list(reversed(uv_values)))
+        for j, va in enumerate(ids):
+            vb = ids[(j + 1) % len(ids)]
+            key = tuple(sorted((va, vb)))
+            edge_counts[key] = edge_counts.get(key, 0) + 1
+            edge_uv.setdefault(key, (uv_values[j], uv_values[(j + 1) % len(ids)]))
+    for (va, vb), count in edge_counts.items():
+        if count != 1:
+            continue
+        a, b = index[va], index[vb]
+        faces.append([a, b, b + len(used_vertices), a + len(used_vertices)])
+        face_materials.append(2)
+        uv_a, uv_b = edge_uv[(va, vb)]
+        face_uvs.append([uv_a, uv_b, uv_b, uv_a])
+
+    mesh = bpy.data.meshes.new(name + "Mesh")
+    mesh.from_pydata(vertices, [], faces)
+    mesh.materials.append(outer_material)
+    mesh.materials.append(inner_material)
+    mesh.materials.append(edge_material)
+    mesh.update()
+    for i, poly in enumerate(mesh.polygons):
+        poly.material_index = face_materials[i]
+        poly.use_smooth = face_materials[i] != 2
+    layer = mesh.uv_layers.new(name=uv_layer.name or "UVMap")
+    for poly, uvs in zip(mesh.polygons, face_uvs):
+        if len(uvs) != poly.loop_total:
+            raise RuntimeError(f"UV loop mismatch while creating {name}")
+        for li, uv in zip(range(poly.loop_start, poly.loop_start + poly.loop_total), uvs):
+            layer.data[li].uv = uv
+    obj = bpy.data.objects.new(name, mesh)
+    source.users_collection[0].objects.link(obj)
+    obj.parent = rig
+    obj.matrix_world = source.matrix_world.copy()
+    groups = {group.index: obj.vertex_groups.new(name=group.name) for group in source.vertex_groups}
+    memberships = [source_mesh.vertices[i].groups for i in used_vertices]
+    for j, weights in enumerate(memberships):
+        for item in weights:
+            group = groups.get(item.group)
+            if group is not None and item.weight > 0.0001:
+                group.add([j, j + len(used_vertices)], item.weight, "REPLACE")
+    arm = obj.modifiers.new("VQ2 garment skin", "ARMATURE")
+    arm.object = rig
+    obj["garment_layer"] = True
+    obj["shell_thickness_m"] = thickness
+    obj["source_face_count"] = len(selected)
+    return obj
+
+
+def face_weight(obj, poly, group_indices):
+    total = 0.0
+    for vi in poly.vertices:
+        total += sum(item.weight for item in obj.data.vertices[vi].groups if item.group in group_indices)
+    return total / len(poly.vertices)
+
+
 def make_commando_body(image):
     original = bpy.data.objects.get("Lijf_Uniform")
     if original is None:
@@ -162,42 +260,77 @@ def make_commando_body(image):
             clone.data.materials[index] = mat
     if not any(slot_mat and slot_mat.name == "JungleCommando_Camo" for slot_mat in clone.data.materials):
         raise RuntimeError("Tiger Stripe material did not bind to the duplicate body")
-    glove = bpy.data.materials.get("Commando Webbing · Dark Olive")
-    hair = bpy.data.materials.get("Commando Hair · Short Dark Brown")
-    if glove is None or hair is None:
-        raise RuntimeError("Commando glove or hair PBR material is missing")
-    clone.data.materials.append(glove)
-    glove_index = len(clone.data.materials) - 1
-    clone.data.materials.append(hair)
-    hair_index = len(clone.data.materials) - 1
-    group_indices = {
-        group.index for group in clone.vertex_groups
-        if group.name.startswith(("DEF-hand", "DEF-thumb", "DEF-f_", "DEF-index", "DEF-middle", "DEF-ring", "DEF-pinky"))
-    }
-    head_group = next((group.index for group in clone.vertex_groups if group.name == "DEF-head"), None)
-    glove_polygons = hair_polygons = 0
-    for polygon in clone.data.polygons:
-        hand_weight = sum(
-            next((item.weight for item in clone.data.vertices[vertex_index].groups if item.group in group_indices), 0.0)
-            for vertex_index in polygon.vertices
-        ) / len(polygon.vertices)
-        if polygon.material_index in {0, 1} and hand_weight > 0.32:
-            polygon.material_index = glove_index
-            glove_polygons += 1
-            continue
-        if head_group is not None and polygon.material_index == 0:
-            weights = [next((item.weight for item in clone.data.vertices[index].groups if item.group == head_group), 0.0) for index in polygon.vertices]
-            center_z = sum(clone.data.vertices[index].co.z for index in polygon.vertices) / len(polygon.vertices)
-            if center_z > 1.555 and sum(weights) / len(weights) > 0.35:
-                polygon.material_index = hair_index
-                hair_polygons += 1
-    clone["glove_polygons"] = glove_polygons
-    clone["short_hair_polygons"] = hair_polygons
-    if glove_polygons == 0 or hair_polygons == 0:
-        raise RuntimeError(f"Expected glove and cropped-hair faces, got gloves={glove_polygons}, hair={hair_polygons}")
+    # Keep skin and uniform as one skinned under-layer; the new outfit is built as
+    # separate weighted garment shells below instead of recoloring this surface alone.
+    for poly in clone.data.polygons:
+        center = poly.center
+        if center.z > 1.49 and poly.material_index == 0:
+            poly.use_smooth = True
     original.users_collection[0].objects.link(clone)
     clone.matrix_world = original.matrix_world.copy()
-    return clone
+    garment_idx = next((i for i, material in enumerate(original.data.materials) if material and material.name == "Uniform_Kleding"), None)
+    if garment_idx is None:
+        raise RuntimeError("Uniform_Kleding slot missing from source body")
+    top_faces, trouser_faces = [], []
+    for poly in original.data.polygons:
+        if poly.material_index != garment_idx:
+            continue
+        if poly.center.z <= 0.95:
+            trouser_faces.append(poly.index)
+        if poly.center.z >= 0.88:
+            top_faces.append(poly.index)
+    camo = bpy.data.materials["JungleCommando_Camo"]
+    nylon = bpy.data.materials["Commando Nylon · Olive Drab"]
+    binding = bpy.data.materials["Commando Webbing · Dark Olive"]
+
+    def fabric_folds(part):
+        def amount(co, normal):
+            x, y, z = co
+            if part == "trousers":
+                centers = (0.34, 0.54, 0.79)
+                envelope = sum(math.exp(-((z - c) / 0.043) ** 2) for c in centers)
+                phase = math.atan2(y + 0.005, abs(x) + 0.012) * 3.3 + z * 14.0
+                return 0.0032 * envelope * math.cos(phase)
+            arm_envelope = math.exp(-((abs(x) - 0.45) / 0.055) ** 2) * math.exp(-((z - 1.43) / 0.11) ** 2)
+            chest_envelope = math.exp(-((z - 1.12) / 0.08) ** 2) * math.exp(-((abs(x) - 0.12) / 0.09) ** 2)
+            arm_phase = math.atan2(y - 0.035, z - 1.43) * 3.0 + abs(x) * 18.0
+            chest_phase = math.sin(x * 42.0 + y * 35.0)
+            return 0.0036 * arm_envelope * math.cos(arm_phase) + 0.0018 * chest_envelope * chest_phase
+        return amount
+
+    pants = skinned_surface(original, "Uniform_Trousers_Shell", trouser_faces, bpy.data.objects["Rig"], camo, nylon, binding, fold=fabric_folds("trousers"))
+    jacket = skinned_surface(original, "Uniform_Jacket_Shell", top_faces, bpy.data.objects["Rig"], camo, nylon, binding, fold=fabric_folds("jacket"))
+
+    # Separate cropped-hair shell: only upper scalp faces, so the face itself keeps
+    # the original skin PBR and the hairline never behaves like a headband.
+    head_index = next((g.index for g in original.vertex_groups if g.name == "DEF-head"), None)
+    hair_faces = []
+    if head_index is not None:
+        for poly in original.data.polygons:
+            if poly.material_index != 0:
+                continue
+            weights = [sum(w.weight for w in original.data.vertices[vi].groups if w.group == head_index) for vi in poly.vertices]
+            if sum(weights) / len(weights) < 0.35:
+                continue
+            # Include the full crown and temples; restricting by face normal left
+            # pale bald scalp triangles around the dark cap in the first preview.
+            if poly.center.z > 1.585:
+                hair_faces.append(poly.index)
+    if not hair_faces:
+        raise RuntimeError("Could not identify scalp faces for the short-hair shell")
+    hair = bpy.data.materials["Commando Hair · Short Dark Brown"]
+    # The source skin mesh also contains the bald scalp surface. Reassign the
+    # upper scalp polygons on the player-only copy to hair; the separate shell
+    # by itself would leave that pale scalp showing through around its edges.
+    scalp_slot = next((i for i, material in enumerate(clone.data.materials) if material and material.name == hair.name), None)
+    if scalp_slot is None:
+        clone.data.materials.append(hair)
+        scalp_slot = len(clone.data.materials) - 1
+    for poly in clone.data.polygons:
+        if poly.index in hair_faces:
+            poly.material_index = scalp_slot
+    hair_shell = skinned_surface(original, "Hair_Cropped", hair_faces, bpy.data.objects["Rig"], hair, hair, hair, offset=0.003, thickness=0.003)
+    return clone, [pants, jacket, hair_shell]
 
 
 def new_box(name, location, dimensions, material, bevel=0.008):
@@ -219,16 +352,30 @@ def new_box(name, location, dimensions, material, bevel=0.008):
     return obj
 
 
-def new_cylinder(name, location, radius, depth, material, vertices=12, horizontal=False):
+def new_cylinder(name, location, radius, depth, material, vertices=12, horizontal=False, bevel=True):
     rotation = (math.pi / 2, 0, 0) if horizontal else (0, 0, 0)
     bpy.ops.mesh.primitive_cylinder_add(vertices=vertices, radius=radius, depth=depth, location=location, rotation=rotation)
     obj = bpy.context.object
     obj.name = name
     obj.data.materials.append(material)
-    bevel = obj.modifiers.new("Machined edge", "BEVEL")
-    bevel.width = min(radius * 0.2, depth * 0.15)
-    bevel.segments = 2
-    bpy.ops.object.modifier_apply(modifier=bevel.name)
+    if bevel:
+        mod = obj.modifiers.new("Machined edge", "BEVEL")
+        mod.width = min(radius * 0.2, depth * 0.15)
+        mod.segments = 2
+        bpy.ops.object.modifier_apply(modifier=mod.name)
+    return obj
+
+
+def new_rod_between(name, start, end, radius, material, vertices=8):
+    a, b = Vector(start), Vector(end)
+    direction = b - a
+    bpy.ops.mesh.primitive_cylinder_add(vertices=vertices, radius=radius, depth=direction.length, location=(a + b) * 0.5)
+    obj = bpy.context.object
+    obj.name = name
+    obj.rotation_euler = direction.to_track_quat("Z", "Y").to_euler()
+    obj.data.materials.append(material)
+    for poly in obj.data.polygons:
+        poly.use_smooth = True
     return obj
 
 
@@ -253,46 +400,121 @@ def merge_and_bind(objects, name, rig, bone_name="DEF-spine002"):
     return active
 
 
-def build_equipment(rig, texture_dir):
+def build_equipment(rig, texture_dir, source_body):
     olive_maps = micro_maps(texture_dir, "olive_nylon", (76, 88, 55), fabric=True)
     trim_maps = micro_maps(texture_dir, "dark_olive_webbing", (49, 60, 39), fabric=True)
     steel_maps = micro_maps(texture_dir, "parkerized_steel", (54, 59, 50), fabric=False)
     hair_maps = micro_maps(texture_dir, "short_cropped_hair", (52, 40, 31), fabric=False, roughness_override=0.82)
+    boot_maps = micro_maps(texture_dir, "combat_boot_leather", (43, 39, 31), fabric=False, roughness_override=0.86)
+    rubber_maps = micro_maps(texture_dir, "combat_boot_rubber", (26, 29, 26), fabric=False, roughness_override=0.94)
     olive = pbr_material("Commando Nylon · Olive Drab", olive_maps)
     trim = pbr_material("Commando Webbing · Dark Olive", trim_maps)
     hardware = pbr_material("Commando Hardware · Parkerized Steel", steel_maps, 0.72)
+    boot_leather = pbr_material("Commando Combat Boot · Matte Leather", boot_maps, 0.03)
+    boot_rubber = pbr_material("Commando Boot · Rubber Sole", rubber_maps, 0.0)
     pbr_material("Commando Hair · Short Dark Brown", hair_maps)
-    boots = bpy.data.materials["Uitrusting"].copy()
-    boots.name = "Commando Combat Boots"
-    boot_bsdf = next(node for node in boots.node_tree.nodes if node.type == "BSDF_PRINCIPLED")
-    boot_bsdf.inputs["Base Color"].default_value = (0.3, 0.27, 0.21, 1.0)
     bpy.data.objects["Laarzen"].data.materials.clear()
-    bpy.data.objects["Laarzen"].data.materials.append(boots)
+    bpy.data.objects["Laarzen"].data.materials.append(boot_leather)
+
+    # Snug, separately skinned carrier panels are extracted from the actual torso
+    # surface; the old wide, protruding vest remains only for the legacy cosmetic.
+    garment_idx = next((i for i, m in enumerate(source_body.data.materials) if m and m.name == "Uniform_Kleding"), None)
+    if garment_idx is None:
+        raise RuntimeError("Cannot build plate carrier without Uniform_Kleding geometry")
+    carrier_faces = [p.index for p in source_body.data.polygons
+                     if p.material_index == garment_idx and 1.10 <= p.center.z <= 1.48
+                     and abs(p.center.x) <= 0.205 and abs(p.normal.y) > 0.34]
+    vest = skinned_surface(source_body, "Vest_JungleCommando", carrier_faces, rig, olive, trim, trim,
+                           offset=0.010, thickness=0.008)
+    vest["design"] = "Compact fitted front/back carrier shell; no backpack or projecting frame"
+    plate_parts = []
+    # Shaped plate/panel and close shoulder straps stay within the body silhouette.
+    plate_parts.append(new_box("carrier chest plate", (0.0, -0.177, 1.315), (0.29, 0.018, 0.235), trim, 0.035))
+    # Keep the rear carrier flat against the torso; no boxy back plate or frame.
+    plate_parts.append(new_box("carrier rear panel", (0.0, 0.105, 1.315), (0.23, 0.008, 0.18), trim, 0.018))
+    for side in (-1, 1):
+        plate_parts.append(new_box("carrier shoulder strap", (side * 0.105, -0.075, 1.445), (0.030, 0.012, 0.135), olive, 0.008))
+        plate_parts.append(new_box("carrier side strap", (side * 0.18, -0.008, 1.285), (0.018, 0.105, 0.085), trim, 0.006))
+    plate_parts.append(new_box("carrier ID loop", (0.0, -0.190, 1.415), (0.07, 0.008, 0.012), olive, 0.004))
+    plate_parts.append(new_box("carrier seam front left", (-0.137, -0.193, 1.315), (0.003, 0.003, 0.17), olive, 0.001))
+    plate_parts.append(new_box("carrier seam front right", (0.137, -0.193, 1.315), (0.003, 0.003, 0.17), olive, 0.001))
+    plate_parts = [o for o in plate_parts if o is not None]
+    carrier_details = merge_and_bind(plate_parts, "Vest_JungleCommando_Details", rig)
+    carrier_details["garment_layer"] = True
+
     mags = []
     for x in (-0.155, 0.0, 0.155):
-        mags.append(new_box("mag pouch body", (x, -0.333, 1.245), (0.105, 0.083, 0.155), olive, 0.012))
-        mags.append(new_box("mag pouch cover flap", (x, -0.382, 1.305), (0.096, 0.018, 0.046), trim, 0.006))
-        mags.append(new_box("mag pouch clasp", (x, -0.395, 1.285), (0.026, 0.012, 0.018), hardware, 0.003))
+        mags.append(new_box("mag pouch body", (x, -0.228, 1.245), (0.105, 0.065, 0.155), olive, 0.018))
+        mags.append(new_box("mag pouch cover flap", (x, -0.266, 1.305), (0.096, 0.014, 0.046), trim, 0.010))
+        mags.append(new_box("mag pouch clasp", (x, -0.276, 1.285), (0.026, 0.008, 0.018), hardware, 0.004))
         # Visible reinforced vertical stitch channels on the front face.
         for dx in (-0.036, 0.036):
-            mags.append(new_box("mag pouch seam", (x + dx, -0.391, 1.235), (0.003, 0.003, 0.064), trim, 0.001))
+            mags.append(new_box("mag pouch seam", (x + dx, -0.268, 1.235), (0.002, 0.002, 0.064), olive, 0.0007))
 
     radio = [
-        new_box("radio shell", (-0.235, -0.295, 1.345), (0.078, 0.074, 0.14), trim, 0.010),
-        new_box("radio speaker grille", (-0.235, -0.336, 1.353), (0.052, 0.007, 0.043), hardware, 0.003),
-        new_box("radio display", (-0.235, -0.337, 1.314), (0.032, 0.007, 0.019), olive, 0.002),
-        new_cylinder("radio antenna", (-0.244, -0.298, 1.451), 0.006, 0.10, hardware, 10),
-        new_cylinder("radio channel dial", (-0.199, -0.338, 1.414), 0.011, 0.01, hardware, 12, horizontal=True),
+        new_box("radio shell", (-0.224, -0.220, 1.345), (0.072, 0.062, 0.13), trim, 0.016),
+        new_box("radio speaker grille", (-0.224, -0.253, 1.353), (0.050, 0.006, 0.040), hardware, 0.004),
+        new_box("radio display", (-0.224, -0.254, 1.314), (0.030, 0.006, 0.018), olive, 0.003),
+        new_cylinder("radio antenna", (-0.235, -0.216, 1.435), 0.005, 0.082, hardware, 10),
+        new_cylinder("radio channel dial", (-0.192, -0.255, 1.414), 0.010, 0.009, hardware, 12, horizontal=True),
     ]
     marker = pbr_material("IFAK subdued marker", olive_maps)
     ifak = [
-        new_box("IFAK pouch shell", (0.247, -0.252, 1.095), (0.11, 0.082, 0.125), olive, 0.012),
-        new_box("IFAK cover", (0.247, -0.298, 1.111), (0.096, 0.015, 0.082), trim, 0.006),
-        new_box("IFAK pull tab", (0.247, -0.311, 1.08), (0.03, 0.01, 0.014), hardware, 0.003),
-        new_box("IFAK cross marker", (0.247, -0.31, 1.111), (0.008, 0.003, 0.034), marker, 0.001),
-        new_box("IFAK cross marker horizontal", (0.247, -0.311, 1.111), (0.03, 0.003, 0.008), marker, 0.001),
+        new_box("IFAK pouch shell", (0.215, -0.185, 1.095), (0.10, 0.065, 0.12), olive, 0.016),
+        new_box("IFAK cover", (0.215, -0.221, 1.111), (0.088, 0.012, 0.078), trim, 0.009),
+        new_box("IFAK pull tab", (0.215, -0.230, 1.08), (0.026, 0.007, 0.013), hardware, 0.004),
+        new_box("IFAK cross marker", (0.215, -0.229, 1.111), (0.006, 0.002, 0.032), marker, 0.001),
+        new_box("IFAK cross marker horizontal", (0.215, -0.230, 1.111), (0.028, 0.002, 0.006), marker, 0.001),
     ]
-    return [merge_and_bind(mags, "Mag_Pouches", rig), merge_and_bind(radio, "Radio_Field", rig), merge_and_bind(ifak, "IFAK_Pouch", rig)]
+    for side in (-1, 1):
+        pocket_x = side * 0.108
+        # Low-profile cargo pockets, separate from the uniform shell and weighted to the thigh.
+        mags.extend([
+            new_box("cargo thigh pocket", (pocket_x, -0.142, 0.805), (0.095, 0.034, 0.105), olive, 0.012),
+            new_box("cargo pocket flap", (pocket_x, -0.164, 0.854), (0.089, 0.009, 0.031), trim, 0.006),
+            new_box("cargo pocket tab", (pocket_x, -0.170, 0.839), (0.018, 0.005, 0.012), hardware, 0.003),
+            new_box("cargo pocket topstitch", (pocket_x, -0.170, 0.787), (0.076, 0.002, 0.002), trim, 0.0007),
+        ])
+
+    # Full-cover glove shells follow the hand and individual finger weights.
+    hand_groups = {g.index for g in source_body.vertex_groups if g.name.startswith(("DEF-hand", "DEF-thumb", "DEF-f_"))}
+    glove_faces = [p.index for p in source_body.data.polygons if face_weight(source_body, p, hand_groups) > 0.28]
+    gloves = skinned_surface(source_body, "Gloves_Closed", glove_faces, rig, trim, trim, hardware, offset=0.002, thickness=0.003, inner_surface=False)
+
+    # Reinforced knee/elbow panels are shaped from uniform topology, not decals.
+    knee_faces, elbow_faces = [], []
+    for p in source_body.data.polygons:
+        if p.material_index != garment_idx:
+            continue
+        if 0.47 <= p.center.z <= 0.64 and abs(p.center.x) <= 0.15 and p.normal.y < -0.28:
+            knee_faces.append(p.index)
+        if 1.34 <= p.center.z <= 1.52 and 0.28 <= abs(p.center.x) <= 0.59:
+            elbow_faces.append(p.index)
+    reinforcements = []
+    if knee_faces:
+        reinforcements.append(skinned_surface(source_body, "Knee_Reinforcements", knee_faces, rig, trim, olive, trim, offset=0.006, thickness=0.005))
+    if elbow_faces:
+        reinforcements.append(skinned_surface(source_body, "Elbow_Reinforcements", elbow_faces, rig, trim, olive, trim, offset=0.005, thickness=0.004))
+
+    # Dark rubber outsoles and crossed laces are distinct foot-weighted geometry.
+    soles = []
+    laces = []
+    eyelets = []
+    for side, x in (("L", 0.089), ("R", -0.089)):
+        soles.append(new_box("boot outsole", (x, -0.045, 0.014), (0.118, 0.214, 0.026), boot_rubber, 0.012))
+        for i, y in enumerate((-0.005, -0.045, -0.086)):
+            z = 0.185
+            laces.append(new_rod_between("boot crossed lace", (x - 0.032, y - 0.012, z), (x + 0.032, y + 0.012, z), 0.0022, trim))
+            laces.append(new_rod_between("boot crossed lace", (x + 0.032, y - 0.012, z + 0.001), (x - 0.032, y + 0.012, z + 0.001), 0.0022, trim))
+            for sx in (-1, 1):
+                eyelets.append(new_cylinder("boot eyelet", (x + sx * 0.037, y, z - 0.002), 0.003, 0.003, hardware, 6, horizontal=True, bevel=False))
+    sole_meshes = [merge_and_bind([soles[i]], f"Boot_Sole_{side}", rig, f"DEF-foot{side}") for i, side in enumerate(("L", "R"))]
+    lace_meshes = [merge_and_bind(laces[:6], "Boot_Laces_L", rig, "DEF-footL"), merge_and_bind(laces[6:], "Boot_Laces_R", rig, "DEF-footR")]
+    eyelet_meshes = [merge_and_bind(eyelets[:6], "Boot_Eyelets_L", rig, "DEF-footL"), merge_and_bind(eyelets[6:], "Boot_Eyelets_R", rig, "DEF-footR")]
+
+    return [vest, carrier_details, merge_and_bind(mags, "Mag_Pouches", rig),
+            merge_and_bind(radio, "Radio_Field", rig), merge_and_bind(ifak, "IFAK_Pouch", rig),
+            gloves, *reinforcements, *sole_meshes, *lace_meshes, *eyelet_meshes]
 
 
 def mesh_report(scene):
@@ -334,14 +556,21 @@ def run(args):
             bpy.data.objects.remove(obj, do_unlink=True)
 
     tiger = tiger_stripe(args.textures / "tiger_stripe_albedo_2048.png")
-    added = build_equipment(rig, args.textures)
-    commando_body = make_commando_body(tiger)
+    source_body = bpy.data.objects.get("Lijf_Uniform")
+    if source_body is None:
+        raise RuntimeError("Lijf_Uniform is required for the player-only shell build")
+    added = build_equipment(rig, args.textures, source_body)
+    commando_body, garment_shells = make_commando_body(tiger)
+    added.extend(garment_shells)
 
     # This is a dedicated player scene: preserve all selectable player tops, while avoiding
     # duplicate enemy/ally geometry and textures in the game PCK. Shared role models stay intact.
     player_meshes = {
         "Lijf_Uniform", "Lijf_JungleCommando", "Lijf_Bloot", "Lijf_Mouwloos",
         "Hoofdband", "Koppel", "Laarzen", "Vest", "Mag_Pouches", "Radio_Field", "IFAK_Pouch",
+        "Uniform_Trousers_Shell", "Uniform_Jacket_Shell", "Hair_Cropped", "Vest_JungleCommando",
+        "Vest_JungleCommando_Details", "Gloves_Closed", "Knee_Reinforcements", "Elbow_Reinforcements",
+        "Boot_Sole_L", "Boot_Sole_R", "Boot_Laces_L", "Boot_Laces_R", "Boot_Eyelets_L", "Boot_Eyelets_R",
     }
     for obj in list(bpy.context.scene.objects):
         if obj.type == "MESH" and obj.name not in player_meshes:
@@ -374,8 +603,10 @@ def run(args):
         "texture": str(args.textures / "tiger_stripe_albedo_2048.png"),
         "added_equipment": [o.name for o in added],
         "commando_body_variant": commando_body.name,
-        "glove_polygons": commando_body.get("glove_polygons", 0),
-        "short_hair_polygons": commando_body.get("short_hair_polygons", 0),
+        "separate_garments": [o.name for o in garment_shells],
+        "added_equipment": [o.name for o in added],
+        "closed_glove_meshes": [o.name for o in added if o.name == "Gloves_Closed"],
+        "reinforcement_meshes": [o.name for o in added if "Reinforcements" in o.name],
         "animation_contract": ["stil", "lopen", "rennen", "achteruit", "schieten", "geraakt", "dood1", "dood2", "steken", "herladen", "klimmen", "zitten", "rollen", "sprinten", "explosie_dood", "brand_rennen", "brand_val"],
         "note": "Ten embedded source actions retained; Godot soldier_model.gd merges the other seven from their existing GLBs.",
     })

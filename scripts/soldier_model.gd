@@ -12,7 +12,10 @@ const SCENE_V2 := preload("res://assets/soldaat_vq2.glb")
 const SCENE_PLAYER := preload("res://assets/soldaat_jungle_commando.glb")
 const LOOKS := {
 	"eigen": ["Lijf_Uniform", "Helm", "Vest", "Koppel", "Rugzak", "Laarzen"],
-	"speler:jungle": ["Lijf_JungleCommando", "Vest", "Koppel", "Laarzen", "Mag_Pouches", "Radio_Field", "IFAK_Pouch"],
+	"speler:jungle": ["Lijf_JungleCommando", "Uniform_Jacket_Shell", "Uniform_Trousers_Shell", "Hair_Cropped",
+		"Vest_JungleCommando", "Vest_JungleCommando_Details", "Koppel", "Laarzen", "Mag_Pouches", "Radio_Field", "IFAK_Pouch",
+		"Gloves_Closed", "Knee_Reinforcements", "Elbow_Reinforcements", "Boot_Sole_L", "Boot_Sole_R",
+		"Boot_Laces_L", "Boot_Laces_R", "Boot_Eyelets_L", "Boot_Eyelets_R"],
 	"speler:bloot": ["Lijf_Bloot", "Hoofdband", "Koppel", "Laarzen"],
 	"speler:mouwloos": ["Lijf_Mouwloos", "Hoofdband", "Koppel", "Laarzen"],
 	"speler:uniform": ["Lijf_Uniform", "Hoofdband", "Koppel", "Laarzen"],

@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "glb": "assets/soldaat_jungle_commando.glb",
+  "bytes": 11187376,
+  "player_default_triangles": 15552,
+  "skin_joints": 53,
+  "embedded_source_animations": [
+    "achteruit",
+    "dood1",
+    "dood2",
+    "geraakt",
+    "herladen",
+    "lopen",
+    "rennen",
+    "schieten",
+    "steken",
+    "stil"
+  ],
+  "materials": [
+    "Commando Combat Boots",
+    "Commando Hair \u00b7 Short Dark Brown",
+    "Commando Hardware \u00b7 Parkerized Steel",
+    "Commando Nylon \u00b7 Olive Drab",
+    "Commando Webbing \u00b7 Dark Olive",
+    "JungleCommando_Camo"
+  ],
+  "embedded_images": 25,
+  "required_meshes_with_uv_normals_and_skinning": [
+    "IFAK_Pouch",
+    "Koppel",
+    "Laarzen",
+    "Lijf_JungleCommando",
+    "Mag_Pouches",
+    "Radio_Field",
+    "Vest"
+  ],
+  "note": "The seven Godot-merged clips remain loaded from their existing resources and are checked by the Godot soldier regression test."
+}

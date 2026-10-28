@@ -8,9 +8,11 @@ const SCENE := preload("res://assets/soldaat.glb")
 ## VQ2-mannetje (bron/soldaat_vq2): realistisch MakeHuman-lichaam op hetzelfde DEF-skelet met dezelfde clips, vier
 ## lichaamsvarianten en uitrusting per type. Instelling "soldaat" = "v1" valt terug op het oude model.
 const SCENE_V2 := preload("res://assets/soldaat_vq2.glb")
+## Player-only Showcase variant: Tiger Stripe + compact commando equipment; shared VQ2 stays unchanged for allies/enemies.
+const SCENE_PLAYER := preload("res://assets/soldaat_jungle_commando.glb")
 const LOOKS := {
 	"eigen": ["Lijf_Uniform", "Helm", "Vest", "Koppel", "Rugzak", "Laarzen"],
-	"speler:jungle": ["Lijf_Uniform", "Hoofdband", "Koppel", "Laarzen"],
+	"speler:jungle": ["Lijf_JungleCommando", "Vest", "Koppel", "Laarzen", "Mag_Pouches", "Radio_Field", "IFAK_Pouch"],
 	"speler:bloot": ["Lijf_Bloot", "Hoofdband", "Koppel", "Laarzen"],
 	"speler:mouwloos": ["Lijf_Mouwloos", "Hoofdband", "Koppel", "Laarzen"],
 	"speler:uniform": ["Lijf_Uniform", "Hoofdband", "Koppel", "Laarzen"],
@@ -54,7 +56,8 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 	v2 = GameSettings.get_value("soldaat") != "v1"
 	look = look_ if LOOKS.has(look_) else "eigen"
 	_uniform = uniform
-	var model := (SCENE_V2 if v2 else SCENE).instantiate()
+	var model_scene: PackedScene = SCENE if not v2 else (SCENE_PLAYER if look.begins_with("speler:") else SCENE_V2)
+	var model := model_scene.instantiate()
 	add_child(model)
 	anim = model.find_child("AnimationPlayer", true, false)
 	# de klim-animatie komt uit een eigen glb met hetzelfde skelet en wordt aan dit mannetje gehangen
@@ -313,7 +316,10 @@ func set_uniform(c: Color) -> void:
 	if v2:
 		for i in _mats.size():
 			var nm := _mats[i].resource_name
-			if nm.ends_with("_Kleding"):
+			if nm == "JungleCommando_Camo":
+				# Keep the approved default Tiger Stripe palette; other existing camo choices still tint it.
+				_mats[i].albedo_color = Color.WHITE if c == Color("4b5a2c") else uniform_tint(c)
+			elif nm.ends_with("_Kleding"):
 				_mats[i].albedo_color = uniform_tint(c)
 			elif nm != "Hoofdband":
 				_mats[i].albedo_color = Color.WHITE

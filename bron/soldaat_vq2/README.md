@@ -39,10 +39,11 @@ godot --headless --path . --import && python3 tools/textuur_import.py && godot -
 - Looks (`SoldierModel.LOOKS`): `eigen` (bondgenoten, wachten), `speler:jungle|bloot|mouwloos|uniform|vest` (volgt
   Uitrusting > Bovenlijf), `vijand:knife|rifle|rocket|heavy`. Instelling *Mannetjes* = *Oud model* zet v1 terug.
 
-De spelerstandaard `speler:jungle` gebruikt `Lijf_Uniform`, de bestaande woodland-camouflage-PBR-kaarten, hoofdband,
-koppel en laarzen. De vorige standaardlook (`bloot`) blijft kiesbaar. Zie [SPELER_JUNGLE.md](SPELER_JUNGLE.md) en
-`maak_speler_jungle_preview.py` voor de afzonderlijke iPhone Quick Look-variant. De game-GLB, rig en animaties blijven
-dezelfde; dit voorkomt een tweede, afwijkende soldaatbron.
+De huidige spelersstandaard `speler:jungle` gebruikt de afzonderlijke, issue #138 goedgekeurde Jungle Commando Tiger
+Stripe-look: `assets/soldaat_jungle_commando.glb`, met dezelfde 53-botten-DEF-rig en dezelfde tien basisclips. Een
+player-only GLB voorkomt wijzigingen aan het gedeelde model voor bondgenoten en vijanden. De oude topkeuzes blijven
+beschikbaar. Zie [JUNGLE_COMMANDO.md](JUNGLE_COMMANDO.md) voor de bron, productie, USDZ en animatiecontract. De eerdere
+woodland-preview uit [SPELER_JUNGLE.md](SPELER_JUNGLE.md) blijft bewaard als eerdere versie.
 
 ## Cijfers
 | deel | driehoeken |

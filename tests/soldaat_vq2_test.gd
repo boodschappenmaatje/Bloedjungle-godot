@@ -76,10 +76,13 @@ func _run() -> void:
 		for mat: StandardMaterial3D in m._mats:
 			if mat.resource_name.ends_with("_Kleding"):
 				tinted += 1
-				_check(mat.albedo_color.is_equal_approx(SoldierModel.uniform_tint(m._uniform)), "%s: kledingtint niet gezet" % look)
+				if look != "speler:jungle":
+					_check(mat.albedo_color.is_equal_approx(SoldierModel.uniform_tint(m._uniform)), "%s: kledingtint niet gezet" % look)
+			if look == "speler:jungle" and mat.resource_name == "JungleCommando_Camo":
+				_check(mat.albedo_color == Color.WHITE, "junglecommando-camouflage wordt niet ongetint getoond")
 			_check(mat.albedo_texture != null, "%s: materiaal %s zonder albedo-textuur" % [look, mat.resource_name])
 			_check(mat.normal_enabled and mat.normal_texture != null, "%s: materiaal %s zonder normal map" % [look, mat.resource_name])
-		_check(tinted >= 1, "%s: geen getint kledingmateriaal" % look)
+		_check(tinted >= 1 or look == "speler:jungle", "%s: geen getint kledingmateriaal" % look)
 		if look != "vijand:knife":
 			_check(m._gun != null, "%s: geen wapen in de hand" % look)
 			var hand := m._hand.global_position
@@ -99,6 +102,22 @@ func _run() -> void:
 	# de huid volgt het skelet: het lichaam is een skin op hetzelfde skelet
 	var body: MeshInstance3D = walker.find_child("Lijf_Uniform", true, false)
 	_check(body != null and body.skin != null and body.get_node_or_null(body.skeleton) == skel, "lichaam hangt niet aan het skelet")
+	var commando: SoldierModel = models["speler:jungle"]
+	var commando_body := commando.find_child("Lijf_JungleCommando", true, false) as MeshInstance3D
+	_check(commando_body != null and commando_body.visible, "speler gebruikt de Tiger Stripe-bronbody niet")
+	var commando_skel := commando.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	_check(commando_body.skin != null and commando_body.get_node_or_null(commando_body.skeleton) == commando_skel, "Jungle Commando-body is niet aan de bestaande 53-bottenrig gekoppeld")
+	_check(not (commando.find_child("Hoofdband", true, false) as Node3D).visible, "standaard Jungle Commando draagt onverwacht een hoofdband")
+	for detail in ["Mag_Pouches", "Radio_Field", "IFAK_Pouch"]:
+		var detail_node := commando.find_child(detail, true, false) as MeshInstance3D
+		_check(detail_node != null and detail_node.visible, "speleruitrusting %s ontbreekt" % detail)
+	var has_gloves := false
+	var has_dark_hair := false
+	for mat: StandardMaterial3D in commando._mats:
+		has_gloves = has_gloves or mat.resource_name == "Commando Webbing · Dark Olive"
+		has_dark_hair = has_dark_hair or mat.resource_name == "Commando Hair · Short Dark Brown"
+	_check(has_gloves, "volledig gesloten handschoenmateriaal ontbreekt")
+	_check(has_dark_hair, "kort donker haarmateriaal ontbreekt")
 
 	# hoofdband en flits
 	var pl: SoldierModel = models["speler:bloot"]

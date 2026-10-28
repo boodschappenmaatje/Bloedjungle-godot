@@ -45,7 +45,7 @@ func _test_wheel_sectors_and_commands() -> void:
 		c.advance(Controller.HOLD_TIME)
 		var result: Dictionary = c.release(1, center + points[i] * 80.0, center)
 		_check(result.get("order", "") == Controller.COMMANDS[i], "wheel command %s" % Controller.COMMANDS[i])
-		_check(result.kind == ("issue" if i == 0 else "target"), "wheel action kind %s" % Controller.COMMANDS[i])
+		_check(result.kind == ("issue" if Controller.COMMANDS[i] == "follow" else "target"), "wheel action kind %s" % Controller.COMMANDS[i])
 
 
 func _test_target_orders() -> void:
@@ -66,7 +66,8 @@ func _test_target_orders() -> void:
 	for target_type in ["enemy", "ground"]:
 		c.begin(3, Vector2.ZERO)
 		c.advance(Controller.HOLD_TIME)
-		c.release(3, Vector2.LEFT * 80.0, Vector2.ZERO)
+		var attack_index: int = Controller.COMMANDS.find("attack")
+		c.release(3, Vector2.RIGHT.rotated(float(attack_index) * PI / 2.0) * 80.0, Vector2.ZERO)
 		c.begin_target(9)
 		_check(c.complete_target(9, target_type) == "attack", "attack accepts %s selection" % target_type)
 
@@ -81,14 +82,14 @@ func _test_safe_edge_sector() -> void:
 	c.begin(2, raw_origin)
 	c.advance(Controller.HOLD_TIME)
 	_check(Controller.sector(safe_center, safe_center + Vector2.RIGHT * 80) == 0, "safe-edge east sector uses displayed center")
-	_check(c.release(2, safe_center + Vector2.RIGHT * 80, safe_center).order == "follow", "safe-edge wheel command matches drawn sector")
+	_check(c.release(2, safe_center + Vector2.RIGHT * 80, safe_center).order == "attack", "safe-edge wheel command matches drawn sector")
 
 
 func _test_cancel_reset_and_invalid_targets() -> void:
 	var c = Controller.new()
 	c.begin(1, Vector2.ZERO)
 	c.advance(Controller.HOLD_TIME)
-	c.release(1, Vector2(80, 80), Vector2.ZERO) # defend sector
+	c.release(1, Vector2.LEFT * 80, Vector2.ZERO) # defend sector
 	_check(c.is_modal(), "targeting is modal")
 	_check(c.begin_target(5), "target pointer assigned")
 	_check(c.complete_target(5, "missing") == "", "invalid/missing target does not issue")

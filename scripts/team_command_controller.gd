@@ -2,7 +2,8 @@ extends RefCounted
 ## Pure input/order state shared by the HUD adapter and the lightweight test fixture.
 
 const HOLD_TIME := 0.38
-const COMMANDS := ["follow", "defend", "attack", "move"]
+# Controller sectors are right, down, left, up; keep them aligned with the wheel artwork.
+const COMMANDS := ["attack", "move", "defend", "follow"]
 
 var pointer_id := -2 # screen finger index, or -1 for the mouse
 var origin := Vector2.ZERO

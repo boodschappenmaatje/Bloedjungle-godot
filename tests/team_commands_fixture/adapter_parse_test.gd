@@ -3,6 +3,11 @@ extends Control
 const TeamCommandsScript = preload("res://team_commands.gd")
 const TouchSticksScript = preload("res://touch_sticks.gd")
 
+class FakeBuildMode extends Node:
+	var entered := 0
+	func _enter() -> void:
+		entered += 1
+
 class FakeSoldier extends RefCounted:
 	var helper := false
 	var guard := false
@@ -21,6 +26,9 @@ func _ready() -> void:
 	var sticks = TouchSticksScript.new()
 	add_child(team)
 	add_child(sticks)
+	var build_mode := FakeBuildMode.new()
+	build_mode.add_to_group("build_mode")
+	add_child(build_mode)
 	var first_soldier := FakeSoldier.new()
 	var second_soldier := FakeSoldier.new()
 	var guard := FakeSoldier.new()
@@ -42,6 +50,11 @@ func _ready() -> void:
 		push_error("TEAM adapter did not build its ActionBtn")
 		get_tree().quit(1)
 		return
+	_check(team.button.kind == "combined", "one combined BOUW/TEAM button is built")
+	var combined_center: Vector2 = team.button.get_global_rect().get_center()
+	team.controller.begin(22, combined_center)
+	team._finish_pointer(22, combined_center)
+	_check(build_mode.entered == 1, "combined button opens build mode with a short prep tap")
 	if not sticks.is_in_group("touch_sticks") or not team.is_in_group("team_commands"):
 		push_error("TEAM/joystick input routers did not register")
 		get_tree().quit(1)
@@ -49,10 +62,11 @@ func _ready() -> void:
 	for corner in [Vector2.ZERO, Vector2(team.size.x, 0), Vector2(0, team.size.y), team.size]:
 		team.controller.begin(8, corner)
 		var corrected: Vector2 = team._wheel_center()
-		_check(corrected.x >= 114.0 and corrected.x <= team.size.x - 114.0, "wheel stays inside safe horizontal edges")
+		_check(corrected.x >= WheelArt.OUTER + 6.0 - 0.01 and corrected.x <= team.size.x - (WheelArt.OUTER + 6.0) + 0.01, "wheel stays inside safe horizontal edges")
 		_check(corrected.y >= 86.0 and corrected.y <= team.size.y - 86.0, "wheel stays inside safe vertical edges")
 		team.cancel_input()
 	var center: Vector2 = team.button.get_global_rect().get_center()
+	Game.state = "play" # combat tap keeps the existing follow/hold quick command
 	var down := InputEventScreenTouch.new()
 	down.index = 3
 	down.pressed = true
@@ -93,7 +107,7 @@ func _ready() -> void:
 	var mouse_up := InputEventMouseButton.new()
 	mouse_up.button_index = MOUSE_BUTTON_LEFT
 	mouse_up.pressed = false
-	mouse_up.position = wheel_center + Vector2.LEFT * 80.0
+	mouse_up.position = wheel_center + Vector2.RIGHT * 80.0
 	sticks._input(mouse_up)
 	_check(team.controller.pending_order == "attack", "long press selects attack through shared input router")
 	var hud_down := InputEventMouseButton.new()

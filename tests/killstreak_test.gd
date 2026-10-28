@@ -257,7 +257,19 @@ func _run() -> void:
 	for b in get_nodes_in_group("hud_button"):
 		if b is Button and b.get("kind") == "lucht2":
 			chooser = b
-	_check(chooser != null and chooser.is_visible_in_tree() and chooser.get("reward") == "napalm", "de kiezer moet de andere beloning (napalm) tonen")
+	# HUD 3.0: de losse WISSEL-knop is vervangen door het steunwiel (lang indrukken op de steunknop)
+	_check(chooser == null or not chooser.is_visible_in_tree(), "de losse kiezerknop hoort verborgen te zijn (steunwiel)")
+	var combat: Node = null
+	for n in root.find_children("CombatButtons", "", true, false):
+		combat = n
+	_check(combat != null, "steunwiel: CombatButtons ontbreekt")
+	if combat != null:
+		game.streak_sel = "napalm"
+		combat.call("_select_wheel", "support", 0)
+		_check(game.streak_sel == "truck", "steunwiel sector 0 kiest de truck (%s)" % game.streak_sel)
+		combat.call("_select_wheel", "support", 3)
+		_check(game.streak_sel == "napalm", "steunwiel sector 3 kiest napalm (%s)" % game.streak_sel)
+		game.streak_sel = "truck"
 	var used: String = game.streak_take()
 	_check(used == "truck" and game.streak_bank == ["napalm"], "gekozen beloning wordt gebruikt en de andere blijft (%s, %s)" % [used, str(game.streak_bank)])
 	_check(game.streak_current() == "napalm" and game.streak_others().is_empty(), "daarna blijft napalm over zonder kiezer")

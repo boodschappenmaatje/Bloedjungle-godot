@@ -270,7 +270,8 @@ func _sync() -> void:
 	var show := total > 0 and not Game.build_mode and (Game.state == "play" or Game.state == "prep")
 	var active := not Game.build_mode and (Game.state == "play" or Game.state == "prep")
 	var driving: bool = Game.player != null and is_instance_valid(Game.player) and Game.player.driving
-	_equipment_panel.visible = active and not Game.editing and not driving
+	# Equipment selection now lives in the compact long-press wheel on the selected equipment action.
+	_equipment_panel.visible = false
 	for slot in _equipment_slots:
 		slot.stock = _equipment_stock(slot.item)
 		slot.selected = slot.item == Game.equipment_sel

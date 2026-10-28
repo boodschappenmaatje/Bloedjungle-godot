@@ -2,7 +2,7 @@ class_name TeamCommands
 extends Control
 ## HUD adapter for the shared, asset-independent team input controller.
 
-const LABELS := ["VOLGEN", "VERDEDIGEN", "AANVALLEN", "VERPLAATSEN"]
+const LABELS := ["AANVALLEN", "VERPLAATSEN", "VERDEDIGEN", "VOLGEN"]
 const Controller = preload("res://scripts/team_command_controller.gd")
 
 var button: ActionBtn
@@ -17,6 +17,8 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	button = ActionBtn.make("troepen", "TEAM")
+	button.kind = "combined"
+	button.set_caption("BOUW / TEAM")
 	button.visible = true
 	button.custom_minimum_size = Vector2(58, 58)
 	button.size = button.custom_minimum_size
@@ -32,8 +34,10 @@ func _layout() -> void:
 		return
 	var v := get_viewport_rect().size
 	var safe := UI.safe_margins(v)
-	var x := safe.x + 20.0 if v.x < v.y else maxf(safe.x + 100.0, v.x * 0.5 - 210.0)
-	var y := v.y - safe.w - 204.0
+	# Staand boven de wapenbalk, liggend aan de linkerrand tussen TACTISCH en de linkerstick: vrij van de plaatsingsbalk en wapenbalk.
+	var portrait := v.x < v.y
+	var x := safe.x + 20.0
+	var y := v.y - safe.w - 320.0 if portrait else v.y * 0.5 - button.size.y * 0.5
 	button.position = Vector2(clampf(x, safe.x, v.x - safe.z - button.size.x), clampf(y, safe.y, v.y - safe.w - button.size.y))
 
 
@@ -43,7 +47,7 @@ func _process(delta: float) -> void:
 		_last_context = context
 		if Game.state in ["menu", "shop", "over"] or Game.build_mode or get_tree().paused:
 			cancel_input()
-	button.visible = Game.state in ["play", "prep"] and not Game.build_mode and _available() > 0
+	button.visible = (Game.state == "prep" or (Game.state == "play" and _available() > 0)) and not Game.build_mode
 	button.badge = str(_available())
 	mouse_filter = Control.MOUSE_FILTER_STOP if controller.is_modal() else Control.MOUSE_FILTER_IGNORE
 	if controller.advance(delta):
@@ -150,7 +154,12 @@ func _finish_pointer(id: int, pos: Vector2) -> void:
 	var result: Dictionary = controller.release(id, pos, _wheel_center())
 	match result.get("kind", ""):
 		"toggle":
-			toggle_follow_hold()
+			if Game.state == "prep":
+				var build := get_tree().get_first_node_in_group("build_mode")
+				if build != null:
+					build.call("_enter")
+			else:
+				toggle_follow_hold()
 		"issue":
 			_issue(result.order, Vector3.ZERO, null)
 		"target":
@@ -200,20 +209,18 @@ func _input(e: InputEvent) -> void:
 func _draw() -> void:
 	if not controller.wheel_open:
 		return
-	var center := _wheel_center()
+	# sector 0 rechts, 1 onder, 2 links, 3 boven (zelfde volgorde als LABELS)
+	var icons := ["aanvallen", "verplaatsen", "verdedigen", "volgen"]
+	var items: Array = []
 	for i in 4:
-		var angle: float = TAU * i / 4.0 - PI / 4.0
-		var p := center + Vector2(cos(angle), sin(angle)) * 86.0
-		var rect := Rect2(p - Vector2(52, 24), Vector2(104, 48))
-		draw_rect(rect, UI.PANEL, true)
-		draw_rect(rect, UI.BRASS if i == controller.selected_sector else UI.PANEL_LINE, false, 2.0)
-		draw_string(UI.body(700), p + Vector2(-42, 5), LABELS[i], HORIZONTAL_ALIGNMENT_LEFT, -1, 13, UI.INK)
+		items.append({"label": LABELS[i], "icon": icons[i], "active": true})
+	WheelArt.draw(self, _wheel_center(), items, 0.0, controller.selected_sector)
 
 
 func _wheel_center() -> Vector2:
 	var safe := UI.safe_margins(size)
-	# The diagonal 104×48 sector panels extend about 113 px horizontally and 85 px vertically.
-	return Vector2(clampf(controller.origin.x, safe.x + 114.0, size.x - safe.z - 114.0), clampf(controller.origin.y, safe.y + 86.0, size.y - safe.w - 86.0))
+	var r := WheelArt.OUTER + 6.0
+	return Vector2(clampf(controller.origin.x, safe.x + r, size.x - safe.z - r), clampf(controller.origin.y, safe.y + r, size.y - safe.w - r))
 
 
 func _issue(command: String, target: Vector3, enemy: Node3D) -> void:

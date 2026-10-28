@@ -8,6 +8,25 @@
 
 Deze afspraken gelden voor **Codex én Claude Code** bij alle toekomstige 3D-assetwerkzaamheden, ook als de gebruiker alleen een korte opdracht geeft.
 
+### Verplichte ONTWERPSTOP — expliciete goedkeuring vóór Blender-productie
+
+**Dit is een harde fasegrens voor Codex én Claude Code.** Het geldt bij **ieder nieuw 3D-model** én bij **ingrijpende visuele herontwerpen** van bestaande game-assets (bijvoorbeeld de speler ombouwen tot een Rambo-achtige militair met camouflage). Een verzoek als "maak", "verander", "verbeter", "bouw", "laat hem eruitzien als ..." of een beschrijving van het gewenste uiterlijk is **nog geen ontwerpgoedkeuring**.
+
+**Fase A — inventariseren en overleggen (toegestaan vóór akkoord):**
+- Lees de huidige game-/assetcode, bronbestanden, lopende branches en bestaande goedgekeurde specificaties; inspecteer eventuele rigs, clips, collisions en scripts. Veilig, read-only onderzoek en het vastleggen van bevindingen zijn toegestaan.
+- Bespreek stapsgewijs met de gebruiker het uiterlijk (silhouet, proporties, kleding, accessoires, kleuren), inzet in de game, bestaande en gewenste animaties, gameplaycontracten, schade/VFX en kwaliteit vanuit de echte top-down camera.
+- Toon 2–4 **gecontroleerde** Poly Haven- of bibliotheekmateriaalopties waar relevant, met bruikbare links/previews. **Vraag vóór het ophalen van nieuwe texturepakketten om materiaalkeuze.**
+- Maak een korte, concreet controleerbare **Asset Design Specification**. Vraag vervolgens expliciet: **"Is dit ontwerp goedgekeurd? Zeg 'Ontwerp goedgekeurd, bouwen' als ik mag starten."**
+
+**Fase B — productie (alleen ná aantoonbare goedkeuring):**
+- Begin pas na de expliciete akkoordzin van de gebruiker **na presentatie van de specificatie**, of een aantoonbaar reeds goedgekeurde specificatie met expliciete uitvoeropdracht. Accepteer géén impliciete goedkeuring op basis van de eerste opdracht.
+- Vóór het akkoord: **geen Blender-model bouwen of aanpassen, geen scripts uitvoeren die modellen wijzigen, geen definitieve texturen downloaden/baken, geen animaties exporteren en geen game-assetvervanging implementeren**. Goedkeuring voor een ontwerp mag niet worden afgeleid uit "doe maar" wanneer onduidelijk is waarop dat slaat.
+- Na akkoord: maak bron-/game-assets en een iPhone-USDZ-preview volgens de rest van deze standaard, met gerichte tests, op één branch. **De latere visuele goedkeuring voor merge/OTA blijft een afzonderlijk besluit.**
+
+**Uitzondering: puur technische vervanging door een AL GOEDGEKEURD model.** Bij een opdracht zoals "vervang de oude bunker door onze reeds goedgekeurde HQ-bunker" mag de implementatie direct beginnen, mits er géén nieuw ontwerp of nieuwe stijlvraag nodig is. Behoud alle bestaande Godot-gameplaycontracten.
+
+**Wanneer een agent te vroeg is begonnen:** stop verdere assetproductie onmiddellijk, bewaar reeds gemaakt werk veilig (zonder weggooien of overschrijven), meld wat al is uitgevoerd en hervat bij Fase A. De gebruiker beslist of bestaand proefwerk wordt behouden. Een lopende sessie op een oude branch moet deze nieuwe regel expliciet ontvangen; een GitHub-documentwijziging onderbreekt zo'n sessie niet automatisch.
+
 ### Snelle 3-stappenworkflow: maken → bekijken → mergen
 
 Als de gebruiker korte opdrachten geeft zoals **"voertuig maken"**, **"voertuig bekijken"** en **"voertuig naar main en OTA"**, volg deze efficiënte workflow bij **Codex én Claude Code**, zonder nieuwe projecten of dubbele rondes:

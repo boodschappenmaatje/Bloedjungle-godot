@@ -1,0 +1,130 @@
+class_name SoldierMark
+extends Node3D
+## Leesbaarheid van soldaten: een ring op de grond (goud met richtingspijl voor jou, rood voor vijanden, groen voor
+## bondgenoten), een zacht randlicht langs het lichaam en in Tactisch een groter model. Instelling "markeringen":
+## "on" = in beide camerastanden, "tact" = alleen in Tactisch, "off" = uit. Hangt als kind aan een SoldierModel.
+
+const MODEL_BOOST := 1.3   # Tactisch: het lichaam wat groter, botsing en raakvlak blijven gelijk
+const RING_SHADER := """
+shader_type spatial;
+render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled;
+uniform vec4 col : source_color;
+uniform float arrow = 0.0;
+void fragment() {
+	vec2 p = UV * 2.0 - 1.0;
+	float d = length(p);
+	float ring = smoothstep(0.66, 0.72, d) * (1.0 - smoothstep(0.84, 0.90, d));
+	float fill = (1.0 - smoothstep(0.2, 0.72, d)) * 0.18;
+	float a = 0.0;
+	if (arrow > 0.5) {
+		float f = -p.y;
+		a = step(0.80, f) * step(f, 1.0) * step(abs(p.x), (1.0 - f) * 0.9);
+	}
+	ALBEDO = col.rgb;
+	ALPHA = col.a * max(max(ring, a), fill);
+}
+"""
+const RIM_SHADER := """
+shader_type spatial;
+render_mode unshaded, blend_add, depth_draw_never, shadows_disabled;
+uniform vec4 col : source_color;
+uniform float strength = 1.0;
+void fragment() {
+	float f = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
+	ALBEDO = col.rgb * f * strength;
+}
+"""
+const COLORS := {"speler": Color("f2c94c"), "vijand": Color("e0392b"), "vriend": Color("4fd36b")}
+const RIM_STRENGTH := {"speler": 0.5, "vijand": 0.3, "vriend": 0.3}
+
+static var _ring_shader: Shader
+static var _rim_shader: Shader
+static var _rim_mats := {}
+static var _frame := -1
+static var _active := true
+static var _tactical := false
+
+var kind := "vriend"
+var model: SoldierModel
+var _ring: MeshInstance3D
+var _boost := 1.0
+
+
+## Bepaalt voor elke frame één keer of de markeringen aan staan en of de camera in Tactisch staat.
+static func _refresh(tree: SceneTree) -> void:
+	var f := Engine.get_process_frames()
+	if f == _frame:
+		return
+	_frame = f
+	var cam := tree.root.get_viewport().get_camera_3d()
+	_tactical = cam != null and not bool(cam.get("combat_view"))
+	var mode: String = GameSettings.get_value("markeringen")
+	_active = mode == "on" or (mode == "tact" and _tactical)
+	for k in _rim_mats:
+		(_rim_mats[k] as ShaderMaterial).set_shader_parameter("strength", 1.0 if _active else 0.0)
+
+
+static func _rim(k: String) -> ShaderMaterial:
+	if not _rim_mats.has(k):
+		if _rim_shader == null:
+			_rim_shader = Shader.new()
+			_rim_shader.code = RIM_SHADER
+		var m := ShaderMaterial.new()
+		m.shader = _rim_shader
+		m.set_shader_parameter("col", Color(1.0, 0.93, 0.7) * RIM_STRENGTH[k])
+		_rim_mats[k] = m
+	return _rim_mats[k]
+
+
+## Zet de markering bij dit mannetje; kind volgt uit de look (speler, vijand of bondgenoot/wacht).
+static func attach(m: SoldierModel) -> void:
+	var s := SoldierMark.new()
+	s.name = "SoldierMark"
+	s.model = m
+	s.kind = "speler" if m.look.begins_with("speler") else ("vijand" if m.look.begins_with("vijand") else "vriend")
+	m.add_child(s)
+
+
+func _ready() -> void:
+	if _ring_shader == null:
+		_ring_shader = Shader.new()
+		_ring_shader.code = RING_SHADER
+	var plane := PlaneMesh.new()
+	var r := 0.75 if kind == "speler" else 0.6
+	plane.size = Vector2.ONE * r * 2.0 / 0.9
+	var mat := ShaderMaterial.new()
+	mat.shader = _ring_shader
+	mat.render_priority = 1
+	mat.set_shader_parameter("col", Color(COLORS[kind], 0.95 if kind == "speler" else 0.85))
+	mat.set_shader_parameter("arrow", 1.0 if kind == "speler" else 0.0)
+	_ring = MeshInstance3D.new()
+	_ring.mesh = plane
+	_ring.material_override = mat
+	_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_ring.position.y = 0.05
+	add_child(_ring)
+	# randlicht als tweede laag op elk lichaamsdeel
+	var rim := _rim(kind)
+	for mi: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
+		for s in mi.mesh.get_surface_count():
+			var src := mi.get_surface_override_material(s)
+			if src is StandardMaterial3D and src.next_pass == null:
+				(src as StandardMaterial3D).next_pass = rim
+
+
+func _process(_d: float) -> void:
+	_refresh(get_tree())
+	var body := model.get_parent()
+	if body != null and body.get("dead") == true:
+		_ring.visible = false
+		_set_boost(1.0)
+		return
+	_ring.visible = _active
+	_set_boost(MODEL_BOOST if _active and _tactical else 1.0)
+
+
+func _set_boost(b: float) -> void:
+	if is_equal_approx(_boost, b) or model._model == null:
+		return
+	_boost = b
+	(model._model as Node3D).scale = Vector3.ONE * b

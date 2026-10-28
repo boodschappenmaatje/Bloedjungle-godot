@@ -37,6 +37,8 @@ var _held_time := 0.0
 var _hold_origin := Vector2.ZERO
 var _wheel_kind := ""
 var _wheel_sector := -1
+var _wheel_ui: Control      # tekent het wiel boven alle andere HUD-knoppen
+const WHEEL_EXIT := 150.0   # px van het midden: verder slepen sluit het wiel en begint met richten
 
 
 func _ready() -> void:
@@ -53,6 +55,13 @@ func _ready() -> void:
 		Sfx.play("click")
 		Game.changed.emit())
 	_air = _make("lucht", "STEUN", func(): pass)  # de aanraking loopt via _input (tik of slepen)
+	_wheel_ui = Control.new()
+	_wheel_ui.name = "WheelLayer"
+	_wheel_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_wheel_ui.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_wheel_ui.z_index = 100
+	_wheel_ui.draw.connect(_draw_wheel)
+	add_child(_wheel_ui)
 	resized.connect(_layout)
 	_layout()
 
@@ -227,6 +236,8 @@ func _wheel_input(event: InputEvent) -> bool:
 		return false
 	if not released:
 		_wheel_sector = _sector(pos - _hold_origin)
+		if _wheel_sector >= 0 and (pos - _hold_origin).length() > WHEEL_EXIT and _exit_aim(pointer, pos):
+			return true
 		queue_redraw()
 		get_viewport().set_input_as_handled()
 		return true
@@ -240,6 +251,26 @@ func _wheel_input(event: InputEvent) -> bool:
 		_select_wheel(kind, selected)
 	get_viewport().set_input_as_handled()
 	queue_redraw()
+	return true
+
+
+## Ver buiten het wiel slepen op napalm of granaat: kiezen, het wiel sluit en dezelfde vinger richt meteen verder.
+func _exit_aim(pointer: int, pos: Vector2) -> bool:
+	var napalm := _wheel_kind == "support" and _wheel_sector == 3 and Game.streak_bank.has("napalm")
+	var grenade := _wheel_kind == "equipment" and _wheel_sector == 0 and Game.grenades > 0
+	if not napalm and not grenade:
+		return false
+	_select_wheel(_wheel_kind, _wheel_sector)
+	_wheel_kind = ""
+	_wheel_sector = -1
+	_held_pointer = -2
+	_held_action = ""
+	queue_redraw()
+	if napalm:
+		_begin_air(pointer, pos)
+	else:
+		_begin_aim(pointer, pos)
+	get_viewport().set_input_as_handled()
 	return true
 
 
@@ -269,8 +300,20 @@ func _select_wheel(kind: String, sector: int) -> void:
 
 
 func _draw() -> void:
+	if _wheel_ui == null:
+		return
+	# zolang een wiel open is, verdwijnen de knoppen eronder: geen door elkaar lopende pictogrammen
+	var open := _wheel_kind != ""
+	for b in [_reload, _sprint, _grenade, _roll, _air, _air2]:
+		b.modulate.a = 0.0 if open else 1.0
+	_wheel_ui.queue_redraw()
+
+
+func _draw_wheel() -> void:
+	var ci := _wheel_ui
 	if _wheel_kind == "":
 		return
+	ci.draw_rect(Rect2(Vector2.ZERO, size), Color(0.0, 0.0, 0.0, 0.5))
 	var safe := UI.safe_margins(size)
 	var r := WheelArt.OUTER + 6.0
 	var center := Vector2(clampf(_hold_origin.x, safe.x + r, size.x - safe.z - r), clampf(_hold_origin.y, safe.y + r, size.y - safe.w - r))
@@ -290,7 +333,13 @@ func _draw() -> void:
 			{"label": "VERSTERKING", "icon": "versterking", "active": false},
 			{"label": "NAPALM", "icon": "napalm", "active": Game.streak_bank.has("napalm"), "current": now == "napalm"},
 		]
-	WheelArt.draw(self, center, items, -PI * 0.5, _wheel_sector)
+	WheelArt.draw(ci, center, items, -PI * 0.5, _wheel_sector)
+	var aimable := (_wheel_kind == "support" and _wheel_sector == 3) or (_wheel_kind == "equipment" and _wheel_sector == 0)
+	if aimable and items[_wheel_sector].get("active", false):
+		var f: Font = UI.body(700)
+		var t := "Sleep verder om te richten"
+		var tw := f.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
+		ci.draw_string(f, Vector2(clampf(center.x - tw * 0.5, 8.0, size.x - tw - 8.0), center.y - r - 8.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UI.BRASS)
 
 
 func _air_id() -> String:

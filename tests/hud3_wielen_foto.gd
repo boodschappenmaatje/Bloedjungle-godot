@@ -35,7 +35,7 @@ func _process(_d: float) -> bool:
 		game.changed.emit()
 	if frames == 60:
 		combat._wheel_kind = "equipment"
-		combat._hold_origin = Vector2(466, 215)
+		combat._hold_origin = Vector2(790, 330)
 		combat._wheel_sector = 0
 		combat.queue_redraw()
 	if frames == 70:
@@ -48,7 +48,7 @@ func _process(_d: float) -> bool:
 		combat._wheel_kind = ""
 		combat.queue_redraw()
 		team.controller.wheel_open = true
-		team.controller.origin = Vector2(466, 215)
+		team.controller.origin = Vector2(790, 330)
 		team.controller.selected_sector = 0
 		team.queue_redraw()
 	if frames == 90:

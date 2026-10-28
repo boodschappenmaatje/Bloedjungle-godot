@@ -15,6 +15,7 @@ func _ready() -> void:
 	add_to_group("team_commands")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	z_index = 100   # het commandowiel ligt boven alle andere HUD-knoppen
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	button = ActionBtn.make("troepen", "TEAM")
 	button.kind = "combined"
@@ -214,6 +215,7 @@ func _draw() -> void:
 	var items: Array = []
 	for i in 4:
 		items.append({"label": LABELS[i], "icon": icons[i], "active": true})
+	draw_rect(Rect2(Vector2.ZERO, size), Color(0.0, 0.0, 0.0, 0.5))
 	WheelArt.draw(self, _wheel_center(), items, 0.0, controller.selected_sector)
 
 

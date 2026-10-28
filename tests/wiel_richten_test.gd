@@ -26,6 +26,14 @@ func _drag(pos: Vector2) -> void:
 	combat._input(e)
 
 
+func _touch(pos: Vector2, pressed: bool) -> void:
+	var e := InputEventScreenTouch.new()
+	e.index = 0
+	e.pressed = pressed
+	e.position = pos
+	combat._input(e)
+
+
 func _process(_d: float) -> bool:
 	frames += 1
 	game = root.get_node("Game")
@@ -70,7 +78,30 @@ func _process(_d: float) -> bool:
 		_check(combat._wheel_kind == "support" and combat.air_finger == -2, "truck: wiel blijft, geen richten")
 		combat._wheel_kind = ""
 		combat._held_pointer = -2
-	if frames == 55:
+	if frames == 60:
+		# tikken op de steunknop opent een wiel dat open blijft; tik op een optie kiest, tik op de gekozen optie gebruikt
+		game.streak_bank = ["truck", "napalm"]
+		game.streak_sel = "truck"
+		game.changed.emit()
+		var c: Vector2 = combat._air.global_position + combat._air.size * 0.5
+		_touch(c, true)
+		_touch(c, false)
+		_check(combat._wheel_kind == "support" and combat._wheel_sticky, "tik op steunknop: wiel blijft open")
+		var w: Vector2 = combat._wheel_center()
+		_touch(w + Vector2(-70, 0), true)
+		_touch(w + Vector2(-70, 0), false)
+		_check(combat._wheel_kind == "" and game.streak_current() == "napalm", "tik op NAPALM kiest napalm en sluit")
+		_touch(c, true)
+		_touch(c, false)
+		_check(combat._wheel_sticky, "opnieuw tikken opent het wiel")
+		w = combat._wheel_center()
+		_touch(w + Vector2(-70, 0), true)
+		_touch(w + Vector2(-70, 0), false)
+		_check(not game.streak_bank.has("napalm"), "tik op de gekozen optie gebruikt napalm")
+		_touch(c, true)
+		_touch(c, false)
+		_check(combat._wheel_kind == "" and not game.streak_bank.has("truck"), "alleen truck over: tik gebruikt hem zonder wiel")
+	if frames == 65:
 		print("FAILS=", fails)
 		quit(fails)
 	return false

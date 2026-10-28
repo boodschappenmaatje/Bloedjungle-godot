@@ -253,7 +253,7 @@ func _sector(delta: Vector2) -> int:
 
 func _select_wheel(kind: String, sector: int) -> void:
 	if kind == "equipment":
-		var choices := ["grenade", "c4", "mine", "smoke"]
+		var choices := ["grenade", "c4", "smoke", "mine"]   # boven, rechts, onder, links (zoals het HUD 3.0-plaatje)
 		var item: String = choices[sector]
 		if item == "grenade" and Game.grenades > 0 or item == "mine" and int(Game.inv.get("mine", 0)) > 0:
 			Game.equipment_sel = item
@@ -271,7 +271,7 @@ func _select_wheel(kind: String, sector: int) -> void:
 func _draw() -> void:
 	if _wheel_kind == "":
 		return
-	var labels := ["GRANAAT", "C4  ·  N/B", "MIJN", "ROOK  ·  N/B"] if _wheel_kind == "equipment" else ["TRUCK", "LUCHTAANVAL  ·  N/B", "VERSTERKING  ·  N/B", "NAPALM"]
+	var labels := ["GRANAAT", "C4  ·  N/B", "ROOK  ·  N/B", "MIJN"] if _wheel_kind == "equipment" else ["TRUCK", "LUCHTAANVAL  ·  N/B", "VERSTERKING  ·  N/B", "NAPALM"]
 	var safe := UI.safe_margins(size)
 	var center := Vector2(clampf(_hold_origin.x, safe.x + 96.0, size.x - safe.z - 96.0), clampf(_hold_origin.y, safe.y + 96.0, size.y - safe.w - 96.0))
 	draw_circle(center, 91.0, Color(0.015, 0.02, 0.015, 0.94))
@@ -281,7 +281,7 @@ func _draw() -> void:
 		var p := center + Vector2(cos(a), sin(a)) * 56.0
 		var active := false
 		if _wheel_kind == "equipment":
-			active = (i == 0 and Game.grenades > 0) or (i == 2 and int(Game.inv.get("mine", 0)) > 0)
+			active = (i == 0 and Game.grenades > 0) or (i == 3 and int(Game.inv.get("mine", 0)) > 0)
 		else:
 			active = (i == 0 and Game.streak_bank.has("truck")) or (i == 3 and Game.streak_bank.has("napalm"))
 		var color := UI.BRASS if active else Color(UI.INK_DIM, 0.62)

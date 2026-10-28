@@ -63,7 +63,7 @@ func _run() -> void:
 		return
 	# Pijltjes houden de voorraadselectie bij; C4 heeft geen implementatie of voorraad.
 	var combat = hud.find_child("CombatButtons", true, false)
-	combat.call("_select_wheel", "equipment", 2)
+	combat.call("_select_wheel", "equipment", 3)
 	_check(game.equipment_sel == "mine", "radiaal menu selecteert de mijn niet")
 	await _frames(2)
 	var items_before: int = _count_kind(game.defs, "mine")

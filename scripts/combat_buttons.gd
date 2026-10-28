@@ -271,27 +271,26 @@ func _select_wheel(kind: String, sector: int) -> void:
 func _draw() -> void:
 	if _wheel_kind == "":
 		return
-	var labels := ["GRANAAT", "C4  ·  N/B", "ROOK  ·  N/B", "MIJN"] if _wheel_kind == "equipment" else ["TRUCK", "LUCHTAANVAL  ·  N/B", "VERSTERKING  ·  N/B", "NAPALM"]
 	var safe := UI.safe_margins(size)
-	var center := Vector2(clampf(_hold_origin.x, safe.x + 96.0, size.x - safe.z - 96.0), clampf(_hold_origin.y, safe.y + 96.0, size.y - safe.w - 96.0))
-	draw_circle(center, 91.0, Color(0.015, 0.02, 0.015, 0.94))
-	draw_arc(center, 91.0, 0.0, TAU, 56, UI.BRASS, 2.0, true)
-	for i in 4:
-		var a := -PI * 0.5 + float(i) * PI * 0.5
-		var p := center + Vector2(cos(a), sin(a)) * 56.0
-		var active := false
-		if _wheel_kind == "equipment":
-			active = (i == 0 and Game.grenades > 0) or (i == 3 and int(Game.inv.get("mine", 0)) > 0)
-		else:
-			active = (i == 0 and Game.streak_bank.has("truck")) or (i == 3 and Game.streak_bank.has("napalm"))
-		var color := UI.BRASS if active else Color(UI.INK_DIM, 0.62)
-		if i == _wheel_sector:
-			draw_circle(p, 27.0, Color(UI.BRASS, 0.17))
-			draw_arc(p, 27.0, 0, TAU, 28, UI.BRASS, 2.0)
-		draw_string(UI.body(700), p + Vector2(-52, 5), labels[i], HORIZONTAL_ALIGNMENT_CENTER, 104, 10, color)
-	draw_circle(center, 16.0, Color(UI.PANEL, 0.98))
-	draw_arc(center, 16.0, 0, TAU, 24, UI.BRASS, 1.5)
-	draw_string(UI.body(700), center + Vector2(-4, 4), "×", HORIZONTAL_ALIGNMENT_CENTER, 8, 12, UI.INK)
+	var r := WheelArt.OUTER + 6.0
+	var center := Vector2(clampf(_hold_origin.x, safe.x + r, size.x - safe.z - r), clampf(_hold_origin.y, safe.y + r, size.y - safe.w - r))
+	var items: Array
+	if _wheel_kind == "equipment":
+		items = [
+			{"label": "GRANAAT", "icon": "granaat", "active": Game.grenades > 0, "current": Game.equipment_sel == "grenade"},
+			{"label": "C4", "icon": "c4", "active": false},
+			{"label": "ROOK", "icon": "rook", "active": false},
+			{"label": "MIJN", "icon": "mijn", "active": int(Game.inv.get("mine", 0)) > 0, "current": Game.equipment_sel == "mine"},
+		]
+	else:
+		var now: String = Game.streak_current()
+		items = [
+			{"label": "TRUCK", "icon": "truck", "active": Game.streak_bank.has("truck"), "current": now == "truck"},
+			{"label": "LUCHTAANVAL", "icon": "luchtaanval", "active": false},
+			{"label": "VERSTERKING", "icon": "versterking", "active": false},
+			{"label": "NAPALM", "icon": "napalm", "active": Game.streak_bank.has("napalm"), "current": now == "napalm"},
+		]
+	WheelArt.draw(self, center, items, -PI * 0.5, _wheel_sector)
 
 
 func _air_id() -> String:

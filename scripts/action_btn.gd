@@ -5,6 +5,7 @@ extends Button
 
 const SIZE := Vector2(54, 54)
 const GAP := 62.0
+const ICON_ONLY := ["combined", "granaat", "herlaad", "sprint", "rol", "lucht", "lucht2"]
 
 var kind := ""
 var caption := ""
@@ -82,7 +83,8 @@ func set_caption(c: String) -> void:
 
 func _draw() -> void:
 	var col: Color = Color(UI.BRASS, 0.42) if disabled else UI.BRASS
-	var c := Vector2(size.x * 0.5, 21.0)
+	var icon_only := kind in ICON_ONLY   # HUD 3.0: alleen het pictogram, zonder tekstlabel
+	var c := Vector2(size.x * 0.5, size.y * 0.5 if icon_only else 21.0)
 	var w := 2.6
 	match kind:
 		"poort":
@@ -183,11 +185,12 @@ func _draw() -> void:
 		if bar > 0.001:
 			draw_arc(ring_center, radius, -PI * 0.5, -PI * 0.5 + TAU * clampf(bar, 0.0, 1.0), 36, UI.BRASS, 2.8, true)
 	var f: Font = UI.body(700, 1)
-	var fs := 10
-	while fs > 6 and f.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > size.x - 16.0:
-		fs -= 1
-	var tw := f.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	draw_string(f, Vector2((size.x - tw) * 0.5, size.y - 7.0), caption, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, UI.INK)
+	if not icon_only:
+		var fs := 10
+		while fs > 6 and f.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > size.x - 16.0:
+			fs -= 1
+		var tw := f.get_string_size(caption, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+		draw_string(f, Vector2((size.x - tw) * 0.5, size.y - 7.0), caption, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, UI.INK)
 	if badge != "":
 		var bw := f.get_string_size(badge, HORIZONTAL_ALIGNMENT_LEFT, -1, 11).x + 8.0
 		var br := Rect2(size.x - bw + 2.0, -2.0, bw, 16.0)

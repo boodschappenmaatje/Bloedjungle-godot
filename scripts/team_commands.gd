@@ -209,26 +209,18 @@ func _input(e: InputEvent) -> void:
 func _draw() -> void:
 	if not controller.wheel_open:
 		return
-	var center := _wheel_center()
-	draw_circle(center, 106.0, Color(0.01, 0.018, 0.012, 0.96))
-	draw_arc(center, 106.0, 0.0, TAU, 64, Color(UI.BRASS, 0.88), 2.2, true)
-	draw_line(center + Vector2(0, -103), center + Vector2(0, 103), Color(UI.BRASS, 0.28), 1.0)
-	draw_line(center + Vector2(-103, 0), center + Vector2(103, 0), Color(UI.BRASS, 0.28), 1.0)
+	# sector 0 rechts, 1 onder, 2 links, 3 boven (zelfde volgorde als LABELS)
+	var icons := ["aanvallen", "verplaatsen", "verdedigen", "volgen"]
+	var items: Array = []
 	for i in 4:
-		var angle: float = TAU * i / 4.0
-		var p := center + Vector2(cos(angle), sin(angle)) * 62.0
-		draw_circle(p, 37.0, Color(0.12, 0.095, 0.035, 0.98) if i == controller.selected_sector else UI.PANEL)
-		draw_arc(p, 37.0, 0.0, TAU, 40, UI.BRASS if i == controller.selected_sector else Color(UI.BRASS, 0.58), 2.0, true)
-		draw_string(UI.body(700), p + Vector2(-45, 5), LABELS[i], HORIZONTAL_ALIGNMENT_CENTER, 90, 10, UI.INK)
-	draw_circle(center, 17.0, UI.PANEL)
-	draw_arc(center, 17.0, 0.0, TAU, 24, UI.BRASS, 1.6, true)
-	draw_string(UI.body(700), center + Vector2(-4, 5), "×", HORIZONTAL_ALIGNMENT_CENTER, 8, 16, UI.INK)
+		items.append({"label": LABELS[i], "icon": icons[i], "active": true})
+	WheelArt.draw(self, _wheel_center(), items, 0.0, controller.selected_sector)
 
 
 func _wheel_center() -> Vector2:
 	var safe := UI.safe_margins(size)
-	# The diagonal 104×48 sector panels extend about 113 px horizontally and 85 px vertically.
-	return Vector2(clampf(controller.origin.x, safe.x + 114.0, size.x - safe.z - 114.0), clampf(controller.origin.y, safe.y + 86.0, size.y - safe.w - 86.0))
+	var r := WheelArt.OUTER + 6.0
+	return Vector2(clampf(controller.origin.x, safe.x + r, size.x - safe.z - r), clampf(controller.origin.y, safe.y + r, size.y - safe.w - r))
 
 
 func _issue(command: String, target: Vector3, enemy: Node3D) -> void:

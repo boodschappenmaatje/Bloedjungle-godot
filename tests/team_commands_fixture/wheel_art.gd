@@ -1,0 +1,1 @@
+../../scripts/wheel_art.gd

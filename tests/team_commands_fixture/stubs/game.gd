@@ -19,3 +19,4 @@ var move := Vector2.ZERO
 var aim := NAN
 var fire := false
 var player: Node3D
+func streak_current() -> String: return streak_sel

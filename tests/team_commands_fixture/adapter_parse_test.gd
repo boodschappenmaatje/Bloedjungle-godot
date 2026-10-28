@@ -62,7 +62,7 @@ func _ready() -> void:
 	for corner in [Vector2.ZERO, Vector2(team.size.x, 0), Vector2(0, team.size.y), team.size]:
 		team.controller.begin(8, corner)
 		var corrected: Vector2 = team._wheel_center()
-		_check(corrected.x >= 114.0 and corrected.x <= team.size.x - 114.0, "wheel stays inside safe horizontal edges")
+		_check(corrected.x >= WheelArt.OUTER + 6.0 - 0.01 and corrected.x <= team.size.x - (WheelArt.OUTER + 6.0) + 0.01, "wheel stays inside safe horizontal edges")
 		_check(corrected.y >= 86.0 and corrected.y <= team.size.y - 86.0, "wheel stays inside safe vertical edges")
 		team.cancel_input()
 	var center: Vector2 = team.button.get_global_rect().get_center()

@@ -1,0 +1,27 @@
+{
+ "stats": {
+  "beide": "Generator en wrak: 11.122 driehoeken · 14 meshes · 11 materialen · 9 texturen (1K-VQ2-sets). Geen iPhone-FPS gemeten.",
+  "Generator": "Generator: 9.306 driehoeken · 9 meshes · 7 materialen · 9 texturen (1K-VQ2-sets). Geen iPhone-FPS gemeten.",
+  "Wrak": "Wrak: 1.816 driehoeken · 5 meshes · 5 materialen · 9 texturen (1K-VQ2-sets). Geen iPhone-FPS gemeten."
+ },
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "clips": {
+  "Draaien": {
+   "start": [
+    0,
+    0,
+    0,
+    1
+   ],
+   "eind": [
+    1.0000000000000007,
+    0,
+    0,
+    -2.0304702062084332e-8
+   ],
+   "verschil": 1.4142135767306883
+  }
+ },
+ "errors": [],
+ "ok": true
+}

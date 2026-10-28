@@ -23,6 +23,12 @@ func max_hp() -> float:
 
 func _ready() -> void:
 	add_to_group("gates")
+	Game.power_changed.connect(func():
+		for g in list:   # zwaailampen aan of uit met de stroom
+			for b in g.beacons:
+				var st: String = b.state
+				b.state = ""
+				_beacon_state(b, st))
 	for sz in [-1.0, 1.0]:
 		var g := {"name": "noord" if sz < 0.0 else "zuid", "sz": sz, "open": 0.0, "hold": 0.0, "user_open": false, "locked": false,
 			"hp": HP, "max_hp": HP, "broken": false, "moving": false}
@@ -96,7 +102,7 @@ func _beacon_state(b: Dictionary, st: String) -> void:
 		return
 	b.state = st
 	var c: Color = {"dicht": Color(1.0, 0.1, 0.05), "schuift": Color(1.0, 0.45, 0.05), "open": Color(0.15, 1.0, 0.3)}[st]
-	var e: float = {"dicht": 0.7, "schuift": 3.5, "open": 0.9}[st]
+	var e: float = {"dicht": 0.7, "schuift": 3.5, "open": 0.9}[st] * (1.0 if Game.power else 0.0)
 	if b.kap:
 		b.kap.albedo_color = Color(c.r, c.g, c.b, 0.6)
 		b.kap.emission_enabled = true
@@ -107,7 +113,7 @@ func _beacon_state(b: Dictionary, st: String) -> void:
 		b.bol.emission = c.lerp(Color.WHITE, 0.4)
 		b.bol.emission_energy_multiplier = e * 1.5
 	b.light.light_color = c.lerp(Color(1.0, 0.7, 0.3), 0.3)
-	b.light.visible = st == "schuift"
+	b.light.visible = st == "schuift" and Game.power
 	if st == "schuift":
 		b.anim.play("draaien")
 	else:

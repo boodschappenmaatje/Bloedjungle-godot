@@ -35,5 +35,7 @@ func _post_import(scene: Node) -> Object:
 					material.metallic_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_BLUE
 					material.roughness = 1.0
 					material.metallic = 1.0
+					if material.resource_name.ends_with("_gebrand"):
+						material.albedo_color = Color(0.3, 0.28, 0.27)   # zwartgeblakerd (de tint zit in Blender in een node en gaat niet mee in de glb)
 					break
 	return scene

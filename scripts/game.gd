@@ -3,6 +3,7 @@ extends Node
 
 signal changed
 signal banner(big: String, small: String, time: float)
+signal power_changed
 signal over(reason: String)
 
 var state := "menu"  # "prep" (pauze tussen golven), "play" (golf bezig), "over"
@@ -57,6 +58,11 @@ var streak_bank: Array = []     # ids uit Streak.LADDER die klaarstaan, oudste e
 var streak_given := {}          # id -> true: deze streak al uitgereikt
 var streak_t := -100.0          # tijd (s) van de laatste streak-kill: de teller komt dan even in beeld
 var streak_air := {"truck": 0, "napalm": 0}  # beloningen die je dit spel hebt gebruikt (voor de samenvatting)
+var power := true:   # stroom in de basis en de straatlantaarns; valt uit als de generator kapot is (Generator)
+	set(v):
+		if v != power:
+			power = v
+			power_changed.emit()
 var hit_src := "speler"         # wie schiet er nu: speler, soldaat of lucht; alleen speler-kills tellen voor de streak
 
 var player  # de speler (player.gd)
@@ -82,6 +88,11 @@ func note_blast(at: Vector3, radius: float) -> void:
 			var d: float = e.global_position.distance_to(at)
 			if d > radius + 0.5 and d < radius * 2.4 + 3.0:
 				e.flinch(at)
+
+
+## Wat het kost om de generator te repareren (0 = heel).
+func generator_cost() -> int:
+	return Generator.inst.repair_cost() if Generator.inst != null else 0
 
 
 ## Wat het kost om de wachthuisjes en slagbomen te repareren (0 = alles heel).

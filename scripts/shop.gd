@@ -788,6 +788,12 @@ func _base_cards() -> void:
 		_plain_card("Wachtposten repareren", "Zet de wachthuisjes en slagbomen bij de poorten weer als nieuw neer.", "", 0, 0, "Repareer · %s" % UI.nl(wcost), Game.points >= wcost, func():
 			if Game.buy(wcost):
 				Wachtpost.inst.repair_all())
+	var ecost: int = Game.generator_cost()
+	if ecost > 0:
+		var estat := "kapot, alle lampen uit" if Generator.inst.down else "%d%%" % roundi(Generator.inst.hp / Generator.HP * 100.0)
+		_plain_card("Generator repareren", "Zet de dieselgenerator in de westhoek weer als nieuw neer. Kapot = geen stroom: de lampen in de basis en in de stad zijn uit.", estat, 0, 0, "Repareer · %s" % UI.nl(ecost), Game.points >= ecost, func():
+			if Game.buy(ecost):
+				Generator.inst.repair())
 	var gl: int = Game.upg["gate"]
 	_plain_card("Poorten versterken", "Dikker staal: +40%% stevigheid voor beide poorten (nu %d). Tip: houd bij een beschadigde poort de knop ingedrukt." % roundi(Game.gates.max_hp()), "", gl, 5, "Max" if gl >= 5 else "Versterk · %s" % UI.nl(350 * (gl + 1)), gl < 5 and Game.points >= 350 * (gl + 1), func():
 		if Game.buy(350 * (gl + 1)):

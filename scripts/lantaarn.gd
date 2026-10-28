@@ -62,7 +62,7 @@ func _process(delta: float) -> void:
 
 
 func _apply() -> void:
-	_on = GameSettings.get_value("time") != "day"
+	_on = GameSettings.get_value("time") != "day" and Game.power
 	if _glass != null:
 		_glass.emission_energy_multiplier = 3.0 if _on else 0.0
 	var cam := get_viewport().get_camera_3d()

@@ -1,8 +1,35 @@
-# BLOEDJUNGLE — 3D ASSET STANDARD VQ2 (projectbreed)
+# BLOEDJUNGLE — HIGH QUALITY SHOWCASE + VQ2 3D ASSET STANDARD (projectbreed)
 
-**Status:** standaard voor alle **nieuwe of opnieuw gemaakte 3D-modellen** in Bloedjungle, voor zowel ChatGPT Codex als Claude Code.
+**Status:** High Quality Showcase is de standaard voor nieuwe en verbeterde Bloedjungle-assets voor zowel ChatGPT Codex als Claude Code. De bestaande VQ2-richtlijnen en referentieassets blijven de minimale visuele ondergrens; ze worden niet verwijderd.
 **Enige bron van waarheid:** dit document. `AGENTS.md` en `CLAUDE.md` verwijzen hiernaar; kopieer de volledige regels niet naar twee verschillende plaatsen.
 **Vastgelegde referentie:** bestaande Blender Visual Quality 2.0-productie (kazerne, wachttoren, legerjeep) en [de resultaten](vq2/README.md). Het eerdere [productiecontract](BLENDER_VISUAL_QUALITY_2.md) bevat specifieke gegevens over die drie modellen, geen algemene opdracht om steeds dezelfde drie te bouwen.
+
+## 0. Permanente samenwerking: korte opdrachten, eerst overleg waar nodig
+
+Deze afspraken gelden voor **Codex én Claude Code** bij alle toekomstige 3D-assetwerkzaamheden, ook als de gebruiker alleen een korte opdracht geeft.
+
+### Nieuwe modellen: ontwerp vóór productie
+1. Bij een nieuwe asset (bijv. "maak een straaljager") bespreek je **eerst met de gebruiker** het type en uiterlijk, de rol in de game, interacties/gameplayfuncties, beweegbare onderdelen, afzonderlijke Blender-/glTF-animaties, Godot-gestuurde bewegingen, geluid/VFX, schade/vernietiging en mobile prestatiebudgetten. Bied concrete, beknopte keuzes aan en stel vragen stapsgewijs, niet allemaal tegelijk.
+2. Sla de afspraken op in een versieerbare **Asset Design Specification** bij de asset, met exacte clipnamen, pivots, clipsduur/loopgedrag, triggers, implementatieverantwoordelijkheid Blender versus Godot en acceptatiecriteria.
+3. **Begin niet met de definitieve modelproductie voordat de gebruiker het ontwerp expliciet heeft goedgekeurd.** Als er al een goedgekeurde specificatie is, hergebruik die en vraag alleen naar nieuwe ambiguïteiten.
+
+### Bestaande modellen vervangen of aanpassen: kort verzoek volstaat
+1. Wanneer de gebruiker vraagt een oud model te vervangen door de HQ-versie, zoek zelf de relevante Godot-scènes, assetpaden, scripts en eerdere afspraken. Vraag niet opnieuw naar al bekende details; voer het verzoek uit binnen de expliciete scope.
+2. Behoud **alle bestaande gameplaycontracten**, waaronder collisions, ingangen/deuren, klim-/dak-/slooplogica, physics, animaties, rigs, pivots, aanvalspunten, triggers, AI en interacties. Controleer met gerichte regressietests, niet alleen een succesvolle GLB-import.
+3. Een assetvervanging is niet automatisch een verzoek om gameplayfuncties opnieuw te ontwerpen. Maak een **Draft PR**, lever een vergelijking en meld echte tests en beperkingen.
+
+### Productie- en kwaliteitsstandaard
+- Gebruik waar lokaal bereikbaar de bestaande **Bloedjungle 3D Production Pipeline 1.0 — High Quality Showcase** op de fysieke iMac onder `~/Documents/Bloedjungle 3D — Performance/pipeline-v1/`. Lees de actuele lokale README, config en scripts vóór gebruik; de repository vervangt deze runtime niet.
+- Maak een **hoogwaardig bewerkbaar bronmodel** en een afzonderlijk **Godot-geoptimaliseerd gameasset**; behoud bronkwaliteit. Gebruik echte Blender-bronbestanden, GLB, bruikbare gebakken PBR-maps en previews vanuit de werkelijke gameplaycamera. Animaties zijn echte zichtbare clips, of expliciet als Godot-code beschreven.
+- Voor Showcase-bronnen is **2K een richtwaarde**, 4K alleen wanneer brondetail en zichtbaarheid dit rechtvaardigen. Voor iPhone-exports gelden meetgestuurde resolutie, atlassen, LOD en trianglebudgetten (vaak 512–2K). Hoge renderresolutie of 128+ Cycles-CPU-samples bewijst op zichzelf geen assetkwaliteit.
+- Op de bestaande iMac zijn **Solid Viewport en Cycles CPU** de betrouwbare route. EEVEE/Material Preview zijn niet bevestigd stabiel; ga er niet stilzwijgend van uit dat zij werken. Indien lokale Blender-toegang ontbreekt, zeg dat expliciet en claim geen lokale productie.
+- Houd de bestaande **VQ2-referenties** als minimale kwaliteitseis; eerdere stijlafspraken, kleuren, top-down leesbaarheid en gameplaybehoud blijven van kracht.
+
+### Testen, samenwerken en publicatie
+- Gebruik passende Godot-import-, scene-, gameplay- en animatieregressietests. Na een al gevalideerde pipeline **geen eindeloze performancetests**: doe een gerichte check per nieuw model en uitgebreid testen bij duidelijke regressie of zware systeemwijzigingen.
+- Vermeld `PASS / WARNING / NOT RUN`, en claim nooit fysieke iPhone-FPS zonder echte apparaatmeting. Een afzonderlijke Asset Test Zone bewijst niet automatisch gameplay-FPS.
+- Werk op een aparte branch met **Draft PR** voor game-/assetwijzigingen. **Niet naar `main` mergen of naar de gedeelde `updates`-release publiceren zonder afzonderlijke expliciete toestemming van de gebruiker.** De gedeelde OTA-feed bereikt mogelijk andere installaties.
+- Schrijf korte uitvoerbare antwoorden aan de gebruiker: die moet kunnen zeggen "Vervang de oude bunker door onze HQ-bunker" zonder lange prompts.
 
 ## 1. Stijl: wat is de maatstaf?
 
@@ -17,7 +44,7 @@
 
 - Echte **base color/albedo**, **OpenGL normal** en **roughness** (bij voorkeur correct ingepakte glTF metallic/roughness/ORM); AO alleen waar nuttig, metallic alleen voor metaal.
 - Kies UV's, texeldichtheid en projectie zorgvuldig. Voorkom uitgerekte vlakken en storend herhalingspatroon. Houd PBR-bronmetadata en licenties bij.
-- **1K is de uitgangsbasis** voor veel objecten, **2K** voor opvallende objecten of grote zichtbare vlakken **alleen als de bron werkelijk voldoende details bevat**. Kleine props mogen 512px of atlasdeling gebruiken. Geen 256→2K opschalen en dat als verbetering tellen.
+- **High Quality Showcase-bronmodellen:** standaard een richtwaarde van 2K, 4K alleen voor aantoonbaar nuttige hero-details. **Godot-gameversie:** texturebudget per asset en gameplayafstand bepalen, vaak 512px–2K, met atlassen/deling waar verstandig. De bestaande VQ2-1K-regel blijft een zuinige optie voor kleinere assets. Geen 256→2K opschalen en dat als echte kwaliteitswinst tellen.
 - Hergebruik goede bestaande CC0/PBR-materiaalsets, onder meer uit `assets/textures/vq2/`, als die passend zijn. Geen externe betaalde leveranciers zonder toestemming.
 - Textuurkwaliteit is belangrijker dan losse materiaalnamen. Gebruik gedeelde materiaalbibliotheken/atlassen wanneer dit drawcalls en geheugengebruik helpt.
 
@@ -70,4 +97,4 @@ Een asset is **niet af** zonder:
 5. Werk op een **aparte featurebranch en Draft PR** bij inhoudelijke model-/gamewijzigingen; **geen automatische merge naar `main`**. Alleen de gebruiker keurt modelkwaliteit definitief goed na visuele beoordeling.
 6. Maak geen tweede concurrerende kwaliteitsstandaard. Wijzig bij een gewenste stijlupgrade **eerst dit document** en werk Codex/Claude instructieverwijzingen zo nodig bij.
 
-**Korte naam voor prompts:** `BLOEDJUNGLE 3D ASSET STANDARD VQ2`. Als gebruiker alleen zegt “maak een nieuw gebouw/voertuig/3D-model”, geldt VQ2 automatisch.
+**Korte naam voor prompts:** `BLOEDJUNGLE HIGH QUALITY SHOWCASE`. Bij korte verzoeken geldt automatisch deze workflow én de VQ2-basis als minimum. Voor nieuwe modellen eerst het ontwerp overleggen; voor bestaande modellen het gevraagde aanpassen met behoud van alle gameplaycontracten.

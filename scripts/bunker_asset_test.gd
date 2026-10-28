@@ -125,14 +125,16 @@ func _build_ui() -> void:
 	hud_root.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	hud_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(hud_root)
-	var safe := UI.safe_margins(get_viewport().get_visible_rect().size, 14.0)
-	hud_root.position = Vector2(safe.x, safe.y)
 	var viewport_size := get_viewport().get_visible_rect().size
+	var safe := UI.safe_margins(viewport_size, 14.0)
+	hud_root.position = Vector2(safe.x, safe.y)
+	hud_root.size = Vector2(maxf(0.0, viewport_size.x - safe.x - safe.z), maxf(0.0, viewport_size.y - safe.y - safe.w))
 	var panel_width := clampf(viewport_size.x * 0.34, 300.0, 430.0)
 
 	collapsed_bar = PanelContainer.new()
 	collapsed_bar.name = "CollapsedHUD"
 	collapsed_bar.custom_minimum_size = Vector2(panel_width, 56.0)
+	collapsed_bar.size = collapsed_bar.custom_minimum_size
 	collapsed_bar.add_theme_stylebox_override("panel", UI.box(Color(0.035, 0.045, 0.032, 0.72), UI.BRASS, 1, 8, 5))
 	hud_root.add_child(collapsed_bar)
 	var compact_row := HBoxContainer.new()
@@ -147,7 +149,8 @@ func _build_ui() -> void:
 	expanded_panel = PanelContainer.new()
 	expanded_panel.name = "ExpandedHUD"
 	expanded_panel.visible = false
-	expanded_panel.custom_minimum_size = Vector2(panel_width, 0.0)
+	expanded_panel.custom_minimum_size = Vector2(panel_width, minf(500.0, viewport_size.y * 0.72))
+	expanded_panel.size = expanded_panel.custom_minimum_size
 	expanded_panel.add_theme_stylebox_override("panel", UI.box(Color(0.035, 0.045, 0.032, 0.87), UI.BRASS, 1, 8, 8))
 	hud_root.add_child(expanded_panel)
 	var scroll := ScrollContainer.new()

@@ -30,6 +30,10 @@ func _run() -> void:
 	_check(zone.camera_option.item_count == 5, "expected four camera presets plus the manual orbit profile")
 	_check(zone.lighting_option.item_count == 2, "expected standard and enhanced lighting")
 	_check(not zone.expanded_panel.visible and zone.collapsed_bar.visible, "HUD should start compact")
+	_check(zone.hud_root.size.x > 0.0 and zone.hud_root.size.y > 0.0 and zone.collapsed_bar.size.x >= 300.0 and zone.collapsed_bar.size.y >= 48.0, "HUD must have a landscape-safe layout and touch-sized compact controls")
+	zone._toggle_hud()
+	_check(zone.expanded_panel.visible and zone.expanded_panel.size.x >= 300.0 and zone.expanded_panel.size.y > 0.0, "expanded settings panel has no usable layout size")
+	zone._toggle_hud()
 
 	zone._set_camera_profile(0)
 	_check(is_equal_approx(rad_to_deg(zone.pitch), 58.0) and is_equal_approx(zone.camera_distance, 28.0), "normal gameplay camera must match 58 degrees / 28 metres")

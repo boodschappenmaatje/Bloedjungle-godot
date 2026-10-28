@@ -47,7 +47,6 @@
     "FlaperonL",
     "FlaperonR",
     "StabilisatorL",
-    "Naverbrander",
     "Body",
     "GearNeus",
     "GearL"
@@ -56,6 +55,6 @@
  },
  "phases": [],
  "errors": [],
- "stats": "5.996 driehoeken · 150 meshes · 14 materialen · texturen 1024×1024, 512×512 · vijf echte GLB-clips; vliegpad, wapens loslaten, nabrander-gloed en geluid zijn Godot. Geen iPhone-FPS gemeten.",
+ "stats": "6.696 driehoeken · 179 meshes · 18 materialen · texturen 1024×1024, 512×512 · vijf echte GLB-clips; vliegpad, wapens loslaten, nabrander-gloed en geluid zijn Godot. Geen iPhone-FPS gemeten.",
  "ok": true
 }

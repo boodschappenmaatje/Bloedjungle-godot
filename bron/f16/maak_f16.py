@@ -179,7 +179,11 @@ RADOOM = pbr("Radoom", None, (0.20, 0.19, 0.17), 0.45, 0.0)
 BAND = pbr("Oranjeband", None, (0.80, 0.30, 0.05), 0.5, 0.0)
 GEEL = pbr("Geelband", None, (0.85, 0.65, 0.05), 0.5, 0.0)
 GLAS = pbr("Glas", None, (0.30, 0.23, 0.08), 0.06, 0.8)    # gouden F-16-kap
-GLOED = pbr("Naverbrander", None, (1.0, 0.45, 0.12), 0.4, 0.0, emit=(1.0, 0.45, 0.12), strength=3.0)
+GLOED = pbr("Naverbrander", None, (1.0, 0.45, 0.12), 0.4, 0.0, emit=(1.0, 0.45, 0.12), strength=2.2, alpha=0.55)      # middelste laag: halfdoorzichtig oranje
+FLAMRAND = pbr("FlamRand", None, (0.9, 0.12, 0.03), 0.5, 0.0, emit=(0.9, 0.12, 0.03), strength=1.0, alpha=0.35)   # buitenste laag: doorzichtig rood
+FLAMKERN = pbr("FlamKern", None, (1.0, 0.92, 0.72), 0.4, 0.0, emit=(1.0, 0.85, 0.55), strength=2.6)               # hete kern: geelwit
+FLAMBLAUW = pbr("FlamBlauw", None, (0.55, 0.70, 1.0), 0.4, 0.0, emit=(0.45, 0.62, 1.0), strength=3.0)            # blauwe basis bij de nozzle
+DIAMANT = pbr("Diamant", None, (1.0, 1.0, 1.0), 0.4, 0.0, emit=(1.0, 0.97, 0.9), strength=5.0)                    # schokdiamanten
 
 
 # ============================================================ bouwstenen
@@ -385,8 +389,31 @@ loft("InlaatGat", [(2.34, 0.98, 0.62, -0.75, 3.2), (2.20, 0.98, 0.62, -0.75, 3.2
 
 # -- uitlaat met naverbrander
 cyl("UitlaatRing", 0.66, 0.30, STAAL, body, (0, -7.35, 0.35), "y", 20)
-cyl("Uitlaat", 0.62, 0.90, DONKER, body, (0, -7.75, 0.35), "y", 20, 0.50)
-cyl("Naverbrander", 0.46, 0.06, GLOED, body, (0, -8.20, 0.35), "y", 20)
+cyl("UitlaatKern", 0.50, 0.60, DONKER, body, (0, -7.75, 0.35), "y", 20, 0.46)
+# nozzle: 16 petalen die om hun scharnier (tangentiele as) open en dicht gaan met de gasstand
+NOZ = leeg("Nozzle", body, (0, -7.50, 0.35))
+PETALEN = []
+for i in range(16):
+    a = i / 16 * math.tau
+    pv = leeg(f"NozzleP{i}", NOZ, (math.sin(a) * 0.60, 0, math.cos(a) * 0.60))
+    pv.rotation_mode = "XYZ"
+    pv.rotation_euler = (0, a, 0)
+    doos(f"Petaal{i}", (0.235, 0.85, 0.03), DONKER if i % 2 else STAAL, pv, (0, -0.425, 0))
+    PETALEN.append((pv, a))
+# gelaagde nabrandervlam met schokdiamanten (wortel Naverbrander schaalt met de gasstand; lengte langs -Y)
+FLAM = leeg("Naverbrander", body, (0, -8.30, 0.35))
+cyl("FlamRand", 0.58, 3.8, FLAMRAND, FLAM, (0, -1.90, 0), "y", 16, 0.04)
+cyl("FlamBuiten", 0.46, 3.1, GLOED, FLAM, (0, -1.55, 0), "y", 16, 0.03)
+cyl("FlamKernKegel", 0.22, 2.3, FLAMKERN, FLAM, (0, -1.15, 0), "y", 14, 0.02)
+cyl("FlamBlauwKegel", 0.20, 0.8, FLAMBLAUW, FLAM, (0, -0.40, 0), "y", 14, 0.16)
+DIAM = []
+for k in range(5):
+    yy = -(0.50 + 0.44 * k)
+    r = 0.30 - 0.035 * k
+    d = leeg(f"Naverbrander_Diamant{k}", FLAM, (0, yy, 0))
+    cyl(f"DiamantA{k}", r, 0.30, DIAMANT, d, (0, 0.15, 0), "y", 10, 0.01)
+    cyl(f"DiamantB{k}", r, 0.30, DIAMANT, d, (0, -0.15, 0), "y", 10, 0.01)
+    DIAM.append(d)
 
 # -- vleugels: afgeknotte delta (voorrand 40 graden), strakes, flaperons
 X0, X1 = 0.9, 4.7
@@ -558,14 +585,16 @@ def sin(t, periode, amp, fase=0.0):
     return amp * math.sin(math.tau * t / periode + fase)
 
 
-NAV = [o for o in ALLE if o.name.startswith("Naverbrander")]
+NAV = [o for o in ALLE if o.name == "Naverbrander"]
 FLAP = {o.name: o for o in ALLE if o.name.startswith("Flaperon")}
 STAB = {o.name: o for o in ALLE if o.name.startswith("Stabilisator")}
 GEARO = [g for g, _ in GEAR]
 for o in [body] + NAV + list(FLAP.values()) + list(STAB.values()):
     o.rotation_mode = "XYZ"
 LOC0 = {o: o.location.copy() for o in list(FLAP.values()) + list(STAB.values())}
-DOELEN = [body] + NAV + list(FLAP.values()) + list(STAB.values())
+DOELEN = [body] + NAV + DIAM + [p for p, _ in PETALEN] + list(FLAP.values()) + list(STAB.values())
+for o in DIAM + [p for p, _ in PETALEN]:
+    o.rotation_mode = "XYZ"
 
 
 def smooth(u):
@@ -573,8 +602,10 @@ def smooth(u):
     return u * u * (3 - 2 * u)
 
 
-def vliegen(t, pitch=0.0, roll=0.0, dz=0.0, ail=0.0):
-    """Standaardpose: naverbrander flikkert, flaperons en stabilators bewegen licht, romp deint licht."""
+def vliegen(t, pitch=0.0, roll=0.0, dz=0.0, ail=0.0, gas=0.85, flare=0.0):
+    """Standaardpose: romp deint licht, flaperons/stabilators bewegen licht en de motor staat op een gasstand.
+    gas 0 = stationair (nozzle dicht, geen vlam), ~0,5 = militair vermogen, 1 = volle nabrander (lange vlam, nozzle wijd open).
+    flare = korte opflakkering bij het inschakelen (extra lengte)."""
     stand = {body: {"rot": (pitch + sin(t, 2.0, hoek(0.5)), roll + sin(t, 4.0, hoek(0.9)), 0.0),
                     "loc": (0, 0, dz + sin(t, 2.0, 0.04))}}
     for n, o in FLAP.items():
@@ -583,26 +614,43 @@ def vliegen(t, pitch=0.0, roll=0.0, dz=0.0, ail=0.0):
     for n, o in STAB.items():
         richting = 1.0 if n.endswith("R") else -1.0
         stand[o] = {"rot": (hoek(-1) + sin(t, 2.0, hoek(1.2), 0.3) + 0.5 * ail * richting, 0.0, 0.0)}
-    for i, o in enumerate(NAV):
-        f = 1.0 + 0.18 * math.sin(math.tau * t * 6.0 + i * 1.3)
-        stand[o] = {"scale": (f, 1.0 + 0.5 * (f - 1.0), f)}
+    # nozzle: dicht bij stationair/militair, wijd open in nabrander
+    open_graden = -3.0 + 11.0 * gas
+    for i, (pv, ang) in enumerate(PETALEN):
+        stand[pv] = {"rot": (-hoek(open_graden + 0.6 * math.sin(math.tau * t * 4.0 + i * 0.7)), ang, 0.0)}
+    # vlam: pas zichtbaar boven ~0,45 gas; flikkering met hele periodes per 2 s zodat de lus naadloos sluit
+    aan = smooth((gas - 0.45) / 0.15)
+    flik = 1.0 + 0.07 * math.sin(math.tau * t * 6.0) + 0.04 * math.sin(math.tau * t * 11.0 + 1.0)
+    lengte = max(0.001, aan * (0.35 + 0.65 * min(gas, 1.0)) * flik * (1.0 + 0.35 * flare))
+    breedte = max(0.001, aan * (0.6 + 0.4 * min(gas, 1.0)) * (1.0 + 0.04 * math.sin(math.tau * t * 8.0)))
+    for o in NAV:
+        stand[o] = {"scale": (breedte, lengte, breedte)}
+    # schokdiamanten: pulseren in tegenfase, nemen af in grootte bij lage gas
+    for k, d in enumerate(DIAM):
+        f = max(0.001, aan * (0.55 + 0.45 * gas) * (1.0 + 0.22 * math.sin(math.tau * t * 4.0 + k * 1.1)))
+        stand[d] = {"scale": (f, f * (1.0 + 0.3 * math.sin(math.tau * t * 6.0 + k)), f)}
     return stand
 
 
 def gear_pose(t):
-    stand = vliegen(t)
+    stand = vliegen(t, gas=0.30)   # naderen: stationair/laag vermogen, geen nabrander
     u = smooth(t / 0.9) if t < 1.5 else 1.0 - smooth((t - 1.5) / 0.9)   # 0 = ingeklapt, 1 = uitgeklapt
     for g, rust in GEAR:
         stand[g] = {"rot": tuple(r * (1 - u) for r in rust)}
     return stand
 
 
-zet_actie("Vliegen-loop", 60, lambda t: vliegen(t), DOELEN)
+def bump(t, midden, breedte):
+    return math.exp(-((t - midden) / breedte) ** 2)
+
+
+zet_actie("Vliegen-loop", 60, lambda t: vliegen(t, gas=0.85), DOELEN)
 zet_actie("Bocht", 90, lambda t: vliegen(t, hoek(-2), hoek(30) * math.sin(math.pi * min(t / 3.0, 1.0)) ** 0.8,
-                                         0.0, hoek(10) * math.sin(math.pi * min(t / 3.0, 1.0))), DOELEN)
+                                         0.0, hoek(10) * math.sin(math.pi * min(t / 3.0, 1.0)), gas=0.85), DOELEN)
 zet_actie("Aanval", 90, lambda t: vliegen(t, hoek(-6) * math.sin(math.pi * min(t / 3.0, 1.0)), 0.0,
-                                          -0.4 * math.sin(math.pi * min(t / 3.0, 1.0)), 0.0), DOELEN)
-zet_actie("Rol", 60, lambda t: vliegen(t, 0.0, math.tau * smooth(t / 2.0), 0.0, hoek(18) * math.sin(math.pi * min(t / 2.0, 1.0))), DOELEN)
+                                          -0.4 * math.sin(math.pi * min(t / 3.0, 1.0)), 0.0,
+                                          gas=0.85 + 0.15 * math.sin(math.pi * min(t / 1.5, 1.0)), flare=bump(t, 0.4, 0.2)), DOELEN)
+zet_actie("Rol", 60, lambda t: vliegen(t, 0.0, math.tau * smooth(t / 2.0), 0.0, hoek(18) * math.sin(math.pi * min(t / 2.0, 1.0)), gas=1.0), DOELEN)
 zet_actie("Landingsgestel", 72, gear_pose, DOELEN + GEARO)
 for o in DOELEN:
     o.rotation_euler = (0, 0, 0)
@@ -612,6 +660,11 @@ for o, l in LOC0.items():
     o.location = l
 for g, rust in GEAR:
     g.rotation_euler = rust
+for pv, ang in PETALEN:
+    pv.rotation_euler = (-hoek(-3.0 + 11.0 * 0.85), ang, 0)
+_rust = vliegen(0.0, gas=0.85)   # rustpose = begin van Vliegen-loop (vlam op reisstand)
+for o in NAV + DIAM:
+    o.scale = _rust[o]["scale"]
 scene.frame_start, scene.frame_end = 0, 90
 
 

@@ -25,3 +25,6 @@ Status: GOEDGEKEURD door Dennis 2026-10-28 ("Kleur moet originele kleur worden, 
 
 ## Acceptatie
 Zelfde napalm-aanval werkt ongewijzigd, 5 clips zichtbaar bewegend, zichtbaar beter dan huidige jet vanuit gamecamera, test slaagt.
+
+## Aanvulling nabrander (goedgekeurd door Dennis 2026-10-28: A, B, C, F)
+Gelaagde vlam met schokdiamanten, 16 bewegende nozzle-petalen en gas-standen per clip. Zie README voor namen en waarden. Niet in scope: hitte-vervorming (D), vonken/rookspoor (E).

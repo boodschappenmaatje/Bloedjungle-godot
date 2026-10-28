@@ -45,6 +45,8 @@ Deze afspraken gelden voor **Codex én Claude Code** bij alle toekomstige 3D-ass
 - Echte **base color/albedo**, **OpenGL normal** en **roughness** (bij voorkeur correct ingepakte glTF metallic/roughness/ORM); AO alleen waar nuttig, metallic alleen voor metaal.
 - Kies UV's, texeldichtheid en projectie zorgvuldig. Voorkom uitgerekte vlakken en storend herhalingspatroon. Houd PBR-bronmetadata en licenties bij.
 - **High Quality Showcase-bronmodellen:** standaard een richtwaarde van 2K, 4K alleen voor aantoonbaar nuttige hero-details. **Godot-gameversie:** texturebudget per asset en gameplayafstand bepalen, vaak 512px–2K, met atlassen/deling waar verstandig. De bestaande VQ2-1K-regel blijft een zuinige optie voor kleinere assets. Geen 256→2K opschalen en dat als echte kwaliteitswinst tellen.
+- Maak voor elk model ook een aparte **`.usdz`-preview voor iPhone Bestanden/Quick Look**. Dit is een beoordelingskopie; de bewerkbare `.blend` blijft de bron en de geoptimaliseerde `.glb` blijft de Godot-export. Neem PBR-materialen en benodigde texturen mee, houd de schaal in meters en exporteer afgesproken animatie wanneer de bron echte, actieve Blender/GLB-animatie bevat. Verzin geen clips en claim geen playback die niet is gecontroleerd.
+- Gebruik op de iMac `tools/usdz_preview/export_usdz.py` met Blender 4.5+, gevolgd door `tools/usdz_preview/validate_usdz.py` (Apple `usdchecker --arkit` en `usdzip`-inhoudscontrole). Zet previews bij voorkeur in iCloud Drive `Bloedjungle Previews/<asset>/<versie>/`; gebruik bij ontbrekende iCloud-toegang `previews/usdz/<asset>/<versie>/` in het project en geef een directe downloadlink. Gebruik nooit een bestaande bestandsnaam stilzwijgend opnieuw.
 - Hergebruik goede bestaande CC0/PBR-materiaalsets, onder meer uit `assets/textures/vq2/`, als die passend zijn. Geen externe betaalde leveranciers zonder toestemming.
 - Textuurkwaliteit is belangrijker dan losse materiaalnamen. Gebruik gedeelde materiaalbibliotheken/atlassen wanneer dit drawcalls en geheugengebruik helpt.
 
@@ -75,6 +77,7 @@ Voor **ieder nieuw/verbeterd model**:
 3. Toon echte `glTF`-animatieclips met selector, Play/Pause, restart, en scrubber/snelheid waar passend. Test zichtbaar bewegende wielen, rotors, schuifdeuren of andere doelonderdelen. Voor puur door Godot gestuurde beweging: bied daarnaast een **echte Godot-testscene**, en label wat de webviewer zelf niet kan spelen.
 4. Publiceer indien mogelijk een werkende, op iPhone te openen viewerlink. **Een webviewer is niet hetzelfde als native inline 3D in ChatGPT**; maak geen onjuiste beloftes dat de modellen in dit chatvenster interactief verschijnen.
 5. Test de modellen in bestaande Godot-scènes of een geïntegreerde showcase met **de werkelijke gameplaycamera**; behoud gameplaybesturing. Voor/na-renders mogen niet de enige controle zijn.
+6. Maak daarnaast een los `.usdz`-bestand voor iPhone Bestanden/Quick Look, met materialen en waar technisch ondersteund de afgesproken animaties. Valideer de pakketstructuur en materialen; controleer de native Quick Look-preview op macOS indien beschikbaar. Een succesvolle archiefcheck bewijst niet dat animatie op een specifieke iPhone afspeelt; vermeld die toestelcontrole als niet uitgevoerd totdat ze echt is gedaan.
 
 ## 6. Kwaliteitscontrole per oplevering
 
@@ -82,6 +85,7 @@ Een asset is **niet af** zonder:
 - [ ] Oude versie en nieuwe versie vergeleken in identieke Blender- en Godot-camera's, indien upgrade.
 - [ ] Overtuigende VQ2-stijl, constructie, PBR-texturen, correcte UVs en realistische slijtage — verbetering is ook op gameplayafstand leesbaar.
 - [ ] Nieuwe `.glb`, bewerkbare Blender-bron, herhaalbaar exportscript en bron-/licentieinformatie opgeslagen.
+- [ ] Afzonderlijke `.usdz`-iPhonepreview met materiaaltexturen gemaakt, gecontroleerd en op iCloud Drive gezet indien beschikbaar; animatie is alleen als werkend gemeld na controle.
 - [ ] Objectnaam, pivots, metermaat, collisions, gameplay-nodecontracten en eventueel destructie-/bouwgedrag behouden en getest.
 - [ ] Werkelijke driehoeken, materialen, surfaces, texturebronresoluties en geheugen-/prestatie-observaties gerapporteerd.
 - [ ] 3D-viewer uitgebreid met echte asset, iPhone-vriendelijke besturing en animatie-afspeelfuncties wanneer clips bestaan.

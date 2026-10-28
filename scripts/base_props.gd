@@ -5,6 +5,8 @@ class_name BaseProps
 
 const C := Data.COMPOUND
 const G := Data.GATE_GAP
+const BUNKER_GAME_ASSET := preload("res://assets/tests/bunker/bloedjungle_bunker_hq.glb")
+const BUNKER_COLLISION_SIZE := Vector3(4.6, 2.0, 4.6)
 
 
 static func build(root: Node3D) -> void:
@@ -60,41 +62,28 @@ static func _gates(root: Node3D) -> void:
 
 
 static func _bunker(root: Node3D) -> void:
-	var b := Kit.box(root, Vector3.ZERO, Vector3(4.6, 2.0, 4.6), Kit.concrete(), 0.0, Kit.LAYER_BUNKER)
+	# Keep the original gameplay body exactly: same layer, 4.6 × 2 × 4.6 m box,
+	# position, damage script and FX anchors. Only the visual child is replaced.
+	var b := StaticBody3D.new()
+	b.name = "Bunker"
+	b.collision_layer = Kit.LAYER_BUNKER
+	b.collision_mask = 0
 	b.set_script(preload("res://scripts/bunker.gd"))
 	b.set_process(true)
-	Kit.box(root, Vector3(0, 2.0, 0), Vector3(5.2, 0.4, 5.2), Kit.concrete_dark())
-	Kit.box(root, Vector3(0, 2.4, 0), Vector3(4.2, 0.18, 4.2), Kit.concrete())
-	# schietgleuven rondom en een stalen deur
-	var dark := Kit.flat(Color("0b0b0a"), 1.0)
-	for yaw in [0.0, PI / 2.0, PI, -PI / 2.0]:
-		var d := Vector3(sin(yaw), 0, cos(yaw))
-		Kit.box(root, d * 2.3 + Vector3(0, 1.3, 0), Vector3(2.2, 0.3, 0.12), dark, yaw)
-	Kit.box(root, Vector3(1.1, 0, 2.31), Vector3(1.0, 1.55, 0.14), Kit.flat(Color("1b1812"), 0.6, 0.5))
-	Kit.box(root, Vector3(1.1, 1.55, 2.33), Vector3(1.2, 0.14, 0.3), Kit.concrete_dark())
-	# camouflagenet over de rand van het dak
-	var net := Kit.box(root, Vector3(-1.2, 2.62, -1.0), Vector3(2.8, 0.06, 2.6), Kit.olive(), 0.15)
-	net.rotation.z = 0.06
-	# machinegeweernest op het dak: zandzakken en een geweer
-	Kit.sandbags(root, Vector3(0.4, 2.6, 1.9), Vector3(2.0, 2.6, 1.9), 2, 7)
-	Kit.cylinder(root, Vector3(1.2, 2.6, 1.5), 0.05, 0.6, Kit.flat(Color("1a1a1a"), 0.5, 0.6), 6)
-	Kit.box(root, Vector3(1.2, 3.1, 1.4), Vector3(0.1, 0.1, 0.9), Kit.flat(Color("111111"), 0.4, 0.7))
-	# antenne en schotel
-	Kit.cylinder(root, Vector3(-1.8, 2.6, -1.8), 0.05, 3.4, Kit.flat(Color("8a8a8a"), 0.4, 0.8), 6)
-	Kit.cylinder(root, Vector3(-1.2, 2.6, 1.2), 0.04, 1.0, Kit.flat(Color("2a2a2a"), 0.6, 0.5), 6)
-	var dish := MeshInstance3D.new()
-	var sm := SphereMesh.new()
-	sm.radius = 0.5
-	sm.height = 0.5
-	sm.is_hemisphere = true
-	dish.mesh = sm
-	dish.material_override = Kit.flat(Color("9a9a92"), 0.4, 0.6)
-	dish.position = Vector3(-1.2, 3.7, 1.2)
-	dish.rotation = Vector3(-1.1, 0.6, 0.0)
-	root.add_child(dish)
-	# vlag
-	Kit.cylinder(root, Vector3(1.9, 2.6, -1.9), 0.04, 3.2, Kit.flat(Color("c9c9bd"), 0.4, 0.5), 6)
-	Kit.box(root, Vector3(2.4, 5.1, -1.9), Vector3(1.0, 0.65, 0.03), Kit.flat(Color("3d6b2d"), 0.9))
+	var collision := CollisionShape3D.new()
+	collision.name = "BunkerCollision"
+	var shape := BoxShape3D.new()
+	shape.size = BUNKER_COLLISION_SIZE
+	collision.shape = shape
+	collision.position.y = BUNKER_COLLISION_SIZE.y / 2.0
+	b.add_child(collision)
+	var visual := BUNKER_GAME_ASSET.instantiate() as Node3D
+	visual.name = "Bunker_High_Quality_Showcase"
+	# Fit the 8.4 × 7.2 m source footprint to the existing 4.6 m gameplay
+	# footprint while retaining the authored vertical silhouette and door.
+	visual.scale = Vector3(0.547619, 0.55, 0.638889)
+	b.add_child(visual)
+	root.add_child(b)
 	# zandzakkenring met een opening bij de deur
 	var r := 3.05
 	Kit.sandbags(root, Vector3(-r, 0, -r), Vector3(r, 0, -r), 2, 21)

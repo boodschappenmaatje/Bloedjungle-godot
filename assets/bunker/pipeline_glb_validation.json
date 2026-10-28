@@ -1,0 +1,100 @@
+{
+  "asset": "Bloedjungle_Bunker_Game_Optimized.glb",
+  "bytes": 10214712,
+  "triangles": 37928,
+  "nodes": 1,
+  "meshes": 1,
+  "materials": 8,
+  "images": 4,
+  "material_channels": {
+    "base_color": 8,
+    "metallic_roughness": 8,
+    "normal": 8,
+    "occlusion": 8,
+    "emission": 8
+  },
+  "godot_import_status": "NOT TESTED",
+  "checks": [
+    {
+      "check": "glb_magic",
+      "status": "PASS",
+      "detail": "glTF"
+    },
+    {
+      "check": "gltf_version_2",
+      "status": "PASS",
+      "detail": "2"
+    },
+    {
+      "check": "declared_length",
+      "status": "PASS",
+      "detail": "declared=10214712 actual=10214712"
+    },
+    {
+      "check": "json_chunk",
+      "status": "PASS",
+      "detail": "Parsed JSON chunk"
+    },
+    {
+      "check": "scene",
+      "status": "PASS",
+      "detail": "1 scenes"
+    },
+    {
+      "check": "mesh_nodes",
+      "status": "PASS",
+      "detail": "1 nodes; 1 meshes"
+    },
+    {
+      "check": "uv_mapping",
+      "status": "PASS",
+      "detail": "8/8 primitives have TEXCOORD_0"
+    },
+    {
+      "check": "normals",
+      "status": "PASS",
+      "detail": "8/8 primitives have NORMAL"
+    },
+    {
+      "check": "materials",
+      "status": "PASS",
+      "detail": "8 materials"
+    },
+    {
+      "check": "embedded_textures",
+      "status": "PASS",
+      "detail": "4 images"
+    },
+    {
+      "check": "pbr_base_color",
+      "status": "PASS",
+      "detail": "8/8 materials reference this map"
+    },
+    {
+      "check": "pbr_metallic_roughness",
+      "status": "PASS",
+      "detail": "8/8 materials reference this map"
+    },
+    {
+      "check": "pbr_normal",
+      "status": "PASS",
+      "detail": "8/8 materials reference this map"
+    },
+    {
+      "check": "pbr_occlusion",
+      "status": "PASS",
+      "detail": "8/8 materials reference this map"
+    },
+    {
+      "check": "pbr_emission",
+      "status": "PASS",
+      "detail": "8/8 materials reference this map"
+    },
+    {
+      "check": "references",
+      "status": "PASS",
+      "detail": "Accessor and texture indices in range"
+    }
+  ],
+  "status": "PASS"
+}

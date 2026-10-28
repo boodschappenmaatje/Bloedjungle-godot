@@ -137,6 +137,11 @@ func _setup_pose() -> void:
 	pose.setup_skeleton(skel)
 	_palm_r = pose.palm_offset("R")
 	pose.palm_l = pose.palm_offset("L")
+	if look == "speler:jungle":
+		# The source Garand foregrip is beyond this rig's two-bone left-arm reach
+		# during locomotion. Bring the player support hand to the receiver; other
+		# soldier looks retain their shared weapon-specific grip table.
+		pose.left_hold_overrides["garand"] = Vector3(0.0, 0.08, 0.0)
 	if _gun != null:   # het wapen hing al in de hand: zet het op de handpalm
 		_gun.transform.origin += _palm_r
 	_sync_hold()

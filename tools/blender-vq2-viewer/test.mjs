@@ -33,6 +33,12 @@ try{
   for(const mode of ['albedo','normal','roughness','wire','pbr']){await page.selectOption('#shading',mode);await page.waitForTimeout(50);}
   results.models.push({name,materials:state.materials,orbit:true,game_camera_58deg_28m:true,inspection_modes:true});
  }
+ await page.selectOption('#asset','bunker_hq');await ready(page,'bunker_hq');
+ const bunker=await page.evaluate(()=>window.__VQ2_TEST__.loaded());
+ assert(bunker.materials.length>=4,'bunker GLB has too few imported materials');
+ assert((await page.locator('#stats').textContent()).includes('37.928'),'bunker geometry audit is not visible');
+ await page.locator('#stage').screenshot({path:path.join(out,'bunker-hq-browser.png')});
+ results.models.push({name:'bunker_hq',materials:bunker.materials,glb_loaded:true,geometry_audit_visible:true,game_camera_controls:true});
  await page.selectOption('#asset','jeep');await ready(page,'jeep');
  const clips=await page.evaluate(()=>window.__VQ2_TEST__.clips());assert(clips.length===7,'expected 7 real clips');
  for(const name of ['Stationair','Rijden','Achteruit','Bocht','Remmen','Vuren','Rondkijken']){

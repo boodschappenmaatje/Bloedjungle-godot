@@ -261,6 +261,10 @@ func _build_menu() -> void:
 	row.add_child(_button("Stadseditor", "secondary", _open_stad_editor))
 	row.add_child(_button("Updates", "secondary", func(): UpdatePanel.open(self)))
 	left.add_child(row)
+	var asset_test := _button("3D Asset Test Zone · Bunker", "secondary", _open_bunker_asset_test)
+	asset_test.custom_minimum_size.y = 44
+	asset_test.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.add_child(asset_test)
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 12)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -307,6 +311,11 @@ func show_menu() -> void:
 func _start_game() -> void:
 	_show("")
 	get_tree().current_scene.begin()
+
+
+func _open_bunker_asset_test() -> void:
+	_show("")
+	get_tree().change_scene_to_file("res://scenes/bunker_asset_test.tscn")
 
 
 ## Stadseditor vanuit het hoofdmenu (start de wereld op en opent hem meteen) of vanuit het pauzemenu (alleen tussen de golven).

@@ -232,7 +232,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		touch_positions[drag.index] = drag.position
 		if touch_positions.size() >= 2:
 			var points: Array = touch_positions.values()
-			var pinch := points[0].distance_to(points[1])
+			var pinch: float = points[0].distance_to(points[1])
 			if previous_pinch > 0.0:
 				camera_distance = clampf(camera_distance * previous_pinch / maxf(pinch, 1.0), 7.0, 38.0)
 				_update_camera()

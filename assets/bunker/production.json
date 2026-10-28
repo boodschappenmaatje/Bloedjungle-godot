@@ -1,0 +1,38 @@
+{
+  "pipeline": "Bloedjungle 3D Production Pipeline 1.0",
+  "profile": "High Quality Showcase",
+  "asset_class": "hero_building",
+  "blender_version": "4.5.15 LTS",
+  "cycles_device": "CPU",
+  "texture_resolution": 2048,
+  "source_mesh_objects": 173,
+  "source_evaluated_triangles": 37752,
+  "game_mesh_objects": 1,
+  "game_triangles": 37928,
+  "materials": 8,
+  "embedded_pbr_images": 4,
+  "source_blend": {
+    "path": "high_quality/Bloedjungle_Bunker_HQ_Source.blend",
+    "sha256": "dedb552de6f280a8f1944dfac10d701a2c55f7d7e3ba6dc6d1f0e6afc1889820"
+  },
+  "game_blend": {
+    "path": "game_optimized/Bloedjungle_Bunker_Game_Optimized.blend",
+    "sha256": "04f71f6b9d267a9fe2e9faa3ce2a38852d4aaa24ec69175a02f701394700ab5f"
+  },
+  "glb": {
+    "path": "../tests/bunker/bloedjungle_bunker_hq.glb",
+    "sha256": "b8dd152e62161f53910e5d47ecc7d590a20ce7135d77b9c682c6b5379be09d78",
+    "bytes": 10214712
+  },
+  "source_texture_files": {
+    "Bunker_HQ_BaseColor.png": "4937f1fc5b77ef8a01b9fdfc5e7e0fc44e4299af5c6885af4837875deafe7a50",
+    "Bunker_HQ_Normal.png": "158b28142ac5578728b218ea5fdd6b0a04e1405e1ccda04c255cab6bc7e8df15",
+    "Bunker_HQ_Roughness.png": "807047db46b9dce9ef32fb5c751722d484014b4dca2b3867821d43f166094e81",
+    "Bunker_HQ_Metallic.png": "bbe1c84ce8057e5e03a05da76954287d02d4a5212c76d4372c353356c310e80c",
+    "Bunker_HQ_AO.png": "05a998db72d6f8ab3ff9e44512c838260223f8e4ccf61f86d598ccc8be676c3f",
+    "Bunker_HQ_ORM.png": "6718e37129c21c043b70315575f74d79ca391604e176c663e41aa5f3f597cf53",
+    "Bunker_HQ_Emission.png": "52743b57c227a286a3acbcbe568f400f99e8a7a9ed697c929be08953f901f656",
+    "Bunker_HQ_Height.png": "5f755b0a1d3a2a279b6bdf23d1b3c7cc6d72c5a356ad152983fac39e57db7bab"
+  },
+  "source_license": "User-created Bloedjungle production asset; derived from the user's existing bunker source project."
+}

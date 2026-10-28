@@ -7,7 +7,7 @@ const WARMUP_SECONDS := 5.0
 const MEASURE_SECONDS := 30.0
 const METRICS := preload("res://scripts/bunker_asset_metrics.gd")
 const SCENARIOS := ["A · Baseline", "B · Jungleomgeving", "C · Drie bunkers", "D · Zware stresstest"]
-const CAMERA_PROFILES := ["Gameplay · Normaal", "Gameplay · Gevecht", "Schuin", "Voorzijde"]
+const CAMERA_PROFILES := ["Gameplay · Normaal", "Gameplay · Gevecht", "Schuin", "Voorzijde", "Handmatig"]
 const LIGHTING_PROFILES := ["Standaardbelichting", "Verbeterde belichting"]
 
 var bunker: Node3D
@@ -345,6 +345,8 @@ func _set_camera_profile(index: int) -> void:
 			pitch = deg_to_rad(12.0)
 			camera_distance = 17.0
 			camera.fov = 45.0
+		4: # Touch orbit/zoom leaves the current values in place.
+			pass
 	if is_instance_valid(camera_option):
 		camera_option.select(camera_profile_index)
 	_update_camera()
@@ -590,12 +592,13 @@ func _unhandled_input(event: InputEvent) -> void:
 			var pinch: float = points[0].distance_to(points[1])
 			if previous_pinch > 0.0:
 				camera_distance = clampf(camera_distance * previous_pinch / maxf(pinch, 1.0), 7.0, 60.0)
+				_set_manual_camera()
 				_update_camera()
 			previous_pinch = pinch
 		else:
 			yaw -= drag.relative.x * 0.006
 			pitch = clampf(pitch + drag.relative.y * 0.0035, deg_to_rad(8.0), deg_to_rad(78.0))
-			camera_profile_index = 2
+			_set_manual_camera()
 			_update_camera()
 	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT:
 		drag_active = event.pressed
@@ -603,13 +606,15 @@ func _unhandled_input(event: InputEvent) -> void:
 		var motion := event as InputEventMouseMotion
 		yaw -= motion.relative.x * 0.006
 		pitch = clampf(pitch + motion.relative.y * 0.0035, deg_to_rad(8.0), deg_to_rad(78.0))
-		camera_profile_index = 2
+		_set_manual_camera()
 		_update_camera()
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_UP:
 		camera_distance = maxf(7.0, camera_distance - 1.0)
+		_set_manual_camera()
 		_update_camera()
 	elif event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 		camera_distance = minf(60.0, camera_distance + 1.0)
+		_set_manual_camera()
 		_update_camera()
 
 
@@ -618,6 +623,12 @@ func _point_over_hud(point: Vector2) -> bool:
 		return false
 	var visible_rect := Rect2(hud_root.global_position, expanded_panel.size if hud_expanded else collapsed_bar.size)
 	return visible_rect.has_point(point)
+
+
+func _set_manual_camera() -> void:
+	camera_profile_index = CAMERA_PROFILES.size() - 1
+	if is_instance_valid(camera_option):
+		camera_option.select(camera_profile_index)
 
 
 func status_label_set(value: String) -> void:

@@ -6,7 +6,7 @@ De assettest is een aparte Godot-scène die bereikbaar blijft via **3D Asset Tes
 
 - De ingeklapte HUD toont de actuele framecadans en, na een voltooide meting, gemiddelde FPS en 1%-low. Tik **TEST** om de compacte instellingen te openen.
 - In de uitgeklapte HUD kies je scenario, camerastand en belichting. De knoppen zijn minimaal 48 logische pixels hoog; de HUD gebruikt de bestaande veilige schermmarges.
-- Sleep over het model om te draaien en knijp om in/uit te zoomen. De cameramodi **Gameplay · Normaal** en **Gameplay · Gevecht** volgen `scripts/camera_rig.gd`: FOV 45°, respectievelijk 58°/28 m en 48°/16 m. De gameplay-look-ahead van 7% van de afstand (5% in portret) blijft op een vaste scènefocus toegepast. **Schuin** en **Voorzijde** zijn inspectiestanden.
+- Sleep over het model om te draaien en knijp om in/uit te zoomen; de keuzelijst schakelt dan naar **Handmatig**. De cameramodi **Gameplay · Normaal** en **Gameplay · Gevecht** volgen `scripts/camera_rig.gd`: FOV 45°, respectievelijk 58°/28 m en 48°/16 m. De gameplay-look-ahead van 7% van de afstand (5% in portret) blijft op een vaste scènefocus toegepast. **Schuin** en **Voorzijde** zijn inspectiestanden.
 - **Standaardbelichting** gebruikt de veldkleur en zon zonder shadow map. **Verbeterde belichting** gebruikt dezelfde scène met warmere zon, meer omgevingslicht en schaduwen. Dit zijn uitsluitend lokale testscene-instellingen.
 
 ## Reproduceerbare scenario's

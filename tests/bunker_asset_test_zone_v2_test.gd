@@ -27,7 +27,7 @@ func _run() -> void:
 	_check(zone.bunker_instances.size() == 1, "baseline should contain one bunker")
 	_check(zone.bunker != null and zone._audit_model(zone.bunker).triangles == 37928, "baseline bunker/PBR GLB did not import")
 	_check(zone.scenario_option.item_count == 4, "expected four reproducible scenarios")
-	_check(zone.camera_option.item_count == 4, "expected four camera profiles")
+	_check(zone.camera_option.item_count == 5, "expected four camera presets plus the manual orbit profile")
 	_check(zone.lighting_option.item_count == 2, "expected standard and enhanced lighting")
 	_check(not zone.expanded_panel.visible and zone.collapsed_bar.visible, "HUD should start compact")
 

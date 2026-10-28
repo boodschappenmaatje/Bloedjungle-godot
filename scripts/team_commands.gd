@@ -34,8 +34,10 @@ func _layout() -> void:
 		return
 	var v := get_viewport_rect().size
 	var safe := UI.safe_margins(v)
-	var x := safe.x + 20.0 if v.x < v.y else maxf(safe.x + 100.0, v.x * 0.5 - 210.0)
-	var y := v.y - safe.w - 220.0
+	# Staand boven de wapenbalk, liggend aan de linkerrand tussen TACTISCH en de linkerstick: vrij van de plaatsingsbalk en wapenbalk.
+	var portrait := v.x < v.y
+	var x := safe.x + 20.0
+	var y := v.y - safe.w - 320.0 if portrait else v.y * 0.5 - button.size.y * 0.5
 	button.position = Vector2(clampf(x, safe.x, v.x - safe.z - button.size.x), clampf(y, safe.y, v.y - safe.w - button.size.y))
 
 

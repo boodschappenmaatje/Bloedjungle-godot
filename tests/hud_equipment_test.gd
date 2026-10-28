@@ -57,7 +57,7 @@ func _run() -> void:
 	for b in get_nodes_in_group("hud_button"):
 		if b is Button and b.get_script() != null and b.get_script().resource_path == "res://scripts/action_btn.gd" and b.get("kind") == "granaat":
 			use_btn = b
-	_check(use_btn != null and use_btn.get("caption") == "GEBRUIK", "de bestaande granaatknop is niet de GEBRUIK-knop")
+	_check(use_btn != null and use_btn.get("caption") in ["GRANAAT", "MIJN", "UITRUSTING"], "de bestaande uitrustingsknop is niet de compacte GRANAAT/MIJN-knop")
 	if use_btn == null:
 		quit(1)
 		return

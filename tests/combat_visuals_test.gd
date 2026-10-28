@@ -52,6 +52,11 @@ func _run() -> void:
 		_check(is_equal_approx(float(Data.WEAPONS[id].dmg), expected_damage[id]), "%s schadewaarde is veranderd" % id)
 		_check(float(Data.WEAPON_VISUALS[id].recoil) > 0.0, "%s mist wapenspecifieke terugslag" % id)
 		if id in ["thompson", "mg42"]:
+			_check(float(Data.WEAPONS[id].get("bloom_step", 0.0)) > 0.0, "%s mist cumulatieve spreiding bij salvo" % id)
+			_check(float(Data.WEAPONS[id].get("bloom_max", 0.0)) > 0.0, "%s mist begrenzing voor cumulatieve spreiding" % id)
+		else:
+			_check(not Data.WEAPONS[id].has("bloom_step"), "%s mag geen automatische burst-bloom krijgen" % id)
+		if id in ["thompson", "mg42"]:
 			_check(int(Data.WEAPON_VISUALS[id].trail_every) == 1, "%s mist de tracer per automatisch schot" % id)
 		if id != "bazooka":
 			_check(float(Data.WEAPON_VISUALS[id].flash_length) >= 0.6 and float(Data.WEAPON_VISUALS[id].flash_width) >= 0.2, "%s mondingsflits is te klein voor een telefoon" % id)
@@ -68,6 +73,11 @@ func _run() -> void:
 		player.set("fire_t", 0.0)
 		var before := _bullets().size()
 		player.call("_shoot", game.wstat(id))
+		var bloom_after_first: float = float(player.get("_weapon_bloom"))
+		if id in ["thompson", "mg42"]:
+			_check(bloom_after_first > 0.0 and bloom_after_first <= float(Data.WEAPONS[id].bloom_max), "%s heeft geen begrensde burst-bloom" % id)
+		else:
+			_check(is_zero_approx(bloom_after_first), "%s heeft onterecht burst-bloom" % id)
 		_check(float(player.get("model").get("_recoil")) > 0.0, "%s geeft geen zichtbare wapenimpuls" % id)
 		var spawned := _bullets().slice(before)
 		var expected_count: int = Data.WEAPONS[id].pellets

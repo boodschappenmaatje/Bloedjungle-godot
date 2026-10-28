@@ -11,13 +11,14 @@ const SOLDIER_SCALE := 1.2
 const WEAPON_SND := {"m1911": "pistol", "thompson": "smg", "garand": "rifle", "trench": "shotgun", "mg42": "mg", "bazooka": "rocket"}
 const WEAPONS := {
 	"m1911": {"short": "Pistool", "name": "M1911 Pistool", "price": 0, "dmg": 26.0, "rate": 0.19, "mag": 8, "reload": 1.1, "spread": 0.035, "speed": 75.0, "pellets": 1, "pierce": 0, "life": 0.6, "desc": "Betrouwbaar zijwapen. Altijd bij je."},
-	"thompson": {"short": "Thompson", "name": "Thompson M1928", "price": 700, "dmg": 18.0, "rate": 0.075, "mag": 30, "reload": 2.0, "spread": 0.08, "speed": 75.0, "pellets": 1, "pierce": 0, "life": 0.55, "desc": "De Tommy gun. Snel, luid en hongerig."},
+	"thompson": {"short": "Thompson", "name": "Thompson M1928", "price": 700, "dmg": 18.0, "rate": 0.075, "mag": 30, "reload": 2.0, "spread": 0.08, "bloom_step": 0.12, "bloom_max": 0.70, "speed": 75.0, "pellets": 1, "pierce": 0, "life": 0.55, "desc": "De Tommy gun. Snel, luid en hongerig."},
 	"garand": {"short": "Garand", "name": "M1 Garand", "price": 1000, "dmg": 80.0, "rate": 0.3, "mag": 8, "reload": 1.9, "spread": 0.012, "speed": 120.0, "pellets": 1, "pierce": 2, "life": 0.6, "desc": "Semi-automatisch geweer. Kogel gaat door drie man heen."},
 	"trench": {"short": "Shotgun", "name": "Winchester M1897", "price": 1400, "dmg": 16.0, "rate": 0.62, "mag": 6, "reload": 2.6, "spread": 0.2, "speed": 65.0, "pellets": 9, "pierce": 0, "life": 0.32, "desc": "Loopgraafshotgun. Van dichtbij blijft er weinig over."},
-	"mg42": {"short": "MG 42", "name": "MG 42", "price": 2800, "dmg": 27.0, "rate": 0.05, "mag": 100, "reload": 3.6, "spread": 0.1, "speed": 95.0, "pellets": 1, "pierce": 1, "life": 0.6, "slow": 0.78, "desc": "1200 schoten per minuut. Je loopt er wel trager mee."},
+	"mg42": {"short": "MG 42", "name": "MG 42", "price": 2800, "dmg": 27.0, "rate": 0.05, "mag": 100, "reload": 3.6, "spread": 0.1, "bloom_step": 0.10, "bloom_max": 0.90, "speed": 95.0, "pellets": 1, "pierce": 1, "life": 0.6, "slow": 0.78, "desc": "1200 schoten per minuut. Je loopt er wel trager mee."},
 	"bazooka": {"short": "Bazooka", "name": "M1 Bazooka", "price": 3800, "dmg": 240.0, "rate": 1.0, "mag": 1, "reload": 2.1, "spread": 0.01, "speed": 32.0, "pellets": 1, "pierce": 0, "life": 1.4, "explosive": 4.8, "desc": "Raketwerper. Enorme ontploffing, houd afstand."},
 }
 # Alleen visuele kogel- en flitsinstellingen; deze waarden veranderen de schietlogica niet.
+# bloom_step / bloom_max in WEAPONS zijn uitsluitend tijdelijke spreidingsfeedback tijdens aanhoudend automatisch vuur; schade, tempo en upgrades blijven ongewijzigd.
 const WEAPON_VISUALS := {
 	"m1911": {"flash_length": 1.25, "flash_width": 0.44, "flash_life": 0.08, "flash_color": Color(1.0, 0.76, 0.34), "flash_particles": 3, "flash_energy": 1.5, "flash_range": 5.0, "trail_every": 1, "trail_length": 3.0, "trail_width": 0.052, "trail_head": Color(1.0, 0.86, 0.28, 1.0), "trail_tail": Color(1.0, 0.48, 0.04, 0.28), "casing_every": 1, "recoil": 0.82},
 	"thompson": {"flash_length": 1.05, "flash_width": 0.4, "flash_life": 0.07, "flash_color": Color(1.0, 0.67, 0.27), "flash_particles": 3, "flash_energy": 1.3, "flash_range": 4.8, "trail_every": 1, "trail_length": 2.4, "trail_width": 0.048, "trail_head": Color(1.0, 0.81, 0.22, 1.0), "trail_tail": Color(1.0, 0.41, 0.025, 0.26), "casing_every": 3, "recoil": 0.48},

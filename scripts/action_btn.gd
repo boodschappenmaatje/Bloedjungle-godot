@@ -116,13 +116,14 @@ func _draw() -> void:
 				draw_line(hc + Vector2(-7.5, 0), hc + Vector2(7.5, 0), col, 2.0)
 			draw_line(c + Vector2(-14, 9), c + Vector2(14, 9), col, 2.0)
 		"combined":
-			# Squad above the compact building mark, matching the approved combined access icon.
-			for i in 3:
-				var hc := c + Vector2(-10 + i * 10, -6 - (3 if i == 1 else 0))
-				draw_arc(hc, 5.0, PI, TAU, 10, col, 2.3)
-				draw_line(hc + Vector2(-7, 0), hc + Vector2(7, 0), col, 1.8)
-			draw_rect(Rect2(c + Vector2(-8, 5), Vector2(16, 4)), col)
-			draw_rect(Rect2(c + Vector2(-5, 11), Vector2(10, 4)), col)
+			# HUD 3.0: drie soldaten boven drie blokken (bouwen), zoals in het plaatje
+			for x in [-10.0, 0.0, 10.0]:
+				var hc := c + Vector2(x, -12.0 - (2.0 if x == 0.0 else 0.0))
+				draw_circle(hc, 3.2, col)
+				draw_arc(hc + Vector2(0, 8.5), 5.6, PI, TAU, 8, col, 2.6)
+			draw_rect(Rect2(c + Vector2(-5.5, 2.0), Vector2(11, 6.5)), col)
+			draw_rect(Rect2(c + Vector2(-12.0, 9.5), Vector2(11, 6.5)), col)
+			draw_rect(Rect2(c + Vector2(1.0, 9.5), Vector2(11, 6.5)), col)
 		"zeil":
 			# laadbak met zeil: dicht = boog vol, open = alleen spanten
 			draw_rect(Rect2(c + Vector2(-15, 4), Vector2(30, 7)), col, false, 2.2)
@@ -154,7 +155,16 @@ func _draw() -> void:
 			draw_arc(c, 11.0, PI * 0.15, PI * 1.75, 16, col, w)
 			draw_colored_polygon(PackedVector2Array([c + Vector2(-13, 2), c + Vector2(-5, 3), c + Vector2(-9, 11)]), col)
 		"lucht":
-			Streak.draw_icon(self, reward, c + Vector2(0, 1), 1.0, col)
+			# HUD 3.0: één steunknop met een helikopter; het wiel (lang indrukken) kiest welke steun
+			draw_line(c + Vector2(-15, -10), c + Vector2(15, -10), col, 2.4)
+			draw_line(c + Vector2(0, -10), c + Vector2(0, -6), col, 2.2)
+			draw_colored_polygon(PackedVector2Array([c + Vector2(-8, -4), c + Vector2(0, -7), c + Vector2(8, -4), c + Vector2(11, 1), c + Vector2(7, 6), c + Vector2(-6, 6), c + Vector2(-9, 2)]), col)
+			draw_colored_polygon(PackedVector2Array([c + Vector2(3, -4), c + Vector2(8, -3), c + Vector2(9, 1), c + Vector2(3, 1)]), Color(0.05, 0.06, 0.04, 0.9))
+			draw_line(c + Vector2(-8, 0), c + Vector2(-18, -3), col, 2.8)
+			draw_line(c + Vector2(-18, -3), c + Vector2(-18, -9), col, 2.4)
+			draw_line(c + Vector2(-8, 10), c + Vector2(9, 10), col, 2.0)
+			draw_line(c + Vector2(-4, 6), c + Vector2(-4, 10), col, 1.8)
+			draw_line(c + Vector2(4, 6), c + Vector2(4, 10), col, 1.8)
 			if not disabled:
 				var pulse := 0.55 + 0.45 * sin(Time.get_ticks_msec() / 260.0)
 				draw_arc(size * 0.5, size.x * 0.5 - 1.5, 0, TAU, 32, Color(UI.BRASS, 0.35 + 0.65 * pulse), 2.6, true)

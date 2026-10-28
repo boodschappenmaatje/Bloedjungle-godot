@@ -27,10 +27,12 @@ func _process(_d: float) -> bool:
 		GameSettings.set_value("time", "day")
 		game.prep_t = 9999.0
 		game.inv = {"bags": 3, "trench": 2, "mine": 2, "wire": 1, "sentry": 0}
-		game.streak_bank = ["truck", "napalm"]
 		game.changed.emit()
 		combat = main.get_node("Hud").find_child("CombatButtons", true, false)
 		team = get_first_node_in_group("team_commands")
+	if frames == 30:
+		game.streak_bank = ["truck", "napalm"]
+		game.changed.emit()
 	if frames == 60:
 		combat._wheel_kind = "equipment"
 		combat._hold_origin = Vector2(466, 215)

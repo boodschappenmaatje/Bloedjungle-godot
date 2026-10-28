@@ -86,6 +86,7 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 		_setup_upper_body_animation()
 		_setup_pose()
 		play("stil")
+		SoldierMark.attach(self)
 		return
 	# eigen kopie van de materialen, zodat elk mannetje een eigen kleur en rode flits kan hebben
 	for mi: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
@@ -103,6 +104,7 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 	_model = model
 	_setup_upper_body_animation()
 	play("stil")
+	SoldierMark.attach(self)
 
 
 var _parts := {}   # naam -> MeshInstance3D (VQ2)

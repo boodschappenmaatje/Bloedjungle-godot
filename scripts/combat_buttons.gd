@@ -37,6 +37,7 @@ var _held_time := 0.0
 var _hold_origin := Vector2.ZERO
 var _wheel_kind := ""
 var _wheel_sector := -1
+var _wheel_sticky := false  # wiel geopend met een tik: blijft open, daarna tik je op een optie
 var _wheel_ui: Control      # tekent het wiel boven alle andere HUD-knoppen
 const WHEEL_EXIT := 150.0   # px van het midden: verder slepen sluit het wiel en begint met richten
 
@@ -212,6 +213,8 @@ func _wheel_input(event: InputEvent) -> bool:
 			if tap_equipment:
 				_use_equipment()
 		return false
+	if _wheel_sticky:
+		return _sticky_input(event)
 	var pointer := -2
 	var pos := Vector2.ZERO
 	var released := false
@@ -252,6 +255,89 @@ func _wheel_input(event: InputEvent) -> bool:
 	get_viewport().set_input_as_handled()
 	queue_redraw()
 	return true
+
+
+func _wheel_center() -> Vector2:
+	var safe := UI.safe_margins(size)
+	var r := WheelArt.OUTER + 6.0
+	return Vector2(clampf(_hold_origin.x, safe.x + r, size.x - safe.z - r), clampf(_hold_origin.y, safe.y + r, size.y - safe.w - r))
+
+
+## Een tik op de knop opent het wiel als er iets te kiezen valt; het blijft open tot je een optie tikt.
+func _multiple_choices(kind: String) -> bool:
+	if kind == "support":
+		return not Game.streak_others().is_empty()
+	return Game.grenades > 0 and int(Game.inv.get("mine", 0)) > 0
+
+
+func _open_sticky(kind: String, button: ActionBtn) -> void:
+	_wheel_kind = kind
+	_wheel_sticky = true
+	_wheel_sector = -1
+	_hold_origin = button.global_position + button.size * 0.5
+	Sfx.play("click")
+	queue_redraw()
+
+
+func _close_wheel() -> void:
+	_wheel_kind = ""
+	_wheel_sticky = false
+	_wheel_sector = -1
+	queue_redraw()
+
+
+func _sticky_input(event: InputEvent) -> bool:
+	var pos := Vector2.ZERO
+	var pressed := false
+	if event is InputEventScreenTouch:
+		pos = event.position
+		pressed = event.pressed
+	elif event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.device != InputEvent.DEVICE_ID_EMULATION:
+		pos = event.position
+		pressed = event.pressed
+	elif event is InputEventScreenDrag or event is InputEventMouseMotion or event is InputEventScreenTouch or event is InputEventMouseButton:
+		get_viewport().set_input_as_handled()
+		return true
+	else:
+		return false
+	get_viewport().set_input_as_handled()
+	if not pressed:
+		return true
+	var delta := pos - _wheel_center()
+	if delta.length() < WheelArt.INNER or delta.length() > WheelArt.OUTER + 12.0:
+		_close_wheel()
+		return true
+	var kind := _wheel_kind
+	var sector := _sector(delta)
+	_close_wheel()
+	if sector >= 0:
+		_sticky_pick(kind, sector)
+	return true
+
+
+## Tikken op een andere optie kiest die; tikken op de gekozen optie gebruikt hem meteen (kort, zonder richten).
+func _sticky_pick(kind: String, sector: int) -> void:
+	var p = Game.player
+	if p == null or not is_instance_valid(p):
+		return
+	if kind == "equipment":
+		var item: String = ["grenade", "c4", "smoke", "mine"][sector]
+		if item == Game.equipment_sel and item == "grenade" and p.can_throw_grenade():
+			aim_drag = Vector2.ZERO
+			p.throw_grenade_at(aim_target())
+		elif item == Game.equipment_sel and item == "mine":
+			_use_equipment()
+		else:
+			_select_wheel(kind, sector)
+		return
+	var reward: String = ["truck", "airstrike", "reinforcement", "napalm"][sector]
+	if reward == _air_id() and not p.dead and not p.driving:
+		air_drag = Vector2.ZERO
+		var a := air_aim()
+		Game.streak_take()
+		Streak.use(reward, p.get_parent(), a.target, a.dir)
+	else:
+		_select_wheel(kind, sector)
 
 
 ## Ver buiten het wiel slepen op napalm of granaat: kiezen, het wiel sluit en dezelfde vinger richt meteen verder.
@@ -312,11 +398,11 @@ func _draw() -> void:
 func _draw_wheel() -> void:
 	var ci := _wheel_ui
 	if _wheel_kind == "":
+		_wheel_sticky = false
 		return
 	ci.draw_rect(Rect2(Vector2.ZERO, size), Color(0.0, 0.0, 0.0, 0.5))
-	var safe := UI.safe_margins(size)
 	var r := WheelArt.OUTER + 6.0
-	var center := Vector2(clampf(_hold_origin.x, safe.x + r, size.x - safe.z - r), clampf(_hold_origin.y, safe.y + r, size.y - safe.w - r))
+	var center := _wheel_center()
 	var items: Array
 	if _wheel_kind == "equipment":
 		items = [
@@ -335,9 +421,9 @@ func _draw_wheel() -> void:
 		]
 	WheelArt.draw(ci, center, items, -PI * 0.5, _wheel_sector)
 	var aimable := (_wheel_kind == "support" and _wheel_sector == 3) or (_wheel_kind == "equipment" and _wheel_sector == 0)
-	if aimable and items[_wheel_sector].get("active", false):
+	if _wheel_sticky or (aimable and items[_wheel_sector].get("active", false)):
 		var f: Font = UI.body(700)
-		var t := "Sleep verder om te richten"
+		var t := "Sleep verder om te richten" if not _wheel_sticky else "Tik op de gekozen optie om te gebruiken"
 		var tw := f.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
 		ci.draw_string(f, Vector2(clampf(center.x - tw * 0.5, 8.0, size.x - tw - 8.0), center.y - r - 8.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UI.BRASS)
 
@@ -368,6 +454,10 @@ func release_air() -> void:
 	var id := _air_id()
 	var cancel := _air_out and air_drag.length() <= AIM_DEAD
 	var p = Game.player
+	if not _air_out and air_drag.length() <= AIM_DEAD and _multiple_choices("support") and _wheel_kind == "":
+		cancel_air()
+		_open_sticky("support", _air)
+		return
 	if not cancel and id != "" and p != null and is_instance_valid(p):
 		var a := air_aim()
 		Game.streak_take()
@@ -438,6 +528,11 @@ func drag_aim(d: Vector2) -> void:
 func release_aim() -> void:
 	var p = Game.player
 	var cancel := _aim_out and aim_drag.length() <= AIM_DEAD
+	var tap := not _aim_out and aim_drag.length() <= AIM_DEAD
+	if tap and _multiple_choices("equipment") and _wheel_kind == "":
+		cancel_aim()
+		_open_sticky("equipment", _grenade)
+		return
 	if not cancel and p != null and is_instance_valid(p):
 		p.throw_grenade_at(aim_target())
 	cancel_aim()
@@ -531,6 +626,7 @@ func _process(_delta: float) -> void:
 		_held_time += _delta
 		if _held_time >= WHEEL_HOLD:
 			_wheel_kind = _held_action
+			_wheel_sticky = false
 			_wheel_sector = -1
 			if _held_action == "equipment":
 				cancel_aim()

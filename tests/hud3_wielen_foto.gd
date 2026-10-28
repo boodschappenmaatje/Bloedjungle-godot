@@ -35,6 +35,7 @@ func _process(_d: float) -> bool:
 		game.changed.emit()
 	if frames == 60:
 		combat._wheel_kind = "equipment"
+		combat._wheel_sticky = true
 		combat._hold_origin = Vector2(790, 330)
 		combat._wheel_sector = 0
 		combat.queue_redraw()

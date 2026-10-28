@@ -73,6 +73,7 @@ jobs:
           "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/import.log"
           "$GODOT_BIN" --headless --path . --quit-after 10 2>&1 | tee "$RUNNER_TEMP/startup.log"
           "$GODOT_BIN" --headless --path . -s tests/bunker_hq_replacement_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/bunker_hq_replacement_test.log"
+          "$GODOT_BIN" --headless --path . -s tests/soldaat_vq2_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/soldaat_vq2_test.log"
           if grep -E '(^| )(SCRIPT ERROR|Parse Error|Failed loading resource)' "$RUNNER_TEMP/import.log" "$RUNNER_TEMP/startup.log"; then
             echo "Godot import/startup logged errors; see the retained diagnostics artifact" >&2
             exit 1
@@ -91,6 +92,7 @@ jobs:
             ${{ runner.temp }}/import.log
             ${{ runner.temp }}/startup.log
             ${{ runner.temp }}/bunker_hq_replacement_test.log
+            ${{ runner.temp }}/soldaat_vq2_test.log
           if-no-files-found: ignore
           retention-days: 7
       - name: Export iOS project

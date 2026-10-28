@@ -36,8 +36,13 @@ godot --headless --path . --import && python3 tools/textuur_import.py && godot -
   getint) en `<Variant>_Kleding` (Godot zet `albedo_color = SoldierModel.uniform_tint(uniformkleur)`).
 - Uitrusting (materiaal `Uitrusting`, `Hoofdband` getint met de bandkleur): `Helm Vest Koppel Rugzak Hoofdband Bandana
   Boonie Pet Staalhelm Borsttuig Patroongordels Raketzak Laarzen Laarzen_V`.
-- Looks (`SoldierModel.LOOKS`): `eigen` (bondgenoten, wachten), `speler:bloot|mouwloos|uniform|vest` (volgt
+- Looks (`SoldierModel.LOOKS`): `eigen` (bondgenoten, wachten), `speler:jungle|bloot|mouwloos|uniform|vest` (volgt
   Uitrusting > Bovenlijf), `vijand:knife|rifle|rocket|heavy`. Instelling *Mannetjes* = *Oud model* zet v1 terug.
+
+De spelerstandaard `speler:jungle` gebruikt `Lijf_Uniform`, de bestaande woodland-camouflage-PBR-kaarten, hoofdband,
+koppel en laarzen. De vorige standaardlook (`bloot`) blijft kiesbaar. Zie [SPELER_JUNGLE.md](SPELER_JUNGLE.md) en
+`maak_speler_jungle_preview.py` voor de afzonderlijke iPhone Quick Look-variant. De game-GLB, rig en animaties blijven
+dezelfde; dit voorkomt een tweede, afwijkende soldaatbron.
 
 ## Cijfers
 | deel | driehoeken |

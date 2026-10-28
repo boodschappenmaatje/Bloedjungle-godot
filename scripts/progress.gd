@@ -21,7 +21,8 @@ const GEAR := {
 		{"id": "goud", "name": "Goud", "color": Color("d6ad4f"), "bonus": "15% meer punten", "b": {"points": 1.15}, "unlock": ["wave", 15]},
 	],
 	"top": [
-		{"id": "bloot", "name": "Ontbloot", "bonus": "Rambo: 6% sneller", "b": {"speed": 1.06}},
+		{"id": "jungle", "name": "Jungle-overlever", "bonus": "6% sneller", "b": {"speed": 1.06}},
+		{"id": "bloot", "name": "Ontbloot", "bonus": "6% sneller", "b": {"speed": 1.06}},
 		{"id": "mouwloos", "name": "Mouwloos shirt", "bonus": "3% sneller, 3% minder schade", "b": {"speed": 1.03, "taken": 0.97}},
 		{"id": "uniform", "name": "Uniform", "bonus": "6% minder schade", "b": {"taken": 0.94}, "unlock": ["wave", 3]},
 		{"id": "vest", "name": "Tactisch vest", "bonus": "12% minder schade, 5% trager", "b": {"taken": 0.88, "speed": 0.95}, "unlock": ["kills", 500]},
@@ -32,7 +33,7 @@ const TITLES := {"camo": "Camouflage", "band": "Hoofdband", "top": "Bovenlijf"}
 static var scores: Array = []
 static var player_name := "Rambo"
 static var stats := {"bestWave": 0, "kills": 0, "games": 0, "boss": 0}
-static var sel := {"camo": "jungle", "band": "rood", "top": "bloot"}
+static var sel := {"camo": "jungle", "band": "rood", "top": "jungle"}
 static var autostart := false  # na "Opnieuw" meteen spelen, zonder hoofdmenu
 static var _loaded := false
 static var _bonus := {}
@@ -51,6 +52,9 @@ static func load_all() -> void:
 		stats[k] = int(cf.get_value("stats", k, 0))
 	for k in sel:
 		sel[k] = cf.get_value("gear", k, sel[k])
+	if migrate_appearance(cf):
+		sel.top = str(cf.get_value("gear", "top", sel.top))
+		cf.save(PATH)
 
 
 static func save() -> void:
@@ -61,7 +65,20 @@ static func save() -> void:
 		cf.set_value("stats", k, stats[k])
 	for k in sel:
 		cf.set_value("gear", k, sel[k])
+	cf.set_value("gear", "appearance_version", 1)
 	cf.save(PATH)
+
+
+## Migreer alleen de voormalige standaardlook; bonus en overige opgeslagen uitrusting blijven gelijk.
+static func migrate_appearance(cf: ConfigFile) -> bool:
+	if int(cf.get_value("gear", "appearance_version", 0)) >= 1:
+		return false
+	var top := str(cf.get_value("gear", "top", "jungle"))
+	if top == "bloot":
+		top = "jungle"
+	cf.set_value("gear", "appearance_version", 1)
+	cf.set_value("gear", "top", top)
+	return true
 
 
 static func stat_of(kind: String) -> int:

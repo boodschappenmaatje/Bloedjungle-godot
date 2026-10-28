@@ -31,6 +31,18 @@ func _visible_parts(m: SoldierModel) -> Array:
 
 
 func _run() -> void:
+	var legacy_save := ConfigFile.new()
+	legacy_save.set_value("gear", "top", "bloot")
+	_check(Progress.migrate_appearance(legacy_save), "oude spelerslook is niet gemigreerd")
+	_check(legacy_save.get_value("gear", "top") == "jungle", "oude standaard wordt geen woodlandlook")
+	_check(int(legacy_save.get_value("gear", "appearance_version")) == 1, "uiterlijkmigratieversie ontbreekt")
+	var current_save := ConfigFile.new()
+	current_save.set_value("gear", "appearance_version", 1)
+	current_save.set_value("gear", "top", "bloot")
+	_check(not Progress.migrate_appearance(current_save), "gekozen oude look wordt opnieuw gemigreerd")
+	_check(current_save.get_value("gear", "top") == "bloot", "gekozen oude look wordt niet behouden")
+	_check(Progress.GEAR["top"][0].id == "jungle", "nieuwe standaard is niet Jungle-overlever")
+
 	var old_setting := GameSettings.get_value("soldaat")
 	GameSettings.values["soldaat"] = "vq2"
 	var holder := Node3D.new()

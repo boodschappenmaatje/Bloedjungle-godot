@@ -10,6 +10,7 @@ const SCENE := preload("res://assets/soldaat.glb")
 const SCENE_V2 := preload("res://assets/soldaat_vq2.glb")
 const LOOKS := {
 	"eigen": ["Lijf_Uniform", "Helm", "Vest", "Koppel", "Rugzak", "Laarzen"],
+	"speler:jungle": ["Lijf_Uniform", "Hoofdband", "Koppel", "Laarzen"],
 	"speler:bloot": ["Lijf_Bloot", "Hoofdband", "Koppel", "Laarzen"],
 	"speler:mouwloos": ["Lijf_Mouwloos", "Hoofdband", "Koppel", "Laarzen"],
 	"speler:uniform": ["Lijf_Uniform", "Hoofdband", "Koppel", "Laarzen"],

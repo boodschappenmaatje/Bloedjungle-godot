@@ -1,0 +1,30 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+WARNING: Screen-space ambient occlusion (SSAO) is only available when using the Forward+ or Compatibility renderers.
+     at: environment_set_ssao (servers/rendering/storage/environment_storage.cpp:700)
+     GDScript backtrace (most recent call first):
+         [0] _ready (res://scripts/atmosphere.gd:55)
+WARNING: 54 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 11 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+real 6.14
+user 5.29
+sys 0.64
+           561958912  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              147803  page reclaims
+                   4  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                   9  voluntary context switches
+                6085  involuntary context switches
+         37070746657  instructions retired
+         23519106173  cycles elapsed
+           455024640  peak memory footprint

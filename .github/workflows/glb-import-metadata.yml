@@ -1,0 +1,28 @@
+name: GLB import metadata
+
+on:
+  pull_request:
+    paths:
+      - "assets/**/*.glb"
+      - "assets/**/*.glb.import"
+      - "tools/check_glb_import_metadata.py"
+      - ".github/workflows/glb-import-metadata.yml"
+      - ".gitignore"
+  push:
+    paths:
+      - "assets/**/*.glb"
+      - "assets/**/*.glb.import"
+      - "tools/check_glb_import_metadata.py"
+      - ".github/workflows/glb-import-metadata.yml"
+      - ".gitignore"
+
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+      - name: Check GLB import metadata
+        run: python tools/check_glb_import_metadata.py

@@ -30,6 +30,23 @@ func _visible_parts(m: SoldierModel) -> Array:
 	return out
 
 
+func _visible_model_height(m: Node3D) -> float:
+	var low := INF
+	var high := -INF
+	var player_parts := {}
+	for part_name in SoldierModel.LOOKS["speler:jungle"]:
+		player_parts[str(part_name)] = true
+	for mi: MeshInstance3D in m.find_children("*", "MeshInstance3D", true, false):
+		if not mi.is_visible_in_tree() or mi.mesh == null or not player_parts.has(str(mi.name)):
+			continue
+		var bounds := mi.get_aabb()
+		for corner in range(8):
+			var world_point: Vector3 = mi.global_transform * bounds.get_endpoint(corner)
+			low = minf(low, world_point.y)
+			high = maxf(high, world_point.y)
+	return high - low if high >= low else 0.0
+
+
 func _run() -> void:
 	var legacy_save := ConfigFile.new()
 	legacy_save.set_value("gear", "top", "bloot")
@@ -80,6 +97,9 @@ func _run() -> void:
 					_check(mat.albedo_color.is_equal_approx(SoldierModel.uniform_tint(m._uniform)), "%s: kledingtint niet gezet" % look)
 			if look == "speler:jungle" and mat.resource_name == "JungleCommando_Camo":
 				_check(mat.albedo_color == Color.WHITE, "junglecommando-camouflage wordt niet ongetint getoond")
+			if look == "speler:jungle" and mat.resource_name == "Commando Hair · Short Dark Brown":
+				_check(mat.albedo_color.is_equal_approx(Color(0.012, 0.007, 0.005, 1.0)),
+					"donkere glTF-haarfactor wordt door uniformkleur wit gemaakt")
 			# Hair uses a dark glTF baseColorFactor intentionally; Godot's imported
 			# StandardMaterial3D does not expose that factor here as an albedo texture.
 			if mat.resource_name != "Commando Hair · Short Dark Brown":
@@ -124,6 +144,11 @@ func _run() -> void:
 	_check(has_gloves, "volledig gesloten handschoenmateriaal ontbreekt")
 	_check(has_dark_hair, "kort donker haarmateriaal ontbreekt")
 	_check(has_stubble_skin, "huidmateriaal met lichte stoppeldetail ontbreekt")
+	var imported_height := _visible_model_height(commando)
+	_check(imported_height > 1.55 and imported_height < 1.80,
+		"Jungle Commando-importhoogte is onverwacht: %.3f m" % imported_height)
+	_check(imported_height * Data.SOLDIER_SCALE >= 1.90,
+		"geschaalde Jungle Commando is lager dan 1,90 m: %.3f m" % (imported_height * Data.SOLDIER_SCALE))
 	# HQ v2 has real skinned garment shells and compact individual gear pieces.
 	for part in ["Uniform_Jacket_Shell", "Uniform_Trousers_Shell", "Vest_JungleCommando", "Vest_JungleCommando_Back", "Gloves_Closed", "Hair_Cropped", "Knee_Reinforcements", "Elbow_Reinforcements"]:
 		var part_node := commando.find_child(part, true, false) as MeshInstance3D

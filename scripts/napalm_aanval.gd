@@ -509,6 +509,9 @@ func _smoke(parent: Node, at: Vector3) -> Node3D:
 	var root := Node3D.new()
 	parent.add_child(root)
 	root.global_position = at + Vector3(0, 2.4, 0)
+	if Fx.napalm_rook(root, Vector3.ZERO, 15.0, 100.0) != null:
+		root.global_position = at + Vector3(0, 0.3, 0)
+		return root
 	var sm := Fx._puff(7, 4.0, 3.2, false, Fx._ramp([Color(0.1, 0.09, 0.08, 0.0), Color(0.14, 0.13, 0.12, 0.34), Color(0.2, 0.19, 0.18, 0.0)], [0.0, 0.25, 1.0]), Vector2(1.0, 2.0), 2.4)
 	root.add_child(sm)
 	sm.emitting = true
@@ -520,6 +523,8 @@ func _smolder(parent: Node, at: Vector3) -> Node3D:
 	var root := Node3D.new()
 	parent.add_child(root)
 	root.global_position = at + Vector3(0, 0.4, 0)
+	if Fx.napalm_rook(root, Vector3.ZERO, randf_range(11.0, 14.0), AFTER_TIME - 3.5) != null:
+		return root
 	var g := 0.5
 	var sm := Fx._puff(22, SMOKE_LIFE, 3.0, false, Fx._ramp([Color(g, g, g, 0.0), Color(g, g, g, 0.8), Color(g + 0.05, g + 0.05, g + 0.05, 0.6), Color(g + 0.1, g + 0.1, g + 0.1, 0.0)], [0.0, 0.12, 0.65, 1.0]), Vector2(0.9, 1.8), 1.0)
 	var grow := Curve.new()

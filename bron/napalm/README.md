@@ -9,3 +9,6 @@ Gemeten: iPhone/Xogot-prestaties NIET. Twee atlassen: staand (napalm_vlam_atlas.
 - `scripts/napalm_plaats.gd`: na het richten blijft de strook staan; tik op het veld om hem te verzetten, sleep om te draaien, START bevestigt (kruis annuleert).
 - `scripts/napalm_aanval.gd`: toestel 30 m/s (was 58), warm schijnsel met knipperlicht en een schaduw op de grond.
 - v151: op aanraking plaatst de rechterstick de strook (richting = plek en vliegrichting, 6 tot 20 m van de speler), loslaten bevestigt, terug naar het midden en loslaten of het kruisje annuleert (`Streak.armed`, `TouchSticks.aim_d`). Op een computer blijft tikken + START.
+
+## v152: rook uit Blender
+`blender --background --python bron/napalm/maak_vlam.py -- <uitmap> --rook` simuleert een donkere, rollende rookpluim (Mantaflow, 64 beelden, ~8 min HQ) en geeft `f###.png`; samenvoegen tot 8x8-atlas `assets/napalm_rook_atlas.png` met PIL. In de game: `Fx.napalm_rook` + `shaders/napalm_rook.gdshader` (speelt eenmalig af, trekt aan het eind weg). Zonder atlas valt de game terug op de oude deeltjesrook. De `--plas`-modus (vuur van boven) gaf een symmetrische vlek en is niet gebruikt.

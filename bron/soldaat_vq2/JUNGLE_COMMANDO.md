@@ -75,6 +75,13 @@ soldier regression test checks weapon reach while idle, walking, running, firing
 and hit-reacting, and checks that reload starts and advances. Local Godot is not
 installed on the production iMac; Godot 4.7.2 CI is the authoritative runtime test.
 
+The default player mesh measures approximately 1.62 m from feet to cropped hair
+in Blender. The existing gameplay scale is 1.2, making the in-game player about
+1.94 m tall. Keep that physical scale; do not enlarge the body to compensate for
+the normal 28 m gameplay-camera framing. The Godot runtime must preserve the
+`Commando Hair · Short Dark Brown` glTF base-color factor when applying uniform
+tints; replacing it with white makes the hair look pale in gameplay.
+
 The v1 and earlier approved v2 source, export, textures, USDZ and renders remain
 in their original version folders. The newest editable source, game GLB, textures,
 USDZ previews, renders and receipts are kept in `2.7/`.

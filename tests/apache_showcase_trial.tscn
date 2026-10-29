@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/apache_showcase/Apache_Showcase_Mobile.glb" id="1_apache"]
+
+[node name="ApacheShowcaseTrial" type="Node3D"]
+
+[node name="ApacheShowcaseMobile" parent="." instance=ExtResource("1_apache")]

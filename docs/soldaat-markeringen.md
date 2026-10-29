@@ -3,7 +3,7 @@
 Leesbaarheid van soldaten in Gevecht en Tactisch (keuze van Dennis: A, B, D, E, H).
 
 - `scripts/soldier_mark.gd` (SoldierMark) hangt als kind aan elk SoldierModel (speler, vijanden, bondgenoten, wachten).
-  - Ring op de grond: goud met richtingspijl voor jou, rood voor vijanden, groen voor bondgenoten.
+  - Ring op de grond: rood voor vijanden, groen voor bondgenoten. Jij hebt sinds v152 geen ring en geen pijl meer (Dennis wilde die terug weg).
   - Zacht randlicht (fresnel, tweede materiaallaag) langs het lichaam; strength-uniform wordt één keer per frame gezet.
   - Tactisch: het lichaam 30% groter (alleen het glb-model, botsing en raakvlak blijven gelijk).
   - Dode soldaten verliezen hun ring en grootte (leest `dead` van de ouder).

@@ -15,6 +15,7 @@ const NAPALM_WIDTH := 5.0    # m breed
 const NAPALM_RANGE_MIN := 8.0
 const NAPALM_RANGE_MAX := 30.0
 const NAPALM_TAP := 14.0     # alleen tikken: zo ver recht vooruit
+static var armed := false     # napalm staat klaar: de rechterstick plaatst de strook (napalm_plaats.gd), loslaten bevestigt
 const FADE_AFTER := 4.0      # s dat de teller na een kill in beeld blijft
 
 

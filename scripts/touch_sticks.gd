@@ -13,6 +13,7 @@ var _mouse_used := false
 var _mouse_down := false
 var _events := 0
 var _last_touch_hud_visible := false
+static var aim_d := Vector2.ZERO   # uitwijking van de rechterstick (-1..1), ook als hij niet schiet; napalm_plaats.gd gebruikt dit
 static var info := ""  # voor de fps-teller: wat de sticks nu zien (om te kijken waarom ze niet reageren)
 
 
@@ -147,7 +148,10 @@ func _process(_delta: float) -> void:
 		float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP)))
 	var aim := NAN
 	var fire := false
+	aim_d = Vector2.ZERO
 	for s in _sticks.values():
+		if s.aim:
+			aim_d = s.d
 		var l: float = s.d.length()
 		if not s.aim and l > 0.12:
 			mv = s.d
@@ -163,6 +167,9 @@ func _process(_delta: float) -> void:
 			var p: Vector3 = Game.player.global_position
 			aim = atan2(hit.x - p.x, hit.z - p.z)
 		fire = _mouse_down
+	if Streak.armed:
+		aim = NAN   # napalm staat klaar: de rechterstick richt de strook en schiet niet
+		fire = false
 	info = "touch %d · sticks %d · %dx%d" % [_events, _sticks.size(), get_viewport_rect().size.x, get_viewport_rect().size.y]
 	Game.move = mv.limit_length(1.0)
 	Game.aim = aim

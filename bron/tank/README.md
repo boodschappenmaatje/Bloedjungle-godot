@@ -1,3 +1,5 @@
+> **Let op:** de tank in het spel (`assets/tank.glb`) is sinds v154 de Tiger uit [`bron/tiger/`](../tiger/README.md). Dit is de oude procedurele tank (V1 in de viewer: `assets/vq2_baseline/tank_v1.glb`).
+
 # Tank (Blender-bron)
 
 `assets/tank.glb` wordt gemaakt door `maak_tank.py` (Blender 5.2, ook zonder scherm via `pip install bpy`):

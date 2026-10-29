@@ -23,15 +23,15 @@ func _process(_d: float) -> bool:
 		main.begin()
 	if frames == 60:
 		var kit: GDScript = load("res://scripts/kit.gd")
-		for n in ["Zandzak1", "Zandzak2", "Zandzak3", "Kist_Hout", "Kist_Munitie"]:
+		for n in ["Zandzak1", "Zandzak2", "Zandzak3", "Kist_Hout", "Kist_Munitie", "Munitiekist"]:
 			var m: Mesh = kit.call("prop_mesh", n)
 			_check(m != null and m.get_surface_count() >= 1, n + " ontbreekt in props.glb")
 			var mat := m.surface_get_material(0) as StandardMaterial3D
-			_check(mat != null and mat.resource_name.begins_with("VQ2_") and mat.albedo_texture != null, n + ": geen VQ2-textuur")
+			_check(mat != null and mat.albedo_texture != null and (n == "Munitiekist" or mat.resource_name.begins_with("VQ2_")), n + ": geen VQ2-textuur")
 		var crates := 0
 		var bags := 0
 		for mi in main.find_children("*", "MeshInstance3D", true, false):
-			if mi.mesh == kit.call("prop_mesh", "Kist_Hout") or mi.mesh == kit.call("prop_mesh", "Kist_Munitie"):
+			if mi.mesh == kit.call("prop_mesh", "Kist_Hout") or mi.mesh == kit.call("prop_mesh", "Munitiekist"):
 				crates += 1
 		for mm in main.find_children("*", "MultiMeshInstance3D", true, false):
 			for n in ["Zandzak1", "Zandzak2", "Zandzak3"]:

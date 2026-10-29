@@ -1,6 +1,6 @@
 # Munitiekist (Meshy-test, VQ2-opschoning)
 
-Eerste proef met [Meshy](https://www.meshy.ai) text-to-3D als bron voor Bloedjungle-props. **Testasset:** nog niet in het spel geplaatst; de bestaande procedurele `Kist_Munitie` in `assets/props.glb` blijft ongewijzigd. Of de Meshy-kist die vervangt, beslist Dennis na het bekijken.
+Eerste proef met [Meshy](https://www.meshy.ai) text-to-3D als bron voor Bloedjungle-props. In het spel geplaatst (v153) in de voorraadhoek van de basis (`BaseProps._crates`, 4 kisten, schaal 1,1 = 77 × 63 × 47 cm, collider aangepast aan de gestapelde kist). `Kist_Munitie` in `assets/props.glb` blijft bestaan, maar wordt niet meer geplaatst. Laden via `Kit.prop_mesh(Kit.MUNITIEKIST)`. In-game beeld: `docs/vq2/renders/munitiekist-meshy-in-spel-voorraadhoek.png`.
 
 ## Bron
 
@@ -44,7 +44,7 @@ Beelden: `docs/vq2/renders/munitiekist-blender-oud-meshyvol-meshygame.png` (Cycl
 | Godot 4.7.2 import + `tests/munitiekist_meshy_test.gd` (maat, pivot, 1 surface, 1K-PBR, enkelzijdig) | PASS |
 | Viewer `tools/blender-vq2-viewer/test-munitiekist.mjs` (oud/nieuw/naast elkaar, gamecamera, draaien, geen clips) | PASS (Chromium, software-WebGL) |
 | USDZ `previews/usdz/munitiekist_meshy/v1/` (pakket: usdc + 3 texturen) | PASS; Apple `usdchecker` NOT RUN (geen Mac) |
-| In het spel geplaatst / gameplayregressie | NOT RUN (testasset, niet geplaatst) |
+| `tests/props_test.gd` (voorraadhoek, kisten, botsing) en in-game opname met de echte spelcamera | PASS |
 | iPhone / Xogot / Safari / Quick Look | NOT RUN |
 
 Geen animaties: een gesloten kist heeft geen clips.

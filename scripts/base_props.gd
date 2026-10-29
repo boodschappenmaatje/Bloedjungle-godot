@@ -131,11 +131,11 @@ static func _crates(root: Node3D, pos: Vector3) -> void:
 		if i < 2:
 			Kit.prop(root, "Kist_Hout", p + Vector3(0, s * 0.91, 0), s * 0.85, rng.randf() * PI)
 		elif i == 2:
-			Kit.prop(root, "Kist_Munitie", p + Vector3(0, s * 0.91, 0), 1.5, rng.randf() * PI)
-	Kit.collider(root, pos + Vector3(0.15, 0.3, 1.5), Vector3(1.4, 0.6, 0.7), Kit.LAYER_WALL)
-	Kit.prop(root, "Kist_Munitie", pos + Vector3(-0.2, 0, 1.4), 1.5, 0.4)
-	Kit.prop(root, "Kist_Munitie", pos + Vector3(0.5, 0, 1.55), 1.5, -0.2)
-	Kit.prop(root, "Kist_Munitie", pos + Vector3(0.5, 0.45, 1.55), 1.5, -0.1)
+			Kit.prop(root, Kit.MUNITIEKIST, p + Vector3(0, s * 0.91, 0), 1.1, rng.randf() * PI)
+	Kit.collider(root, pos + Vector3(0.15, 0.63, 1.5), Vector3(1.4, 1.26, 0.8), Kit.LAYER_WALL)
+	Kit.prop(root, Kit.MUNITIEKIST, pos + Vector3(-0.3, 0, 1.4), 1.1, 0.4)
+	Kit.prop(root, Kit.MUNITIEKIST, pos + Vector3(0.5, 0, 1.55), 1.1, -0.2)
+	Kit.prop(root, Kit.MUNITIEKIST, pos + Vector3(0.5, 0.63, 1.55), 1.1, -0.1)
 	Kit.collider(root, pos + Vector3(2.4, 0.45, 0.9), Vector3(2.0, 0.9, 0.7), Kit.LAYER_WALL)
 	for i in 3:
 		Kit.cylinder(root, pos + Vector3(1.7 + i * 0.7, 0, 0.9), 0.3, 0.9, Kit.olive() if i != 1 else Kit.rust(), 10)

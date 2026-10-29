@@ -13,7 +13,7 @@
     "occlusion": 0,
     "emission": 0
   },
-  "godot_import_status": "NOT TESTED",
+  "godot_import_status": "PASS — separately verified with Godot 4.7.2 headless import",
   "checks": [
     {
       "check": "glb_magic",

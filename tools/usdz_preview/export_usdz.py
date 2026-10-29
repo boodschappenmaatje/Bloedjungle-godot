@@ -71,7 +71,9 @@ def scene_inventory() -> dict:
         for material in materials
         if material.use_nodes and material.node_tree
         for node in material.node_tree.nodes
-        if node.type == "TEX_IMAGE" and node.image is not None
+        if node.type == "TEX_IMAGE"
+        and node.image is not None
+        and any(link.from_node == node for link in material.node_tree.links)
     }
     actions = set()
     active_animation = False

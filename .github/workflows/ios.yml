@@ -59,6 +59,11 @@ jobs:
       # On a pristine checkout Godot initially parses autoloads before imported
       # GLB scenes exist. First pass builds .godot/imported; only the second
       # pass is used for strict parser validation.
+      - name: Validate Jungle Commando GLB contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/validate_jungle_commando_glb.py assets/soldaat_jungle_commando.glb --report "$RUNNER_TEMP/jungle_commando_glb.json"
       - name: Prime Godot asset import cache
         shell: bash
         run: |
@@ -73,6 +78,7 @@ jobs:
           "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/import.log"
           "$GODOT_BIN" --headless --path . --quit-after 10 2>&1 | tee "$RUNNER_TEMP/startup.log"
           "$GODOT_BIN" --headless --path . -s tests/bunker_hq_replacement_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/bunker_hq_replacement_test.log"
+          "$GODOT_BIN" --headless --path . -s tests/soldaat_vq2_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/soldaat_vq2_test.log"
           if grep -E '(^| )(SCRIPT ERROR|Parse Error|Failed loading resource)' "$RUNNER_TEMP/import.log" "$RUNNER_TEMP/startup.log"; then
             echo "Godot import/startup logged errors; see the retained diagnostics artifact" >&2
             exit 1
@@ -91,6 +97,8 @@ jobs:
             ${{ runner.temp }}/import.log
             ${{ runner.temp }}/startup.log
             ${{ runner.temp }}/bunker_hq_replacement_test.log
+            ${{ runner.temp }}/soldaat_vq2_test.log
+            ${{ runner.temp }}/jungle_commando_glb.json
           if-no-files-found: ignore
           retention-days: 7
       - name: Export iOS project

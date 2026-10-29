@@ -31,6 +31,18 @@ func _visible_parts(m: SoldierModel) -> Array:
 
 
 func _run() -> void:
+	var legacy_save := ConfigFile.new()
+	legacy_save.set_value("gear", "top", "bloot")
+	_check(Progress.migrate_appearance(legacy_save), "oude spelerslook is niet gemigreerd")
+	_check(legacy_save.get_value("gear", "top") == "jungle", "oude standaard wordt geen woodlandlook")
+	_check(int(legacy_save.get_value("gear", "appearance_version")) == 1, "uiterlijkmigratieversie ontbreekt")
+	var current_save := ConfigFile.new()
+	current_save.set_value("gear", "appearance_version", 1)
+	current_save.set_value("gear", "top", "bloot")
+	_check(not Progress.migrate_appearance(current_save), "gekozen oude look wordt opnieuw gemigreerd")
+	_check(current_save.get_value("gear", "top") == "bloot", "gekozen oude look wordt niet behouden")
+	_check(Progress.GEAR["top"][0].id == "jungle", "nieuwe standaard is niet Jungle-overlever")
+
 	var old_setting := GameSettings.get_value("soldaat")
 	GameSettings.values["soldaat"] = "vq2"
 	var holder := Node3D.new()
@@ -64,10 +76,16 @@ func _run() -> void:
 		for mat: StandardMaterial3D in m._mats:
 			if mat.resource_name.ends_with("_Kleding"):
 				tinted += 1
-				_check(mat.albedo_color.is_equal_approx(SoldierModel.uniform_tint(m._uniform)), "%s: kledingtint niet gezet" % look)
-			_check(mat.albedo_texture != null, "%s: materiaal %s zonder albedo-textuur" % [look, mat.resource_name])
+				if look != "speler:jungle":
+					_check(mat.albedo_color.is_equal_approx(SoldierModel.uniform_tint(m._uniform)), "%s: kledingtint niet gezet" % look)
+			if look == "speler:jungle" and mat.resource_name == "JungleCommando_Camo":
+				_check(mat.albedo_color == Color.WHITE, "junglecommando-camouflage wordt niet ongetint getoond")
+			# Hair uses a dark glTF baseColorFactor intentionally; Godot's imported
+			# StandardMaterial3D does not expose that factor here as an albedo texture.
+			if mat.resource_name != "Commando Hair · Short Dark Brown":
+				_check(mat.albedo_texture != null, "%s: materiaal %s zonder albedo-textuur" % [look, mat.resource_name])
 			_check(mat.normal_enabled and mat.normal_texture != null, "%s: materiaal %s zonder normal map" % [look, mat.resource_name])
-		_check(tinted >= 1, "%s: geen getint kledingmateriaal" % look)
+		_check(tinted >= 1 or look == "speler:jungle", "%s: geen getint kledingmateriaal" % look)
 		if look != "vijand:knife":
 			_check(m._gun != null, "%s: geen wapen in de hand" % look)
 			var hand := m._hand.global_position
@@ -87,6 +105,45 @@ func _run() -> void:
 	# de huid volgt het skelet: het lichaam is een skin op hetzelfde skelet
 	var body: MeshInstance3D = walker.find_child("Lijf_Uniform", true, false)
 	_check(body != null and body.skin != null and body.get_node_or_null(body.skeleton) == skel, "lichaam hangt niet aan het skelet")
+	var commando: SoldierModel = models["speler:jungle"]
+	var commando_body := commando.find_child("Lijf_JungleCommando", true, false) as MeshInstance3D
+	_check(commando_body != null and commando_body.visible, "speler gebruikt de Tiger Stripe-bronbody niet")
+	var commando_skel := commando.find_children("*", "Skeleton3D", true, false)[0] as Skeleton3D
+	_check(commando_body.skin != null and commando_body.get_node_or_null(commando_body.skeleton) == commando_skel, "Jungle Commando-body is niet aan de bestaande 53-bottenrig gekoppeld")
+	_check(not (commando.find_child("Hoofdband", true, false) as Node3D).visible, "standaard Jungle Commando draagt onverwacht een hoofdband")
+	for detail in ["Mag_Pouches", "Radio_Field", "IFAK_Pouch"]:
+		var detail_node := commando.find_child(detail, true, false) as MeshInstance3D
+		_check(detail_node != null and detail_node.visible, "speleruitrusting %s ontbreekt" % detail)
+	var has_gloves := false
+	var has_dark_hair := false
+	var has_stubble_skin := false
+	for mat: StandardMaterial3D in commando._mats:
+		has_gloves = has_gloves or mat.resource_name == "Commando Webbing · Dark Olive"
+		has_dark_hair = has_dark_hair or mat.resource_name == "Commando Hair · Short Dark Brown"
+		has_stubble_skin = has_stubble_skin or mat.resource_name == "JungleCommando_Skin_Stubble"
+	_check(has_gloves, "volledig gesloten handschoenmateriaal ontbreekt")
+	_check(has_dark_hair, "kort donker haarmateriaal ontbreekt")
+	_check(has_stubble_skin, "huidmateriaal met lichte stoppeldetail ontbreekt")
+	# HQ v2 has real skinned garment shells and compact individual gear pieces.
+	for part in ["Uniform_Jacket_Shell", "Uniform_Trousers_Shell", "Vest_JungleCommando", "Vest_JungleCommando_Back", "Gloves_Closed", "Hair_Cropped", "Knee_Reinforcements", "Elbow_Reinforcements"]:
+		var part_node := commando.find_child(part, true, false) as MeshInstance3D
+		_check(part_node != null and part_node.visible, "HQ Jungle Commando onderdeel %s ontbreekt" % part)
+		if part_node != null:
+			_check(part_node.skin != null and part_node.get_node_or_null(part_node.skeleton) == commando_skel, "%s volgt niet de bestaande rig" % part)
+	# Exercise the actual weapon IK over stationary, locomotion, firing and hit poses.
+	for clip in ["stil", "lopen", "rennen", "schieten", "geraakt"]:
+		commando.play(clip, 0.0)
+		for _i in 10:
+			await process_frame
+		_check(commando.pose.reach_gap["R"] < 0.025 and commando.pose.reach_gap["L"] < 0.025,
+			"HQ wapenhouding bereikt beide handen niet tijdens %s (R %.3f, L %.3f)" % [clip, commando.pose.reach_gap["R"], commando.pose.reach_gap["L"]])
+	# Reload is a one-shot full-body action, so verify that the merged clip is
+	# present, starts and advances without applying the two-hand firing hold.
+	commando.play("herladen", 0.0)
+	_check(commando.clip_length("herladen") > 0.0 and commando.anim.is_playing(), "herlaadclip start niet op HQ-speler")
+	for _i in 12:
+		await process_frame
+	_check(commando.current == "herladen" and commando.anim.current_animation == "herladen", "herladen wordt tijdens het afspelen afgebroken")
 
 	# hoofdband en flits
 	var pl: SoldierModel = models["speler:bloot"]

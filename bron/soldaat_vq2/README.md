@@ -36,8 +36,14 @@ godot --headless --path . --import && python3 tools/textuur_import.py && godot -
   getint) en `<Variant>_Kleding` (Godot zet `albedo_color = SoldierModel.uniform_tint(uniformkleur)`).
 - Uitrusting (materiaal `Uitrusting`, `Hoofdband` getint met de bandkleur): `Helm Vest Koppel Rugzak Hoofdband Bandana
   Boonie Pet Staalhelm Borsttuig Patroongordels Raketzak Laarzen Laarzen_V`.
-- Looks (`SoldierModel.LOOKS`): `eigen` (bondgenoten, wachten), `speler:bloot|mouwloos|uniform|vest` (volgt
+- Looks (`SoldierModel.LOOKS`): `eigen` (bondgenoten, wachten), `speler:jungle|bloot|mouwloos|uniform|vest` (volgt
   Uitrusting > Bovenlijf), `vijand:knife|rifle|rocket|heavy`. Instelling *Mannetjes* = *Oud model* zet v1 terug.
+
+De huidige spelersstandaard `speler:jungle` gebruikt de afzonderlijke, issue #138 goedgekeurde Jungle Commando Tiger
+Stripe-look: `assets/soldaat_jungle_commando.glb`, met dezelfde 53-botten-DEF-rig en dezelfde tien basisclips. Een
+player-only GLB voorkomt wijzigingen aan het gedeelde model voor bondgenoten en vijanden. De oude topkeuzes blijven
+beschikbaar. Zie [JUNGLE_COMMANDO.md](JUNGLE_COMMANDO.md) voor de bron, productie, USDZ en animatiecontract. De eerdere
+woodland-preview uit [SPELER_JUNGLE.md](SPELER_JUNGLE.md) blijft bewaard als eerdere versie.
 
 ## Cijfers
 | deel | driehoeken |

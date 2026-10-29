@@ -20,6 +20,12 @@ De hostingdienst bevestigt een geslaagde publicatie en leverde een [echt browser
 
 ## Wat is veranderd
 
+**Speelbare soldaat:** de standaard look is nu een gespierde jungle-overlever met volledig woodland-camouflageuniform,
+hoofdband, koppel en laarzen. De VQ2-rig, wapens, gameplayanimaties, bondgenoten en vijanden blijven gelijk. De oude
+ontblote look blijft als cosmetische keuze beschikbaar; bestaande saves met de oude standaard migreren eenmalig naar
+de gecamoufleerde standaard zonder wijziging van de 6%-bewegingsbonus. De productiebron en game-GLB blijven dezelfde
+[soldaat VQ2](../../bron/soldaat_vq2/README.md); de iPhone-preview is een aparte USDZ-beoordelingskopie.
+
 **Kazerne:** golfplaat met echte doorsnede/dikte, gebogen nok, plaatnaden en bevestigingen, fotografische vezelstructuur onder verweerde olijfverf, zichtbare houten verbindingen, kozijnen/vensterbank, ventilatielamellen, deurbeslag, naamplaat en fundering. De oude gevelbalken lopen niet meer door de deur. Oriëntatie, bouwkosten, bestaande plaatsing en de collider van 4,4 × 2,2 × 3,2 meter blijven behouden.
 
 **Wachttoren:** versterkte houtverbindingen en knieschoren, stalen voetschoenen/boutplaten, dikker dek, echte dakgolven en afwatering, ladderbevestigingen en treden, fotografisch hout, canvas en staal. Het werkelijke dekoppervlak is 5,3 meter hoog; de bestaande +X-klimroute en `Toren_dak`/`Toren_dakrib` blijven intact, inclusief alle dakonderdelen die verdwijnen bij het klimmen.

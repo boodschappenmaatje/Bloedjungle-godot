@@ -14,6 +14,7 @@ Voor het maken, aanpassen, verbeteren, exporteren of animeren van 3D-modellen, e
 - **Bestaande assets vervangen:** korte opdracht volstaat; inspecteer bestaande code en behoud gameplayfuncties, animaties, ingangen, colliders, slooplogica en interacties. Maak tests en Draft PR zonder overbodige nieuwe vragen.
 - Gebruik indien beschikbaar de lokale **Bloedjungle 3D Production Pipeline 1.0 High Quality Showcase** op de iMac voor een HQ-bronmodel en aparte geoptimaliseerde Godot-gameversie; beweer niet dat lokaal is uitgevoerd als die toegang ontbreekt.
 - Produceer daadwerkelijk herhaalbare Blender `.blend`/`.py`, echte `.glb` en PBR-kaarten; geen prompt/renders in plaats van assets.
+- Lever naast `.blend` en Godot-`.glb` bij ieder model een `.usdz`-iPhonepreview voor de Bestanden-app/Quick Look; gebruik de iCloud Drive-map `Bloedjungle Previews` wanneer die beschikbaar is. Volg de canonieke werkwijze in `docs/ASSET_QUALITY_STANDARD.md`.
 - Zorg voor realistische militaire jungle-stijl, top-down leesbaarheid, hoogwaardige PBR en beheersbare iPhone/Xogot-prestaties.
 - **Behoud de bestaande scenehiërarchie, rigs, animaties, colliders en gameplay**; statische legerjeep is niet de speelbare jeep.
 - Neem elk nieuw/gewijzigd model op in `tools/blender-vq2-viewer/`; 360° draaien en zoom, voor/na bij upgrades, **echte** geanimeerde clips afspelen als aanwezig. Toon anders eerlijk dat er geen clips zijn.

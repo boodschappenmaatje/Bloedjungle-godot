@@ -68,7 +68,6 @@ func _run() -> void:
 	await _capture_segment(24)
 	model.play("sprinten")
 	await _capture_segment(24)
-
 	model.play("stil")
 	player.fire_t = 0.0
 	player._shoot(Game.call("wstat", "garand"))
@@ -132,6 +131,7 @@ func _add_preview_environment(world: Node3D) -> void:
 func _capture_segment(frame_count: int) -> void:
 	for _i in frame_count:
 		await get_tree().process_frame
+		await RenderingServer.frame_post_draw
 		var image := get_viewport().get_texture().get_image()
 		var path := _output_dir.path_join("frame_%04d.png" % _frame_index)
 		var error := image.save_png(path)

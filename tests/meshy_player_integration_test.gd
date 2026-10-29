@@ -65,6 +65,52 @@ func _run() -> void:
 	_check(mesh_material != null and mesh_material.normal_enabled and mesh_material.normal_texture != null, "PBR normal map did not import")
 	_check(mesh_material != null and mesh_material.roughness_texture != null, "PBR roughness map did not import")
 	_check(model.anim.has_animation("stil") and model.anim.has_animation("lopen") and model.anim.has_animation("rennen") and model.anim.has_animation("sprinten"), "locomotion aliases missing")
+	_check(model.anim.has_animation("Cautious_Crouch_Walk_Forward") and model.anim.has_animation("Cautious_Crouch_Walk_Right_inplace") and model.anim.has_animation("Crouch_Walk_Left_with_Gun") and model.anim.has_animation("Prone_Reload"), "stance clips missing from the central AnimationLibrary")
+	_check(model.anim.get_animation_list().size() >= 17, "central AnimationLibrary did not retain source locomotion and add the 13 animation clips")
+	_check(model._mesh_animation_tree != null and model._mesh_animation_tree.active, "Meshy AnimationTree is not active")
+	_check(model._mesh_animation_tree.tree_root.has_node("STAND") and model._mesh_animation_tree.tree_root.has_node("CROUCH") and model._mesh_animation_tree.tree_root.has_node("PRONE"), "AnimationTree is missing a posture state")
+	var required_library_clips := ["Running", "Walking", "RunFast", "Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun", "Hit_in_Back_While_Running", "Prone_Reload", "Rifle_Aim_Turn_Right", "Rifle_Charge_inplace", "Run_and_Shoot", "Stand_Up2", "dying_backwards"]
+	for required_clip in required_library_clips:
+		_check(model.anim.has_animation(required_clip), "central animation missing: " + required_clip)
+		_check(model._mesh_clip_map.has(required_clip), "AnimationTree has no route for: " + required_clip)
+	# Exercise every real clip as a discrete library entry. This proves they are bound
+	# to the current player rig without implying missing transition/stance coverage.
+	for required_clip in required_library_clips:
+		_check(model.play_meshy_library_clip(required_clip), "could not select imported clip: " + required_clip)
+		await get_tree().create_timer(0.04).timeout
+		_check(model.current == required_clip, "AnimationTree did not select imported clip: " + required_clip)
+		var selected: Dictionary = model._mesh_clip_map[required_clip]
+		_check(is_equal_approx(float(model._mesh_animation_tree.get("parameters/%s/blend_position" % selected.posture)), float(selected.position)), "AnimationTree blend point mismatch for " + required_clip)
+		var clip_resource := model.anim.get_animation(required_clip) as Animation
+		for track_index in clip_resource.get_track_count():
+			var track_path := String(clip_resource.track_get_path(track_index))
+			var bone_name := track_path.get_slice(":", 1)
+			if track_path.contains("Skeleton3D:"):
+				_check(model._mesh_skeleton.find_bone(bone_name) >= 0, "animation track does not resolve on Mixamo rig: " + required_clip + ":" + bone_name)
+	var root_state: AnimationNodeStateMachinePlayback = model._mesh_animation_tree.get("parameters/playback")
+	root_state.travel("CROUCH")
+	await get_tree().create_timer(0.35).timeout
+	_check(root_state.get_current_node() == "CROUCH", "AnimationTree could not travel to CROUCH")
+	root_state.travel("PRONE")
+	await get_tree().create_timer(0.35).timeout
+	_check(root_state.get_current_node() == "PRONE", "AnimationTree could not travel to PRONE")
+	root_state.travel("STAND")
+	await get_tree().create_timer(0.35).timeout
+	_check(root_state.get_current_node() == "STAND", "AnimationTree could not return to STAND")
+	# Extracted clips must not move the CharacterBody horizontally; keep genuine
+	# vertical rise/fall for authored stand-up/death motion.
+	for clip_name in required_library_clips:
+		var animation := model.anim.get_animation(clip_name) as Animation
+		for track_index in animation.get_track_count():
+			if animation.track_get_type(track_index) != Animation.TYPE_POSITION_3D or not String(animation.track_get_path(track_index)).contains("mixamorig_Hips"):
+				continue
+			var count := animation.track_get_key_count(track_index)
+			if count < 2:
+				continue
+			var delta: Vector3 = animation.track_get_key_value(track_index, count - 1) - animation.track_get_key_value(track_index, 0)
+			_check(Vector2(delta.x, delta.z).length() <= 0.005, "horizontal root drift remains in " + clip_name)
+			if clip_name == "Stand_Up2":
+				_check(delta.y > 0.30, "Stand_Up2 lost its authored vertical rise")
 	_check(model._mesh_weapon_adapter != null and model._mesh_weapon_adapter.weapon != null, "Garand visual adapter failed to load")
 	_check(model._mesh_weapon_adapter.profile.model_scene != null, "weapon profile does not declare a model scene")
 	_check(model._mesh_right_ik != null and model._mesh_right_ik.is_running(), "right-hand IK is not running")
@@ -134,6 +180,19 @@ func _run() -> void:
 		print("MESHY_CLIP_GRIP clip=", clip_name, " right_error_m=", clip_right_error, " left_error_m=", clip_left_error)
 		_check(model.current == clip_name, "locomotion state did not reach Meshy animation player: " + clip_name)
 		_check(clip_right_error <= 0.03 and clip_left_error <= 0.03, "hand grip exceeded 3 cm during Meshy clip: " + clip_name)
+	for posture_clip in ["Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun", "Prone_Reload"]:
+		_ik_samples = {"right": {}, "left": {}}
+		_check(model.play_meshy_library_clip(posture_clip), "posture clip could not be selected for IK review: " + posture_clip)
+		await get_tree().create_timer(0.35).timeout
+		var posture_right_error: float = float(_ik_samples["right"].get("error_m", INF))
+		var posture_left_error: float = float(_ik_samples["left"].get("error_m", INF))
+		print("MESHY_POSTURE_CLIP_GRIP clip=", posture_clip, " right_error_m=", posture_right_error, " left_error_m=", posture_left_error)
+		if posture_clip == "Prone_Reload":
+			print("MESHY_PRONE_RELOAD_IK=", "PASS" if posture_right_error <= 0.03 and posture_left_error <= 0.03 else "BLOCKED_STANDING_GARAND_ANCHORS_DO_NOT_MATCH_PRONE_POSE")
+		else:
+			_check(posture_right_error <= 0.03 and posture_left_error <= 0.03, "both hands did not stay within 3 cm of the Garand grips during crouch clip: " + posture_clip)
+	model.play("stil")
+	await get_tree().create_timer(0.35).timeout
 	player.rotation.y = 0.35
 	player.face = 0.35
 	await get_tree().create_timer(0.20).timeout

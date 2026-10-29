@@ -13,6 +13,8 @@ const SCENE_PLAYER := preload("res://assets/soldaat_jungle_commando.glb")
 ## Experimental player-only Meshy/Mixamo rig from the isolated, already-reviewed lab.
 ## The file is byte-identical to the user-supplied remesh/rig export; NPCs never select it.
 const SCENE_MESHY_PLAYER_PATH := "res://assets/meshy_jungle_commando.glb"
+## Mesh-free shared animation source extracted from the supplied same-rig library.
+const MESHY_ANIMATION_LIBRARY := preload("res://resources/animations/meshy_player_animation_library.res")
 const MESHY_GARAND_PROFILE = preload("res://resources/weapon_profiles/garand_meshy.tres")
 const MESHY_WEAPON_ADAPTER_SCRIPT := preload("res://scripts/weapon_model_adapter.gd")
 const LOOKS := {
@@ -62,6 +64,9 @@ var _mesh_left_ik: SkeletonIK3D
 var _mesh_right_target: Marker3D
 var _mesh_weapon_adapter: Variant
 var _mesh_action_player: AnimationPlayer
+var _mesh_animation_tree: AnimationTree
+var _mesh_animation_playback: AnimationNodeStateMachinePlayback
+var _mesh_clip_map: Dictionary = {}
 
 
 ## uniform = kleur van het uniform; look = sleutel uit LOOKS ("eigen" voor bondgenoten en wachten,
@@ -217,7 +222,16 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 		if skel.find_bone(bone) < 0:
 			push_error("Meshy player rig is missing expected Mixamo bone: " + bone)
 			return
-	var lib := anim.get_animation_library("")
+	# Duplicate the centrally extracted animation-only resource per player instance. The
+	# original GLB remains untouched and its mesh/skin are not duplicated into the library.
+	var old_lib := anim.get_animation_library("")
+	var lib := MESHY_ANIMATION_LIBRARY.duplicate(true) as AnimationLibrary
+	if old_lib != null:
+		for old_name in old_lib.get_animation_list():
+			if not lib.has_animation(old_name):
+				lib.add_animation(old_name, old_lib.get_animation(old_name).duplicate(true))
+		anim.remove_animation_library("")
+	anim.add_animation_library("", lib)
 	_alias_meshy_clip(lib, "stil", "Idle")
 	_alias_meshy_clip(lib, "lopen", "Walking")
 	_alias_meshy_clip(lib, "rennen", "Running")
@@ -228,6 +242,7 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 		_add_meshy_idle(lib, skel)
 	if not lib.has_animation("stil"):
 		_alias_meshy_clip(lib, "stil", "Idle")
+	_build_meshy_animation_tree(lib)
 	for mi: MeshInstance3D in _model.find_children("*", "MeshInstance3D", true, false):
 		if mi.name == "Icosphere":
 			mi.hide()
@@ -235,6 +250,77 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 	_setup_meshy_weapon_ik(skel)
 	_setup_meshy_actions()
 	set_uniform(uniform)
+
+
+## Godot 4.7's imported clips are routed through three explicit posture states. Each
+## state's 1D blend space contains only real supplied clips; absent idles/transitions
+## are intentionally not synthesized or connected to gameplay controls.
+func _build_meshy_animation_tree(lib: AnimationLibrary) -> void:
+	var machine := AnimationNodeStateMachine.new()
+	_mesh_clip_map.clear()
+	var posture_clips := {
+		"STAND": ["stil", "lopen", "rennen", "sprinten", "Rifle_Aim_Turn_Right", "Rifle_Charge_inplace", "Run_and_Shoot", "Stand_Up2", "Hit_in_Back_While_Running", "dying_backwards"],
+		"CROUCH": ["Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun"],
+		"PRONE": ["Prone_Reload"],
+	}
+	for posture in posture_clips:
+		var blend_space := AnimationNodeBlendSpace1D.new()
+		blend_space.min_space = 0.0
+		blend_space.max_space = float(posture_clips[posture].size() - 1)
+		blend_space.snap = 1.0
+		for index in posture_clips[posture].size():
+			var clip_name: String = posture_clips[posture][index]
+			if not lib.has_animation(clip_name):
+				continue
+			var clip_node := AnimationNodeAnimation.new()
+			clip_node.animation = clip_name
+			clip_node.resource_name = clip_name
+			blend_space.add_blend_point(clip_node, float(index), -1, clip_name)
+			_mesh_clip_map[clip_name] = {"posture": posture, "position": float(index)}
+			if posture == "STAND" and clip_name in ["stil", "lopen", "rennen", "sprinten"]:
+				_mesh_clip_map[{"stil": "Idle", "lopen": "Walking", "rennen": "Running", "sprinten": "RunFast"}[clip_name]] = _mesh_clip_map[clip_name]
+		machine.add_node(posture, blend_space, Vector2.ZERO)
+	var stand_to_crouch := AnimationNodeStateMachineTransition.new()
+	stand_to_crouch.xfade_time = 0.22
+	machine.add_transition("STAND", "CROUCH", stand_to_crouch)
+	var crouch_to_stand := AnimationNodeStateMachineTransition.new()
+	crouch_to_stand.xfade_time = 0.22
+	machine.add_transition("CROUCH", "STAND", crouch_to_stand)
+	var crouch_to_prone := AnimationNodeStateMachineTransition.new()
+	crouch_to_prone.xfade_time = 0.22
+	machine.add_transition("CROUCH", "PRONE", crouch_to_prone)
+	var prone_to_crouch := AnimationNodeStateMachineTransition.new()
+	prone_to_crouch.xfade_time = 0.22
+	machine.add_transition("PRONE", "CROUCH", prone_to_crouch)
+	var stand_to_prone := AnimationNodeStateMachineTransition.new()
+	stand_to_prone.xfade_time = 0.22
+	machine.add_transition("STAND", "PRONE", stand_to_prone)
+	var prone_to_stand := AnimationNodeStateMachineTransition.new()
+	prone_to_stand.xfade_time = 0.22
+	machine.add_transition("PRONE", "STAND", prone_to_stand)
+	_mesh_animation_tree = AnimationTree.new()
+	_mesh_animation_tree.name = "MeshyAnimationTree"
+	_mesh_animation_tree.tree_root = machine
+	_mesh_animation_tree.root_node = NodePath("..")
+	_model.add_child(_mesh_animation_tree)
+	_mesh_animation_tree.anim_player = _mesh_animation_tree.get_path_to(anim)
+	_mesh_animation_tree.active = true
+	_mesh_animation_playback = _mesh_animation_tree.get("parameters/playback") as AnimationNodeStateMachinePlayback
+	_mesh_animation_playback.start("STAND")
+	_mesh_animation_tree.set("parameters/STAND/blend_position", 0.0)
+
+
+## Explicit clip review hook used by the isolated animation-library test/preview.
+## It selects only clips in the supplied library and never invents stance content.
+func play_meshy_library_clip(clip_name: String, speed := 1.0) -> bool:
+	if not meshy_player or _mesh_animation_tree == null or not _mesh_clip_map.has(clip_name):
+		return false
+	var selection: Dictionary = _mesh_clip_map[clip_name]
+	_mesh_animation_tree.set("parameters/%s/blend_position" % selection.posture, selection.position)
+	_mesh_animation_playback.travel(selection.posture)
+	anim.speed_scale = speed
+	current = clip_name
+	return true
 
 
 func _attach_gun_meshy(skel: Skeleton3D, gun_kind: String) -> void:
@@ -783,7 +869,8 @@ func _play_meshy_clip(clip: String, blend: float, speed: float) -> void:
 	if clip == "herladen":
 		if current != clip:
 			current = clip
-			anim.play("stil", blend)
+			play_meshy_library_clip("stil", speed)
+			current = clip
 			if _mesh_action_player != null and _mesh_action_player.has_animation("herladen"):
 				_mesh_action_player.play("herladen", 0.08)
 		if _mesh_action_player != null:
@@ -792,15 +879,16 @@ func _play_meshy_clip(clip: String, blend: float, speed: float) -> void:
 	if current == clip:
 		anim.speed_scale = speed
 		return
-	if not anim.has_animation(clip):
-		return
 	if _mesh_action_player != null and _mesh_action_player.is_playing():
 		_mesh_action_player.stop()
 		if _mesh_weapon_adapter != null:
 			_mesh_weapon_adapter.left_hand_grip.position = _mesh_weapon_adapter.profile.left_hand_grip
-	current = clip
-	anim.play(clip, blend)
-	anim.speed_scale = speed
+	# Keep the legacy player-facing names while routing all supported clips through
+	# the centrally imported AnimationTree. Unsupported actions remain no-ops.
+	var aliases := {"stil": "stil", "lopen": "lopen", "rennen": "rennen", "sprinten": "sprinten"}
+	var library_clip: String = String(aliases.get(clip, clip))
+	if not play_meshy_library_clip(library_clip, speed):
+		return
 
 
 ## Lengte van een animatie in seconden (0 als hij niet bestaat); handig om een clip precies op een duur te laten passen.

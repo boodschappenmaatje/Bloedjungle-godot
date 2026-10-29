@@ -364,14 +364,16 @@ func _make_carpet() -> void:
 			var shift := FLAME_STEP * 0.5 * (0.0 if lane_sign < 0.0 else 1.0)
 			var h := randf_range(2.4, 4.8)
 			var roll := randf()
+			var low := false
 			if roll < 0.15:
 				h = randf_range(1.5, 2.2)       # lage plekken
+				low = true
 			elif roll > 0.85:
 				h = randf_range(5.0, 5.8)       # uitschieters
 			h *= lerpf(1.0, 0.55, edge)
-			_flames.append({"s": s + shift + randf_range(-0.3, 0.3), "lane": lane, "h": h, "w": randf_range(3.2, 4.6) * lerpf(1.0, 0.7, edge), "node": null, "born": 0.0, "die": randf(), "side": side, "ph": randf() * TAU, "fr": randf_range(7.0, 14.0)})
+			_flames.append({"s": s + shift + randf_range(-0.3, 0.3), "lane": lane, "h": h, "w": randf_range(3.2, 4.6) * lerpf(1.0, 0.7, edge), "node": null, "born": 0.0, "die": randf(), "side": side, "ph": randf() * TAU, "fr": randf_range(7.0, 14.0), "low": low})
 		if randf() < 0.55:   # losse brandhaardjes tussen de planten, ook buiten de twee rijen
-			_flames.append({"s": s + randf_range(-0.9, 0.9), "lane": randf_range(-half, half), "h": randf_range(0.9, 1.7), "w": randf_range(1.3, 2.2), "node": null, "born": 0.0, "die": randf(), "side": side, "ph": randf() * TAU, "fr": randf_range(9.0, 18.0)})
+			_flames.append({"s": s + randf_range(-0.9, 0.9), "lane": randf_range(-half, half), "h": randf_range(0.9, 1.7), "w": randf_range(1.3, 2.2), "node": null, "born": 0.0, "die": randf(), "side": side, "ph": randf() * TAU, "fr": randf_range(9.0, 18.0), "low": true})
 
 
 ## Vuurgolf: vlammen verschijnen zodra het vuur van een inslag ze bereikt en doven aan het eind.
@@ -398,7 +400,7 @@ func _update_carpet(_delta: float) -> void:
 			for b in _bombs:
 				if b.hit and absf(float(f.s) - float(b.s)) <= REACH and (_t - float(b.t_hit)) * WAVE_SPEED >= absf(float(f.s) - float(b.s)):
 					var pos: Vector3 = center + dir * float(f.s) + (f.side as Vector3) * float(f.lane)
-					f.node = _make_flame(pos, float(f.w), float(f.h))
+					f.node = _make_flame(pos, float(f.h), bool(f.low))
 					f.born = _t
 					break
 		elif is_instance_valid(f.node):
@@ -416,8 +418,8 @@ func _update_carpet(_delta: float) -> void:
 
 
 ## Eén vlamtong op wereldpositie pos; hij begint ingeklapt en groeit in (grow).
-func _make_flame(pos: Vector3, w: float, h: float) -> MeshInstance3D:
-	var mi := Fx.napalm_flame_sim(get_parent(), Vector3.ZERO, h)
+func _make_flame(pos: Vector3, h: float, low: bool) -> MeshInstance3D:
+	var mi := Fx.napalm_flame_sim(get_parent(), Vector3.ZERO, h, low)
 	mi.global_position = pos
 	mi.set_instance_shader_parameter("grow", 0.0)
 	return mi

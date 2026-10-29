@@ -7,6 +7,7 @@ import bpy, sys, os, math
 arg = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 out = arg[0] if arg else "/tmp/vlam"
 snel = "--snel" in arg
+laag = "--laag" in arg      # lage, brede, rollende vlam (liggend vuur over de grond)
 os.makedirs(out, exist_ok=True)
 COLS, ROWS = (4, 4) if snel else (8, 8)
 FR = COLS * ROWS
@@ -36,7 +37,7 @@ sc.render.fps = 24
 bpy.ops.mesh.primitive_uv_sphere_add(radius=0.28, location=(0, 0, 0.1), segments=16, ring_count=8)
 fl = bpy.context.object
 fl.name = "Brandstof"
-fl.scale = (1.0, 1.0, 0.35)
+fl.scale = (2.4, 1.0, 0.25) if laag else (1.0, 1.0, 0.35)
 bpy.ops.object.select_all(action="DESELECT")
 fl.select_set(True)
 bpy.context.view_layer.objects.active = fl
@@ -57,22 +58,22 @@ d.cache_data_format = "OPENVDB"
 d.cache_noise_format = "OPENVDB"
 d.cache_frame_start = 1
 d.cache_frame_end = FR + 24
-d.beta = 1.4                       # hitte-drijfkracht: hoge, snelle tongen
+d.beta = (0.5 if laag else 1.4)                       # hitte-drijfkracht: hoge, snelle tongen
 d.vorticity = 0.5
-d.burning_rate = 0.6
+d.burning_rate = 0.9 if laag else 0.6
 d.flame_smoke = 0.25
 d.flame_vorticity = 0.8
 d.dissolve_speed = 15
 d.use_dissolve_smoke = True
 f = fl.modifiers["Fluid"].flow_settings
-f.surface_distance = 0.6
+f.surface_distance = 0.35 if laag else 0.6
 fl.hide_render = False
 fl.visible_camera = False
 
 # camera: orthografisch, van opzij, kijkt over het hele domein
 cam_d = bpy.data.cameras.new("Cam")
 cam_d.type = "ORTHO"
-cam_d.ortho_scale = 2.3
+cam_d.ortho_scale = 2.3 if not laag else 2.3
 cam = bpy.data.objects.new("Cam", cam_d)
 sc.collection.objects.link(cam)
 cam.location = (0, -6, 0.95)

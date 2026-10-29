@@ -24,6 +24,38 @@
  },
  "errors": [],
  "bazooka": "geen clips, Play uitgeschakeld",
- "stats": "Garand: 264 driehoeken · 5 meshes · 4 materialen · geen texturen (vlakke PBR-waarden, kleine prop). Geen iPhone-FPS gemeten.",
+ "stats": "Garand: V1 264 driehoeken · 5 meshes · 4 materialen · geen textuur. Weapon Upgrade 2.0 2.712 driehoeken · 4 meshes · 3 materialen · 512×512. De nieuwe gameversie gebruikt originele 512px PBR-kaarten; geen iPhone-FPS gemeten.",
+ "soldier_hold": {
+  "M1911": {
+   "hand": "DEF-handR",
+   "clips": 2,
+   "mounted_motion_m": 0.0337
+  },
+  "Thompson": {
+   "hand": "DEF-handR",
+   "clips": 1,
+   "mounted_motion_m": 0.019
+  },
+  "Garand": {
+   "hand": "DEF-handR",
+   "clips": 1,
+   "mounted_motion_m": 0.0442
+  },
+  "Trench": {
+   "hand": "DEF-handR",
+   "clips": 1,
+   "mounted_motion_m": 0.07
+  },
+  "MG42": {
+   "hand": "DEF-handR",
+   "clips": 1,
+   "mounted_motion_m": 0.0294
+  },
+  "Bazooka": {
+   "hand": "DEF-handR",
+   "clips": 0,
+   "mounted_motion_m": 0
+  }
+ },
  "ok": true
 }

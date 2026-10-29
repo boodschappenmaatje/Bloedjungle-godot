@@ -47,10 +47,23 @@ func _run() -> void:
 
 	# Deze waarden zijn de bestaande gameplaywaarden; de upgrade hoort die niet te veranderen.
 	var expected_damage := {"m1911": 26.0, "thompson": 18.0, "garand": 80.0, "trench": 16.0, "mg42": 27.0, "bazooka": 240.0}
+	var sound_names := {}
+	var recoil_values := {}
+	var sound_system: Node = root.get_node("Sfx")
 	for id in Data.WEAPON_ORDER:
 		_check(Data.WEAPON_VISUALS.has(id), "%s mist een visueel wapenprofiel" % id)
 		_check(is_equal_approx(float(Data.WEAPONS[id].dmg), expected_damage[id]), "%s schadewaarde is veranderd" % id)
 		_check(float(Data.WEAPON_VISUALS[id].recoil) > 0.0, "%s mist wapenspecifieke terugslag" % id)
+		recoil_values[float(Data.WEAPON_VISUALS[id].recoil)] = true
+		var shot_sound: String = Data.WEAPON_SND[id]
+		_check(not sound_names.has(shot_sound), "%s deelt het schotgeluid met een ander wapen" % id)
+		sound_names[shot_sound] = true
+		_check(sound_system.get("_streams").has(shot_sound), "%s heeft geen gegenereerd schotgeluid" % id)
+		if id in ["thompson", "mg42"]:
+			_check(float(Data.WEAPONS[id].get("bloom_step", 0.0)) > 0.0, "%s mist cumulatieve spreiding bij salvo" % id)
+			_check(float(Data.WEAPONS[id].get("bloom_max", 0.0)) > 0.0, "%s mist begrenzing voor cumulatieve spreiding" % id)
+		else:
+			_check(not Data.WEAPONS[id].has("bloom_step"), "%s mag geen automatische burst-bloom krijgen" % id)
 		if id in ["thompson", "mg42"]:
 			_check(int(Data.WEAPON_VISUALS[id].trail_every) == 1, "%s mist de tracer per automatisch schot" % id)
 		if id != "bazooka":
@@ -66,9 +79,25 @@ func _run() -> void:
 		player.call("equip", id)
 		player.set("ammo", Data.WEAPONS[id].mag)
 		player.set("fire_t", 0.0)
+		await _frames(2)
 		var before := _bullets().size()
 		player.call("_shoot", game.wstat(id))
+		var bloom_after_first: float = float(player.get("_weapon_bloom"))
+		if id in ["thompson", "mg42"]:
+			_check(bloom_after_first > 0.0 and bloom_after_first <= float(Data.WEAPONS[id].bloom_max), "%s heeft geen begrensde burst-bloom" % id)
+		else:
+			_check(is_zero_approx(bloom_after_first), "%s heeft onterecht burst-bloom" % id)
 		_check(float(player.get("model").get("_recoil")) > 0.0, "%s geeft geen zichtbare wapenimpuls" % id)
+		var pose: Node = player.get("model").get("pose")
+		_check(pose != null and pose.get("reach_gap").R < 0.04 and pose.get("reach_gap").L < 0.04, "%s-handhouding reikt niet tot de grepen" % id)
+		var muzzle: Vector3 = player.get("model").call("muzzle_position")
+		var aim_forward := Vector3(sin(float(player.get("face"))), 0.0, cos(float(player.get("face"))))
+		var muzzle_delta := muzzle - player.global_position
+		_check(muzzle.y > 0.8 and muzzle.y < 3.5 and muzzle_delta.dot(aim_forward) > 0.15, "%s heeft een ongeldige loopmonding: %s" % [id, muzzle])
+		if id != "bazooka":
+			var casing: Vector3 = player.get("model").call("casing_position")
+			var casing_delta := casing - player.global_position
+			_check(casing.y > 0.8 and casing.y < 3.5 and casing_delta.dot(aim_forward) > -0.3, "%s heeft een ongeldige hulspositie: %s" % [id, casing])
 		var spawned := _bullets().slice(before)
 		var expected_count: int = Data.WEAPONS[id].pellets
 		_check(spawned.size() == expected_count, "%s vuurt %d projectielen af i.p.v. %d" % [id, spawned.size(), expected_count])
@@ -97,7 +126,7 @@ func _run() -> void:
 		if id == "bazooka":
 			var camera: Camera3D = main.get_node("Camera")
 			_check(float(camera.get("_combat_shake_time")) > 0.0, "bazooka geeft geen korte camerakick")
-
+	_check(recoil_values.size() == 6, "wapens delen onbedoeld dezelfde zichtbare terugslagsterkte")
 	# Vijandelijke automatische vuurtracers blijven zichtbaar, maar krijgen geen tweede projectielsysteem.
 	var enemy_scene: PackedScene = load("res://scenes/enemy.tscn")
 	for kind in ["rifle", "heavy"]:
@@ -141,6 +170,15 @@ func _run() -> void:
 	_check(str(model.get("current")) in ["lopen", "rennen"], "hitpose stopt de bestaande basisanimatie")
 	game.set("fire", false)
 	game.set("move", Vector2.ZERO)
+	# The Garand ping is tied to the last round rather than every shot.
+	player.call("equip", "garand")
+	player.set("ammo", 1)
+	player.set("fire_t", 0.0)
+	player.call("_shoot", game.wstat("garand"))
+	var ping_played := false
+	for audio: AudioStreamPlayer in sound_system.get("_players"):
+		ping_played = ping_played or audio.stream == sound_system.get("_streams").garand_clip
+	_check(ping_played, "laatste Garand-patroon speelt geen eigen clip-ping")
 
 	# Herhaalde effecten blijven binnen de mobiele limieten en hulzen worden hergebruikt.
 	var fx: Script = load("res://scripts/fx.gd")

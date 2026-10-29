@@ -6,7 +6,9 @@ const RATE := 22050
 # f = filterfrequentie waarmee het begint, d = duur in seconden, v = volume, b = dreunfrequentie (0 = geen)
 const DEFS := {
 	"pistol": {"f": 2400, "d": 0.2, "v": 0.7, "b": 120}, "smg": {"f": 2600, "d": 0.13, "v": 0.5, "b": 95},
-	"rifle": {"f": 1900, "d": 0.4, "v": 0.95, "b": 80}, "shotgun": {"f": 1300, "d": 0.5, "v": 1.1, "b": 60},
+	"rifle": {"f": 1900, "d": 0.4, "v": 0.95, "b": 80},
+	# Kort metallisch signaal voor de uitgeworpen Garand-clip; eigen effect, geen UI-ping.
+	"garand_clip": {"f": 4100, "d": 0.22, "v": 0.45, "b": 0, "tone": 2350.0}, "shotgun": {"f": 1300, "d": 0.5, "v": 1.1, "b": 60},
 	"mg": {"f": 2100, "d": 0.15, "v": 0.55, "b": 85}, "rocket": {"f": 800, "d": 0.7, "v": 0.8, "b": 50},
 	"enemy": {"f": 1600, "d": 0.16, "v": 0.32, "b": 0}, "ak": {"f": 2200, "d": 0.14, "v": 0.4, "b": 90},
 	"boom": {"f": 600, "d": 1.3, "v": 1.3, "b": 42}, "splat": {"f": 450, "d": 0.14, "v": 0.45, "b": 0},

@@ -1,0 +1,1866 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project opzetten (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Bestandsstructuur aan het scannen...[39m[0m
+WARNING: Detected another project.godot at res://prototypes/meshy_player_lab. The folder will be ignored.
+     at: _should_skip_directory (editor/file_system/editor_file_system.cpp:3497)
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Globale klassenamen laden...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | GDExtensions verifiëren...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Autoload-scripts aanmaken...[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_olive_nylon_normal_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_olive_nylon_normal_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '0' with the name 'olive_nylon_normal_512' resolved to res://assets/soldaat_jungle_commando_olive_nylon_normal_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_olive_nylon_albedo_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_olive_nylon_albedo_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '1' with the name 'olive_nylon_albedo_512' resolved to res://assets/soldaat_jungle_commando_olive_nylon_albedo_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_olive_nylon_roughness_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_olive_nylon_roughness_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '2' with the name 'olive_nylon_roughness_512' resolved to res://assets/soldaat_jungle_commando_olive_nylon_roughness_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_dark_olive_webbing_normal_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_dark_olive_webbing_normal_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '3' with the name 'dark_olive_webbing_normal_512' resolved to res://assets/soldaat_jungle_commando_dark_olive_webbing_normal_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_dark_olive_webbing_albedo_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_dark_olive_webbing_albedo_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '4' with the name 'dark_olive_webbing_albedo_512' resolved to res://assets/soldaat_jungle_commando_dark_olive_webbing_albedo_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_dark_olive_webbing_roughness_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_dark_olive_webbing_roughness_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '5' with the name 'dark_olive_webbing_roughness_512' resolved to res://assets/soldaat_jungle_commando_dark_olive_webbing_roughness_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_parkerized_steel_normal_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_parkerized_steel_normal_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '6' with the name 'parkerized_steel_normal_512' resolved to res://assets/soldaat_jungle_commando_parkerized_steel_normal_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_parkerized_steel_albedo_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_parkerized_steel_albedo_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '7' with the name 'parkerized_steel_albedo_512' resolved to res://assets/soldaat_jungle_commando_parkerized_steel_albedo_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_parkerized_steel_roughness_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_parkerized_steel_roughness_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '8' with the name 'parkerized_steel_roughness_512' resolved to res://assets/soldaat_jungle_commando_parkerized_steel_roughness_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_short_cropped_hair_normal_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_short_cropped_hair_normal_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '9' with the name 'short_cropped_hair_normal_512' resolved to res://assets/soldaat_jungle_commando_short_cropped_hair_normal_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_short_cropped_hair_roughness_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_short_cropped_hair_roughness_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '10' with the name 'short_cropped_hair_roughness_512' resolved to res://assets/soldaat_jungle_commando_short_cropped_hair_roughness_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_uitrusting_normal.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_uitrusting_normal.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '11' with the name 'uitrusting_normal' resolved to res://assets/soldaat_jungle_commando_uitrusting_normal.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_uitrusting_albedo.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_uitrusting_albedo.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '12' with the name 'uitrusting_albedo' resolved to res://assets/soldaat_jungle_commando_uitrusting_albedo.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_uitrusting_orm.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_uitrusting_orm.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '13' with the name 'uitrusting_orm' resolved to res://assets/soldaat_jungle_commando_uitrusting_orm.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_combat_boot_leather_normal_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_combat_boot_leather_normal_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '14' with the name 'combat_boot_leather_normal_512' resolved to res://assets/soldaat_jungle_commando_combat_boot_leather_normal_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_combat_boot_leather_albedo_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_combat_boot_leather_albedo_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '15' with the name 'combat_boot_leather_albedo_512' resolved to res://assets/soldaat_jungle_commando_combat_boot_leather_albedo_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_combat_boot_leather_roughness_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_combat_boot_leather_roughness_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '16' with the name 'combat_boot_leather_roughness_512' resolved to res://assets/soldaat_jungle_commando_combat_boot_leather_roughness_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_combat_boot_rubber_normal_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_combat_boot_rubber_normal_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '17' with the name 'combat_boot_rubber_normal_512' resolved to res://assets/soldaat_jungle_commando_combat_boot_rubber_normal_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_combat_boot_rubber_albedo_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_combat_boot_rubber_albedo_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '18' with the name 'combat_boot_rubber_albedo_512' resolved to res://assets/soldaat_jungle_commando_combat_boot_rubber_albedo_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_combat_boot_rubber_roughness_512.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_combat_boot_rubber_roughness_512.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '19' with the name 'combat_boot_rubber_roughness_512' resolved to res://assets/soldaat_jungle_commando_combat_boot_rubber_roughness_512.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_lijf_bloot_normal.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_lijf_bloot_normal.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '20' with the name 'lijf_bloot_normal' resolved to res://assets/soldaat_jungle_commando_lijf_bloot_normal.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_lijf_bloot_albedo.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_lijf_bloot_albedo.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '21' with the name 'lijf_bloot_albedo' resolved to res://assets/soldaat_jungle_commando_lijf_bloot_albedo.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_lijf_bloot_orm.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_lijf_bloot_orm.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '22' with the name 'lijf_bloot_orm' resolved to res://assets/soldaat_jungle_commando_lijf_bloot_orm.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_lijf_uniform_normal.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_lijf_uniform_normal.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '23' with the name 'lijf_uniform_normal' resolved to res://assets/soldaat_jungle_commando_lijf_uniform_normal.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_commando_skin_stubble_1024.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_commando_skin_stubble_1024.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '24' with the name 'commando_skin_stubble_1024' resolved to res://assets/soldaat_jungle_commando_commando_skin_stubble_1024.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_lijf_uniform_orm.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_lijf_uniform_orm.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '25' with the name 'lijf_uniform_orm' resolved to res://assets/soldaat_jungle_commando_lijf_uniform_orm.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_tiger_stripe_albedo_2048.png' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_tiger_stripe_albedo_2048.png.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '26' with the name 'tiger_stripe_albedo_2048' resolved to res://assets/soldaat_jungle_commando_tiger_stripe_albedo_2048.png couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_lijf_mouwloos_normal.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_lijf_mouwloos_normal.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '27' with the name 'lijf_mouwloos_normal' resolved to res://assets/soldaat_jungle_commando_lijf_mouwloos_normal.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_lijf_mouwloos_albedo.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_lijf_mouwloos_albedo.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '28' with the name 'lijf_mouwloos_albedo' resolved to res://assets/soldaat_jungle_commando_lijf_mouwloos_albedo.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_lijf_mouwloos_orm.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_lijf_mouwloos_orm.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '29' with the name 'lijf_mouwloos_orm' resolved to res://assets/soldaat_jungle_commando_lijf_mouwloos_orm.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/soldaat_jungle_commando_lijf_uniform_albedo.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/soldaat_jungle_commando_lijf_uniform_albedo.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '30' with the name 'lijf_uniform_albedo' resolved to res://assets/soldaat_jungle_commando_lijf_uniform_albedo.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+SCRIPT ERROR: Parse Error: Preload file "res://assets/geluid/alarm.mp3" has no resource loaders (unrecognized file extension).
+          at: GDScript::reload (res://scripts/patrouille.gd:9)
+SCRIPT ERROR: Parse Error: Cannot infer the type of "ALARM_STREAM" constant because the value doesn't have a set type.
+          at: GDScript::reload (res://scripts/patrouille.gd:9)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+          at: GDScript::reload (res://scripts/ally.gd:0)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+          at: GDScript::reload (res://scripts/versterking.gd:0)
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+ERROR: Can't find file 'res://assets/straaljager_jet_raket_normal.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/straaljager_jet_raket_normal.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '6' with the name 'jet_raket_normal' resolved to res://assets/straaljager_jet_raket_normal.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/straaljager_jet_raket_albedo.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/straaljager_jet_raket_albedo.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '7' with the name 'jet_raket_albedo' resolved to res://assets/straaljager_jet_raket_albedo.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+ERROR: Can't find file 'res://assets/straaljager_jet_raket_orm.jpg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+ERROR: Failed loading resource: res://assets/straaljager_jet_raket_orm.jpg.
+   at: _load (core/io/resource_loader.cpp:317)
+WARNING: glTF: Image index '8' with the name 'jet_raket_orm' resolved to res://assets/straaljager_jet_raket_orm.jpg couldn't be imported. It will be loaded directly instead, uncompressed.
+     at: _parse_image_save_image (modules/gltf/gltf_document.cpp:2277)
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+          at: GDScript::reload (res://scripts/streak.gd:0)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+          at: GDScript::reload (res://scripts/action_btn.gd:0)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+          at: GDScript::reload (res://scripts/apache.gd:0)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+          at: GDScript::reload (res://scripts/garage_menu.gd:0)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+          at: GDScript::reload (res://scripts/buildings.gd:0)
+SCRIPT ERROR: Compile Error: Failed to compile depended scripts.
+          at: GDScript::reload (res://scripts/game.gd:0)
+ERROR: Failed to load script "res://scripts/game.gd" with error "Parse error".
+   at: load (modules/gdscript/gdscript_resource_format.cpp:46)
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Plug-ins initialiseren...[39m[0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Bestands-scan aan het starten...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | Started Globale klassen aan het registreren... (221 steps)[39m[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | AanvalRoutes[39m[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | ActionBtn[39m[0m
+[   0% ] [90m[1mupdate_scripts_classes[22m | Ally[39m[0m
+[   1% ] [90m[1mupdate_scripts_classes[22m | Apache[39m[0m
+[   1% ] [90m[1mupdate_scripts_classes[22m | Atmosphere[39m[0m
+[   2% ] [90m[1mupdate_scripts_classes[22m | Auto[39m[0m
+[   2% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[   3% ] [90m[1mupdate_scripts_classes[22m | Barrel[39m[0m
+[   3% ] [90m[1mupdate_scripts_classes[22m | BaseProps[39m[0m
+[   4% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[   4% ] [90m[1mupdate_scripts_classes[22m | Brandkraan[39m[0m
+[   4% ] [90m[1mupdate_scripts_classes[22m | Bridge[39m[0m
+[   5% ] [90m[1mupdate_scripts_classes[22m | Buildings[39m[0m
+[   5% ] [90m[1mupdate_scripts_classes[22m | BuildingBody[39m[0m
+[   6% ] [90m[1mupdate_scripts_classes[22m | BuildMode[39m[0m
+[   6% ] [90m[1mupdate_scripts_classes[22m | Bullet[39m[0m
+[   7% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[   7% ] [90m[1mupdate_scripts_classes[22m | Bus[39m[0m
+[   8% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[   8% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[   9% ] [90m[1mupdate_scripts_classes[22m | CombatButtons[39m[0m
+[   9% ] [90m[1mupdate_scripts_classes[22m | Data[39m[0m
+[   9% ] [90m[1mupdate_scripts_classes[22m | Defenses[39m[0m
+[  10% ] [90m[1mupdate_scripts_classes[22m | Diagnose[39m[0m
+[  10% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  11% ] [90m[1mupdate_scripts_classes[22m | Foliage[39m[0m
+[  11% ] [90m[1mupdate_scripts_classes[22m | Fx[39m[0m
+[  12% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  12% ] [90m[1mupdate_scripts_classes[22m | GameSettings[39m[0m
+[  13% ] [90m[1mupdate_scripts_classes[22m | GarageMenu[39m[0m
+[  13% ] [90m[1mupdate_scripts_classes[22m | Gates[39m[0m
+[  13% ] [90m[1mupdate_scripts_classes[22m | GateBody[39m[0m
+[  14% ] [90m[1mupdate_scripts_classes[22m | GateHud[39m[0m
+[  14% ] [90m[1mupdate_scripts_classes[22m | Generator[39m[0m
+[  15% ] [90m[1mupdate_scripts_classes[22m | GeneratorBody[39m[0m
+[  15% ] [90m[1mupdate_scripts_classes[22m | GrassField[39m[0m
+[  16% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  16% ] [90m[1mupdate_scripts_classes[22m | Grenade[39m[0m
+[  17% ] [90m[1mupdate_scripts_classes[22m | GrenadeAim[39m[0m
+[  17% ] [90m[1mupdate_scripts_classes[22m | HouseBody[39m[0m
+[  18% ] [90m[1mupdate_scripts_classes[22m | HpBar[39m[0m
+[  18% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  18% ] [90m[1mupdate_scripts_classes[22m | HudExtra[39m[0m
+[  19% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  19% ] [90m[1mupdate_scripts_classes[22m | JungleGeluid[39m[0m
+[  20% ] [90m[1mupdate_scripts_classes[22m | Kit[39m[0m
+[  20% ] [90m[1mupdate_scripts_classes[22m | Lantaarn[39m[0m
+[  21% ] [90m[1mupdate_scripts_classes[22m | LeafTex[39m[0m
+[  21% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  22% ] [90m[1mupdate_scripts_classes[22m | Loading[39m[0m
+[  22% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  22% ] [90m[1mupdate_scripts_classes[22m | NapalmAanval[39m[0m
+[  23% ] [90m[1mupdate_scripts_classes[22m | NapalmAim[39m[0m
+[  23% ] [90m[1mupdate_scripts_classes[22m | NapalmPlace[39m[0m
+[  24% ] [90m[1mupdate_scripts_classes[22m | Patrouille[39m[0m
+[  24% ] [90m[1mupdate_scripts_classes[22m | PauseMenu[39m[0m
+[  25% ] [90m[1mupdate_scripts_classes[22m | PerfGovernor[39m[0m
+[  25% ] [90m[1mupdate_scripts_classes[22m | PerfMonitor[39m[0m
+[  26% ] [90m[1mupdate_scripts_classes[22m | PlaceHud[39m[0m
+[  26% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  27% ] [90m[1mupdate_scripts_classes[22m | Pomp[39m[0m
+[  27% ] [90m[1mupdate_scripts_classes[22m | PostBody[39m[0m
+[  27% ] [90m[1mupdate_scripts_classes[22m | Progress[39m[0m
+[  28% ] [90m[1mupdate_scripts_classes[22m | Puin[39m[0m
+[  28% ] [90m[1mupdate_scripts_classes[22m | River[39m[0m
+[  29% ] [90m[1mupdate_scripts_classes[22m | Route[39m[0m
+[  29% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  30% ] [90m[1mupdate_scripts_classes[22m | ShadowProxy[39m[0m
+[  30% ] [90m[1mupdate_scripts_classes[22m | Shop[39m[0m
+[  31% ] [90m[1mupdate_scripts_classes[22m | SoldierMark[39m[0m
+[  31% ] [90m[1mupdate_scripts_classes[22m | SoldierModel[39m[0m
+[  31% ] [90m[1mupdate_scripts_classes[22m | SoldierPose[39m[0m
+[  32% ] [90m[1mupdate_scripts_classes[22m | SoldierRagdoll[39m[0m
+[  32% ] [90m[1mupdate_scripts_classes[22m | Stad[39m[0m
+[  33% ] [90m[1mupdate_scripts_classes[22m | StadData[39m[0m
+[  33% ] [90m[1mupdate_scripts_classes[22m | StadEditor[39m[0m
+[  34% ] [90m[1mupdate_scripts_classes[22m | StadEditorPreview[39m[0m
+[  34% ] [90m[1mupdate_scripts_classes[22m | StadEditorUI[39m[0m
+[  35% ] [90m[1mupdate_scripts_classes[22m | Streak[39m[0m
+[  35% ] [90m[1mupdate_scripts_classes[22m | StreakHud[39m[0m
+[  36% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  36% ] [90m[1mupdate_scripts_classes[22m | TeamCommands[39m[0m
+[  36% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  37% ] [90m[1mupdate_scripts_classes[22m | TouchSticks[39m[0m
+[  37% ] [90m[1mupdate_scripts_classes[22m | UI[39m[0m
+[  38% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  38% ] [90m[1mupdate_scripts_classes[22m | UpdatePanel[39m[0m
+[  39% ] [90m[1mupdate_scripts_classes[22m | Versterking[39m[0m
+[  39% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  40% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  40% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  40% ] [90m[1mupdate_scripts_classes[22m | Wachtpost[39m[0m
+[  41% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  41% ] [90m[1mupdate_scripts_classes[22m | WheelArt[39m[0m
+[  42% ] [90m[1mupdate_scripts_classes[22m | Woonhuis[39m[0m
+[  42% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  43% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  43% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  44% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  44% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  45% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  45% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  45% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  46% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  46% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  47% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  47% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  48% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  48% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  49% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  49% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  50% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  50% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  50% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  51% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  51% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  52% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  52% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  53% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  53% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  54% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  54% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  54% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  55% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  55% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  56% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  56% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  57% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  57% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  58% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  58% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  59% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  59% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  59% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  60% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  60% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  61% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  61% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  62% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  62% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  63% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  63% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  63% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  64% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  64% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  65% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  65% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  66% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  66% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  67% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  67% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  68% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  68% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  68% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  69% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  69% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  70% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  70% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  71% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  71% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  72% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  72% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  72% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  73% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  73% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  74% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  74% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  75% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  75% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  76% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  76% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  77% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  77% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  77% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  78% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  78% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  79% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  79% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  80% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  80% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  81% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  81% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  81% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  82% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  82% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  83% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  83% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  84% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  84% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  85% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  85% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  86% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  86% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  86% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  87% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  87% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  88% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  88% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  89% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  89% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  90% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  90% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  90% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  91% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  91% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  92% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  92% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  93% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  93% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  94% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  94% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  95% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  95% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  95% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  96% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  96% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  97% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  97% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  98% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  98% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[  99% ] [90m[1mupdate_scripts_classes[22m | [39m[0m
+[92m[ DONE ][39m [1mupdate_scripts_classes[22m
+[0m
+[   0% ] [90m[1m_update_scan_actions[22m | Started Acties scannen... (403 steps)[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | asset_inventory.csv[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | clean_checkout_resource_samples.csv[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | resource_samples.csv[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | Barlow-Medium.ttf[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | Barlow-SemiBold.ttf[39m[0m
+[   1% ] [90m[1m_update_scan_actions[22m | BarlowCondensed-500.woff2[39m[0m
+[   1% ] [90m[1m_update_scan_actions[22m | BarlowCondensed-600.woff2[39m[0m
+[   1% ] [90m[1m_update_scan_actions[22m | BarlowCondensed-700.woff2[39m[0m
+[   1% ] [90m[1m_update_scan_actions[22m | BlackOpsOne.woff2[39m[0m
+[   2% ] [90m[1m_update_scan_actions[22m | brokstukken.glb[39m[0m
+[   2% ] [90m[1m_update_scan_actions[22m | explosie_vuur2.png[39m[0m
+[   2% ] [90m[1m_update_scan_actions[22m | explosie_vuur3.png[39m[0m
+[   2% ] [90m[1m_update_scan_actions[22m | explosie_vuur.png[39m[0m
+[   3% ] [90m[1m_update_scan_actions[22m | krater.glb[39m[0m
+[   3% ] [90m[1m_update_scan_actions[22m | vat.glb[39m[0m
+[   3% ] [90m[1m_update_scan_actions[22m | vlam.png[39m[0m
+[   3% ] [90m[1m_update_scan_actions[22m | achter_dag.wav[39m[0m
+[   4% ] [90m[1m_update_scan_actions[22m | achter_nacht.wav[39m[0m
+[   4% ] [90m[1m_update_scan_actions[22m | achter_water.wav[39m[0m
+[   4% ] [90m[1m_update_scan_actions[22m | roep_brulaap_1.wav[39m[0m
+[   4% ] [90m[1m_update_scan_actions[22m | roep_brulaap_2.wav[39m[0m
+[   5% ] [90m[1m_update_scan_actions[22m | roep_brulaap_3.wav[39m[0m
+[   5% ] [90m[1m_update_scan_actions[22m | roep_fluit_1.wav[39m[0m
+[   5% ] [90m[1m_update_scan_actions[22m | roep_fluit_2.wav[39m[0m
+[   5% ] [90m[1m_update_scan_actions[22m | roep_fluit_3.wav[39m[0m
+[   6% ] [90m[1m_update_scan_actions[22m | roep_koer_1.wav[39m[0m
+[   6% ] [90m[1m_update_scan_actions[22m | roep_koer_2.wav[39m[0m
+[   6% ] [90m[1m_update_scan_actions[22m | roep_koer_3.wav[39m[0m
+[   6% ] [90m[1m_update_scan_actions[22m | roep_krijs_1.wav[39m[0m
+[   7% ] [90m[1m_update_scan_actions[22m | roep_krijs_2.wav[39m[0m
+[   7% ] [90m[1m_update_scan_actions[22m | roep_krijs_3.wav[39m[0m
+[   7% ] [90m[1m_update_scan_actions[22m | roep_nachtzwaluw_1.wav[39m[0m
+[   7% ] [90m[1m_update_scan_actions[22m | roep_nachtzwaluw_2.wav[39m[0m
+[   8% ] [90m[1m_update_scan_actions[22m | roep_nachtzwaluw_3.wav[39m[0m
+[   8% ] [90m[1m_update_scan_actions[22m | roep_triller_1.wav[39m[0m
+[   8% ] [90m[1m_update_scan_actions[22m | roep_triller_2.wav[39m[0m
+[   8% ] [90m[1m_update_scan_actions[22m | roep_triller_3.wav[39m[0m
+[   9% ] [90m[1m_update_scan_actions[22m | roep_uil_1.wav[39m[0m
+[   9% ] [90m[1m_update_scan_actions[22m | roep_uil_2.wav[39m[0m
+[   9% ] [90m[1m_update_scan_actions[22m | roep_uil_3.wav[39m[0m
+[   9% ] [90m[1m_update_scan_actions[22m | alarm.mp3[39m[0m
+[  10% ] [90m[1m_update_scan_actions[22m | generator.wav[39m[0m
+[  10% ] [90m[1m_update_scan_actions[22m | grass_baseline.glb[39m[0m
+[  10% ] [90m[1m_update_scan_actions[22m | grass_medium_lod0.glb[39m[0m
+[  10% ] [90m[1m_update_scan_actions[22m | grass_medium_lod1.glb[39m[0m
+[  11% ] [90m[1m_update_scan_actions[22m | grass_medium_lod2.glb[39m[0m
+[  11% ] [90m[1m_update_scan_actions[22m | grass_short_lod0.glb[39m[0m
+[  11% ] [90m[1m_update_scan_actions[22m | grass_short_lod1.glb[39m[0m
+[  11% ] [90m[1m_update_scan_actions[22m | grass_short_lod2.glb[39m[0m
+[  12% ] [90m[1m_update_scan_actions[22m | grass_tall_lod0.glb[39m[0m
+[  12% ] [90m[1m_update_scan_actions[22m | grass_tall_lod1.glb[39m[0m
+[  12% ] [90m[1m_update_scan_actions[22m | grass_tall_lod2.glb[39m[0m
+[  12% ] [90m[1m_update_scan_actions[22m | auto.png[39m[0m
+[  13% ] [90m[1m_update_scan_actions[22m | autobrand.png[39m[0m
+[  13% ] [90m[1m_update_scan_actions[22m | autowrak.png[39m[0m
+[  13% ] [90m[1m_update_scan_actions[22m | bankje.png[39m[0m
+[  13% ] [90m[1m_update_scan_actions[22m | benzine.png[39m[0m
+[  14% ] [90m[1m_update_scan_actions[22m | blok1.png[39m[0m
+[  14% ] [90m[1m_update_scan_actions[22m | blok2.png[39m[0m
+[  14% ] [90m[1m_update_scan_actions[22m | blok3.png[39m[0m
+[  14% ] [90m[1m_update_scan_actions[22m | blok4.png[39m[0m
+[  15% ] [90m[1m_update_scan_actions[22m | boom.png[39m[0m
+[  15% ] [90m[1m_update_scan_actions[22m | bord.png[39m[0m
+[  15% ] [90m[1m_update_scan_actions[22m | brandkraan.png[39m[0m
+[  15% ] [90m[1m_update_scan_actions[22m | bus.png[39m[0m
+[  16% ] [90m[1m_update_scan_actions[22m | busbrand.png[39m[0m
+[  16% ] [90m[1m_update_scan_actions[22m | bushokje.png[39m[0m
+[  16% ] [90m[1m_update_scan_actions[22m | buswrak.png[39m[0m
+[  16% ] [90m[1m_update_scan_actions[22m | container.png[39m[0m
+[  17% ] [90m[1m_update_scan_actions[22m | hek.png[39m[0m
+[  17% ] [90m[1m_update_scan_actions[22m | hotel.png[39m[0m
+[  17% ] [90m[1m_update_scan_actions[22m | kerk.png[39m[0m
+[  17% ] [90m[1m_update_scan_actions[22m | lantaarn.png[39m[0m
+[  18% ] [90m[1m_update_scan_actions[22m | magazijn.png[39m[0m
+[  18% ] [90m[1m_update_scan_actions[22m | plein.png[39m[0m
+[  18% ] [90m[1m_update_scan_actions[22m | prullenbak.png[39m[0m
+[  18% ] [90m[1m_update_scan_actions[22m | puin.png[39m[0m
+[  19% ] [90m[1m_update_scan_actions[22m | stoep.png[39m[0m
+[  19% ] [90m[1m_update_scan_actions[22m | stoplicht.png[39m[0m
+[  19% ] [90m[1m_update_scan_actions[22m | struik.png[39m[0m
+[  19% ] [90m[1m_update_scan_actions[22m | weg_bocht.png[39m[0m
+[  20% ] [90m[1m_update_scan_actions[22m | weg_kruis.png[39m[0m
+[  20% ] [90m[1m_update_scan_actions[22m | weg_recht.png[39m[0m
+[  20% ] [90m[1m_update_scan_actions[22m | weg_steeg.png[39m[0m
+[  20% ] [90m[1m_update_scan_actions[22m | weg_t.png[39m[0m
+[  21% ] [90m[1m_update_scan_actions[22m | weg_zebra.png[39m[0m
+[  21% ] [90m[1m_update_scan_actions[22m | winkel.png[39m[0m
+[  21% ] [90m[1m_update_scan_actions[22m | woonhuis.png[39m[0m
+[  21% ] [90m[1m_update_scan_actions[22m | zandzakken.png[39m[0m
+[  22% ] [90m[1m_update_scan_actions[22m | bloedjungle_bunker_hq.glb[39m[0m
+[  22% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  22% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  22% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  23% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  23% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  23% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  23% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  24% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  24% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  24% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  24% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  25% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  25% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  25% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  25% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  25% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  26% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  26% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  26% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  26% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  27% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  27% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  27% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  27% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  28% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  28% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  28% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  28% ] [90m[1m_update_scan_actions[22m | fern_color.png[39m[0m
+[  29% ] [90m[1m_update_scan_actions[22m | fern_normal.png[39m[0m
+[  29% ] [90m[1m_update_scan_actions[22m | grass_color.png[39m[0m
+[  29% ] [90m[1m_update_scan_actions[22m | grass_normal.png[39m[0m
+[  29% ] [90m[1m_update_scan_actions[22m | leaf_color.png[39m[0m
+[  30% ] [90m[1m_update_scan_actions[22m | leaf_normal.png[39m[0m
+[  30% ] [90m[1m_update_scan_actions[22m | palm_color.png[39m[0m
+[  30% ] [90m[1m_update_scan_actions[22m | palm_normal.png[39m[0m
+[  30% ] [90m[1m_update_scan_actions[22m | albedo.jpg[39m[0m
+[  31% ] [90m[1m_update_scan_actions[22m | normal.png[39m[0m
+[  31% ] [90m[1m_update_scan_actions[22m | orm.png[39m[0m
+[  31% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  31% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  32% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  32% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  32% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  32% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  33% ] [90m[1m_update_scan_actions[22m | albedo.jpg[39m[0m
+[  33% ] [90m[1m_update_scan_actions[22m | normal.jpg[39m[0m
+[  33% ] [90m[1m_update_scan_actions[22m | orm.png[39m[0m
+[  33% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  34% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  34% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  34% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  34% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  35% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  35% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  35% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  35% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  36% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  36% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  36% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  36% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  37% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  37% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  37% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  37% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  38% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  38% ] [90m[1m_update_scan_actions[22m | base_color.jpg[39m[0m
+[  38% ] [90m[1m_update_scan_actions[22m | normal_gl.jpg[39m[0m
+[  38% ] [90m[1m_update_scan_actions[22m | roughness.jpg[39m[0m
+[  39% ] [90m[1m_update_scan_actions[22m | albedo.jpg[39m[0m
+[  39% ] [90m[1m_update_scan_actions[22m | normal.jpg[39m[0m
+[  39% ] [90m[1m_update_scan_actions[22m | orm.png[39m[0m
+[  39% ] [90m[1m_update_scan_actions[22m | albedo.jpg[39m[0m
+[  40% ] [90m[1m_update_scan_actions[22m | normal.jpg[39m[0m
+[  40% ] [90m[1m_update_scan_actions[22m | orm.png[39m[0m
+[  40% ] [90m[1m_update_scan_actions[22m | albedo.jpg[39m[0m
+[  40% ] [90m[1m_update_scan_actions[22m | normal.jpg[39m[0m
+[  41% ] [90m[1m_update_scan_actions[22m | orm.png[39m[0m
+[  41% ] [90m[1m_update_scan_actions[22m | albedo.jpg[39m[0m
+[  41% ] [90m[1m_update_scan_actions[22m | normal.jpg[39m[0m
+[  41% ] [90m[1m_update_scan_actions[22m | orm.png[39m[0m
+[  42% ] [90m[1m_update_scan_actions[22m | albedo.jpg[39m[0m
+[  42% ] [90m[1m_update_scan_actions[22m | normal.jpg[39m[0m
+[  42% ] [90m[1m_update_scan_actions[22m | orm.png[39m[0m
+[  42% ] [90m[1m_update_scan_actions[22m | albedo.jpg[39m[0m
+[  43% ] [90m[1m_update_scan_actions[22m | normal.jpg[39m[0m
+[  43% ] [90m[1m_update_scan_actions[22m | orm.png[39m[0m
+[  43% ] [90m[1m_update_scan_actions[22m | albedo.jpg[39m[0m
+[  43% ] [90m[1m_update_scan_actions[22m | normal.jpg[39m[0m
+[  44% ] [90m[1m_update_scan_actions[22m | orm.png[39m[0m
+[  44% ] [90m[1m_update_scan_actions[22m | icon_base.png[39m[0m
+[  44% ] [90m[1m_update_scan_actions[22m | icon_heart.png[39m[0m
+[  44% ] [90m[1m_update_scan_actions[22m | icon_knife.png[39m[0m
+[  45% ] [90m[1m_update_scan_actions[22m | icon_skull.png[39m[0m
+[  45% ] [90m[1m_update_scan_actions[22m | icon_switch.png[39m[0m
+[  45% ] [90m[1m_update_scan_actions[22m | weapon_bazooka.png[39m[0m
+[  45% ] [90m[1m_update_scan_actions[22m | weapon_garand.png[39m[0m
+[  46% ] [90m[1m_update_scan_actions[22m | weapon_m1911.png[39m[0m
+[  46% ] [90m[1m_update_scan_actions[22m | weapon_mg42.png[39m[0m
+[  46% ] [90m[1m_update_scan_actions[22m | weapon_thompson.png[39m[0m
+[  46% ] [90m[1m_update_scan_actions[22m | weapon_trench.png[39m[0m
+[  47% ] [90m[1m_update_scan_actions[22m | jeep.glb[39m[0m
+[  47% ] [90m[1m_update_scan_actions[22m | kazerne.glb[39m[0m
+[  47% ] [90m[1m_update_scan_actions[22m | legerjeep.glb[39m[0m
+[  47% ] [90m[1m_update_scan_actions[22m | straaljager.glb[39m[0m
+[  48% ] [90m[1m_update_scan_actions[22m | straaljager_jet_boven_albedo.jpg[39m[0m
+[  48% ] [90m[1m_update_scan_actions[22m | straaljager_jet_boven_normal.jpg[39m[0m
+[  48% ] [90m[1m_update_scan_actions[22m | straaljager_jet_boven_orm.jpg[39m[0m
+[  48% ] [90m[1m_update_scan_actions[22m | straaljager_jet_bus_albedo.jpg[39m[0m
+[  49% ] [90m[1m_update_scan_actions[22m | straaljager_jet_bus_normal.jpg[39m[0m
+[  49% ] [90m[1m_update_scan_actions[22m | straaljager_jet_bus_orm.jpg[39m[0m
+[  49% ] [90m[1m_update_scan_actions[22m | straaljager_jet_donker_albedo.jpg[39m[0m
+[  49% ] [90m[1m_update_scan_actions[22m | straaljager_jet_donker_normal.jpg[39m[0m
+[  50% ] [90m[1m_update_scan_actions[22m | straaljager_jet_donker_orm.jpg[39m[0m
+[  50% ] [90m[1m_update_scan_actions[22m | straaljager_jet_onder_albedo.jpg[39m[0m
+[  50% ] [90m[1m_update_scan_actions[22m | straaljager_jet_onder_normal.jpg[39m[0m
+[  50% ] [90m[1m_update_scan_actions[22m | straaljager_jet_onder_orm.jpg[39m[0m
+[  50% ] [90m[1m_update_scan_actions[22m | straaljager_jet_staal_albedo.jpg[39m[0m
+[  51% ] [90m[1m_update_scan_actions[22m | straaljager_jet_staal_normal.jpg[39m[0m
+[  51% ] [90m[1m_update_scan_actions[22m | straaljager_jet_staal_orm.jpg[39m[0m
+[  51% ] [90m[1m_update_scan_actions[22m | wachttoren.glb[39m[0m
+[  51% ] [90m[1m_update_scan_actions[22m | acties.glb[39m[0m
+[  52% ] [90m[1m_update_scan_actions[22m | apache.glb[39m[0m
+[  52% ] [90m[1m_update_scan_actions[22m | apache_apache_olijf.png[39m[0m
+[  52% ] [90m[1m_update_scan_actions[22m | auto.glb[39m[0m
+[  52% ] [90m[1m_update_scan_actions[22m | auto_auto_binnen.jpg[39m[0m
+[  53% ] [90m[1m_update_scan_actions[22m | auto_auto_binnen_n.jpg[39m[0m
+[  53% ] [90m[1m_update_scan_actions[22m | auto_auto_binnen_orm.jpg[39m[0m
+[  53% ] [90m[1m_update_scan_actions[22m | auto_auto_chroom.jpg[39m[0m
+[  53% ] [90m[1m_update_scan_actions[22m | auto_auto_chroom_n.jpg[39m[0m
+[  54% ] [90m[1m_update_scan_actions[22m | auto_auto_chroom_orm.jpg[39m[0m
+[  54% ] [90m[1m_update_scan_actions[22m | auto_auto_lak.jpg[39m[0m
+[  54% ] [90m[1m_update_scan_actions[22m | auto_auto_lak_n.jpg[39m[0m
+[  54% ] [90m[1m_update_scan_actions[22m | auto_auto_lak_orm.jpg[39m[0m
+[  55% ] [90m[1m_update_scan_actions[22m | auto_auto_plastic.jpg[39m[0m
+[  55% ] [90m[1m_update_scan_actions[22m | auto_auto_plastic_n.jpg[39m[0m
+[  55% ] [90m[1m_update_scan_actions[22m | auto_auto_plastic_orm.jpg[39m[0m
+[  55% ] [90m[1m_update_scan_actions[22m | auto_auto_rubber.jpg[39m[0m
+[  56% ] [90m[1m_update_scan_actions[22m | auto_auto_rubber_n.jpg[39m[0m
+[  56% ] [90m[1m_update_scan_actions[22m | auto_auto_rubber_orm.jpg[39m[0m
+[  56% ] [90m[1m_update_scan_actions[22m | auto_auto_velg.jpg[39m[0m
+[  56% ] [90m[1m_update_scan_actions[22m | auto_auto_velg_n.jpg[39m[0m
+[  57% ] [90m[1m_update_scan_actions[22m | auto_auto_velg_orm.jpg[39m[0m
+[  57% ] [90m[1m_update_scan_actions[22m | auto_auto_wrak.jpg[39m[0m
+[  57% ] [90m[1m_update_scan_actions[22m | auto_auto_wrak_n.jpg[39m[0m
+[  57% ] [90m[1m_update_scan_actions[22m | auto_auto_wrak_orm.jpg[39m[0m
+[  58% ] [90m[1m_update_scan_actions[22m | benzine.glb[39m[0m
+[  58% ] [90m[1m_update_scan_actions[22m | benzine_benzine_baksteen.png[39m[0m
+[  58% ] [90m[1m_update_scan_actions[22m | benzine_benzine_beton.png[39m[0m
+[  58% ] [90m[1m_update_scan_actions[22m | benzine_benzine_binnen.png[39m[0m
+[  59% ] [90m[1m_update_scan_actions[22m | benzine_benzine_luik.png[39m[0m
+[  59% ] [90m[1m_update_scan_actions[22m | benzine_benzine_pleister.png[39m[0m
+[  59% ] [90m[1m_update_scan_actions[22m | benzine_benzine_tegels.png[39m[0m
+[  59% ] [90m[1m_update_scan_actions[22m | brandkraan.glb[39m[0m
+[  60% ] [90m[1m_update_scan_actions[22m | brug.glb[39m[0m
+[  60% ] [90m[1m_update_scan_actions[22m | bus.glb[39m[0m
+[  60% ] [90m[1m_update_scan_actions[22m | bus_bus_binnen.jpg[39m[0m
+[  60% ] [90m[1m_update_scan_actions[22m | bus_bus_binnen_n.jpg[39m[0m
+[  61% ] [90m[1m_update_scan_actions[22m | bus_bus_binnen_orm.jpg[39m[0m
+[  61% ] [90m[1m_update_scan_actions[22m | bus_bus_bord.jpg[39m[0m
+[  61% ] [90m[1m_update_scan_actions[22m | bus_bus_chroom.jpg[39m[0m
+[  61% ] [90m[1m_update_scan_actions[22m | bus_bus_chroom_n.jpg[39m[0m
+[  62% ] [90m[1m_update_scan_actions[22m | bus_bus_chroom_orm.jpg[39m[0m
+[  62% ] [90m[1m_update_scan_actions[22m | bus_bus_lak.jpg[39m[0m
+[  62% ] [90m[1m_update_scan_actions[22m | bus_bus_lak_n.jpg[39m[0m
+[  62% ] [90m[1m_update_scan_actions[22m | bus_bus_lak_orm.jpg[39m[0m
+[  63% ] [90m[1m_update_scan_actions[22m | bus_bus_plastic.jpg[39m[0m
+[  63% ] [90m[1m_update_scan_actions[22m | bus_bus_plastic_n.jpg[39m[0m
+[  63% ] [90m[1m_update_scan_actions[22m | bus_bus_plastic_orm.jpg[39m[0m
+[  63% ] [90m[1m_update_scan_actions[22m | bus_bus_rubber.jpg[39m[0m
+[  64% ] [90m[1m_update_scan_actions[22m | bus_bus_rubber_n.jpg[39m[0m
+[  64% ] [90m[1m_update_scan_actions[22m | bus_bus_rubber_orm.jpg[39m[0m
+[  64% ] [90m[1m_update_scan_actions[22m | bus_bus_velg.jpg[39m[0m
+[  64% ] [90m[1m_update_scan_actions[22m | bus_bus_velg_n.jpg[39m[0m
+[  65% ] [90m[1m_update_scan_actions[22m | bus_bus_velg_orm.jpg[39m[0m
+[  65% ] [90m[1m_update_scan_actions[22m | bus_bus_wrak.jpg[39m[0m
+[  65% ] [90m[1m_update_scan_actions[22m | bus_bus_wrak_n.jpg[39m[0m
+[  65% ] [90m[1m_update_scan_actions[22m | bus_bus_wrak_orm.jpg[39m[0m
+[  66% ] [90m[1m_update_scan_actions[22m | garage.glb[39m[0m
+[  66% ] [90m[1m_update_scan_actions[22m | garage_garage_camo.png[39m[0m
+[  66% ] [90m[1m_update_scan_actions[22m | garage_garage_plaat.png[39m[0m
+[  66% ] [90m[1m_update_scan_actions[22m | generator.glb[39m[0m
+[  67% ] [90m[1m_update_scan_actions[22m | helipad.glb[39m[0m
+[  67% ] [90m[1m_update_scan_actions[22m | helipad_helipad_beton.png[39m[0m
+[  67% ] [90m[1m_update_scan_actions[22m | helipad_helipad_plaat.png[39m[0m
+[  67% ] [90m[1m_update_scan_actions[22m | hotel.glb[39m[0m
+[  68% ] [90m[1m_update_scan_actions[22m | hotel_hotel_baksteen.png[39m[0m
+[  68% ] [90m[1m_update_scan_actions[22m | hotel_hotel_binnen.png[39m[0m
+[  68% ] [90m[1m_update_scan_actions[22m | hotel_hotel_luifel.png[39m[0m
+[  68% ] [90m[1m_update_scan_actions[22m | hotel_hotel_luik.png[39m[0m
+[  69% ] [90m[1m_update_scan_actions[22m | hotel_hotel_planken.png[39m[0m
+[  69% ] [90m[1m_update_scan_actions[22m | hotel_hotel_pleister.png[39m[0m
+[  69% ] [90m[1m_update_scan_actions[22m | hotel_hotel_tegels.png[39m[0m
+[  69% ] [90m[1m_update_scan_actions[22m | jeep.glb[39m[0m
+[  70% ] [90m[1m_update_scan_actions[22m | jeep_jeep_olijf.png[39m[0m
+[  70% ] [90m[1m_update_scan_actions[22m | jungle.glb[39m[0m
+[  70% ] [90m[1m_update_scan_actions[22m | kazerne.glb[39m[0m
+[  70% ] [90m[1m_update_scan_actions[22m | kerk.glb[39m[0m
+[  71% ] [90m[1m_update_scan_actions[22m | kerk_kerk_binnen.png[39m[0m
+[  71% ] [90m[1m_update_scan_actions[22m | kerk_kerk_dakpan.png[39m[0m
+[  71% ] [90m[1m_update_scan_actions[22m | kerk_kerk_glaslood.png[39m[0m
+[  71% ] [90m[1m_update_scan_actions[22m | kerk_kerk_planken.png[39m[0m
+[  72% ] [90m[1m_update_scan_actions[22m | kerk_kerk_pleister.png[39m[0m
+[  72% ] [90m[1m_update_scan_actions[22m | kerk_kerk_steen.png[39m[0m
+[  72% ] [90m[1m_update_scan_actions[22m | kerk_kerk_tegels.png[39m[0m
+[  72% ] [90m[1m_update_scan_actions[22m | kerk_kerk_vlag.png[39m[0m
+[  73% ] [90m[1m_update_scan_actions[22m | klimmen.glb[39m[0m
+[  73% ] [90m[1m_update_scan_actions[22m | legerjeep.glb[39m[0m
+[  73% ] [90m[1m_update_scan_actions[22m | loopgraaf.glb[39m[0m
+[  73% ] [90m[1m_update_scan_actions[22m | magazijn.glb[39m[0m
+[  74% ] [90m[1m_update_scan_actions[22m | magazijn_baksteen_base.png[39m[0m
+[  74% ] [90m[1m_update_scan_actions[22m | magazijn_baksteen_normal.png[39m[0m
+[  74% ] [90m[1m_update_scan_actions[22m | magazijn_beton_base.png[39m[0m
+[  74% ] [90m[1m_update_scan_actions[22m | magazijn_beton_normal.png[39m[0m
+[  75% ] [90m[1m_update_scan_actions[22m | magazijn_golfplaat roest_base.png[39m[0m
+[  75% ] [90m[1m_update_scan_actions[22m | magazijn_golfplaat roest_normal.png[39m[0m
+[  75% ] [90m[1m_update_scan_actions[22m | magazijn_militair olijfgroen_base.png[39m[0m
+[  75% ] [90m[1m_update_scan_actions[22m | magazijn_militair olijfgroen_normal.png[39m[0m
+[  75% ] [90m[1m_update_scan_actions[22m | magazijn_pleister_base.png[39m[0m
+[  76% ] [90m[1m_update_scan_actions[22m | magazijn_pleister_normal.png[39m[0m
+[  76% ] [90m[1m_update_scan_actions[22m | magazijn_staal_base.png[39m[0m
+[  76% ] [90m[1m_update_scan_actions[22m | magazijn_staal_normal.png[39m[0m
+[  76% ] [90m[1m_update_scan_actions[22m | magazijn_verweerd hout_base.png[39m[0m
+[  77% ] [90m[1m_update_scan_actions[22m | magazijn_verweerd hout_normal.png[39m[0m
+[  77% ] [90m[1m_update_scan_actions[22m | magazijn_waarschuwing geel_base.png[39m[0m
+[  77% ] [90m[1m_update_scan_actions[22m | magazijn_waarschuwing geel_normal.png[39m[0m
+[  77% ] [90m[1m_update_scan_actions[22m | napalm_vlam_atlas.png[39m[0m
+[  78% ] [90m[1m_update_scan_actions[22m | napalm_vlam_laag_atlas.png[39m[0m
+[  78% ] [90m[1m_update_scan_actions[22m | poort.glb[39m[0m
+[  78% ] [90m[1m_update_scan_actions[22m | props.glb[39m[0m
+[  78% ] [90m[1m_update_scan_actions[22m | soldaat.glb[39m[0m
+[  79% ] [90m[1m_update_scan_actions[22m | soldaat_jungle_commando.glb[39m[0m
+[  79% ] [90m[1m_update_scan_actions[22m | soldaat_vq2.glb[39m[0m
+[  79% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_lijf_bloot_albedo.jpg[39m[0m
+[  79% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_lijf_bloot_normal.jpg[39m[0m
+[  80% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_lijf_bloot_orm.jpg[39m[0m
+[  80% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_lijf_mouwloos_albedo.jpg[39m[0m
+[  80% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_lijf_mouwloos_normal.jpg[39m[0m
+[  80% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_lijf_mouwloos_orm.jpg[39m[0m
+[  81% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_lijf_uniform_albedo.jpg[39m[0m
+[  81% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_lijf_uniform_normal.jpg[39m[0m
+[  81% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_lijf_uniform_orm.jpg[39m[0m
+[  81% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_lijf_vijand_albedo.jpg[39m[0m
+[  82% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_lijf_vijand_normal.jpg[39m[0m
+[  82% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_lijf_vijand_orm.jpg[39m[0m
+[  82% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_uitrusting_albedo.jpg[39m[0m
+[  82% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_uitrusting_normal.jpg[39m[0m
+[  83% ] [90m[1m_update_scan_actions[22m | soldaat_vq2_uitrusting_orm.jpg[39m[0m
+[  83% ] [90m[1m_update_scan_actions[22m | straaljager.glb[39m[0m
+[  83% ] [90m[1m_update_scan_actions[22m | straaljager_jet_boven_albedo.jpg[39m[0m
+[  83% ] [90m[1m_update_scan_actions[22m | straaljager_jet_boven_normal.jpg[39m[0m
+[  84% ] [90m[1m_update_scan_actions[22m | straaljager_jet_boven_orm.jpg[39m[0m
+[  84% ] [90m[1m_update_scan_actions[22m | straaljager_jet_bus_albedo.jpg[39m[0m
+[  84% ] [90m[1m_update_scan_actions[22m | straaljager_jet_bus_normal.jpg[39m[0m
+[  84% ] [90m[1m_update_scan_actions[22m | straaljager_jet_bus_orm.jpg[39m[0m
+[  85% ] [90m[1m_update_scan_actions[22m | straaljager_jet_donker_albedo.jpg[39m[0m
+[  85% ] [90m[1m_update_scan_actions[22m | straaljager_jet_donker_normal.jpg[39m[0m
+[  85% ] [90m[1m_update_scan_actions[22m | straaljager_jet_donker_orm.jpg[39m[0m
+[  85% ] [90m[1m_update_scan_actions[22m | straaljager_jet_onder_albedo.jpg[39m[0m
+[  86% ] [90m[1m_update_scan_actions[22m | straaljager_jet_onder_normal.jpg[39m[0m
+[  86% ] [90m[1m_update_scan_actions[22m | straaljager_jet_onder_orm.jpg[39m[0m
+[  86% ] [90m[1m_update_scan_actions[22m | straaljager_jet_raket_albedo.jpg[39m[0m
+[  86% ] [90m[1m_update_scan_actions[22m | straaljager_jet_raket_normal.jpg[39m[0m
+[  87% ] [90m[1m_update_scan_actions[22m | straaljager_jet_raket_orm.jpg[39m[0m
+[  87% ] [90m[1m_update_scan_actions[22m | straaljager_jet_staal_albedo.jpg[39m[0m
+[  87% ] [90m[1m_update_scan_actions[22m | straaljager_jet_staal_normal.jpg[39m[0m
+[  87% ] [90m[1m_update_scan_actions[22m | straaljager_jet_staal_orm.jpg[39m[0m
+[  88% ] [90m[1m_update_scan_actions[22m | straat.glb[39m[0m
+[  88% ] [90m[1m_update_scan_actions[22m | straatmeubilair.glb[39m[0m
+[  88% ] [90m[1m_update_scan_actions[22m | straatmeubilair_sm_bast.png[39m[0m
+[  88% ] [90m[1m_update_scan_actions[22m | straatmeubilair_sm_beton.png[39m[0m
+[  89% ] [90m[1m_update_scan_actions[22m | straatmeubilair_sm_blad.png[39m[0m
+[  89% ] [90m[1m_update_scan_actions[22m | straatmeubilair_sm_bord.png[39m[0m
+[  89% ] [90m[1m_update_scan_actions[22m | straatmeubilair_sm_hout.png[39m[0m
+[  89% ] [90m[1m_update_scan_actions[22m | straatmeubilair_sm_metaal.png[39m[0m
+[  90% ] [90m[1m_update_scan_actions[22m | straatmeubilair_sm_zak.png[39m[0m
+[  90% ] [90m[1m_update_scan_actions[22m | straat_straat_asfalt.png[39m[0m
+[  90% ] [90m[1m_update_scan_actions[22m | straat_straat_ijzer.png[39m[0m
+[  90% ] [90m[1m_update_scan_actions[22m | straat_straat_keien.png[39m[0m
+[  91% ] [90m[1m_update_scan_actions[22m | straat_straat_keien_n.png[39m[0m
+[  91% ] [90m[1m_update_scan_actions[22m | straat_straat_rooster.png[39m[0m
+[  91% ] [90m[1m_update_scan_actions[22m | straat_straat_steen.png[39m[0m
+[  91% ] [90m[1m_update_scan_actions[22m | straat_straat_stoep.png[39m[0m
+[  92% ] [90m[1m_update_scan_actions[22m | straat_straat_stoep_n.png[39m[0m
+[  92% ] [90m[1m_update_scan_actions[22m | straat_straat_verf.png[39m[0m
+[  92% ] [90m[1m_update_scan_actions[22m | tank.glb[39m[0m
+[  92% ] [90m[1m_update_scan_actions[22m | tank_tank_camo.png[39m[0m
+[  93% ] [90m[1m_update_scan_actions[22m | uitrusting.glb[39m[0m
+[  93% ] [90m[1m_update_scan_actions[22m | vrachtwagen.glb[39m[0m
+[  93% ] [90m[1m_update_scan_actions[22m | vrachtwagen_vrachtwagen_olijf.png[39m[0m
+[  93% ] [90m[1m_update_scan_actions[22m | wachtpost.glb[39m[0m
+[  94% ] [90m[1m_update_scan_actions[22m | wachttoren.glb[39m[0m
+[  94% ] [90m[1m_update_scan_actions[22m | wapens.glb[39m[0m
+[  94% ] [90m[1m_update_scan_actions[22m | winkel.glb[39m[0m
+[  94% ] [90m[1m_update_scan_actions[22m | winkel_winkel_baksteen.png[39m[0m
+[  95% ] [90m[1m_update_scan_actions[22m | winkel_winkel_binnen.png[39m[0m
+[  95% ] [90m[1m_update_scan_actions[22m | winkel_winkel_luifel.png[39m[0m
+[  95% ] [90m[1m_update_scan_actions[22m | winkel_winkel_luik.png[39m[0m
+[  95% ] [90m[1m_update_scan_actions[22m | winkel_winkel_planken.png[39m[0m
+[  96% ] [90m[1m_update_scan_actions[22m | winkel_winkel_pleister.png[39m[0m
+[  96% ] [90m[1m_update_scan_actions[22m | winkel_winkel_tegels.png[39m[0m
+[  96% ] [90m[1m_update_scan_actions[22m | woonhuis.glb[39m[0m
+[  96% ] [90m[1m_update_scan_actions[22m | woonhuis_woonhuis_baksteen.png[39m[0m
+[  97% ] [90m[1m_update_scan_actions[22m | woonhuis_woonhuis_binnen.png[39m[0m
+[  97% ] [90m[1m_update_scan_actions[22m | woonhuis_woonhuis_dakpan.png[39m[0m
+[  97% ] [90m[1m_update_scan_actions[22m | woonhuis_woonhuis_luik.png[39m[0m
+[  97% ] [90m[1m_update_scan_actions[22m | woonhuis_woonhuis_planken.png[39m[0m
+[  98% ] [90m[1m_update_scan_actions[22m | woonhuis_woonhuis_pleister.png[39m[0m
+[  98% ] [90m[1m_update_scan_actions[22m | woonhuis_woonhuis_tegels.png[39m[0m
+[  98% ] [90m[1m_update_scan_actions[22m | zitten.glb[39m[0m
+[  98% ] [90m[1m_update_scan_actions[22m | zwaailamp.glb[39m[0m
+[  99% ] [90m[1m_update_scan_actions[22m | patrouille.png[39m[0m
+[  99% ] [90m[1m_update_scan_actions[22m | icon.svg[39m[0m
+[  99% ] [90m[1m_update_scan_actions[22m | referentie-stijl.png[39m[0m
+[92m[ DONE ][39m [1m_update_scan_actions[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started Assets (her)importeren (308 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   0% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   0% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   0% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   1% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   1% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   1% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   2% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   2% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   2% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   3% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   3% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   3% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   4% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   4% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   4% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   5% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   5% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   5% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   6% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   6% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   6% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   7% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   7% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   7% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   8% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   8% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   8% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   9% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   9% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   9% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  10% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  10% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  10% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  11% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  11% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  11% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  11% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  12% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  12% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  12% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  13% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  13% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  13% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  14% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  14% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  14% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  15% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  15% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  15% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  16% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  16% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  16% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  17% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  17% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  17% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  18% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  18% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  18% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  19% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  19% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  19% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  20% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  20% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  20% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  21% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  21% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  21% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  22% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  22% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  22% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  22% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  23% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  23% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  23% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  24% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  24% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  24% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  25% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  25% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  25% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  26% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  26% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  26% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  27% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  27% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  27% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  28% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  28% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  28% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  29% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  29% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  29% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  30% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  30% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  30% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  31% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  31% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  31% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  32% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  32% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  32% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  33% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  33% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  33% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  33% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  34% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  34% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  34% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  35% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  35% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  35% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  36% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  36% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  36% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  37% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  37% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  37% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  38% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  38% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  38% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  39% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  39% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  39% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  40% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  40% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  40% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  41% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  41% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  41% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  42% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  42% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  42% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  43% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  43% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  43% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  44% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  44% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  44% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  44% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  45% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  45% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  45% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  46% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  46% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  46% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  47% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  47% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  47% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  48% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  48% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  48% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  49% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  49% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  49% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  50% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  50% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  50% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  51% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  51% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  51% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  52% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  52% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  52% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  53% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  53% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  53% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  54% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  54% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  54% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  55% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  55% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  55% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  55% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  56% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  56% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  56% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  57% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  57% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  57% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  58% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  58% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  58% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  59% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  59% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  59% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  60% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  60% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  60% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  61% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  61% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  61% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  62% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  62% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  62% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  63% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  63% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  63% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  64% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  64% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  64% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  65% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  65% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  65% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  66% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  66% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  66% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  66% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  67% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  67% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  67% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  68% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  68% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  68% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  69% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  69% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  69% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  70% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  70% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  70% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  71% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  71% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  71% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  72% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  72% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  72% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  73% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  73% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  73% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  74% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  74% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  74% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  75% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  75% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  75% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  76% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  76% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  76% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  77% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  77% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  77% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  77% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  78% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  78% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  78% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  79% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  79% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  79% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  80% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  80% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  80% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  81% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  81% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  81% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  82% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  82% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  82% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  83% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  83% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  83% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  84% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  84% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  84% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  85% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  85% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  85% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  86% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  86% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  86% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  87% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  87% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  87% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  88% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  88% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  88% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  88% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  89% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  89% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  89% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  90% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  90% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  90% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  91% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  91% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  91% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  92% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  92% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  92% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  93% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  93% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  93% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  94% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  94% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  94% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  95% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  95% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  95% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  96% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  96% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  96% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  97% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  97% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  97% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  98% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  98% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  98% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  99% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  99% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   0% ] [90m[1mreimport[22m | Voorbewerkingen herimport aan het uitvoeren...[39m[0m
+[   0% ] [90m[1mpreload_reimporting_scene[22m | Started Scènes aan het voorbereiden voor herladen (1 steps)[39m[0m
+[   0% ] [90m[1mpreload_reimporting_scene[22m | Scène [leeg] aan het analyseren[39m[0m
+[  50% ] [90m[1mpreload_reimporting_scene[22m | Voorbereiding gedaan.[39m[0m
+[92m[ DONE ][39m [1mpreload_reimporting_scene[22m
+[0m
+[   0% ] [90m[1mreimport[22m | asset_inventory.csv[39m[0m
+[   0% ] [90m[1mreimport[22m | clean_checkout_resource_samples.csv[39m[0m
+[   0% ] [90m[1mreimport[22m | resource_samples.csv[39m[0m
+[   0% ] [90m[1mreimport[22m | asset_inventory.csv[39m[0m
+[   1% ] [90m[1mreimport[22m | clean_checkout_resource_samples.csv[39m[0m
+[   1% ] [90m[1mreimport[22m | resource_samples.csv[39m[0m
+[   1% ] [90m[1mreimport[22m | BlackOpsOne.woff2[39m[0m
+[   2% ] [90m[1mreimport[22m | BarlowCondensed-700.woff2[39m[0m
+[   2% ] [90m[1mreimport[22m | BarlowCondensed-600.woff2[39m[0m
+[   2% ] [90m[1mreimport[22m | alarm.mp3[39m[0m
+[   3% ] [90m[1mreimport[22m | asset_inventory.csv[39m[0m
+[   3% ] [90m[1mreimport[22m | clean_checkout_resource_samples.csv[39m[0m
+[   3% ] [90m[1mreimport[22m | resource_samples.csv[39m[0m
+[   4% ] [90m[1mreimport[22m | BlackOpsOne.woff2[39m[0m
+[   4% ] [90m[1mreimport[22m | BarlowCondensed-700.woff2[39m[0m
+[   4% ] [90m[1mreimport[22m | BarlowCondensed-600.woff2[39m[0m
+[   5% ] [90m[1mreimport[22m | BarlowCondensed-500.woff2[39m[0m
+[   5% ] [90m[1mreimport[22m | Barlow-SemiBold.ttf[39m[0m
+[   5% ] [90m[1mreimport[22m | Barlow-Medium.ttf[39m[0m
+[   6% ] [90m[1mreimport[22m | alarm.mp3[39m[0m
+[   6% ] [90m[1mreimport[22m | straaljager_jet_staal_albedo.jpg[39m[0m
+[   6% ] [90m[1mreimport[22m | straaljager_jet_onder_orm.jpg[39m[0m
+[   7% ] [90m[1mreimport[22m | straaljager_jet_onder_normal.jpg[39m[0m
+[   7% ] [90m[1mreimport[22m | straaljager_jet_onder_albedo.jpg[39m[0m
+[   7% ] [90m[1mreimport[22m | straaljager_jet_donker_orm.jpg[39m[0m
+[   8% ] [90m[1mreimport[22m | straaljager_jet_donker_normal.jpg[39m[0m
+[   8% ] [90m[1mreimport[22m | straaljager_jet_donker_albedo.jpg[39m[0m
+[   8% ] [90m[1mreimport[22m | straaljager_jet_bus_orm.jpg[39m[0m
+[   9% ] [90m[1mreimport[22m | straaljager_jet_bus_normal.jpg[39m[0m
+[   9% ] [90m[1mreimport[22m | straaljager_jet_bus_albedo.jpg[39m[0m
+[   9% ] [90m[1mreimport[22m | straaljager_jet_boven_orm.jpg[39m[0m
+[  10% ] [90m[1mreimport[22m | straaljager_jet_boven_normal.jpg[39m[0m
+[  10% ] [90m[1mreimport[22m | straaljager_jet_boven_albedo.jpg[39m[0m
+[  10% ] [90m[1mreimport[22m | weapon_trench.png[39m[0m
+[  11% ] [90m[1mreimport[22m | weapon_thompson.png[39m[0m
+[  11% ] [90m[1mreimport[22m | weapon_mg42.png[39m[0m
+[  11% ] [90m[1mreimport[22m | hotel_hotel_luik.png[39m[0m
+[  11% ] [90m[1mreimport[22m | hotel_hotel_luifel.png[39m[0m
+[  12% ] [90m[1mreimport[22m | hotel_hotel_binnen.png[39m[0m
+[  12% ] [90m[1mreimport[22m | hotel_hotel_baksteen.png[39m[0m
+[  12% ] [90m[1mreimport[22m | helipad_helipad_plaat.png[39m[0m
+[  13% ] [90m[1mreimport[22m | helipad_helipad_beton.png[39m[0m
+[  13% ] [90m[1mreimport[22m | garage_garage_plaat.png[39m[0m
+[  13% ] [90m[1mreimport[22m | garage_garage_camo.png[39m[0m
+[  14% ] [90m[1mreimport[22m | benzine_benzine_tegels.png[39m[0m
+[  14% ] [90m[1mreimport[22m | benzine_benzine_pleister.png[39m[0m
+[  14% ] [90m[1mreimport[22m | benzine_benzine_luik.png[39m[0m
+[  15% ] [90m[1mreimport[22m | benzine_benzine_binnen.png[39m[0m
+[  15% ] [90m[1mreimport[22m | benzine_benzine_beton.png[39m[0m
+[  15% ] [90m[1mreimport[22m | benzine_benzine_baksteen.png[39m[0m
+[  16% ] [90m[1mreimport[22m | apache_apache_olijf.png[39m[0m
+[  16% ] [90m[1mreimport[22m | straaljager_jet_staal_orm.jpg[39m[0m
+[  16% ] [90m[1mreimport[22m | straaljager_jet_staal_normal.jpg[39m[0m
+[  17% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  17% ] [90m[1mreimport[22m | normal.jpg[39m[0m
+[  17% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  18% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  18% ] [90m[1mreimport[22m | normal.jpg[39m[0m
+[  18% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  19% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  19% ] [90m[1mreimport[22m | normal.jpg[39m[0m
+[  19% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  20% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  20% ] [90m[1mreimport[22m | normal.jpg[39m[0m
+[  20% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  21% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  21% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  21% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  22% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  22% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  22% ] [90m[1mreimport[22m | weapon_m1911.png[39m[0m
+[  22% ] [90m[1mreimport[22m | weapon_garand.png[39m[0m
+[  23% ] [90m[1mreimport[22m | weapon_bazooka.png[39m[0m
+[  23% ] [90m[1mreimport[22m | icon_switch.png[39m[0m
+[  23% ] [90m[1mreimport[22m | icon_skull.png[39m[0m
+[  24% ] [90m[1mreimport[22m | icon_knife.png[39m[0m
+[  24% ] [90m[1mreimport[22m | icon_heart.png[39m[0m
+[  24% ] [90m[1mreimport[22m | icon_base.png[39m[0m
+[  25% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  25% ] [90m[1mreimport[22m | normal.jpg[39m[0m
+[  25% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  26% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  26% ] [90m[1mreimport[22m | normal.jpg[39m[0m
+[  26% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  27% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  27% ] [90m[1mreimport[22m | normal.jpg[39m[0m
+[  27% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  28% ] [90m[1mreimport[22m | straatmeubilair_sm_beton.png[39m[0m
+[  28% ] [90m[1mreimport[22m | straatmeubilair_sm_blad.png[39m[0m
+[  28% ] [90m[1mreimport[22m | straatmeubilair_sm_bord.png[39m[0m
+[  29% ] [90m[1mreimport[22m | straatmeubilair_sm_hout.png[39m[0m
+[  29% ] [90m[1mreimport[22m | straatmeubilair_sm_metaal.png[39m[0m
+[  29% ] [90m[1mreimport[22m | straatmeubilair_sm_zak.png[39m[0m
+[  30% ] [90m[1mreimport[22m | straat_straat_asfalt.png[39m[0m
+[  30% ] [90m[1mreimport[22m | straat_straat_ijzer.png[39m[0m
+[  30% ] [90m[1mreimport[22m | straat_straat_keien.png[39m[0m
+[  31% ] [90m[1mreimport[22m | straat_straat_keien_n.png[39m[0m
+[  31% ] [90m[1mreimport[22m | straat_straat_rooster.png[39m[0m
+[  31% ] [90m[1mreimport[22m | straat_straat_steen.png[39m[0m
+[  32% ] [90m[1mreimport[22m | straat_straat_stoep.png[39m[0m
+[  32% ] [90m[1mreimport[22m | straat_straat_stoep_n.png[39m[0m
+[  32% ] [90m[1mreimport[22m | straat_straat_verf.png[39m[0m
+[  33% ] [90m[1mreimport[22m | tank_tank_camo.png[39m[0m
+[  33% ] [90m[1mreimport[22m | referentie-stijl.png[39m[0m
+[  33% ] [90m[1mreimport[22m | icon.svg[39m[0m
+[  33% ] [90m[1mreimport[22m | patrouille.png[39m[0m
+[  34% ] [90m[1mreimport[22m | woonhuis_woonhuis_tegels.png[39m[0m
+[  34% ] [90m[1mreimport[22m | woonhuis_woonhuis_pleister.png[39m[0m
+[  34% ] [90m[1mreimport[22m | woonhuis_woonhuis_planken.png[39m[0m
+[  35% ] [90m[1mreimport[22m | woonhuis_woonhuis_luik.png[39m[0m
+[  35% ] [90m[1mreimport[22m | woonhuis_woonhuis_dakpan.png[39m[0m
+[  35% ] [90m[1mreimport[22m | woonhuis_woonhuis_binnen.png[39m[0m
+[  36% ] [90m[1mreimport[22m | woonhuis_woonhuis_baksteen.png[39m[0m
+[  36% ] [90m[1mreimport[22m | winkel_winkel_tegels.png[39m[0m
+[  36% ] [90m[1mreimport[22m | winkel_winkel_pleister.png[39m[0m
+[  37% ] [90m[1mreimport[22m | winkel_winkel_planken.png[39m[0m
+[  37% ] [90m[1mreimport[22m | winkel_winkel_luik.png[39m[0m
+[  37% ] [90m[1mreimport[22m | winkel_winkel_luifel.png[39m[0m
+[  38% ] [90m[1mreimport[22m | winkel_winkel_binnen.png[39m[0m
+[  38% ] [90m[1mreimport[22m | winkel_winkel_baksteen.png[39m[0m
+[  38% ] [90m[1mreimport[22m | magazijn_golfplaat roest_base.png[39m[0m
+[  39% ] [90m[1mreimport[22m | magazijn_beton_normal.png[39m[0m
+[  39% ] [90m[1mreimport[22m | magazijn_beton_base.png[39m[0m
+[  39% ] [90m[1mreimport[22m | magazijn_baksteen_normal.png[39m[0m
+[  40% ] [90m[1mreimport[22m | magazijn_baksteen_base.png[39m[0m
+[  40% ] [90m[1mreimport[22m | kerk_kerk_vlag.png[39m[0m
+[  40% ] [90m[1mreimport[22m | kerk_kerk_tegels.png[39m[0m
+[  41% ] [90m[1mreimport[22m | kerk_kerk_steen.png[39m[0m
+[  41% ] [90m[1mreimport[22m | kerk_kerk_pleister.png[39m[0m
+[  41% ] [90m[1mreimport[22m | kerk_kerk_planken.png[39m[0m
+[  42% ] [90m[1mreimport[22m | kerk_kerk_glaslood.png[39m[0m
+[  42% ] [90m[1mreimport[22m | kerk_kerk_dakpan.png[39m[0m
+[  42% ] [90m[1mreimport[22m | kerk_kerk_binnen.png[39m[0m
+[  43% ] [90m[1mreimport[22m | jeep_jeep_olijf.png[39m[0m
+[  43% ] [90m[1mreimport[22m | hotel_hotel_tegels.png[39m[0m
+[  43% ] [90m[1mreimport[22m | hotel_hotel_pleister.png[39m[0m
+[  44% ] [90m[1mreimport[22m | hotel_hotel_planken.png[39m[0m
+[  44% ] [90m[1mreimport[22m | straatmeubilair_sm_bast.png[39m[0m
+[  44% ] [90m[1mreimport[22m | straaljager_jet_raket_orm.jpg[39m[0m
+[  44% ] [90m[1mreimport[22m | straaljager_jet_raket_normal.jpg[39m[0m
+[  45% ] [90m[1mreimport[22m | straaljager_jet_raket_albedo.jpg[39m[0m
+[  45% ] [90m[1mreimport[22m | napalm_vlam_laag_atlas.png[39m[0m
+[  45% ] [90m[1mreimport[22m | napalm_vlam_atlas.png[39m[0m
+[  46% ] [90m[1mreimport[22m | magazijn_waarschuwing geel_normal.png[39m[0m
+[  46% ] [90m[1mreimport[22m | magazijn_waarschuwing geel_base.png[39m[0m
+[  46% ] [90m[1mreimport[22m | magazijn_verweerd hout_normal.png[39m[0m
+[  47% ] [90m[1mreimport[22m | magazijn_verweerd hout_base.png[39m[0m
+[  47% ] [90m[1mreimport[22m | magazijn_staal_normal.png[39m[0m
+[  47% ] [90m[1mreimport[22m | magazijn_staal_base.png[39m[0m
+[  48% ] [90m[1mreimport[22m | magazijn_pleister_normal.png[39m[0m
+[  48% ] [90m[1mreimport[22m | magazijn_pleister_base.png[39m[0m
+[  48% ] [90m[1mreimport[22m | magazijn_militair olijfgroen_normal.png[39m[0m
+[  49% ] [90m[1mreimport[22m | magazijn_militair olijfgroen_base.png[39m[0m
+[  49% ] [90m[1mreimport[22m | magazijn_golfplaat roest_normal.png[39m[0m
+[  49% ] [90m[1mreimport[22m | stoplicht.png[39m[0m
+[  50% ] [90m[1mreimport[22m | struik.png[39m[0m
+[  50% ] [90m[1mreimport[22m | weg_bocht.png[39m[0m
+[  50% ] [90m[1mreimport[22m | weg_kruis.png[39m[0m
+[  51% ] [90m[1mreimport[22m | weg_recht.png[39m[0m
+[  51% ] [90m[1mreimport[22m | weg_steeg.png[39m[0m
+[  51% ] [90m[1mreimport[22m | weg_t.png[39m[0m
+[  52% ] [90m[1mreimport[22m | weg_zebra.png[39m[0m
+[  52% ] [90m[1mreimport[22m | winkel.png[39m[0m
+[  52% ] [90m[1mreimport[22m | woonhuis.png[39m[0m
+[  53% ] [90m[1mreimport[22m | zandzakken.png[39m[0m
+[  53% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  53% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  54% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  54% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  54% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  55% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  55% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  55% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  55% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  56% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  56% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  56% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  57% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  57% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  57% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  58% ] [90m[1mreimport[22m | auto.png[39m[0m
+[  58% ] [90m[1mreimport[22m | autobrand.png[39m[0m
+[  58% ] [90m[1mreimport[22m | autowrak.png[39m[0m
+[  59% ] [90m[1mreimport[22m | bankje.png[39m[0m
+[  59% ] [90m[1mreimport[22m | benzine.png[39m[0m
+[  59% ] [90m[1mreimport[22m | blok1.png[39m[0m
+[  60% ] [90m[1mreimport[22m | blok2.png[39m[0m
+[  60% ] [90m[1mreimport[22m | blok3.png[39m[0m
+[  60% ] [90m[1mreimport[22m | blok4.png[39m[0m
+[  61% ] [90m[1mreimport[22m | boom.png[39m[0m
+[  61% ] [90m[1mreimport[22m | bord.png[39m[0m
+[  61% ] [90m[1mreimport[22m | brandkraan.png[39m[0m
+[  62% ] [90m[1mreimport[22m | bus.png[39m[0m
+[  62% ] [90m[1mreimport[22m | busbrand.png[39m[0m
+[  62% ] [90m[1mreimport[22m | bushokje.png[39m[0m
+[  63% ] [90m[1mreimport[22m | buswrak.png[39m[0m
+[  63% ] [90m[1mreimport[22m | container.png[39m[0m
+[  63% ] [90m[1mreimport[22m | hek.png[39m[0m
+[  64% ] [90m[1mreimport[22m | hotel.png[39m[0m
+[  64% ] [90m[1mreimport[22m | kerk.png[39m[0m
+[  64% ] [90m[1mreimport[22m | lantaarn.png[39m[0m
+[  65% ] [90m[1mreimport[22m | magazijn.png[39m[0m
+[  65% ] [90m[1mreimport[22m | plein.png[39m[0m
+[  65% ] [90m[1mreimport[22m | prullenbak.png[39m[0m
+[  66% ] [90m[1mreimport[22m | puin.png[39m[0m
+[  66% ] [90m[1mreimport[22m | stoep.png[39m[0m
+[  66% ] [90m[1mreimport[22m | palm_color.png[39m[0m
+[  66% ] [90m[1mreimport[22m | palm_normal.png[39m[0m
+[  67% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  67% ] [90m[1mreimport[22m | normal.png[39m[0m
+[  67% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  68% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  68% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  68% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  69% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  69% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  69% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  70% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  70% ] [90m[1mreimport[22m | normal.jpg[39m[0m
+[  70% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  71% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  71% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  71% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  72% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  72% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  72% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  73% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  73% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  73% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  74% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  74% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  74% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  75% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  75% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  75% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  76% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  76% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  76% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  77% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  77% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  77% ] [90m[1mreimport[22m | roughness.jpg[39m[0m
+[  77% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  78% ] [90m[1mreimport[22m | base_color.jpg[39m[0m
+[  78% ] [90m[1mreimport[22m | normal_gl.jpg[39m[0m
+[  78% ] [90m[1mreimport[22m | asset_inventory.csv[39m[0m
+[  79% ] [90m[1mreimport[22m | clean_checkout_resource_samples.csv[39m[0m
+[  79% ] [90m[1mreimport[22m | resource_samples.csv[39m[0m
+[  79% ] [90m[1mreimport[22m | BlackOpsOne.woff2[39m[0m
+[  80% ] [90m[1mreimport[22m | BarlowCondensed-700.woff2[39m[0m
+[  80% ] [90m[1mreimport[22m | BarlowCondensed-600.woff2[39m[0m
+[  80% ] [90m[1mreimport[22m | BarlowCondensed-500.woff2[39m[0m
+[  81% ] [90m[1mreimport[22m | Barlow-SemiBold.ttf[39m[0m
+[  81% ] [90m[1mreimport[22m | Barlow-Medium.ttf[39m[0m
+[  81% ] [90m[1mreimport[22m | alarm.mp3[39m[0m
+[  82% ] [90m[1mreimport[22m | straaljager_jet_staal_albedo.jpg[39m[0m
+[  82% ] [90m[1mreimport[22m | straaljager_jet_onder_orm.jpg[39m[0m
+[  82% ] [90m[1mreimport[22m | straaljager_jet_onder_normal.jpg[39m[0m
+[  83% ] [90m[1mreimport[22m | straaljager_jet_onder_albedo.jpg[39m[0m
+[  83% ] [90m[1mreimport[22m | straaljager_jet_donker_orm.jpg[39m[0m
+[  83% ] [90m[1mreimport[22m | straaljager_jet_donker_normal.jpg[39m[0m
+[  84% ] [90m[1mreimport[22m | straaljager_jet_donker_albedo.jpg[39m[0m
+[  84% ] [90m[1mreimport[22m | straaljager_jet_bus_orm.jpg[39m[0m
+[  84% ] [90m[1mreimport[22m | straaljager_jet_bus_normal.jpg[39m[0m
+[  85% ] [90m[1mreimport[22m | straaljager_jet_bus_albedo.jpg[39m[0m
+[  85% ] [90m[1mreimport[22m | straaljager_jet_boven_orm.jpg[39m[0m
+[  85% ] [90m[1mreimport[22m | straaljager_jet_boven_normal.jpg[39m[0m
+[  86% ] [90m[1mreimport[22m | straaljager_jet_boven_albedo.jpg[39m[0m
+[  86% ] [90m[1mreimport[22m | weapon_trench.png[39m[0m
+[  86% ] [90m[1mreimport[22m | winkel.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  87% ] [90m[1mreimport[22m | straaljager.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  87% ] [90m[1mreimport[22m | legerjeep.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  87% ] [90m[1mreimport[22m | brug.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  88% ] [90m[1mreimport[22m | garage.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  88% ] [90m[1mreimport[22m | kazerne.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  88% ] [90m[1mreimport[22m | jeep.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  88% ] [90m[1mreimport[22m | generator.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  89% ] [90m[1mreimport[22m | woonhuis.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  89% ] [90m[1mreimport[22m | helipad.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  89% ] [90m[1mreimport[22m | magazijn.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  90% ] [90m[1mreimport[22m | loopgraaf.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  90% ] [90m[1mreimport[22m | legerjeep.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  90% ] [90m[1mreimport[22m | bloedjungle_bunker_hq.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  91% ] [90m[1mreimport[22m | hotel.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  91% ] [90m[1mreimport[22m | kerk.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  91% ] [90m[1mreimport[22m | zwaailamp.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  92% ] [90m[1mreimport[22m | kazerne.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  92% ] [90m[1mreimport[22m | jungle.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  92% ] [90m[1mreimport[22m | jeep.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  93% ] [90m[1mreimport[22m | grass_tall_lod2.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  93% ] [90m[1mreimport[22m | grass_tall_lod1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  93% ] [90m[1mreimport[22m | grass_tall_lod0.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  94% ] [90m[1mreimport[22m | grass_short_lod2.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  94% ] [90m[1mreimport[22m | grass_short_lod1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  94% ] [90m[1mreimport[22m | grass_short_lod0.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  95% ] [90m[1mreimport[22m | grass_medium_lod2.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  95% ] [90m[1mreimport[22m | grass_medium_lod1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  95% ] [90m[1mreimport[22m | grass_medium_lod0.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  96% ] [90m[1mreimport[22m | grass_baseline.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  96% ] [90m[1mreimport[22m | straatmeubilair.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  96% ] [90m[1mreimport[22m | straat.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  97% ] [90m[1mreimport[22m | props.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  97% ] [90m[1mreimport[22m | poort.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  97% ] [90m[1mreimport[22m | wachttoren.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  98% ] [90m[1mreimport[22m | apache.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  98% ] [90m[1mreimport[22m | tank.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  98% ] [90m[1mreimport[22m | benzine.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  99% ] [90m[1mreimport[22m | wachtpost.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  99% ] [90m[1mreimport[22m | wachttoren.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  99% ] [90m[1mreimport[22m | Afmaken van asset-import...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started Assets (her)importeren (308 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Nabewerkingen herimport aan het uitvoeren...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Editor aan het laden (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Editorlay-out laden...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | Panelen laden...[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+WARNING: 25 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)

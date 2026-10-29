@@ -1,0 +1,62 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+WARNING: Adding 'Helm' as child to '@BoneAttachment3D@67' will make owner 'uitrusting' inconsistent. Consider unsetting the owner beforehand.
+     at: add_child (scene/main/node.cpp:1728)
+     GDScript backtrace (most recent call first):
+         [0] _attach_gear (res://scripts/soldier_model.gd:415)
+         [1] _attach_gun (res://scripts/soldier_model.gd:393)
+         [2] setup (res://scripts/soldier_model.gd:109)
+         [3] _run (res://tests/soldaat_vq2_test.gd:198)
+WARNING: Adding 'Rugzak' as child to '@BoneAttachment3D@68' will make owner 'uitrusting' inconsistent. Consider unsetting the owner beforehand.
+     at: add_child (scene/main/node.cpp:1728)
+     GDScript backtrace (most recent call first):
+         [0] _attach_gear (res://scripts/soldier_model.gd:415)
+         [1] _attach_gun (res://scripts/soldier_model.gd:393)
+         [2] setup (res://scripts/soldier_model.gd:109)
+         [3] _run (res://tests/soldaat_vq2_test.gd:198)
+WARNING: Adding 'Koppel' as child to '@BoneAttachment3D@69' will make owner 'uitrusting' inconsistent. Consider unsetting the owner beforehand.
+     at: add_child (scene/main/node.cpp:1728)
+     GDScript backtrace (most recent call first):
+         [0] _attach_gear (res://scripts/soldier_model.gd:415)
+         [1] _attach_gun (res://scripts/soldier_model.gd:393)
+         [2] setup (res://scripts/soldier_model.gd:109)
+         [3] _run (res://tests/soldaat_vq2_test.gd:198)
+WARNING: Adding 'LaarsL' as child to '@BoneAttachment3D@70' will make owner 'uitrusting' inconsistent. Consider unsetting the owner beforehand.
+     at: add_child (scene/main/node.cpp:1728)
+     GDScript backtrace (most recent call first):
+         [0] _attach_gear (res://scripts/soldier_model.gd:415)
+         [1] _attach_gun (res://scripts/soldier_model.gd:393)
+         [2] setup (res://scripts/soldier_model.gd:109)
+         [3] _run (res://tests/soldaat_vq2_test.gd:198)
+WARNING: Adding 'LaarsR' as child to '@BoneAttachment3D@71' will make owner 'uitrusting' inconsistent. Consider unsetting the owner beforehand.
+     at: add_child (scene/main/node.cpp:1728)
+     GDScript backtrace (most recent call first):
+         [0] _attach_gear (res://scripts/soldier_model.gd:415)
+         [1] _attach_gun (res://scripts/soldier_model.gd:393)
+         [2] setup (res://scripts/soldier_model.gd:109)
+         [3] _run (res://tests/soldaat_vq2_test.gd:198)
+SOLDAAT VQ2 TEST OK
+WARNING: 113 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 11 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+real 2.86
+user 2.36
+sys 0.30
+           325345280  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+               81843  page reclaims
+                 119  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                  12  voluntary context switches
+                2870  involuntary context switches
+         16437697953  instructions retired
+         10513773071  cycles elapsed
+           245141504  peak memory footprint

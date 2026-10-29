@@ -80,7 +80,12 @@ func _run() -> void:
 					_check(mat.albedo_color.is_equal_approx(SoldierModel.uniform_tint(m._uniform)), "%s: kledingtint niet gezet" % look)
 			if look == "speler:jungle" and mat.resource_name == "JungleCommando_Camo":
 				_check(mat.albedo_color == Color.WHITE, "junglecommando-camouflage wordt niet ongetint getoond")
-			_check(mat.albedo_texture != null, "%s: materiaal %s zonder albedo-textuur" % [look, mat.resource_name])
+			# Hair uses the GLB metallic-roughness baseColorFactor intentionally:
+			# its source head UV atlas is incompatible with the short-hair micro-map.
+			var has_albedo := mat.albedo_texture != null
+			if mat.resource_name == "Commando Hair · Short Dark Brown" and not has_albedo:
+				has_albedo = mat.albedo_color.r < 0.3 and mat.albedo_color.g < 0.3 and mat.albedo_color.b < 0.3
+			_check(has_albedo, "%s: materiaal %s zonder albedo-textuur of geldige donkere baseColorFactor" % [look, mat.resource_name])
 			_check(mat.normal_enabled and mat.normal_texture != null, "%s: materiaal %s zonder normal map" % [look, mat.resource_name])
 		_check(tinted >= 1 or look == "speler:jungle", "%s: geen getint kledingmateriaal" % look)
 		if look != "vijand:knife":

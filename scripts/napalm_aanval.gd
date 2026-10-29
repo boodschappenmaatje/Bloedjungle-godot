@@ -6,10 +6,10 @@ extends Node3D
 ## Schade telt als "lucht": die kills tellen niet mee voor je eigen streak.
 
 const JET := preload("res://assets/straaljager.glb")
-const SPEED := 58.0       # m/s
+const SPEED := 30.0       # m/s: veel langzamer dan eerst (58), zodat het toestel langer in beeld blijft
 const HEIGHT := 13.0      # m boven de grond
-const LEAD := 80.0        # m voor de strook waar het toestel begint
-const FALL_V := 20.0      # m/s vooruitsnelheid van een losgelaten bus
+const LEAD := 70.0        # m voor de strook waar het toestel begint
+const FALL_V := 26.0      # m/s vooruitsnelheid van een losgelaten bus
 const GRAVITY := 22.0
 const BURN_TIME := 10.0
 const BURN_RUN := 5.0     # s dat een vijand brandend rondrent voor hij dood neervalt (enemy.gd: ignite)
@@ -36,6 +36,8 @@ var _tick := 0.0
 var _fires: Array = []
 var _carpet: MeshInstance3D
 var _carpet_mat: ShaderMaterial
+var _jet_light: OmniLight3D   # warm schijnsel onder het toestel: licht de romp op tegen de bruine grond
+var _jet_shadow: MeshInstance3D
 var _flames: Array = []       # [{s, lane, h, node, die}] vlammen die meekomen met de vuurgolf
 var _first_hit := -1.0
 var _passed := false
@@ -55,6 +57,7 @@ func start(target: Vector3, d: Vector3) -> void:
 	jet.scale = Vector3.ONE * 0.8   # 13 m lang: past op het scherm en leest als een toestel boven de strook
 	_place(-LEAD - Streak.NAPALM_LENGTH * 0.5)
 	jet.rotation.y = atan2(-dir.x, -dir.z)
+	_jet_visibility()
 	var ap: AnimationPlayer = jet.find_child("AnimationPlayer", true, false)
 	if ap != null and ap.has_animation("Vliegen"):   # Godot haalt het -loop-achtervoegsel van de clipnaam en laat hem lussen
 		ap.play("Vliegen")
@@ -86,6 +89,49 @@ func _jet_sound(s: float) -> void:
 ## Zet het toestel op afstand s (m) langs de strook; s = 0 is het midden.
 func _place(s: float) -> void:
 	jet.global_position = center + dir * s + Vector3.UP * HEIGHT
+	if _jet_light != null and is_instance_valid(_jet_light):
+		_jet_light.global_position = jet.global_position + Vector3(0, 1.5, 0)
+		var blink := 0.5 + 0.5 * sin(_t * 9.0)   # knipperend herkenningslicht
+		_jet_light.light_energy = 2.4 + 1.6 * blink
+	if _jet_shadow != null and is_instance_valid(_jet_shadow):
+		_jet_shadow.global_position = Vector3(jet.global_position.x, 0.09, jet.global_position.z)
+
+
+const SHADOW_SHADER := """
+shader_type spatial;
+render_mode unshaded, blend_mix, cull_disabled, depth_draw_never, shadows_disabled;
+void fragment() {
+	vec2 p = (UV - 0.5) * 2.0;
+	float a = 1.0 - smoothstep(0.35, 1.0, length(p * vec2(1.0, 0.8)));
+	ALBEDO = vec3(0.0);
+	ALPHA = a * 0.5;
+}
+"""
+static var _shadow_shader: Shader
+
+
+## Schijnsel en schaduw bij het toestel, zodat het ook op bruine grond goed opvalt.
+func _jet_visibility() -> void:
+	_jet_light = OmniLight3D.new()
+	_jet_light.light_color = Color(1.0, 0.93, 0.8)
+	_jet_light.omni_range = 20.0
+	_jet_light.shadow_enabled = false
+	add_child(_jet_light)
+	_jet_light.top_level = true
+	if _shadow_shader == null:
+		_shadow_shader = Shader.new()
+		_shadow_shader.code = SHADOW_SHADER
+	var mat := ShaderMaterial.new()
+	mat.shader = _shadow_shader
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(9.0, 13.0)
+	_jet_shadow = MeshInstance3D.new()
+	_jet_shadow.mesh = plane
+	_jet_shadow.material_override = mat
+	_jet_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(_jet_shadow)
+	_jet_shadow.top_level = true
+	_jet_shadow.rotation.y = atan2(-dir.x, -dir.z)
 
 
 func _physics_process(delta: float) -> void:
@@ -104,6 +150,10 @@ func _physics_process(delta: float) -> void:
 		if s > LEAD + Streak.NAPALM_LENGTH:
 			jet.queue_free()
 			jet = null
+			if _jet_light != null:
+				_jet_light.queue_free()
+			if _jet_shadow != null:
+				_jet_shadow.queue_free()
 			Sfx.jet_off()
 	_update_carpet(delta)
 	if not _impacts.is_empty():

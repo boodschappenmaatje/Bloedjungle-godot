@@ -15,7 +15,7 @@ const DEFS := {
 	"knife": {"f": 900, "d": 0.1, "v": 0.4, "b": 0}, "thud": {"f": 400, "d": 0.15, "v": 0.5, "b": 60},
 	"sentry": {"f": 2500, "d": 0.11, "v": 0.3, "b": 0}, "ping": {"f": 4200, "d": 0.05, "v": 0.18, "b": 0}, "gate": {"f": 520, "d": 0.6, "v": 0.3, "b": 46},
 	"spuit": {"f": 5200, "d": 1.1, "v": 0.5, "b": 0},
-	"straal": {"f": 1500, "d": 2.4, "v": 0.5, "b": 75}, "napalm": {"f": 900, "d": 1.7, "v": 0.95, "b": 52},
+	"straal": {"f": 1500, "d": 2.4, "v": 0.5, "b": 75}, "napalm": {"f": 900, "d": 1.7, "v": 0.95, "b": 52}, "wuuf": {"f": 420, "d": 0.6, "v": 0.8, "b": 38},
 	"claxon": {"f": 900, "d": 0.45, "v": 0.5, "b": 0, "tone": 410.0}, "alarm": {"f": 900, "d": 0.3, "v": 0.45, "b": 0, "tone": 1250.0},
 }
 const VOICES := 20
@@ -26,6 +26,7 @@ var _players: Array[AudioStreamPlayer] = []
 var _next := 0
 var _rain: AudioStreamPlayer
 var _jet: AudioStreamPlayer
+var fluit: AudioStreamWAV   # fluitende val van een bom (napalm): glijdende toon met wat ruis
 
 
 func _ready() -> void:
@@ -36,6 +37,7 @@ func _ready() -> void:
 		var p := AudioStreamPlayer.new()
 		add_child(p)
 		_players.append(p)
+	fluit = _make_fluit()
 	_rain = AudioStreamPlayer.new()
 	_rain.stream = _make_rain()
 	_rain.volume_db = linear_to_db(0.22)
@@ -153,6 +155,29 @@ func _make(s: Dictionary) -> AudioStreamWAV:
 			var te := clampf(minf(t * 60.0, (s.d - t) * 40.0), 0.0, 1.0)
 			v = lp * 0.2 * s.v * te + (sin(TAU * tone * t) + 0.5 * sin(TAU * tone * 2.01 * t)) * s.v * 0.5 * te
 		data.encode_s16(i * 2, clampi(roundi(tanh(v * 0.8) * 32000.0), -32768, 32767))
+	var w := AudioStreamWAV.new()
+	w.format = AudioStreamWAV.FORMAT_16_BITS
+	w.mix_rate = RATE
+	w.data = data
+	return w
+
+
+func _make_fluit() -> AudioStreamWAV:
+	var dur := 2.0
+	var n := int(RATE * dur)
+	var data := PackedByteArray()
+	data.resize(n * 2)
+	var phase := 0.0
+	var lp := 0.0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77
+	for i in n:
+		var t := float(i) / RATE
+		var u := t / dur
+		phase += TAU * lerpf(1900.0, 950.0, u) / RATE
+		lp += 0.2 * (rng.randf_range(-1.0, 1.0) - lp)
+		var v := (sin(phase) * 0.5 + sin(phase * 2.01) * 0.12 + lp * 0.25) * minf(1.0, t * 12.0)
+		data.encode_s16(i * 2, clampi(roundi(v * 20000.0), -32768, 32767))
 	var w := AudioStreamWAV.new()
 	w.format = AudioStreamWAV.FORMAT_16_BITS
 	w.mix_rate = RATE

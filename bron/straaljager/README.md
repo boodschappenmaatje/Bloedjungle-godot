@@ -1,5 +1,7 @@
 # Straaljager (napalm-luchtsteun)
 
+> Vervangen op 2026-10-28 door de F-16 (`bron/f16/`). Dit is de bron van de oude jet (baseline V1 in `assets/vq2_baseline/straaljager.glb`).
+
 Grondaanvalstoestel voor de killstreak Napalm-aanval (VQ2, zie `docs/ASSET_QUALITY_STANDARD.md`).
 
 ```sh

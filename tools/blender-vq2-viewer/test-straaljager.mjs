@@ -1,4 +1,4 @@
-// Controle van de straaljager in de VQ2-viewer: echte GLB, acht echte clips met zichtbare beweging, vijf schadefases, 360° en gamecamera.
+// Controle van de straaljager in de VQ2-viewer: echte GLB, F-16: vijf echte clips met zichtbare beweging, V1 (oude jet) naast V2, 360° en gamecamera.
 import {chromium} from 'playwright-core';
 import http from 'node:http';
 import fs from 'node:fs/promises';
@@ -14,7 +14,7 @@ const out=path.join(root,'docs/vq2/renders');await fs.mkdir(out,{recursive:true}
 const results={browser:'Chromium headless, software WebGL; geen fysieke Safari/iPhone-test',clips:{},phases:[],errors:[]};
 function assert(ok,msg){if(!ok)throw Error(msg);}
 async function scrub(page,time){await page.locator('#scrub').evaluate((e,t)=>{e.value=t;e.dispatchEvent(new Event('input',{bubbles:true}));},String(time));await page.waitForTimeout(100);}
-const sample=page=>page.evaluate(()=>{const o={};for(const n of ['AileronL','AileronR','Naverbrander_L','Body','FlapL']){const x=window.__VQ2_TEST__.node(n);if(x)o[n]={q:x.quaternion.toArray(),s:x.scale.toArray()};}return o;});
+const sample=page=>page.evaluate(()=>{const o={};for(const n of ['FlaperonL','FlaperonR','StabilisatorL','Naverbrander','Body','GearNeus','GearL']){const x=window.__VQ2_TEST__.node(n);if(x)o[n]={q:x.quaternion.toArray(),s:x.scale.toArray()};}return o;});
 const diff=(a,b)=>Object.keys(a).filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k]));
 try{
  const page=await browser.newPage({viewport:{width:1280,height:1050}});
@@ -24,8 +24,8 @@ try{
  await page.selectOption('#asset','straaljager');
  await page.waitForFunction(()=>window.__VQ2_TEST__.ready()&&window.__VQ2_TEST__.loaded().asset==='straaljager');await page.waitForTimeout(300);
  const clips=await page.evaluate(()=>window.__VQ2_TEST__.clips());
- assert(clips.length===3,'verwacht 3 clips, kreeg '+clips.length);
- const expect={Vliegen:['AileronL','Naverbrander_L'],Bocht:['Body','AileronL'],Aanval:['Body','AileronL']};
+ assert(clips.length===5,'verwacht 5 clips, kreeg '+clips.length);
+ const expect={Vliegen:['FlaperonL','Naverbrander'],Bocht:['Body','FlaperonL'],Aanval:['Body','FlaperonL'],Rol:['Body','FlaperonR'],Landingsgestel:['GearNeus','GearL']};
  for(const [name,nodes] of Object.entries(expect)){
   const clip=clips.find(c=>c.startsWith(name));assert(clip,'clip ontbreekt: '+name);
   await page.selectOption('#clips',clip);await scrub(page,0);const a=await sample(page);
@@ -33,6 +33,7 @@ try{
   const moved=diff(a,b);for(const n of nodes)assert(moved.includes(n),`${name}: ${n} beweegt niet (${moved})`);
   results.clips[name]={duration:dur,moved};
  }
+ assert(await page.evaluate(()=>!document.getElementById('version').disabled),'V1 (oude straaljager) moet kiesbaar zijn');
  await page.click('#top');
  await page.screenshot({path:path.join(out,'straaljager-viewer-heel.png')});
  await page.click('#iso');await page.waitForTimeout(150);await page.locator('#stage').screenshot({path:path.join(out,'straaljager-viewer-gamecamera.png')});

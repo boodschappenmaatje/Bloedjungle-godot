@@ -4,33 +4,57 @@
   "Vliegen": {
    "duration": 2,
    "moved": [
-    "AileronL",
-    "AileronR",
-    "Naverbrander_L",
+    "FlaperonL",
+    "FlaperonR",
+    "StabilisatorL",
+    "Naverbrander",
     "Body"
    ]
   },
   "Bocht": {
    "duration": 3,
    "moved": [
-    "AileronL",
-    "AileronR",
-    "Naverbrander_L",
+    "FlaperonL",
+    "FlaperonR",
+    "StabilisatorL",
+    "Naverbrander",
     "Body"
    ]
   },
   "Aanval": {
    "duration": 3,
    "moved": [
-    "AileronL",
-    "AileronR",
-    "Naverbrander_L",
+    "FlaperonL",
+    "FlaperonR",
+    "StabilisatorL",
+    "Naverbrander",
     "Body"
+   ]
+  },
+  "Rol": {
+   "duration": 2,
+   "moved": [
+    "FlaperonL",
+    "FlaperonR",
+    "StabilisatorL",
+    "Naverbrander",
+    "Body"
+   ]
+  },
+  "Landingsgestel": {
+   "duration": 2.4000000953674316,
+   "moved": [
+    "FlaperonL",
+    "FlaperonR",
+    "StabilisatorL",
+    "Body",
+    "GearNeus",
+    "GearL"
    ]
   }
  },
  "phases": [],
  "errors": [],
- "stats": "3.956 driehoeken · 98 meshes · 10 materialen · texturen 1024×1024, 512×512 · schade via shape key Deuk en verkoold materiaal. Geen iPhone-FPS gemeten.",
+ "stats": "6.696 driehoeken · 179 meshes · 18 materialen · texturen 1024×1024, 512×512 · vijf echte GLB-clips; vliegpad, wapens loslaten, nabrander-gloed en geluid zijn Godot. Geen iPhone-FPS gemeten.",
  "ok": true
 }

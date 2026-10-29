@@ -23,7 +23,7 @@ Build output was produced through the existing local Bloedjungle 3D Production P
 | `tests/loadout_test.gd` | PASS — existing five-slot loadout, ownership and upgrade persistence |
 | `tests/auto_raken_test.gd --fixed-fps 60` | PASS — 672 hit cases; all six weapons hit both auto and bus targets |
 | `tests/weapon_test_zone_test.tscn` | PASS — real Main/player/camera, six selections, three target types, auto and bus |
-| `tools/blender-vq2-viewer/test-wapens.mjs` | PASS — six clips, measured motion, empty M1911 slide, no Bazooka dummy clip, and orbit in Chromium software WebGL |
+| `tools/blender-vq2-viewer/test-wapens.mjs` | PASS — isolated and soldier-mounted clips, empty M1911 slide, no Bazooka dummy clip, orbit, and all six weapons attached to `DEF-handR` in the shared V1/V2 soldier viewer (Chromium software WebGL). Mounted motion: 3.37 / 1.90 / 4.42 / 7.00 / 2.94 cm for M1911 / Thompson / Garand / Trench / MG42. |
 | Six USDZ archive integrity checks | PASS — all six exports open as ZIP/USDZ archives with valid entries |
 | Local `game-dev` adapter/capture/package receipt workflow | NOT RUN — required local CLI is absent |
 | Physical iPhone 18 Pro Max / Xogot FPS and touch testing | NOT RUN |
@@ -35,4 +35,4 @@ Godot's headless renderer warns that SSAO is unavailable in its headless backend
 
 ## Review captures
 
-The six Blender draft renders and same-canvas/same-camera V1/V2 viewer comparison are in `docs/vq2/renders/`. The 3D viewer shows isolated V1/V2 weapons with matching camera and real clips. In-hand pose is reviewed in the real Godot Weapon Test Zone rather than overlaid in that browser viewer. Human visual approval and physical iPhone review remain pending; this work stays in Draft PR #141.
+The six Blender draft renders, same-canvas/same-camera V1/V2 weapon comparison, and V1/V2 soldier-with-Garand hold capture are in `docs/vq2/renders/`. The existing 3D viewer can switch through all six weapons held by both soldier versions, retains the shared camera and loads each weapon's real clips. Human visual approval and physical iPhone review remain pending; this work stays in Draft PR #141.

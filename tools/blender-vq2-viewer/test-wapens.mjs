@@ -56,6 +56,28 @@ try{
  const box=await page.locator('#canvas').boundingBox();await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);await page.mouse.down();await page.mouse.move(box.x+box.width*.8,box.y+box.height*.55,{steps:10});await page.mouse.up();await page.waitForTimeout(300);
  assert(JSON.stringify(cam0)!==JSON.stringify(await page.evaluate(()=>window.__VQ2_TEST__.loaded().camera)),'orbit werkt niet');
  results.stats=await page.evaluate(()=>document.getElementById('stats').textContent);
+ await page.selectOption('#asset','soldaat');
+ await page.waitForFunction(()=>window.__VQ2_TEST__?.loaded().asset==='soldaat'&&window.__VQ2_TEST__?.mountedGun().name==='Garand'&&document.getElementById('loading').hidden,{},{timeout:20000});
+ assert(!(await page.locator('#gun-row').isHidden()),'soldaatviewer toont geen wapenkeuze');
+ const held={};
+ for(const gun of ['M1911','Thompson','Garand','Trench','MG42','Bazooka']){
+  await page.selectOption('#gun',gun);
+  await page.waitForFunction(expected=>window.__VQ2_TEST__?.mountedGun().name===expected,gun,{timeout:10000});
+  const state=await page.evaluate(()=>window.__VQ2_TEST__.mountedGun());
+  assert(state.hand==='DEF-handR',`${gun} hangt niet aan DEF-handR`);
+  assert(gun==='Bazooka'?state.clips.length===0:state.clips.some(c=>c.startsWith(gun+'_')),`${gun} mist zijn echte wapenclips in de soldaatviewer`);
+  let moved=0;
+  if(gun!=='Bazooka'){
+   const [clip,node,expected]=CASES[gun];
+   await page.selectOption('#clips',`${gun}_${clip}`);await scrub(page,0);const start=await pos(page,node);const duration=await page.evaluate(()=>Number(document.getElementById('scrub').max));
+   for(let k=1;k<=8;k++){await scrub(page,duration*k/8);const now=await pos(page,node);moved=Math.max(moved,Math.hypot(now[0]-start[0],now[1]-start[1],now[2]-start[2]));}
+   assert(Math.abs(moved-expected)<.004,`${gun}: gemonteerde ${node}-clip schuift ${moved.toFixed(3)} m (verwacht ${expected})`);
+  }
+  held[gun]={hand:state.hand,clips:state.clips.length,mounted_motion_m:Number(moved.toFixed(4))};
+ }
+ results.soldier_hold=held;
+ await page.selectOption('#gun','Garand');await page.waitForTimeout(300);
+ await page.locator('#stage').screenshot({path:path.join(out,'weapon-upgrade-v1-v2-hold.png')});
  results.ok=true;
 }catch(e){results.ok=false;results.error=e.message;try{results.loading=await (await browser.contexts()[0].pages())[0].locator('#loading').textContent();}catch{}}
 await fs.writeFile(path.join(root,'docs/vq2/results/wapens-viewer-test.json'),JSON.stringify(results,null,1));

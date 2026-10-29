@@ -14,6 +14,38 @@ function applyGun(){
  bounds.makeEmpty();for(const slot of Object.values(slots))slot.root.traverse(o=>{if(o.isMesh&&o.visible&&GUN_NODES.every(n=>n===g||!isUnder(o,n)))bounds.expandByObject(o);});
  setCamera(false);setupClips();stats();dirty=true;
 }
+let gunRequest=0;
+async function applySoldierGun(){
+ if($('asset').value!=='soldaat'||!slots.v2)return;
+ const current=++gunRequest,kind=$('gun').value;
+ try{
+  const mounted=await Promise.all(Object.entries(slots).map(async([version,slot])=>{
+   const previous=slot.weaponNode;
+   if(previous?.parent)previous.parent.remove(previous);
+   const path=`../../assets/${version==='v1'?'vq2_baseline/':''}wapens.glb`;
+   const gltf=await loader.loadAsync(path);
+   if(current!==gunRequest)return null;
+   const weapon=gltf.scene.getObjectByName(kind);
+   const hand=slot.root.getObjectByName('DEF-handR');
+   if(!weapon||!hand)throw new Error(`Wapen ${kind} of DEF-handR ontbreekt in ${version}`);
+   weapon.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true;o.userData.original=o.material;}});
+   slot.root.updateMatrixWorld(true);hand.updateWorldMatrix(true,false);
+   const inverse=hand.getWorldQuaternion(new THREE.Quaternion()).invert();
+   weapon.parent.remove(weapon);
+   hand.add(weapon);
+   weapon.position.set(0,0,0);
+   weapon.quaternion.copy(inverse).multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0,1,0),Math.PI));
+   weapon.scale.setScalar(1);
+   slot.weaponNode=weapon;
+   slot.gunClips=gltf.animations.filter(c=>c.name.startsWith(kind+'_'));
+   return slot;
+  }));
+  if(current!==gunRequest)return;
+  for(const slot of mounted){if(!slot)continue;slot.clips=slot.clips.filter(c=>!GUN_NODES.some(n=>c.name.startsWith(n+'_'))).concat(slot.gunClips);}
+  bounds.makeEmpty();for(const slot of Object.values(slots))bounds.union(new THREE.Box3().setFromObject(slot.root));
+  setCamera(false);setupClips();stats();status();dirty=true;
+ }catch(error){$('loading').hidden=false;$('loading').textContent=`Wapen kon niet in de soldatenhand worden geladen: ${error.message}`;}
+}
 // jungle: palmen en rotsen staan in één glb op de oorsprong; de keuzelijst laat er één zien. Geen clips: de wind is een Godot-shader.
 const JUNGLE_NODES=['Palm1','Palm1_far','Palm2','Palm2_far','Palm3','Palm3_far','Rots1','Rots2','Rots3','Boom1','Boom1_far','Boom2','Boom2_far','Stomp1','Stomp2'];
 function applyJungle(){
@@ -134,7 +166,7 @@ async function load(){
  $('grass-row').hidden=!GRASS.includes(asset);
  const versions=NEW_ONLY.includes(asset)?['v2']:['v1','v2'];
  try{
-  $('look-row').hidden=asset!=='soldaat';$('gun-row').hidden=asset!=='wapens';$('plant-row').hidden=asset!=='jungle';$('prop-row').hidden=asset!=='props';$('post-row').hidden=asset!=='wachtpost';$('gen-row').hidden=asset!=='generator';
+  $('look-row').hidden=asset!=='soldaat';$('gun-row').hidden=!['wapens','soldaat'].includes(asset);$('plant-row').hidden=asset!=='jungle';$('prop-row').hidden=asset!=='props';$('post-row').hidden=asset!=='wachtpost';$('gen-row').hidden=asset!=='generator';
   const grassPath=v=>`../../assets/grass/${v==='v1'?'grass_baseline':asset+'_lod'+$('grass-lod').value}.glb`;
   const loaded=await Promise.all(versions.map(async v=>[v,makeSlot(await loader.loadAsync(GRASS.includes(asset)?grassPath(v):glbPath(asset,v)))]));
   // extra clips met hetzelfde skelet (klimmen, zitten, rollen, sprinten, herladen, explosie- en branddood), zoals SoldierModel.setup()
@@ -142,6 +174,7 @@ async function load(){
   const next=Object.fromEntries(loaded);
   if(current!==request){disposeSlots(next);return;}
   disposeSlots(slots);slots=next;
+  if(asset==='soldaat')await applySoldierGun();
   bounds.makeEmpty();for(const s of Object.values(slots))bounds.union(new THREE.Box3().setFromObject(s.root));
   if(asset==='wapens')applyGun();if(asset==='jungle')applyJungle();if(asset==='props')applyProp();if(asset==='wachtpost')applyWachtpost();if(asset==='generator')applyGenerator();setCamera(false);setupClips();setupMaterials();shading();if(DAMAGED.includes(asset))applyPhase(0);applyLook();if(GRASS.includes(asset))grassVariant();stats();$('loading').hidden=true;status();dirty=true;
  }catch(error){if(current!==request)return;$('loading').hidden=false;$('loading').textContent='Het GLB-model kon niet geladen worden. Controleer de verbinding en open de viewer via HTTP(S). '+error.message;}
@@ -156,7 +189,7 @@ function setCamera(game){
  controls.update();camera.updateProjectionMatrix();dirty=true;
 }
 
-function status(){const asset=$('asset').value,version=$('version').value;$('status').textContent=`${names[asset]} · ${GRASS.includes(asset)?'Blender 3D-sprieten, 2K PBR; V1 = oorspronkelijke 75 cm graskaarten':asset==='jeep'?'ongewijzigde speelbare jeep':asset==='auto'?'nieuwe auto (geen V1)':asset==='bus'?'nieuwe bus (geen V1)':asset==='straaljager'?'nieuwe straaljager voor de napalm-luchtsteun (geen V1)':asset==='wapens'?'V1 links / Weapon Upgrade 2.0 rechts; dezelfde wapenkeuze, camera en echte clips':asset==='wachtpost'?'slagboom (echte clip Open: arm 82° omhoog) en wachthuisje uit bron/wachtpost, VQ2-PBR en eigen rood-wit verf (geen V1)':asset==='generator'?'dieselgenerator (echte clip Draaien: koelventilator) en gebrand wrak uit bron/generator, VQ2-PBR (geen V1)':asset==='props'?'zandzakken (3 vormen) en houten en munitiekist uit bron/props, echte VQ2-PBR-texturen (geen V1)':asset==='jungle'?'palmen, jungleboom (plankwortels, lianen), verre varianten, rotsen en de stronken van omgevallen bomen uit bron/jungle; schors- en bladtextuur en wind zitten in Godot (geen V1)':asset==='soldaat'&&version==='split'?'V1 oude pop links / VQ2 realistisch rechts, zelfde skelet, clip en camera':version==='split'?'V1 links / VQ2 rechts, identieke camera en belichting':version==='v1'?'origineel op vaste baseline':'VQ2 export'} · 360° draaien en zoomen actief.`;}
+function status(){const asset=$('asset').value,version=$('version').value;$('status').textContent=`${names[asset]} · ${GRASS.includes(asset)?'Blender 3D-sprieten, 2K PBR; V1 = oorspronkelijke 75 cm graskaarten':asset==='jeep'?'ongewijzigde speelbare jeep':asset==='auto'?'nieuwe auto (geen V1)':asset==='bus'?'nieuwe bus (geen V1)':asset==='straaljager'?'nieuwe straaljager voor de napalm-luchtsteun (geen V1)':asset==='wapens'?'V1 links / Weapon Upgrade 2.0 rechts; dezelfde wapenkeuze, camera en echte clips':asset==='wachtpost'?'slagboom (echte clip Open: arm 82° omhoog) en wachthuisje uit bron/wachtpost, VQ2-PBR en eigen rood-wit verf (geen V1)':asset==='generator'?'dieselgenerator (echte clip Draaien: koelventilator) en gebrand wrak uit bron/generator, VQ2-PBR (geen V1)':asset==='props'?'zandzakken (3 vormen) en houten en munitiekist uit bron/props, echte VQ2-PBR-texturen (geen V1)':asset==='jungle'?'palmen, jungleboom (plankwortels, lianen), verre varianten, rotsen en de stronken van omgevallen bomen uit bron/jungle; schors- en bladtextuur en wind zitten in Godot (geen V1)':asset==='soldaat'&&version==='split'?`V1/V2 soldaat met ${$('gun').value} in de rechterhand; zelfde houding, camera en verlichting`:version==='split'?'V1 links / VQ2 rechts, identieke camera en belichting':version==='v1'?'origineel op vaste baseline':'VQ2 export'} · 360° draaien en zoomen actief.`;}
 const PHASES=['Heel','Beschadigd (ruiten, deuk, band)','Zwaar (deur eraf, kap open)','Brandend (vlammen en rook)','Wrak (verkoold, smeulend)','Ontploffing (speelt af)'];
 function phaseNodes(slot){const o={};slot.root.traverse(n=>{if(n.name)o[n.name]=n;});return o;}
 function applyPhase(p){
@@ -260,7 +293,7 @@ function setupClips(){
  const enabled=clips.length>0;for(const id of ['clips','play','restart','scrub','speed'])$(id).disabled=!enabled;
  if(!enabled){$('clips').add(new Option('Geen animaties in dit model',''));$('animation-status').textContent=GRASS.includes($('asset').value)?'Geen GLB-clips. Wind en lokaal buigen zijn Godot-shaderbewegingen: open scenes/grass_showcase.tscn in Xogot.':$('asset').value==='wapens'?'Dit wapen heeft geen bewegende delen en dus geen clips.':'Geen animaties in dit model.';$('time').textContent='—';clipName='';return;}
  for(const c of clips)$('clips').add(new Option($('asset').value==='wapens'?c.name.replace(/^[^_]+_/,''):c.name.replace(/-loop$/,''),c.name));
- $('animation-status').textContent=GRASS.includes($('asset').value)?'Geen GLB-clips. Wind en lokaal buigen zijn Godot-shaderbewegingen: open scenes/grass_showcase.tscn in Xogot.':$('asset').value==='wapens'?'Echte GLB-clips uit Blender (60 beelden per seconde): slede, repeerknop, sluiting, pomp of repeergreep schuift bij een schot. In het spel start Godot dezelfde clip bij elk schot; "leeg" houdt de pistoolslede open.':$('asset').value==='soldaat'?`Echte GLB-clips op het DEF-skelet (${clips.length}): de tien uit soldaat.glb plus klimmen, zitten en de acties (rollen, sprinten, herladen, explosie- en branddood) uit hun eigen glb, net als in Godot. Beide modellen spelen dezelfde clip. Wapen, terugslag en de schiet-/trefferhouding op het bovenlijf zijn Godot (SoldierModel).`:$('asset').value==='straaljager'?'Echte GLB-clips uit Blender: Vliegen (loop), Bocht en Aanval (neus omlaag, rolroeren, naverbranders). De napalm-vlam en het loslaten van de bommen zijn Godot-effecten; zie de Godot-demo.':DAMAGED.includes($('asset').value)?'Echte GLB-clips uit Blender'+($('asset').value==='bus'?': voordeur, middendeur, motorluik, knielen, lichten, ruitenwissers, knipperlichten en alarm':': deuren, motorkap, kofferklep, ruitenwissers, knipperlichten en alarm')+'. Vuur, rook, ontploffing en vliegende onderdelen zijn Godot-effecten; zie de Godot-demo.':'Originele GLB-clips: wielrotatie, sturen, vering, MG-terugslag en bemanning worden echt geanimeerd. Kies een clip en speel af; gebruik de tijdlijn voor details.';
+ $('animation-status').textContent=GRASS.includes($('asset').value)?'Geen GLB-clips. Wind en lokaal buigen zijn Godot-shaderbewegingen: open scenes/grass_showcase.tscn in Xogot.':$('asset').value==='wapens'?'Echte GLB-clips uit Blender (60 beelden per seconde): slede, repeerknop, sluiting, pomp of repeergreep schuift bij een schot. In het spel start Godot dezelfde clip bij elk schot; "leeg" houdt de pistoolslede open.':$('asset').value==='soldaat'?`Het gekozen wapen (${ $('gun').value }) is aan DEF-handR gemonteerd; de browsermixer speelt ook de echte 60 Hz wapenclips af. Lichaamshoudingen blijven de bestaande SoldierModel-poses.`:$('asset').value==='straaljager'?'Echte GLB-clips uit Blender: Vliegen (loop), Bocht en Aanval (neus omlaag, rolroeren, naverbranders). De napalm-vlam en het loslaten van de bommen zijn Godot-effecten; zie de Godot-demo.':DAMAGED.includes($('asset').value)?'Echte GLB-clips uit Blender'+($('asset').value==='bus'?': voordeur, middendeur, motorluik, knielen, lichten, ruitenwissers, knipperlichten en alarm':': deuren, motorkap, kofferklep, ruitenwissers, knipperlichten en alarm')+'. Vuur, rook, ontploffing en vliegende onderdelen zijn Godot-effecten; zie de Godot-demo.':'Originele GLB-clips: wielrotatie, sturen, vering, MG-terugslag en bemanning worden echt geanimeerd. Kies een clip en speel af; gebruik de tijdlijn voor details.';
  selectClip(clips[0].name);
 }
 function selectClip(name){
@@ -327,11 +360,11 @@ function loop(){
  if(dirty&&slots.v2){render();dirty=false;}
 }
 $('boom').onclick=()=>{$('phase').value='5';applyPhase(5);};
-$('phase').addEventListener('change',()=>applyPhase(Number($('phase').value)));$('look').addEventListener('change',applyLook);$('gun').addEventListener('change',applyGun);$('post').addEventListener('change',applyWachtpost);$('gen').addEventListener('change',applyGenerator);$('plant').addEventListener('change',applyJungle);$('prop').addEventListener('change',applyProp);$('asset').addEventListener('change',load);$('version').addEventListener('change',()=>{setupMaterials();status();dirty=true;});$('shading').addEventListener('change',shading);
+ $('phase').addEventListener('change',()=>applyPhase(Number($('phase').value)));$('look').addEventListener('change',applyLook);$('gun').addEventListener('change',()=>{if($('asset').value==='soldaat')applySoldierGun();else applyGun();});$('post').addEventListener('change',applyWachtpost);$('gen').addEventListener('change',applyGenerator);$('plant').addEventListener('change',applyJungle);$('prop').addEventListener('change',applyProp);$('asset').addEventListener('change',load);$('version').addEventListener('change',()=>{setupMaterials();status();dirty=true;});$('shading').addEventListener('change',shading);
 $('iso').onclick=()=>setCamera(false);$('top').onclick=()=>setCamera(true);
 $('rotate').onclick=()=>{rotating=!rotating;$('rotate').setAttribute('aria-pressed',String(rotating));dirty=true;};
 $('full').onclick=async()=>{const fallback=()=>{stage.scrollIntoView({behavior:'smooth'});$('status').textContent='Safari ondersteunt hier geen fullscreen. Draai je iPhone naar liggend voor een grotere weergave.';};if(stage.requestFullscreen){try{await stage.requestFullscreen();}catch{fallback();}}else fallback();};
-$('clips').onchange=()=>selectClip($('clips').value);$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Pauze':'Afspelen';dirty=true;};
+ $('clips').onchange=()=>selectClip($('clips').value);$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Pauze':'Afspelen';dirty=true;};
 $('restart').onclick=()=>{scrub(0);playing=true;$('play').textContent='Pauze';};$('scrub').oninput=()=>{playing=false;$('play').textContent='Afspelen';scrub(Number($('scrub').value));};$('materials').onchange=materialInfo;
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();$('loading').hidden=false;$('loading').textContent='De browser heeft de 3D-context vrijgegeven. Herlaad deze pagina om de modellen opnieuw te openen.';});
 fetch('../../docs/vq2/results/asset-report.json').then(r=>r.json()).then(r=>{report=r;stats();}).catch(()=>{});
@@ -341,7 +374,8 @@ window.__VQ2_TEST__={node:n=>{let r=null;slots.v2?.root.traverse(o=>{if(o.name==
  sample:()=>{const out={};slots.v2?.root.traverse(o=>{if(/WielLV|StuurLV|MG$|Body$|Geschut$/.test(o.name)){out[o.name]={position:o.position.toArray(),quaternion:o.quaternion.toArray(),scale:o.scale.toArray()};}});return out;},
  visible:()=>{const o=[];slots.v2?.root.traverse(x=>{if(ALL_PARTS.has(x.name)&&x.visible)o.push(x.name);});return o.sort();},
  bone:n=>{let r=null;slots.v2?.root.traverse(o=>{if(o.isBone&&o.name===n)r=o.quaternion.toArray();});return r;},
- loaded:()=>({asset:$('asset').value,look:$('look').value,version:$('version').value,materials:materials.map(m=>m.name),camera:camera.position.toArray(),target:controls.target.toArray(),playing})};
+ loaded:()=>({asset:$('asset').value,look:$('look').value,version:$('version').value,materials:materials.map(m=>m.name),camera:camera.position.toArray(),target:controls.target.toArray(),playing}),
+ mountedGun:()=>({name:slots.v2?.weaponNode?.name||null,hand:slots.v2?.weaponNode?.parent?.name||null,clips:slots.v2?.gunClips?.map(c=>c.name)||[]})};
 const requestedAsset=new URLSearchParams(location.search).get('asset');
 if(requestedAsset&&names[requestedAsset])$('asset').value=requestedAsset;
 resize();loop();load();

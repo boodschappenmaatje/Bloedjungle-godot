@@ -1,0 +1,382 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project opzetten (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Bestandsstructuur aan het scannen...[39m[0m
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Globale klassenamen laden...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | GDExtensions verifiëren...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Autoload-scripts aanmaken...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Plug-ins initialiseren...[39m[0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Bestands-scan aan het starten...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+[   0% ] [90m[1m_update_scan_actions[22m | Started Acties scannen... (38 steps)[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | brokstukken.glb[39m[0m
+[   2% ] [90m[1m_update_scan_actions[22m | krater.glb[39m[0m
+[   5% ] [90m[1m_update_scan_actions[22m | vat.glb[39m[0m
+[   7% ] [90m[1m_update_scan_actions[22m | bloedjungle_bunker_hq.glb[39m[0m
+[  10% ] [90m[1m_update_scan_actions[22m | kazerne.glb[39m[0m
+[  12% ] [90m[1m_update_scan_actions[22m | legerjeep.glb[39m[0m
+[  15% ] [90m[1m_update_scan_actions[22m | straaljager.glb[39m[0m
+[  17% ] [90m[1m_update_scan_actions[22m | wachttoren.glb[39m[0m
+[  20% ] [90m[1m_update_scan_actions[22m | acties.glb[39m[0m
+[  23% ] [90m[1m_update_scan_actions[22m | apache.glb[39m[0m
+[  25% ] [90m[1m_update_scan_actions[22m | auto.glb[39m[0m
+[  28% ] [90m[1m_update_scan_actions[22m | benzine.glb[39m[0m
+[  30% ] [90m[1m_update_scan_actions[22m | brandkraan.glb[39m[0m
+[  33% ] [90m[1m_update_scan_actions[22m | brug.glb[39m[0m
+[  35% ] [90m[1m_update_scan_actions[22m | bus.glb[39m[0m
+[  38% ] [90m[1m_update_scan_actions[22m | garage.glb[39m[0m
+[  41% ] [90m[1m_update_scan_actions[22m | helipad.glb[39m[0m
+[  43% ] [90m[1m_update_scan_actions[22m | hotel.glb[39m[0m
+[  46% ] [90m[1m_update_scan_actions[22m | kerk.glb[39m[0m
+[  48% ] [90m[1m_update_scan_actions[22m | klimmen.glb[39m[0m
+[  51% ] [90m[1m_update_scan_actions[22m | loopgraaf.glb[39m[0m
+[  53% ] [90m[1m_update_scan_actions[22m | magazijn.glb[39m[0m
+[  56% ] [90m[1m_update_scan_actions[22m | poort.glb[39m[0m
+[  58% ] [90m[1m_update_scan_actions[22m | soldaat.glb[39m[0m
+[  61% ] [90m[1m_update_scan_actions[22m | soldaat_jungle_commando.glb[39m[0m
+[  64% ] [90m[1m_update_scan_actions[22m | soldaat_vq2.glb[39m[0m
+[  66% ] [90m[1m_update_scan_actions[22m | straaljager.glb[39m[0m
+[  69% ] [90m[1m_update_scan_actions[22m | straat.glb[39m[0m
+[  71% ] [90m[1m_update_scan_actions[22m | straatmeubilair.glb[39m[0m
+[  74% ] [90m[1m_update_scan_actions[22m | tank.glb[39m[0m
+[  76% ] [90m[1m_update_scan_actions[22m | uitrusting.glb[39m[0m
+[  79% ] [90m[1m_update_scan_actions[22m | vrachtwagen.glb[39m[0m
+[  82% ] [90m[1m_update_scan_actions[22m | winkel.glb[39m[0m
+[  84% ] [90m[1m_update_scan_actions[22m | woonhuis.glb[39m[0m
+[  87% ] [90m[1m_update_scan_actions[22m | zitten.glb[39m[0m
+[  89% ] [90m[1m_update_scan_actions[22m | zwaailamp.glb[39m[0m
+[  92% ] [90m[1m_update_scan_actions[22m | resource_samples.csv[39m[0m
+[  94% ] [90m[1m_update_scan_actions[22m | asset_inventory.csv[39m[0m
+[92m[ DONE ][39m [1m_update_scan_actions[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started Assets (her)importeren (38 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   2% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   5% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   7% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  10% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  12% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  15% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  17% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  20% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  23% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  25% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  28% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  30% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  33% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  35% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  38% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  41% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  43% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  46% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  48% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  51% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  53% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  56% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  58% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  61% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  64% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  66% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  69% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  71% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  74% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  76% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  79% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  82% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  84% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  87% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  89% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  92% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[  94% ] [90m[1mreimport[22m | Bestanden voorbereiden om opnieuw te importeren...[39m[0m
+[   0% ] [90m[1mreimport[22m | Voorbewerkingen herimport aan het uitvoeren...[39m[0m
+[   0% ] [90m[1mreimport[22m | asset_inventory.csv[39m[0m
+[   2% ] [90m[1mreimport[22m | resource_samples.csv[39m[0m
+[   5% ] [90m[1mreimport[22m | klimmen.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[   7% ] [90m[1mreimport[22m | loopgraaf.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  10% ] [90m[1mreimport[22m | magazijn.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  12% ] [90m[1mreimport[22m | poort.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  15% ] [90m[1mreimport[22m | soldaat.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  17% ] [90m[1mreimport[22m | soldaat_jungle_commando.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  20% ] [90m[1mreimport[22m | soldaat_vq2.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  23% ] [90m[1mreimport[22m | straaljager.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  25% ] [90m[1mreimport[22m | straat.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  28% ] [90m[1mreimport[22m | straatmeubilair.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  30% ] [90m[1mreimport[22m | tank.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  33% ] [90m[1mreimport[22m | uitrusting.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  35% ] [90m[1mreimport[22m | vrachtwagen.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  38% ] [90m[1mreimport[22m | winkel.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  41% ] [90m[1mreimport[22m | woonhuis.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  43% ] [90m[1mreimport[22m | zitten.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  46% ] [90m[1mreimport[22m | zwaailamp.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  48% ] [90m[1mreimport[22m | brokstukken.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  51% ] [90m[1mreimport[22m | krater.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  53% ] [90m[1mreimport[22m | vat.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  56% ] [90m[1mreimport[22m | bloedjungle_bunker_hq.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  58% ] [90m[1mreimport[22m | kazerne.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  61% ] [90m[1mreimport[22m | legerjeep.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  64% ] [90m[1mreimport[22m | straaljager.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  66% ] [90m[1mreimport[22m | wachttoren.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  69% ] [90m[1mreimport[22m | acties.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  71% ] [90m[1mreimport[22m | apache.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  74% ] [90m[1mreimport[22m | auto.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  76% ] [90m[1mreimport[22m | benzine.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  79% ] [90m[1mreimport[22m | brandkraan.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  82% ] [90m[1mreimport[22m | brug.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  84% ] [90m[1mreimport[22m | bus.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  87% ] [90m[1mreimport[22m | garage.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  89% ] [90m[1mreimport[22m | helipad.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  92% ] [90m[1mreimport[22m | hotel.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  94% ] [90m[1mreimport[22m | kerk.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Scène importeren (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Scène wordt geïmporteerd...[39m[0m
+[   1% ] [90m[1mimport[22m | Aangepast script uitvoeren ...[39m[0m
+[  99% ] [90m[1mimport[22m | Opslaan...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  97% ] [90m[1mreimport[22m | Afmaken van asset-import...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started Assets (her)importeren (38 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Nabewerkingen herimport aan het uitvoeren...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Editor aan het laden (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Editorlay-out laden...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | Panelen laden...[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m

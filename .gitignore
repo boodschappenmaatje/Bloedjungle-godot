@@ -2,4 +2,5 @@
 /export/
 *.translation
 *.import
+!assets/**/*.glb.import
 __pycache__/

@@ -12,7 +12,9 @@ const SCENE_V2 := preload("res://assets/soldaat_vq2.glb")
 const SCENE_PLAYER := preload("res://assets/soldaat_jungle_commando.glb")
 const LOOKS := {
 	"eigen": ["Lijf_Uniform", "Helm", "Vest", "Koppel", "Rugzak", "Laarzen"],
-	"speler:jungle": ["Lijf_JungleCommando", "Vest", "Koppel", "Laarzen", "Mag_Pouches", "Radio_Field", "IFAK_Pouch"],
+	"speler:jungle": ["Lijf_JungleCommando", "Uniform_Jacket_Shell", "Uniform_Trousers_Shell", "Hair_Cropped",
+		"Vest_JungleCommando", "Vest_JungleCommando_Back", "Vest_JungleCommando_Details", "Koppel", "Laarzen", "Mag_Pouches", "Radio_Field", "IFAK_Pouch",
+		"Gloves_Closed", "Knee_Reinforcements", "Elbow_Reinforcements"],
 	"speler:bloot": ["Lijf_Bloot", "Hoofdband", "Koppel", "Laarzen"],
 	"speler:mouwloos": ["Lijf_Mouwloos", "Hoofdband", "Koppel", "Laarzen"],
 	"speler:uniform": ["Lijf_Uniform", "Hoofdband", "Koppel", "Laarzen"],
@@ -134,6 +136,11 @@ func _setup_pose() -> void:
 	pose.setup_skeleton(skel)
 	_palm_r = pose.palm_offset("R")
 	pose.palm_l = pose.palm_offset("L")
+	if look == "speler:jungle":
+		# The source Garand foregrip is beyond this rig's two-bone left-arm reach
+		# during locomotion. Bring the player support hand to the receiver; other
+		# soldier looks retain their shared weapon-specific grip table.
+		pose.left_hold_overrides["garand"] = Vector3(-0.12, 0.08, 0.0)
 	if _gun != null:   # het wapen hing al in de hand: zet het op de handpalm
 		_gun.transform.origin += _palm_r
 	_sync_hold()

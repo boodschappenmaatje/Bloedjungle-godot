@@ -31,6 +31,7 @@ const POLE_R := Vector3(-0.6, -1.0, -0.3)   # de elleboog wijst omlaag en naar b
 const POLE_L := Vector3(0.5, -1.0, -0.3)
 
 var weapon := ""            # sleutel in HOLDS ("" = geen wapen)
+var left_hold_overrides: Dictionary = {}  # player-only grip corrections; shared NPC weapon holds stay unchanged
 var hold := false           # stil/lopen/schieten: de handen volgen het wapen; anders speelt de animatie (herladen, klimmen, rol)
 var recoil := 0.0           # terugslag 0..1,35 (zie SoldierModel)
 var gun_n := Transform3D.IDENTITY   # wapenknoop t.o.v. het bot DEF-handR (door SoldierModel gezet)
@@ -159,6 +160,8 @@ func _hold_weapon(w: float) -> void:
 	var wrist_r := d * gun_n.affine_inverse()
 	# linkerhand: spiegelbeeld van de handstand rechts, gedraaid om de looprichting; de pols ligt een handpalm van de steungreep af
 	var l: Vector3 = spec["left"]
+	if left_hold_overrides.has(weapon):
+		l = left_hold_overrides[weapon]
 	var grip_point := d * Vector3(l.x, l.z, -l.y)
 	var mirror := Basis.from_scale(Vector3(-1, 1, 1))
 	var hb: Basis = mirror * wrist_r.basis * mirror

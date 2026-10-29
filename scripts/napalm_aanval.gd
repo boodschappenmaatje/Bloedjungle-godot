@@ -417,7 +417,7 @@ func _update_carpet(_delta: float) -> void:
 
 ## Eén vlamtong op wereldpositie pos; hij begint ingeklapt en groeit in (grow).
 func _make_flame(pos: Vector3, w: float, h: float) -> MeshInstance3D:
-	var mi := Fx.napalm_flame(get_parent(), Vector3.ZERO, w, h)
+	var mi := Fx.napalm_flame_sim(get_parent(), Vector3.ZERO, h)
 	mi.global_position = pos
 	mi.set_instance_shader_parameter("grow", 0.0)
 	return mi

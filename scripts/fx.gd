@@ -927,6 +927,33 @@ static func flame(parent: Node3D, local_pos: Vector3, height: float, light := tr
 
 const NAPALM_FLAME := preload("res://shaders/napalm_vlam.gdshader")
 static var _napalm_flame_mat: ShaderMaterial
+const NAPALM_FLAME_SIM := preload("res://shaders/napalm_vlam_sim.gdshader")
+const NAPALM_ATLAS := "res://assets/napalm_vlam_atlas.png"
+static var _napalm_sim_mat: ShaderMaterial
+
+
+## Vlam uit een echte vuursimulatie (Blender, bron/napalm): beeldreeks op een vlak dat met de camera meedraait.
+## h = zichtbare vlamhoogte in meters. Zonder atlas valt het terug op de shader-vlam.
+static func napalm_flame_sim(parent: Node3D, local_pos: Vector3, h: float) -> MeshInstance3D:
+	if not ResourceLoader.exists(NAPALM_ATLAS):
+		return napalm_flame(parent, local_pos, h, h)
+	if _napalm_sim_mat == null:
+		_napalm_sim_mat = ShaderMaterial.new()
+		_napalm_sim_mat.shader = NAPALM_FLAME_SIM
+		_napalm_sim_mat.set_shader_parameter("atlas", load(NAPALM_ATLAS))
+	var s := h * 1.55   # de vlam beslaat ongeveer 65% van het beeld
+	var quad := QuadMesh.new()
+	quad.size = Vector2(s, s)
+	quad.center_offset = Vector3(0.0, s * 0.39, 0.0)   # de voet van de vlam staat iets boven de onderrand van het beeld
+	var mi := MeshInstance3D.new()
+	mi.mesh = quad
+	mi.material_override = _napalm_sim_mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
+	mi.position = local_pos
+	mi.set_instance_shader_parameter("seed", randf() * 10.0)
+	mi.set_instance_shader_parameter("grow", 1.0)
+	return mi
 
 
 ## Realistische vlamtong (shader met stromende ruis) met de voet op local_pos; de breedte w en hoogte h zijn in meters.

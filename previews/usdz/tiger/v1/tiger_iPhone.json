@@ -1,0 +1,33 @@
+{
+  "package_status": "PASS",
+  "apple_arkit_validation": "NOT_RUN_BY_EXPORTER",
+  "source": "/home/user/bloedjungle-godot/assets/tank.glb",
+  "source_sha256": "2ce5efaad9638cd3d8887d25ca9344501d9667129746399c61694b8e696e80e2",
+  "output": "/home/user/bloedjungle-godot/previews/usdz/tiger/v1/tiger_iPhone.usdz",
+  "output_bytes": 3984831,
+  "output_sha256": "98a7cfa2905a3a0d7fbb064a0e356ad38e3b2900149e6376f41550af9f8bc30e",
+  "blender_version": "5.2.3 LTS",
+  "preview_texture_max_px": 2048,
+  "source_texture_paths_resolved": 0,
+  "animation_exported": true,
+  "static_curves_converted_to_meshes": 0,
+  "mesh_objects": 25,
+  "materials": 2,
+  "material_images": 6,
+  "animation_actions": [
+    "Stationair-loop"
+  ],
+  "scene_animation_active": true,
+  "frame_start": 1,
+  "frame_end": 250,
+  "fps": 24.0,
+  "packaged_files": [
+    "tiger_iPhone.usdc",
+    "textures/Tiger_rups_normal.jpg",
+    "textures/Tiger_rups_orm.jpg",
+    "textures/Tiger_rups_albedo.jpg",
+    "textures/Tiger_normal.jpg",
+    "textures/Tiger_orm.jpg",
+    "textures/Tiger_albedo.jpg"
+  ]
+}

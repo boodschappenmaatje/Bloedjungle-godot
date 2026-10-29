@@ -18,6 +18,8 @@ def args():
     p.add_argument("--output-dir", required=True, type=Path)
     p.add_argument("--action", default="stil")
     p.add_argument("--frame", type=int)
+    p.add_argument("--samples", type=int, help="Override a view's default Cycles CPU samples")
+    p.add_argument("--scale", type=float, default=1.0, help="Uniform render-size multiplier")
     p.add_argument("--views", action="append", choices=("jungle_commando_3q.png", "jungle_commando_front.png", "jungle_commando_back.png", "jungle_commando_side.png", "jungle_commando_gameplay_topdown.png"))
     return p.parse_args(raw)
 
@@ -107,6 +109,11 @@ def main():
         raise RuntimeError(f"Requested action {opt.action!r} is missing")
     for name in opt.views or list(views):
         offset, resolution, samples = views[name]
+        if opt.samples is not None:
+            samples = max(1, opt.samples)
+        if not 0.05 <= opt.scale <= 1.0:
+            raise ValueError("--scale must be between 0.05 and 1.0")
+        resolution = tuple(max(64, round(value * opt.scale)) for value in resolution)
         output = opt.output_dir / name
         if output.exists():
             raise FileExistsError(output)

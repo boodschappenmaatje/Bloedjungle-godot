@@ -1,4 +1,4 @@
-# Jungle Commando Tiger Stripe — High Quality Showcase v2.0
+# Jungle Commando Tiger Stripe — High Quality Showcase v2.7
 
 This is the player-only appearance approved in GitHub issue #138. It is an original
 modern jungle commando look and does not copy a film character. The default player
@@ -7,13 +7,15 @@ compact olive vest, three magazine pouches, radio, IFAK, belt and boots. It has 
 headband or helmet. Existing player tops remain selectable; allies and enemies keep
 using the shared `soldaat_vq2.glb` unchanged.
 
-v2 addresses the first preview feedback with separate, double-sided weighted jacket
+v2.7 addresses the final polish feedback with separate, double-sided weighted jacket
 and trouser shells (including real hem thickness), shaped knees/elbows, smaller
-carrier straps, an olive fitted plate carrier, fully enclosed glove shells, dark
-boots with separate rubber soles/laces/eyelets, and a cropped dark hair cap. The
-player-only scalp polygons now use the hair material too, so the pale bald scalp
-does not show through the haircut. The weapon remains attached by the existing
-Godot runtime IK; the review USDZ includes the existing M1911 only as a preview prop.
+carrier straps, an olive fitted plate carrier, fully enclosed glove shells and
+dark boots with rubber sole faces on the original skinned boot mesh. The player-only
+scalp polygons use a darker short-hair material; facial skin shading is softened,
+and light stubble is painted into a dedicated skin UV texture. The relaxed review
+pose is solved from rig rest pose, separately from the gameplay idle. The weapon
+remains attached by existing Godot runtime IK; the review USDZ includes the M1911
+only as a preview prop.
 
 ## Production files
 
@@ -28,9 +30,9 @@ Godot runtime IK; the review USDZ includes the existing M1911 only as a preview 
 The generator reads `assets/soldaat_vq2.glb` read-only and writes separate outputs;
 it never changes the shared VQ2 model. It keeps the original skin, uniform normal,
 ORM and UVs. New nylon, webbing, hair, leather and rubber use packed PBR maps; the
-original Tiger Stripe base color is 2048px. The active player look is 34,169
-triangles at the character's 1.6m scale, including its independently skinned
-garment, glove, carrier and boot detail meshes; alternative player tops remain in
+original Tiger Stripe base color is 2048px. The active player look is approximately
+34k triangles at the character's 1.6m scale, including its independently skinned
+garment, glove and carrier meshes; alternative player tops remain in
 the source file. The game export embeds 31 images. No external textures/downloads.
 
 The new variant shares the same 53-bone DEF rig and the ten clips embedded in the
@@ -64,21 +66,22 @@ parts, metric scale and an active `stil` idle animation. On this iMac it passed
 Apple `usdchecker --arkit` and `usdzip` package validation. Quick Look on a physical
 iPhone has not yet been tested.
 
-The v2 review package has separate neutral and `schieten` preview files, plus
-Cycles CPU renders from the matching three-quarter, front and 45° FOV / 58° / 28m
-gameplay camera. The game runtime retains its original weapon IK, collision and
-animation systems. The GLB contains the same 53-bone rig and ten embedded source
-clips; Godot still merges the seven other clips from the unchanged existing assets.
-The updated soldier regression test samples the weapon reach while idle, walking,
-running, firing and hit-reacting. Local Godot is not installed on the production
-iMac; the Godot 4.7.2 CI workflow is the authoritative runtime test.
+The v2.7 review package has separate neutral and `schieten` preview files, plus
+Cycles CPU renders from front, back, side and the 45° FOV / 58° / 28m gameplay
+camera. The game runtime retains its original weapon IK, collision and animation
+systems. The GLB contains the same 53-bone rig and ten embedded source clips;
+Godot still merges the seven other clips from the unchanged existing assets. The
+soldier regression test checks weapon reach while idle, walking, running, firing
+and hit-reacting, and checks that reload starts and advances. Local Godot is not
+installed on the production iMac; Godot 4.7.2 CI is the authoritative runtime test.
 
-The v1 source, export, textures, USDZ and renders remain in the separate `1.0/`
-pipeline folder. The updated v2 files and preview reports are kept in `2.0/`.
+The v1 and earlier approved v2 source, export, textures, USDZ and renders remain
+in their original version folders. The newest editable source, game GLB, textures,
+USDZ previews, renders and receipts are kept in `2.7/`.
 
 Current iCloud Drive preview:
 
-`Bloedjungle Previews/Player Jungle Commando/2.0/`
+`Bloedjungle Previews/Player Jungle Commando/2.7/`
 
 The equivalent local files, production renders and JSON receipts are in
-`~/Documents/Bloedjungle 3D — Performance/pipeline-v1/assets/player_jungle_commando/2.0/`.
+`~/Documents/Bloedjungle 3D — Performance/pipeline-v1/assets/player_jungle_commando/2.7/`.

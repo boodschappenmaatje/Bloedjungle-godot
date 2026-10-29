@@ -36,6 +36,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--report", help="Optional JSON receipt destination")
     parser.add_argument("--max-texture-size", type=int, choices=(512, 1024, 2048, 4096), default=2048)
     parser.add_argument("--require-animation", action="store_true", help="Fail if no active scene/NLA animation is found")
+    parser.add_argument("--action", help="Select this Blender action before exporting a review animation")
     parser.add_argument("--overwrite", action="store_true", help="Allow replacing output and receipt files")
     return parser.parse_args(raw)
 
@@ -148,6 +149,45 @@ def export_preview(output: Path, max_texture_size: int, animation: bool) -> None
         raise RuntimeError(f"Blender USD export did not finish: {result}")
 
 
+def resolve_texture_paths() -> int:
+    """Resolve source-relative image paths before exporting into a temp folder.
+
+    Blender's USDZ packager otherwise resolves `//` image paths against the
+    temporary USD output directory, which can omit newly generated pipeline
+    maps even though they exist beside the source .blend.
+    """
+    resolved = 0
+    for image in bpy.data.images:
+        if image.source != "FILE" or not image.filepath:
+            continue
+        try:
+            source_path = Path(bpy.path.abspath(image.filepath)).expanduser().resolve(strict=True)
+        except (OSError, RuntimeError):
+            continue
+        if source_path.is_file():
+            if image.packed_file:
+                image.unpack(method="USE_ORIGINAL")
+            image.filepath = str(source_path)
+            image.reload()
+            resolved += 1
+    return resolved
+
+
+def select_action(name: str | None) -> None:
+    if not name:
+        return
+    action = bpy.data.actions.get(name)
+    rig = next((obj for obj in bpy.context.scene.objects if obj.type == "ARMATURE"), None)
+    if action is None or rig is None:
+        raise RuntimeError(f"Could not select review action {name!r}: action or armature is missing")
+    rig.animation_data_create()
+    rig.animation_data.action = action
+    first, last = (int(round(v)) for v in action.frame_range)
+    bpy.context.scene.frame_start = first
+    bpy.context.scene.frame_end = last
+    bpy.context.scene.frame_set((first + last) // 2)
+
+
 def inspect_usdz(path: Path, expected_textures: int) -> list[str]:
     if not zipfile.is_zipfile(path):
         raise RuntimeError("Blender output is not a valid USDZ zip archive")
@@ -181,12 +221,14 @@ def main() -> None:
         raise FileExistsError(f"Refusing to overwrite existing report: {report_path}")
 
     load_source(source)
+    select_action(args.action)
     converted_curves = convert_static_curves_to_meshes()
     inventory = scene_inventory()
     if not inventory["mesh_objects"]:
         raise RuntimeError("No visible mesh objects were found in the source scene")
     if args.require_animation and not inventory["scene_animation_active"]:
         raise RuntimeError("No active Action/NLA animation was found for the requested preview")
+    resolved_texture_paths = resolve_texture_paths()
 
     output.parent.mkdir(parents=True, exist_ok=True)
     temporary_dir = Path(tempfile.mkdtemp(prefix=f".{output.stem}.{uuid.uuid4().hex}.", dir=output.parent))
@@ -211,6 +253,7 @@ def main() -> None:
         "output_sha256": sha256(output),
         "blender_version": bpy.app.version_string,
         "preview_texture_max_px": args.max_texture_size,
+        "source_texture_paths_resolved": resolved_texture_paths,
         "animation_exported": inventory["scene_animation_active"],
         "static_curves_converted_to_meshes": converted_curves,
         **inventory,

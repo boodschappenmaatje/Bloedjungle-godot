@@ -1,8 +1,8 @@
 {
   "status": "PASS",
   "glb": "assets/soldaat_jungle_commando.glb",
-  "bytes": 12733768,
-  "player_default_triangles": 34945,
+  "bytes": 13266484,
+  "player_default_triangles": 33041,
   "skin_joints": 53,
   "embedded_source_animations": [
     "achteruit",
@@ -23,16 +23,11 @@
     "Commando Hardware \u00b7 Parkerized Steel",
     "Commando Nylon \u00b7 Olive Drab",
     "Commando Webbing \u00b7 Dark Olive",
-    "JungleCommando_Camo"
+    "JungleCommando_Camo",
+    "JungleCommando_Skin_Stubble"
   ],
   "embedded_images": 31,
   "required_meshes_with_uv_normals_and_skinning": [
-    "Boot_Eyelets_L",
-    "Boot_Eyelets_R",
-    "Boot_Laces_L",
-    "Boot_Laces_R",
-    "Boot_Sole_L",
-    "Boot_Sole_R",
     "Elbow_Reinforcements",
     "Gloves_Closed",
     "Hair_Cropped",
@@ -46,6 +41,7 @@
     "Uniform_Jacket_Shell",
     "Uniform_Trousers_Shell",
     "Vest_JungleCommando",
+    "Vest_JungleCommando_Back",
     "Vest_JungleCommando_Details"
   ],
   "note": "The active hero-player budget includes separate uniform shells, carrier, gloves, reinforcements and boot hardware; the other seven Godot-merged clips remain checked by the Godot soldier regression test."

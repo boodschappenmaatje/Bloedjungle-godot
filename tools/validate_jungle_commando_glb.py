@@ -11,15 +11,14 @@ from pathlib import Path
 
 REQUIRED_PARTS = {
     "Lijf_JungleCommando", "Uniform_Jacket_Shell", "Uniform_Trousers_Shell", "Hair_Cropped",
-    "Vest_JungleCommando", "Vest_JungleCommando_Details", "Koppel", "Laarzen", "Mag_Pouches",
+    "Vest_JungleCommando", "Vest_JungleCommando_Back", "Vest_JungleCommando_Details", "Koppel", "Laarzen", "Mag_Pouches",
     "Radio_Field", "IFAK_Pouch", "Gloves_Closed", "Knee_Reinforcements", "Elbow_Reinforcements",
-    "Boot_Sole_L", "Boot_Sole_R", "Boot_Laces_L", "Boot_Laces_R", "Boot_Eyelets_L", "Boot_Eyelets_R",
 }
 REQUIRED_ANIMATIONS = {"stil", "lopen", "rennen", "achteruit", "schieten", "geraakt", "dood1", "dood2", "steken", "herladen"}
 PBR_MATERIALS = {
     "JungleCommando_Camo", "Commando Nylon · Olive Drab", "Commando Webbing · Dark Olive",
     "Commando Hardware · Parkerized Steel", "Commando Hair · Short Dark Brown",
-    "Commando Combat Boot · Matte Leather", "Commando Boot · Rubber Sole",
+    "Commando Combat Boot · Matte Leather", "Commando Boot · Rubber Sole", "JungleCommando_Skin_Stubble",
 }
 
 
@@ -71,8 +70,14 @@ def validate(path: Path) -> dict:
         if "normalTexture" not in material:
             raise ValueError(f"{name} lacks tangent-space normal map")
         pbr = material.get("pbrMetallicRoughness", {})
-        if "baseColorTexture" not in pbr or "metallicRoughnessTexture" not in pbr:
-            raise ValueError(f"{name} lacks base-color or metallic/roughness PBR map")
+        # A solid, physically based baseColorFactor is valid for short hair;
+        # skin, fabric, gear and footwear still require their detailed albedo.
+        has_base = "baseColorTexture" in pbr or (
+            name == "Commando Hair · Short Dark Brown"
+            and len(pbr.get("baseColorFactor", [])) == 4
+        )
+        if not has_base or "metallicRoughnessTexture" not in pbr:
+            raise ValueError(f"{name} lacks base color or metallic/roughness PBR data")
     images = doc.get("images", [])
     if not images or any("bufferView" not in image for image in images):
         raise ValueError("One or more textures are not embedded in the GLB")

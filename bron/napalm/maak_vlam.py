@@ -8,6 +8,9 @@ arg = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 out = arg[0] if arg else "/tmp/vlam"
 snel = "--snel" in arg
 laag = "--laag" in arg      # lage, brede, rollende vlam (liggend vuur over de grond)
+rook = "--rook" in arg      # opstijgende zwarte rookpluim (geen gloed), speelt eenmalig af vanaf de ontsteking
+plas = "--plas" in arg      # brandende plas van boven gezien (vlak vuur op de grond)
+LEAD_IN = 0 if rook else 24
 os.makedirs(out, exist_ok=True)
 COLS, ROWS = (4, 4) if snel else (8, 8)
 FR = COLS * ROWS
@@ -30,14 +33,14 @@ sc.render.film_transparent = True
 sc.render.image_settings.file_format = "PNG"
 sc.render.image_settings.color_mode = "RGBA"
 sc.frame_start = 1
-sc.frame_end = FR + 24     # 24 beelden inlooptijd, daarna FR beelden vastleggen
+sc.frame_end = FR + LEAD_IN     # inlooptijd, daarna FR beelden vastleggen
 sc.render.fps = 24
 
 # brandstof: een lage plas op de bodem; quick_smoke maakt het domein en een werkend vuurmateriaal
 bpy.ops.mesh.primitive_uv_sphere_add(radius=0.28, location=(0, 0, 0.1), segments=16, ring_count=8)
 fl = bpy.context.object
 fl.name = "Brandstof"
-fl.scale = (2.4, 1.0, 0.25) if laag else (1.0, 1.0, 0.35)
+fl.scale = (2.4, 1.0, 0.25) if laag else ((1.9, 1.9, 0.12) if plas else ((1.5, 1.5, 0.5) if rook else (1.0, 1.0, 0.35)))
 bpy.ops.object.select_all(action="DESELECT")
 fl.select_set(True)
 bpy.context.view_layer.objects.active = fl
@@ -46,22 +49,28 @@ dom = [o for o in bpy.data.objects if "Fluid" in o.modifiers and o.modifiers["Fl
 dom.name = "Domein"
 dom.location = (0, 0, 1.5)
 dom.scale = (1.5, 1.0, 1.5)      # 3 x 2 x 3 m (kubus van 2 m)
+if rook:
+    dom.location = (0, 0, 2.0)
+    dom.scale = (2.1, 1.0, 2.0)   # 4,2 x 2 x 4 m: de pluim stijgt hoog
+if plas:
+    dom.location = (0, 0, 0.9)
+    dom.scale = (2.6, 2.6, 0.9)   # 5,2 x 5,2 x 1,8 m, van boven gezien; het beeld snijdt de randen weg
 d = dom.modifiers["Fluid"].domain_settings
 d.resolution_max = RES
 d.use_noise = False
 d.noise_scale = 2
 d.cache_directory = os.path.join(out, "cache")
 sc.frame_start = 1
-sc.frame_end = FR + 24
+sc.frame_end = FR + LEAD_IN
 d.cache_type = "ALL"
 d.cache_data_format = "OPENVDB"
 d.cache_noise_format = "OPENVDB"
 d.cache_frame_start = 1
-d.cache_frame_end = FR + 24
-d.beta = (0.5 if laag else 1.4)                       # hitte-drijfkracht: hoge, snelle tongen
+d.cache_frame_end = FR + LEAD_IN
+d.beta = (0.9 if rook else (0.5 if laag else 1.4))                       # hitte-drijfkracht: hoge, snelle tongen
 d.vorticity = 0.5
-d.burning_rate = 0.9 if laag else 0.6
-d.flame_smoke = 0.25
+d.burning_rate = 0.5 if rook else (0.9 if laag else 0.6)
+d.flame_smoke = 3.0 if rook else 0.25
 d.flame_vorticity = 0.8
 d.dissolve_speed = 15
 d.use_dissolve_smoke = True
@@ -78,6 +87,23 @@ cam = bpy.data.objects.new("Cam", cam_d)
 sc.collection.objects.link(cam)
 cam.location = (0, -6, 0.95)
 cam.rotation_euler = (math.radians(90), 0, 0)
+if rook:
+    cam_d.ortho_scale = 4.4
+    cam.location = (0, -8, 2.0)
+if plas:
+    cam_d.ortho_scale = 3.4
+    cam.location = (0, 0, 6)
+    cam.rotation_euler = (0, 0, 0)
+# licht voor de rook (alleen de achtergrond is transparant, de belichting werkt gewoon)
+if rook:
+    sun = bpy.data.objects.new("Zon", bpy.data.lights.new("Zon", "SUN"))
+    sun.data.energy = 1.2
+    sun.rotation_euler = (math.radians(50), math.radians(10), math.radians(-30))
+    sc.collection.objects.link(sun)
+    w = bpy.data.worlds.new("W"); w.use_nodes = True
+    w.node_tree.nodes["Background"].inputs[0].default_value = (0.55, 0.58, 0.62, 1)
+    w.node_tree.nodes["Background"].inputs[1].default_value = 0.35
+    sc.world = w
 sc.camera = cam
 
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(out, "vlam.blend"))
@@ -132,7 +158,11 @@ nt.links.new(fa.outputs["Fac"], mule.inputs[0])
 nt.links.new(add.outputs[0], pv.inputs["Density"])
 nt.links.new(ramp.outputs["Color"], pv.inputs["Emission Color"])
 nt.links.new(mule.outputs[0], pv.inputs["Emission Strength"])
-pv.inputs["Color"].default_value = (0.04, 0.03, 0.03, 1)
+pv.inputs["Color"].default_value = (0.07, 0.065, 0.06, 1) if rook else (0.04, 0.03, 0.03, 1)
+if rook:
+    mule.inputs[1].default_value = 0.02    # vrijwel geen gloed: het is rook, geen vuur
+    mulr.inputs[1].default_value = 16.0     # dichte rook
+    mul.inputs[1].default_value = 0.5
 pv.inputs["Density Attribute"].default_value = ""
 nt.links.new(pv.outputs["Volume"], o.inputs["Volume"])
 vol.materials.append(m)
@@ -140,7 +170,7 @@ vol.materials.append(m)
 # beelden renderen
 frames = []
 for i in range(FR):
-    sc.frame_set(25 + i)
+    sc.frame_set(1 + LEAD_IN + i)
     p = os.path.join(out, "f%03d.png" % i)
     sc.render.filepath = p
     bpy.ops.render.render(write_still=True)

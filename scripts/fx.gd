@@ -930,6 +930,9 @@ static var _napalm_flame_mat: ShaderMaterial
 const NAPALM_FLAME_SIM := preload("res://shaders/napalm_vlam_sim.gdshader")
 const NAPALM_ATLAS := "res://assets/napalm_vlam_atlas.png"
 const NAPALM_ATLAS_LAAG := "res://assets/napalm_vlam_laag_atlas.png"
+const NAPALM_ROOK_ATLAS := "res://assets/napalm_rook_atlas.png"
+const NAPALM_ROOK := preload("res://shaders/napalm_rook.gdshader")
+static var _napalm_rook_mat: ShaderMaterial
 static var _napalm_sim_mat: ShaderMaterial
 static var _napalm_sim_laag_mat: ShaderMaterial
 
@@ -961,6 +964,30 @@ static func napalm_flame_sim(parent: Node3D, local_pos: Vector3, h: float, low :
 	mi.position = local_pos
 	mi.set_instance_shader_parameter("seed", randf() * 10.0)
 	mi.set_instance_shader_parameter("grow", 1.0)
+	return mi
+
+
+## Rookpluim uit de Blender-simulatie, eenmalig afspelend; null als het beeldenblad ontbreekt. fade_after = seconden tot hij wegtrekt.
+static func napalm_rook(parent: Node3D, pos: Vector3, size: float, fade_after := 100.0) -> MeshInstance3D:
+	if not ResourceLoader.exists(NAPALM_ROOK_ATLAS):
+		return null
+	if _napalm_rook_mat == null:
+		_napalm_rook_mat = ShaderMaterial.new()
+		_napalm_rook_mat.shader = NAPALM_ROOK
+		_napalm_rook_mat.set_shader_parameter("atlas", load(NAPALM_ROOK_ATLAS))
+	var quad := QuadMesh.new()
+	quad.size = Vector2(size, size)
+	quad.center_offset = Vector3(0.0, size * 0.42, 0.0)
+	var mi := MeshInstance3D.new()
+	mi.mesh = quad
+	mi.material_override = _napalm_rook_mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
+	mi.position = pos
+	mi.set_instance_shader_parameter("age", 0.0)
+	mi.set_instance_shader_parameter("fade_after", fade_after)
+	var life := minf(fade_after + 3.5, 40.0)
+	mi.create_tween().tween_method(func(v: float) -> void: mi.set_instance_shader_parameter("age", v), 0.0, life, life)
 	return mi
 
 

@@ -1,0 +1,10 @@
+{
+ "stats": {
+  "v2": "Munitiekist: V1 572 driehoeken · 2 materialen · texturen 1024px. Meshy 2.499 driehoeken · 1 materialen · texturen 1024px. Geen iPhone-FPS gemeten.",
+  "v1": "Munitiekist: V1 572 driehoeken · 2 materialen · texturen 1024px. Meshy 2.499 driehoeken · 1 materialen · texturen 1024px. Geen iPhone-FPS gemeten.",
+  "split": "Munitiekist: V1 572 driehoeken · 2 materialen · texturen 1024px. Meshy 2.499 driehoeken · 1 materialen · texturen 1024px. Geen iPhone-FPS gemeten."
+ },
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "errors": [],
+ "ok": true
+}

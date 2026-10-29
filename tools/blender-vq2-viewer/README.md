@@ -62,3 +62,7 @@ De viewer bevat ook `assets/wachtpost.glb` (bron `bron/wachtpost/`): slagboom me
 ## Generator
 
 De viewer bevat ook `assets/generator.glb` (bron `bron/generator/`): dieselgenerator met de echte GLB-clip `Draaien` (koelventilator) en het zwartgeblakerde wrak, samen of apart. Rook, vuur, explosie, geluid en trilling zijn Godot-effecten (`scripts/generator.gd`, `tests/generator_test.gd`, opnames `tests/generator_foto.gd`). Test: `node test-generator.mjs`. Geen iPhone/Safari-meting uitgevoerd.
+
+## Munitiekist (Meshy-test)
+
+Model **Munitiekist** vergelijkt de procedurele `Kist_Munitie` uit `assets/props.glb` (V1, de rest van props.glb verborgen) met `assets/munitiekist_meshy.glb`: een Meshy text-to-3D-kist, in Blender op maat gezet, AI-letters weggepoetst, 2.500 driehoeken met opnieuw gebakken 1K-PBR (bron `bron/munitiekist_meshy/`). Geen clips. Test: `node test-munitiekist.mjs`. Geen iPhone/Safari-meting uitgevoerd.

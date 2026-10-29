@@ -8,10 +8,12 @@ Meshy task trail:
 Files:
 - `apache_showcase_meshy.glb`: original Meshy textured master.
 - `Apache_Showcase_Source.blend`: editable Blender source imported from the master.
-- `Apache_Showcase_Mobile.glb`: decimated standalone mobile trial export (target about 50k polygons).
+- `Apache_Showcase_Mobile.glb`: decimated standalone mobile trial export (50k body polygons) with separate main/tail rotor pivots and five animation clips.
 - `meshy/preview.png`: Meshy render preview.
-- `build_showcase.py`: repeatable Blender import/source/mobile export procedure.
+- `build_showcase.py`: repeatable Blender import, rotor assembly, animation, source and mobile export procedure.
 
-The Meshy model is a single merged mesh with no animation tracks. It is a standalone visual trial and does not replace `assets/apache.glb` or alter gameplay. The isolated Godot scene is `tests/apache_showcase_trial.tscn`.
+The Meshy master is a single merged mesh. `build_showcase.py` adds separate rotor assemblies and creates five Blender/GLB clips: `Grond`, `Opstijgen`, `Zweven`, `Vliegen`, and `Bocht`. The animation clip tracks rotate the main and tail rotors; body motion is local to the clips. This is a standalone visual trial and does not replace `assets/apache.glb` or alter gameplay. The isolated Godot scene is `tests/apache_showcase_trial.tscn`.
 
 The generated master is photorealistically textured in the Meshy preview. The USDZ/iPhone Quick Look export is not included because the available Blender 4.3 runtime has no USD exporter enabled. The GLB can be downloaded/opened in 3D apps that support glTF, but iPhone Files Quick Look requires USDZ.
+
+The isolated Godot trial scene autoplays `Grond`; keys 1–5 select `Grond`, `Opstijgen`, `Zweven`, `Vliegen`, and `Bocht`.

@@ -77,7 +77,9 @@ installed on the production iMac; Godot 4.7.2 CI is the authoritative runtime te
 
 The default player mesh measures approximately 1.62 m from feet to cropped hair
 in Blender. The existing gameplay scale is 1.2, making the in-game player about
-1.94 m tall. Keep that physical scale; do not enlarge the body to compensate for
+1.94 m tall by Blender geometry bounds. Godot 4.7.2's combined visible outfit
+mesh AABB measures about 1.71 m before the same runtime scale (a conservative
+skinned-mesh envelope), also above 1.90 m in game. Keep that physical scale; do not enlarge the body to compensate for
 the normal 28 m gameplay-camera framing. The Godot runtime must preserve the
 `Commando Hair · Short Dark Brown` glTF base-color factor when applying uniform
 tints; replacing it with white makes the hair look pale in gameplay.

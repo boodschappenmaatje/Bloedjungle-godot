@@ -144,11 +144,11 @@ func _run() -> void:
 	_check(has_gloves, "volledig gesloten handschoenmateriaal ontbreekt")
 	_check(has_dark_hair, "kort donker haarmateriaal ontbreekt")
 	_check(has_stubble_skin, "huidmateriaal met lichte stoppeldetail ontbreekt")
-	var source_height := _visible_model_height(commando)
-	_check(source_height > 1.55 and source_height < 1.70,
-		"Jungle Commando-bronhoogte is onverwacht: %.3f m" % source_height)
-	_check(source_height * Data.SOLDIER_SCALE >= 1.90,
-		"geschaalde Jungle Commando is lager dan 1,90 m: %.3f m" % (source_height * Data.SOLDIER_SCALE))
+	var imported_height := _visible_model_height(commando)
+	_check(imported_height > 1.55 and imported_height < 1.80,
+		"Jungle Commando-importhoogte is onverwacht: %.3f m" % imported_height)
+	_check(imported_height * Data.SOLDIER_SCALE >= 1.90,
+		"geschaalde Jungle Commando is lager dan 1,90 m: %.3f m" % (imported_height * Data.SOLDIER_SCALE))
 	# HQ v2 has real skinned garment shells and compact individual gear pieces.
 	for part in ["Uniform_Jacket_Shell", "Uniform_Trousers_Shell", "Vest_JungleCommando", "Vest_JungleCommando_Back", "Gloves_Closed", "Hair_Cropped", "Knee_Reinforcements", "Elbow_Reinforcements"]:
 		var part_node := commando.find_child(part, true, false) as MeshInstance3D

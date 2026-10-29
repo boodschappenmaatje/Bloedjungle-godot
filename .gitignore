@@ -3,4 +3,5 @@
 *.translation
 *.import
 !assets/**/*.glb.import
+!assets/meshy_jungle_commando_texture_*.png.import
 __pycache__/

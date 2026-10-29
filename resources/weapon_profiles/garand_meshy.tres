@@ -1,0 +1,17 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapon_model_profile.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/wapens.glb" id="2"]
+
+[resource]
+script = ExtResource("1")
+model_node = &"Garand"
+model_scene = ExtResource("2")
+mount_position = Vector3(-0.14, 1.42, 0.05)
+mount_rotation = Vector3(0, 3.141593, 0)
+left_hand_grip = Vector3(-0.06, -0.02, -0.35)
+muzzle_local = Vector3(0, 0.07, -1.08)
+casing_local = Vector3(0.035, 0.11, -0.16)
+magazine_local = Vector3(-0.035, -0.1, -0.34)
+sight_local = Vector3(0, 0.11, -0.53)
+ejection_local = Vector3(0.055, 0.11, -0.18)

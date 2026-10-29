@@ -331,7 +331,7 @@ func set_uniform(c: Color) -> void:
 			elif nm == "Commando Hair · Short Dark Brown":
 				# Keep the GLB's dark baseColorFactor. Whitening every non-camouflage material
 				# erased this factor and made the cropped hair appear pale in the actual game.
-				_mats[i].albedo_color = _base_cols[i]
+				_mats[i].albedo_color = Color(0.012, 0.007, 0.005, 1.0)
 			elif nm != "Hoofdband":
 				_mats[i].albedo_color = Color.WHITE
 			_base_cols[i] = _mats[i].albedo_color

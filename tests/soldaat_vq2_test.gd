@@ -33,8 +33,11 @@ func _visible_parts(m: SoldierModel) -> Array:
 func _visible_model_height(m: Node3D) -> float:
 	var low := INF
 	var high := -INF
+	var player_parts := {}
+	for part_name in SoldierModel.LOOKS["speler:jungle"]:
+		player_parts[str(part_name)] = true
 	for mi: MeshInstance3D in m.find_children("*", "MeshInstance3D", true, false):
-		if not mi.is_visible_in_tree() or mi.mesh == null:
+		if not mi.is_visible_in_tree() or mi.mesh == null or not player_parts.has(str(mi.name)):
 			continue
 		var bounds := mi.get_aabb()
 		for corner in range(8):
@@ -95,7 +98,7 @@ func _run() -> void:
 			if look == "speler:jungle" and mat.resource_name == "JungleCommando_Camo":
 				_check(mat.albedo_color == Color.WHITE, "junglecommando-camouflage wordt niet ongetint getoond")
 			if look == "speler:jungle" and mat.resource_name == "Commando Hair · Short Dark Brown":
-				_check(mat.albedo_color.r < 0.08 and mat.albedo_color.g < 0.08 and mat.albedo_color.b < 0.08,
+				_check(mat.albedo_color.is_equal_approx(Color(0.012, 0.007, 0.005, 1.0)),
 					"donkere glTF-haarfactor wordt door uniformkleur wit gemaakt")
 			# Hair uses a dark glTF baseColorFactor intentionally; Godot's imported
 			# StandardMaterial3D does not expose that factor here as an albedo texture.

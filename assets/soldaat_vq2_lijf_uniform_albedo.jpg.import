@@ -3,11 +3,9 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://ccqjeh73h08oe"
-path.s3tc="res://.godot/imported/soldaat_vq2_lijf_uniform_albedo.jpg-640b108514349c1e93b1e256a0c848b6.s3tc.ctex"
-path.etc2="res://.godot/imported/soldaat_vq2_lijf_uniform_albedo.jpg-640b108514349c1e93b1e256a0c848b6.etc2.ctex"
+path="res://.godot/imported/soldaat_vq2_lijf_uniform_albedo.jpg-640b108514349c1e93b1e256a0c848b6.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
 "md5": "2538c07b548b0f42b6987499d1934da4"
@@ -16,7 +14,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/soldaat_vq2_lijf_uniform_albedo.jpg"
-dest_files=["res://.godot/imported/soldaat_vq2_lijf_uniform_albedo.jpg-640b108514349c1e93b1e256a0c848b6.s3tc.ctex", "res://.godot/imported/soldaat_vq2_lijf_uniform_albedo.jpg-640b108514349c1e93b1e256a0c848b6.etc2.ctex"]
+dest_files=["res://.godot/imported/soldaat_vq2_lijf_uniform_albedo.jpg-640b108514349c1e93b1e256a0c848b6.ctex"]
 
 [params]
 

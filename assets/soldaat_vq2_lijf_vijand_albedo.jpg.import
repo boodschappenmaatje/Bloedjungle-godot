@@ -3,11 +3,9 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://csmah6311jeon"
-path.s3tc="res://.godot/imported/soldaat_vq2_lijf_vijand_albedo.jpg-eb1fa477ccd5c368d87c0ce4c2e101fe.s3tc.ctex"
-path.etc2="res://.godot/imported/soldaat_vq2_lijf_vijand_albedo.jpg-eb1fa477ccd5c368d87c0ce4c2e101fe.etc2.ctex"
+path="res://.godot/imported/soldaat_vq2_lijf_vijand_albedo.jpg-eb1fa477ccd5c368d87c0ce4c2e101fe.ctex"
 metadata={
-"imported_formats": ["s3tc_bptc", "etc2_astc"],
-"vram_texture": true
+"vram_texture": false
 }
 generator_parameters={
 "md5": "f93506b8789e26a8f3e5f1b0d06010b2"
@@ -16,7 +14,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/soldaat_vq2_lijf_vijand_albedo.jpg"
-dest_files=["res://.godot/imported/soldaat_vq2_lijf_vijand_albedo.jpg-eb1fa477ccd5c368d87c0ce4c2e101fe.s3tc.ctex", "res://.godot/imported/soldaat_vq2_lijf_vijand_albedo.jpg-eb1fa477ccd5c368d87c0ce4c2e101fe.etc2.ctex"]
+dest_files=["res://.godot/imported/soldaat_vq2_lijf_vijand_albedo.jpg-eb1fa477ccd5c368d87c0ce4c2e101fe.ctex"]
 
 [params]
 

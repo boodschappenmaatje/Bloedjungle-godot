@@ -27,6 +27,7 @@ var air_drag := Vector2.ZERO
 var _air_start := Vector2.ZERO
 var _air_out := false
 var _air_vis: NapalmAim
+var _place: NapalmPlace       # napalm staat neergezet en wacht op START
 
 ## A held support/equipment button promotes to a four-way selector. The pointer remains owned here,
 ## so opening a wheel can never send its release through to the weapon/fire controls.
@@ -333,9 +334,7 @@ func _sticky_pick(kind: String, sector: int) -> void:
 	var reward: String = ["truck", "airstrike", "reinforcement", "napalm"][sector]
 	if reward == _air_id() and not p.dead and not p.driving:
 		air_drag = Vector2.ZERO
-		var a := air_aim()
-		Game.streak_take()
-		Streak.use(reward, p.get_parent(), a.target, a.dir)
+		_use_air(reward, air_aim())
 	else:
 		_select_wheel(kind, sector)
 
@@ -460,11 +459,21 @@ func release_air() -> void:
 		return
 	if not cancel and id != "" and p != null and is_instance_valid(p):
 		var a := air_aim()
-		Game.streak_take()
-		Streak.use(id, p.get_parent(), a.target, a.dir)
+		_use_air(id, a)
 	cancel_air()
 	if cancel:
 		Sfx.play("click")
+
+
+## Truck gaat meteen; napalm blijft eerst staan: plek en richting kunnen nog worden verzet en je bevestigt met START.
+func _use_air(id: String, a: Dictionary) -> void:
+	var p = Game.player
+	if id == "napalm":
+		if _place == null or not is_instance_valid(_place):
+			_place = NapalmPlace.open(self, a.target, a.dir)
+		return
+	Game.streak_take()
+	Streak.use(id, p.get_parent(), a.target, a.dir)
 
 
 func cancel_air() -> void:

@@ -1,0 +1,100 @@
+{
+  "asset": "wapens.glb",
+  "bytes": 11087484,
+  "triangles": 27848,
+  "nodes": 48,
+  "meshes": 35,
+  "materials": 9,
+  "images": 27,
+  "material_channels": {
+    "base_color": 9,
+    "metallic_roughness": 9,
+    "normal": 9,
+    "occlusion": 0,
+    "emission": 0
+  },
+  "godot_import_status": "NOT TESTED",
+  "checks": [
+    {
+      "check": "glb_magic",
+      "status": "PASS",
+      "detail": "glTF"
+    },
+    {
+      "check": "gltf_version_2",
+      "status": "PASS",
+      "detail": "2"
+    },
+    {
+      "check": "declared_length",
+      "status": "PASS",
+      "detail": "declared=11087484 actual=11087484"
+    },
+    {
+      "check": "json_chunk",
+      "status": "PASS",
+      "detail": "Parsed JSON chunk"
+    },
+    {
+      "check": "scene",
+      "status": "PASS",
+      "detail": "1 scenes"
+    },
+    {
+      "check": "mesh_nodes",
+      "status": "PASS",
+      "detail": "48 nodes; 35 meshes"
+    },
+    {
+      "check": "uv_mapping",
+      "status": "PASS",
+      "detail": "35/35 primitives have TEXCOORD_0"
+    },
+    {
+      "check": "normals",
+      "status": "PASS",
+      "detail": "35/35 primitives have NORMAL"
+    },
+    {
+      "check": "materials",
+      "status": "PASS",
+      "detail": "9 materials"
+    },
+    {
+      "check": "embedded_textures",
+      "status": "PASS",
+      "detail": "27 images"
+    },
+    {
+      "check": "pbr_base_color",
+      "status": "PASS",
+      "detail": "9/9 materials reference this map"
+    },
+    {
+      "check": "pbr_metallic_roughness",
+      "status": "PASS",
+      "detail": "9/9 materials reference this map"
+    },
+    {
+      "check": "pbr_normal",
+      "status": "PASS",
+      "detail": "9/9 materials reference this map"
+    },
+    {
+      "check": "pbr_occlusion",
+      "status": "FAIL",
+      "detail": "0/9 materials reference this map"
+    },
+    {
+      "check": "pbr_emission",
+      "status": "FAIL",
+      "detail": "0/9 materials reference this map"
+    },
+    {
+      "check": "references",
+      "status": "PASS",
+      "detail": "Accessor and texture indices in range"
+    }
+  ],
+  "status": "FAIL"
+}

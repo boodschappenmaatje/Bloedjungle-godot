@@ -24,6 +24,6 @@
  },
  "errors": [],
  "bazooka": "geen clips, Play uitgeschakeld",
- "stats": "Garand: 264 driehoeken · 5 meshes · 4 materialen · geen texturen (vlakke PBR-waarden, kleine prop). Geen iPhone-FPS gemeten.",
+ "stats": "Garand: V1 264 driehoeken · 5 meshes · 4 materialen · geen textuur. Weapon Upgrade 2.0 2.712 driehoeken · 4 meshes · 3 materialen · 512×512. De nieuwe gameversie gebruikt originele 512px PBR-kaarten; geen iPhone-FPS gemeten.",
  "ok": true
 }

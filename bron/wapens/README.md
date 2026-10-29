@@ -1,9 +1,14 @@
 # Wapens (Blender-bron)
 
-`assets/wapens.glb` wordt gemaakt door `maak_wapens.py` (Blender 5.2, ook zonder scherm via `pip install bpy`):
+`assets/wapens.glb` wordt gemaakt door `maak_wapens.py` (getest met lokaal Blender 4.5.15 LTS; geen Python-pakketinstallatie nodig):
 
-    python3 maak_wapens.py uit/     # wapens.glb + wapens.blend
-    python3 render.py uit/wapens.blend uit/   # plaatjes per wapen (3/4-aanzicht)
+    Blender --background --factory-startup --python maak_wapens.py -- /pad/naar/weapon_upgrade_2_0
+    Blender --background --python render.py -- /pad/naar/weapon_upgrade_2_0/high_quality/wapens_hq.blend /pad/naar/previews --draft
+    Blender --background --python export_usdz.py -- /pad/naar/wapens_hq.blend /pad/naar/ios_preview
+
+De build schrijft afzonderlijke `high_quality/wapens_hq.blend` en `game_optimized/wapens_game.blend` plus `game_optimized/wapens.glb`, en originele 512px basis-, roughness-, normal- en metallic-kaarten. De `.blend`-bestanden zijn meegeleverd in `uit/`; ze bevatten gepackte textures. Geometrie en textures zijn origineel door de generator gemaakt; er zijn geen externe modellen of materiaalbestanden gebruikt.
+
+`uit/ios_preview/*.usdz` bevat één statische Quick Look-preview per wapen, geëxporteerd uit de HQ-bron. Deze bestanden zijn als USDZ/ZIP-integriteit gecontroleerd; Quick Look op een iPhone is nog niet getest. De GLB blijft de game- en viewerbron met werkende animaties.
 
 Knopen: `M1911`, `Thompson`, `Garand`, `Trench`, `MG42`, `Bazooka`, plus `Huls` en `Raket`. Oorsprong = de greep van de rechterhand,
 loop langs Blender +Y (Godot -Z). Per materiaal een mesh (`<wapen>_Staal`, `_Hout`, ...), zodat een wapen maar 3 tot 6 tekenopdrachten kost.

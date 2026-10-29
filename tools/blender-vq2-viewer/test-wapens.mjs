@@ -48,6 +48,10 @@ try{
  await page.selectOption('#gun','Garand');await page.waitForTimeout(250);
  await page.click('#iso');await page.waitForTimeout(150);await page.screenshot({path:path.join(out,'wapens-viewer-heel.png')});
  await page.click('#top');await page.waitForTimeout(150);await page.locator('#stage').screenshot({path:path.join(out,'wapens-viewer-gamecamera.png')});
+ await page.click('#iso');await page.selectOption('#version','split');await page.waitForTimeout(200);
+ const split=await page.evaluate(()=>window.__VQ2_TEST__.loaded());
+ assert(split.version==='split','V1/V2 naast elkaar is niet beschikbaar');
+ await page.locator('#stage').screenshot({path:path.join(out,'weapon-upgrade-v1-v2-split.png')});
  const cam0=await page.evaluate(()=>window.__VQ2_TEST__.loaded().camera);
  const box=await page.locator('#canvas').boundingBox();await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);await page.mouse.down();await page.mouse.move(box.x+box.width*.8,box.y+box.height*.55,{steps:10});await page.mouse.up();await page.waitForTimeout(300);
  assert(JSON.stringify(cam0)!==JSON.stringify(await page.evaluate(()=>window.__VQ2_TEST__.loaded().camera)),'orbit werkt niet');

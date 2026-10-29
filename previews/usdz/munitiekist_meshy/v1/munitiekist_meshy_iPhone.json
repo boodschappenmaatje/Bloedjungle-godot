@@ -1,0 +1,28 @@
+{
+  "package_status": "PASS",
+  "apple_arkit_validation": "NOT_RUN_BY_EXPORTER",
+  "source": "/home/user/bloedjungle-godot/assets/munitiekist_meshy.glb",
+  "source_sha256": "29252455873a575acd3ce38a3fdbb8df99fe1e49eb7cba61cdc50a41a88bbb89",
+  "output": "/home/user/bloedjungle-godot/previews/usdz/munitiekist_meshy/v1/munitiekist_meshy_iPhone.usdz",
+  "output_bytes": 506542,
+  "output_sha256": "33e54e4a86cdbb5e7ff0f34ec4884d4f99a6d5d4553af5e72ed9d2d372edfe92",
+  "blender_version": "5.2.3 LTS",
+  "preview_texture_max_px": 1024,
+  "source_texture_paths_resolved": 0,
+  "animation_exported": false,
+  "static_curves_converted_to_meshes": 0,
+  "mesh_objects": 1,
+  "materials": 1,
+  "material_images": 3,
+  "animation_actions": [],
+  "scene_animation_active": false,
+  "frame_start": 1,
+  "frame_end": 250,
+  "fps": 24.0,
+  "packaged_files": [
+    "munitiekist_meshy_iPhone.usdc",
+    "textures/Munitiekist_normal.jpg",
+    "textures/Munitiekist_orm.jpg",
+    "textures/Munitiekist_albedo.jpg"
+  ]
+}

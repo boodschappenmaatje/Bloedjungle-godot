@@ -127,7 +127,7 @@ def convert_static_curves_to_meshes() -> int:
 
 def export_preview(output: Path, max_texture_size: int, animation: bool) -> None:
     size_name = str(max_texture_size)
-    result = bpy.ops.wm.usd_export(
+    options = dict(
         filepath=str(output),
         selected_objects_only=False,
         visible_objects_only=True,
@@ -147,6 +147,9 @@ def export_preview(output: Path, max_texture_size: int, animation: bool) -> None
         convert_orientation=True,
         relative_paths=True,
     )
+    # Blender 5.x dropped some options (e.g. visible_objects_only); pass only what this build knows.
+    known = {p.identifier for p in bpy.ops.wm.usd_export.get_rna_type().properties}
+    result = bpy.ops.wm.usd_export(**{k: v for k, v in options.items() if k in known})
     if "FINISHED" not in result:
         raise RuntimeError(f"Blender USD export did not finish: {result}")
 

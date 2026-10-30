@@ -36,6 +36,7 @@ const MESHY_STOW_OFFSET := Transform3D(Basis(Vector3.BACK, deg_to_rad(-32.0)) * 
 ## klimmen, zitten, mes) hangt het wapen op de rug.
 const MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten", "hurken_stil", "hurken_lopen", "hurken_achteruit", "liggen_stil", "kruipen"]
 const MESHY_GARAND_PROFILE = preload("res://resources/weapon_profiles/garand_meshy.tres")
+const MESHY_M1911_PROFILE = preload("res://resources/weapon_profiles/m1911_meshy.tres")
 const MESHY_WEAPON_ADAPTER_SCRIPT := preload("res://scripts/weapon_model_adapter.gd")
 const LOOKS := {
 	"eigen": ["Lijf_Uniform", "Helm", "Vest", "Koppel", "Rugzak", "Laarzen"],
@@ -363,7 +364,7 @@ func _attach_gun_meshy(skel: Skeleton3D, gun_kind: String) -> void:
 	_mesh_weapon_adapter.name = "WeaponModelAdapter"
 	actor.add_child(_mesh_weapon_adapter)
 	var visual_name: String = GUN_OF.get(gun_kind, "Garand")
-	var profile: Resource = MESHY_GARAND_PROFILE if visual_name == "Garand" else null
+	var profile: Resource = MESHY_GARAND_PROFILE if visual_name == "Garand" else (MESHY_M1911_PROFILE if visual_name == "M1911" else null)
 	if not _mesh_weapon_adapter.configure(visual_name, profile):
 		_mesh_weapon_adapter.queue_free()
 		_mesh_weapon_adapter = null

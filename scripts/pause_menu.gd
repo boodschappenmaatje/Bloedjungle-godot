@@ -4,7 +4,7 @@ extends CanvasLayer
 ## uitrusting, wapenwiel en "missie mislukt". Staat in een eigen laag boven de rest van de HUD.
 
 const ROWS := [
-	["soldaat", "Mannetjes (na nieuw spel)", [["vq2", "Realistisch"], ["v1", "Oud model"]]],
+	["soldaat", "Mannetjes (na nieuw spel)", [["vq2", "Realistisch"], ["meshy", "Meshy-speler (nieuw)"], ["v1", "Oud model"]]],
 	["ragdoll", "Doodsval vijanden", [["on", "Ragdoll"], ["off", "Animatie"]]],
 	["markeringen", "Markeringen soldaten", [["on", "Aan"], ["tact", "Alleen Tactisch"], ["off", "Uit"]]],
 	["quality", "Grafiek", [["low", "Laag"], ["high", "Hoog"], ["ultra", "Ultra"]]],

@@ -51,6 +51,20 @@ try{
  const cam0=await page.evaluate(()=>window.__VQ2_TEST__.loaded().camera);
  const box=await page.locator('#canvas').boundingBox();await page.mouse.move(box.x+box.width*.5,box.y+box.height*.5);await page.mouse.down();await page.mouse.move(box.x+box.width*.8,box.y+box.height*.55,{steps:10});await page.mouse.up();await page.waitForTimeout(300);
  assert(JSON.stringify(cam0)!==JSON.stringify(await page.evaluate(()=>window.__VQ2_TEST__.loaded().camera)),'orbit werkt niet');
+ // Compare the replacement Meshy pistol against the untouched original and verify real slide travel.
+ await page.selectOption('#asset','m1911');
+ await page.waitForFunction(()=>window.__VQ2_TEST__.ready()&&window.__VQ2_TEST__.loaded().asset==='m1911');
+ await page.selectOption('#version','v2');await page.waitForTimeout(250);
+ const m1911clips=await page.evaluate(()=>[...document.querySelectorAll('#clips option')].map(o=>o.value));
+ for(const clip of ['M1911_schot','M1911_leeg','M1911_herladen','M1911_wisselen','M1911_rust'])assert(m1911clips.includes(clip),'Meshy M1911 clip missing: '+clip);
+ await page.selectOption('#clips','M1911_schot');await scrub(page,0);const slide0=await pos(page,'M1911_Slede');
+ const slideDuration=await page.evaluate(()=>Number(document.getElementById('scrub').max));let slideTravel=0;
+ for(let k=1;k<=12;k++){await scrub(page,slideDuration*k/12);const p=await pos(page,'M1911_Slede');slideTravel=Math.max(slideTravel,Math.abs(p[0]-slide0[0]));}
+ assert(Math.abs(slideTravel-.034)<.004,'Meshy M1911 slide travel was '+slideTravel.toFixed(3)+' m');
+ await page.selectOption('#clips','M1911_leeg');const emptyDuration=await page.evaluate(()=>Number(document.getElementById('scrub').max));await scrub(page,emptyDuration);const slideLock=await pos(page,'M1911_Slede');
+ assert(Math.abs(Math.abs(slideLock[0]-slide0[0])-.034)<.004,'empty clip did not hold the slide open');
+ await page.selectOption('#clips','M1911_schot');await scrub(page,slideDuration*.3);await page.locator('#stage').screenshot({path:path.join(out,'meshy-m1911-gamecamera.png')});
+ results.m1911={clips:m1911clips,slide_travel_m:Number(slideTravel.toFixed(4)),empty_lockback_m:Number(Math.abs(slideLock[0]-slide0[0]).toFixed(4)),compare:'original M1911 / Meshy M1911'};
  results.stats=await page.evaluate(()=>document.getElementById('stats').textContent);
  results.ok=true;
 }catch(e){results.ok=false;results.error=e.message;try{results.loading=await (await browser.contexts()[0].pages())[0].locator('#loading').textContent();}catch{}}

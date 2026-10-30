@@ -81,11 +81,14 @@ func _weapon_animation_player(holder: Node, gun: Node3D, gun_name: String) -> An
 		var animation := src.get_animation(clip).duplicate() as Animation
 		for track in range(animation.get_track_count() - 1, -1, -1):
 			var path := String(animation.track_get_path(track))
-			if path.begins_with(gun_name + "/"):
+			if path == gun_name:
+				# The merged weapon root becomes the AnimationPlayer root in Godot.
+				animation.track_set_path(track, NodePath("."))
+			elif path.begins_with(gun_name + "/"):
 				animation.track_set_path(track, NodePath(path.substr(gun_name.length() + 1)))
 			elif not path.begins_with(gun_name + "_") and path != gun_name:
 				animation.remove_track(track)
-		animation.loop_mode = Animation.LOOP_NONE
+		animation.loop_mode = Animation.LOOP_LINEAR if String(clip).ends_with("_rust") else Animation.LOOP_NONE
 		lib.add_animation(String(clip).trim_prefix(gun_name + "_"), animation)
 	if lib.get_animation_list().is_empty():
 		return null

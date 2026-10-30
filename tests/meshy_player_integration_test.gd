@@ -247,6 +247,32 @@ func _run() -> void:
 	await get_tree().create_timer(reload_wait).timeout
 	_check(player.ammo == int(game.call("wstat", "garand").mag), "existing reload timer did not refill the Garand magazine")
 
+	# Exercise the Meshy M1911 replacement in the actual two-hand IK path.
+	player.set_physics_process(false)
+	player.set_process(false)
+	model.set_gun("m1911")
+	for _frame in 4:
+		await get_tree().physics_frame
+	var pistol_adapter: Node = model._mesh_weapon_adapter
+	_check(pistol_adapter != null and pistol_adapter.profile.model_scene.resource_path.ends_with("meshy_m1911.glb"), "Meshy M1911 profile did not load the replacement GLB")
+	_check(pistol_adapter != null and pistol_adapter.weapon.find_child("M1911_Slede", true, false) != null, "replacement slide is not a child of the weapon root")
+	_check(pistol_adapter != null and pistol_adapter.animation_player != null and pistol_adapter.animation_player.has_animation("schot") and pistol_adapter.animation_player.has_animation("leeg") and pistol_adapter.animation_player.has_animation("herladen") and pistol_adapter.animation_player.has_animation("wisselen") and pistol_adapter.animation_player.has_animation("rust"), "replacement weapon clips are incomplete")
+	var pistol_muzzle: Vector3 = model.muzzle_position()
+	var pistol_forward: Vector3 = player.global_basis.z.normalized()
+	_check((pistol_muzzle - pistol_adapter.global_position).normalized().dot(pistol_forward) > 0.9, "M1911 muzzle does not point along the player's forward axis")
+	await get_tree().create_timer(0.08).timeout
+	var pistol_right_error: float = float(_ik_samples["right"].get("error_m", INF))
+	var pistol_left_error: float = float(_ik_samples["left"].get("error_m", INF))
+	_check(pistol_right_error < 0.03 and pistol_left_error < 0.03, "Meshy player hands do not reach the M1911 grips")
+	var slide := pistol_adapter.weapon.find_child("M1911_Slede", true, false) as Node3D
+	var slide_at_rest := slide.position.x
+	model.shoot_recoil("m1911")
+	await get_tree().create_timer(0.05).timeout
+	_check(slide.position.x > slide_at_rest + 0.01, "M1911 shot clip did not cycle the slide")
+	model.play_weapon_action("leeg")
+	await get_tree().create_timer(0.35).timeout
+	_check(slide.position.x > slide_at_rest + 0.02, "M1911 empty clip did not hold the slide open")
+
 	# Meshy-API-clips (62) en de Nederlandse spelnamen die het spel aanroept.
 	player.set_physics_process(false)   # de speler-controller zet anders elk frame zelf weer "stil"
 	player.set_process(false)

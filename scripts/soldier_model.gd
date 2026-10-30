@@ -306,7 +306,7 @@ func _build_meshy_animation_tree(lib: AnimationLibrary) -> void:
 			var clip_node := AnimationNodeAnimation.new()
 			clip_node.animation = clip_name
 			clip_node.resource_name = clip_name
-			blend_space.add_blend_point(clip_node, float(index), -1, clip_name)
+			blend_space.add_blend_point(clip_node, float(index), -1)
 			_mesh_clip_map[clip_name] = {"posture": posture, "position": float(index)}
 			if posture == "STAND" and clip_name in ["stil", "lopen", "rennen", "sprinten"]:
 				_mesh_clip_map[{"stil": "Idle", "lopen": "Walking", "rennen": "Running", "sprinten": "RunFast"}[clip_name]] = _mesh_clip_map[clip_name]
@@ -816,7 +816,22 @@ func _gun_player(holder: Node, gun: Node3D, gun_name: String) -> AnimationPlayer
 ## Speelt een wapenclip: bij een schot schuift de slede, hendel of pomp mee; "leeg" laat de slede open staan.
 func _gun_clip(clip: String) -> void:
 	if _gun_anim != null and _gun_anim.has_animation(clip):
-		_gun_anim.play(clip)
+		_gun_anim.play(clip, 0.025 if _weapon_kind == "m1911" else -1.0)
+
+
+## Speelt een visuele actieclip van het Meshy-pistool als die in de huidige GLB zit.
+func play_weapon_action(action: String) -> void:
+	if _gun_anim == null:
+		return
+	var clip := action.to_lower()
+	if _gun_anim.has_animation(clip):
+		_gun_anim.play(clip, 0.10)
+
+
+## Keeps the Meshy M1911 in its gentle idle hold after a one-shot action ends.
+func ensure_weapon_idle() -> void:
+	if _gun_anim != null and _gun_anim.has_animation("rust") and not _gun_anim.is_playing():
+		_gun_anim.play("rust", 0.12)
 
 
 ## Brengt de wapendelen terug in rust (na het herladen).

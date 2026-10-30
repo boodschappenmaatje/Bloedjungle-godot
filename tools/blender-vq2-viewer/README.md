@@ -66,3 +66,7 @@ De viewer bevat ook `assets/generator.glb` (bron `bron/generator/`): dieselgener
 ## Munitiekist (Meshy-test)
 
 Model **Munitiekist** vergelijkt de procedurele `Kist_Munitie` uit `assets/props.glb` (V1, de rest van props.glb verborgen) met `assets/munitiekist_meshy.glb`: een Meshy text-to-3D-kist, in Blender op maat gezet, AI-letters weggepoetst, 2.500 driehoeken met opnieuw gebakken 1K-PBR (bron `bron/munitiekist_meshy/`). Geen clips. Test: `node test-munitiekist.mjs`. Geen iPhone/Safari-meting uitgevoerd.
+
+## Meshy M1911
+
+Model **M1911 · Meshy** vergelijkt de oorspronkelijke M1911 uit `assets/wapens.glb` met `assets/meshy_m1911.glb`. De Meshy-bron blijft ongewijzigd in `assets/meshy_weapon.glb`; `bron/wapens/maak_meshy_m1911.py` maakt de geoptimaliseerde 1K-PBR-gameversie met frame en bewegende slede als aparte meshes, vijf echte GLB-clips en circa 29.000 driehoeken. De Meshy-speler houdt het pistool via het M1911-profiel en tweehandige IK vast. Test: `node test-m1911.mjs`. Geen fysieke iPhone/Safari/Xogot-meting uitgevoerd.

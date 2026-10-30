@@ -3,9 +3,11 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://cckucohovvpv"
-path="res://.godot/imported/soldaat_vq2_uitrusting_normal.jpg-15b2f108199d2de748c7dfa86e6997f0.ctex"
+path.s3tc="res://.godot/imported/soldaat_vq2_uitrusting_normal.jpg-15b2f108199d2de748c7dfa86e6997f0.s3tc.ctex"
+path.etc2="res://.godot/imported/soldaat_vq2_uitrusting_normal.jpg-15b2f108199d2de748c7dfa86e6997f0.etc2.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc", "etc2_astc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "e406e386ef7e6e8e87c787ff0765c33f"
@@ -14,7 +16,7 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/soldaat_vq2_uitrusting_normal.jpg"
-dest_files=["res://.godot/imported/soldaat_vq2_uitrusting_normal.jpg-15b2f108199d2de748c7dfa86e6997f0.ctex"]
+dest_files=["res://.godot/imported/soldaat_vq2_uitrusting_normal.jpg-15b2f108199d2de748c7dfa86e6997f0.s3tc.ctex", "res://.godot/imported/soldaat_vq2_uitrusting_normal.jpg-15b2f108199d2de748c7dfa86e6997f0.etc2.ctex"]
 
 [params]
 

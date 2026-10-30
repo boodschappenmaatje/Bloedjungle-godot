@@ -106,7 +106,8 @@ func _style() -> void:
 func _rescale() -> void:
 	var s := get_window().size
 	var touch := UI.is_touch_platform()
-	get_window().content_scale_factor = clampf(minf(s.x, s.y) / (430.0 if touch else 720.0), 1.0, 4.0)
+	# Rond 500 logische punten hoog blijven de iPhone-knoppen bruikbaar en krijgt het spel meer beeldruimte.
+	get_window().content_scale_factor = clampf(minf(s.x, s.y) / (500.0 if touch else 720.0), 1.0, 4.0)
 	_layout_wave_banner()
 
 

@@ -339,7 +339,7 @@ func _update_camera_controls() -> void:
 func _build_radar() -> void:
 	_radar = Control.new()
 	_radar.name = "TacticalRadar"
-	_radar.custom_minimum_size = Vector2(132, 144)
+	_radar.custom_minimum_size = Vector2(120, 128)
 	_radar.size = _radar.custom_minimum_size
 	_radar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_radar.draw.connect(_draw_radar)
@@ -558,8 +558,8 @@ func _radar_size() -> Vector2:
 	if size.x < size.y:
 		return Vector2(88, 100)  # staand: smal, anders overlapt hij de knoppen onder de golf-titel
 	if size.y < 420.0:
-		return Vector2(112, 120)  # klein liggend scherm: blijft boven de wisselknop
-	return Vector2(132, 144)
+		return Vector2(104, 112)  # klein liggend scherm: blijft boven de wisselknop
+	return Vector2(120, 128)
 
 
 func _layout() -> void:

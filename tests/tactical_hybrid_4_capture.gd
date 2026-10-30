@@ -17,6 +17,13 @@ func _initialize() -> void:
 
 func _process(_delta: float) -> bool:
 	frames += 1
+	if OS.has_environment("BJ_CAPTURE_FIRE") and frames in [116, 146]:
+		var game := root.get_node_or_null("Game")
+		var player: Variant = game.get("player") if game != null else null
+		if player != null:
+			var w: Dictionary = game.call("wstat", player.weapon)
+			player.model.set_shoot_pose(true, player.weapon, w.rate)
+			player._shoot(w)
 	if frames >= 60 and frames <= 150:
 		samples.append(Performance.get_monitor(Performance.TIME_PROCESS))
 	if frames == 120 or frames == 150:

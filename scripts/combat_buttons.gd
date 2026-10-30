@@ -692,7 +692,7 @@ func _process(_delta: float) -> void:
 	if key == _state:
 		return
 	_state = key
-	_reload.disabled = p.ammo >= w.mag or reloading or p.driving
+	_reload.disabled = not p.can_reload() or reloading or p.driving
 	_sprint.open_state = p.sprint_on
 	_sprint.bar = p.stamina
 	_sprint.disabled = p.driving

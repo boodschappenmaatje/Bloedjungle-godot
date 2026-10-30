@@ -64,10 +64,15 @@ func _ready() -> void:
 	model.set_gun(weapon)
 	ammo = Game.owned[weapon].ammo
 	if weapon == "m1911":
-		# Legacy integer saves represented total loaded rounds.
-		var legacy_total: int = clampi(ammo, 0, 8)
-		m1911_chambered = legacy_total > 0
-		m1911_mag_rounds = maxi(0, legacy_total - 1)
+		var stored: Dictionary = Game.owned[weapon]
+		if stored.has("mag_rounds") and stored.has("chambered"):
+			m1911_mag_rounds = clampi(int(stored.mag_rounds), 0, 7)
+			m1911_chambered = bool(stored.chambered)
+		else:
+			var legacy_total: int = clampi(ammo, 0, 8)
+			m1911_chambered = legacy_total > 0
+			m1911_mag_rounds = maxi(0, legacy_total - 1)
+		_sync_m1911_ammo()
 	rotation.y = face
 	_mask0 = collision_mask
 	$Shape.shape = ($Shape.shape as CapsuleShape3D).duplicate()   # de scène deelt de capsule; houdingen passen hem per speler aan
@@ -161,6 +166,7 @@ func _physics_process(delta: float) -> void:
 					m1911_chambered = true
 					m1911_mag_rounds = 6
 				ammo = m1911_mag_rounds + int(m1911_chambered)
+				_sync_m1911_ammo()
 			else:
 				ammo = w.mag
 			model.gun_reset()
@@ -473,15 +479,23 @@ func equip(id: String) -> void:
 		return
 	if Game.owned.has(weapon):
 		Game.owned[weapon].ammo = ammo
+		if weapon == "m1911":
+			_sync_m1911_ammo()
 	weapon = id
 	Game.cur = id
 	model.set_gun(id)
 	model.play_weapon_action("wisselen")
 	ammo = Game.owned[id].ammo
 	if id == "m1911":
-		var total: int = clampi(ammo, 0, 8)
-		m1911_chambered = total > 0
-		m1911_mag_rounds = maxi(0, total - 1)
+		var stored: Dictionary = Game.owned[id]
+		if stored.has("mag_rounds") and stored.has("chambered"):
+			m1911_mag_rounds = clampi(int(stored.mag_rounds), 0, 7)
+			m1911_chambered = bool(stored.chambered)
+		else:
+			var total: int = clampi(ammo, 0, 8)
+			m1911_chambered = total > 0
+			m1911_mag_rounds = maxi(0, total - 1)
+		_sync_m1911_ammo()
 	_shot_sequence = 0
 	reload_t = 0.0
 	fire_t = 0.3
@@ -496,6 +510,21 @@ func _reload(w: Dictionary) -> void:
 	model.play_weapon_action("herladen")
 	Sfx.play("reload")
 	Game.changed.emit()
+
+
+func _sync_m1911_ammo() -> void:
+	if not Game.owned.has("m1911"):
+		return
+	ammo = m1911_mag_rounds + int(m1911_chambered)
+	Game.owned.m1911.ammo = ammo
+	Game.owned.m1911.mag_rounds = m1911_mag_rounds
+	Game.owned.m1911.chambered = m1911_chambered
+
+
+func can_reload() -> bool:
+	if reload_t > 0.0:
+		return false
+	return m1911_mag_rounds < 7 if weapon == "m1911" else ammo < int(Game.wstat(weapon).mag)
 
 
 ## Tegen de borstwering aan kun je eroverheen schieten (de vijand niet).

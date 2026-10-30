@@ -534,7 +534,12 @@ func _process(delta: float) -> void:
 				_weapon_t = 0.9
 			_last_weapon = p.weapon
 		var w: Dictionary = Game.wstat(p.weapon)
-		_ammo.text = "…" if p.reload_t > 0.0 else "%d | %d" % [p.ammo, w.mag]
+		if p.reload_t > 0.0:
+			_ammo.text = "…"
+		elif p.weapon == "m1911":
+			_ammo.text = "%d+%d | 7" % [p.m1911_mag_rounds, int(p.m1911_chambered)]
+		else:
+			_ammo.text = "%d | %d" % [p.ammo, w.mag]
 		var low: bool = p.reload_t <= 0.0 and p.ammo <= w.mag * 0.25
 		_ammo.add_theme_color_override("font_color", Color8(255, 90, 58) if low else (UI.INK_DIM if p.reload_t > 0.0 else UI.BRASS))
 	_top_right.reset_size()

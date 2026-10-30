@@ -7,7 +7,7 @@ var _blook := Vector3.ZERO
 var _nlook := Vector3.ZERO
 var _fog0 := -1.0
 var combat_view := false
-var zoom_step := 0
+var zoom_step := 0  # legacy leeswaarde voor bestaande capturetests; gameplayzoom is uitgeschakeld
 var focus := Vector3.ZERO  # het punt waar de camera naar kijkt (speler + look-ahead, iets naar achteren geschoven)
 var _snap := true  # eerste beeld meteen op de speler, niet ernaartoe vliegen
 const EDITOR_DISTANCE := 62.0
@@ -30,10 +30,6 @@ const GROUP_HOLD_SECONDS := 2.0
 func toggle_view() -> void:
 	combat_view = not combat_view
 
-func zoom(delta_step: int) -> void:
-	zoom_step = clampi(zoom_step + delta_step, -3, 4)
-
-
 ## Kleine, korte camerakick voor zware wapens en nabije explosies.
 func combat_impulse(strength: float) -> void:
 	_combat_shake_strength = maxf(_combat_shake_strength, clampf(strength, 0.0, 0.055))
@@ -44,18 +40,6 @@ func _unhandled_key_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.pressed and not event.echo and event.keycode == KEY_C and not Game.build_mode and (Game.state == "play" or Game.state == "prep"):
 		toggle_view()
 
-
-func _unhandled_input(event: InputEvent) -> void:
-	# Het muiswiel zoomt alleen in de speelcamera; bouwmodus behoudt zijn eigen zoombediening.
-	if Game.build_mode or (Game.state != "play" and Game.state != "prep"):
-		return
-	if event is InputEventMouseButton and event.pressed:
-		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-			zoom(-1)
-			get_viewport().set_input_as_handled()
-		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-			zoom(1)
-			get_viewport().set_input_as_handled()
 
 func _ready() -> void:
 	# lange lens en onscherpe verte: kijkt als een filmbeeld, niet als een kaart
@@ -175,9 +159,9 @@ func _process(delta: float) -> void:
 		_scan_group(p)
 	_group_hold = maxf(0.0, _group_hold - delta)
 	var base_distance := 20.0 if combat_view else 22.5
-	var wanted_distance: float = clampf(base_distance + float(zoom_step) * 2.5, 11.0, 39.0)
-	# Een bewuste pinch naar binnen krijgt voorrang op de automatische groepsuitsnede.
-	if _group_hold > 0.0 and zoom_step >= 0:
+	var wanted_distance: float = base_distance
+	# Alleen automatische tank-/groepskadrering kan de vaste speelcamera tijdelijk verruimen.
+	if _group_hold > 0.0:
 		wanted_distance = maxf(wanted_distance, _group_distance)
 	# Snel ruimte maken wanneer een voertuig opduikt, langzaam terug naar de speler.
 	var zoom_speed := 2.2 if wanted_distance > _camera_distance else 0.85

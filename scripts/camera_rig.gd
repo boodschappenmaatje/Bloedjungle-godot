@@ -185,7 +185,7 @@ func _process(delta: float) -> void:
 	_camera_distance = dist
 	if portrait:
 		dist = minf(dist * 1.2, 44.0)
-	var angle: float = deg_to_rad(53.0)
+	var angle: float = deg_to_rad(clampf(float(GameSettings.get_value("camera_pitch")), 35.0, 75.0))
 	var h: float = sin(angle) * dist
 	var back: float = cos(angle) * dist
 	var aiming: bool = not is_nan(Game.aim)
@@ -199,7 +199,7 @@ func _process(delta: float) -> void:
 	_group_offset = _group_offset.lerp(_group_shift, group_f)
 	var target: Vector3 = p.global_position + _lead + _group_offset * _group_weight
 	# De speler staat iets onder het midden van het beeld: de camera kijkt een stukje voorbij hem
-	# De kijkhoek blijft 53°; de uitsnede houdt ruimte voor de schietrichting.
+	# De ingestelde kijkhoek blijft behouden; de uitsnede houdt ruimte voor de schietrichting.
 	focus = target + Vector3(0.0, 0.0, -dist * (0.05 if portrait else 0.07))
 	var goal: Vector3 = focus + Vector3(0.0, h, back)
 	goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)

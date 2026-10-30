@@ -77,10 +77,11 @@ func _input(event: InputEvent) -> void:
 					return  # gameplay-touch buiten de twee thumb-zones blijft vrij
 				aim = right_d < left_d
 				origin = right_anchor if aim else left_anchor
-			# Houd iedere touch aan zijn eigen vinger-ID; een tweede vinger mag de eerste stick niet overnemen.
-			for held in _sticks.values():
-				if held.aim == aim:
-					return
+			# Een nieuwe aanraking in dezelfde vaste zone vervangt een gemiste release.
+			# De andere stick behoudt zijn eigen vinger-ID.
+			for held_id in _sticks.keys():
+				if _sticks[held_id].aim == aim:
+					_sticks.erase(held_id)
 			var d: Vector2 = event.position - origin
 			if d.length() > STICK_R:
 				d = d.normalized() * STICK_R
@@ -192,8 +193,9 @@ func _draw() -> void:
 
 func _draw_stick(origin: Vector2, direction: Vector2, aim: bool, alpha: float) -> void:
 	var firing := aim and direction.length() > AIM_FIRE
-	draw_circle(origin, ANCHOR_R, Color(0.015, 0.03, 0.025, 0.12 * alpha))
-	draw_arc(origin, ANCHOR_R, 0, TAU, 48, Color(1, 0.3, 0.2, 0.72 * alpha) if firing else Color(UI.INK, 0.36 * alpha), 1.5)
+	# De bedienbare zone blijft 76 punten; alleen de getekende ring neemt minder speelbeeld in.
+	draw_circle(origin, 64.0, Color(0.015, 0.03, 0.025, 0.12 * alpha))
+	draw_arc(origin, 64.0, 0, TAU, 48, Color(1, 0.3, 0.2, 0.72 * alpha) if firing else Color(UI.INK, 0.36 * alpha), 1.5)
 	if aim:
 		draw_arc(origin, STICK_R * AIM_FIRE, 0, TAU, 40, Color(UI.BRASS, 0.28 * alpha), 1.1)
 	var arrow_color := Color(UI.INK, 0.78 * alpha)

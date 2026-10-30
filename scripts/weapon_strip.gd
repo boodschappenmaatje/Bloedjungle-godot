@@ -227,10 +227,10 @@ func _layout() -> void:
 	var x_max := INF
 	if UI.is_touch_platform() and not portrait:
 		# Tussen de linkerjoystick en het rechter actiecluster blijven; de pijlen worden iets smaller als het krap is.
-		arrow.x = 38.0
+		arrow.x = 32.0
 		x_min = safe.x + (0.0 if size.x < 880.0 else 14.0) + 152.0 + 8.0
 		x_max = ActionBtn.cluster_left(size) - 8.0
-		card_max = clampf(x_max - x_min - arrow.x * 2.0 - 8.0, 110.0, 200.0)
+		card_max = clampf(x_max - x_min - arrow.x * 2.0 - 8.0, 110.0, 160.0)
 	var card := Vector2(minf(card_max, maxf(110.0, size.x - safe.x - safe.z - arrow.x * 2.0 - 8.0)), 64.0)
 	var total := arrow.x * 2.0 + card.x + 8.0
 	var x := maxf(safe.x, (size.x - total) * 0.5)

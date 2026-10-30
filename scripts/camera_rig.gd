@@ -21,7 +21,7 @@ var _group_distance := 0.0
 var _group_focus := Vector3.ZERO
 var _group_hold := 0.0
 var _group_scan := 0.0
-const GROUP_HOLD_SECONDS := 1.4
+const GROUP_HOLD_SECONDS := 2.0
 
 
 func toggle_view() -> void:
@@ -168,14 +168,17 @@ func _process(delta: float) -> void:
 	# Houd het personage leesbaar; alleen nabije teamleden en voertuigen vragen meer ruimte.
 	_group_scan -= delta
 	if _group_scan <= 0.0:
-		_group_scan = 0.3
+		_group_scan = 0.4
 		_scan_group(p)
 	_group_hold = maxf(0.0, _group_hold - delta)
-	var base_distance := 19.0 if combat_view else 24.0
+	var base_distance := 20.0 if combat_view else 22.5
 	var wanted_distance: float = clampf(base_distance + float(zoom_step) * 2.5, 11.0, 39.0)
-	if _group_hold > 0.0:
+	# Een bewuste pinch naar binnen krijgt voorrang op de automatische groepsuitsnede.
+	if _group_hold > 0.0 and zoom_step >= 0:
 		wanted_distance = maxf(wanted_distance, _group_distance)
-	var dist: float = lerpf(_camera_distance if _camera_distance > 0.0 else wanted_distance, wanted_distance, 1.0 - exp(-2.0 * delta))
+	# Snel ruimte maken wanneer een voertuig opduikt, langzaam terug naar de speler.
+	var zoom_speed := 2.2 if wanted_distance > _camera_distance else 0.85
+	var dist: float = lerpf(_camera_distance if _camera_distance > 0.0 else wanted_distance, wanted_distance, 1.0 - exp(-zoom_speed * delta))
 	_camera_distance = dist
 	if portrait:
 		dist = minf(dist * 1.2, 44.0)
@@ -189,7 +192,7 @@ func _process(delta: float) -> void:
 	var group_offset: Vector3 = (_group_focus - p.global_position) * clampf(_group_hold / GROUP_HOLD_SECONDS, 0.0, 1.0)
 	var target: Vector3 = p.global_position + _lead + group_offset
 	# De speler staat iets onder het midden van het beeld: de camera kijkt een stukje voorbij hem
-	# (kijkhoek en afstand tot dat punt blijven 58°/28 m en 48°/16 m).
+	# De kijkhoek blijft 53°; de uitsnede houdt ruimte voor de schietrichting.
 	focus = target + Vector3(0.0, 0.0, -dist * (0.05 if portrait else 0.07))
 	var goal: Vector3 = focus + Vector3(0.0, h, back)
 	goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)
@@ -233,8 +236,8 @@ func _scan_group(p: Node3D) -> void:
 	for point in points:
 		radius = maxf(radius, point.distance_to(center))
 	radius = maxf(radius, p.global_position.distance_to(center))
-	_group_focus = p.global_position.lerp(center, 0.5)
-	_group_distance = clampf(19.0 + radius * 1.15 + (4.0 if tank_near else 0.0), 24.0, 39.0)
+	_group_focus = p.global_position.lerp(center, 0.42)
+	_group_distance = clampf(18.5 + radius * 0.85 + (1.5 if tank_near else 0.0), 23.0, 39.0)
 	_group_hold = GROUP_HOLD_SECONDS
 
 

@@ -38,6 +38,8 @@ var path_i := 0
 var stun_t := 0.0  # geschrokken van een explosie: even stilstaan
 var _shoot_pose_t := 0.0
 var _shot_sequence := 0
+var _range_marker: Node3D
+var _health_fill: MeshInstance3D
 var burn_t := 0.0          # > 0: staat in brand (napalm), rent wild rond en valt aan het eind dood
 var _burn_fx: Node3D
 var _burn_dir := Vector3.ZERO
@@ -69,6 +71,46 @@ func _ready() -> void:
 	model.scale = Vector3.ONE * t.scale * Data.SOLDIER_SCALE
 	(shape.shape as CapsuleShape3D).radius = t.r
 	Game.enemies.append(self)
+	_build_range_marker()
+
+
+## Een kleine gezondheidsstreep boven verre vijanden, alleen wanneer ze in zicht zijn.
+## Twee eenvoudige quads per vijand: geen tekst, extra viewport of lichtberekening.
+func _build_range_marker() -> void:
+	_range_marker = Node3D.new()
+	_range_marker.name = "RangeMarker"
+	_range_marker.position.y = 2.55 * t.scale * Data.SOLDIER_SCALE
+	add_child(_range_marker)
+	for is_fill in [false, true]:
+		var quad := QuadMesh.new()
+		quad.size = Vector2(1.05 if is_fill else 1.17, 0.075 if is_fill else 0.12)
+		var mat := StandardMaterial3D.new()
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+		mat.albedo_color = Color(0.94, 0.25, 0.16) if is_fill else Color(0.025, 0.03, 0.025, 0.88)
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.no_depth_test = false
+		quad.material = mat
+		var mesh := MeshInstance3D.new()
+		mesh.mesh = quad
+		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mesh.position.z = 0.012 if is_fill else 0.0
+		_range_marker.add_child(mesh)
+		if is_fill:
+			_health_fill = mesh
+
+
+func _process(_delta: float) -> void:
+	if _range_marker == null:
+		return
+	var player: Node3D = Game.player
+	var distance := player.global_position.distance_to(global_position) if player != null and is_instance_valid(player) else INF
+	var marker_mode := GameSettings.get_value("markeringen")
+	var cam := get_viewport().get_camera_3d()
+	var markers_on := marker_mode == "on" or (marker_mode == "tact" and cam != null and not bool(cam.get("combat_view")))
+	_range_marker.visible = markers_on and not dead and distance >= 11.0 and distance <= 38.0 and not _far
+	if _range_marker.visible:
+		_health_fill.scale.x = clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0)
 
 
 func _physics_process(delta: float) -> void:

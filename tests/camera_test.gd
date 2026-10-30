@@ -43,7 +43,7 @@ func _run() -> void:
 	await _settle_camera(camera)
 	# afstand en hoek gelden voor het kijkpunt (speler + look-ahead + schuif naar achteren)
 	var strategic_distance := camera.global_position.distance_to(camera.get("focus"))
-	_check(absf(strategic_distance - 24.0) < 0.8, "strategische cameraafstand is %.2f i.p.v. 24 m" % strategic_distance)
+	_check(absf(strategic_distance - 22.5) < 0.8, "strategische cameraafstand is %.2f i.p.v. 22,5 m" % strategic_distance)
 	var screen_h := float(root.get_visible_rect().size.y)
 	var player_y := camera.unproject_position(player.global_position + Vector3.UP).y
 	_check(player_y > screen_h * 0.5 and player_y < screen_h * 0.7, "speler staat niet iets onder het schermmidden (y=%.0f van %.0f)" % [player_y, screen_h])
@@ -53,7 +53,7 @@ func _run() -> void:
 	await _settle_camera(camera)
 	var combat_distance := camera.global_position.distance_to(camera.get("focus"))
 	_check(bool(camera.get("combat_view")), "gevechtsstand schakelt niet in")
-	_check(absf(combat_distance - 19.0) < 0.8, "gevechtscameraafstand is %.2f i.p.v. 19 m" % combat_distance)
+	_check(absf(combat_distance - 20.0) < 0.8, "gevechtscameraafstand is %.2f i.p.v. 20 m" % combat_distance)
 	var combat_angle := rad_to_deg(atan2(camera.global_transform.basis.z.y, Vector2(camera.global_transform.basis.z.x, camera.global_transform.basis.z.z).length()))
 	_check(absf(combat_angle - 53.0) < 0.8, "gevechtskijkhoek is %.2f° i.p.v. 53°" % combat_angle)
 	_check(absf(camera.fov - 45.0) < 0.01, "camerafov is niet 45°")
@@ -84,7 +84,7 @@ func _run() -> void:
 	_check(bool(camera.get("combat_view")) == selected_view, "bouwmodus vergat de geselecteerde speelcamera")
 	_check(int(camera.get("zoom_step")) == selected_zoom, "bouwmodus vergat de cameraschaal")
 	var after_distance := camera.global_position.distance_to(camera.get("focus"))
-	_check(absf(after_distance - (24.0 + selected_zoom * 2.5)) < 1.0, "camera keert niet terug op de speelafstand (%.2f m)" % after_distance)
+	_check(absf(after_distance - (22.5 + selected_zoom * 2.5)) < 1.0, "camera keert niet terug op de speelafstand (%.2f m)" % after_distance)
 	# Een nabije tank en twee teamleden moeten rustig ruimte krijgen zonder de handmatige zoomstand te verliezen.
 	var tank := load("res://scenes/tank.tscn").instantiate() as Node3D
 	tank.position = player.position + Vector3(6.0, 0.0, 2.0)
@@ -97,8 +97,12 @@ func _run() -> void:
 		ally.set_physics_process(false)
 		game.allies.append(ally)
 	await _settle_camera(camera, 90)
-	_check(float(camera.get("_group_distance")) > 28.0, "teamcamera maakt geen ruimte voor tank en teamleden")
+	_check(float(camera.get("_group_distance")) > 24.0, "teamcamera maakt geen ruimte voor tank en teamleden")
 	_check(int(camera.get("zoom_step")) == selected_zoom, "automatische camera overschrijft handmatige zoomstand")
+	camera.call("zoom", -6)
+	await _settle_camera(camera, 90)
+	_check(float(camera.get("_camera_distance")) < float(camera.get("_group_distance")) - 2.0, "bewuste pinch naar binnen wordt door de teamcamera genegeerd")
+	camera.call("zoom", 6)
 	tank.queue_free()
 	for ally in game.allies:
 		ally.queue_free()

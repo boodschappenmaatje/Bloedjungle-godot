@@ -71,11 +71,11 @@ func _run() -> void:
 			if b is Button and b.get_script() != null and b.get_script().resource_path == "res://scripts/action_btn.gd" and b.get("kind") == "granaat":
 				use_button = b
 		_check(use_button != null and use_button.get("caption") in ["GRANAAT", "MIJN"], "%s: compacte uitrustingsknop ontbreekt" % s)
-		_check(buttons.size() >= 10, "%s: te weinig zichtbare knoppen (%d)" % [s, buttons.size()])
+		_check(buttons.size() >= 9, "%s: te weinig zichtbare knoppen (%d)" % [s, buttons.size()])
 		var names := {}
 		for b in buttons:
 			names[str(b.get("kind"))] = true
-		for k in ["herlaad", "sprint", "granaat", "rol"]:
+		for k in ["herlaad", "sprint", "granaat"]:
 			_check(names.has(k), "%s: knop %s ontbreekt" % [s, k])
 		for i in buttons.size():
 			var a: Rect2 = (buttons[i] as Control).get_global_rect()

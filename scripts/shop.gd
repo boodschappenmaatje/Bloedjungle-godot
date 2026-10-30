@@ -384,7 +384,8 @@ func _wimg(id: String, tier: int) -> Control:
 	glow.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	holder.add_child(glow)
 	var pic := TextureRect.new()
-	pic.texture = load("res://assets/ui/weapons/weapon_%s.png" % id)
+	var strip := get_tree().get_first_node_in_group("weapon_strip")
+	pic.texture = strip._icons.get(id) if id == "m1911" and strip != null and strip._icons.has(id) else load("res://assets/ui/weapons/weapon_%s.png" % id)
 	pic.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	pic.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	pic.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

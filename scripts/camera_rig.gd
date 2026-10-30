@@ -17,6 +17,11 @@ var _editor_tilt := EDITOR_TILT
 var _editor_active := false
 var _combat_shake_time := 0.0
 var _combat_shake_strength := 0.0
+var _group_distance := 0.0
+var _group_focus := Vector3.ZERO
+var _group_hold := 0.0
+var _group_scan := 0.0
+const GROUP_HOLD_SECONDS := 1.4
 
 
 func toggle_view() -> void:
@@ -160,18 +165,29 @@ func _process(delta: float) -> void:
 	attributes.dof_blur_far_enabled = GameSettings.get_value("quality") == "ultra" and GameSettings.get_value("t_post") == "on"  # scherptediepte kost veel op mobiel
 	_blook = Vector3.ZERO
 	far = lerpf(far, 220.0, minf(1.0, delta * 3.0))
-	# Generals-first camera, Dead Nation gevechtsstand, met begrensde zoom.
-	var dist: float = clampf((16.0 if combat_view else 28.0) + float(zoom_step) * 2.5, 8.5, 38.0)
+	# Houd het personage leesbaar; alleen nabije teamleden en voertuigen vragen meer ruimte.
+	_group_scan -= delta
+	if _group_scan <= 0.0:
+		_group_scan = 0.3
+		_scan_group(p)
+	_group_hold = maxf(0.0, _group_hold - delta)
+	var base_distance := 19.0 if combat_view else 24.0
+	var wanted_distance: float = clampf(base_distance + float(zoom_step) * 2.5, 11.0, 39.0)
+	if _group_hold > 0.0:
+		wanted_distance = maxf(wanted_distance, _group_distance)
+	var dist: float = lerpf(_camera_distance if _camera_distance > 0.0 else wanted_distance, wanted_distance, 1.0 - exp(-2.0 * delta))
+	_camera_distance = dist
 	if portrait:
-		dist = minf(dist * 1.2, 42.0)
-	var angle: float = deg_to_rad(48.0 if combat_view else 58.0)
+		dist = minf(dist * 1.2, 44.0)
+	var angle: float = deg_to_rad(53.0)
 	var h: float = sin(angle) * dist
 	var back: float = cos(angle) * dist
 	var aiming: bool = not is_nan(Game.aim)
-	var lead_dist: float = (2.5 if combat_view else 3.0) if aiming else 0.5
+	var lead_dist: float = (5.0 if combat_view else 6.0) if aiming else 0.7
 	var want: Vector3 = Vector3(sin(p.face), 0.0, cos(p.face)) * lead_dist
 	_lead = _lead.lerp(want, 1.0 - exp(-3.0 * delta))
-	var target: Vector3 = p.global_position + _lead
+	var group_offset: Vector3 = (_group_focus - p.global_position) * clampf(_group_hold / GROUP_HOLD_SECONDS, 0.0, 1.0)
+	var target: Vector3 = p.global_position + _lead + group_offset
 	# De speler staat iets onder het midden van het beeld: de camera kijkt een stukje voorbij hem
 	# (kijkhoek en afstand tot dat punt blijven 58°/28 m en 48°/16 m).
 	focus = target + Vector3(0.0, 0.0, -dist * (0.05 if portrait else 0.07))
@@ -191,6 +207,35 @@ func _process(delta: float) -> void:
 	# Alleen de zichtlijn naar de speler en naar de dichtstbijzijnde vijanden wordt uit de bladeren gehouden.
 	Foliage.update_visibility_focus(p.global_position, global_position, delta, true, _nearby_enemies(p))
 	Foliage.update_pushers(p, get_tree())
+
+
+var _camera_distance := 0.0
+
+
+## Een goedkope periodieke scan, met tijdsmarge tegen voortdurend pompend zoomen.
+func _scan_group(p: Node3D) -> void:
+	var points: Array[Vector3] = []
+	var tank_near := false
+	for vehicle in get_tree().get_nodes_in_group("voertuigen"):
+		if vehicle is CharacterBody3D and vehicle.get_script() == preload("res://scripts/tank.gd") and vehicle.global_position.distance_to(p.global_position) < 27.0:
+			points.append(vehicle.global_position)
+			tank_near = true
+	for ally in Game.allies:
+		if is_instance_valid(ally) and ally is Node3D and ally.global_position.distance_to(p.global_position) < 20.0:
+			points.append(ally.global_position)
+	if not tank_near and points.size() < 2:
+		return
+	var center := p.global_position
+	for point in points:
+		center += point
+	center /= float(points.size() + 1)
+	var radius := 0.0
+	for point in points:
+		radius = maxf(radius, point.distance_to(center))
+	radius = maxf(radius, p.global_position.distance_to(center))
+	_group_focus = p.global_position.lerp(center, 0.5)
+	_group_distance = clampf(19.0 + radius * 1.15 + (4.0 if tank_near else 0.0), 24.0, 39.0)
+	_group_hold = GROUP_HOLD_SECONDS
 
 
 ## De (hoogstens) drie vijanden het dichtst bij de speler, voor de jungle-zichtlijn.

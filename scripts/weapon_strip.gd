@@ -18,6 +18,7 @@ class ArrowGlyph:
 
 const IDS := ["m1911", "thompson", "garand", "trench", "mg42", "bazooka"]
 const GUNS := preload("res://assets/wapens.glb")
+const MESHY_M1911 := preload("res://assets/meshy_m1911.glb")
 const OPEN_TIME := 3.0
 const ICON_SIZE := Vector2i(256, 96)
 
@@ -38,12 +39,13 @@ var _last_state := ""
 
 
 func _ready() -> void:
+	add_to_group("weapon_strip")
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_card = _button(_toggle_list)
 	_pic = _picture(_card)
 	_name = _label(_card, 11, HORIZONTAL_ALIGNMENT_LEFT)
-	_ammo = _label(_card, 22, HORIZONTAL_ALIGNMENT_RIGHT)
+	_ammo = _label(_card, 27, HORIZONTAL_ALIGNMENT_RIGHT)
 	_prev = _button(_cycle.bind(-1))
 	_prev_glyph = _arrow(_prev, -1.0)
 	_next = _button(_cycle.bind(1))
@@ -122,25 +124,32 @@ func _render_icons() -> void:
 	vp.add_child(cam)
 	var holder := GUNS.instantiate()
 	vp.add_child(holder)
+	var meshy_holder := MESHY_M1911.instantiate() as Node3D
+	vp.add_child(meshy_holder)
+	meshy_holder.visible = false
 	for i in IDS.size():
 		var id: String = IDS[i]
-		var node := holder.find_child(SoldierModel.GUN_OF[id], true, false) as Node3D
+		var meshy := id == "m1911"
+		holder.visible = not meshy
+		meshy_holder.visible = meshy
+		var source: Node3D = meshy_holder if meshy else holder
+		var node := source.find_child(SoldierModel.GUN_OF[id], true, false) as Node3D
 		if node == null:
 			continue
-		for other in holder.get_children():
+		for other in source.get_children():
 			# New animated weapon GLBs also contain an AnimationPlayer.
 			if other is Node3D:
 				other.visible = false
 		node.visible = true
 		var p := node.get_parent()
-		while p != null and p != holder:
+		while p != null and p != source:
 			(p as Node3D).visible = true
 			p = p.get_parent()
 		var box := _box(node)
 		var center := box.get_center()
 		# de loop wijst langs -Z; een camera op +X die naar -X kijkt heeft -Z rechts in beeld
 		cam.size = maxf(box.size.y, box.size.z / (float(ICON_SIZE.x) / float(ICON_SIZE.y))) * 1.12
-		cam.position = center + Vector3(6.0, 0.0, 0.0)
+		cam.position = center + (Vector3(0.0, 0.0, 6.0) if meshy else Vector3(6.0, 0.0, 0.0))
 		cam.look_at(center, Vector3.UP)
 		await get_tree().process_frame
 		await get_tree().process_frame
@@ -235,11 +244,11 @@ func _layout() -> void:
 	_next.position = Vector2(x + arrow.x + 3.0 + card.x + 3.0, y0)
 	_next.size = arrow
 	_pic.position = Vector2(4, 4)
-	_pic.size = Vector2(card.x - 8.0, 40.0)
-	_name.position = Vector2(8, 45)
+	_pic.size = Vector2(card.x - 8.0, 47.0)
+	_name.position = Vector2(8, 48)
 	_name.size = Vector2(card.x - 70.0, 16)
-	_ammo.position = Vector2(card.x - 74.0, 40.0)
-	_ammo.size = Vector2(66.0, 24.0)
+	_ammo.position = Vector2(card.x - 82.0, 34.0)
+	_ammo.size = Vector2(74.0, 30.0)
 	# uitgeklapt: de andere wapens in een rij boven de kaart
 	var lw := 74.0
 	for i in _list.size():
@@ -315,7 +324,7 @@ func _process(delta: float) -> void:
 
 func _style(active: bool) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color(0.12, 0.17, 0.13, 0.92) if active else Color(0.035, 0.06, 0.05, 0.79)
+	sb.bg_color = Color(0.08, 0.075, 0.055, 0.94) if active else Color(0.025, 0.028, 0.025, 0.86)
 	sb.border_color = Color(UI.BRASS, 0.72) if active else Color(UI.INK_DIM, 0.18)
 	sb.set_border_width_all(1)
 	sb.set_corner_radius_all(5)

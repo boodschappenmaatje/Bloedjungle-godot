@@ -9,6 +9,7 @@ var _grenade: ActionBtn
 var _roll: ActionBtn
 var _stance: ActionBtn        # houding: staan, hurken, liggen (alleen de Meshy-speler)
 var _stance_down_ms := 0
+var _sprint_down_ms := 0
 var _air2: ActionBtn         # kiezer: de andere beloning die klaarstaat (tik om te wisselen)
 var _air: ActionBtn          # luchtsteun (killstreak): staat naast GEBRUIK en verschijnt alleen als er een beloning klaarstaat
 var _state := ""
@@ -51,9 +52,16 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	get_viewport().size_changed.connect(_cancel_gesture)
 	_reload = _make("herlaad", "HERLAAD", func(): _player_call("request_reload"))
-	_sprint = _make("sprint", "SPRINT", func(): _player_call("toggle_sprint"))
+	_sprint = _make("sprint", "SPRINT", func(): _sprint_down_ms = Time.get_ticks_msec())
+	_sprint.button_up.connect(func():
+		if Time.get_ticks_msec() - _sprint_down_ms >= 420 and UI.is_touch_platform():
+			_player_call("request_dodge")
+		else:
+			_player_call("toggle_sprint"))
+	_sprint.tooltip_text = "Tik: sprint · ingedrukt houden: ontwijkrol"
 	_grenade = _make("granaat", "GEBRUIK", func(): pass) # release chooses tap-use or a long-press wheel
 	_roll = _make("rol", "ROL", func(): _player_call("request_dodge"))
+	_roll.visible = not UI.is_touch_platform()
 	_stance = _make("houding", "HOUDING", func(): _stance_down_ms = Time.get_ticks_msec())
 	_stance.button_up.connect(func(): _player_call_args("cycle_stance", [Time.get_ticks_msec() - _stance_down_ms >= 420]))   # tik: doorschakelen, lang: plat/opstaan
 	_air2 = _make("lucht2", "WISSEL", func():
@@ -620,7 +628,7 @@ func _layout() -> void:
 	_grenade.position = Vector2(x0, y0)
 	_reload.position = Vector2(x1, y0)
 	_air2.position = Vector2(x1, y0 - g)   # rechts van de luchtsteun-knop
-	_stance.position = Vector2(x1, y0 - g)   # de plek van de (verborgen) wisselknop: boven HERLAAD
+	_stance.position = Vector2(x1, y0 - 2.0 * g)   # vrij van plaatsingsvakken en de rechter joystick
 	_air.position = Vector2(x0, y0 - g)   # boven GEBRUIK: links ervan staat de wapenstrip, erboven de uitrustingskiezer
 	for b in [_reload, _sprint, _grenade, _roll, _air, _air2, _stance]:
 		b.size = ActionBtn.SIZE
@@ -662,7 +670,8 @@ func _process(_delta: float) -> void:
 	var others: Array = Game.streak_others()
 	_air2.visible = _air.visible and not others.is_empty() and air_finger == -2
 	_air2.visible = false # support switching is handled by the support wheel
-	_stance.visible = p.model.meshy_player
+	_stance.visible = p.model.meshy_player and not Game.place_armed
+	_roll.visible = not UI.is_touch_platform()
 	if _stance.stance != p.stance:
 		_stance.stance = p.stance
 		_stance.queue_redraw()

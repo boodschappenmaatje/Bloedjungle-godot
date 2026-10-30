@@ -35,6 +35,7 @@ var _exhausted := false     # leeg geraakt: pas weer sprinten als er wat bij is
 var _reload_dur := 1.0      # hoe lang het lopende herladen duurt (de herlaadbeweging past zich daaraan aan)
 var _dust_t := 0.0
 var _shot_sequence := 0
+var _fire_was_down := false
 
 const STAIR_FOOT := 1.8      # de klimladder staat aan de +X zijde van de toren (zie bron/wachttoren)
 const STAIR_TOP := 1.3
@@ -149,7 +150,9 @@ func _physics_process(delta: float) -> void:
 			ammo = w.mag
 			model.gun_reset()
 			Game.changed.emit()
-	if Game.fire and climb < 0.0:
+	var trigger_pressed := Game.fire and (weapon != "m1911" or not _fire_was_down)
+	_fire_was_down = Game.fire
+	if trigger_pressed and climb < 0.0:
 		idle_t = 0.0
 		_shoot(w)
 	else:
@@ -158,7 +161,7 @@ func _physics_process(delta: float) -> void:
 			_reload(w)  # geen herlaadknop: na even niet schieten vult hij zelf bij
 	if reload_t <= 0.0 and fire_t <= 0.0:
 		model.ensure_weapon_idle()
-	model.set_shoot_pose(Game.fire and reload_t <= 0.0, weapon, w.rate)
+	model.set_shoot_pose((Game.fire if weapon != "m1911" else trigger_pressed) and reload_t <= 0.0, weapon, w.rate)
 	_animate(mv, moving)
 
 

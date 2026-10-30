@@ -292,7 +292,12 @@ func wstat(id: String) -> Dictionary:
 	var u: Dictionary = owned[id].up if owned.has(id) else {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}
 	w.dmg *= 1.0 + 0.3 * u.dmg
 	w.rate *= pow(0.86, u.rate)
-	w.mag = roundi(w.mag * (1.0 + 0.3 * u.mag))
+	# The M1911 uses a physical seven-round magazine; its legacy mag upgrade
+	# must never turn it into a fictional 9/11-round magazine.
+	if id == "m1911":
+		w.mag = 7
+	else:
+		w.mag = roundi(w.mag * (1.0 + 0.3 * u.mag))
 	w.reload *= pow(0.82, u.rel)
 	return w
 

@@ -28,6 +28,8 @@ var _next := 0
 var _rain: AudioStreamPlayer
 var _jet: AudioStreamPlayer
 var fluit: AudioStreamWAV   # fluitende val van een bom (napalm): glijdende toon met wat ruis
+const M1911_REPORT: AudioStream = preload("res://assets/audio/m1911/m1911_report.wav")
+var _m1911_stream: AudioStream = M1911_REPORT
 
 
 func _ready() -> void:
@@ -47,6 +49,15 @@ func _ready() -> void:
 
 ## Speelt een effect. pos = waar het klinkt (zacht als het ver van de speler is); zonder pos klinkt het overal even hard.
 func play(name: String, vol := 1.0, pos = null) -> void:
+	if name == "m1911_real":
+		JungleGeluid.verstoor("pistol", vol)
+		var real_player := _players[_next]
+		_next = (_next + 1) % VOICES
+		real_player.stream = _m1911_stream
+		real_player.pitch_scale = randf_range(0.98, 1.02)
+		real_player.volume_db = linear_to_db(maxf(0.001, vol * MASTER))
+		real_player.play()
+		return
 	if not _streams.has(name):
 		return
 	JungleGeluid.verstoor(name, vol)

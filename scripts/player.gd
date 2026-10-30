@@ -36,6 +36,8 @@ var _reload_dur := 1.0      # hoe lang het lopende herladen duurt (de herlaadbew
 var _dust_t := 0.0
 var _shot_sequence := 0
 var _fire_was_down := false
+var m1911_mag_rounds := 0
+var m1911_chambered := false
 
 const STAIR_FOOT := 1.8      # de klimladder staat aan de +X zijde van de toren (zie bron/wachttoren)
 const STAIR_TOP := 1.3
@@ -61,6 +63,11 @@ func _ready() -> void:
 	weapon = Game.cur
 	model.set_gun(weapon)
 	ammo = Game.owned[weapon].ammo
+	if weapon == "m1911":
+		# Legacy integer saves represented total loaded rounds.
+		var legacy_total: int = clampi(ammo, 0, 8)
+		m1911_chambered = legacy_total > 0
+		m1911_mag_rounds = maxi(0, legacy_total - 1)
 	rotation.y = face
 	_mask0 = collision_mask
 	$Shape.shape = ($Shape.shape as CapsuleShape3D).duplicate()   # de scène deelt de capsule; houdingen passen hem per speler aan
@@ -147,7 +154,15 @@ func _physics_process(delta: float) -> void:
 	if reload_t > 0.0:
 		reload_t -= delta
 		if reload_t <= 0.0:
-			ammo = w.mag
+			if weapon == "m1911":
+				if m1911_chambered:
+					m1911_mag_rounds = 7
+				else:
+					m1911_chambered = true
+					m1911_mag_rounds = 6
+				ammo = m1911_mag_rounds + int(m1911_chambered)
+			else:
+				ammo = w.mag
 			model.gun_reset()
 			Game.changed.emit()
 	var trigger_pressed := Game.fire and (weapon != "m1911" or not _fire_was_down)
@@ -392,13 +407,32 @@ func _climb_step(delta: float) -> void:
 func _shoot(w: Dictionary) -> void:
 	if reload_t > 0.0 or fire_t > 0.0:
 		return
-	if ammo <= 0:
+	if weapon == "m1911":
+		if not m1911_chambered and m1911_mag_rounds > 0:
+			m1911_mag_rounds -= 1
+			m1911_chambered = true
+		if not m1911_chambered:
+			Sfx.play("click")
+			model.play_weapon_action("leeg")
+			return
+	else:
+		if ammo <= 0:
+			_reload(w)
+			return
+	if weapon != "m1911" and ammo <= 0:
 		_reload(w)
 		return
 	fire_t = w.rate
-	ammo -= 1
+	if weapon == "m1911":
+		m1911_chambered = false
+		if m1911_mag_rounds > 0:
+			m1911_mag_rounds -= 1
+			m1911_chambered = true
+		ammo = m1911_mag_rounds + int(m1911_chambered)
+	else:
+		ammo -= 1
 	_shot_sequence += 1
-	model.shoot_recoil(weapon, ammo <= 0)
+	model.shoot_recoil(weapon, ammo <= 0 and (weapon != "m1911" or m1911_mag_rounds <= 0))
 	var fwd := Vector3(sin(face), 0.0, cos(face))
 	var muzzle: Vector3 = model.muzzle_position()
 	var over := _hugging_wall(fwd)
@@ -429,7 +463,7 @@ func _shoot(w: Dictionary) -> void:
 		Fx.casing(get_parent(), model.casing_position(), axes[0], axes[1])
 	Sfx.play(Data.WEAPON_SND[weapon])
 	Game.changed.emit()
-	if ammo <= 0:
+	if ammo <= 0 and (weapon != "m1911" or not m1911_chambered):
 		_reload(w)
 
 
@@ -444,6 +478,10 @@ func equip(id: String) -> void:
 	model.set_gun(id)
 	model.play_weapon_action("wisselen")
 	ammo = Game.owned[id].ammo
+	if id == "m1911":
+		var total: int = clampi(ammo, 0, 8)
+		m1911_chambered = total > 0
+		m1911_mag_rounds = maxi(0, total - 1)
 	_shot_sequence = 0
 	reload_t = 0.0
 	fire_t = 0.3
@@ -451,7 +489,7 @@ func equip(id: String) -> void:
 
 
 func _reload(w: Dictionary) -> void:
-	if reload_t > 0.0 or ammo >= w.mag:
+	if reload_t > 0.0 or (weapon == "m1911" and m1911_chambered and m1911_mag_rounds >= 7) or (weapon != "m1911" and ammo >= w.mag):
 		return
 	reload_t = w.reload * Progress.bonus().reload
 	_reload_dur = maxf(reload_t, 0.1)

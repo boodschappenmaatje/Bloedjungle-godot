@@ -22,3 +22,19 @@ Mechanical sound verification: NOT VERIFIED; no licensed mechanical source was s
 - HUD reload affordance uses magazine count rather than total loaded rounds.
 - Temporary mechanical event hooks currently map to existing procedural click/reload sounds only; they are scaffolding, not licensed authentic recordings. Existing shared reload animation still lacks keyed event tracks, so timing is phase-based and approximate.
 - Validation after these changes: Godot editor import completed; Meshy integration test PASS. Full regressions from prior commit remain recorded above; reload interruption/state matrix tests have NOT yet been authored.
+
+## Remaining execution checklist (resume here)
+- [x] M1911-specific shot sample path and provenance.
+- [x] Strict semi-auto trigger edge and legacy ammo migration to physical runtime fields.
+- [x] Seven-round capacity cap and 7+1 HUD representation.
+- [x] Reload phase/event scaffolding with no magazine fill before mag-in; empty reload chambers one round.
+- [x] Standalone test-zone scene/script with live fire/reload/empty-lock controls, stance cycling, semi-auto hold assist toggle, real/procedural audio A/B, volume control, instantaneous FPS and rolling avg/1%-low/p99 frametime display.
+- [x] Source geometry inspection; keep current optimized GLB because the FBX is one dense, unrigged mesh.
+- [ ] Automated M1911 ammo-state/reload interruption/save-load matrix; current project has no general persistent run-save.
+- [ ] Actual sound event-to-animation key tracks and independently licensed mechanism recordings.
+- [ ] Separate mechanically accurate hammer, trigger and removable magazine meshes; source FBX has no part boundaries.
+- [ ] Prone reload IK correction (the test exposes large errors for the existing Prone_Reload pose).
+- [ ] Target range/test enemies and repeatable A/B visual captures in the test zone.
+- [ ] Native iPhone 18 Pro Max touch/performance/audio measurements; no device is attached to this environment.
+
+The new test zone is a Godot runnable scene at `scenes/m1911_test_zone.tscn`; it is not wired into the production menu. It launches the actual main scene and adds an opt-in test overlay. Godot headless scene-start check passed; an interactive visual/hardware run was not possible here.

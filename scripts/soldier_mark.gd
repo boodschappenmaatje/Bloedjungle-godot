@@ -1,10 +1,10 @@
 class_name SoldierMark
 extends Node3D
-## Leesbaarheid van soldaten: een ring op de grond (rood voor vijanden, groen voor bondgenoten; jij hebt sinds v152
-## geen ring en geen pijl meer), een zacht randlicht langs het lichaam en in Tactisch een groter model. Instelling "markeringen":
+## Leesbaarheid van soldaten: een subtiele ring op de grond, een richtingstreep voor de speler
+## en een zacht randlicht langs het lichaam. Instelling "markeringen":
 ## "on" = in beide camerastanden, "tact" = alleen in Tactisch, "off" = uit. Hangt als kind aan een SoldierModel.
 
-const MODEL_BOOST := 1.3   # Tactisch: het lichaam wat groter, botsing en raakvlak blijven gelijk
+const MODEL_BOOST := 1.0   # De camera zorgt voor leesbaarheid zonder onnatuurlijke modelschaal.
 const RING_SHADER := """
 shader_type spatial;
 render_mode unshaded, cull_disabled, depth_draw_never, shadows_disabled;
@@ -28,8 +28,8 @@ void fragment() {
 	ALBEDO = col.rgb * f * strength;
 }
 """
-const COLORS := {"vijand": Color("e0392b"), "vriend": Color("4fd36b")}
-const RIM_STRENGTH := {"speler": 0.5, "vijand": 0.3, "vriend": 0.3}
+const COLORS := {"speler": Color("d9b36a"), "vijand": Color("e34b37"), "vriend": Color("4fd36b")}
+const RIM_STRENGTH := {"speler": 0.62, "vijand": 0.38, "vriend": 0.34}
 
 static var _ring_shader: Shader
 static var _rim_shader: Shader
@@ -40,7 +40,8 @@ static var _tactical := false
 
 var kind := "vriend"
 var model: SoldierModel
-var _ring: MeshInstance3D   # null bij de speler: die heeft geen ring
+var _ring: MeshInstance3D
+var _direction: MeshInstance3D
 var _boost := 1.0
 
 
@@ -80,8 +81,9 @@ static func attach(m: SoldierModel) -> void:
 
 
 func _ready() -> void:
-	if kind != "speler":
-		_make_ring()
+	_make_ring()
+	if kind == "speler":
+		_make_direction()
 	# randlicht als tweede laag op elk lichaamsdeel
 	var rim := _rim(kind)
 	for mi: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
@@ -96,11 +98,11 @@ func _make_ring() -> void:
 		_ring_shader = Shader.new()
 		_ring_shader.code = RING_SHADER
 	var plane := PlaneMesh.new()
-	plane.size = Vector2.ONE * 0.6 * 2.0 / 0.9
+	plane.size = Vector2.ONE * (0.46 if kind == "speler" else 0.6) * 2.0 / 0.9
 	var mat := ShaderMaterial.new()
 	mat.shader = _ring_shader
 	mat.render_priority = 1
-	mat.set_shader_parameter("col", Color(COLORS[kind], 0.85))
+	mat.set_shader_parameter("col", Color(COLORS[kind], 0.52 if kind == "speler" else 0.85))
 	_ring = MeshInstance3D.new()
 	_ring.mesh = plane
 	_ring.material_override = mat
@@ -109,16 +111,35 @@ func _make_ring() -> void:
 	add_child(_ring)
 
 
+func _make_direction() -> void:
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(0.075, 0.01, 0.19)
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.albedo_color = Color(0.95, 0.72, 0.35, 0.62)
+	mesh.material = mat
+	_direction = MeshInstance3D.new()
+	_direction.mesh = mesh
+	_direction.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_direction.position = Vector3(0.0, 0.065, 0.55)
+	add_child(_direction)
+
+
 func _process(_d: float) -> void:
 	_refresh(get_tree())
 	var body := model.get_parent()
 	if body != null and body.get("dead") == true:
 		if _ring != null:
 			_ring.visible = false
+		if _direction != null:
+			_direction.visible = false
 		_set_boost(1.0)
 		return
 	if _ring != null:
 		_ring.visible = _active
+	if _direction != null:
+		_direction.visible = _active
 	_set_boost(MODEL_BOOST if _active and _tactical else 1.0)
 
 

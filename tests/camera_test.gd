@@ -50,7 +50,7 @@ func _run() -> void:
 	var strategic_angle := rad_to_deg(atan2(camera.global_transform.basis.z.y, Vector2(camera.global_transform.basis.z.x, camera.global_transform.basis.z.z).length()))
 	_check(absf(strategic_angle - 53.0) < 0.8, "strategische kijkhoek is %.2f° i.p.v. 53°" % strategic_angle)
 	camera.call("toggle_view")
-	await _settle_camera(camera)
+	await _settle_camera(camera, 150)  # inzoomen gaat bewust langzaam (0,85/s)
 	var combat_distance := camera.global_position.distance_to(camera.get("focus"))
 	_check(bool(camera.get("combat_view")), "gevechtsstand schakelt niet in")
 	_check(absf(combat_distance - 20.0) < 0.8, "gevechtscameraafstand is %.2f i.p.v. 20 m" % combat_distance)
@@ -99,6 +99,18 @@ func _run() -> void:
 	await _settle_camera(camera, 90)
 	_check(float(camera.get("_group_distance")) > 24.0, "teamcamera maakt geen ruimte voor tank en teamleden")
 	_check(int(camera.get("zoom_step")) == selected_zoom, "automatische camera overschrijft handmatige zoomstand")
+	# Lopen naast de tank: de speler mag op het scherm niet periodiek verspringen (groepsscan elke 0,4 s).
+	var jump := 0.0
+	var last_screen := camera.unproject_position(player.global_position)
+	for _i in 120:
+		player.global_position += Vector3(0.0, 0.0, 3.5 / 60.0)
+		camera.call("_process", 1.0 / 60.0)
+		await process_frame
+		var screen := camera.unproject_position(player.global_position)
+		jump = maxf(jump, screen.distance_to(last_screen) / screen_h * 720.0)  # omgerekend naar een 720p-scherm
+		last_screen = screen
+	_check(jump < 4.0, "teamcamera verspringt tijdens lopen (%.1f px op 720p in één frame)" % jump)
+	print("CAMERA TEST: grootste schermsprong speler per frame %.2f px op 720p" % jump)
 	camera.call("zoom", -6)
 	await _settle_camera(camera, 90)
 	_check(float(camera.get("_camera_distance")) < float(camera.get("_group_distance")) - 2.0, "bewuste pinch naar binnen wordt door de teamcamera genegeerd")

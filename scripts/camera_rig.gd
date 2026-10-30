@@ -18,7 +18,10 @@ var _editor_active := false
 var _combat_shake_time := 0.0
 var _combat_shake_strength := 0.0
 var _group_distance := 0.0
-var _group_focus := Vector3.ZERO
+var _group_shift := Vector3.ZERO  # groepsverschuiving t.o.v. de speler (beweegt mee tussen scans)
+var _group_offset := Vector3.ZERO  # zacht bijgestuurde versie van _group_shift
+var _group_weight := 0.0  # 0..1, glijdt in en uit i.p.v. per scan te verspringen
+var _look := Vector3.ZERO  # zacht gevolgd kijkpunt, zodat de camera nooit in één frame draait
 var _group_hold := 0.0
 var _group_scan := 0.0
 const GROUP_HOLD_SECONDS := 2.0
@@ -189,14 +192,21 @@ func _process(delta: float) -> void:
 	var lead_dist: float = (5.0 if combat_view else 6.0) if aiming else 0.7
 	var want: Vector3 = Vector3(sin(p.face), 0.0, cos(p.face)) * lead_dist
 	_lead = _lead.lerp(want, 1.0 - exp(-3.0 * delta))
-	var group_offset: Vector3 = (_group_focus - p.global_position) * clampf(_group_hold / GROUP_HOLD_SECONDS, 0.0, 1.0)
-	var target: Vector3 = p.global_position + _lead + group_offset
+	# De groepsuitsnede is een verschuiving t.o.v. de speler die zacht in- en uitglijdt. Een vast wereldpunt
+	# per scan liet de camera elke 0,4 s verspringen en tussendoor achter de lopende speler blijven hangen.
+	var group_f := 1.0 - exp(-2.5 * delta)
+	_group_weight = lerpf(_group_weight, 1.0 if _group_hold > 0.0 else 0.0, group_f)
+	_group_offset = _group_offset.lerp(_group_shift, group_f)
+	var target: Vector3 = p.global_position + _lead + _group_offset * _group_weight
 	# De speler staat iets onder het midden van het beeld: de camera kijkt een stukje voorbij hem
 	# De kijkhoek blijft 53°; de uitsnede houdt ruimte voor de schietrichting.
 	focus = target + Vector3(0.0, 0.0, -dist * (0.05 if portrait else 0.07))
 	var goal: Vector3 = focus + Vector3(0.0, h, back)
 	goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)
-	global_position = goal if _snap else global_position.lerp(goal, 1.0 - exp(-5.0 * delta))
+	var follow := 1.0 - exp(-5.0 * delta)
+	global_position = goal if _snap else global_position.lerp(goal, follow)
+	# Kijkpunt en positie volgen met dezelfde snelheid: de kijkhoek blijft gelijk en draait niet abrupt.
+	_look = focus if _snap else _look.lerp(focus, follow)
 	_snap = false
 	if _combat_shake_time > 0.0:
 		var envelope := clampf(_combat_shake_time / 0.13, 0.0, 1.0) * _combat_shake_strength
@@ -205,8 +215,8 @@ func _process(delta: float) -> void:
 		_combat_shake_time = maxf(0.0, _combat_shake_time - delta)
 		if _combat_shake_time == 0.0:
 			_combat_shake_strength = 0.0
-	_nlook = focus
-	look_at(focus, Vector3.UP)
+	_nlook = _look
+	look_at(_look, Vector3.UP)
 	# Alleen de zichtlijn naar de speler en naar de dichtstbijzijnde vijanden wordt uit de bladeren gehouden.
 	Foliage.update_visibility_focus(p.global_position, global_position, delta, true, _nearby_enemies(p))
 	Foliage.update_pushers(p, get_tree())
@@ -236,7 +246,7 @@ func _scan_group(p: Node3D) -> void:
 	for point in points:
 		radius = maxf(radius, point.distance_to(center))
 	radius = maxf(radius, p.global_position.distance_to(center))
-	_group_focus = p.global_position.lerp(center, 0.42)
+	_group_shift = (center - p.global_position) * 0.42
 	_group_distance = clampf(18.5 + radius * 0.85 + (1.5 if tank_near else 0.0), 23.0, 39.0)
 	_group_hold = GROUP_HOLD_SECONDS
 

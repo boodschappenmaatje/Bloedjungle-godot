@@ -5,7 +5,7 @@ extends Button
 
 const SIZE := Vector2(54, 54)
 const GAP := 62.0
-const ICON_ONLY := ["combined", "granaat", "herlaad", "sprint", "rol", "lucht", "lucht2"]
+const ICON_ONLY := ["combined", "granaat", "herlaad", "sprint", "rol", "lucht", "lucht2", "houding"]
 
 var kind := ""
 var caption := ""
@@ -14,6 +14,7 @@ var reward := ""   # luchtsteun-knop: id van de beloning die klaarstaat (Streak.
 var bar := -1.0  # 0..1 toont een smalle sterktebalk onder de knop, -1 verbergt hem
 var open_state := false
 var badge := ""  # klein getal rechtsboven, bijv. "×3"
+var stance := 0  # houding-knop: 0 staan, 1 hurken, 2 liggen (het pictogram wisselt mee)
 
 
 ## Afstand van de onderrand tot de bovenkant van de wapenbalk in landschap (balk is 64 hoog).
@@ -40,6 +41,7 @@ static func make(k: String, cap: String) -> ActionBtn:
 		"herlaad": "Actief wapen herladen",
 		"sprint": "Sprinten · balk toont uithoudingsvermogen",
 		"rol": "Ontwijkrol · afkoeling wordt rond de knop getoond",
+		"houding": "Houding · tik: staan, hurken, liggen · vasthouden: meteen liggen of opstaan",
 		"lucht2": "Andere luchtsteun · tik om deze te kiezen",
 		"lucht": "Luchtsteun · tik om te gebruiken, napalm: vasthouden en slepen om de strook te richten",
 	}.get(k, cap)
@@ -154,6 +156,27 @@ func _draw() -> void:
 			# gebogen pijl: een koprol
 			draw_arc(c, 11.0, PI * 0.15, PI * 1.75, 16, col, w)
 			draw_colored_polygon(PackedVector2Array([c + Vector2(-13, 2), c + Vector2(-5, 3), c + Vector2(-9, 11)]), col)
+		"houding":
+			# kleine soldaat in de huidige houding: staand, gehurkt of plat op de grond
+			match stance:
+				0:
+					draw_circle(c + Vector2(0, -12), 4.0, col)
+					draw_line(c + Vector2(0, -7), c + Vector2(0, 4), col, 3.4)
+					draw_line(c + Vector2(-7, -4), c + Vector2(7, -4), col, 2.6)
+					draw_line(c + Vector2(0, 4), c + Vector2(-5, 14), col, 3.0)
+					draw_line(c + Vector2(0, 4), c + Vector2(5, 14), col, 3.0)
+				1:
+					draw_circle(c + Vector2(2, -8), 4.0, col)
+					draw_line(c + Vector2(1, -3), c + Vector2(-3, 5), col, 3.4)
+					draw_line(c + Vector2(-3, 5), c + Vector2(4, 7), col, 3.0)
+					draw_line(c + Vector2(4, 7), c + Vector2(2, 14), col, 3.0)
+					draw_line(c + Vector2(-1, -1), c + Vector2(8, -2), col, 2.6)
+				_:
+					draw_circle(c + Vector2(-11, 4), 4.0, col)
+					draw_line(c + Vector2(-6, 6), c + Vector2(12, 6), col, 3.4)
+					draw_line(c + Vector2(-4, 3), c + Vector2(4, 0), col, 2.6)
+					draw_line(c + Vector2(-14, 12), c + Vector2(14, 12), col, 1.8)
+			draw_arc(size * 0.5, size.x * 0.5 - 2.0, 0, TAU, 28, Color(UI.BRASS, 0.9 if stance > 0 else 0.0), 2.4)
 		"lucht":
 			# HUD 3.0: één steunknop met een helikopter; het wiel (lang indrukken) kiest welke steun
 			draw_line(c + Vector2(-15, -10), c + Vector2(15, -10), col, 2.4)

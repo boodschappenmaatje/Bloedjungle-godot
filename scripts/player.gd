@@ -29,6 +29,7 @@ var dodge_t := 0.0          # > 0 terwijl hij rolt
 var dodge_cd := 0.0
 var dodge_dir := Vector2.ZERO
 var grenade_cd := 0.0
+var stance := 0             # 0 staan, 1 hurken, 2 liggen: alleen met de Meshy-speler (instelling Soldaat = meshy)
 var _stam_wait := 0.0
 var _exhausted := false     # leeg geraakt: pas weer sprinten als er wat bij is
 var _reload_dur := 1.0      # hoe lang het lopende herladen duurt (de herlaadbeweging past zich daaraan aan)
@@ -46,6 +47,9 @@ const DODGE_TIME := 0.42
 const DODGE_SPEED := 11.5
 const DODGE_COST := 0.28
 const DODGE_CD := 1.3
+const STANCE_SPEED := [1.0, 0.5, 0.25]   # loopsnelheid per houding
+const STANCE_HEIGHT := [2.15, 1.4, 0.7]  # capsulehoogte per houding: liggend vliegen kogels over je heen
+const STANCE_RADIUS := [0.45, 0.45, 0.35]
 const DODGE_SAFE := 0.32     # zo lang van de rol raken kogels hem niet
 
 
@@ -58,6 +62,7 @@ func _ready() -> void:
 	ammo = Game.owned[weapon].ammo
 	rotation.y = face
 	_mask0 = collision_mask
+	$Shape.shape = ($Shape.shape as CapsuleShape3D).duplicate()   # de scène deelt de capsule; houdingen passen hem per speler aan
 
 
 ## Kleur en hoofdband volgens de gekozen uitrusting; ook gebruikt als je in het menu iets anders kiest.
@@ -94,7 +99,7 @@ func _physics_process(delta: float) -> void:
 		_dodge_step(delta)
 		return
 	# sprint: alleen lopend, niet tijdens schieten en niet op een toren; kost uithoudingsvermogen
-	var want_sprint: bool = (sprint_on or Input.is_physical_key_pressed(KEY_SHIFT)) and mv.length() > 0.3 and not Game.fire and tower == null and not _exhausted
+	var want_sprint: bool = stance == 0 and (sprint_on or Input.is_physical_key_pressed(KEY_SHIFT)) and mv.length() > 0.3 and not Game.fire and tower == null and not _exhausted
 	sprinting = want_sprint and stamina > 0.0
 	if sprinting:
 		stamina = maxf(0.0, stamina - SPRINT_DRAIN * delta)
@@ -109,7 +114,7 @@ func _physics_process(delta: float) -> void:
 			stamina = minf(1.0, stamina + STAM_REGEN * delta)
 		if _exhausted and stamina > 0.3:
 			_exhausted = false
-	velocity = Vector3(mv.x, 0.0, mv.y) * Data.PLAYER_SPEED * spd_mul * (SPRINT_MUL if sprinting else 1.0)
+	velocity = Vector3(mv.x, 0.0, mv.y) * Data.PLAYER_SPEED * spd_mul * (SPRINT_MUL if sprinting else 1.0) * STANCE_SPEED[stance]
 	move_and_slide()
 	var flat := Vector2(position.x, position.z)
 	var clamped := Data.clamp_world(flat)
@@ -167,14 +172,66 @@ func request_reload() -> void:
 
 func toggle_sprint() -> void:
 	if _can_act():
+		if stance > 0:
+			set_stance(0)   # sprinten kan alleen staand: eerst opstaan (lukt niet onder een laag dak)
+			if stance > 0:
+				return
 		sprint_on = not sprint_on
 		Sfx.play("click")
+
+
+## Houdingknop: tik = staan > hurken > liggen > staan; lang indrukken = meteen liggen (of opstaan als je al laag zit).
+func cycle_stance(long_press := false) -> void:
+	if not _can_act() or not model.meshy_player or climb >= 0.0 or tower != null or dodge_t > 0.0:
+		return
+	var target := (stance + 1) % 3
+	if long_press:
+		target = 2 if stance == 0 else 0
+	set_stance(target)
+	Sfx.play("click")
+
+
+## Zet de houding. Opstaan lukt alleen als er boven je ruimte is; anders blijf je in de hoogste houding waar het wel past.
+func set_stance(target: int) -> void:
+	if not model.meshy_player:
+		return
+	target = clampi(target, 0, 2)
+	if target < stance:
+		while target < 2 and not _has_room(target):
+			target += 1
+		if target >= stance:
+			return
+	stance = target
+	model.set_stance(stance)
+	var shape := $Shape as CollisionShape3D
+	var cap := shape.shape as CapsuleShape3D
+	cap.height = STANCE_HEIGHT[stance]
+	cap.radius = STANCE_RADIUS[stance]
+	shape.position.y = STANCE_HEIGHT[stance] * 0.5
+	Game.changed.emit()
+
+
+## Past de capsule van deze houding hier zonder iets te raken (muur, dak, andere lichamen)?
+func _has_room(target: int) -> bool:
+	var cap := CapsuleShape3D.new()
+	cap.height = STANCE_HEIGHT[target]
+	cap.radius = STANCE_RADIUS[target] - 0.05
+	var q := PhysicsShapeQueryParameters3D.new()
+	q.shape = cap
+	q.transform = Transform3D(Basis.IDENTITY, global_position + Vector3(0.0, STANCE_HEIGHT[target] * 0.5 + 0.06, 0.0))
+	q.collision_mask = _mask0
+	q.exclude = [get_rid()]
+	return get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
 
 
 ## Een snelle koprol in de looprichting (zonder stick: een stap achteruit). Kort onkwetsbaar, daarna even wachten.
 func request_dodge() -> void:
 	if not _can_act() or climb >= 0.0 or tower != null or dodge_t > 0.0 or dodge_cd > 0.0 or stamina < DODGE_COST:
 		return
+	if stance > 0:
+		set_stance(0)
+		if stance > 0:
+			return
 	var mv := Game.move
 	dodge_dir = mv.normalized() if mv.length() > 0.2 else Vector2(-sin(face), -cos(face))
 	dodge_t = DODGE_TIME
@@ -424,6 +481,9 @@ var _back := false   # loopt achteruit (zie _animate)
 
 func _animate(mv: Vector2, moving: float) -> void:
 	var run_mul := SPRINT_MUL if sprinting else 1.0
+	if stance > 0 and model.meshy_player:
+		_animate_low(mv, moving)
+		return
 	if reload_t > 0.0 and moving < 0.15:
 		# de herlaadbeweging duurt precies zolang als het herladen van dit wapen
 		model.play("herladen", 0.12, maxf(0.5, model.clip_length("herladen")) / _reload_dur)
@@ -453,6 +513,24 @@ func _animate(mv: Vector2, moving: float) -> void:
 			model.play("lopen", 0.2, spd / 2.4)
 		if not sprinting:
 			model.set_leg_yaw(leg)
+
+
+## Hurkend of liggend: eigen clips voor stilstaan, lopen/kruipen en achteruit (de Meshy-clips, zie bron/meshy_speler_animaties).
+func _animate_low(mv: Vector2, moving: float) -> void:
+	var low := stance == 2
+	if reload_t > 0.0 and moving < 0.15:
+		model.play("liggen_stil" if low else "hurken_stil", 0.15)   # herladen zonder eigen clip: de greep-IK beweegt de linkerhand
+		return
+	if moving < 0.15:
+		model.play("liggen_stil" if low else "hurken_stil", 0.25)
+		return
+	var rel := angle_difference(face, atan2(mv.x, mv.y))
+	_back = absf(rel) > (1.31 if _back else 1.83)
+	var spd: float = moving * Data.PLAYER_SPEED * STANCE_SPEED[stance]
+	if low:
+		model.play("kruipen", 0.2, (1.0 if _back else -1.0) * clampf(spd / 0.9, 0.5, 2.0))   # vooruit = de achteruit-kruipclip omgekeerd
+	else:
+		model.play("hurken_achteruit" if _back else "hurken_lopen", 0.2, clampf(spd / 1.4, 0.5, 1.8))
 
 
 func hit(dmg: float, dir: Vector3, from_player: bool, heavy := false) -> void:

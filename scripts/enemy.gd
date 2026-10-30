@@ -105,7 +105,10 @@ func _process(_delta: float) -> void:
 		return
 	var player: Node3D = Game.player
 	var distance := player.global_position.distance_to(global_position) if player != null and is_instance_valid(player) else INF
-	_range_marker.visible = not dead and distance >= 11.0 and distance <= 38.0 and not _far
+	var marker_mode := GameSettings.get_value("markeringen")
+	var cam := get_viewport().get_camera_3d()
+	var markers_on := marker_mode == "on" or (marker_mode == "tact" and cam != null and not bool(cam.get("combat_view")))
+	_range_marker.visible = markers_on and not dead and distance >= 11.0 and distance <= 38.0 and not _far
 	if _range_marker.visible:
 		_health_fill.scale.x = clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0)
 

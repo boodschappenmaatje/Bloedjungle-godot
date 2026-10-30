@@ -567,7 +567,7 @@ func _layout() -> void:
 	_radar.custom_minimum_size = _radar_size()
 	_radar.size = _radar.custom_minimum_size
 	_status_panel.position = Vector2(safe.x, safe.y)
-	_status_panel.size = Vector2(minf(size.x * 0.42, 232.0), 52.0)
+	_status_panel.size = Vector2(minf(size.x * 0.42, 190.0), 48.0)
 	_top_right.reset_size()
 	_camera_controls.position = Vector2(safe.x, safe.y + _status_panel.size.y + 7.0)
 	# killstreak-teller: liggend rechts naast de balken, staand eronder (daar staan de TACTISCH-knoppen niet)

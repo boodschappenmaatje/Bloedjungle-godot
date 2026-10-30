@@ -173,7 +173,8 @@ func _process(delta: float) -> void:
 	_group_hold = maxf(0.0, _group_hold - delta)
 	var base_distance := 20.0 if combat_view else 22.5
 	var wanted_distance: float = clampf(base_distance + float(zoom_step) * 2.5, 11.0, 39.0)
-	if _group_hold > 0.0:
+	# Een bewuste pinch naar binnen krijgt voorrang op de automatische groepsuitsnede.
+	if _group_hold > 0.0 and zoom_step >= 0:
 		wanted_distance = maxf(wanted_distance, _group_distance)
 	# Snel ruimte maken wanneer een voertuig opduikt, langzaam terug naar de speler.
 	var zoom_speed := 2.2 if wanted_distance > _camera_distance else 0.85
@@ -236,7 +237,7 @@ func _scan_group(p: Node3D) -> void:
 		radius = maxf(radius, point.distance_to(center))
 	radius = maxf(radius, p.global_position.distance_to(center))
 	_group_focus = p.global_position.lerp(center, 0.42)
-	_group_distance = clampf(20.5 + radius * 1.08 + (2.5 if tank_near else 0.0), 23.0, 39.0)
+	_group_distance = clampf(18.5 + radius * 0.85 + (1.5 if tank_near else 0.0), 23.0, 39.0)
 	_group_hold = GROUP_HOLD_SECONDS
 
 

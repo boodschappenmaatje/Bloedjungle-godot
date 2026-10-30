@@ -24,6 +24,18 @@
  },
  "errors": [],
  "bazooka": "geen clips, Play uitgeschakeld",
- "stats": "Garand: 264 driehoeken · 5 meshes · 4 materialen · geen texturen (vlakke PBR-waarden, kleine prop). Geen iPhone-FPS gemeten.",
+ "m1911": {
+  "clips": [
+   "M1911_herladen",
+   "M1911_leeg",
+   "M1911_rust",
+   "M1911_schot",
+   "M1911_wisselen"
+  ],
+  "slide_travel_m": 0.0337,
+  "empty_lockback_m": 0.0339,
+  "compare": "original M1911 / Meshy M1911"
+ },
+ "stats": "M1911 Meshy: 29.003 driehoeken · 2 meshes · 1 materialen · Meshy-PBR, drie 1K-textures. Geen iPhone-FPS gemeten.",
  "ok": true
 }

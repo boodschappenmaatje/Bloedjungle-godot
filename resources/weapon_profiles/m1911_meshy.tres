@@ -1,17 +1,17 @@
 [gd_resource type="Resource" load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/weapon_model_profile.gd" id="1"]
-[ext_resource type="PackedScene" path="res://assets/wapens.glb" id="2"]
+[ext_resource type="PackedScene" path="res://assets/meshy_m1911.glb" id="2"]
 
 [resource]
 script = ExtResource("1")
 model_node = &"M1911"
 model_scene = ExtResource("2")
 mount_position = Vector3(-0.05, 1.36, 0.36)
-mount_rotation = Vector3(0, 3.141593, 0)
-left_hand_grip = Vector3(-0.02, -0.01, -0.07)
-muzzle_local = Vector3(0, 0.03, -0.21)
-casing_local = Vector3(0.03, 0.03, -0.05)
-magazine_local = Vector3(0, -0.1, 0.0)
-sight_local = Vector3(0, 0.05, -0.15)
-ejection_local = Vector3(0.03, 0.03, -0.05)
+mount_rotation = Vector3(0, 1.570796, 0)
+left_hand_grip = Vector3(-0.055, -0.025, -0.015)
+muzzle_local = Vector3(-0.17, 0.0, 0.0)
+casing_local = Vector3(-0.09, 0.012, 0.0)
+magazine_local = Vector3(0.015, -0.015, 0.0)
+sight_local = Vector3(-0.10, 0.025, 0.0)
+ejection_local = Vector3(-0.09, 0.012, 0.0)

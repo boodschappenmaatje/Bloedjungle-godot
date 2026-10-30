@@ -20,3 +20,20 @@ sluiting 4,5 cm, pomp 7 cm, greep 3 cm). In het spel maakt `SoldierModel._gun_pl
 Tests: `tests/wapen_clips_test.gd` (afstand en terugkeer per wapen), `tests/combat_visuals_test.gd` (pomp), viewertest `tools/blender-vq2-viewer/test-wapens.mjs`;
 demo `tests/wapen_clips_foto.gd` (beeld: `docs/vq2/renders/wapens-bewegende-delen.png`, rijen M1911, M1911 leeg, Thompson, Garand, Trench, MG42; kolommen boven rust/piek, rechts rust/piek).
 Viewer: Model "Wapens" in `tools/blender-vq2-viewer`. Geen fysieke iPhone/Xogot-meting gedaan.
+
+## Meshy M1911A1-player asset
+
+The original Meshy download is preserved as `assets/meshy_weapon.glb`; the
+existing `assets/wapens.glb` and its source are unchanged. Run
+`blender --background --threads 4 --python bron/wapens/maak_meshy_m1911.py`
+to reproduce `assets/meshy_m1911.glb` and the editable
+`bron/wapens/uit/meshy_m1911.blend`. The script separates the upper slide from
+the frame, keeps the 219 mm overall scale, reduces the game model to about
+29,000 triangles and embeds three 1K maps. Its clips are `M1911_schot`,
+`M1911_leeg`, `M1911_herladen`, `M1911_wisselen` and `M1911_rust`.
+
+Only the opt-in Meshy player profile `resources/weapon_profiles/m1911_meshy.tres`
+selects this replacement. The classic player, NPCs, and the original weapon GLB
+continue to use `assets/wapens.glb`. The M1911 integration and viewer comparison
+tests are `tests/meshy_player_integration_test.gd` and
+`tools/blender-vq2-viewer/test-wapens.mjs`.

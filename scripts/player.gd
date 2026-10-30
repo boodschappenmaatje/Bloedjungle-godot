@@ -156,6 +156,8 @@ func _physics_process(delta: float) -> void:
 		idle_t += delta
 		if idle_t > 1.4 and ammo < w.mag:
 			_reload(w)  # geen herlaadknop: na even niet schieten vult hij zelf bij
+	if reload_t <= 0.0 and fire_t <= 0.0:
+		model.ensure_weapon_idle()
 	model.set_shoot_pose(Game.fire and reload_t <= 0.0, weapon, w.rate)
 	_animate(mv, moving)
 
@@ -437,6 +439,7 @@ func equip(id: String) -> void:
 	weapon = id
 	Game.cur = id
 	model.set_gun(id)
+	model.play_weapon_action("wisselen")
 	ammo = Game.owned[id].ammo
 	_shot_sequence = 0
 	reload_t = 0.0
@@ -449,6 +452,7 @@ func _reload(w: Dictionary) -> void:
 		return
 	reload_t = w.reload * Progress.bonus().reload
 	_reload_dur = maxf(reload_t, 0.1)
+	model.play_weapon_action("herladen")
 	Sfx.play("reload")
 	Game.changed.emit()
 

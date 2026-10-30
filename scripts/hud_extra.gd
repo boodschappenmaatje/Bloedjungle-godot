@@ -27,8 +27,6 @@ var _menu_button: Button
 var _fps: Label
 var _camera_controls: Control
 var _camera_button: Button
-var _zoom_in_button: Button
-var _zoom_out_button: Button
 var _radar: Control
 var _streak: StreakHud
 var _radar_refresh := 0.0
@@ -39,10 +37,6 @@ const RADAR_POST_SIGHT := 26.0  # m rond torens, soldaten en gebouwen
 const RADAR_BASE_MARGIN := 8.0  # m buiten de muur die de basis overziet
 const RADAR_MEMORY := 2.5  # s
 var _seen := {}  # instance-id -> laatste keer gezien (s)
-var _pinch_points := {} # only touches that start outside sticks, buttons, and modal team targeting
-var _pinch_distance := 0.0
-var _pinch_accum := 0.0
-const PINCH_STEP := 24.0
 
 
 class MenuGlyph:
@@ -81,83 +75,7 @@ func _ready() -> void:
 	_fps.position = Vector2(12, 84)
 	add_child(_fps)
 	resized.connect(_layout)
-	get_viewport().size_changed.connect(_cancel_pinch)
 	_layout()
-
-
-func _cancel_pinch() -> void:
-	_pinch_points.clear()
-	_pinch_distance = 0.0
-	_pinch_accum = 0.0
-
-
-func _notification(what: int) -> void:
-	if what in [NOTIFICATION_APPLICATION_FOCUS_OUT, NOTIFICATION_WM_WINDOW_FOCUS_OUT, NOTIFICATION_APPLICATION_PAUSED]:
-		_cancel_pinch()
-
-
-func _input(event: InputEvent) -> void:
-	if not UI.is_touch_platform() or Game.state not in ["play", "prep"] or Game.build_mode or get_tree().paused:
-		_cancel_pinch()
-		return
-	var team := get_tree().get_first_node_in_group("team_commands")
-	if team != null and team.is_modal():
-		_cancel_pinch()
-		return
-	if event is InputEventScreenTouch:
-		if event.pressed:
-			if _is_touch_control(event.position):
-				return
-			_pinch_points[event.index] = event.position
-			if _pinch_points.size() > 2:
-				_cancel_pinch()
-				return
-			if _pinch_points.size() == 2:
-				_pinch_distance = _two_touch_distance()
-				_pinch_accum = 0.0
-		else:
-			_pinch_points.erase(event.index)
-			if _pinch_points.size() < 2:
-				_pinch_distance = 0.0
-				_pinch_accum = 0.0
-	elif event is InputEventScreenDrag and _pinch_points.has(event.index):
-		if _is_touch_control(event.position):
-			_cancel_pinch()
-			return
-		_pinch_points[event.index] = event.position
-		if _pinch_points.size() == 2:
-			var distance := _two_touch_distance()
-			_pinch_accum += distance - _pinch_distance
-			_pinch_distance = distance
-			while absf(_pinch_accum) >= PINCH_STEP:
-				var camera := get_viewport().get_camera_3d()
-				if camera != null and camera.has_method("zoom"):
-					camera.call("zoom", -1 if _pinch_accum > 0.0 else 1)
-				_pinch_accum -= signf(_pinch_accum) * PINCH_STEP
-
-
-func _two_touch_distance() -> float:
-	var keys: Array = _pinch_points.keys()
-	if keys.size() != 2:
-		return 0.0
-	var first: Vector2 = _pinch_points[keys[0]]
-	var second: Vector2 = _pinch_points[keys[1]]
-	return first.distance_to(second)
-
-
-func _is_touch_control(position: Vector2) -> bool:
-	if _radar != null and _radar.is_visible_in_tree() and _radar.get_global_rect().has_point(position):
-		return true
-	var sticks := get_tree().get_first_node_in_group("touch_sticks")
-	if sticks != null:
-		for aim in [false, true]:
-			var anchor: Vector2 = sticks.call("_anchor", aim)
-			if position.distance_to(anchor) <= 76.0:
-				return true
-	for item in get_tree().get_nodes_in_group("hud_button"):
-		if item is Control and item.is_visible_in_tree() and item.get_global_rect().has_point(position):
-			return true
-	return false
 
 
 func _shadowed(l: Label) -> Label:
@@ -284,22 +202,11 @@ func _build_camera_controls() -> void:
 	_camera_button = _camera_button_new("TACTISCH", Vector2(104, 30))
 	_camera_button.pressed.connect(_toggle_camera)
 	_camera_controls.add_child(_camera_button)
-	_zoom_out_button = _camera_button_new("−", Vector2(34, 30))
-	_zoom_out_button.position.x = 108.0
-	_zoom_out_button.pressed.connect(_zoom_camera.bind(1))
-	_camera_controls.add_child(_zoom_out_button)
-	_zoom_in_button = _camera_button_new("+", Vector2(34, 30))
-	_zoom_in_button.position.x = 146.0
-	_zoom_in_button.pressed.connect(_zoom_camera.bind(-1))
-	_camera_controls.add_child(_zoom_in_button)
-	if UI.is_touch_platform():
-		_zoom_in_button.hide()
-		_zoom_out_button.hide()
 
 
 func _camera_button_new(text_: String, button_size: Vector2) -> Button:
 	var b := Button.new()
-	b.name = {"TACTISCH": "CameraViewButton", "−": "CameraZoomOutButton", "+": "CameraZoomInButton"}.get(text_, "CameraButton")
+	b.name = "CameraViewButton"
 	b.text = text_
 	b.size = button_size
 	b.add_to_group("hud_button")
@@ -316,12 +223,6 @@ func _toggle_camera() -> void:
 		_update_camera_controls()
 
 
-func _zoom_camera(direction: int) -> void:
-	var cam := get_viewport().get_camera_3d()
-	if cam != null and cam.has_method("zoom"):
-		cam.call("zoom", direction)
-
-
 func _update_camera_controls() -> void:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
@@ -329,11 +230,6 @@ func _update_camera_controls() -> void:
 	var combat: bool = bool(cam.get("combat_view"))
 	_camera_button.text = "GEVECHT" if combat else "TACTISCH"
 	_camera_button.tooltip_text = "Schakel tussen tactische en gevechtscamera"
-	_zoom_in_button.tooltip_text = "Camera dichterbij"
-	_zoom_out_button.tooltip_text = "Camera verder weg"
-	var step: int = int(cam.get("zoom_step"))
-	_zoom_out_button.disabled = step >= 4
-	_zoom_in_button.disabled = step <= -3
 
 
 func _build_radar() -> void:

@@ -1,10 +1,12 @@
 class_name NapalmPlace
 extends Control
-## Napalm plaatsen met tikken en bevestigen: na het kiezen blijft de strook staan. Tik op het veld waar hij moet komen, sleep vanaf die plek
-## om de vliegrichting te draaien, en druk daarna op START (of op de kruisknop om te annuleren). Er gaat niets af voor je bevestigt.
+## Napalm plaatsen. Op aanraking: de rechterstick plaatst de strook (richting van de stick = plek en vliegrichting, hoe verder duwen hoe verder weg),
+## loslaten bevestigt en zet de aanval in gang; terug naar het midden en dan loslaten, of de kruisknop, annuleert.
+## Op een computer: tik op het veld waar hij moet komen, sleep om te draaien, START bevestigt.
 
 const REACH_MIN := 6.0
-const REACH_MAX := 42.0     # m van de speler: verder dan het gewone slepen (30 m), want je tikt nu rechtstreeks
+const REACH_MAX := 20.0     # m van de speler: zo ver past nog op het scherm (de camera kijkt schuin vooruit)
+const STICK_DEAD := 0.18
 const TURN_MIN := 22.0      # px slepen voor de richting verandert
 const BTN_GO := Vector2(190, 52)
 const BTN_X := Vector2(52, 52)
@@ -16,6 +18,8 @@ var _finger := -2           # vinger die het veld vasthoudt (-1 = muis)
 var _press := Vector2.ZERO
 var _turned := false
 var _hint_t := 0.0
+var _stick_on := false      # de rechterstick is vastgehouden en stuurt de strook
+var _stick_last := Vector2.ZERO
 
 
 ## target/dir: de strook zoals hij na het richten stond; hij verschijnt direct en kan nog worden verzet.
@@ -36,11 +40,13 @@ func _ready() -> void:
 	if p != null and is_instance_valid(p):
 		_vis = NapalmAim.new()
 		p.get_parent().add_child(_vis)
+	Streak.armed = true
 	_update()
 	Sfx.play("click")
 
 
 func _exit_tree() -> void:
+	Streak.armed = false
 	if _vis != null and is_instance_valid(_vis):
 		_vis.queue_free()
 	_vis = null
@@ -65,10 +71,50 @@ func _process(delta: float) -> void:
 		queue_free()
 		return
 	_hint_t += delta
+	if UI.is_touch_platform():
+		_stick_step()
 	queue_redraw()
 
 
+## Rechterstick: positie en richting van de strook. Loslaten na het richten bevestigt, loslaten in het midden annuleert.
+func _stick_step() -> void:
+	var d := TouchSticks.aim_d
+	var l := d.length()
+	if l > STICK_DEAD:
+		_stick_on = true
+		_stick_last = d
+		dir = Vector3(d.x, 0.0, d.y).normalized()   # schermrichting = wereldrichting, net als bij de granaat
+		var k := clampf((l - STICK_DEAD) / (1.0 - STICK_DEAD), 0.0, 1.0)
+		var p = Game.player
+		center = p.global_position + dir * lerpf(REACH_MIN, REACH_MAX, k)
+		center.y = 0.0
+		_update()
+	elif _stick_on:
+		if _held():
+			_stick_last = Vector2.ZERO   # duim terug in het midden: loslaten annuleert nu
+		else:
+			_stick_on = false
+			if _stick_last.length() > STICK_DEAD + 0.05:
+				_confirm()
+			else:
+				_cancel()
+
+
+## Is er nog een vinger op de rechterstick? (aim_d is nul als hij loslaat, ook als de duim in het midden staat)
+func _held() -> bool:
+	for s in get_tree().get_nodes_in_group("touch_sticks"):
+		for st in s._sticks.values():
+			if st.aim:
+				return true
+	return false
+
+
 func _input(event: InputEvent) -> void:
+	if UI.is_touch_platform():
+		if event is InputEventScreenTouch and event.pressed and _x_rect().has_point(event.position):
+			_cancel()
+			get_viewport().set_input_as_handled()
+		return
 	var pos := Vector2.ZERO
 	var pointer := -2
 	var kind := ""
@@ -154,20 +200,22 @@ func _cancel() -> void:
 
 func _draw() -> void:
 	var f: Font = UI.body(700)
-	var go := _go_rect()
 	var x := _x_rect()
 	var warn := _vis != null and is_instance_valid(_vis) and _vis.self_in_strip
 	var col := Color(1.0, 0.5, 0.1) if warn else UI.BRASS
-	draw_rect(go, Color(0.08, 0.06, 0.03, 0.88))
-	draw_rect(go, col, false, 2.0)
-	var t := "START NAPALM"
-	var tw := f.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
-	draw_string(f, go.position + Vector2((go.size.x - tw) * 0.5, go.size.y * 0.5 + 7.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, col)
+	var touch := UI.is_touch_platform()
+	if not touch:
+		var go := _go_rect()
+		draw_rect(go, Color(0.08, 0.06, 0.03, 0.88))
+		draw_rect(go, col, false, 2.0)
+		var t := "START NAPALM"
+		var tw := f.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 20).x
+		draw_string(f, go.position + Vector2((go.size.x - tw) * 0.5, go.size.y * 0.5 + 7.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 20, col)
 	draw_rect(x, Color(0.08, 0.06, 0.03, 0.88))
 	draw_rect(x, UI.BRASS, false, 2.0)
 	var c := x.get_center()
 	draw_line(c + Vector2(-9, -9), c + Vector2(9, 9), UI.BRASS, 3.0)
 	draw_line(c + Vector2(-9, 9), c + Vector2(9, -9), UI.BRASS, 3.0)
-	var hint := "Je staat zelf in de strook!" if warn else "Tik waar het moet · sleep om te draaien"
+	var hint := "Je staat zelf in de strook!" if warn else ("Rechterstick: plaats · loslaten = NAPALM" if touch else "Tik waar het moet · sleep om te draaien")
 	var hw := f.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
-	draw_string(f, Vector2(size.x * 0.5 - hw * 0.5 + 40.0, go.position.y - 12.0), hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, col)
+	draw_string(f, Vector2(size.x * 0.5 - hw * 0.5 + 40.0, _go_rect().position.y - 12.0), hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, col)

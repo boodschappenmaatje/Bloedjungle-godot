@@ -1,8 +1,9 @@
 extends CharacterBody3D
-## Eigen tank, gekocht bij de garage. Kom je dichtbij, dan verschijnt INSTAPPEN: linker stick = rijden en draaien, rechter stick = koepel richten, tot de rand duwen = schieten. Hij rijdt de lijst `goals` af (uit de garage naar zijn plek) en blijft
-## dan staan; de koepel draait naar de dichtstbijzijnde vijand. Model: assets/tank.glb (gemaakt in Blender), voorkant is -Z,
-## met de delen Toren (draait om Y) en Loop (kantelt om X). De animaties uit Blender (Stationair,
-## Rijden, Achteruit, Draaien, Schieten) laten wielen, rupsschakels en de vering bewegen.
+## Eigen tank (Tiger I), gekocht bij de garage. Kom je dichtbij, dan verschijnt INSTAPPEN: linker stick = rijden en draaien, rechter stick = koepel richten, tot de rand duwen = schieten. Hij rijdt de lijst `goals` af (uit de garage naar zijn plek) en blijft
+## dan staan; de koepel draait naar de dichtstbijzijnde vijand. Model: assets/tank.glb (Tiger uit Meshy, opgeschoond in Blender,
+## bron/tiger), voorkant is -Z, met de delen Toren (draait om Y), Loop (kantelt om X) en Monding (waar de granaat uit komt).
+## De animaties uit Blender (Stationair, Rijden, Achteruit, Draaien, Schieten) laten de wielen draaien en de romp op de vering
+## deinen, de loop schiet terug. De rupsbanden (RupsL, RupsR) lopen via de textuur-offset, per kant, zodat bochten kloppen.
 
 const SPEED := 3.2         # m/s rijden
 const TURN := 0.7          # rad/s draaien op de plek
@@ -41,13 +42,29 @@ var _mark_t := 0.0
 var _speed := 0.0
 var _btn: ActionBtn
 var _ram_cd := 0.0
+const TRACK_HALF := 1.5     # m, halve afstand tussen de rupsen (voor de snelheid per kant in een bocht)
+const TRACK_LEN := 13.27    # m, lengte van de rupsbaan (textuur loopt er één keer overheen)
+const CLIP_TURN := 2.2      # m/s rupssnelheid in de clip Draaien bij snelheid 1
+var _rups: Array[StandardMaterial3D] = []
+var _prev_yaw := 0.0
+var _prev_pos := Vector3.ZERO
+var _turn_scale := 1.0      # draaisnelheid voor de clip Draaien, met teken (negatief = rechtsom)
 @onready var _toren: Node3D = $Model/Tank/Body/Toren
 @onready var _loop: Node3D = $Model/Tank/Body/Toren/Loop
+@onready var _muzzle: Node3D = $Model/Tank/Body/Toren/Loop/Monding
 @onready var _anim: AnimationPlayer = $Model/AnimationPlayer
 
 
 func _ready() -> void:
 	add_to_group("voertuigen")   # brandkranen spuiten als je erover rijdt
+	_prev_yaw = rotation.y
+	_prev_pos = global_position
+	for naam in ["RupsL", "RupsR"]:   # elke kant krijgt een eigen materiaal, zodat hij in een bocht anders loopt
+		var mi := $Model/Tank/Body.get_node_or_null(naam) as MeshInstance3D
+		if mi and mi.mesh and mi.mesh.surface_get_material(0) is StandardMaterial3D:
+			var m := (mi.mesh.surface_get_material(0) as StandardMaterial3D).duplicate() as StandardMaterial3D
+			mi.set_surface_override_material(0, m)
+			_rups.append(m)
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 	var layer := CanvasLayer.new()
 	layer.layer = 5
@@ -92,7 +109,22 @@ func _toggle() -> void:
 	_btn.queue_redraw()
 
 
+## Rupsbanden laten lopen naar wat de tank het afgelopen beeld echt deed (vooruit en draaien), per kant.
+func _update_tracks(delta: float) -> void:
+	if delta <= 0.0:
+		return
+	var yaw := wrapf(rotation.y - _prev_yaw, -PI, PI) / delta       # + = naar links
+	var fwd := (global_position - _prev_pos).dot(-global_transform.basis.z) / delta
+	_prev_yaw = rotation.y
+	_prev_pos = global_position
+	_turn_scale = clampf(yaw * TRACK_HALF / CLIP_TURN, -2.5, 2.5)
+	if _rups.size() == 2:
+		_rups[0].uv1_offset.x = fposmod(_rups[0].uv1_offset.x + (fwd - yaw * TRACK_HALF) * delta / TRACK_LEN, 1.0)
+		_rups[1].uv1_offset.x = fposmod(_rups[1].uv1_offset.x + (fwd + yaw * TRACK_HALF) * delta / TRACK_LEN, 1.0)
+
+
 func _physics_process(delta: float) -> void:
+	_update_tracks(delta)
 	_ram_cd -= delta
 	var pl = Game.player
 	var live: bool = Game.state == "play" or Game.state == "prep"
@@ -104,7 +136,7 @@ func _physics_process(delta: float) -> void:
 	if driven:
 		var rot0 := rotation.y
 		_drive_driven(delta, live)
-		var hit := Foliage.hull_tree(self, Vector2(1.95, 3.5))
+		var hit := Foliage.hull_tree(self, Vector2(1.95, 3.3))
 		if not hit.is_empty():   # draaiend tegen een boom aan: botsen (terugdraaien), dan valt hij
 			rotation.y = rot0
 			_speed *= 0.5
@@ -127,7 +159,7 @@ func _physics_process(delta: float) -> void:
 	elif _turning:
 		rotation.y += clampf(diff, -TURN * delta, TURN * delta)
 		_turning = absf(diff) > 0.02
-		_play("Draaien", 1.0)
+		_play("Draaien", _turn_scale if absf(_turn_scale) > 0.2 else signf(diff) * 0.5)
 	else:
 		rotation.y += clampf(diff, -TURN * delta, TURN * delta)
 		global_position += to.normalized() * minf(SPEED * delta, to.length())
@@ -167,7 +199,7 @@ func _aim(delta: float) -> void:
 
 ## Schiet een granaat: vuur uit de loop, een halve seconde later ontploft hij waar de vijand stond.
 func _shoot(at: Vector3) -> void:
-	var tip := _loop.global_position - _loop.global_transform.basis.z * 3.4
+	var tip := _muzzle.global_position
 	Fx.muzzle(get_parent(), tip)
 	Fx.dust(get_parent(), tip)
 	var boom := at
@@ -215,7 +247,7 @@ func _drive_driven(delta: float, live: bool) -> void:
 	if absf(_speed) > 0.3:
 		_play("Rijden" if _speed > 0.0 else "Achteruit", absf(_speed) / ANIM_SPEED)
 	elif turning:
-		_play("Draaien", 1.0)
+		_play("Draaien", _turn_scale if absf(_turn_scale) > 0.2 else 1.0)
 	else:
 		_play("Stationair", 1.0)
 	var p = Game.player
@@ -386,7 +418,7 @@ func _update_sight(delta: float) -> void:
 	var fwd := -_loop.global_transform.basis.z
 	fwd.y = 0.0
 	fwd = fwd.normalized()
-	var tip := _loop.global_position - _loop.global_transform.basis.z * 3.4
+	var tip := _muzzle.global_position
 	var target: Vector3 = _aim_point()
 	var out := fwd
 	if not _lock.is_empty():

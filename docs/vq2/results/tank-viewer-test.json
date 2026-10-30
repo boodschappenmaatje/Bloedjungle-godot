@@ -1,0 +1,63 @@
+{
+ "stats": {
+  "v2": "Tank: V1 7.544 driehoeken · 141 meshes · 8 materialen · texturen 256×256. Tiger 26.829 driehoeken · 25 meshes · 2 materialen · texturen 2048×2048, 4096×512. Geen iPhone-FPS gemeten.",
+  "v1": "Tank: V1 7.544 driehoeken · 141 meshes · 8 materialen · texturen 256×256. Tiger 26.829 driehoeken · 25 meshes · 2 materialen · texturen 2048×2048, 4096×512. Geen iPhone-FPS gemeten.",
+  "split": "Tank: V1 7.544 driehoeken · 141 meshes · 8 materialen · texturen 256×256. Tiger 26.829 driehoeken · 25 meshes · 2 materialen · texturen 2048×2048, 4096×512. Geen iPhone-FPS gemeten."
+ },
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "errors": [],
+ "clips": [
+  "Stationair-loop",
+  "Rijden-loop",
+  "Achteruit-loop",
+  "Draaien-loop",
+  "Schieten"
+ ],
+ "rupsen": {
+  "rijden": [
+   {
+    "wiel": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rl": 0,
+    "rr": 0
+   },
+   {
+    "wiel": [
+     -0.47999082159445633,
+     0,
+     0,
+     0.8772735170802255
+    ],
+    "rl": 0.03122351168054799,
+    "rr": 0.03122351168054799
+   }
+  ],
+  "draaien": [
+   {
+    "wiel": [
+     0,
+     0,
+     0,
+     1
+    ],
+    "rl": 0.03122351168054799,
+    "rr": 0.03122351168054799
+   },
+   {
+    "wiel": [
+     0.31473095065208523,
+     0,
+     0,
+     0.9491809343211248
+    ],
+    "rl": 0.011511379050493762,
+    "rr": 0.050935644310602206
+   }
+  ]
+ },
+ "ok": true
+}

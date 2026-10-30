@@ -287,8 +287,10 @@ static func scatter(parent: Node3D, mesh: Mesh, mat: Material, xforms: Array, co
 
 
 ## De echte props uit assets/props.glb (bron/props/maak_props.py): Zandzak1-3, Kist_Hout, Kist_Munitie.
+## "Munitiekist" is de Meshy-kist uit assets/munitiekist_meshy.glb (bron/munitiekist_meshy/, 70 x 57 x 43 cm, onderkant op y = 0).
 static var _props := {}
 const BAGS := ["Zandzak1", "Zandzak2", "Zandzak3"]
+const MUNITIEKIST := "Munitiekist"
 
 
 static func prop_mesh(name: String) -> Mesh:
@@ -297,6 +299,10 @@ static func prop_mesh(name: String) -> Mesh:
 		for mi in root.find_children("*", "MeshInstance3D", true, false):
 			_props[String(mi.name)] = (mi as MeshInstance3D).mesh
 		root.free()
+	if name == MUNITIEKIST and not _props.has(name):
+		var kist := (load("res://assets/munitiekist_meshy.glb") as PackedScene).instantiate()
+		_props[name] = (kist.find_child(MUNITIEKIST, true, false) as MeshInstance3D).mesh
+		kist.free()
 	return _props[name]
 
 

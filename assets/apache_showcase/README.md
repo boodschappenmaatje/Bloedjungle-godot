@@ -17,3 +17,6 @@ The Meshy master is a single merged mesh. `build_showcase.py` adds separate roto
 The generated master is photorealistically textured in the Meshy preview. The USDZ/iPhone Quick Look export is not included because the available Blender 4.3 runtime has no USD exporter enabled. The GLB can be downloaded/opened in 3D apps that support glTF, but iPhone Files Quick Look requires USDZ.
 
 The isolated Godot trial scene autoplays `Grond`; keys 1–5 select `Grond`, `Opstijgen`, `Zweven`, `Vliegen`, and `Bocht`.
+
+- `Apache_Showcase_iPhone.usdz`: static USDZ package for iPhone Files / Quick Look. It preserves the textured model and rotor geometry; the animated clips remain in the GLB.
+- `build_usdz.py`: creates and validates the USDZ package from the mobile GLB (requires Python packages `usd-core` and `pygltflib`).

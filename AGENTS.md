@@ -23,3 +23,8 @@ Voor het maken, aanpassen, verbeteren, exporteren of animeren van 3D-modellen, e
 - Eén bron van waarheid: **wijzig de canonieke standaard**, niet enkel dit korte Codex-bestand. Dezelfde regels gelden voor Claude Code via `CLAUDE.md`.
 
 Voor andere, niet-3D-gerelateerde taken blijven de normale projectinstructies gelden.
+
+## Primaire game-testomgeving (vaste gebruikersafspraak, 30 oktober 2026)
+- **Test Bloedjungle primair op de native iPhone-app via de bestaande OTA-updateprocedure.** De gebruiker geeft expliciete toestemming per gewenste merge/publicatie; merge of OTA nooit stilzwijgend voor andere wijzigingen.
+- **Xogot haalt op de iPhone te lage FPS** en is daarom geen betrouwbare maatstaf voor native prestaties. Gebruik Xogot hooguit voor snelle import-/editorproeven en noem Xogot-FPS nooit gelijk aan native-app-FPS.
+- Voor beeldsnelheid, touchgedrag, camera en grote gevechten is de **native iPhone-app** de doorslaggevende acceptatietest. Meld "NIET GETEST" wanneer geen echte native meting beschikbaar is. Indien expliciet om OTA-test wordt gevraagd: controleer de bestaande `.github/workflows/ota.yml`, publiceer alleen na toestemming en verifieer de release-workflow.

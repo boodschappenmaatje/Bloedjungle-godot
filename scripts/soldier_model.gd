@@ -22,13 +22,19 @@ const MESHY_ALIASES := {
 	"dood2": "Shot_and_Fall_Forward", "explosie_dood": "Shot_and_Blown_Back", "rollen": "Roll_Dodge",
 	"klimmen": "Fast_Ladder_Climb", "zitten": "Chair_Sit_Idle_M", "steken": "Attack", "brand_val": "falling_down",
 	"brand_rennen": "Stumble_Walk",
+	"hurken_lopen": "Cautious_Crouch_Walk_Forward", "hurken_achteruit": "Cautious_Crouch_Walk_Backward", "kruipen": "Crawl_Backward",
 }
+## Houdingen (hurken, liggen): de stilstaande pose is één echt frame uit een Meshy-clip (voeten bij elkaar), geen verzonnen beweging.
+## kruipen = Crawl_Backward; vooruit kruipen speelt die clip achterstevoren (negatief tempo).
+const MESHY_POSE_CLIPS := {"hurken_stil": ["Cautious_Crouch_Walk_Forward", 1.1], "liggen_stil": ["Prone_Reload", 5.44]}
+## Verschuiving van het geweer-ankerpunt (in bot-meters, vóór de modelschaal) per houding: verschil in positie van Spine2 t.o.v. staan.
+const STANCE_MOUNT := [Vector3.ZERO, Vector3(-0.09, -0.26, 0.26), Vector3(0.03, -0.97, 0.335)]
 ## Geweer op de rug (in de ruimte van bot Spine2): loop omhoog, kolf onder de heup. Afstellen met tests/meshy_player_actions_foto.tscn.
 const MESHY_STOW_BONE := "mixamorig_Spine2"
 const MESHY_STOW_OFFSET := Transform3D(Basis(Vector3.BACK, deg_to_rad(-32.0)) * Basis(Vector3.RIGHT, PI / 2.0), Vector3(0.04, -0.28, -0.2))
 ## Alleen in deze clips houdt de Meshy-speler het geweer vast (IK aan, wapen in de handen); in de andere (rollen, vallen,
 ## klimmen, zitten, mes) hangt het wapen op de rug.
-const MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten"]
+const MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten", "hurken_stil", "hurken_lopen", "hurken_achteruit", "liggen_stil", "kruipen"]
 const MESHY_GARAND_PROFILE = preload("res://resources/weapon_profiles/garand_meshy.tres")
 const MESHY_WEAPON_ADAPTER_SCRIPT := preload("res://scripts/weapon_model_adapter.gd")
 const LOOKS := {
@@ -76,6 +82,8 @@ var _mesh_skeleton: Skeleton3D
 var _mesh_right_ik: SkeletonIK3D
 var _mesh_left_ik: SkeletonIK3D
 var _mesh_armed := true
+var stance := 0            # 0 staan, 1 hurken, 2 liggen (alleen de Meshy-speler)
+var _stance_off := Vector3.ZERO
 var _mesh_right_target: Marker3D
 var _mesh_weapon_adapter: Variant
 var _mesh_action_player: AnimationPlayer
@@ -252,6 +260,8 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 			lib.add_animation(api_clip, MESHY_API_LIBRARY.get_animation(api_clip))
 	for alias in MESHY_ALIASES:
 		_alias_meshy_clip(lib, alias, MESHY_ALIASES[alias])
+	for pose_name in MESHY_POSE_CLIPS:
+		_add_meshy_pose_clip(lib, pose_name, MESHY_POSE_CLIPS[pose_name][0], MESHY_POSE_CLIPS[pose_name][1])
 	_alias_meshy_clip(lib, "stil", "Idle")
 	_alias_meshy_clip(lib, "lopen", "Walking")
 	_alias_meshy_clip(lib, "rennen", "Running")
@@ -440,6 +450,29 @@ func _alias_meshy_clip(lib: AnimationLibrary, alias: String, source: String) -> 
 	if lib.has_animation(alias) or not lib.has_animation(source):
 		return
 	lib.add_animation(alias, lib.get_animation(source))
+
+
+## Eén frame (op tijd t) uit een bestaande clip als stilstaande, lussende pose.
+func _add_meshy_pose_clip(lib: AnimationLibrary, pose_name: String, source: String, t: float) -> void:
+	if lib.has_animation(pose_name) or not lib.has_animation(source):
+		return
+	var src := lib.get_animation(source)
+	var pose := Animation.new()
+	pose.resource_name = pose_name
+	pose.length = 1.0
+	pose.loop_mode = Animation.LOOP_LINEAR
+	for i in src.get_track_count():
+		var kind := src.track_get_type(i)
+		if kind != Animation.TYPE_ROTATION_3D and kind != Animation.TYPE_POSITION_3D:
+			continue
+		var tr := pose.add_track(kind)
+		pose.track_set_path(tr, src.track_get_path(i))
+		for key_time in [0.0, 1.0]:
+			if kind == Animation.TYPE_ROTATION_3D:
+				pose.rotation_track_insert_key(tr, key_time, src.rotation_track_interpolate(i, t))
+			else:
+				pose.position_track_insert_key(tr, key_time, src.position_track_interpolate(i, t))
+	lib.add_animation(pose_name, pose)
 
 
 func _add_meshy_idle(lib: AnimationLibrary, skel: Skeleton3D) -> void:
@@ -930,9 +963,10 @@ func _set_meshy_armed(armed: bool) -> void:
 	else:
 		_mesh_right_ik.stop()
 		_mesh_left_ik.stop()
-	if armed and _mesh_weapon_adapter != null and _mesh_weapon_adapter.profile != null:
-		_mesh_weapon_adapter.position = _mesh_weapon_adapter.profile.mount_position
-		_mesh_weapon_adapter.rotation = _mesh_weapon_adapter.profile.mount_rotation
+
+
+func set_stance(value: int) -> void:
+	stance = clampi(value, 0, 2)
 
 
 ## Wapen op de rug: volgt elk frame het rugbot, zodat het meebeweegt met rollen, vallen, klimmen en zitten.
@@ -962,7 +996,11 @@ func _process(delta: float) -> void:
 	if _mesh_weapon_adapter != null and _mesh_skeleton != null and not _mesh_armed:
 		_stow_meshy_weapon()
 	elif _mesh_weapon_adapter != null and _mesh_weapon_adapter.profile != null:
-		_mesh_weapon_adapter.position = _mesh_weapon_adapter.profile.mount_position + Vector3(0.0, 0.0, -_recoil * 0.06)
+		# het geweer en de rechterhand-greep zakken mee met de houding (hurken, liggen) zodat de armen-IK ze kan bereiken
+		_stance_off = _stance_off.lerp(STANCE_MOUNT[stance] * scale.y, minf(1.0, delta * 9.0))
+		if _mesh_right_target != null:
+			_mesh_right_target.position = _mesh_weapon_adapter.profile.mount_position + _stance_off
+		_mesh_weapon_adapter.position = _mesh_weapon_adapter.profile.mount_position + _stance_off + Vector3(0.0, 0.0, -_recoil * 0.06)
 		_mesh_weapon_adapter.rotation = _mesh_weapon_adapter.profile.mount_rotation + Vector3(-_recoil * 0.2, 0.0, 0.0)
 	elif _recoil > 0.0 and _weapon_mount:
 		_weapon_mount.position = Vector3(0.0, 0.0, -_recoil * 0.06)

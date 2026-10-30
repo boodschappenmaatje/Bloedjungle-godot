@@ -7,6 +7,8 @@ var _reload: ActionBtn
 var _sprint: ActionBtn
 var _grenade: ActionBtn
 var _roll: ActionBtn
+var _stance: ActionBtn        # houding: staan, hurken, liggen (alleen de Meshy-speler)
+var _stance_down_ms := 0
 var _air2: ActionBtn         # kiezer: de andere beloning die klaarstaat (tik om te wisselen)
 var _air: ActionBtn          # luchtsteun (killstreak): staat naast GEBRUIK en verschijnt alleen als er een beloning klaarstaat
 var _state := ""
@@ -52,6 +54,8 @@ func _ready() -> void:
 	_sprint = _make("sprint", "SPRINT", func(): _player_call("toggle_sprint"))
 	_grenade = _make("granaat", "GEBRUIK", func(): pass) # release chooses tap-use or a long-press wheel
 	_roll = _make("rol", "ROL", func(): _player_call("request_dodge"))
+	_stance = _make("houding", "HOUDING", func(): _stance_down_ms = Time.get_ticks_msec())
+	_stance.button_up.connect(func(): _player_call_args("cycle_stance", [Time.get_ticks_msec() - _stance_down_ms >= 420]))   # tik: doorschakelen, lang: plat/opstaan
 	_air2 = _make("lucht2", "WISSEL", func():
 		Game.streak_sel = String(_air2.reward)
 		Sfx.play("click")
@@ -91,6 +95,12 @@ func _make(kind: String, caption: String, action: Callable) -> ActionBtn:
 	b.button_down.connect(action)  # reageert meteen bij aanraking, niet pas bij loslaten
 	add_child(b)
 	return b
+
+
+func _player_call_args(method: String, args: Array) -> void:
+	var p = Game.player
+	if p != null and is_instance_valid(p):
+		p.callv(method, args)
 
 
 func _player_call(method: String) -> void:
@@ -389,7 +399,7 @@ func _draw() -> void:
 		return
 	# zolang een wiel open is, verdwijnen de knoppen eronder: geen door elkaar lopende pictogrammen
 	var open := _wheel_kind != ""
-	for b in [_reload, _sprint, _grenade, _roll, _air, _air2]:
+	for b in [_reload, _sprint, _grenade, _roll, _air, _air2, _stance]:
 		b.modulate.a = 0.0 if open else 1.0
 	_wheel_ui.queue_redraw()
 
@@ -610,8 +620,9 @@ func _layout() -> void:
 	_grenade.position = Vector2(x0, y0)
 	_reload.position = Vector2(x1, y0)
 	_air2.position = Vector2(x1, y0 - g)   # rechts van de luchtsteun-knop
+	_stance.position = Vector2(x1, y0 - g)   # de plek van de (verborgen) wisselknop: boven HERLAAD
 	_air.position = Vector2(x0, y0 - g)   # boven GEBRUIK: links ervan staat de wapenstrip, erboven de uitrustingskiezer
-	for b in [_reload, _sprint, _grenade, _roll, _air, _air2]:
+	for b in [_reload, _sprint, _grenade, _roll, _air, _air2, _stance]:
 		b.size = ActionBtn.SIZE
 
 
@@ -651,6 +662,10 @@ func _process(_delta: float) -> void:
 	var others: Array = Game.streak_others()
 	_air2.visible = _air.visible and not others.is_empty() and air_finger == -2
 	_air2.visible = false # support switching is handled by the support wheel
+	_stance.visible = p.model.meshy_player
+	if _stance.stance != p.stance:
+		_stance.stance = p.stance
+		_stance.queue_redraw()
 	if _air2.visible:
 		_air2.reward = others[0]
 		_air2.set_caption(String(Streak.reward(others[0]).kort))

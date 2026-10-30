@@ -49,6 +49,8 @@ var _return := "pause"
 var _mute_btn: Button
 var _note: Label
 var _segs := {}
+var _camera_pitch_slider: HSlider
+var _camera_pitch_label: Label
 var _scores_box: VBoxContainer
 var _gear_body: VBoxContainer
 var _gear_stats: Label
@@ -164,6 +166,10 @@ func _input(event: InputEvent) -> void:
 		kind = "move"
 	if kind == "down":
 		_drag_sc = null
+		# Een veeg over de hoekschuifregelaar moet de slider, niet het menu, bedienen.
+		if _camera_pitch_slider != null and _camera_pitch_slider.is_visible_in_tree() and _camera_pitch_slider.get_global_rect().has_point(pos):
+			_drag_id = -2
+			return
 		for name in _pcs:
 			var pc: PanelContainer = _pcs[name]
 			if not pc.is_visible_in_tree():
@@ -397,18 +403,80 @@ func _build_settings() -> void:
 			_segs[key].append(b)
 		row.add_child(frame)
 		v.add_child(row)
+	_build_camera_pitch_controls(v)
 	_note = _wrap("", 14, UI.INK_DIM, 440.0)
 	v.add_child(_note)
 	v.add_child(_button("KLAAR", "primary", func(): _show(_return)))
 	_refresh()
 
 
+
+## Instelbare schuine camera: 35° = meer zijkant, 75° = meer bovenaanzicht.
+## De gekozen hoek wordt lokaal opgeslagen; zoom en de groepscamera blijven onafhankelijk.
+func _build_camera_pitch_controls(v: VBoxContainer) -> void:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", UI.box(Color(0.02, 0.03, 0.02, 0.80), UI.PANEL_LINE, 1, 7, 10))
+	v.add_child(panel)
+	var group := VBoxContainer.new()
+	group.add_theme_constant_override("separation", 8)
+	panel.add_child(group)
+	var heading := HBoxContainer.new()
+	group.add_child(heading)
+	var title := UI.label("CAMERAHOEK · TESTEN", UI.body(700, 1), 14, UI.INK)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	heading.add_child(title)
+	_camera_pitch_label = UI.label("53°", UI.body(700, 1), 19, UI.BRASS)
+	_camera_pitch_label.name = "CameraPitchValue"
+	heading.add_child(_camera_pitch_label)
+	_camera_pitch_slider = HSlider.new()
+	_camera_pitch_slider.name = "CameraPitchSlider"
+	_camera_pitch_slider.min_value = 35.0
+	_camera_pitch_slider.max_value = 75.0
+	_camera_pitch_slider.step = 1.0
+	_camera_pitch_slider.custom_minimum_size = Vector2(180.0, 42.0)
+	_camera_pitch_slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_camera_pitch_slider.value_changed.connect(_on_camera_pitch_changed)
+	group.add_child(_camera_pitch_slider)
+	group.add_child(_wrap("35° = schuiner (meer zijkant)     75° = steiler (meer bovenaanzicht).", 12, UI.INK_DIM))
+	var presets := HBoxContainer.new()
+	presets.add_theme_constant_override("separation", 8)
+	group.add_child(presets)
+	for degrees in [40, 53, 65]:
+		var preset := _button("%d°" % degrees + (" · standaard" if degrees == 53 else ""), "seg", func():
+			_camera_pitch_slider.value = float(degrees))
+		preset.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		presets.add_child(preset)
+	group.add_child(_wrap("Vergelijk de hoek in hetzelfde spel. 53° is de vorige Bloedjungle-stand; geen officieel bevestigde Dead Nation-hoek.", 12, UI.INK_DIM))
+	group.add_child(_button("TEST MET DEZE CAMERAHOEK", "secondary", _preview_camera_pitch))
+
+
+func _on_camera_pitch_changed(value: float) -> void:
+	var degrees := clampi(roundi(value), 35, 75)
+	_camera_pitch_label.text = "%d°" % degrees
+	if GameSettings.get_value("camera_pitch") != str(degrees):
+		GameSettings.set_value("camera_pitch", str(degrees))
+
+
+func _preview_camera_pitch() -> void:
+	if _return == "pause":
+		set_paused(false)
+	elif _return == "menu":
+		_start_game()
+	else:
+		_show(_return)
+
+
 func _open_settings(from: String) -> void:
 	_return = from
+	_refresh()
 	_show("settings")
 
 
 func _refresh() -> void:
+	if _camera_pitch_slider != null:
+		var pitch := clampf(float(GameSettings.get_value("camera_pitch")), 35.0, 75.0)
+		_camera_pitch_slider.set_value_no_signal(pitch)
+		_camera_pitch_label.text = "%d°" % roundi(pitch)
 	for key in _segs:
 		for b in _segs[key]:
 			UI.seg_state(b, GameSettings.get_value(key) == b.get_meta("v"))

@@ -33,6 +33,9 @@ var stance := 0             # 0 staan, 1 hurken, 2 liggen: alleen met de Meshy-s
 var _stam_wait := 0.0
 var _exhausted := false     # leeg geraakt: pas weer sprinten als er wat bij is
 var _reload_dur := 1.0      # hoe lang het lopende herladen duurt (de herlaadbeweging past zich daaraan aan)
+var _reload_elapsed := 0.0
+var _reload_phase := 0
+var _reload_was_empty := false
 var _dust_t := 0.0
 var _shot_sequence := 0
 var _fire_was_down := false
@@ -158,17 +161,22 @@ func _physics_process(delta: float) -> void:
 	fire_t -= delta
 	if reload_t > 0.0:
 		reload_t -= delta
+		_reload_elapsed += delta
+		if weapon == "m1911":
+			_update_m1911_reload_events()
 		if reload_t <= 0.0:
 			if weapon == "m1911":
-				if m1911_chambered:
-					m1911_mag_rounds = 7
-				else:
+				if _reload_phase < 2:
+					_update_m1911_reload_events(true)
+				if _reload_was_empty and not m1911_chambered:
 					m1911_chambered = true
-					m1911_mag_rounds = 6
-				ammo = m1911_mag_rounds + int(m1911_chambered)
+					m1911_mag_rounds = maxi(0, m1911_mag_rounds - 1)
+					if _reload_phase < 3:
+						_m1911_mechanical_event("slide_release")
 				_sync_m1911_ammo()
 			else:
 				ammo = w.mag
+			_reload_phase = 0
 			model.gun_reset()
 			Game.changed.emit()
 	var trigger_pressed := Game.fire and (weapon != "m1911" or not _fire_was_down)
@@ -178,7 +186,7 @@ func _physics_process(delta: float) -> void:
 		_shoot(w)
 	else:
 		idle_t += delta
-		if idle_t > 1.4 and ammo < w.mag:
+		if idle_t > 1.4 and can_reload():
 			_reload(w)  # geen herlaadknop: na even niet schieten vult hij zelf bij
 	if reload_t <= 0.0 and fire_t <= 0.0:
 		model.ensure_weapon_idle()
@@ -418,7 +426,7 @@ func _shoot(w: Dictionary) -> void:
 			m1911_mag_rounds -= 1
 			m1911_chambered = true
 		if not m1911_chambered:
-			Sfx.play("click")
+			_m1911_mechanical_event("dry_fire")
 			model.play_weapon_action("leeg")
 			return
 	else:
@@ -507,9 +515,40 @@ func _reload(w: Dictionary) -> void:
 		return
 	reload_t = w.reload * Progress.bonus().reload
 	_reload_dur = maxf(reload_t, 0.1)
+	_reload_elapsed = 0.0
+	if weapon == "m1911":
+		_reload_phase = 0
+		_reload_was_empty = not m1911_chambered
+	else:
+		_reload_phase = 0
 	model.play_weapon_action("herladen")
-	Sfx.play("reload")
+	if weapon == "m1911":
+		_m1911_mechanical_event("reload_start")
+	else:
+		Sfx.play("reload")
 	Game.changed.emit()
+
+
+func _update_m1911_reload_events(force_mag_in := false) -> void:
+	var progress := _reload_elapsed / maxf(_reload_dur, 0.01)
+	if _reload_phase < 1 and progress >= 0.28:
+		_reload_phase = 1
+		_m1911_mechanical_event("mag_out")
+	if _reload_phase < 2 and (progress >= 0.68 or force_mag_in):
+		_reload_phase = 2
+		m1911_mag_rounds = 7
+		_sync_m1911_ammo()
+		_m1911_mechanical_event("mag_in")
+	if _reload_was_empty and _reload_phase < 3 and progress >= 0.92:
+		_reload_phase = 3
+		_m1911_mechanical_event("slide_release")
+
+
+func _m1911_mechanical_event(event_name: String) -> void:
+	# Temporary event tones use the existing procedural library. They are explicitly
+	# not presented as independently recorded or historically verified sounds.
+	var sounds := {"reload_start": "reload", "mag_out": "click", "mag_in": "reload", "slide_release": "click", "dry_fire": "click"}
+	Sfx.play(sounds.get(event_name, "click"), 0.55)
 
 
 func _sync_m1911_ammo() -> void:

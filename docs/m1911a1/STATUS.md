@@ -16,3 +16,9 @@ Mechanical sound verification: NOT VERIFIED; no licensed mechanical source was s
 - M1911 state stores `mag_rounds` and `chambered` in existing `Game.owned.m1911`, mirroring legacy `ammo`. Older records migrate loaded total (clamped 0–8) once; weapon switching restores physical fields. The project has no serialized run-save for `Game.owned`, so app/session persistence is not claimed.
 - HUD displays `magazine+chamber | 7`; reload affordance checks physical magazine state.
 - Blender 4.3.2 inspection: supplied FBX contains one 580,054-vertex mesh named `Mesh_0`, no armature, and no separate slide/hammer/trigger/magazine objects. Current GLB has `M1911` (14,972 vertices) and separately animated `M1911_Slede` (10,189 vertices), plus an 8-vertex helper. GLB is the practical optimized/animated foundation. FBX safe part-splitting and player-rig mapping requires dedicated modeling and visual review; no guessed geometry was added.
+
+## Reload transaction work
+- Reload now has explicit elapsed phases for `mag_out` (28%), `mag_in` (68%), and empty-slede `slide_release` (92%). A magazine is committed at mag-in; interruption before that event does not create rounds. Empty reload chambers one from the new seven-round magazine at completion (6+1); tactical reload preserves an existing chamber round and yields 7+1.
+- HUD reload affordance uses magazine count rather than total loaded rounds.
+- Temporary mechanical event hooks currently map to existing procedural click/reload sounds only; they are scaffolding, not licensed authentic recordings. Existing shared reload animation still lacks keyed event tracks, so timing is phase-based and approximate.
+- Validation after these changes: Godot editor import completed; Meshy integration test PASS. Full regressions from prior commit remain recorded above; reload interruption/state matrix tests have NOT yet been authored.

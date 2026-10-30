@@ -23,8 +23,11 @@ const MESHY_ALIASES := {
 	"klimmen": "Fast_Ladder_Climb", "zitten": "Chair_Sit_Idle_M", "steken": "Attack", "brand_val": "falling_down",
 	"brand_rennen": "Stumble_Walk",
 }
-## Alleen in deze clips houdt de Meshy-speler het geweer vast (IK aan, wapen zichtbaar); in de andere (rollen, vallen,
-## klimmen, zitten, mes) zou het wapen los van het lichaam blijven hangen.
+## Geweer op de rug (in de ruimte van bot Spine2): loop omhoog, kolf onder de heup. Afstellen met tests/meshy_player_actions_foto.tscn.
+const MESHY_STOW_BONE := "mixamorig_Spine2"
+const MESHY_STOW_OFFSET := Transform3D(Basis(Vector3.BACK, deg_to_rad(-32.0)) * Basis(Vector3.RIGHT, PI / 2.0), Vector3(0.04, -0.28, -0.2))
+## Alleen in deze clips houdt de Meshy-speler het geweer vast (IK aan, wapen in de handen); in de andere (rollen, vallen,
+## klimmen, zitten, mes) hangt het wapen op de rug.
 const MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten"]
 const MESHY_GARAND_PROFILE = preload("res://resources/weapon_profiles/garand_meshy.tres")
 const MESHY_WEAPON_ADAPTER_SCRIPT := preload("res://scripts/weapon_model_adapter.gd")
@@ -927,8 +930,17 @@ func _set_meshy_armed(armed: bool) -> void:
 	else:
 		_mesh_right_ik.stop()
 		_mesh_left_ik.stop()
-	if _mesh_weapon_adapter != null:
-		_mesh_weapon_adapter.visible = armed
+	if armed and _mesh_weapon_adapter != null and _mesh_weapon_adapter.profile != null:
+		_mesh_weapon_adapter.position = _mesh_weapon_adapter.profile.mount_position
+		_mesh_weapon_adapter.rotation = _mesh_weapon_adapter.profile.mount_rotation
+
+
+## Wapen op de rug: volgt elk frame het rugbot, zodat het meebeweegt met rollen, vallen, klimmen en zitten.
+func _stow_meshy_weapon() -> void:
+	var idx := _mesh_skeleton.find_bone(MESHY_STOW_BONE)
+	if idx < 0:
+		return
+	_mesh_weapon_adapter.global_transform = _mesh_skeleton.global_transform * _mesh_skeleton.get_bone_global_pose(idx) * MESHY_STOW_OFFSET
 
 
 ## Lengte van een animatie in seconden (0 als hij niet bestaat); handig om een clip precies op een duur te laten passen.
@@ -947,7 +959,9 @@ func _process(delta: float) -> void:
 		pose.recoil = _recoil
 	if _recoil > 0.0:
 		_recoil = maxf(0.0, _recoil - delta * 5.5)
-	if _mesh_weapon_adapter != null and _mesh_weapon_adapter.profile != null:
+	if _mesh_weapon_adapter != null and _mesh_skeleton != null and not _mesh_armed:
+		_stow_meshy_weapon()
+	elif _mesh_weapon_adapter != null and _mesh_weapon_adapter.profile != null:
 		_mesh_weapon_adapter.position = _mesh_weapon_adapter.profile.mount_position + Vector3(0.0, 0.0, -_recoil * 0.06)
 		_mesh_weapon_adapter.rotation = _mesh_weapon_adapter.profile.mount_rotation + Vector3(-_recoil * 0.2, 0.0, 0.0)
 	elif _recoil > 0.0 and _weapon_mount:

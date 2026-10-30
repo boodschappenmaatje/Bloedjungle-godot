@@ -261,10 +261,13 @@ func _run() -> void:
 		await get_tree().process_frame
 		_check(model.current == alias and model.anim.current_animation == alias, "play(%s) startte de clip niet (huidig: %s)" % [alias, model.anim.current_animation])
 		_check(model._mesh_animation_tree.active == false, "AnimationTree bleef actief bij " + alias)
-		_check(model._mesh_weapon_adapter.visible == (alias == "achteruit"), "wapen-zichtbaarheid klopt niet tijdens " + alias)
+		var spine_pos: Vector3 = model._mesh_skeleton.global_transform * model._mesh_skeleton.get_bone_global_pose(model._mesh_skeleton.find_bone("mixamorig_Spine2")).origin
+		var gun_to_spine: float = model._mesh_weapon_adapter.global_position.distance_to(spine_pos)
+		_check(model._mesh_armed == (alias == "achteruit"), "wapen in verkeerde stand tijdens " + alias)
+		_check(alias == "achteruit" or gun_to_spine < 0.8, "wapen hangt niet op de rug tijdens %s (afstand tot rug %.2f m)" % [alias, gun_to_spine])
 	model.play("lopen", 0.05, 1.7)
 	await get_tree().process_frame
-	_check(is_equal_approx(model.anim.speed_scale, 1.7) and model._mesh_weapon_adapter.visible, "lopen: tempo of wapen niet hersteld")
+	_check(is_equal_approx(model.anim.speed_scale, 1.7) and model._mesh_armed, "lopen: tempo of wapen niet hersteld")
 	model.play("lopen", 0.05, -1.0)
 	await get_tree().process_frame
 	_check(model.anim.current_animation == "achteruit" and model.anim.speed_scale > 0.0, "achteruit lopen gebruikt de achterwaartse clip niet")

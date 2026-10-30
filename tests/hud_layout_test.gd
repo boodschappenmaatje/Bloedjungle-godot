@@ -94,7 +94,7 @@ func _run() -> void:
 				_check(false, "%s: fps-teller overlapt %s" % [s, _label(b)])
 		# de puntentelling (rechtsboven) mag niet achter de radar of de pauzeknop verdwijnen
 		var extra := main.get_node("Hud/HudExtra")
-		_check(not extra._zoom_in_button.visible and not extra._zoom_out_button.visible, "%s: losse camera-zoomknoppen blijven zichtbaar op touch" % s)
+		_check(extra.find_child("CameraZoomInButton", true, false) == null and extra.find_child("CameraZoomOutButton", true, false) == null, "%s: handmatige camera-zoomknoppen bestaan nog" % s)
 		_check(extra._camera_button.visible, "%s: camerawisseling is niet bereikbaar op touch" % s)
 		var pts_rect: Rect2 = (extra._top_right as Control).get_global_rect()
 		_check(Rect2(Vector2.ZERO, view).encloses(pts_rect), "%s: puntentelling buiten beeld (%s)" % [s, pts_rect])

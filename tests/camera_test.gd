@@ -48,14 +48,28 @@ func _run() -> void:
 	var player_y := camera.unproject_position(player.global_position + Vector3.UP).y
 	_check(player_y > screen_h * 0.5 and player_y < screen_h * 0.7, "speler staat niet iets onder het schermmidden (y=%.0f van %.0f)" % [player_y, screen_h])
 	var strategic_angle := rad_to_deg(atan2(camera.global_transform.basis.z.y, Vector2(camera.global_transform.basis.z.x, camera.global_transform.basis.z.z).length()))
-	_check(absf(strategic_angle - 53.0) < 0.8, "strategische kijkhoek is %.2f° i.p.v. 53°" % strategic_angle)
+	var saved_pitch := GameSettings.get_value("camera_pitch")
+	var expected_pitch := clampf(float(saved_pitch), 35.0, 75.0)
+	_check(absf(strategic_angle - expected_pitch) < 0.8, "strategische kijkhoek is %.2f° i.p.v. %.0f°" % [strategic_angle, expected_pitch])
+	var pitch_slider := main.find_child("CameraPitchSlider", true, false) as HSlider
+	_check(pitch_slider != null, "camerahoek-schuifregelaar ontbreekt in Instellingen")
+	if pitch_slider != null:
+		_check(pitch_slider.min_value == 35.0 and pitch_slider.max_value == 75.0 and pitch_slider.step == 1.0, "camerahoek-schuifregelaar heeft verkeerde grenzen of stappen")
+	# Echte camera-test: wijzig live de opgeslagen instelling en meet de resulterende camerastand.
+	for new_pitch in [40, 65, 53]:
+		GameSettings.set_value("camera_pitch", str(new_pitch))
+		await _settle_camera(camera, 90)
+		var measured := rad_to_deg(atan2(camera.global_transform.basis.z.y, Vector2(camera.global_transform.basis.z.x, camera.global_transform.basis.z.z).length()))
+		_check(absf(measured - float(new_pitch)) < 1.2, "hoek %d° geeft camerastand %.2f°" % [new_pitch, measured])
+	GameSettings.set_value("camera_pitch", saved_pitch)
+	await _settle_camera(camera, 90)
 	camera.call("toggle_view")
 	await _settle_camera(camera, 150)  # inzoomen gaat bewust langzaam (0,85/s)
 	var combat_distance := camera.global_position.distance_to(camera.get("focus"))
 	_check(bool(camera.get("combat_view")), "gevechtsstand schakelt niet in")
 	_check(absf(combat_distance - 20.0) < 0.8, "gevechtscameraafstand is %.2f i.p.v. 20 m" % combat_distance)
 	var combat_angle := rad_to_deg(atan2(camera.global_transform.basis.z.y, Vector2(camera.global_transform.basis.z.x, camera.global_transform.basis.z.z).length()))
-	_check(absf(combat_angle - 53.0) < 0.8, "gevechtskijkhoek is %.2f° i.p.v. 53°" % combat_angle)
+	_check(absf(combat_angle - expected_pitch) < 0.8, "gevechtskijkhoek is %.2f° i.p.v. %.0f°" % [combat_angle, expected_pitch])
 	_check(absf(camera.fov - 45.0) < 0.01, "camerafov is niet 45°")
 	camera.call("toggle_view")
 	await _settle_camera(camera)

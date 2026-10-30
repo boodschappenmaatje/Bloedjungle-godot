@@ -15,6 +15,17 @@ const SCENE_PLAYER := preload("res://assets/soldaat_jungle_commando.glb")
 const SCENE_MESHY_PLAYER_PATH := "res://assets/meshy_jungle_commando.glb"
 ## Mesh-free shared animation source extracted from the supplied same-rig library.
 const MESHY_ANIMATION_LIBRARY := preload("res://resources/animations/meshy_player_animation_library.res")
+const MESHY_API_LIBRARY := preload("res://resources/animations/meshy_player_animation_library_api.res")   # 62 clips uit de Meshy-API, zie bron/meshy_speler_animaties
+## Namen die het spel al aanroept -> Meshy-API-clip. Zonder deze tabel blijft de Meshy-speler bij die acties stilstaan.
+const MESHY_ALIASES := {
+	"achteruit": "Walk_Backward_with_Gun", "geraakt": "Hit_Reaction", "dood1": "Shot_and_Fall_Backward",
+	"dood2": "Shot_and_Fall_Forward", "explosie_dood": "Shot_and_Blown_Back", "rollen": "Roll_Dodge",
+	"klimmen": "Fast_Ladder_Climb", "zitten": "Chair_Sit_Idle_M", "steken": "Attack", "brand_val": "falling_down",
+	"brand_rennen": "Stumble_Walk",
+}
+## Alleen in deze clips houdt de Meshy-speler het geweer vast (IK aan, wapen zichtbaar); in de andere (rollen, vallen,
+## klimmen, zitten, mes) zou het wapen los van het lichaam blijven hangen.
+const MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten"]
 const MESHY_GARAND_PROFILE = preload("res://resources/weapon_profiles/garand_meshy.tres")
 const MESHY_WEAPON_ADAPTER_SCRIPT := preload("res://scripts/weapon_model_adapter.gd")
 const LOOKS := {
@@ -61,6 +72,7 @@ var _uniform := Color.WHITE
 var _mesh_skeleton: Skeleton3D
 var _mesh_right_ik: SkeletonIK3D
 var _mesh_left_ik: SkeletonIK3D
+var _mesh_armed := true
 var _mesh_right_target: Marker3D
 var _mesh_weapon_adapter: Variant
 var _mesh_action_player: AnimationPlayer
@@ -232,6 +244,11 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 				lib.add_animation(old_name, old_lib.get_animation(old_name).duplicate(true))
 		anim.remove_animation_library("")
 	anim.add_animation_library("", lib)
+	for api_clip in MESHY_API_LIBRARY.get_animation_list():
+		if not lib.has_animation(api_clip):
+			lib.add_animation(api_clip, MESHY_API_LIBRARY.get_animation(api_clip))
+	for alias in MESHY_ALIASES:
+		_alias_meshy_clip(lib, alias, MESHY_ALIASES[alias])
 	_alias_meshy_clip(lib, "stil", "Idle")
 	_alias_meshy_clip(lib, "lopen", "Walking")
 	_alias_meshy_clip(lib, "rennen", "Running")
@@ -316,6 +333,7 @@ func play_meshy_library_clip(clip_name: String, speed := 1.0) -> bool:
 	if not meshy_player or _mesh_animation_tree == null or not _mesh_clip_map.has(clip_name):
 		return false
 	var selection: Dictionary = _mesh_clip_map[clip_name]
+	_mesh_animation_tree.active = true
 	_mesh_animation_tree.set("parameters/%s/blend_position" % selection.posture, selection.position)
 	_mesh_animation_playback.travel(selection.posture)
 	anim.speed_scale = speed
@@ -866,6 +884,9 @@ func play(clip: String, blend := 0.18, speed := 1.0) -> void:
 func _play_meshy_clip(clip: String, blend: float, speed: float) -> void:
 	if anim == null:
 		return
+	if speed < 0.0 and clip == "lopen" and anim.has_animation("achteruit"):
+		clip = "achteruit"   # de lus achterstevoren afspelen is niet meer nodig
+		speed = -speed
 	if clip == "herladen":
 		if current != clip:
 			current = clip
@@ -883,12 +904,31 @@ func _play_meshy_clip(clip: String, blend: float, speed: float) -> void:
 		_mesh_action_player.stop()
 		if _mesh_weapon_adapter != null:
 			_mesh_weapon_adapter.left_hand_grip.position = _mesh_weapon_adapter.profile.left_hand_grip
-	# Keep the legacy player-facing names while routing all supported clips through
-	# the centrally imported AnimationTree. Unsupported actions remain no-ops.
-	var aliases := {"stil": "stil", "lopen": "lopen", "rennen": "rennen", "sprinten": "sprinten"}
-	var library_clip: String = String(aliases.get(clip, clip))
-	if not play_meshy_library_clip(library_clip, speed):
+	# Spelacties spelen rechtstreeks op de AnimationPlayer: de AnimationTree negeert speed_scale (loopsnelheid,
+	# koprol-duur) en kan een eenmalige clip niet opnieuw starten. De tree blijft alleen voor de clip-review.
+	if not anim.has_animation(clip):
 		return
+	if _mesh_animation_tree != null:
+		_mesh_animation_tree.active = false
+	_set_meshy_armed(clip in MESHY_HOLD)
+	current = clip
+	anim.play(clip, blend)
+	anim.speed_scale = speed
+
+
+## Geweer vasthouden: beide arm-IK-ketens aan en het wapen zichtbaar, of allebei uit.
+func _set_meshy_armed(armed: bool) -> void:
+	if _mesh_right_ik == null or _mesh_left_ik == null or armed == _mesh_armed:
+		return
+	_mesh_armed = armed
+	if armed:
+		_mesh_right_ik.start()
+		_mesh_left_ik.start()
+	else:
+		_mesh_right_ik.stop()
+		_mesh_left_ik.stop()
+	if _mesh_weapon_adapter != null:
+		_mesh_weapon_adapter.visible = armed
 
 
 ## Lengte van een animatie in seconden (0 als hij niet bestaat); handig om een clip precies op een duur te laten passen.

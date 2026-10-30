@@ -67,7 +67,7 @@ func _run() -> void:
 	_check(model.anim.has_animation("stil") and model.anim.has_animation("lopen") and model.anim.has_animation("rennen") and model.anim.has_animation("sprinten"), "locomotion aliases missing")
 	_check(model.anim.has_animation("Cautious_Crouch_Walk_Forward") and model.anim.has_animation("Cautious_Crouch_Walk_Right_inplace") and model.anim.has_animation("Crouch_Walk_Left_with_Gun") and model.anim.has_animation("Prone_Reload"), "stance clips missing from the central AnimationLibrary")
 	_check(model.anim.get_animation_list().size() >= 17, "central AnimationLibrary did not retain source locomotion and add the 13 animation clips")
-	_check(model._mesh_animation_tree != null and model._mesh_animation_tree.active, "Meshy AnimationTree is not active")
+	_check(model._mesh_animation_tree != null, "Meshy AnimationTree missing")
 	_check(model._mesh_animation_tree.tree_root.has_node("STAND") and model._mesh_animation_tree.tree_root.has_node("CROUCH") and model._mesh_animation_tree.tree_root.has_node("PRONE"), "AnimationTree is missing a posture state")
 	var required_library_clips := ["Running", "Walking", "RunFast", "Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun", "Hit_in_Back_While_Running", "Prone_Reload", "Rifle_Aim_Turn_Right", "Rifle_Charge_inplace", "Run_and_Shoot", "Stand_Up2", "dying_backwards"]
 	for required_clip in required_library_clips:
@@ -246,6 +246,29 @@ func _run() -> void:
 	var reload_wait: float = float(game.call("wstat", "garand").reload) + 0.15
 	await get_tree().create_timer(reload_wait).timeout
 	_check(player.ammo == int(game.call("wstat", "garand").mag), "existing reload timer did not refill the Garand magazine")
+
+	# Meshy-API-clips (62) en de Nederlandse spelnamen die het spel aanroept.
+	player.set_physics_process(false)   # de speler-controller zet anders elk frame zelf weer "stil"
+	player.set_process(false)
+	model.play("stil")
+	var api_aliases := {"achteruit": "Walk_Backward_with_Gun", "geraakt": "Hit_Reaction", "dood1": "Shot_and_Fall_Backward", "dood2": "Shot_and_Fall_Forward",
+		"explosie_dood": "Shot_and_Blown_Back", "rollen": "Roll_Dodge", "klimmen": "Fast_Ladder_Climb", "zitten": "Chair_Sit_Idle_M",
+		"steken": "Attack", "brand_val": "falling_down", "brand_rennen": "Stumble_Walk"}
+	_check(model.anim.get_animation_list().size() >= 13 + 62, "Meshy-API-bibliotheek is niet samengevoegd")
+	for alias in api_aliases:
+		_check(model.anim.has_animation(alias) and model.anim.get_animation(alias) == model.anim.get_animation(api_aliases[alias]), "alias wijst niet naar de API-clip: " + alias)
+		model.play(alias, 0.05, 1.0)
+		await get_tree().process_frame
+		_check(model.current == alias and model.anim.current_animation == alias, "play(%s) startte de clip niet (huidig: %s)" % [alias, model.anim.current_animation])
+		_check(model._mesh_animation_tree.active == false, "AnimationTree bleef actief bij " + alias)
+		_check(model._mesh_weapon_adapter.visible == (alias == "achteruit"), "wapen-zichtbaarheid klopt niet tijdens " + alias)
+	model.play("lopen", 0.05, 1.7)
+	await get_tree().process_frame
+	_check(is_equal_approx(model.anim.speed_scale, 1.7) and model._mesh_weapon_adapter.visible, "lopen: tempo of wapen niet hersteld")
+	model.play("lopen", 0.05, -1.0)
+	await get_tree().process_frame
+	_check(model.anim.current_animation == "achteruit" and model.anim.speed_scale > 0.0, "achteruit lopen gebruikt de achterwaartse clip niet")
+	model.play("stil")
 
 	# The selection is player-look scoped: allies and enemies keep their existing 53-bone VQ2 model.
 	var npc: Variant = load("res://scripts/soldier_model.gd").new()

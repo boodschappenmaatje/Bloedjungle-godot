@@ -179,8 +179,8 @@ func _physics_process(delta: float) -> void:
 		_shoot(w)
 	else:
 		idle_t += delta
-		if idle_t > 1.4 and can_reload():
-			_reload(w)  # geen herlaadknop: na even niet schieten vult hij zelf bij
+		if idle_t > 1.4 and _should_auto_reload():
+			_reload(w)  # M1911: alleen automatisch bij volledig leeg wapen; andere wapens blijven ongewijzigd
 	if reload_t <= 0.0 and fire_t <= 0.0:
 		model.ensure_weapon_idle()
 	model.set_shoot_pose((Game.fire if weapon != "m1911" else trigger_pressed) and reload_t <= 0.0, weapon, w.rate)
@@ -580,6 +580,15 @@ func _sync_m1911_ammo() -> void:
 	Game.owned.m1911.ammo = ammo
 	Game.owned.m1911.mag_rounds = m1911_mag_rounds
 	Game.owned.m1911.chambered = m1911_chambered
+
+
+## Auto reload is different from a deliberate tactical reload. The old
+## shared idle timer was reloading the M1911 after EVERY single shot because
+## seven-round magazine capacity was checked even while the chamber was loaded.
+func _should_auto_reload() -> bool:
+	if weapon == "m1911":
+		return not m1911_chambered and m1911_mag_rounds == 0 and can_reload()
+	return can_reload()
 
 
 func can_reload() -> bool:

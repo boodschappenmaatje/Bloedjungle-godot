@@ -2,9 +2,9 @@
 
 Branch: `feature/airfield-hq-2-0`
 PR #164: **merged** at `9880c409ac3c048d10b3259f7c1635d836a516e0` before this follow-up.
-Status: **partial; build-mode 2.0 changes are locally validated but are not part of the merged PR or the published OTA; physical iPhone acceptance remains pending**
+Status: **partial; build-mode 2.0 changes are validated and pushed to the existing feature branch, but are not part of the already-merged PR snapshot or published OTA; physical iPhone acceptance remains pending**
 
-The follow-up build placement and touch-control implementation is documented in [BUILD_MODE_2_0.md](BUILD_MODE_2_0.md). PR #164 is no longer a Draft and cannot be updated in place; no new PR was created.
+The follow-up build placement and touch-control implementation is documented in [BUILD_MODE_2_0.md](BUILD_MODE_2_0.md). Commit `fc616d66784db50d60c52583145c1909df64f2a2` is pushed to `feature/airfield-hq-2-0`. PR #164 remains merged at its recorded head `9b1ed405331f779a9d142554a8f31cbf5b27bfab` and merge commit `9880c409ac3c048d10b3259f7c1635d836a516e0`; a merged PR snapshot cannot be updated in place. No new PR was created.
 
 ## Layout and measured area
 

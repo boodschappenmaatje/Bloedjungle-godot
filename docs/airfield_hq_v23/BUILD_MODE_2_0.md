@@ -50,6 +50,6 @@ The Mac’s Vulkan initialization fails during compute-pipeline compilation, so 
 
 ## GitHub / iPhone status
 
-PR #164 is already **merged** at `9880c409ac3c048d10b3259f7c1635d836a516e0` (the user authorized that merge before this follow-up request). GitHub therefore has no Draft PR #164 to update. This follow-up is local on `feature/airfield-hq-2-0`; it has not been merged, released, or published to OTA. No new PR was created. The previously published OTA release was not changed by this follow-up.
+PR #164 is already **merged** at `9880c409ac3c048d10b3259f7c1635d836a516e0` (the user authorized that merge before this follow-up request). Its recorded head is `9b1ed405331f779a9d142554a8f31cbf5b27bfab`, so GitHub has no Draft PR #164 to update. Follow-up commit `fc616d66784db50d60c52583145c1909df64f2a2` is pushed to the existing `feature/airfield-hq-2-0` branch. It has not been merged, released, or published to OTA. No new PR was created. The previously published OTA release was not changed by this follow-up.
 
 No physical iPhone 18 Pro Max placement test, FPS measurement, 1%-low, frametime, or device memory measurement was run.

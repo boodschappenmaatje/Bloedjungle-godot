@@ -1,0 +1,50 @@
+{
+  "package_status": "PASS",
+  "apple_arkit_validation": "PASS",
+  "source": "/Users/admin/Documents/Bloedjungle-Bunker-HQ-Game/previews/usdz/airfield_hq/2.2/tabletop_sources/Airfield_HQ_2_2_hangar_tabletop.blend",
+  "source_sha256": "6a079177cf9776cbb13312bdfa688a2b2a51108c85ecf2ce7a74b30314be4398",
+  "output": "/Users/admin/Documents/Bloedjungle-Bunker-HQ-Game/previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdz",
+  "output_bytes": 4892625,
+  "output_sha256": "347f9df5aa52b7bb798e38f78faec618205ef7c6120390f93262afa15c6024b5",
+  "blender_version": "4.5.15 LTS",
+  "preview_texture_max_px": 1024,
+  "source_texture_paths_resolved": 18,
+  "animation_exported": false,
+  "static_curves_converted_to_meshes": 0,
+  "mesh_objects": 1,
+  "materials": 9,
+  "material_images": 9,
+  "animation_actions": [],
+  "scene_animation_active": false,
+  "frame_start": 1,
+  "frame_end": 120,
+  "fps": 30.0,
+  "packaged_files": [
+    "Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdc",
+    "textures/hangar_concrete_floor_nor_gl_2k.jpg",
+    "textures/hangar_concrete_floor_arm_2k.jpg",
+    "textures/hangar_concrete_floor_diff_2k.jpg",
+    "textures/corrugated_iron_02_nor_gl_2k.jpg",
+    "textures/corrugated_iron_02_arm_2k.jpg",
+    "textures/corrugated_iron_02_diff_2k.jpg",
+    "textures/concrete_floor_01_nor_gl_2k.jpg",
+    "textures/concrete_floor_01_arm_2k.jpg",
+    "textures/concrete_floor_01_diff_2k.jpg"
+  ],
+  "validation_sha256": "347f9df5aa52b7bb798e38f78faec618205ef7c6120390f93262afa15c6024b5",
+  "validation_bytes": 4892625,
+  "validated_usd_layers": [
+    "Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdc"
+  ],
+  "validated_textures": [
+    "textures/hangar_concrete_floor_nor_gl_2k.jpg",
+    "textures/hangar_concrete_floor_arm_2k.jpg",
+    "textures/hangar_concrete_floor_diff_2k.jpg",
+    "textures/corrugated_iron_02_nor_gl_2k.jpg",
+    "textures/corrugated_iron_02_arm_2k.jpg",
+    "textures/corrugated_iron_02_diff_2k.jpg",
+    "textures/concrete_floor_01_nor_gl_2k.jpg",
+    "textures/concrete_floor_01_arm_2k.jpg",
+    "textures/concrete_floor_01_diff_2k.jpg"
+  ]
+}

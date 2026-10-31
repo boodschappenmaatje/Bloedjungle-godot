@@ -1,0 +1,19 @@
+{
+  "asset": "tower",
+  "source": "assets/airfield_hq_v22/high_quality/Bloedjungle_Airfield_HQ_2_2_Source.blend",
+  "preview_blend": "previews/usdz/airfield_hq/2.2/tabletop_sources/Airfield_HQ_2_2_tower_tabletop.blend",
+  "source_span_m": [
+    17.5,
+    14.8,
+    23.175
+  ],
+  "tabletop_span_m": [
+    0.68,
+    0.575,
+    0.9
+  ],
+  "scale_factor": 0.03883495273478825,
+  "source_meshes": 334,
+  "preview_meshes": 1,
+  "animation": "static frame 1 only"
+}

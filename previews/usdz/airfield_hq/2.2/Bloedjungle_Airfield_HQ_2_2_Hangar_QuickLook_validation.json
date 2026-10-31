@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "usdz": "/Users/admin/Documents/Bloedjungle-Bunker-HQ-Game/previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdz",
+  "bytes": 4892625,
+  "sha256": "347f9df5aa52b7bb798e38f78faec618205ef7c6120390f93262afa15c6024b5",
+  "apple_usdchecker_arkit": "PASS",
+  "usdzip_contents": [
+    "Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdc",
+    "textures/hangar_concrete_floor_nor_gl_2k.jpg",
+    "textures/hangar_concrete_floor_arm_2k.jpg",
+    "textures/hangar_concrete_floor_diff_2k.jpg",
+    "textures/corrugated_iron_02_nor_gl_2k.jpg",
+    "textures/corrugated_iron_02_arm_2k.jpg",
+    "textures/corrugated_iron_02_diff_2k.jpg",
+    "textures/concrete_floor_01_nor_gl_2k.jpg",
+    "textures/concrete_floor_01_arm_2k.jpg",
+    "textures/concrete_floor_01_diff_2k.jpg"
+  ],
+  "usd_layers": [
+    "Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdc"
+  ],
+  "texture_files": [
+    "textures/hangar_concrete_floor_nor_gl_2k.jpg",
+    "textures/hangar_concrete_floor_arm_2k.jpg",
+    "textures/hangar_concrete_floor_diff_2k.jpg",
+    "textures/corrugated_iron_02_nor_gl_2k.jpg",
+    "textures/corrugated_iron_02_arm_2k.jpg",
+    "textures/corrugated_iron_02_diff_2k.jpg",
+    "textures/concrete_floor_01_nor_gl_2k.jpg",
+    "textures/concrete_floor_01_arm_2k.jpg",
+    "textures/concrete_floor_01_diff_2k.jpg"
+  ],
+  "usdzip_list": [
+    "Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdc",
+    "textures/hangar_concrete_floor_nor_gl_2k.jpg",
+    "textures/hangar_concrete_floor_arm_2k.jpg",
+    "textures/hangar_concrete_floor_diff_2k.jpg",
+    "textures/corrugated_iron_02_nor_gl_2k.jpg",
+    "textures/corrugated_iron_02_arm_2k.jpg",
+    "textures/corrugated_iron_02_diff_2k.jpg",
+    "textures/concrete_floor_01_nor_gl_2k.jpg",
+    "textures/concrete_floor_01_arm_2k.jpg",
+    "textures/concrete_floor_01_diff_2k.jpg"
+  ],
+  "device_quicklook_playback": "NOT_TESTED",
+  "export_receipt_updated": "/Users/admin/Documents/Bloedjungle-Bunker-HQ-Game/previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.json"
+}

@@ -50,6 +50,8 @@ The Mac’s Vulkan initialization fails during compute-pipeline compilation, so 
 
 ## GitHub / iPhone status
 
-PR #164 is already **merged** at `9880c409ac3c048d10b3259f7c1635d836a516e0` (the user authorized that merge before this follow-up request). Its recorded head is `9b1ed405331f779a9d142554a8f31cbf5b27bfab`, so GitHub has no Draft PR #164 to update. Follow-up commit `fc616d66784db50d60c52583145c1909df64f2a2` is pushed to the existing `feature/airfield-hq-2-0` branch. It has not been merged, released, or published to OTA. No new PR was created. The previously published OTA release was not changed by this follow-up.
+PR #164 remains merged at `9880c409ac3c048d10b3259f7c1635d836a516e0` with original recorded head `9b1ed405331f779a9d142554a8f31cbf5b27bfab`. The follow-up code was fast-forwarded to both `main` and `feature/airfield-hq-2-0` at `b05acb0d112bd714415dd2f20f595744a2e1934c`; no new PR was created. The OTA workflow succeeded in [run 41228843638](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/41228843638) and published manifest `20261031-182332-b05acb0` to the [`updates` release](https://github.com/boodschappenmaatje/Bloedjungle-godot/releases/tag/updates). Its 811,932,824-byte patch has SHA-256 `46f974d1701466738fb25fe1080cc6989ca5a6a7d55bf28ae888baaea6741fbc` and targets base `0b2824e2e970ef5bc10c205275c59cfb8e307e10` (`ota/basis.txt`). The OTA workflow passed; on-device download and activation are not yet tested.
+
+The existing iOS workflow also succeeded in [run 41228843497](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/41228843497) and uploaded unsigned artifact `bloedjungle-ios-unsigned-b05acb0d112bd714415dd2f20f595744a2e1934c` (878,624,075 bytes). This is not an App Store release. No physical iPhone test or performance measurement has been run.
 
 No physical iPhone 18 Pro Max placement test, FPS measurement, 1%-low, frametime, or device memory measurement was run.

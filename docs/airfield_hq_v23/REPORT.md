@@ -2,9 +2,9 @@
 
 Branch: `feature/airfield-hq-2-0`
 PR #164: **merged** at `9880c409ac3c048d10b3259f7c1635d836a516e0` before this follow-up.
-Status: **partial; build-mode 2.0 changes are validated and pushed to the existing feature branch, but are not part of the already-merged PR snapshot or published OTA; physical iPhone acceptance remains pending**
+Status: **partial; build-mode 2.0 is merged to `main` and published to OTA. Physical iPhone acceptance remains pending, and the desktop visual capture still logs four unresolved lambda-capture errors after placement.**
 
-The follow-up build placement and touch-control implementation is documented in [BUILD_MODE_2_0.md](BUILD_MODE_2_0.md). Commit `fc616d66784db50d60c52583145c1909df64f2a2` is pushed to `feature/airfield-hq-2-0`. PR #164 remains merged at its recorded head `9b1ed405331f779a9d142554a8f31cbf5b27bfab` and merge commit `9880c409ac3c048d10b3259f7c1635d836a516e0`; a merged PR snapshot cannot be updated in place. No new PR was created.
+The follow-up build placement and touch-control implementation is documented in [BUILD_MODE_2_0.md](BUILD_MODE_2_0.md). Code commit `fc616d66784db50d60c52583145c1909df64f2a2` and status-doc commit `b05acb0d112bd714415dd2f20f595744a2e1934c` are on both `main` and `feature/airfield-hq-2-0`. PR #164 remains merged at its original head `9b1ed405331f779a9d142554a8f31cbf5b27bfab` and merge commit `9880c409ac3c048d10b3259f7c1635d836a516e0`; the follow-up was fast-forwarded to `main` after that PR. No new PR was created.
 
 ## Layout and measured area
 
@@ -53,6 +53,8 @@ The 107-entry protected-asset SHA-256 manifest is checked locally at delivery. N
 
 ## iOS test path
 
-The repository’s existing pull-request workflow installed Godot 4.7.2 export templates, validated/imported the project, built an unsigned iOS app with Xcode, and uploaded `bloedjungle-ios-unsigned-4f882e66bcc8a1dc2aa62681e2502c0013eb3857`. Run [41215611546](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/41215611546) completed successfully on commit `7c66cac958c9dd4fb2ab52dfbb6b31da443a6e6c`; the artifact is 878,610,959 bytes and expires **30 November 2026**. It predates the build-mode follow-up and does not contain these placement/touch changes. The OTA test was run locally only. No new iOS artifact or OTA patch was built or published for this follow-up.
+The `main` push completed Godot 4.7.2 import/validation and Xcode export in [iOS workflow run 41228843497](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/41228843497). It uploaded unsigned artifact `bloedjungle-ios-unsigned-b05acb0d112bd714415dd2f20f595744a2e1934c` (878,624,075 bytes; 30-day retention). This is for sideloading, not an App Store release.
 
-To install the older artifact, follow the existing [iOS/AltStore instructions](../IOS-ALTSTORE.md): install AltServer and AltStore, download and extract the artifact ZIP, then open the IPA in AltStore (**My Apps → +**) so AltStore signs and installs it. The iPhone must trust the computer during initial AltStore setup. The actual iPhone 18 Pro Max installation, on-device renderer, gameplay acceptance and device performance measurements remain pending. Producing a device build with these follow-up changes requires the normal branch/CI path; the existing OTA release was not modified in this task.
+The same push published OTA through [workflow run 41228843638](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/41228843638) to the existing [`updates` release](https://github.com/boodschappenmaatje/Bloedjungle-godot/releases/tag/updates). Manifest version: `20261031-182332-b05acb0`; patch: `patch-20261031-182332-b05acb0.pck`; size: **811,932,824 bytes**; SHA-256: `46f974d1701466738fb25fe1080cc6989ca5a6a7d55bf28ae888baaea6741fbc`. Its base `0b2824e2e970ef5bc10c205275c59cfb8e307e10` matches `ota/basis.txt`, so apps built from that base can receive it.
+
+For the OTA test, open **Updates** in the installed app, check/download the update, tap **Download and install**, then fully close and reopen the game. The updater needs its existing read-only GitHub token. The patch is about 812 MB, so download over Wi-Fi and allow several minutes. For a fresh install instead, use the unsigned artifact and existing [iOS/AltStore instructions](../IOS-ALTSTORE.md). The iPhone 18 Pro Max installation, OTA activation, gameplay acceptance, and device performance measurements remain pending.

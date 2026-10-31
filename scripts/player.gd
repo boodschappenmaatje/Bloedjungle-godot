@@ -422,9 +422,8 @@ func _shoot(w: Dictionary) -> void:
 	if reload_t > 0.0 or fire_t > 0.0:
 		return
 	if weapon == "m1911":
-		if not m1911_chambered and m1911_mag_rounds > 0:
-			m1911_mag_rounds -= 1
-			m1911_chambered = true
+		# Never chamber a cartridge by pulling the trigger: a loaded magazine
+		# with an empty chamber still requires operating the slide.
 		if not m1911_chambered:
 			_m1911_mechanical_event("dry_fire")
 			model.play_weapon_action("leeg")
@@ -438,11 +437,7 @@ func _shoot(w: Dictionary) -> void:
 		return
 	fire_t = w.rate
 	if weapon == "m1911":
-		m1911_chambered = false
-		if m1911_mag_rounds > 0:
-			m1911_mag_rounds -= 1
-			m1911_chambered = true
-		ammo = m1911_mag_rounds + int(m1911_chambered)
+		_m1911_fire_chambered_round()
 	else:
 		ammo -= 1
 	_shot_sequence += 1
@@ -477,7 +472,9 @@ func _shoot(w: Dictionary) -> void:
 		Fx.casing(get_parent(), model.casing_position(), axes[0], axes[1])
 	Sfx.play(Data.WEAPON_SND[weapon])
 	Game.changed.emit()
-	if ammo <= 0 and (weapon != "m1911" or not m1911_chambered):
+	# Keep the empty M1911 slide visible; the existing idle/manual reload
+	# path may start the next reload later, but not in the firing frame.
+	if ammo <= 0 and weapon != "m1911":
 		_reload(w)
 
 
@@ -506,6 +503,9 @@ func equip(id: String) -> void:
 		_sync_m1911_ammo()
 	_shot_sequence = 0
 	reload_t = 0.0
+	_reload_elapsed = 0.0
+	_reload_phase = 0
+	_reload_was_empty = false
 	fire_t = 0.3
 	Game.changed.emit()
 
@@ -549,6 +549,19 @@ func _m1911_mechanical_event(event_name: String) -> void:
 	# not presented as independently recorded or historically verified sounds.
 	var sounds := {"reload_start": "reload", "mag_out": "click", "mag_in": "reload", "slide_release": "click", "dry_fire": "click"}
 	Sfx.play(sounds.get(event_name, "click"), 0.55)
+
+
+## The only place a fired M1911 cartridge is consumed. Allows deterministic
+## state tests without spawning bullets, audio or a complete level.
+func _m1911_fire_chambered_round() -> bool:
+	if not m1911_chambered:
+		return false
+	m1911_chambered = false
+	if m1911_mag_rounds > 0:
+		m1911_mag_rounds -= 1
+		m1911_chambered = true
+	_sync_m1911_ammo()
+	return true
 
 
 func _sync_m1911_ammo() -> void:

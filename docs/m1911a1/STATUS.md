@@ -38,3 +38,11 @@ Mechanical sound verification: NOT VERIFIED; no licensed mechanical source was s
 - [ ] Native iPhone 18 Pro Max touch/performance/audio measurements; no device is attached to this environment.
 
 The new test zone is a Godot runnable scene at `scenes/m1911_test_zone.tscn`; it is not wired into the production menu. It launches the actual main scene and adds an opt-in test overlay. Godot headless scene-start check passed; an interactive visual/hardware run was not possible here.
+
+
+## Direct follow-up: M1911 chamber regression and practice range
+- Firing now consumes a chambered cartridge through one testable method and immediately synchronizes the physical magazine, chamber, and legacy ammo fields to Game.owned. Pulling the trigger with an empty chamber can no longer silently chamber from a loaded magazine.
+- The final M1911 shot no longer starts the reload in the same firing frame; existing manual/idle reload is unchanged. Reload completion is isolated so the state matrix can exercise it deterministically. Weapon switching cancels reload timers and phase flags.
+- Added `tests/m1911_ammo_reload_test.gd` covering legacy translation, 7+1 depletion, dry-fire/empty chamber, interrupted reload before magazine insertion, tactical 7+1, empty reload 6+1 and runtime Game.owned recreation. The test is now included in the existing iOS/Godot CI validation step, with a retained log artifact.
+- Added three optional practice targets (5/12/20 m; light/heavy/armored *simulated* damage multipliers) to the opt-in M1911 test scene. They are isolated training dummies, not actual enemy AI or production armor behavior. Fixed test firing to respect cadence and only count successfully fired rounds.
+- Verification of these **new** changes: source-reviewed and pushed to the feature branch; CI/Godot test execution is not yet confirmed. Previous 672/672 auto-hit and Meshy tests were from earlier commits and must not be misreported as having passed on this head. External licensed mechanism recordings, true physical iPhone measurement and app-resumable full-run save remain out of scope of this increment.

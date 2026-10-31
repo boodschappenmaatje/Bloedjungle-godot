@@ -166,14 +166,7 @@ func _physics_process(delta: float) -> void:
 			_update_m1911_reload_events()
 		if reload_t <= 0.0:
 			if weapon == "m1911":
-				if _reload_phase < 2:
-					_update_m1911_reload_events(true)
-				if _reload_was_empty and not m1911_chambered:
-					m1911_chambered = true
-					m1911_mag_rounds = maxi(0, m1911_mag_rounds - 1)
-					if _reload_phase < 3:
-						_m1911_mechanical_event("slide_release")
-				_sync_m1911_ammo()
+				_finish_m1911_reload()
 			else:
 				ammo = w.mag
 			_reload_phase = 0
@@ -542,6 +535,22 @@ func _update_m1911_reload_events(force_mag_in := false) -> void:
 	if _reload_was_empty and _reload_phase < 3 and progress >= 0.92:
 		_reload_phase = 3
 		_m1911_mechanical_event("slide_release")
+
+
+## Commit a completed reload atomically; no imaginary round may be chambered
+## when the new magazine is empty. Exposed for the regression state matrix.
+func _finish_m1911_reload() -> void:
+	if _reload_phase < 2:
+		_update_m1911_reload_events(true)
+	if _reload_was_empty and not m1911_chambered and m1911_mag_rounds > 0:
+		m1911_chambered = true
+		m1911_mag_rounds -= 1
+		if _reload_phase < 3:
+			_m1911_mechanical_event("slide_release")
+	_sync_m1911_ammo()
+	_reload_phase = 0
+	_reload_elapsed = 0.0
+	_reload_was_empty = false
 
 
 func _m1911_mechanical_event(event_name: String) -> void:

@@ -12,6 +12,9 @@ const APRON_SIZE := Vector2(18.0, 14.0)
 const LOD0_END_M := 140.0
 const LOD1_END_M := 700.0
 const LOD2_END_M := 2500.0
+const PSP_LIBRARY_SCENE := "res://assets/airfield_hq_v23/psp/PSP_plate_library.glb"
+const PSP_PLATE_COUNT := 8
+const PSP_PATCH_CENTER := Vector2(0.0, -5.25)
 
 var _concrete: StandardMaterial3D
 var _concrete_flat: StandardMaterial3D
@@ -118,6 +121,42 @@ func _build_apron() -> void:
 	_multimesh("Aircraft apron parking slab LOD1", _apron_mesh_lod1, [transform], LOD0_END_M, LOD1_END_M)
 	_multimesh("Aircraft apron parking slab LOD2", _apron_mesh_lod2, [transform], LOD1_END_M, LOD2_END_M, SLAB_DEPTH * 0.5)
 	_collider("Aircraft apron parking collision", Vector3(APRON_SIZE.x, SLAB_DEPTH, APRON_SIZE.y), transform)
+	_build_psp_apron_patch()
+
+func _build_psp_apron_patch() -> void:
+	# Eight historical PSP plates form one small temporary surfacing patch at
+	# the back edge of the existing apron. It adds no terrain area or collision.
+	var packed := load(PSP_LIBRARY_SCENE) as PackedScene
+	if packed == null:
+		push_warning("PSP library could not be loaded; apron remains usable without its optional temporary strip.")
+		return
+	var library := packed.instantiate()
+	var lod_meshes := {}
+	for node in library.find_children("*", "MeshInstance3D", true, false):
+		var mesh_node := node as MeshInstance3D
+		if mesh_node.name.begins_with("PSP_Plate_LOD0_"):
+			lod_meshes[0] = mesh_node.mesh
+		elif mesh_node.name.begins_with("PSP_Plate_LOD1_"):
+			lod_meshes[1] = mesh_node.mesh
+		elif mesh_node.name.begins_with("PSP_Plate_LOD2_"):
+			lod_meshes[2] = mesh_node.mesh
+	library.free()
+	if lod_meshes.size() != 3:
+		push_warning("PSP library is missing one or more LOD meshes; optional apron strip skipped.")
+		return
+	var transforms: Array[Transform3D] = []
+	var origin := AirfieldHQ23.layout_point(
+		AirfieldHQ23.APRON_CENTER.x + PSP_PATCH_CENTER.x,
+		AirfieldHQ23.APRON_CENTER.y + PSP_PATCH_CENTER.y,
+		SLAB_DEPTH + 0.004
+	)
+	var plate_width := 0.381
+	for index in PSP_PLATE_COUNT:
+		var x := (float(index) - float(PSP_PLATE_COUNT - 1) * 0.5) * plate_width
+		transforms.append(Transform3D(Basis.IDENTITY, origin + Vector3(x, 0.0, 0.0)))
+	_multimesh("Historic PSP apron patch LOD0", lod_meshes[0], transforms, 0.0, LOD0_END_M)
+	_multimesh("Historic PSP apron patch LOD1", lod_meshes[1], transforms, LOD0_END_M, LOD1_END_M)
+	_multimesh("Historic PSP apron patch LOD2", lod_meshes[2], transforms, LOD1_END_M, LOD2_END_M)
 
 func _build_taxiway() -> void:
 	var integration := get_parent().get_node_or_null("AirfieldFlightIntegration") as AirfieldFlightIntegration

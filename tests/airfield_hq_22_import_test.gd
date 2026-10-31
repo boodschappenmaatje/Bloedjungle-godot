@@ -138,6 +138,12 @@ func _run() -> void:
 	assert(modules.get_node_or_null("Runway concrete slabs LOD1") is MultiMeshInstance3D and modules.get_node_or_null("Runway concrete slabs LOD2") is MultiMeshInstance3D, "Runway must include far LOD meshes")
 	assert(modules.get_node_or_null("Aircraft apron parking slab LOD0") is MultiMeshInstance3D, "The apron must use a distinct pavement system")
 	assert(modules.get_node_or_null("Aircraft apron parking slab LOD2") is MultiMeshInstance3D, "The apron must include its far LOD mesh")
+	var psp_lod0 := modules.get_node_or_null("Historic PSP apron patch LOD0") as MultiMeshInstance3D
+	var psp_lod1 := modules.get_node_or_null("Historic PSP apron patch LOD1") as MultiMeshInstance3D
+	var psp_lod2 := modules.get_node_or_null("Historic PSP apron patch LOD2") as MultiMeshInstance3D
+	assert(psp_lod0 != null and psp_lod0.multimesh.instance_count == 8, "The historic PSP apron patch must contain eight individual plates in one draw batch")
+	assert(psp_lod1 != null and psp_lod2 != null, "The PSP strip must provide all three distance LODs")
+	assert(FileAccess.file_exists("res://source_assets/airfield_hq_v23/psp/PSP_plate_library.blend"), "The editable Blender PSP source must be delivered")
 	assert(modules.find_children("Taxiway slab collision *", "StaticBody3D", true, false).size() >= 4, "The curved taxiway must have segmented collision")
 	var parking_marker := compact_core.get_node("AirfieldFlightIntegration/P47_Apron_Parking") as Marker3D
 	assert(parking_marker.global_position.distance_to(placed.to_global(Vector3(18.0, 0.22, -20.0))) < 0.02, "The parking marker must align with the compact apron")

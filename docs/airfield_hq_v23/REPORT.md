@@ -25,6 +25,7 @@ Before edits, SHA-256 hashes were recorded for 105 files in `assets/airfield_hq_
 - Uses the existing `Game.pay_build()` flow, building selection/status, repair/rebuild, turn, sale, and cleanup pathways.
 - Reuses the approved 2.2 hangar, interior, tower, doors, service props, and wind sock without editing their source assets or changing their authored scale/design.
 - Builds separate instanced concrete runway slabs, a curved 18.4 m taxiway with segmented collision, and a dedicated 18 × 14 m apron/parking stand. The pavement has near/mid/far render ranges; far slabs use lightweight flat meshes. Runway slab collisions overlap at the expansion joint to avoid a wheel drop.
+- Adds an editable Blender PSP library in `source_assets/airfield_hq_v23/psp/` and a Godot-imported GLB with three LOD meshes. Eight 10 ft × 15 in plates form one small temporary surfacing patch at the back of the existing apron; it uses one MultiMesh batch per LOD and does not expand the footprint. Historical dimensions and the 87-hole pattern are sourced from the U.S. Army Center of Military History; the thin sheet thickness is a documented visual approximation.
 - Adds local-to-complex P-47 markers and a 12.5 m taxi curve radius. The current runway has an 18 m marked takeoff roll; the configured arcade profile calculates a 10 m ground roll, leaving 8 m in this demo setup.
 - Adds an aircraft catalog and asset-gated purchase path at 1,800 points. A missing model prevents charge/registration; the current slot capacity is conservatively one.
 - Adds runway reservation helpers, airfield sale cleanup, compact-area contract assertions, and the 2.2 asset/animation import regression test to iOS CI.
@@ -33,7 +34,8 @@ Before edits, SHA-256 hashes were recorded for 105 files in `assets/airfield_hq_
 
 - The configured original Meshy source path `assets/p47_thunderbolt.glb` is absent. The repository and accessible local file-name search did not find a P-47/Thunderbolt GLB/FBX. No P-47 has been purchased or instantiated; no surrogate is used.
 - Without the original aircraft, its Blender mechanical rig/animations, live propeller/wheels/landing gear, aircraft state machine, taxi/takeoff/flight/landing controller, player flight controls, route occupancy, and a complete use cycle remain incomplete. The markers/profile are not evidence that the flight cycle works.
-- PSP library/modules, separate Blender source files for pavement, new 2.3 screenshots, 2.2-versus-2.3 comparisons, and USDZ previews have not been produced.
+- No separate Blender source for the Godot concrete runway/taxi modules, Godot placement/build/shop screenshots, 2.2-versus-2.3 comparison set, or USDZ previews have been produced. The PSP library has a Blender preview image; this is not a substitute for those full-scene captures.
+- The local `game-dev` packaging/inspection CLI is not installed. The PSP asset was authored with Blender 4.5.15, imported by Godot 4.7.2, and covered by a runtime regression assertion; no canonical game-dev package receipt is claimed.
 - Godot 4.7.2 local headless import and the two targeted Airfield tests now pass. Godot was run from a temporary `/tmp` download, not installed into the repository or system `PATH`.
 - No native iPhone test or device performance measurement was performed. No FPS, 1%-low, frametime, drawcall, or memory result is claimed.
 
@@ -47,15 +49,17 @@ Before edits, SHA-256 hashes were recorded for 105 files in `assets/airfield_hq_
 - `AirfieldHQ23.MAX_RUNWAY_LENGTH`: 30 m.
 - `AirfieldHQ23.RUNWAY_START_X`, `RUNWAY_CENTER_Z`, `APRON_CENTER`, and `TAXI_ARC_CENTER` / `TAXI_ARC_RADIUS`: compact layout in building-local metres.
 - `AirfieldPavementModules.LOD0_END_M`, `LOD1_END_M`, and `LOD2_END_M`: 140 m, 700 m, and 2,500 m distance bands.
+- `AirfieldPavementModules.PSP_PLATE_COUNT`: 8 plates in the compact apron patch; `PSP_PATCH_CENTER` is local to the 18 × 14 m apron.
 - `AirfieldFlightIntegration.DEMO_ACCELERATION_MPS2` and `DEMO_LIFTOFF_SPEED_MPS`: arcade demonstration parameters only.
 
 ## Verification state
 
 - **PASS, local:** protected 2.2 SHA-256 inventory matches; Godot 4.7.2 project import and startup complete without script/parser errors.
 - **PASS, local:** `airfield_hq_22_import_test_scene.tscn` verifies 2.2 animations, meshes/materials/collisions, preserved hangar/tower visibility in the placed core, separate runway/apron modules, pavement LODs, and marker alignment.
+- **PASS, local:** the same 2.2 regression scene verifies PSP LOD0/1/2 import and eight instances in the apron patch. Blender generated `source_assets/airfield_hq_v23/psp/PSP_plate_library.blend` and `assets/airfield_hq_v23/psp/PSP_plate_library.glb`; the rendered preview is `assets/airfield_hq_v23/psp/PSP_plate_library_preview.png`.
 - **PASS, local:** `airfield_hq_23_contract_test_scene.tscn` verifies build-menu entry, area cap, free/blocked/rotated placement, spawn/river/world rejection, build-credit-first payment, missing-model no-charge, one-airfield limit, and runway reservation.
 - **PENDING:** GitHub iOS CI after the current commit; fresh imports report existing 2.2 GLB external-resource UIDs as unavailable and use their embedded texture paths, while the import/animation tests still pass.
-- **RERUN BEFORE COMMIT:** `git diff --check` and SHA-256 inventory after final edits.
+- **PASS, local:** `git diff --check` and all 105 protected 2.2 source-file hashes match.
 - **NOT RUN:** native iPhone tests, flight demonstrations, Blender/Godot visual captures, USDZ validation, and device performance measurements.
 
 The work remains partial until the missing original P-47 source and the remaining flight, visual, and device-verification work are available.

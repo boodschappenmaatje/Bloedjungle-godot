@@ -3,6 +3,7 @@ extends SceneTree
 ## Run: godot --headless --path . -s tests/m1911_ammo_reload_test.gd
 
 var failures := 0
+var game: Variant
 
 
 func _check(ok: bool, message: String) -> void:
@@ -22,9 +23,9 @@ func _check_loaded(p: Variant, mag: int, chamber: bool, tag: String) -> void:
 	_check(p.m1911_mag_rounds == mag, tag + ": magazine count")
 	_check(p.m1911_chambered == chamber, tag + ": chamber")
 	_check(p.ammo == total, tag + ": legacy player ammo")
-	_check(int(Game.owned.m1911.ammo) == total, tag + ": owned ammo mirror")
-	_check(int(Game.owned.m1911.mag_rounds) == mag, tag + ": owned magazine")
-	_check(bool(Game.owned.m1911.chambered) == chamber, tag + ": owned chamber")
+	_check(int(game.owned.m1911.ammo) == total, tag + ": owned ammo mirror")
+	_check(int(game.owned.m1911.mag_rounds) == mag, tag + ": owned magazine")
+	_check(bool(game.owned.m1911.chambered) == chamber, tag + ": owned chamber")
 
 
 func _initialize() -> void:
@@ -32,9 +33,9 @@ func _initialize() -> void:
 
 
 func _run() -> void:
-	GameSettings.values["soldaat"] = "vq2"
-	Game.reset()
-	Game.state = "menu"  # Prevent physics/auto-reload racing this deterministic test.
+	game = root.get_node("Game")
+	game.reset()
+	game.state = "menu"  # Prevent physics/auto-reload racing this deterministic test.
 	var world := Node3D.new()
 	root.add_child(world)
 	var p: Variant = load("res://scenes/player.tscn").instantiate()
@@ -63,21 +64,21 @@ func _run() -> void:
 
 	# Interrupted before insertion: reload creates no rounds.
 	_set_loaded(p, 1, true)
-	p._reload(Game.wstat("m1911"))
+	p._reload(game.wstat("m1911"))
 	_check(p.reload_t > 0.0, "reload starts on partial magazine")
 	p._reload_elapsed = p._reload_dur * 0.40
 	p._update_m1911_reload_events()
 	_check(p._reload_phase == 1, "magazine-out event fired")
 	_check_loaded(p, 1, true, "before mag-in rounds unchanged")
-	Game.owned["thompson"] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": 6}
-	Game.loadout.append("thompson")
+	game.owned["thompson"] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": 6}
+	game.loadout.append("thompson")
 	p.equip("thompson")
 	_check(p.reload_t <= 0.0 and p._reload_phase == 0, "weapon switch interrupts reload")
 	p.equip("m1911")
 	_check_loaded(p, 1, true, "interrupt saved on weapon switch")
 
 	# Tactical reload retains chambered cartridge and inserts a seven-round magazine.
-	p._reload(Game.wstat("m1911"))
+	p._reload(game.wstat("m1911"))
 	p._reload_elapsed = p._reload_dur * 0.69
 	p._update_m1911_reload_events()
 	_check_loaded(p, 7, true, "tactical mag-in 7+1")
@@ -88,7 +89,7 @@ func _run() -> void:
 	# Empty reload: insertion gives seven in mag, slide release feeds one (6+1).
 	_set_loaded(p, 0, false)
 	p.reload_t = 0.0
-	p._reload(Game.wstat("m1911"))
+	p._reload(game.wstat("m1911"))
 	p._reload_elapsed = p._reload_dur * 0.70
 	p._update_m1911_reload_events()
 	_check_loaded(p, 7, false, "empty mag-in leaves chamber empty")
@@ -109,7 +110,7 @@ func _run() -> void:
 	# Legacy integer-only records are still safely migrated.
 	restored.queue_free()
 	await process_frame
-	Game.owned["m1911"] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": 3}
+	game.owned["m1911"] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": 3}
 	var migrated: Variant = load("res://scenes/player.tscn").instantiate()
 	world.add_child(migrated)
 	await process_frame

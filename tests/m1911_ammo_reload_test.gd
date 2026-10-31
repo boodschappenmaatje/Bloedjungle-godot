@@ -11,13 +11,13 @@ func _check(ok: bool, message: String) -> void:
 		push_error("M1911 AMMO TEST: " + message)
 
 
-func _set_loaded(p: Node, mag: int, chamber: bool) -> void:
+func _set_loaded(p: Variant, mag: int, chamber: bool) -> void:
 	p.m1911_mag_rounds = mag
 	p.m1911_chambered = chamber
 	p._sync_m1911_ammo()
 
 
-func _check_loaded(p: Node, mag: int, chamber: bool, tag: String) -> void:
+func _check_loaded(p: Variant, mag: int, chamber: bool, tag: String) -> void:
 	var total := mag + int(chamber)
 	_check(p.m1911_mag_rounds == mag, tag + ": magazine count")
 	_check(p.m1911_chambered == chamber, tag + ": chamber")
@@ -37,7 +37,7 @@ func _run() -> void:
 	Game.state = "menu"  # Prevent physics/auto-reload racing this deterministic test.
 	var world := Node3D.new()
 	root.add_child(world)
-	var p: Node = load("res://scenes/player.tscn").instantiate()
+	var p: Variant = load("res://scenes/player.tscn").instantiate()
 	world.add_child(p)
 	await process_frame
 
@@ -100,7 +100,7 @@ func _run() -> void:
 	_set_loaded(p, 2, false)
 	p.queue_free()
 	await process_frame
-	var restored: Node = load("res://scenes/player.tscn").instantiate()
+	var restored: Variant = load("res://scenes/player.tscn").instantiate()
 	world.add_child(restored)
 	await process_frame
 	_check_loaded(restored, 2, false, "stored owned state on player re-creation")
@@ -110,7 +110,7 @@ func _run() -> void:
 	restored.queue_free()
 	await process_frame
 	Game.owned["m1911"] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": 3}
-	var migrated: Node = load("res://scenes/player.tscn").instantiate()
+	var migrated: Variant = load("res://scenes/player.tscn").instantiate()
 	world.add_child(migrated)
 	await process_frame
 	_check_loaded(migrated, 2, true, "legacy ammo=3 migrated to chamber+mag")

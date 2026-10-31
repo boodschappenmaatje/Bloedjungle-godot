@@ -506,7 +506,10 @@ func equip(id: String) -> void:
 func _reload(w: Dictionary) -> void:
 	if reload_t > 0.0 or (weapon == "m1911" and m1911_chambered and m1911_mag_rounds >= 7) or (weapon != "m1911" and ammo >= w.mag):
 		return
-	reload_t = w.reload * Progress.bonus().reload
+	# A tactical reload is quick because a round remains chambered.
+	# An empty reload also needs a slide release and takes slightly longer.
+	var empty_m1911_reload := weapon == "m1911" and not m1911_chambered
+	reload_t = w.reload * (1.2 if empty_m1911_reload else 1.0) * Progress.bonus().reload
 	_reload_dur = maxf(reload_t, 0.1)
 	_reload_elapsed = 0.0
 	if weapon == "m1911":

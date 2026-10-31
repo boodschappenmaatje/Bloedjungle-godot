@@ -5,6 +5,7 @@ extends CanvasLayer
 
 const ROWS := [
 	["soldaat", "Mannetjes (na nieuw spel)", [["vq2", "Realistisch"], ["meshy", "Meshy-speler (nieuw)"], ["v1", "Oud model"]]],
+	["m1911_fire_mode", "M1911 schieten", [["assist", "Rustig (0,5 s)"], ["manual", "Handmatig"]]],
 	["ragdoll", "Doodsval vijanden", [["on", "Ragdoll"], ["off", "Animatie"]]],
 	["markeringen", "Markeringen soldaten", [["on", "Aan"], ["tact", "Alleen Tactisch"], ["off", "Uit"]]],
 	["quality", "Grafiek", [["low", "Laag"], ["high", "Hoog"], ["ultra", "Ultra"]]],
@@ -404,6 +405,7 @@ func _build_settings() -> void:
 		row.add_child(frame)
 		v.add_child(row)
 	_build_camera_pitch_controls(v)
+	v.add_child(_wrap("Colt M1911: rechterstick licht bewegen = richten; buitenste ring = een schot. Rustig: vasthouden vuurt maximaal iedere 0,5 seconde een apart schot. Handmatig: opnieuw naar de schietring bewegen voor ieder schot.", 12, UI.INK_DIM, 440.0))
 	_note = _wrap("", 14, UI.INK_DIM, 440.0)
 	v.add_child(_note)
 	v.add_child(_button("KLAAR", "primary", func(): _show(_return)))

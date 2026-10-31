@@ -8,12 +8,22 @@ const RUNWAY_WIDTH := 38.0
 const RUNWAY_SEGMENT := 15.0
 const TAXIWAY_WIDTH := 18.4
 const TAXI_SEGMENT := 8.0
-const APRON_TILE := 14.0
+const APRON_SIZE := Vector2(18.0, 14.0)
+const LOD0_END_M := 140.0
+const LOD1_END_M := 700.0
+const LOD2_END_M := 2500.0
 
 var _concrete: StandardMaterial3D
+var _concrete_flat: StandardMaterial3D
 var _runway_mesh: BoxMesh
+var _runway_mesh_lod1: BoxMesh
+var _runway_mesh_lod2: PlaneMesh
 var _taxi_mesh: BoxMesh
+var _taxi_mesh_lod1: BoxMesh
+var _taxi_mesh_lod2: PlaneMesh
 var _apron_mesh: BoxMesh
+var _apron_mesh_lod1: BoxMesh
+var _apron_mesh_lod2: PlaneMesh
 
 func _ready() -> void:
 	_build_material()
@@ -29,17 +39,32 @@ func _build_material() -> void:
 	_concrete.normal_texture = load("res://assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_nor_gl_2k.jpg")
 	_concrete.roughness = 0.88
 	_concrete.uv1_scale = Vector3(6.0, 6.0, 6.0)
+	_concrete_flat = StandardMaterial3D.new()
+	_concrete_flat.albedo_color = Color("b8b6ad")
+	_concrete_flat.roughness = 0.92
 	_runway_mesh = _make_mesh(Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT - 0.06))
+	_runway_mesh_lod1 = _make_mesh(Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT - 0.06), _concrete_flat)
+	_runway_mesh_lod2 = _make_plane(Vector2(RUNWAY_WIDTH, RUNWAY_SEGMENT))
 	_taxi_mesh = _make_mesh(Vector3(TAXIWAY_WIDTH, SLAB_DEPTH, TAXI_SEGMENT - 0.3))
-	_apron_mesh = _make_mesh(Vector3(APRON_TILE - 0.06, SLAB_DEPTH, APRON_TILE - 0.06))
+	_taxi_mesh_lod1 = _make_mesh(Vector3(TAXIWAY_WIDTH, SLAB_DEPTH, TAXI_SEGMENT - 0.3), _concrete_flat)
+	_taxi_mesh_lod2 = _make_plane(Vector2(TAXIWAY_WIDTH, TAXI_SEGMENT))
+	_apron_mesh = _make_mesh(Vector3(APRON_SIZE.x - 0.06, SLAB_DEPTH, APRON_SIZE.y - 0.06))
+	_apron_mesh_lod1 = _make_mesh(Vector3(APRON_SIZE.x - 0.06, SLAB_DEPTH, APRON_SIZE.y - 0.06), _concrete_flat)
+	_apron_mesh_lod2 = _make_plane(APRON_SIZE)
 
-func _make_mesh(dimensions: Vector3) -> BoxMesh:
+func _make_mesh(dimensions: Vector3, material: StandardMaterial3D = null) -> BoxMesh:
 	var mesh := BoxMesh.new()
 	mesh.size = dimensions
-	mesh.material = _concrete
+	mesh.material = _concrete if material == null else material
 	return mesh
 
-func _multimesh(name: String, mesh: Mesh, transforms: Array[Transform3D]) -> void:
+func _make_plane(dimensions: Vector2) -> PlaneMesh:
+	var mesh := PlaneMesh.new()
+	mesh.size = dimensions
+	mesh.material = _concrete_flat
+	return mesh
+
+func _multimesh(name: String, mesh: Mesh, transforms: Array[Transform3D], range_begin: float, range_end: float, plane_offset_y: float = 0.0) -> void:
 	if transforms.is_empty():
 		return
 	var mm := MultiMesh.new()
@@ -47,11 +72,15 @@ func _multimesh(name: String, mesh: Mesh, transforms: Array[Transform3D]) -> voi
 	mm.mesh = mesh
 	mm.instance_count = transforms.size()
 	for i in transforms.size():
-		mm.set_instance_transform(i, transforms[i])
+		var transform := transforms[i]
+		transform.origin.y += plane_offset_y
+		mm.set_instance_transform(i, transform)
 	var instance := MultiMeshInstance3D.new()
 	instance.name = name
 	instance.multimesh = mm
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	instance.visibility_range_begin = range_begin
+	instance.visibility_range_end = range_end
 	add_child(instance)
 
 func _collider(name: String, dimensions: Vector3, transform: Transform3D) -> void:
@@ -68,31 +97,27 @@ func _collider(name: String, dimensions: Vector3, transform: Transform3D) -> voi
 	add_child(body)
 
 func _build_runway() -> void:
-	# Six culling batches, each 150 m long; concrete expansion joints remain 15 m apart.
-	for chunk_index in range(6):
-		var transforms: Array[Transform3D] = []
-		for local_index in range(10):
-			var i := chunk_index * 10 + local_index
-			var z := -107.5 - i * RUNWAY_SEGMENT
-			var transform := Transform3D(Basis.IDENTITY, Vector3(0, SLAB_DEPTH * 0.5, z))
-			transforms.append(transform)
-			_collider("Runway slab collision %02d" % i, Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT - 0.06), transform)
-		_multimesh("Runway concrete segment %02d" % chunk_index, _runway_mesh, transforms)
+	# Two slabs occupy the clear corridor between the hangar and tower. Their
+	# width is 38 m; the 30 m gameplay length is explicitly an arcade compromise.
+	var transforms: Array[Transform3D] = []
+	for i in range(2):
+		var x := AirfieldHQ23.RUNWAY_START_X + RUNWAY_SEGMENT * 0.5 + i * RUNWAY_SEGMENT
+		var transform := Transform3D(Basis(Vector3.UP, PI * 0.5), AirfieldHQ23.layout_point(x, AirfieldHQ23.RUNWAY_CENTER_Z, SLAB_DEPTH * 0.5))
+		transforms.append(transform)
+		# Fill the narrow visual expansion joint with collision overlap so the
+		# wheels never drop through between the separate concrete slabs.
+		_collider("Runway slab collision %02d" % i, Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT + 0.12), transform)
+	_multimesh("Runway concrete slabs LOD0", _runway_mesh, transforms, 0.0, LOD0_END_M)
+	_multimesh("Runway concrete slabs LOD1", _runway_mesh_lod1, transforms, LOD0_END_M, LOD1_END_M)
+	_multimesh("Runway concrete slabs LOD2", _runway_mesh_lod2, transforms, LOD1_END_M, LOD2_END_M, SLAB_DEPTH * 0.5)
 
 func _build_apron() -> void:
-	var transforms: Array[Transform3D] = []
-	var index := 0
-	# A 112 × 98 m apron, separate from runway and taxiway material systems.
-	for x_index in range(8):
-		for z_index in range(7):
-			var x := -49.0 + x_index * APRON_TILE
-			var z := -30.0 + z_index * APRON_TILE
-			var position := Vector3(x, SLAB_DEPTH * 0.5, z)
-			var transform := Transform3D(Basis.IDENTITY, position)
-			transforms.append(transform)
-			_collider("Apron slab collision %02d" % index, Vector3(APRON_TILE - 0.06, SLAB_DEPTH, APRON_TILE - 0.06), transform)
-			index += 1
-	_multimesh("Apron concrete slabs", _apron_mesh, transforms)
+	# One dedicated, level parking stand for the initial single validated slot.
+	var transform := Transform3D(Basis.IDENTITY, AirfieldHQ23.layout_point(AirfieldHQ23.APRON_CENTER.x, AirfieldHQ23.APRON_CENTER.y, SLAB_DEPTH * 0.5))
+	_multimesh("Aircraft apron parking slab LOD0", _apron_mesh, [transform], 0.0, LOD0_END_M)
+	_multimesh("Aircraft apron parking slab LOD1", _apron_mesh_lod1, [transform], LOD0_END_M, LOD1_END_M)
+	_multimesh("Aircraft apron parking slab LOD2", _apron_mesh_lod2, [transform], LOD1_END_M, LOD2_END_M, SLAB_DEPTH * 0.5)
+	_collider("Aircraft apron parking collision", Vector3(APRON_SIZE.x, SLAB_DEPTH, APRON_SIZE.y), transform)
 
 func _build_taxiway() -> void:
 	var integration := get_parent().get_node_or_null("AirfieldFlightIntegration") as AirfieldFlightIntegration
@@ -115,11 +140,16 @@ func _build_taxiway() -> void:
 		var position := Vector3(local_position.x, SLAB_DEPTH * 0.5, local_position.z)
 		var transform := Transform3D(basis, position)
 		transforms.append(transform)
-		_collider("Taxiway slab collision %02d" % index, Vector3(TAXIWAY_WIDTH, SLAB_DEPTH, TAXI_SEGMENT - 0.3), transform)
+		_collider("Taxiway slab collision %02d" % index, Vector3(TAXIWAY_WIDTH, SLAB_DEPTH, TAXI_SEGMENT - 0.26), transform)
 		index += 1
 		if transforms.size() >= 16:
-			_multimesh("Curved taxiway concrete segment %02d" % batch, _taxi_mesh, transforms)
+			_flush_taxi_batch(batch, transforms)
 			batch += 1
 			transforms = []
 		offset += TAXI_SEGMENT - 0.3
-	_multimesh("Curved taxiway concrete segment %02d" % batch, _taxi_mesh, transforms)
+	_flush_taxi_batch(batch, transforms)
+
+func _flush_taxi_batch(batch: int, transforms: Array[Transform3D]) -> void:
+	_multimesh("Curved taxiway concrete segment %02d LOD0" % batch, _taxi_mesh, transforms, 0.0, LOD0_END_M)
+	_multimesh("Curved taxiway concrete segment %02d LOD1" % batch, _taxi_mesh_lod1, transforms, LOD0_END_M, LOD1_END_M)
+	_multimesh("Curved taxiway concrete segment %02d LOD2" % batch, _taxi_mesh_lod2, transforms, LOD1_END_M, LOD2_END_M, SLAB_DEPTH * 0.5)

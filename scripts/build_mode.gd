@@ -20,6 +20,8 @@ var _msg: Label
 var _panel: PanelContainer
 var _cards: Array = []
 var _zoom_btns: Array = []
+var _airfield_rotate_btn: Button
+var _airfield_pan_btn: Button
 var _sel: Variant = null
 var _sell_arm: Variant = null
 var _ptrs := {}
@@ -30,6 +32,9 @@ var _ghost: MeshInstance3D
 var _ring: MeshInstance3D
 var _msg_t := 0.0
 var _airfield_armed := false
+var _airfield_yaw := 0.0
+var _airfield_pan_mode := false
+var _airfield_candidate := Vector3.ZERO
 var _previous_bcam := Vector3.ZERO
 
 
@@ -175,6 +180,24 @@ func _ready() -> void:
 		b.pressed.connect(func(): _zoom_by({"+": 0.8, "−": 1.25, "⌂": 0.0}[z]))
 		_ui.add_child(b)
 		_zoom_btns.append(b)
+	_airfield_rotate_btn = Button.new()
+	_airfield_rotate_btn.add_to_group("hud_button")
+	_airfield_rotate_btn.text = "90° ↻"
+	_airfield_rotate_btn.tooltip_text = "Vliegveldvoorvertoning 90 graden draaien"
+	_airfield_rotate_btn.custom_minimum_size = Vector2(78, 42)
+	UI.style_button(_airfield_rotate_btn, "pause")
+	_airfield_rotate_btn.pressed.connect(_rotate_airfield_preview)
+	_airfield_rotate_btn.visible = false
+	_ui.add_child(_airfield_rotate_btn)
+	_airfield_pan_btn = Button.new()
+	_airfield_pan_btn.add_to_group("hud_button")
+	_airfield_pan_btn.text = "PAN"
+	_airfield_pan_btn.tooltip_text = "Kaartverschuiving voor de vliegveldkavel in- of uitschakelen"
+	_airfield_pan_btn.custom_minimum_size = Vector2(78, 42)
+	UI.style_button(_airfield_pan_btn, "pause")
+	_airfield_pan_btn.pressed.connect(_toggle_airfield_pan)
+	_airfield_pan_btn.visible = false
+	_ui.add_child(_airfield_pan_btn)
 	resized.connect(_layout)
 	Game.changed.connect(_refresh)
 	_layout()
@@ -245,6 +268,9 @@ func _exit() -> void:
 	Game.build_mode = false
 	Game.airfield_build_view = false
 	_airfield_armed = false
+	_airfield_pan_mode = false
+	_airfield_rotate_btn.visible = false
+	_airfield_pan_btn.visible = false
 	Game.bcam = _previous_bcam if _previous_bcam != Vector3.ZERO else Vector3(0, 0, 1)
 	_ui.visible = false
 	_ptrs.clear()
@@ -280,7 +306,11 @@ func _process(delta: float) -> void:
 		if _msg_t <= 0.0:
 			_msg.text = ""
 	if Game.build_mode:
+		_airfield_rotate_btn.visible = _airfield_armed
+		_airfield_pan_btn.visible = _airfield_armed
 		if _airfield_armed:
+			if _airfield_pan_mode:
+				_airfield_candidate = Vector3(Game.bcam.x, 0.0, Game.bcam.y)
 			_show_airfield_preview()
 		_panel.position = Vector2(size.x - _panel.size.x - 12.0, 76.0)
 
@@ -318,6 +348,10 @@ func _layout() -> void:
 	for i in _zoom_btns.size():
 		var b: Button = _zoom_btns[i]
 		b.position = Vector2(size.x - 12.0 - (3 - i) * 42.0 - (2 - i) * 6.0, top - 54.0)
+	if _airfield_rotate_btn != null:
+		_airfield_rotate_btn.position = Vector2(size.x - 238.0, top - 54.0)
+	if _airfield_pan_btn != null:
+		_airfield_pan_btn.position = Vector2(size.x - 328.0, top - 54.0)
 
 
 func _refresh() -> void:
@@ -430,10 +464,10 @@ func _fill_panel() -> void:
 		for item in aircraft:
 			parked.append(String(item.get("kind", "aircraft")).to_upper())
 		info.text = "Vliegtuigplaatsen %d / %d · %s · sterkte %d" % [aircraft.size(), AirfieldHQ23.AIRCRAFT_CAPACITY, ", ".join(parked) if parked.size() > 0 else "geen vliegtuigen", ceili(b.hp)]
-		var status := AirfieldHQ23.shop_status("p47")
-		var def: Dictionary = AirfieldHQ23.AIRCRAFT["p47"]
-		_act(row, "P-47 Thunderbolt", "%d pt" % def.cost, Game.builds.can_buy_aircraft(b, "p47"), func(): Game.builds.buy_aircraft(b, "p47"))
-		tip = "VLIEGVELD — VLIEGTUIGHANGAR · %s. De originele Meshy Pro-bron is vereist; zonder die asset wordt niets afgerekend." % status
+		var aircraft_status := AirfieldHQ23.shop_status("p47")
+		var aircraft_def: Dictionary = AirfieldHQ23.AIRCRAFT["p47"]
+		_act(row, "P-47 Thunderbolt", "%d pt" % aircraft_def.cost, Game.builds.can_buy_aircraft(b, "p47"), func(): Game.builds.buy_aircraft(b, "p47"))
+		tip = "VLIEGVELD — VLIEGTUIGHANGAR · %s. De originele Meshy Pro-bron is vereist; zonder die asset wordt niets afgerekend." % aircraft_status
 	elif b.kind == "helipad":
 		info.text = "In dienst: %s · sterkte %d" % ["Apache" if b.has_heli else "nog niets", ceili(b.hp)]
 		_act(row, "Apache", "gekocht" if b.has_heli else "%d pt" % Buildings.HELI_COST, Game.builds.can_buy_heli(b), func(): Game.builds.buy_heli(b))
@@ -446,11 +480,10 @@ func _fill_panel() -> void:
 		_act(row, "Herbouw" if b.down else "Repareer", "%d pt" % fix, Game.can_afford_build(fix), func():
 			Game.builds.repair(b)
 			Game.changed.emit())
-	if b.kind != "airfield":
-		_act(row, "Draai", "", true, func():
-			if not Game.builds.turn(b):
-				_say("GEEN RUIMTE")
-			Game.changed.emit())
+	_act(row, "Draai", "", true, func():
+		if not Game.builds.turn(b):
+			_say("GEEN RUIMTE")
+		Game.changed.emit())
 	var armed: bool = _sell_arm == b
 	_act(row, "Zeker?" if armed else "Verkoop", "+%d tegoed" % Game.builds.sell_value(b), true, func():
 		if armed:
@@ -514,7 +547,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _over_ui(p: Vector2) -> bool:
-	var ctrls: Array = [_info, _panel]
+	var ctrls: Array = [_info, _panel, _airfield_rotate_btn, _airfield_pan_btn]
 	ctrls.append_array(_zoom_btns)
 	for c: Control in ctrls:
 		if c.is_visible_in_tree() and c.get_global_rect().has_point(p):
@@ -560,17 +593,32 @@ func _down(id: int, pos: Vector2) -> void:
 					_say(c.kind.to_upper() + " KOMT LATER")
 			elif c.kind == "airfield":
 				_airfield_armed = true
+				_airfield_yaw = 0.0
+				_airfield_pan_mode = false
 				Game.airfield_build_view = true
-				Game.bcam = Vector3(AirfieldHQ23.ANCHOR.x, AirfieldHQ23.ANCHOR.z, 2.4)
+				Game.bcam = Vector3(AirfieldHQ23.SUGGESTED_CENTER.x, AirfieldHQ23.SUGGESTED_CENTER.z, 1.0)
+				_airfield_candidate = AirfieldHQ23.SUGGESTED_CENTER
 				_sel = null
 				_fill_panel()
+				_say("PAN VERSCHUIFT DE KAART · TIK OP DE KAVEL OM TE PLAATSEN")
 			else:
 				_drag = {"kind": c.kind, "yaw": 0.0, "ox": 0.0, "oz": 0.0, "sp": pos, "moved": false, "id": id, "st": null}
 			return
 	if _over_ui(pos):
 		return
 	if _airfield_armed:
-		_confirm_airfield()
+		if _airfield_pan_mode:
+			_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id}
+			return
+		var ground: Variant = _ground(pos)
+		if ground == null:
+			return
+		_airfield_candidate = Vector3(_snap(ground.x), 0.0, _snap(ground.z))
+		_drag = {"kind": "airfield", "yaw": _airfield_yaw, "ox": 0.0, "oz": 0.0, "sp": pos, "moved": true, "id": id, "st": null}
+		_drag.x = _airfield_candidate.x
+		_drag.z = _airfield_candidate.z
+		_drag.ok = Game.builds.can_place("airfield", _airfield_candidate, _airfield_yaw)
+		_show_ghost("airfield", _airfield_candidate, _airfield_yaw, _drag.ok)
 		return
 	var g = _ground(pos)
 	if g == null:
@@ -642,6 +690,18 @@ func _up(id: int) -> void:
 			_sell_arm = null
 			_fill_panel()
 		return
+	if d.get("kind", "") == "airfield":
+		var site := Vector3(d.x, 0.0, d.z)
+		if d.get("ok", false) and Game.can_afford_build(AirfieldHQ23.BUILD_COST):
+			_sel = Game.builds.place("airfield", site, d.yaw)
+			if _sel != null:
+				_airfield_armed = false
+				Game.changed.emit()
+			else:
+				_say("ONGELDIGE LOCATIE OF ONVOLDOENDE BOUWTEGOED")
+		else:
+			_say("ONGELDIGE LOCATIE — BASIS, RIVIER, OBJECT OF KAARTRAND")
+		return
 	if d.st != null:
 		d.st.node.visible = true
 		if not d.moved:
@@ -661,7 +721,7 @@ func _up(id: int) -> void:
 
 func _zoom_by(f: float) -> void:
 	if f == 0.0:
-		Game.bcam = Vector3(AirfieldHQ23.ANCHOR.x, AirfieldHQ23.ANCHOR.z, 2.4) if Game.airfield_build_view else Vector3(0, 0, 1)
+		Game.bcam = Vector3(AirfieldHQ23.SUGGESTED_CENTER.x, AirfieldHQ23.SUGGESTED_CENTER.z, 1.0) if Game.airfield_build_view else Vector3(0, 0, 1)
 	else:
 		_set_zoom(Game.bcam.z * f)
 	Sfx.play("click", 0.5)
@@ -674,8 +734,11 @@ func _set_zoom(z: float) -> void:
 
 func _clamp_pan() -> void:
 	if Game.airfield_build_view:
-		Game.bcam.x = clampf(Game.bcam.x, AirfieldHQ23.ANCHOR.x - AirfieldHQ23.FOOTPRINT.x * 0.5, AirfieldHQ23.ANCHOR.x + AirfieldHQ23.FOOTPRINT.x * 0.5)
-		Game.bcam.y = clampf(Game.bcam.y, AirfieldHQ23.ANCHOR.z - AirfieldHQ23.FOOTPRINT.z * 0.5, AirfieldHQ23.ANCHOR.z + AirfieldHQ23.FOOTPRINT.z * 0.5)
+		var quarter_turn := absf(fposmod(_airfield_yaw, PI) - PI * 0.5) < 0.01
+		var half_x := AirfieldHQ23.FOOTPRINT.z * 0.5 if quarter_turn else AirfieldHQ23.FOOTPRINT.x * 0.5
+		var half_z := AirfieldHQ23.FOOTPRINT.x * 0.5 if quarter_turn else AirfieldHQ23.FOOTPRINT.z * 0.5
+		Game.bcam.x = clampf(Game.bcam.x, -Data.WORLD_X + 1.0 + half_x, Data.WORLD_X - 1.0 - half_x)
+		Game.bcam.y = clampf(Game.bcam.y, -Data.WORLD_Z_N + 1.0 + half_z, Data.WORLD_Z_S - 1.0 - half_z)
 		return
 	var m := Data.WORLD_R - 6.0
 	var v := Vector2(Game.bcam.x, Game.bcam.y)
@@ -717,28 +780,20 @@ func _show_ghost(kind: String, at: Vector3, yaw: float, ok: bool) -> void:
 
 
 func _show_airfield_preview() -> void:
-	var at := AirfieldHQ23.ANCHOR
-	var ok := Game.builds.can_place("airfield", at, 0.0) and Game.can_afford_build(AirfieldHQ23.BUILD_COST)
-	_show_ghost("airfield", at, 0.0, ok)
+	var at := _airfield_candidate if _airfield_candidate != Vector3.ZERO else AirfieldHQ23.SUGGESTED_CENTER
+	var ok := Game.builds.can_place("airfield", at, _airfield_yaw) and Game.can_afford_build(AirfieldHQ23.BUILD_COST)
+	_show_ghost("airfield", at, _airfield_yaw, ok)
 
-func _confirm_airfield() -> void:
-	if not _airfield_armed:
-		return
-	var at := AirfieldHQ23.ANCHOR
-	if Game.builds.full("airfield"):
-		_say("ER IS AL EEN VLIEGVELD")
-		return
-	if not Game.can_afford_build(AirfieldHQ23.BUILD_COST):
-		_say("ONVOLDOENDE PUNTEN")
-		return
-	_sel = Game.builds.place("airfield", at, 0.0)
-	if _sel != null:
-		_airfield_armed = false
-		if _ghost:
-			_ghost.visible = false
-		Game.changed.emit()
-	else:
-		_say("ONGELDIGE VLIEGVELDKAVEL")
+func _rotate_airfield_preview() -> void:
+	_airfield_yaw = wrapf(_airfield_yaw + PI * 0.5, 0.0, TAU)
+	_clamp_pan()
+	_airfield_candidate = Vector3(Game.bcam.x, 0.0, Game.bcam.y)
+	_show_airfield_preview()
+
+func _toggle_airfield_pan() -> void:
+	_airfield_pan_mode = not _airfield_pan_mode
+	_airfield_pan_btn.text = "PAN AAN" if _airfield_pan_mode else "PAN"
+	Sfx.play("click", 0.5)
 
 
 func _place_ring(b: Dictionary) -> void:

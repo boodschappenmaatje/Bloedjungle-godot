@@ -80,7 +80,8 @@ jobs:
           "$GODOT_BIN" --headless --path . -s tests/bunker_hq_replacement_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/bunker_hq_replacement_test.log"
           "$GODOT_BIN" --headless --path . -s tests/soldaat_vq2_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/soldaat_vq2_test.log"
           "$GODOT_BIN" --headless --path . -s tests/m1911_ammo_reload_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/m1911_ammo_reload_test.log"
-          "$GODOT_BIN" --headless --path . -s tests/airfield_hq_23_contract_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/airfield_hq_23_contract_test.log"
+          "$GODOT_BIN" --headless --fixed-fps 60 --path . res://tests/airfield_hq_22_import_test_scene.tscn 2>&1 | tee "$RUNNER_TEMP/airfield_hq_22_import_test.log"
+          "$GODOT_BIN" --headless --fixed-fps 60 --path . res://tests/airfield_hq_23_contract_test_scene.tscn 2>&1 | tee "$RUNNER_TEMP/airfield_hq_23_contract_test.log"
           "$GODOT_BIN" --headless --path . -s tests/ota_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/ota_test.log"
           if grep -E '(^| )(SCRIPT ERROR|Parse Error|Failed loading resource)' "$RUNNER_TEMP/import.log" "$RUNNER_TEMP/startup.log"; then
             echo "Godot import/startup logged errors; see the retained diagnostics artifact" >&2
@@ -102,6 +103,7 @@ jobs:
             ${{ runner.temp }}/bunker_hq_replacement_test.log
             ${{ runner.temp }}/soldaat_vq2_test.log
             ${{ runner.temp }}/m1911_ammo_reload_test.log
+            ${{ runner.temp }}/airfield_hq_22_import_test.log
             ${{ runner.temp }}/ota_test.log
             ${{ runner.temp }}/jungle_commando_glb.json
           if-no-files-found: ignore

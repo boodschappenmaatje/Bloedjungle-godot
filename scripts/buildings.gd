@@ -77,7 +77,25 @@ func _tower_feet() -> Array:
 ## Kan dit hier staan? Gebouwen binnen de muur, stukken overal behalve op de muur en in de poorten.
 func can_place(kind: String, at: Vector3, yaw: float, me: Variant = null) -> bool:
 	if kind == "airfield":
-		return AirfieldHQ23.complex_available() and absf(at.x - AirfieldHQ23.ANCHOR.x) < 0.1 and absf(at.z - AirfieldHQ23.ANCHOR.z) < 0.1 and absf(fposmod(yaw, TAU)) < 0.01 and (me != null or not full(kind))
+		if not AirfieldHQ23.complex_available() or not AirfieldHQ23.area_limit_ok() or (me == null and full(kind)):
+			return false
+		if not AirfieldHQ23.site_inside_world(at, yaw) or not AirfieldHQ23.site_clear_of_combat_spawns(at, yaw):
+			return false
+		if not AirfieldHQ23.site_clear_of_river(at, yaw):
+			return false
+		var site_shape := BoxShape3D.new()
+		site_shape.size = Vector3(AirfieldHQ23.FOOTPRINT.x - 1.0, 1.0, AirfieldHQ23.FOOTPRINT.z - 1.0)
+		var site_query := PhysicsShapeQueryParameters3D.new()
+		site_query.shape = site_shape
+		site_query.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_NATURE | Kit.LAYER_WATER
+		if me != null:
+			site_query.exclude.append(me.node.get_rid())
+			for child in me.node.find_children("*", "CollisionObject3D", true, false):
+				site_query.exclude.append((child as CollisionObject3D).get_rid())
+		site_query.transform = Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0.0, 0.6, 0.0))
+		if not is_inside_tree():
+			return true
+		return get_world_3d().direct_space_state.intersect_shape(site_query, 1).is_empty()
 	var d: Dictionary = DEFS[kind]
 	var sz: Vector3 = d.size
 	var piece := is_piece(kind)
@@ -372,8 +390,6 @@ func sell(b: Dictionary) -> void:
 
 
 func turn(b: Dictionary) -> bool:
-	if b.kind == "airfield":
-		return false
 	var ny: float = fposmod(b.yaw + PI / 2.0, TAU)
 	if not can_place(b.kind, b.at, ny, b):
 		return false

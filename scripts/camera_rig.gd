@@ -89,6 +89,15 @@ func _dust() -> void:
 
 ## Bouwmodus (placeBuildCam in 22-camera.js): hoog boven de basis, verschuiven en zoomen met Game.bcam.
 func _build_cam(delta: float, portrait: bool) -> void:
+	if Game.airfield_build_view:
+		var aspect := maxf(0.1, get_viewport().get_visible_rect().size.x / get_viewport().get_visible_rect().size.y)
+		var tan_v := tan(deg_to_rad(fov * 0.5))
+		var tan_h := tan_v * aspect
+		var distance := maxf(AirfieldHQ23.FOOTPRINT.x / (2.0 * tan_h), AirfieldHQ23.FOOTPRINT.z / (2.0 * tan_v)) * 1.15 / maxf(Game.bcam.z, 0.35)
+		var target := Vector3(Game.bcam.x, 0.0, Game.bcam.y)
+		global_transform = Transform3D(Basis(Vector3.RIGHT, Vector3(0, 0, -1), Vector3.UP), target + Vector3(0, distance, 0))
+		far = maxf(220.0, distance + 80.0)
+		return
 	var k := (20.0 if Game.airfield_build_view else Data.COMPOUND / 14.0 * 1.1) * Game.bcam.z
 	# liggend ~71 graden neerwaarts op ~48 m (richtwaarde 70); staand blijft steiler zodat de smalle breedte past
 	var goal := Vector3(Game.bcam.x, (83.0 if portrait else 46.0) * k, Game.bcam.y + (16.0 if portrait else 19.2) * k)

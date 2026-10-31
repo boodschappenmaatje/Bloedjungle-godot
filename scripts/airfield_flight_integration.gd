@@ -10,9 +10,12 @@ const DOOR_CLEAR_WIDTH_M := 39.4
 const DOOR_CLEAR_HEIGHT_M := 13.0
 const TAXIWAY_WIDTH_M := 18.4
 const RUNWAY_WIDTH_M := 38.0
-const RUNWAY_LENGTH_M := 900.0
-const DEMO_ACCELERATION_MPS2 := 2.0
-const DEMO_LIFTOFF_SPEED_MPS := 50.0
+const RUNWAY_LENGTH_M := AirfieldHQ23.MAX_RUNWAY_LENGTH
+const TAKEOFF_START_X := AirfieldHQ23.RUNWAY_START_X + 12.0
+const RUNWAY_END_X := AirfieldHQ23.RUNWAY_END_X
+const TAKEOFF_AVAILABLE_ROLL_M := RUNWAY_END_X - TAKEOFF_START_X
+const DEMO_ACCELERATION_MPS2 := 5.0
+const DEMO_LIFTOFF_SPEED_MPS := 10.0
 
 @onready var taxi_route: Path3D = $P47_Taxi_Route
 @onready var takeoff_path: Path3D = $P47_Takeoff_Path
@@ -48,13 +51,14 @@ func clearance_report() -> Dictionary:
 func takeoff_profile_report() -> Dictionary:
 	var distance := DEMO_LIFTOFF_SPEED_MPS * DEMO_LIFTOFF_SPEED_MPS / (2.0 * DEMO_ACCELERATION_MPS2)
 	return {
-		"profile_type": "gameplay demonstration assumption; not measured P-47 flight data",
+		"profile_type": "arcade gameplay assumption; not measured or historically representative P-47 flight data",
 		"acceleration_mps2": DEMO_ACCELERATION_MPS2,
 		"liftoff_speed_mps": DEMO_LIFTOFF_SPEED_MPS,
 		"required_ground_roll_m": distance,
 		"paved_runway_m": RUNWAY_LENGTH_M,
-		"remaining_runway_m": RUNWAY_LENGTH_M - distance,
-		"fits_demonstration": distance < RUNWAY_LENGTH_M - 100.0,
+		"available_roll_from_start_marker_m": TAKEOFF_AVAILABLE_ROLL_M,
+		"remaining_runway_m": TAKEOFF_AVAILABLE_ROLL_M - distance,
+		"fits_demonstration": distance <= TAKEOFF_AVAILABLE_ROLL_M - 0.25,
 	}
 
 func _curve(points: Array[Vector3]) -> Curve3D:
@@ -64,25 +68,39 @@ func _curve(points: Array[Vector3]) -> Curve3D:
 	return c
 
 func _build_paths() -> void:
-	# Godot X/Z correspond to Blender X/-Y. Extra samples soften the turn from
-	# the apron around the tower into the runway holding point.
-	taxi_route.curve = _curve([
-		Vector3(0, .22, 48), Vector3(18, .22, 48), Vector3(34, .22, 46),
-		Vector3(47, .22, 42), Vector3(54, .22, 33), Vector3(60, .22, 15),
-		Vector3(58, .22, -5), Vector3(55, .22, -36), Vector3(54, .22, -70),
-		Vector3(51, .22, -105), Vector3(43, .22, -140),
-		Vector3(30, .22, -175), Vector3(19, .22, -204),
-		Vector3(11, .22, -230), Vector3(0, .22, -245),
-	])
+	# Route coordinates are relative to the placed complex. The taxiway uses a
+	# sampled 90-degree arc with a 12.5 m centreline radius to clear the hangar.
+	$P47_Hangar_Spawn.position = Vector3(0.0, 0.22, 0.0)
+	var parking := AirfieldHQ23.layout_point(AirfieldHQ23.APRON_CENTER.x, AirfieldHQ23.APRON_CENTER.y)
+	var taxi_join := AirfieldHQ23.layout_point(AirfieldHQ23.TAXI_ARC_CENTER.x, AirfieldHQ23.TAXI_ARC_CENTER.y + AirfieldHQ23.TAXI_ARC_RADIUS)
+	$P47_Apron_Parking.position = parking
+	$P47_Taxi_Start.position = parking
+	$P47_Runway_Hold.position = taxi_join
+	$P47_Runway_Start.position = AirfieldHQ23.layout_point(TAKEOFF_START_X, AirfieldHQ23.RUNWAY_CENTER_Z)
+	$P47_Landing_Touchdown.position = AirfieldHQ23.layout_point(AirfieldHQ23.RUNWAY_END_X - 3.0, AirfieldHQ23.RUNWAY_CENTER_Z)
+	$P47_Landing_Approach.position = AirfieldHQ23.layout_point(75.0, AirfieldHQ23.RUNWAY_CENTER_Z, 24.0)
+	var taxi_points: Array[Vector3] = [
+		parking,
+		AirfieldHQ23.layout_point(AirfieldHQ23.APRON_CENTER.x, -4.0),
+	]
+	for i in range(1, 9):
+		var angle := lerpf(PI, PI * 0.5, float(i) / 8.0)
+		var point := AirfieldHQ23.TAXI_ARC_CENTER + Vector2(cos(angle), sin(angle)) * AirfieldHQ23.TAXI_ARC_RADIUS
+		taxi_points.append(AirfieldHQ23.layout_point(point.x, point.y))
+	taxi_route.curve = _curve(taxi_points)
 	takeoff_path.curve = _curve([
-		Vector3(0, .22, -245), Vector3(0, .22, -400),
-		Vector3(0, .22, -650), Vector3(0, .22, -870),
-		Vector3(0, 6, -900), Vector3(0, 20, -945), Vector3(0, 55, -1040),
+		AirfieldHQ23.layout_point(TAKEOFF_START_X, AirfieldHQ23.RUNWAY_CENTER_Z),
+		AirfieldHQ23.layout_point(42.0, AirfieldHQ23.RUNWAY_CENTER_Z, 0.22),
+		AirfieldHQ23.layout_point(50.0, AirfieldHQ23.RUNWAY_CENTER_Z, 2.0),
+		AirfieldHQ23.layout_point(62.0, 10.0, 12.0),
+		AirfieldHQ23.layout_point(75.0, 14.0, 24.0),
 	])
 	landing_path.curve = _curve([
-		Vector3(0, 60, -1160), Vector3(0, 25, -1020),
-		Vector3(0, 7, -900), Vector3(0, .22, -850),
-		Vector3(0, .22, -550), Vector3(0, .22, -300),
+		AirfieldHQ23.layout_point(75.0, AirfieldHQ23.RUNWAY_CENTER_Z, 24.0),
+		AirfieldHQ23.layout_point(62.0, AirfieldHQ23.RUNWAY_CENTER_Z, 10.0),
+		AirfieldHQ23.layout_point(55.0, AirfieldHQ23.RUNWAY_CENTER_Z, 3.0),
+		$P47_Landing_Touchdown.position,
+		AirfieldHQ23.layout_point(41.0, AirfieldHQ23.RUNWAY_CENTER_Z),
 	])
 
 func place_real_aircraft(aircraft: Node3D) -> void:

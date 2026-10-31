@@ -1,0 +1,28 @@
+{
+  "asset": "Bloedjungle Airfield HQ 2.3 Compact",
+  "source": "protected HQ 2.2 source; transformed review copy",
+  "blender": "4.5.15 LTS",
+  "lod": 2,
+  "units": "metres",
+  "mesh_objects": 8,
+  "triangles": 16394,
+  "light_nodes": 0,
+  "door_clear_width_m": 15.0,
+  "door_clear_height_m": 5.89,
+  "door_leaf_width_m": 7.37,
+  "door_wing_margin_each_side_m": 1.28,
+  "clear_interior_m": [
+    15.0,
+    13.0,
+    6.0
+  ],
+  "gltf_albedo_material_fixes": [
+    "Aged airfield concrete",
+    "Hangar Interior Pitted Concrete",
+    "USAAF olive drab painted steel",
+    "Weathered galvanized steel"
+  ],
+  "animations": [],
+  "glb": "assets/airfield_hq_v23/hangar/Airfield_HQ_23_Compact_LOD2.glb",
+  "bytes": 26443976
+}

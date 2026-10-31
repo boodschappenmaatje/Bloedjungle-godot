@@ -1,0 +1,11 @@
+{
+  "asset": "15 x 18 m beveled 3D concrete runway slab, source HQ23 2K PBR",
+  "blender": "4.5.15 LTS",
+  "lod": 2,
+  "triangles": 44,
+  "vertices": 24,
+  "material_slots": 1,
+  "units": "metres",
+  "glb": "assets/airfield_hq_v23/pavement/Airfield_Runway_Slab_HQ23_LOD2.glb",
+  "bytes": 6235864
+}

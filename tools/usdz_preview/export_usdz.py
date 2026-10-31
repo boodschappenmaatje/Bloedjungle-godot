@@ -22,6 +22,7 @@ import zipfile
 from pathlib import Path
 
 import bpy
+from mathutils import Vector
 
 
 TEXTURE_SUFFIXES = {".png", ".jpg", ".jpeg", ".exr", ".avif", ".tif", ".tiff"}
@@ -35,6 +36,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", required=True, help="New .usdz destination")
     parser.add_argument("--report", help="Optional JSON receipt destination")
     parser.add_argument("--max-texture-size", type=int, choices=(512, 1024, 2048, 4096), default=2048)
+    parser.add_argument("--center", action="store_true", help="Center visible mesh bounds on X/Y and place the lowest point at Z=0")
     parser.add_argument("--require-animation", action="store_true", help="Fail if no active scene/NLA animation is found")
     parser.add_argument("--action", help="Select this Blender action before exporting a review animation")
     parser.add_argument("--overwrite", action="store_true", help="Allow replacing output and receipt files")
@@ -178,6 +180,25 @@ def resolve_texture_paths() -> int:
     return resolved
 
 
+def center_visible_meshes() -> None:
+    """Center the preview copy in memory; never saves or changes its source."""
+    scene = bpy.context.scene
+    objects = [obj for obj in scene.objects if obj.type == "MESH" and obj.visible_get()]
+    points = [obj.matrix_world @ Vector(corner)
+              for obj in objects for corner in obj.bound_box]
+    if not points:
+        raise RuntimeError("Cannot center preview: no visible mesh bounds were found")
+    center_x = (min(point.x for point in points) + max(point.x for point in points)) * 0.5
+    center_y = (min(point.y for point in points) + max(point.y for point in points)) * 0.5
+    floor_z = min(point.z for point in points)
+    offset = Vector((-center_x, -center_y, -floor_z))
+    roots = [obj for obj in scene.objects if obj.parent is None]
+    for obj in roots:
+        matrix = obj.matrix_world.copy()
+        matrix.translation += offset
+        obj.matrix_world = matrix
+
+
 def select_action(name: str | None) -> None:
     if not name:
         return
@@ -227,6 +248,8 @@ def main() -> None:
 
     load_source(source)
     select_action(args.action)
+    if args.center:
+        center_visible_meshes()
     converted_curves = convert_static_curves_to_meshes()
     inventory = scene_inventory()
     if not inventory["mesh_objects"]:
@@ -258,6 +281,7 @@ def main() -> None:
         "output_sha256": sha256(output),
         "blender_version": bpy.app.version_string,
         "preview_texture_max_px": args.max_texture_size,
+        "centered_preview": args.center,
         "source_texture_paths_resolved": resolved_texture_paths,
         "animation_exported": inventory["scene_animation_active"],
         "static_curves_converted_to_meshes": converted_curves,

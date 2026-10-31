@@ -18,34 +18,38 @@ const MAX_GROUND_AREA := 2.0 * BASE_GROUND_SIZE.x * BASE_GROUND_SIZE.y
 # hangar/tower and separate paving lobes. Its map-placement bounds include empty
 # existing terrain between components; only the conservative surface sum below
 # is charged against the 2× land-take limit.
-const FOOTPRINT := Vector3(113.25, 23.0, 87.4) # symmetric bounds for build-camera framing only
+const FOOTPRINT := Vector3(75.0, 23.0, 53.0) # symmetric component bounds for build-camera framing only
 
-const HANGAR_CENTER := Vector2(-24.125, -0.3)
-const HANGAR_SIZE := Vector2(65.0, 42.46)
-const TOWER_CENTER := Vector2(47.875, -20.3)
-const TOWER_SIZE := Vector2(17.5, 14.8) # 2.2 reference envelope; 2.3 tower is contained
+const HANGAR_CENTER := Vector2(0.0, 2.5)
+const HANGAR_SIZE := Vector2(28.0, 24.0) # construction zone around a 22 × 20 m shell
+const TOWER_CENTER := Vector2(-17.0, 19.5)
+const TOWER_SIZE := Vector2(8.0, 8.0) # tower core; exterior stair access has its own zone
+const TOWER_STAIR_CENTER := Vector2(-22.0, 19.5)
+const TOWER_STAIR_SIZE := Vector2(4.0, 8.0)
 
 const RUNWAY_LENGTH_M := 75.0
 const RUNWAY_WIDTH_M := 18.0
-const RUNWAY_START_X := -56.5
+const RUNWAY_START_X := -37.5
 const RUNWAY_END_X := RUNWAY_START_X + RUNWAY_LENGTH_M
-const RUNWAY_CENTER_Z := -31.5
-const APRON_CENTER := Vector2(28.0, -20.0)
-const TAXI_ARC_CENTER := Vector2(16.0, -22.5)
+const RUNWAY_CENTER_Z := -17.5
+const APRON_CENTER := Vector2(0.0, 19.5)
+const TAXI_ARC_CENTER := Vector2(16.0, 7.5)
 const TAXI_ARC_RADIUS := 12.0
-const TAXIWAY_WIDTH_M := 18.4
-const TAXI_START := Vector2(28.0, -20.0)
-const TAXI_ARC_START := Vector2(28.0, -22.5)
-const TAXI_ARC_END := Vector2(16.0, -34.5)
+const TAXIWAY_WIDTH_M := 18.0
+const TAXI_START := Vector2(9.0, 19.5)
+const TAXI_ARC_START := Vector2(16.0, 19.5)
+const TAXI_ARC_END := Vector2(28.0, 7.5)
+const TAXI_RUNWAY_END := Vector2(28.0, -8.5)
+const TAXI_RUNWAY_HOLD := Vector2(28.0, -4.5)
 
-# The unscaled approved core's original translation is retained.
-const COMPLEX_CENTER_OFFSET := Vector3(-24.125, 0.0, -0.3)
+# The derived compact hangar is centred at its authored floor origin.
+const COMPLEX_CENTER_OFFSET := Vector3(0.0, 0.0, HANGAR_CENTER.y)
 const SUGGESTED_CENTER := Vector3(70.0, 0.0, 115.0)
 const P47_SCENE := "res://assets/p47_thunderbolt.glb"
 const AIRCRAFT := {
 	"p47": {"name": "Republic P-47 Thunderbolt", "cost": P47_COST, "scene": P47_SCENE, "source_required": "original Meshy Pro GLB/FBX"},
 }
-const COMPLEX_SCENE := "res://scenes/airfield_hq_22_showcase.tscn"
+const COMPLEX_SCENE := "res://scenes/airfield_hq_23_compact_showcase.tscn"
 const TOWER_LOD_SCENES := [
 	"res://assets/airfield_hq_v23/tower/Control_Tower_HQ_23.glb",
 	"res://assets/airfield_hq_v23/tower/Control_Tower_HQ_23_LOD1.glb",
@@ -69,8 +73,8 @@ static func make_complex() -> StaticBody3D:
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
 	body.set_meta("impact_material", "concrete")
-	# This coarse overall box is disabled: individual construction-region checks
-	# and the original building colliders preserve walkable gaps and playable access.
+	# This coarse overall box is disabled: individual placement regions and solid
+	# wall, door and stair colliders preserve playable access between components.
 	var slab_collision := CollisionShape3D.new()
 	var slab := BoxShape3D.new()
 	slab.size = Vector3(FOOTPRINT.x, 0.5, FOOTPRINT.z)
@@ -79,7 +83,7 @@ static func make_complex() -> StaticBody3D:
 	slab_collision.disabled = true
 	body.add_child(slab_collision)
 	var complex := packed.instantiate()
-	complex.name = "AirfieldHQ22ApprovedCore"
+	complex.name = "AirfieldHQ23CompactCore"
 	complex.position = COMPLEX_CENTER_OFFSET
 	body.add_child(complex)
 	_compact_approved_core(complex)
@@ -92,10 +96,10 @@ static func make_complex() -> StaticBody3D:
 	return body
 
 static func _compact_approved_core(complex: Node3D) -> void:
-	# Only the approved 2.2 tower shell is hidden in this new 2.3 instance.
-	# Hangar, interior, sliding doors, tower door and animated windsock remain byte-identical.
-	var keep_prefixes := ["Hangar HQ 22", "Hangar sliding door", "USAAF blue insignia", "USAAF white star", "Hangar Service Props", "Tower access door", "Tower wind sock"]
-	for lod_name in ["Airfield_HQ_22_LOD0", "Airfield_HQ_22_LOD1", "Airfield_HQ_22_LOD2"]:
+	# The protected 2.2 showcase stays untouched. This derived 2.3 scene keeps its
+	# compact hangar, service interior and animated hangar doors; its old tower hides.
+	var keep_prefixes := ["Hangar HQ 22", "Hangar sliding door", "USAAF blue insignia", "USAAF white star", "Hangar Service Props"]
+	for lod_name in ["Airfield_HQ_23_Compact_LOD0", "Airfield_HQ_23_Compact_LOD1", "Airfield_HQ_23_Compact_LOD2"]:
 		var lod := complex.get_node_or_null(lod_name)
 		if lod == null:
 			continue
@@ -107,18 +111,16 @@ static func _compact_approved_core(complex: Node3D) -> void:
 					break
 			node.visible = keep
 	_disable_unwanted_workshop_lights(complex)
-	for collider_name in ["RunwayCollision", "ApronCollision", "TaxiCollision"]:
+	for collider_name in ["RunwayCollision", "ApronCollision", "TaxiCollision", "TowerCollision", "TowerWestWall", "TowerEastWall", "TowerSouthWestPier", "TowerSouthEastPier", "TowerDoorCollision"]:
 		var collider := complex.get_node_or_null("GameplayCollisions/" + collider_name) as StaticBody3D
 		if collider != null:
 			collider.collision_layer = 0
 
 static func _disable_unwanted_workshop_lights(complex: Node3D) -> void:
-	# The approved HQ 2.2 source remains byte-identical. These five imported LOD0
-	# OmniLight3D nodes have a 4096 m range and ~38k energy and are not suitable as
-	# runtime lights for the placed HQ 2.3 airfield. Hide only these named lights
-	# on the newly instantiated 2.3 copy; warning-light meshes and all other nodes
-	# remain untouched.
-	var lod0 := complex.get_node_or_null("Airfield_HQ_22_LOD0")
+	# The protected source remains byte-identical. The derived GLB carries five
+	# bounded local workshop lights; keep them off in normal daylight and expose a
+	# reversible toggle for matched lights-on/lights-off review captures.
+	var lod0 := complex.get_node_or_null("Airfield_HQ_23_Compact_LOD0")
 	if lod0 == null:
 		return
 	for node in lod0.find_children("*", "OmniLight3D", true, false):
@@ -129,7 +131,8 @@ static func _disable_unwanted_workshop_lights(complex: Node3D) -> void:
 static func _add_hq23_tower(complex: Node3D) -> void:
 	var tower_root := Node3D.new()
 	tower_root.name = "ControlTowerHQ23"
-	tower_root.position = Vector3(72.0, 0.0, -20.0)
+	tower_root.position = layout_point(TOWER_CENTER.x, TOWER_CENTER.y, 0.0)
+	tower_root.scale = Vector3(0.54, 1.0, 0.54)
 	complex.add_child(tower_root)
 	for index in TOWER_LOD_SCENES.size():
 		var path: String = TOWER_LOD_SCENES[index]
@@ -150,28 +153,28 @@ static func _add_hq23_tower(complex: Node3D) -> void:
 static func _add_tower_stair_collisions(complex: Node3D) -> void:
 	var body := StaticBody3D.new()
 	body.name = "HQ23 Tower stair and level collisions"
-	body.position = Vector3(72.0, 0.0, -20.0)
+	body.position = layout_point(TOWER_CENTER.x, TOWER_CENTER.y, 0.0)
 	body.collision_layer = Kit.LAYER_GROUND
 	body.collision_mask = 0
 	complex.add_child(body)
 	var flight_xs := [5.10, 7.45, 5.10, 7.45]
 	var flight_dirs := [1, -1, 1, -1]
 	for flight_index in 4:
-		var x: float = flight_xs[flight_index]
+		var x: float = flight_xs[flight_index] * 0.54
 		var direction: int = flight_dirs[flight_index]
 		var low := 0.45 + float(flight_index) * 3.03
-		var y_start := -2.65 if direction > 0 else 2.65
+		var y_start := (-2.65 if direction > 0 else 2.65) * 0.54
 		var y_end := y_start + direction * 5.30
 		for step in 18:
 			var t := (float(step) + 0.5) / 18.0
 			var z := low + 3.03 * t
 			var y := y_start + (y_end - y_start) * t
-			_add_box_collision(body, Vector3(x, z, -y), Vector3(1.18, 0.12, 0.27))
+			_add_box_collision(body, Vector3(x, z, -y), Vector3(1.0, 0.12, 0.30))
 	for level in range(1, 5):
 		var high := 0.45 + float(level) * 3.03
 		var x: float = flight_xs[level - 1]
-		var y := -2.65 if level % 2 == 1 else 2.65
-		_add_box_collision(body, Vector3((x + 4.55) * 0.5, high - 0.06, -y), Vector3(absf(x - 4.55) + 1.4, 0.14, 1.48))
+		var y := (-2.65 if level % 2 == 1 else 2.65) * 0.54
+		_add_box_collision(body, Vector3((x + 4.55) * 0.5 * 0.54, high - 0.06, -y), Vector3((absf(x - 4.55) + 1.4) * 0.54, 0.14, 1.0))
 
 static func _add_box_collision(parent: Node, at: Vector3, dimensions: Vector3) -> void:
 	var node := CollisionShape3D.new()
@@ -191,15 +194,15 @@ static func region_transform(at: Vector3, yaw: float, region: Dictionary) -> Tra
 	return Transform3D(Basis(Vector3.UP, yaw + local_yaw), world_center)
 
 static func layout_point(x: float, z: float, y: float = 0.22) -> Vector3:
-	# Convert the declared airport-local layout coordinates into the translated
-	# HQ2.2 source scene's child coordinate frame without scaling that core.
+	# Convert airport-local coordinates into the compact hangar-centered scene.
 	return Vector3(x - COMPLEX_CENTER_OFFSET.x, y, z - COMPLEX_CENTER_OFFSET.z)
 
 static func taxi_centerline_points() -> Array[Vector2]:
 	var points: Array[Vector2] = [TAXI_START, TAXI_ARC_START]
 	for i in range(1, 9):
-		var angle := lerpf(0.0, -PI * 0.5, float(i) / 8.0)
+		var angle := lerpf(PI * 0.5, 0.0, float(i) / 8.0)
 		points.append(TAXI_ARC_CENTER + Vector2(cos(angle), sin(angle)) * TAXI_ARC_RADIUS)
+	points.append(TAXI_RUNWAY_END)
 	return points
 
 static func _taxi_regions(step_m: float = 4.0) -> Array[Dictionary]:
@@ -225,6 +228,7 @@ static func site_regions() -> Array[Dictionary]:
 	var regions: Array[Dictionary] = [
 		{"name": "hangar", "center": HANGAR_CENTER, "size": HANGAR_SIZE, "yaw": 0.0},
 		{"name": "tower", "center": TOWER_CENTER, "size": TOWER_SIZE, "yaw": 0.0},
+		{"name": "tower_access", "center": TOWER_STAIR_CENTER, "size": TOWER_STAIR_SIZE, "yaw": 0.0},
 		{"name": "runway", "center": Vector2((RUNWAY_START_X + RUNWAY_END_X) * 0.5, RUNWAY_CENTER_Z), "size": Vector2(RUNWAY_WIDTH_M, RUNWAY_LENGTH_M), "yaw": PI * 0.5},
 		{"name": "apron", "center": APRON_CENTER, "size": Vector2(18.0, 14.0), "yaw": 0.0},
 	]
@@ -244,11 +248,11 @@ static func _region_corners(region: Dictionary) -> Array[Vector2]:
 	return corners
 
 static func footprint_area() -> float:
-	var taxi_length := TAXI_START.distance_to(TAXI_ARC_START) + TAXI_ARC_RADIUS * PI * 0.5
+	var taxi_length := TAXI_START.distance_to(TAXI_ARC_START) + TAXI_ARC_RADIUS * PI * 0.5 + TAXI_ARC_END.distance_to(TAXI_RUNWAY_END)
 	# A full 8 m of modular end coverage is added as a safe upper bound. Areas at
 	# the apron, runway, and structure joints are intentionally counted twice.
 	var taxi_with_endcaps := (taxi_length + 8.0) * TAXIWAY_WIDTH_M
-	return HANGAR_SIZE.x * HANGAR_SIZE.y + TOWER_SIZE.x * TOWER_SIZE.y + RUNWAY_LENGTH_M * RUNWAY_WIDTH_M + 18.0 * 14.0 + taxi_with_endcaps
+	return HANGAR_SIZE.x * HANGAR_SIZE.y + TOWER_SIZE.x * TOWER_SIZE.y + TOWER_STAIR_SIZE.x * TOWER_STAIR_SIZE.y + RUNWAY_LENGTH_M * RUNWAY_WIDTH_M + 18.0 * 14.0 + taxi_with_endcaps
 
 static func area_limit_ok() -> bool:
 	return footprint_area() <= MAX_GROUND_AREA

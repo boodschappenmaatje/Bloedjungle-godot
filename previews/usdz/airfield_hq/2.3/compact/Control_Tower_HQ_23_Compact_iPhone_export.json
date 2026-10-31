@@ -1,0 +1,32 @@
+{
+  "package_status": "PASS",
+  "apple_arkit_validation": "NOT_RUN_BY_EXPORTER",
+  "source": "/workspace/Bloedjungle-godot/assets/airfield_hq_v23/tower/Control_Tower_HQ_23.glb",
+  "source_sha256": "0d26a3657af9bc3907b58bd15d62f8a1383f12780921a38645c6bce5080c8179",
+  "output": "/workspace/Bloedjungle-godot/previews/usdz/airfield_hq/2.3/compact/Control_Tower_HQ_23_Compact_iPhone.usdz",
+  "output_bytes": 16529616,
+  "output_sha256": "d7ee610dda86f256b50ffad86892745bac8e403d1d5d00f18d9e4aef9fbc59de",
+  "blender_version": "4.5.15 LTS",
+  "preview_texture_max_px": 2048,
+  "centered_preview": true,
+  "source_texture_paths_resolved": 0,
+  "animation_exported": false,
+  "static_curves_converted_to_meshes": 0,
+  "mesh_objects": 7,
+  "materials": 7,
+  "material_images": 6,
+  "animation_actions": [],
+  "scene_animation_active": false,
+  "frame_start": 1,
+  "frame_end": 250,
+  "fps": 24.0,
+  "packaged_files": [
+    "Control_Tower_HQ_23_Compact_iPhone.usdc",
+    "textures/tower_roof_normal_1k.png",
+    "textures/tower_roof_roughness_1k.png",
+    "textures/tower_roof_albedo_1k.png",
+    "textures/tower_masonry_normal_1k.png",
+    "textures/tower_masonry_roughness_1k.png",
+    "textures/tower_masonry_albedo_1k.png"
+  ]
+}

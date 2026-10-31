@@ -1,0 +1,11 @@
+{
+  "asset": "18 m wide continuous curved solid concrete taxi strip, connected from apron to runway",
+  "blender": "4.5.15 LTS",
+  "lod": 0,
+  "triangles": 2268,
+  "vertices": 1136,
+  "material_slots": 1,
+  "units": "metres",
+  "glb": "assets/airfield_hq_v23/pavement/Airfield_Taxiway_HQ23_Compact_LOD0.glb",
+  "bytes": 6508660
+}

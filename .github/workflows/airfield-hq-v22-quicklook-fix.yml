@@ -23,7 +23,7 @@ jobs:
           URL="https://download.blender.org/release/Blender4.5/blender-4.5.3-linux-x64.tar.xz"
           curl -fL --retry 3 "$URL" -o "$RUNNER_TEMP/blender.tar.xz"
           tar -xf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
-          BLENDER_DIR="$(find "$RUNNER_TEMP" -maxdepth 2 -type f -name blender -executable -printf '%h\\n' | head -1)"
+          BLENDER_DIR="$RUNNER_TEMP/blender-4.5.3-linux-x64"
           test -n "$BLENDER_DIR"
           echo "$BLENDER_DIR" >> "$GITHUB_PATH"
           "$BLENDER_DIR/blender" --version | head -3

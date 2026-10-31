@@ -1,0 +1,19 @@
+{
+  "asset": "Bloedjungle Airfield HQ 2.1",
+  "variant": "LOD0",
+  "blender": "4.5.15 LTS",
+  "units": "metres",
+  "mesh_objects": 15,
+  "triangles": 131930,
+  "material_slots": 48,
+  "unique_materials": 17,
+  "animation_clips": [
+    "Open_Left_Door",
+    "Open_Right_Door",
+    "Blink_Red_Markers"
+  ],
+  "glb": "assets/airfield_hq_v21/runtime/Bloedjungle_Airfield_HQ_2_1_LOD0.glb",
+  "bytes": 45580576,
+  "texture_source": "Poly Haven CC0 maps; 2K concrete/steel hero maps; 1K dirt and grass; embedded in GLB",
+  "p47": "not available; no substitute fabricated"
+}

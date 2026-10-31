@@ -50,6 +50,10 @@ USDZ preview is in iCloud Drive under `Bloedjungle Previews/Airfield HQ/2.0/`.
 The web viewer was checked in desktop Safari; no physical iPhone browser or
 frame-rate test was performed.
 
+## Airfield HQ 2.1 review candidate
+
+Kies **Airfield HQ 2.1** en gebruik de LOD-keuze voor de 2.1-export. De animatiekeuze toont de linker/rechter deur en rode markers. Airfield HQ 2.0 blijft als vergelijkingsversie beschikbaar. De vier vaste camerastandpunten en de technische status staan in `previews/airfield_hq/v21_review/` en `assets/airfield_hq_v21/AIRFIELD_HQ_2_1_REPORT.md`. Deze kandidaat haalt het fotorealistische acceptatiecriterium nog niet; zie de bekende blokkades in het rapport.
+
 ## Personenauto
 
 De viewer bevat ook `assets/auto.glb` (Personenauto, bron `bron/auto/`): zes echte GLB-clips (deuren, motorkap, kofferklep, ruitenwissers, knipperlichten, alarm) en een keuzelijst **Schadefase** (heel, beschadigd, zwaar, brandend, wrak) die de echte shape key `Deuk`, het verkoolde materiaal en losse onderdelen gebruikt. Brand, rook, ontploffing en vliegende onderdelen zijn Godot-effecten: zie `scenes/auto_demo.tscn` en `tests/auto_foto.gd`. Test: `node test-auto.mjs` (Chromium; zet `CHROMIUM=` als het pad afwijkt).

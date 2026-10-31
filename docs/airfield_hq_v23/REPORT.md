@@ -41,7 +41,7 @@ Godot 4.7.2 production-world captures load the 2.3 assets and exercise the exist
 
 - `airfield_hq_23_contract_test_scene.tscn`: build card and price, 75 × 18 m slab endpoints/collisions, area cap, valid/invalid/rotated placement, one-build limit, credit-first payment, damage/repair/rebuild/sale, disabled aircraft purchase/no charge.
 - `airfield_hq_22_import_test_scene.tscn`: 2.2 hangar meshes/materials/collisions and animation names, tower/stair collisions, 2.3 module/LOD presence and route alignment.
-- `bunker_hq_replacement_test.gd`, `soldaat_vq2_test.gd`, and `sloop_test.gd --fixed-fps 60`: exit 0; bunker, soldier and demolition checks report pass/zero errors.
+- `bunker_hq_replacement_test.gd`, `soldaat_vq2_test.gd`, `m1911_ammo_reload_test.gd`, and `sloop_test.gd --fixed-fps 60`: exit 0; bunker, soldier, M1911 ammo/reload, and demolition checks report pass/zero assertion errors. The M1911 test now resolves its static touch helper at runtime so it works in the workflow's standalone `--script` runner.
 - `bouw_test.gd --fixed-fps 60`: exit 0 and builds/recruits/sells, but its non-asserting diagnostics report three invalid-placement cases as `true` despite inline comments expecting `false` (kazerne on wall, kazerne at gate, wall on wall line). Those mismatches need a separate baseline/build-system review before claiming all old placement behavior is clean.
 - The image capture run passed and saved the actual production scene and comparison images listed below.
 

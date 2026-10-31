@@ -4,6 +4,7 @@ extends SceneTree
 
 var failures := 0
 var game: Variant
+var touch_sticks_script: Script
 
 
 func _check(ok: bool, message: String) -> void:
@@ -34,6 +35,11 @@ func _initialize() -> void:
 
 func _run() -> void:
 	game = root.get_node("Game")
+	# Resolve this helper at runtime, after project autoloads have initialized.
+	# A static TouchSticks class reference here makes Godot's standalone --script
+	# runner parse touch_sticks.gd before the Game singleton is registered.
+	touch_sticks_script = load("res://scripts/touch_sticks.gd")
+	_check(touch_sticks_script != null and touch_sticks_script.has_method("m1911_zone_active"), "touch fire-zone helper must load after project autoloads")
 	game.reset()
 	game.state = "menu"  # Prevent physics/auto-reload racing this deterministic test.
 	var world := Node3D.new()
@@ -46,10 +52,10 @@ func _run() -> void:
 	# separate shot every 0.5 s while the assisted fire zone remains held.
 	_check(GameSettings.get_value("m1911_fire_mode") == "assist", "assist is the default mode")
 	_check(game.wstat("m1911").rate >= 0.5, "Colt fire cadence must be at least 0.5 s")
-	_check(not TouchSticks.m1911_zone_active(0.80, false), "80% stick must remain aim-only")
-	_check(TouchSticks.m1911_zone_active(0.84, false), "84% stick enters fire zone")
-	_check(TouchSticks.m1911_zone_active(0.75, true), "75% held fire stays latched")
-	_check(not TouchSticks.m1911_zone_active(0.70, true), "70% leaves fire zone")
+	_check(not touch_sticks_script.call("m1911_zone_active", 0.80, false), "80% stick must remain aim-only")
+	_check(touch_sticks_script.call("m1911_zone_active", 0.84, false), "84% stick enters fire zone")
+	_check(touch_sticks_script.call("m1911_zone_active", 0.75, true), "75% held fire stays latched")
+	_check(not touch_sticks_script.call("m1911_zone_active", 0.70, true), "70% leaves fire zone")
 	_check(p.m1911_trigger_request(true, false, true, false), "first outer-ring entry fires immediately")
 	_check(not p.m1911_trigger_request(true, true, true, false), "holding within cooldown must not fire")
 	_check(p.m1911_trigger_request(true, true, true, true), "held outer ring fires next separate shot when ready")

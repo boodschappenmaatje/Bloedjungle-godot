@@ -22,7 +22,7 @@ permissions:
 # installed builds can download the full 250MB patch with a 10-minute timeout.
 # Set to 'false' only AFTER the user has installed/restarted the bridge.
 env:
-  OTA_BOOTSTRAP: 'true'
+  OTA_BOOTSTRAP: 'false'
 
 concurrency:
   group: ota-${{ github.ref }}

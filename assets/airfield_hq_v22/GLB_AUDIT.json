@@ -1,0 +1,242 @@
+{
+  "LOD0": {
+    "bytes": 51930616,
+    "mesh_nodes": 34,
+    "primitives_draw_surface_proxy": 97,
+    "unique_materials": 19,
+    "images": [
+      {
+        "name": "corrugated_iron_02_nor_gl_2k",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 2178443
+      },
+      {
+        "name": "corrugated_iron_02_arm_2k",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 4037544
+      },
+      {
+        "name": "corrugated_iron_02_diff_2k",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 2325335
+      },
+      {
+        "name": "hangar_concrete_floor_nor_gl_2k",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 3100672
+      },
+      {
+        "name": "hangar_concrete_floor_arm_2k",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 2994585
+      },
+      {
+        "name": "hangar_concrete_floor_diff_2k",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 2559056
+      },
+      {
+        "name": "concrete_floor_01_nor_gl_2k",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 3261423
+      },
+      {
+        "name": "concrete_floor_01_arm_2k",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 760362
+      },
+      {
+        "name": "concrete_floor_01_diff_2k",
+        "width": 2048,
+        "height": 2048,
+        "encoded_bytes": 2967720
+      },
+      {
+        "name": "normal_gl",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 544129
+      },
+      {
+        "name": "base_color",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 457917
+      },
+      {
+        "name": "roughness",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 1329236
+      },
+      {
+        "name": "dirt_nor_gl_1024",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 484774
+      },
+      {
+        "name": "dirt_arm_1024",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 169112
+      },
+      {
+        "name": "dirt_diff_1024",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 244764
+      }
+    ],
+    "uncompressed_rgba8_mips_mib_upper_estimate": 224.0,
+    "animations": [
+      "Open_Left_Door",
+      "Open_Right_Door",
+      "Blink_Red_Markers",
+      "Open_Tower_Door",
+      "Wind_Sock_Gust"
+    ],
+    "actual_gpu_drawcalls": "NOT_MEASURED",
+    "actual_gpu_memory": "NOT_MEASURED"
+  },
+  "LOD1": {
+    "bytes": 10968096,
+    "mesh_nodes": 21,
+    "primitives_draw_surface_proxy": 81,
+    "unique_materials": 12,
+    "images": [
+      {
+        "name": "corrugated_iron_02_nor_gl_1024",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 155343
+      },
+      {
+        "name": "corrugated_iron_02_arm_1024",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 309217
+      },
+      {
+        "name": "corrugated_iron_02_diff_1024",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 176303
+      },
+      {
+        "name": "hangar_concrete_floor_nor_gl_1024",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 230919
+      },
+      {
+        "name": "hangar_concrete_floor_arm_1024",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 173410
+      },
+      {
+        "name": "hangar_concrete_floor_diff_1024",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 198165
+      },
+      {
+        "name": "concrete_floor_01_nor_gl_1024",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 320615
+      },
+      {
+        "name": "concrete_floor_01_arm_1024",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 248222
+      },
+      {
+        "name": "concrete_floor_01_diff_1024",
+        "width": 1024,
+        "height": 1024,
+        "encoded_bytes": 478398
+      }
+    ],
+    "uncompressed_rgba8_mips_mib_upper_estimate": 48.0,
+    "animations": [],
+    "actual_gpu_drawcalls": "NOT_MEASURED",
+    "actual_gpu_memory": "NOT_MEASURED"
+  },
+  "LOD2": {
+    "bytes": 4476436,
+    "mesh_nodes": 21,
+    "primitives_draw_surface_proxy": 81,
+    "unique_materials": 12,
+    "images": [
+      {
+        "name": "corrugated_iron_02_nor_gl_512",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 51171
+      },
+      {
+        "name": "corrugated_iron_02_arm_512",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 63514
+      },
+      {
+        "name": "corrugated_iron_02_diff_512",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 39567
+      },
+      {
+        "name": "hangar_concrete_floor_nor_gl_512",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 56610
+      },
+      {
+        "name": "hangar_concrete_floor_arm_512",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 39435
+      },
+      {
+        "name": "hangar_concrete_floor_diff_512",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 45234
+      },
+      {
+        "name": "concrete_floor_01_nor_gl_512",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 62823
+      },
+      {
+        "name": "concrete_floor_01_arm_512",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 62880
+      },
+      {
+        "name": "concrete_floor_01_diff_512",
+        "width": 512,
+        "height": 512,
+        "encoded_bytes": 115069
+      }
+    ],
+    "uncompressed_rgba8_mips_mib_upper_estimate": 12.0,
+    "animations": [],
+    "actual_gpu_drawcalls": "NOT_MEASURED",
+    "actual_gpu_memory": "NOT_MEASURED"
+  }
+}

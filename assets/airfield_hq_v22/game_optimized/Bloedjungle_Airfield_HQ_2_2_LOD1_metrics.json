@@ -1,0 +1,15 @@
+{
+  "asset": "Bloedjungle Airfield HQ 2.2",
+  "variant": "LOD1",
+  "blender": "4.5.15 LTS",
+  "units": "metres",
+  "mesh_objects": 21,
+  "triangles": 61445,
+  "material_slots": 81,
+  "unique_materials": 12,
+  "animation_clips": [],
+  "glb": "assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD1.glb",
+  "bytes": 10968096,
+  "texture_source": "Poly Haven CC0 maps; 1024px mobile maps; embedded in GLB",
+  "p47": "not available; no substitute fabricated"
+}

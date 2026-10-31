@@ -16,11 +16,17 @@ jobs:
       - uses: actions/checkout@v4
         with:
           lfs: false
-      - name: Install Blender for portable USDZ export
+      - name: Install official Blender 4.5 with USDZ exporter enabled
+        shell: bash
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y blender python3-numpy
-          blender --version | head -3
+          set -euo pipefail
+          URL="https://download.blender.org/release/Blender4.5/blender-4.5.3-linux-x64.tar.xz"
+          curl -fL --retry 3 "$URL" -o "$RUNNER_TEMP/blender.tar.xz"
+          tar -xf "$RUNNER_TEMP/blender.tar.xz" -C "$RUNNER_TEMP"
+          BLENDER_DIR="$(find "$RUNNER_TEMP" -maxdepth 2 -type f -name blender -executable -printf '%h\\n' | head -1)"
+          test -n "$BLENDER_DIR"
+          echo "$BLENDER_DIR" >> "$GITHUB_PATH"
+          "$BLENDER_DIR/blender" --version | head -3
       - name: Build small centered hangar and tower USDZ previews
         shell: bash
         run: |

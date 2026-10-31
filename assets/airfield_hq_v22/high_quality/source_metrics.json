@@ -1,0 +1,16 @@
+{
+  "source_blend": "assets/airfield_hq_v22/high_quality/Bloedjungle_Airfield_HQ_2_2_Source.blend",
+  "blender": "4.5.15 LTS",
+  "source_meshes": 1807,
+  "animations": [
+    "Blink_Red_Markers",
+    "Open_Left_Door",
+    "Open_Right_Door",
+    "Open_Tower_Door",
+    "Wind_Sock_Gust"
+  ],
+  "runway_m": 900,
+  "p47_door_width_m": 39.4,
+  "p47_door_height_m": 13.0,
+  "p47_hangar_clear_width_m": 30.0
+}

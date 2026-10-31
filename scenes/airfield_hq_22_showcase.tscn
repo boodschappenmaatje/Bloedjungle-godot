@@ -1,0 +1,162 @@
+[gd_scene load_steps=15 format=3]
+
+[ext_resource type="PackedScene" path="res://assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD0.glb" id="1_airfield"]
+[ext_resource type="PackedScene" path="res://assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD1.glb" id="2_airfield_lod"]
+[ext_resource type="Script" path="res://scripts/airfield_hq_22_showcase.gd" id="3_lod_driver"]
+[ext_resource type="PackedScene" path="res://assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD2.glb" id="4_airfield_lod2"]
+[ext_resource type="Script" path="res://scripts/airfield_flight_integration.gd" id="5_flight"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_runway"]
+size = Vector3(38, 0.5, 900)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hangar"]
+size = Vector3(0.8, 13, 38)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door"]
+size = Vector3(20, 13, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tower"]
+size = Vector3(10.1, 10.4, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tower_side"]
+size = Vector3(0.5, 10.4, 10.1)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tower_door"]
+size = Vector3(1.35, 2.55, 0.18)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tower_south_pier"]
+size = Vector3(4.3, 10.4, 0.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_apron"]
+size = Vector3(112, 0.3, 98)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_taxi"]
+size = Vector3(20, 0.3, 260)
+
+[node name="AirfieldHQShowcase" type="Node3D"]
+script = ExtResource("3_lod_driver")
+
+[node name="Airfield_HQ_22_LOD0" parent="." instance=ExtResource("1_airfield")]
+
+[node name="Airfield_HQ_22_LOD1" parent="." instance=ExtResource("2_airfield_lod")]
+
+[node name="Airfield_HQ_22_LOD2" parent="." instance=ExtResource("4_airfield_lod2")]
+
+[node name="Aircraft_Purchase_Display_Spawn" type="Marker3D" parent="."]
+position = Vector3(0, 0, -28)
+metadata/purpose = "spawn/display point for future point-purchased player aircraft"
+
+[node name="Aircraft_Hangar_Spawn" type="Marker3D" parent="."]
+position = Vector3(0, 0, 0)
+metadata/purpose = "clear hangar centre for player aircraft"
+
+[node name="AirfieldFlightIntegration" type="Node3D" parent="."]
+script = ExtResource("5_flight")
+
+[node name="P47_Hangar_Spawn" type="Marker3D" parent="AirfieldFlightIntegration"]
+position = Vector3(0, 0.22, 0)
+
+[node name="P47_Apron_Parking" type="Marker3D" parent="AirfieldFlightIntegration"]
+position = Vector3(0, 0.22, 48)
+
+[node name="P47_Taxi_Start" type="Marker3D" parent="AirfieldFlightIntegration"]
+position = Vector3(47, 0.22, 42)
+
+[node name="P47_Runway_Hold" type="Marker3D" parent="AirfieldFlightIntegration"]
+position = Vector3(11, 0.22, -230)
+
+[node name="P47_Runway_Start" type="Marker3D" parent="AirfieldFlightIntegration"]
+position = Vector3(0, 0.22, -245)
+
+[node name="P47_Landing_Touchdown" type="Marker3D" parent="AirfieldFlightIntegration"]
+position = Vector3(0, 0.22, -850)
+
+[node name="P47_Landing_Approach" type="Marker3D" parent="AirfieldFlightIntegration"]
+position = Vector3(0, 60, -1160)
+
+[node name="P47_Taxi_Route" type="Path3D" parent="AirfieldFlightIntegration"]
+
+[node name="P47_Takeoff_Path" type="Path3D" parent="AirfieldFlightIntegration"]
+
+[node name="P47_Landing_Path" type="Path3D" parent="AirfieldFlightIntegration"]
+
+[node name="GameplayCollisions" type="Node3D" parent="."]
+
+[node name="RunwayCollision" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(0, -0.15, -550)
+
+[node name="RunwayShape" type="CollisionShape3D" parent="GameplayCollisions/RunwayCollision"]
+shape = SubResource("BoxShape3D_runway")
+
+[node name="LeftHangarWallCollision" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(-22, 6, 0)
+
+[node name="LeftWallShape" type="CollisionShape3D" parent="GameplayCollisions/LeftHangarWallCollision"]
+shape = SubResource("BoxShape3D_hangar")
+
+[node name="RightHangarWallCollision" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(22, 6, 0)
+
+[node name="RightWallShape" type="CollisionShape3D" parent="GameplayCollisions/RightHangarWallCollision"]
+shape = SubResource("BoxShape3D_hangar")
+
+[node name="LeftDoorCollision" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(-10.2, 6.65, 19.55)
+
+[node name="LeftDoorShape" type="CollisionShape3D" parent="GameplayCollisions/LeftDoorCollision"]
+shape = SubResource("BoxShape3D_door")
+
+[node name="RightDoorCollision" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(10.2, 6.65, 19.55)
+
+[node name="RightDoorShape" type="CollisionShape3D" parent="GameplayCollisions/RightDoorCollision"]
+shape = SubResource("BoxShape3D_door")
+
+[node name="TowerCollision" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(72, 5.2, -25.05)
+
+[node name="TowerShape" type="CollisionShape3D" parent="GameplayCollisions/TowerCollision"]
+shape = SubResource("BoxShape3D_tower")
+
+[node name="TowerWestWall" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(66.95, 5.2, -20)
+
+[node name="TowerWestShape" type="CollisionShape3D" parent="GameplayCollisions/TowerWestWall"]
+shape = SubResource("BoxShape3D_tower_side")
+
+[node name="TowerEastWall" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(77.05, 5.2, -20)
+
+[node name="TowerEastShape" type="CollisionShape3D" parent="GameplayCollisions/TowerEastWall"]
+shape = SubResource("BoxShape3D_tower_side")
+
+[node name="TowerSouthWestPier" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(69.1, 5.2, -14.95)
+
+[node name="TowerSouthWestShape" type="CollisionShape3D" parent="GameplayCollisions/TowerSouthWestPier"]
+shape = SubResource("BoxShape3D_tower_south_pier")
+
+[node name="TowerSouthEastPier" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(74.9, 5.2, -14.95)
+
+[node name="TowerSouthEastShape" type="CollisionShape3D" parent="GameplayCollisions/TowerSouthEastPier"]
+shape = SubResource("BoxShape3D_tower_south_pier")
+
+[node name="TowerDoorCollision" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(71.325, 1.63, -14.86)
+
+[node name="TowerDoorShape" type="CollisionShape3D" parent="GameplayCollisions/TowerDoorCollision"]
+position = Vector3(0.675, 0, 0)
+shape = SubResource("BoxShape3D_tower_door")
+
+[node name="ApronCollision" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(0, -0.08, 11)
+
+[node name="ApronShape" type="CollisionShape3D" parent="GameplayCollisions/ApronCollision"]
+shape = SubResource("BoxShape3D_apron")
+
+[node name="TaxiCollision" type="StaticBody3D" parent="GameplayCollisions"]
+position = Vector3(47, -0.08, -95)
+
+[node name="TaxiShape" type="CollisionShape3D" parent="GameplayCollisions/TaxiCollision"]
+shape = SubResource("BoxShape3D_taxi")

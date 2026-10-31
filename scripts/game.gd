@@ -37,6 +37,7 @@ var build_credit := BUILD_CREDIT
 var builds: Buildings
 var gates: Gates
 var bridge  # de ophaalbrug (bridge.gd)
+var airfield_build_view := false
 var build_mode := false  # bouwscherm open: camera hoog boven de basis
 var bcam := Vector3(0.0, 0.0, 1.0)  # bouwcamera: x, z en zoom
 var editing := false  # stadseditor open (stad_editor.gd): bouwmodus staat dan ook aan
@@ -158,6 +159,7 @@ func reset() -> void:
 	place_armed = false
 	build_credit = BUILD_CREDIT
 	build_mode = false
+	airfield_build_view = false
 	editing = false
 	bcam = Vector3(0.0, 0.0, 1.0)
 	buildings.clear()

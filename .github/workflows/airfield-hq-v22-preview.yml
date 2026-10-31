@@ -1,0 +1,102 @@
+name: Airfield HQ 2.2 direct 3D preview download
+
+on:
+  push:
+    branches: [feature/airfield-hq-2-0]
+    paths:
+      - ".github/workflows/airfield-hq-v22-preview.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  package-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+
+      - name: Verify actual Airfield HQ 2.2 model assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          USDZ="previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_iPhone.usdz"
+          HANGAR="previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdz"
+          TOWER="previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_Tower_QuickLook.usdz"
+          GLB="assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD1.glb"
+          LOD2="assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD2.glb"
+          for asset in "$USDZ" "$HANGAR" "$TOWER" "$GLB" "$LOD2"; do
+            test -s "$asset"
+            if head -c 80 "$asset" | grep -aq '^version https://git-lfs.github.com/spec/v1'; then
+              echo "LFS pointer is not a real 3D file: $asset" >&2
+              exit 1
+            fi
+            stat -c '%n (%s bytes)' "$asset"
+          done
+          unzip -t "$USDZ" >/dev/null
+          unzip -t "$HANGAR" >/dev/null
+          unzip -t "$TOWER" >/dev/null
+          python3 - <<'PY'
+          import struct
+          from pathlib import Path
+          for name in ("Bloedjungle_Airfield_HQ_2_2_LOD1.glb", "Bloedjungle_Airfield_HQ_2_2_LOD2.glb"):
+              b=Path("assets/airfield_hq_v22/runtime",name).read_bytes()
+              assert len(b)>1000 and b[:4] == b'glTF', name
+              version,size=struct.unpack_from("<II",b,4)
+              assert version==2 and size==len(b), (name,version,size,len(b))
+          print("GLB headers and lengths verified")
+          PY
+
+      - name: Create easy iPhone download ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p preview-download
+          cp previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdz preview-download/
+          cp previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_Tower_QuickLook.usdz preview-download/
+          cp assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD1.glb preview-download/
+          cp assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD2.glb preview-download/
+          cat >preview-download/LEESMIJ-iPhone.txt <<'TXT'
+          Bloedjungle Airfield HQ 2.2 — ONLY a 3D review copy.
+          Open eerst Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdz in de
+          iPhone-app Bestanden. De toren staat in het aparte Tower_QuickLook-bestand.
+          Deze modellen zijn verkleinde tafelmodellen; de game-schaal is niet veranderd.
+          De oude iPhone.usdz bevat het volledige vliegveld en kan leeg lijken.
+          If the USDZ fails in Quick Look, the LOD1/LOD2 GLB files are also
+          included for inspection with a compatible glTF/GLB viewer.
+          This is NOT a game update and does NOT change main or OTA.
+          These previews have not been tested on a physical iPhone.
+          TXT
+          (cd preview-download && zip -q ../Bloedjungle_Airfield_HQ_2_2_3D_Review.zip *.usdz *.glb *.txt)
+          unzip -t Bloedjungle_Airfield_HQ_2_2_3D_Review.zip | tail -1
+          sha256sum preview-download/*.usdz preview-download/*.glb
+
+      - name: Upload GitHub Actions backup copy
+        uses: actions/upload-artifact@v4
+        with:
+          name: Airfield-HQ-2-2-3D-Review
+          path: Bloedjungle_Airfield_HQ_2_2_3D_Review.zip
+          retention-days: 14
+
+      - name: Publish separate review release (never the updates release)
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="airfield-hq-v2.2-review-20261031"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Review release already exists; publishing asset revisions"
+          else
+            gh release create "$TAG" \
+              --title "Bloedjungle Airfield HQ 2.2 — 3D Review" \
+              --notes "Standalone, game-unrelated 3D review downloads for iPhone Files/Quick Look. Airfield HQ PR #164 remains Draft; nothing is merged to main or OTA." \
+              --target "$GITHUB_SHA" --latest=false
+          fi
+          gh release upload "$TAG" \
+            "preview-download/Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdz" \
+            "preview-download/Bloedjungle_Airfield_HQ_2_2_Tower_QuickLook.usdz" \
+            "preview-download/Bloedjungle_Airfield_HQ_2_2_LOD1.glb" \
+            "preview-download/Bloedjungle_Airfield_HQ_2_2_LOD2.glb" \
+            "Bloedjungle_Airfield_HQ_2_2_3D_Review.zip" --clobber

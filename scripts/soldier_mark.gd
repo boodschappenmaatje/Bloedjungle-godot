@@ -52,7 +52,7 @@ static func _refresh(tree: SceneTree) -> void:
 		return
 	_frame = f
 	var cam := tree.root.get_viewport().get_camera_3d()
-	_tactical = cam != null and not bool(cam.get("combat_view"))
+	_tactical = cam != null and cam.get("combat_view") != true
 	var mode: String = GameSettings.get_value("markeringen")
 	_active = mode == "on" or (mode == "tact" and _tactical)
 	for k in _rim_mats:

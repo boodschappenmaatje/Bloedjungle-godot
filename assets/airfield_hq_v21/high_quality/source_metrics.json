@@ -1,0 +1,24 @@
+{
+  "asset": "Bloedjungle Airfield HQ 2.1",
+  "source": "Preserved Airfield HQ 2.0 Blender source, refined and versioned",
+  "blender": "4.5.15 LTS",
+  "units": "metres",
+  "source_mesh_objects": 1836,
+  "source_evaluated_triangles": 175268,
+  "animations": [
+    "Open_Left_Door",
+    "Open_Right_Door",
+    "Blink_Red_Markers"
+  ],
+  "external_texture_sets": [
+    "corrugated_iron_02",
+    "hangar_concrete_floor",
+    "concrete_floor_01",
+    "dirt",
+    "sparse_grass"
+  ],
+  "texture_resolution": "2048x2048",
+  "pbr_license": "Poly Haven CC0 1.0",
+  "P47": "NOT AVAILABLE in project; no fake plane substituted",
+  "source_blend": "assets/airfield_hq_v21/high_quality/Bloedjungle_Airfield_HQ_2_1_Source.blend"
+}

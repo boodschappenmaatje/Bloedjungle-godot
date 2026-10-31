@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "usdz": "/Users/admin/Documents/Bloedjungle-Bunker-HQ-Game/previews/usdz/airfield_hq/2.3/Control_Tower_HQ_23_iPhone.usdz",
+  "bytes": 13308946,
+  "sha256": "5a9c988bc237814487738c661e82f23174af88192b76e4e6f666f5331cbda88c",
+  "apple_usdchecker_arkit": "PASS",
+  "usdzip_contents": [
+    "Control_Tower_HQ_23_iPhone.usdc",
+    "textures/tower_roof_normal_1k.png",
+    "textures/tower_roof_roughness_1k.png",
+    "textures/tower_roof_albedo_1k.png",
+    "textures/tower_masonry_normal_1k.png",
+    "textures/tower_masonry_roughness_1k.png",
+    "textures/tower_masonry_albedo_1k.png"
+  ],
+  "usd_layers": [
+    "Control_Tower_HQ_23_iPhone.usdc"
+  ],
+  "texture_files": [
+    "textures/tower_roof_normal_1k.png",
+    "textures/tower_roof_roughness_1k.png",
+    "textures/tower_roof_albedo_1k.png",
+    "textures/tower_masonry_normal_1k.png",
+    "textures/tower_masonry_roughness_1k.png",
+    "textures/tower_masonry_albedo_1k.png"
+  ],
+  "usdzip_list": [
+    "Control_Tower_HQ_23_iPhone.usdc",
+    "textures/tower_roof_normal_1k.png",
+    "textures/tower_roof_roughness_1k.png",
+    "textures/tower_roof_albedo_1k.png",
+    "textures/tower_masonry_normal_1k.png",
+    "textures/tower_masonry_roughness_1k.png",
+    "textures/tower_masonry_albedo_1k.png"
+  ],
+  "device_quicklook_playback": "NOT_TESTED",
+  "export_receipt_updated": "/Users/admin/Documents/Bloedjungle-Bunker-HQ-Game/previews/usdz/airfield_hq/2.3/Control_Tower_HQ_23_export.json"
+}

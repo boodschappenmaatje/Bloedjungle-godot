@@ -8,6 +8,7 @@ const DEFS := {
 	"kazerne": {"name": "Kazerne", "cost": 1000, "size": Vector3(4.4, 2.2, 3.2), "max": 1, "hp": 600.0},
 	"garage": {"name": "Garage", "cost": 800, "size": Vector3(5.15, 3.1, 5.7), "max": 1, "hp": 900.0},
 	"helipad": {"name": "Heliplatform", "cost": 1000, "size": Vector3(12.8, 2.0, 12.8), "max": 1, "hp": 1200.0},
+	"airfield": {"name": "Vliegveld", "cost": AirfieldHQ23.BUILD_COST, "size": AirfieldHQ23.FOOTPRINT, "max": 1, "hp": 3000.0},
 	"zandzak": {"name": "Zandzakken", "cost": 150, "size": Vector3(3.1, 0.95, 0.8), "max": 40, "hp": 380.0, "piece": true},
 	"muur": {"name": "Betonmuur", "cost": 300, "size": Vector3(3.0, 1.55, 0.7), "max": 30, "hp": 1100.0, "piece": true},
 }
@@ -75,6 +76,31 @@ func _tower_feet() -> Array:
 
 ## Kan dit hier staan? Gebouwen binnen de muur, stukken overal behalve op de muur en in de poorten.
 func can_place(kind: String, at: Vector3, yaw: float, me: Variant = null) -> bool:
+	if kind == "airfield":
+		if not AirfieldHQ23.complex_available() or not AirfieldHQ23.area_limit_ok() or (me == null and full(kind)):
+			return false
+		if not AirfieldHQ23.site_inside_world(at, yaw) or not AirfieldHQ23.site_clear_of_combat_spawns(at, yaw):
+			return false
+		if not AirfieldHQ23.site_clear_of_river(at, yaw):
+			return false
+		if not is_inside_tree():
+			return true
+		var exclusions: Array[RID] = []
+		if me != null:
+			exclusions.append(me.node.get_rid())
+			for child in me.node.find_children("*", "CollisionObject3D", true, false):
+				exclusions.append((child as CollisionObject3D).get_rid())
+		for region in AirfieldHQ23.site_regions():
+			var site_shape := BoxShape3D.new()
+			site_shape.size = Vector3(region.size.x + 0.2, 1.4, region.size.y + 0.2)
+			var site_query := PhysicsShapeQueryParameters3D.new()
+			site_query.shape = site_shape
+			site_query.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_NATURE | Kit.LAYER_WATER
+			site_query.exclude = exclusions
+			site_query.transform = AirfieldHQ23.region_transform(at + Vector3(0.0, 0.7, 0.0), yaw, region)
+			if not get_world_3d().direct_space_state.intersect_shape(site_query, 1).is_empty():
+				return false
+		return true
 	var d: Dictionary = DEFS[kind]
 	var sz: Vector3 = d.size
 	var piece := is_piece(kind)
@@ -136,10 +162,12 @@ func _hits(size: Vector3, at: Vector3, yaw: float, ex: Array[RID]) -> bool:
 
 ## Het gebouw zelf: een StaticBody die kogels en mensen tegenhoudt, met het model eronder.
 func make_node(kind: String) -> StaticBody3D:
+	if kind == "airfield":
+		return AirfieldHQ23.make_complex()
 	var body := BuildingBody.new()
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
-	body.set_meta("impact_material", {"zandzak": "dirt", "muur": "concrete", "kazerne": "wood", "garage": "metal", "helipad": "concrete"}.get(kind, "concrete"))
+	body.set_meta("impact_material", {"zandzak": "dirt", "muur": "concrete", "kazerne": "wood", "garage": "metal", "helipad": "concrete", "airfield": "concrete"}.get(kind, "concrete"))
 	var sz: Vector3 = DEFS[kind].size
 	if kind != "garage" and kind != "helipad":
 		var cs := CollisionShape3D.new()
@@ -187,9 +215,17 @@ func _bags(root: Node3D, sz: Vector3) -> void:
 
 
 func place(kind: String, at: Vector3, yaw: float) -> Variant:
-	if full(kind) or not can_place(kind, at, yaw) or not Game.pay_build(DEFS[kind].cost):
+	if full(kind) or not can_place(kind, at, yaw):
 		return null
-	var node := make_node(kind)
+	var node: StaticBody3D = make_node(kind) if kind == "airfield" else null
+	if kind == "airfield" and node == null:
+		return null
+	if not Game.pay_build(DEFS[kind].cost):
+		if node != null:
+			node.free()
+		return null
+	if node == null:
+		node = make_node(kind)
 	node.position = at
 	node.rotation.y = yaw
 	add_child(node)
@@ -201,6 +237,8 @@ func place(kind: String, at: Vector3, yaw: float) -> Variant:
 	if kind == "garage":
 		b.merge({"has": {"jeep": false, "tank": false, "truck": false}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
 		_garage_init(b)
+	elif kind == "airfield":
+		b.merge({"aircraft": [], "aircraft_capacity": AirfieldHQ23.AIRCRAFT_CAPACITY, "runway_reserved_by": "", "complex": true})
 	elif kind == "helipad":
 		b.merge({"has_heli": false, "hs": "closed", "t": 0.0, "want": false, "heli": null, "spin": 0.0})
 		_pad_init(b)
@@ -224,6 +262,9 @@ func move_to(b: Dictionary, at: Vector3, yaw: float) -> void:
 
 ## Wie in het nieuwe bouwstuk staat, wordt er netjes naast gezet.
 func _push_out(b: Dictionary) -> void:
+	if b.kind == "airfield":
+		_push_out_of_airfield(b)
+		return
 	var sz: Vector3 = DEFS[b.kind].size
 	var who: Array = [Game.player]
 	who.append_array(Game.allies)
@@ -244,11 +285,37 @@ func _push_out(b: Dictionary) -> void:
 			w.global_position = Vector3(p.x, w.global_position.y, p.z)
 
 
+func _push_out_of_airfield(b: Dictionary) -> void:
+	var who: Array = [Game.player]
+	who.append_array(Game.allies)
+	for unit in who:
+		if unit == null or not is_instance_valid(unit):
+			continue
+		var local := Vector2(unit.global_position.x - b.at.x, unit.global_position.z - b.at.z).rotated(b.yaw)
+		for region in AirfieldHQ23.site_regions():
+			var center: Vector2 = region.center
+			var local_yaw: float = region.get("yaw", 0.0)
+			var rel := (local - center).rotated(local_yaw)
+			var half: Vector2 = region.size * 0.5
+			if absf(rel.x) > half.x + 0.3 or absf(rel.y) > half.y + 0.3:
+				continue
+			if half.x - absf(rel.x) < half.y - absf(rel.y):
+				rel.x = signf(rel.x if rel.x != 0.0 else 1.0) * (half.x + 0.7)
+			else:
+				rel.y = signf(rel.y if rel.y != 0.0 else 1.0) * (half.y + 0.7)
+			var building_local := center + rel.rotated(-local_yaw)
+			var world := Vector2(b.at.x, b.at.z) + building_local.rotated(-b.yaw)
+			unit.global_position = Vector3(world.x, unit.global_position.y, world.y)
+			break
+
+
 func remove(b: Dictionary) -> void:
 	_clear_fx(b)
 	if b.bar != null:
 		b.bar.queue_free()
-	if b.kind == "helipad":
+	if b.kind == "airfield":
+		AirfieldHQ23.cleanup(b)
+	elif b.kind == "helipad":
 		var player = Game.player
 		if b.heli != null and is_instance_valid(b.heli):
 			if b.heli.driven and player != null:
@@ -438,6 +505,8 @@ func _physics_process(delta: float) -> void:
 			continue  # een wrak doet niets
 		if b.kind == "garage":
 			_garage_step(b, delta)
+		elif b.kind == "airfield":
+			AirfieldHQ23.step(b, delta)
 		elif b.kind == "helipad":
 			_pad_step(b, delta)
 	# tijdens het bouwen staat de opleiding stil (updateStructures in 16d-base.js)
@@ -676,6 +745,12 @@ func _cut_pad() -> void:
 			mat.set_shader_parameter("pad", Vector4(b.at.x, b.at.z, cos(b.yaw), sin(b.yaw)))
 			mat.set_shader_parameter("pad_half", 4.5)
 
+
+func can_buy_aircraft(b: Dictionary, kind: String) -> bool:
+	return AirfieldHQ23.can_buy(self, b, kind)
+
+func buy_aircraft(b: Dictionary, kind: String) -> bool:
+	return AirfieldHQ23.buy(self, b, kind)
 
 func can_buy_heli(b: Dictionary) -> bool:
 	return b.kind == "helipad" and not b.has_heli and Game.points >= HELI_COST

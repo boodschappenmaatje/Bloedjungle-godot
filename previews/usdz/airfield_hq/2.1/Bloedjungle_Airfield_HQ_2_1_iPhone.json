@@ -1,0 +1,43 @@
+{
+  "package_status": "PASS",
+  "apple_arkit_validation": "NOT_RUN_BY_EXPORTER",
+  "source": "/Users/admin/Documents/Bloedjungle-Bunker-HQ-Game/assets/airfield_hq_v21/high_quality/Bloedjungle_Airfield_HQ_2_1_Source.blend",
+  "source_sha256": "c234e58f0306e9f2dcbcecfd27c4cd87250cdf0965279cd6f02c960a997ab233",
+  "output": "/Users/admin/Documents/Bloedjungle-Bunker-HQ-Game/previews/usdz/airfield_hq/2.1/Bloedjungle_Airfield_HQ_2_1_iPhone.usdz",
+  "output_bytes": 50286924,
+  "output_sha256": "c641e7c2ea28473dae4e3930e7ddf843c695ad7b72616d73a7d807bd3fc2a33a",
+  "blender_version": "4.5.15 LTS",
+  "preview_texture_max_px": 2048,
+  "source_texture_paths_resolved": 15,
+  "animation_exported": true,
+  "static_curves_converted_to_meshes": 0,
+  "mesh_objects": 1836,
+  "materials": 17,
+  "material_images": 15,
+  "animation_actions": [
+    "Open_Left_Door",
+    "Open_Right_Door"
+  ],
+  "scene_animation_active": true,
+  "frame_start": 1,
+  "frame_end": 120,
+  "fps": 30.0,
+  "packaged_files": [
+    "Bloedjungle_Airfield_HQ_2_1_iPhone.usdc",
+    "textures/concrete_floor_01_nor_gl_2k.jpg",
+    "textures/concrete_floor_01_arm_2k.jpg",
+    "textures/concrete_floor_01_diff_2k.jpg",
+    "textures/hangar_concrete_floor_nor_gl_2k.jpg",
+    "textures/hangar_concrete_floor_arm_2k.jpg",
+    "textures/hangar_concrete_floor_diff_2k.jpg",
+    "textures/sparse_grass_nor_gl_2k.jpg",
+    "textures/sparse_grass_arm_2k.jpg",
+    "textures/sparse_grass_diff_2k.jpg",
+    "textures/dirt_nor_gl_2k.jpg",
+    "textures/dirt_arm_2k.jpg",
+    "textures/dirt_diff_2k.jpg",
+    "textures/corrugated_iron_02_nor_gl_2k.jpg",
+    "textures/corrugated_iron_02_arm_2k.jpg",
+    "textures/corrugated_iron_02_diff_2k.jpg"
+  ]
+}

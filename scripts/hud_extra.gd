@@ -227,7 +227,7 @@ func _update_camera_controls() -> void:
 	var cam := get_viewport().get_camera_3d()
 	if cam == null:
 		return
-	var combat: bool = bool(cam.get("combat_view"))
+	var combat: bool = cam.get("combat_view") == true
 	_camera_button.text = "GEVECHT" if combat else "TACTISCH"
 	_camera_button.tooltip_text = "Schakel tussen tactische en gevechtscamera"
 
@@ -304,7 +304,7 @@ func _draw_radar() -> void:
 		var col := Color(0.78, 0.84, 0.42) if kind in ["muur", "zandzak"] else Color(0.38, 0.75, 0.48)
 		_radar.draw_rect(Rect2(point - Vector2(2, 2), Vector2(4, 4)), col, true)
 	for enemy in Game.enemies:
-		if not is_instance_valid(enemy) or not enemy is Node3D or bool(enemy.get("dead")):
+		if not is_instance_valid(enemy) or not enemy is Node3D or enemy.get("dead") == true:
 			continue
 		var vis := _enemy_vis(enemy)
 		if vis <= 0.0:

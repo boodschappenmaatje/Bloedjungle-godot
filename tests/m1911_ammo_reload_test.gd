@@ -42,6 +42,23 @@ func _run() -> void:
 	world.add_child(p)
 	await process_frame
 
+	# Right stick: aim-only center, hysteresis on the fire ring, and one
+	# separate shot every 0.5 s while the assisted fire zone remains held.
+	_check(GameSettings.get_value("m1911_fire_mode") == "assist", "assist is the default mode")
+	_check(game.wstat("m1911").rate >= 0.5, "Colt fire cadence must be at least 0.5 s")
+	_check(not TouchSticks.m1911_zone_active(0.80, false), "80% stick must remain aim-only")
+	_check(TouchSticks.m1911_zone_active(0.84, false), "84% stick enters fire zone")
+	_check(TouchSticks.m1911_zone_active(0.75, true), "75% held fire stays latched")
+	_check(not TouchSticks.m1911_zone_active(0.70, true), "70% leaves fire zone")
+	_check(p.m1911_trigger_request(true, false, true, false), "first outer-ring entry fires immediately")
+	_check(not p.m1911_trigger_request(true, true, true, false), "holding within cooldown must not fire")
+	_check(p.m1911_trigger_request(true, true, true, true), "held outer ring fires next separate shot when ready")
+	_check(not p.m1911_trigger_request(false, true, true, true), "releasing stick stops firing")
+	_check(p.m1911_trigger_request(true, false, false, true), "manual mode first trigger-edge shoots")
+	_check(not p.m1911_trigger_request(true, true, false, true), "manual mode holding never repeats")
+	_check(p.m1911_trigger_request(true, false, false, true), "manual mode release and press shoots again")
+	_check(not p.m1911_trigger_request(true, true, false, true), "mouse/keyboard hold remains single-shot")
+
 	# New game starts with a fully prepared 7+1, not a partially filled magazine.
 	_check_loaded(p, 7, true, "new-game 7+1 initialization")
 	_check(not p.can_reload(), "full magazine has no manual reload")

@@ -46,6 +46,7 @@ const TAXI_RUNWAY_HOLD := Vector2(28.0, -4.5)
 const COMPLEX_CENTER_OFFSET := Vector3(0.0, 0.0, HANGAR_CENTER.y)
 const SUGGESTED_CENTER := Vector3(70.0, 0.0, 115.0)
 const P47_SCENE := "res://assets/p47_thunderbolt.glb"
+const HQ22_ANIMATED_TOWER_SCENE := "res://assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD0.glb"
 const AIRCRAFT := {
 	"p47": {"name": "Republic P-47 Thunderbolt", "cost": P47_COST, "scene": P47_SCENE, "source_required": "original Meshy Pro GLB/FBX"},
 }
@@ -88,6 +89,7 @@ static func make_complex() -> StaticBody3D:
 	body.add_child(complex)
 	_compact_approved_core(complex)
 	_add_hq23_tower(complex)
+	_add_hq22_tower_motion(complex)
 	_add_tower_stair_collisions(complex)
 	var paving := AirfieldPavementModules.new()
 	paving.name = "AirfieldHQ23PavementModules"
@@ -149,6 +151,57 @@ static func _add_hq23_tower(complex: Node3D) -> void:
 			mesh.visibility_range_end = end_distance
 			mesh.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
 		tower_root.add_child(root)
+
+static func _add_hq22_tower_motion(complex: Node3D) -> void:
+	# Reuse the approved HQ2.2 animated access door and shape-key windsock as
+	# separate motion details. All other HQ2.2 tower geometry stays hidden; the
+	# visible tower shell remains the authored HQ2.3 asset. Transform the details
+	# from the old tower's (72, -20) ground center to the compact 8 m tower.
+	var packed := load(HQ22_ANIMATED_TOWER_SCENE) as PackedScene
+	if packed == null:
+		push_error("Approved HQ2.2 tower motion source is missing: " + HQ22_ANIMATED_TOWER_SCENE)
+		return
+	var motion_root := packed.instantiate() as Node3D
+	if motion_root == null:
+		push_error("Approved HQ2.2 tower motion source did not instantiate as Node3D")
+		return
+	motion_root.name = "HQ22 Approved Tower Motion Details"
+	motion_root.scale = Vector3(0.54, 1.0, 0.54)
+	motion_root.rotation.y = PI
+	var target_local := Vector3(TOWER_CENTER.x, 0.0, TOWER_CENTER.y - COMPLEX_CENTER_OFFSET.z)
+	var source_tower_center := Vector3(72.0, 0.0, -20.0)
+	motion_root.position = target_local - (Basis(Vector3.UP, motion_root.rotation.y) * (source_tower_center * motion_root.scale))
+	for node in motion_root.find_children("*", "MeshInstance3D", true, false):
+		var mesh := node as MeshInstance3D
+		mesh.visible = mesh.name == "Tower access door | animated" or mesh.name == "Tower wind sock | wind animation"
+	var source_animator: AnimationPlayer
+	for node in motion_root.find_children("*", "AnimationPlayer", true, false):
+		var animator := node as AnimationPlayer
+		if animator.has_animation("Open_Tower_Door") and animator.has_animation("Wind_Sock_Gust"):
+			source_animator = animator
+			break
+	if source_animator == null:
+		push_error("Approved HQ2.2 tower door/windsock animation clips are missing")
+		return
+	var wind_animator := source_animator.duplicate() as AnimationPlayer
+	wind_animator.name = "HQ22 Wind Sock Loop"
+	var wind_animation := source_animator.get_animation("Wind_Sock_Gust").duplicate() as Animation
+	wind_animation.loop_mode = Animation.LOOP_LINEAR
+	var wind_library := AnimationLibrary.new()
+	wind_library.add_animation("Wind_Sock_Gust", wind_animation)
+	for library_name in wind_animator.get_animation_library_list():
+		wind_animator.remove_animation_library(library_name)
+	wind_animator.add_animation_library("", wind_library)
+	source_animator.get_parent().add_child(wind_animator)
+	complex.add_child(motion_root)
+	var tower_door := motion_root.find_child("Tower access door | animated", true, false) as Node3D
+	if tower_door == null:
+		push_error("Approved HQ2.2 animated tower door node is missing")
+		return
+	var collision := complex.get_node_or_null("GameplayCollisions/TowerDoorCollision") as Node3D
+	if collision != null:
+		var door_transform := motion_root.transform * tower_door.transform
+		collision.transform = door_transform
 
 static func _add_tower_stair_collisions(complex: Node3D) -> void:
 	var body := StaticBody3D.new()

@@ -177,6 +177,42 @@ func _run() -> void:
 		assert(tower_lod != null and not tower_lod.find_children("*", "MeshInstance3D", true, false).is_empty(), "Tower LOD%d must import real geometry" % lod_index)
 	var tower_collisions := compact_core.get_node_or_null("HQ23 Tower stair and level collisions") as StaticBody3D
 	assert(tower_collisions != null and tower_collisions.find_children("*", "CollisionShape3D", true, false).size() >= 75, "The external stair must have walkable step and landing collisions")
+	var tower_motion := compact_core.get_node_or_null("HQ22 Approved Tower Motion Details") as Node3D
+	assert(tower_motion != null, "The compact tower must reuse the approved HQ2.2 moving door and windsock geometry")
+	var compact_tower_door := tower_motion.find_child("Tower access door | animated", true, false) as MeshInstance3D
+	var compact_windsock := tower_motion.find_child("Tower wind sock | wind animation", true, false) as MeshInstance3D
+	assert(compact_tower_door != null and compact_tower_door.visible, "The imported HQ2.2 animated tower-door leaf must be visible in HQ2.3")
+	assert(compact_windsock != null and compact_windsock.visible and compact_windsock.mesh.get_blend_shape_count() > 0, "The imported HQ2.2 wind sock must retain its deforming shape")
+	var tower_door_player: AnimationPlayer
+	var windsock_player: AnimationPlayer
+	for player in animation_players(tower_motion):
+		if player.name == "HQ22 Wind Sock Loop": windsock_player = player
+		elif player.has_animation("Open_Tower_Door"): tower_door_player = player
+	assert(tower_door_player != null and tower_door_player.has_animation("Open_Tower_Door"), "The compact tower must contain the exact HQ2.2 tower-door clip")
+	assert(windsock_player != null and windsock_player.has_animation("Wind_Sock_Gust"), "The compact tower must contain a separate HQ2.2 wind-sock player")
+	var wind_value_start := compact_windsock.get_blend_shape_value(0)
+	await get_tree().create_timer(0.4).timeout
+	assert(windsock_player.is_playing() and absf(compact_windsock.get_blend_shape_value(0) - wind_value_start) > 0.01, "The HQ2.2 wind-sock gust clip must deform the compact HQ2.3 wind sock in Godot (playing=%s animation=%s blend_start=%.3f blend_now=%.3f tracks=%d)" % [windsock_player.is_playing(), windsock_player.current_animation, wind_value_start, compact_windsock.get_blend_shape_value(0), windsock_player.get_animation("Wind_Sock_Gust").get_track_count()])
+	var compact_tower_door_start := compact_tower_door.rotation.y
+	var compact_tower_door_basis_start := compact_tower_door.transform.basis
+	var compact_tower_collision := compact_core.get_node("GameplayCollisions/TowerDoorCollision") as Node3D
+	var tower_collision_start := compact_tower_collision.rotation.y
+	compact_driver.open_tower_door()
+	await get_tree().create_timer(0.4).timeout
+	var tower_clip := tower_door_player.get_animation("Open_Tower_Door")
+	var tower_clip_paths: Array[String] = []
+	for track in tower_clip.get_track_count(): tower_clip_paths.append(String(tower_clip.track_get_path(track)))
+	var tower_clip_values: Array[String] = []
+	for track in tower_clip.get_track_count(): tower_clip_values.append(str(tower_clip.track_get_key_value(track, tower_clip.track_get_key_count(track) - 1)))
+	var player_root := tower_door_player.get_node_or_null(tower_door_player.root_node)
+	assert(tower_door_player.is_playing() and not compact_tower_door.transform.basis.is_equal_approx(compact_tower_door_basis_start), "The HQ2.2 tower-door clip must rotate its visible leaf in Godot (playing=%s clip=%s euler=%s basis_changed=%s time=%.3f root=%s paths=%s last_keys=%s target=%s player_root=%s)" % [tower_door_player.is_playing(), tower_door_player.current_animation, compact_tower_door.rotation, not compact_tower_door.transform.basis.is_equal_approx(compact_tower_door_basis_start), tower_door_player.current_animation_position, tower_door_player.root_node, tower_clip_paths, tower_clip_values, compact_tower_door.get_path(), player_root.get_path() if player_root != null else "null"])
+	assert(absf(compact_tower_collision.rotation.y - tower_collision_start) > 0.02, "The compact tower-door collision must follow the opening leaf")
+	compact_driver.close_tower_door()
+	await get_tree().create_timer(1.35).timeout
+	assert(absf(compact_tower_collision.rotation.y - tower_collision_start) < 0.03, "The compact tower-door collision must return when the leaf closes")
+	await get_tree().create_timer(tower_door_player.get_animation("Open_Tower_Door").length + 0.1).timeout
+	assert(not tower_door_player.is_playing() or tower_door_player.current_animation == "Wind_Sock_Gust", "The reverse tower-door clip must finish and leave the door closed")
+	assert(windsock_player.is_playing(), "The wind-sock loop must continue independently while the tower door moves")
 	var old_runway := compact_lod0.find_child("Airfield Runway_00 100m section", true, false) as MeshInstance3D
 	assert(old_runway == null, "The 2.2 showcase runway must not be part of the compact production GLB")
 	var modules := compact_core.get_node("AirfieldHQ23PavementModules") as AirfieldPavementModules

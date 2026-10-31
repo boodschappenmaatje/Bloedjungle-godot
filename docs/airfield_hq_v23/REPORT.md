@@ -37,7 +37,9 @@ Blender glTF export still warns that multiple image-texture nodes are connected
 for some inherited materials. Godot material presence and UV contracts pass,
 but the final in-engine material appearance has not been reviewed. The five
 inherited hangar work lights are bounded in the placed derivative and disabled
-by default. A matched light-on/light-off render has not been completed.
+by default. Existing Godot views still show clipped highlights in the hangar
+and tower, so in-engine material/light parity is not accepted. A matched
+light-on/light-off render has not been completed in this environment.
 
 ## Build and aircraft state
 
@@ -67,13 +69,19 @@ appearance.
 - [Player-height geometry/layout Workbench comparison](compact_layout_review/compare_player_height.png)
 - [Build-camera geometry/layout Workbench comparison](compact_layout_review/compare_build_camera.png)
 
-No current Godot screenshots were captured for hangar/interior, construction
-details, tower access, whole-base scale, build menu, placement preview or shop.
-The paired 2.2/2.3 material-quality acceptance requested by the user is
-therefore **not established**. No GPU, display, native iPhone or FPS captures
-were performed. Four separate centered component USDZ previews are packaged in
-`previews/usdz/airfield_hq/2.3/compact/`; archive contents were checked on
-Linux, but Apple `usdchecker` and iPhone Quick Look were unavailable.
+Existing production Godot screenshots are in `screenshots/` (build preview,
+field, tower, runway and disabled shop). Inspection shows clipped highlights
+and white surfaces in several of them. They document a visual issue, not
+quality parity. A new Godot live-capture attempt with 4.7.2 exceeded 180 seconds
+and produced no updated PNGs. This environment has no `/dev/dri` device or Xvfb
+display. Same-camera Godot hangar/interior/construction-detail and HQ2.2/HQ2.3
+comparison images therefore remain **NOT_TESTED**. The existing Cycles paired
+renders compare source models, but do not prove in-game material parity.
+
+Four centered component USDZ archives are present in
+`previews/usdz/airfield_hq/2.3/compact/`; all four pass `unzip -t`. Apple's
+`usdchecker` and iPhone Quick Look were unavailable. iPhone preview/display
+remains **NOT_TESTED**.
 
 ## Validation results
 
@@ -83,17 +91,18 @@ Linux, but Apple `usdchecker` and iPhone Quick Look were unavailable.
 | HQ2.2 import, UV/material/collision and animation contract | **PASS** | 34 meshes, 97 surface materials, 166,968 triangles, five source lights retained; five clips found and door, tower-door, marker and windsock animation exercised in the source showcase. |
 | HQ2.3 geometry/build/purchase contract | **PASS** | 75 × 18 runway, five slabs, door/collision sizes, clear envelope, build/payment/foliage/move/repair/rebuild/sale and disabled purchase path checked. |
 | Straight runway/taxi PBR geometry contracts | **PASS** | Non-box authored runway/taxi surfaces, LOD nodes, apron and eight PSP plates checked in the scene contract. |
-| HQ2.3 tower door / wind-sock animation | **FAIL / missing** | The new tower GLB has no authored `Open_Tower_Door` or `Wind_Sock_Gust` clips. HQ2.2 source clips remain unchanged, but the compact HQ2.3 tower does not yet preserve those two behaviors. |
-| Player walk, stair climb, door clearance and vehicle traversal | **NOT_TESTED** | Scene-level proxies exist; no gameplay traversal/collision test was run. |
-| Build-menu and shop visual/touch pass | **NOT_TESTED** | Code contract covers builder and disabled shop state; no Godot visual/device screenshot. |
+| HQ2.3 tower door / wind-sock animation | **PASS (Godot headless scene test)** | The compact tower reuses visible HQ2.2 moving meshes. Godot test verifies the exact source door clip drives the visible door after nested GLTF animation evaluation, door collision follows, and an independent HQ2.2 wind-sock loop changes the shape key. The protected sources remain hash-identical. |
+| Player walk, stair climb, hangar-door traversal and vehicle traversal | **NOT_TESTED** | The contract checks stair collision modules, doorway dimensions and animation-driven door collision, but does not simulate a player walking/climbing through them or a vehicle crossing the route. P-47 clearance is dimensional only; model absent. |
+| Build, repair, rebuild, sale, foliage clearance and disabled P-47 purchase | **PASS (contract)** | Godot contract covers points/cost, one-airfield guard, valid/blocked placement, payment-before-foliage-clearance, repair/rebuild/sale and missing-model purchase block. HUD visuals and touch operation are **NOT_TESTED**. |
+| Current Godot visual capture / matched 2.2 parity | **NOT_TESTED / visual issue found** | New capture exceeded 180 seconds without new PNGs. Existing Godot evidence has visibly clipped highlights. No quality-parity claim. |
 | P-47 model, purchase or flight | **NOT_TESTED / blocked** | Original model absent; purchase disabled. No taxi/takeoff/landing claim. |
 | Main project regressions: bunker, soldier, M1911 reload, build, HUD layout/equipment, bus, weapon clips | **PASS** | Relevant tests run on current checkout. |
-| `auto_spel_test.gd` | **FAIL** | Existing bullet/damage assertions fail for a bus target at 4 m and 12 m. Airfield changes do not touch that test path; a clean main-branch baseline was not run. |
-| Team-command fixture tests | **FAIL / environment-blocked** | Fixture could not compile because `NapalmPlace` is missing from the test environment; fixture `user://` writes also failed. |
+| `auto_spel_test.gd` bus cases | **FAIL / main baseline inconclusive** | Feature run fails M1911 against bus at 4 m; other bus weapon/range cases pass. A main worktree run emitted two M1911 failures (4 m and 12 m), but a clean editor import was still running when stopped, so that result is not a valid same-condition baseline. These cases do not cover airfield code. |
+| Team-command fixture tests | **FAIL (reproduces on main and feature)** | Both branches report `Streak.armed` parse failure and missing `NapalmPlace` in the HUD-wheel test. The team-controller fixture itself reports 68 checks passed. The wrapper's final fixture is a running game and required manual stop. |
 | OTA test | **NOT_TESTED / environment-blocked** | Local mock server could not bind sockets in the sandbox. No OTA action was attempted. |
 | Protected HQ2.2 source SHA-256 manifest | **PASS** | All listed protected source assets match. |
 | `git diff --check` | **PASS** | No whitespace errors in candidate diff. |
-| Cycles visual parity acceptance | **NOT_ESTABLISHED** | Several CPU renders exist, but no full matched comparison for paving/whole base/UI or Godot screenshots; visual quality still requires review. |
+| Cycles visual parity acceptance | **NOT_ESTABLISHED** | Matched hangar/tower CPU renders exist, but compact paving/whole-base/UI and in-game parity are not established; clipped Godot highlights require correction/review. |
 | iPhone 18 Pro Max performance / Quick Look | **NOT_TESTED** | No native device or Apple USDZ validation tool in this Linux environment. |
 
 The shell bounds are intentionally reported as measured, including the
@@ -103,12 +112,12 @@ review. No quality-parity or iPhone acceptance claim is made.
 
 ## Remaining work before acceptance
 
-1. Restore tower door and wind-sock motion in the compact derivative and test
-   both in Godot.
-2. Inspect the Godot scene on screen, including tower steps, hangar door,
-   interior movement/collisions, vehicle clearance, construction UI and shop.
-3. Produce same-camera Cycles and Godot screenshots for all requested details
-   and base-scale comparisons; correct any visible material/detail regression.
+1. Run the live Godot captures in a display-backed renderer and correct the
+   clipped highlights before accepting the in-game visual parity.
+2. Walk a player through the hangar and up/down tower stairs; test door passage,
+   vehicle clearance, the construction UI and the disabled shop interactively.
+3. Produce the missing same-camera Godot hangar/interior/construction-detail
+   comparison images against HQ2.2 and review material differences.
 4. Review compact shell dimensions and the taxi/apron/P-47 clearance with the
    actual approved aircraft when available. Keep purchase disabled until the
    original plane asset and native iPhone acceptance are in place.

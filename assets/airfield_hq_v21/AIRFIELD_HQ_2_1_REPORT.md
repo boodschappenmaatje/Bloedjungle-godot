@@ -16,7 +16,7 @@
 
 ## Validatie
 
-- Godot 4.7.2 importeert de GLB; regressietest `tests/airfield_hq_21_import_test.gd` controleert UV's, materialen, alle drie animatieclips, bewegende deuren, bewegende deurcollision-proxy's en de meshes van LOD1/2. Resultaat: PASS (15 mesh-nodes; 131.930 driehoeken; 6 geïmporteerde hangarlampen; 6 collision shapes).
+- Godot 4.7.2 importeert de GLB; regressietest `tests/airfield_hq_21_import_test.gd` controleert UV's en materialen, speelt de twee deurclips en markerclip af, controleert de bewegende deurcollision-proxy's en de meshes van LOD1/2. Resultaat: PASS (15 mesh-nodes; 131.930 driehoeken; 6 geïmporteerde hangarlampen; 6 collision shapes).
 - Apple `usdchecker --arkit`: PASS. `usdzip --list`: PASS. Afspelen in Quick Look op een fysiek iPhone-apparaat: niet getest.
 - Viewerbundle gebouwd via aanwezige lokale esbuild-runtime. `pnpm run build` stopte op de repositorypolicy die install-scripts van `esbuild` blokkeert; `node build.mjs` met de al aanwezige dependency slaagde. Browsercontrole kon niet worden uitgevoerd: de host heeft lokale browserbesturing uitgeschakeld. De bundle is dus gebouwd maar niet live in een browser of op een iPhone afgetekend.
 - GLB-payloads: LOD0 45.580.576 bytes; LOD1 12.855.500 bytes; LOD2 4.743.248 bytes. USDZ 50.286.924 bytes. Dit zijn gecomprimeerde bestandsgroottes, geen metingen van GPU- of runtimegeheugen.

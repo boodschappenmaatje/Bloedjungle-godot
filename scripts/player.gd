@@ -39,6 +39,7 @@ var _reload_was_empty := false
 var _dust_t := 0.0
 var _shot_sequence := 0
 var _fire_was_down := false
+const M1911_ASSIST_MIN_INTERVAL := 0.5
 var m1911_mag_rounds := 0
 var m1911_chambered := false
 
@@ -172,15 +173,18 @@ func _physics_process(delta: float) -> void:
 			_reload_phase = 0
 			model.gun_reset()
 			Game.changed.emit()
-	var trigger_pressed := Game.fire and (weapon != "m1911" or not _fire_was_down)
+	# Only a real right-stick hold in assisted mode can repeat a M1911 shot.
+	# Mouse/keyboard and Manual mode remain trigger-edge semiautomatic.
+	var assisted_touch := weapon == "m1911" and TouchSticks.m1911_touch_firing and GameSettings.get_value("m1911_fire_mode") == "assist"
+	var trigger_pressed := Game.fire and (weapon != "m1911" or m1911_trigger_request(Game.fire, _fire_was_down, assisted_touch, fire_t <= 0.0))
 	_fire_was_down = Game.fire
 	if trigger_pressed and climb < 0.0:
 		idle_t = 0.0
 		_shoot(w)
 	else:
 		idle_t += delta
-		if idle_t > 1.4 and can_reload():
-			_reload(w)  # geen herlaadknop: na even niet schieten vult hij zelf bij
+		if idle_t > 1.4 and _should_auto_reload():
+			_reload(w)  # M1911: alleen automatisch bij volledig leeg wapen; andere wapens blijven ongewijzigd
 	if reload_t <= 0.0 and fire_t <= 0.0:
 		model.ensure_weapon_idle()
 	model.set_shoot_pose((Game.fire if weapon != "m1911" else trigger_pressed) and reload_t <= 0.0, weapon, w.rate)
@@ -411,6 +415,12 @@ func _climb_step(delta: float) -> void:
 		position.y = 0.0
 
 
+## Pure trigger rule, shared with headless regressions.
+## assisted mode only repeats after the separate physical shot cooldown.
+static func m1911_trigger_request(held: bool, was_held: bool, assisted: bool, ready: bool) -> bool:
+	return held and (not was_held or (assisted and ready))
+
+
 func _shoot(w: Dictionary) -> void:
 	if reload_t > 0.0 or fire_t > 0.0:
 		return
@@ -428,7 +438,8 @@ func _shoot(w: Dictionary) -> void:
 	if weapon != "m1911" and ammo <= 0:
 		_reload(w)
 		return
-	fire_t = w.rate
+	# At least half a second between distinct Colt shots, even after rate upgrades.
+	fire_t = maxf(w.rate, M1911_ASSIST_MIN_INTERVAL) if weapon == "m1911" else w.rate
 	if weapon == "m1911":
 		_m1911_fire_chambered_round()
 	else:
@@ -506,7 +517,10 @@ func equip(id: String) -> void:
 func _reload(w: Dictionary) -> void:
 	if reload_t > 0.0 or (weapon == "m1911" and m1911_chambered and m1911_mag_rounds >= 7) or (weapon != "m1911" and ammo >= w.mag):
 		return
-	reload_t = w.reload * Progress.bonus().reload
+	# A tactical reload is quick because a round remains chambered.
+	# An empty reload also needs a slide release and takes slightly longer.
+	var empty_m1911_reload := weapon == "m1911" and not m1911_chambered
+	reload_t = w.reload * (1.2 if empty_m1911_reload else 1.0) * Progress.bonus().reload
 	_reload_dur = maxf(reload_t, 0.1)
 	_reload_elapsed = 0.0
 	if weapon == "m1911":
@@ -580,6 +594,15 @@ func _sync_m1911_ammo() -> void:
 	Game.owned.m1911.ammo = ammo
 	Game.owned.m1911.mag_rounds = m1911_mag_rounds
 	Game.owned.m1911.chambered = m1911_chambered
+
+
+## Auto reload is different from a deliberate tactical reload. The old
+## shared idle timer was reloading the M1911 after EVERY single shot because
+## seven-round magazine capacity was checked even while the chamber was loaded.
+func _should_auto_reload() -> bool:
+	if weapon == "m1911":
+		return not m1911_chambered and m1911_mag_rounds == 0 and can_reload()
+	return can_reload()
 
 
 func can_reload() -> bool:

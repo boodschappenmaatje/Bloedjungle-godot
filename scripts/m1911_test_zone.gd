@@ -100,7 +100,7 @@ func _build_practice_range() -> void:
 	var direction := Vector3(sin(Game.player.face), 0.0, cos(Game.player.face))
 	var lateral := Vector3(direction.z, 0.0, -direction.x)
 	for spec in [["LIGHT", 5, -2.0, 1.0], ["HEAVY", 12, 0.0, 0.65], ["ARMORED", 20, 2.0, 0.35]]:
-		var dummy: Node3D = TARGET.new()
+		var dummy: Variant = TARGET.new()
 		dummy.configure(spec[0], spec[1], spec[3])
 		main.add_child(dummy)
 		dummy.global_position = p.global_position + direction * float(spec[1]) + lateral * float(spec[2])
@@ -110,7 +110,7 @@ func _build_practice_range() -> void:
 func _reset_targets() -> void:
 	for dummy in targets:
 		if is_instance_valid(dummy):
-			dummy.reset_target()
+			dummy.call("reset_target")
 
 
 func _reload() -> void:

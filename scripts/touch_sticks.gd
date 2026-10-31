@@ -7,12 +7,16 @@ extends Control
 const STICK_R := 56.0
 const ANCHOR_R := 76.0
 const AIM_FIRE := 0.8
+const M1911_FIRE_ENTER := 0.82
+const M1911_FIRE_EXIT := 0.72
 
 var _sticks := {}  # vinger-index -> {"aim": bool, "origin": Vector2, "d": Vector2}
 var _mouse_used := false
 var _mouse_down := false
 var _events := 0
 var _last_touch_hud_visible := false
+static var m1911_touch_firing := false
+var _m1911_fire_latched := false
 static var aim_d := Vector2.ZERO   # uitwijking van de rechterstick (-1..1), ook als hij niet schiet; napalm_plaats.gd gebruikt dit
 static var info := ""  # voor de fps-teller: wat de sticks nu zien (om te kijken waarom ze niet reageren)
 
@@ -36,6 +40,8 @@ func _clear() -> void:
 	Game.move = Vector2.ZERO
 	Game.aim = NAN
 	Game.fire = false
+	m1911_touch_firing = false
+	_m1911_fire_latched = false
 	var team := get_tree().get_first_node_in_group("team_commands")
 	if team != null:
 		team.cancel_input()
@@ -142,6 +148,8 @@ func _process(_delta: float) -> void:
 		Game.move = Vector2.ZERO
 		Game.aim = NAN
 		Game.fire = false
+		m1911_touch_firing = false
+		_m1911_fire_latched = false
 		queue_redraw()
 		return
 	var mv := Vector2(
@@ -149,6 +157,7 @@ func _process(_delta: float) -> void:
 		float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP)))
 	var aim := NAN
 	var fire := false
+	var right_stick_firing := false
 	aim_d = Vector2.ZERO
 	for s in _sticks.values():
 		if s.aim:
@@ -159,7 +168,15 @@ func _process(_delta: float) -> void:
 		elif s.aim and l > 0.18:
 			# scherm-rechts = +x en scherm-omlaag = +z, want de camera kijkt naar het noorden
 			aim = atan2(s.d.x, s.d.y)
-			fire = l > AIM_FIRE
+			if Game.cur == "m1911" and UI.is_touch_platform():
+				# Hysteresis: prevent jitter around the outer ring from firing extra shots.
+				fire = m1911_zone_active(l, _m1911_fire_latched)
+				_m1911_fire_latched = fire
+				right_stick_firing = fire
+			else:
+				fire = l > AIM_FIRE
+	if not right_stick_firing:
+		_m1911_fire_latched = false
 	if is_nan(aim) and _mouse_used and Game.player:
 		var cam := get_viewport().get_camera_3d()
 		var mp := get_viewport().get_mouse_position()
@@ -171,10 +188,18 @@ func _process(_delta: float) -> void:
 	if Streak.armed:
 		aim = NAN   # napalm staat klaar: de rechterstick richt de strook en schiet niet
 		fire = false
+		right_stick_firing = false
+		_m1911_fire_latched = false
 	info = "touch %d · sticks %d · %dx%d" % [_events, _sticks.size(), get_viewport_rect().size.x, get_viewport_rect().size.y]
 	Game.move = mv.limit_length(1.0)
 	Game.aim = aim
 	Game.fire = fire and Game.state != "over" and Game.state != "shop" and Game.state != "menu"
+	m1911_touch_firing = right_stick_firing and Game.fire
+
+
+## Outer-ring entry/exit with a small hysteresis to prevent accidental re-triggers.
+static func m1911_zone_active(distance: float, was_active: bool) -> bool:
+	return distance >= (M1911_FIRE_EXIT if was_active else M1911_FIRE_ENTER)
 
 
 func _draw() -> void:

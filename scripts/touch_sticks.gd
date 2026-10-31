@@ -140,6 +140,8 @@ func _process(_delta: float) -> void:
 		_last_touch_hud_visible = touch_hud_visible
 		queue_redraw()
 	if get_tree().paused or Game.state == "menu" or Game.state == "shop":
+		m1911_touch_firing = false
+		_m1911_fire_latched = false
 		if not _sticks.is_empty():
 			_clear()  # menu of pauze open: sticks weg, de volgende aanraking begint schoon
 		return
@@ -217,7 +219,8 @@ func _draw() -> void:
 
 
 func _draw_stick(origin: Vector2, direction: Vector2, aim: bool, alpha: float) -> void:
-	var firing := aim and direction.length() > AIM_FIRE
+	var fire_threshold := M1911_FIRE_ENTER if Game.cur == "m1911" and UI.is_touch_platform() else AIM_FIRE
+	var firing := aim and direction.length() > fire_threshold
 	# De bedienbare zone blijft 76 punten; alleen de getekende ring neemt minder speelbeeld in.
 	draw_circle(origin, 64.0, Color(0.015, 0.03, 0.025, 0.12 * alpha))
 	draw_arc(origin, 64.0, 0, TAU, 48, Color(1, 0.3, 0.2, 0.72 * alpha) if firing else Color(UI.INK, 0.36 * alpha), 1.5)

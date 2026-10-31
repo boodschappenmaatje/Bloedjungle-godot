@@ -6,6 +6,11 @@ name: OTA update patch
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - "scripts/updater.gd"
+      - "scripts/update_panel.gd"
+      - ".github/workflows/ota.yml"
   push:
     branches: [main, feature/native-ios-complete]
     paths-ignore: ["docs/**", "*.md"]
@@ -116,7 +121,15 @@ jobs:
           print(json.dumps(m, indent=1))
           PY
           echo "PATCH_NAME=$NAME" >> "$GITHUB_ENV"
+      - name: Preview the staged OTA patch (PR only; never published)
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ota-bootstrap-preview-${{ github.sha }}
+          path: out/
+          retention-days: 7
       - name: Publish to the "updates" release
+        if: github.event_name != 'pull_request'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

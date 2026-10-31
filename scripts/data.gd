@@ -10,7 +10,7 @@ const SOLDIER_SCALE := 1.2
 # welk schotgeluid bij welk wapen hoort (Sfx)
 const WEAPON_SND := {"m1911": "m1911_real", "thompson": "smg", "garand": "rifle", "trench": "shotgun", "mg42": "mg", "bazooka": "rocket"}
 const WEAPONS := {
-	"m1911": {"short": "Pistool", "name": "M1911A1 Pistool", "price": 0, "dmg": 26.0, "rate": 0.26, "mag": 7, "reload": 1.25, "spread": 0.035, "speed": 75.0, "pellets": 1, "pierce": 0, "life": 0.6, "desc": ".45 ACP enkelvoudig; zeven patronen in het magazijn."},
+	"m1911": {"short": "Pistool", "name": "M1911A1 Pistool", "price": 0, "dmg": 26.0, "rate": 0.26, "mag": 7, "reload": 1.05, "spread": 0.035, "speed": 75.0, "pellets": 1, "pierce": 0, "life": 0.6, "desc": ".45 ACP enkelvoudig; zeven patronen in het magazijn."},
 	"thompson": {"short": "Thompson", "name": "Thompson M1928", "price": 700, "dmg": 18.0, "rate": 0.075, "mag": 30, "reload": 2.0, "spread": 0.08, "speed": 75.0, "pellets": 1, "pierce": 0, "life": 0.55, "desc": "De Tommy gun. Snel, luid en hongerig."},
 	"garand": {"short": "Garand", "name": "M1 Garand", "price": 1000, "dmg": 80.0, "rate": 0.3, "mag": 8, "reload": 1.9, "spread": 0.012, "speed": 120.0, "pellets": 1, "pierce": 2, "life": 0.6, "desc": "Semi-automatisch geweer. Kogel gaat door drie man heen."},
 	"trench": {"short": "Shotgun", "name": "Winchester M1897", "price": 1400, "dmg": 16.0, "rate": 0.62, "mag": 6, "reload": 2.6, "spread": 0.2, "speed": 65.0, "pellets": 9, "pierce": 0, "life": 0.32, "desc": "Loopgraafshotgun. Van dichtbij blijft er weinig over."},

@@ -99,6 +99,25 @@ func _run() -> void:
 	_check(not p._m1911_fire_chambered_round(), "empty pistol cannot fire")
 	_check_loaded(p, 0, false, "empty trigger changes nothing")
 
+	# Regression: held assisted right-stick at zero must NOT repeat the dry-click
+	# every 0.5 s or keep resetting idle (observed in 31 Oct iPhone recording).
+	_set_loaded(p, 0, false)
+	_check(p.m1911_is_empty(p.m1911_chambered, p.m1911_mag_rounds), "fully empty chamber+mag detected")
+	_check(p.m1911_should_advance_idle(true, false, 0), "held trigger + empty gun continues counting toward auto reload")
+	_check(p.m1911_should_advance_idle(false, false, 0), "released trigger + empty gun continues counting toward reload")
+	_check(not p.m1911_should_advance_idle(true, true, 0), "last chambered shot still respects fire cadence")
+	_check(not p.m1911_should_advance_idle(true, true, 6), "loaded assisted trigger resets idle as usual")
+	_check(not p.m1911_is_empty(true, 0), "last chambered round is not empty")
+	_check(not p.m1911_is_empty(false, 4), "magazine-only state is not fully empty")
+	_check(p.M1911_EMPTY_RELOAD_IDLE < 1.4, "empty Colt reload no longer waits full 1.4 seconds")
+	p._m1911_empty_click_latched = true  # established by the final successful shot in the held trigger
+	_check(not p._m1911_empty_trigger_feedback(), "holding after final round must make no repeated click")
+	p._m1911_empty_click_latched = false  # release, then a new deliberate pull
+	_check(p._m1911_empty_trigger_feedback(), "new distinct empty trigger press may click once")
+	_check(not p._m1911_empty_trigger_feedback(), "continuously held empty trigger never repeats click")
+	p._m1911_empty_click_latched = false
+	_check(p._should_auto_reload(), "fully empty gun is eligible for idle auto-reload despite held trigger")
+
 	# Trigger never racks a slide: magazine present with an empty chamber is not fire-ready.
 	_set_loaded(p, 4, false)
 	_check(not p._m1911_fire_chambered_round(), "trigger does not auto-chamber")

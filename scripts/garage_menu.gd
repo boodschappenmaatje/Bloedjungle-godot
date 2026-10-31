@@ -74,7 +74,7 @@ func _tap(pos: Vector2) -> void:
 	var found: Variant = null
 	if hit != null:
 		for b in Game.buildings:
-			if b.kind != "garage" and b.kind != "helipad":
+			if b.kind != "garage" and b.kind != "helipad" and b.kind != "airfield":
 				continue
 			var sz: Vector3 = Buildings.DEFS[b.kind].size
 			var rel: Vector3 = hit - b.at
@@ -107,7 +107,8 @@ func _refresh() -> void:
 	var b: Dictionary = _sel
 	var head := HBoxContainer.new()
 	_box.add_child(head)
-	head.add_child(UI.label("GARAGE" if b.kind == "garage" else "HELIPLATFORM", UI.display(1), 18, UI.INK))
+	var title := "GARAGE" if b.kind == "garage" else ("VLIEGVELD — VLIEGTUIGHANGAR" if b.kind == "airfield" else "HELIPLATFORM")
+	head.add_child(UI.label(title, UI.display(1), 18, UI.INK))
 	var sp := Control.new()
 	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	head.add_child(sp)
@@ -122,7 +123,26 @@ func _refresh() -> void:
 	var row := HFlowContainer.new()
 	row.add_theme_constant_override("h_separation", 6)
 	_box.add_child(row)
-	if b.kind == "helipad":
+	if b.kind == "airfield":
+		for k in AirfieldHQ23.AIRCRAFT:
+			var def: Dictionary = AirfieldHQ23.AIRCRAFT[k]
+			var aircraft_btn := Button.new()
+			aircraft_btn.add_to_group("hud_button")
+			aircraft_btn.text = def.name + "\n" + ("%d pt" % def.cost)
+			UI.style_button(aircraft_btn, "buy")
+			aircraft_btn.add_theme_font_size_override("font_size", 13)
+			aircraft_btn.custom_minimum_size = Vector2(180, 48)
+			aircraft_btn.disabled = not Game.builds.can_buy_aircraft(b, k)
+			aircraft_btn.pressed.connect(func(): Game.builds.buy_aircraft(b, k))
+			row.add_child(aircraft_btn)
+		var status := Label.new()
+		status.text = AirfieldHQ23.shop_status("p47")
+		status.add_theme_font_override("font", UI.body(600, 0))
+		status.add_theme_font_size_override("font_size", 12)
+		status.add_theme_color_override("font_color", UI.INK_DIM)
+		status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		_box.add_child(status)
+	elif b.kind == "helipad":
 		var apache := Button.new()
 		apache.add_to_group("hud_button")
 		apache.text = "Apache\n" + ("gekocht" if b.has_heli else "%d pt" % Buildings.HELI_COST)

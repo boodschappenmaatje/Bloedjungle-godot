@@ -8,6 +8,7 @@ const DEFS := {
 	"kazerne": {"name": "Kazerne", "cost": 1000, "size": Vector3(4.4, 2.2, 3.2), "max": 1, "hp": 600.0},
 	"garage": {"name": "Garage", "cost": 800, "size": Vector3(5.15, 3.1, 5.7), "max": 1, "hp": 900.0},
 	"helipad": {"name": "Heliplatform", "cost": 1000, "size": Vector3(12.8, 2.0, 12.8), "max": 1, "hp": 1200.0},
+	"airfield": {"name": "Vliegveld", "cost": AirfieldHQ23.BUILD_COST, "size": AirfieldHQ23.FOOTPRINT, "max": 1, "hp": 3000.0},
 	"zandzak": {"name": "Zandzakken", "cost": 150, "size": Vector3(3.1, 0.95, 0.8), "max": 40, "hp": 380.0, "piece": true},
 	"muur": {"name": "Betonmuur", "cost": 300, "size": Vector3(3.0, 1.55, 0.7), "max": 30, "hp": 1100.0, "piece": true},
 }
@@ -75,6 +76,8 @@ func _tower_feet() -> Array:
 
 ## Kan dit hier staan? Gebouwen binnen de muur, stukken overal behalve op de muur en in de poorten.
 func can_place(kind: String, at: Vector3, yaw: float, me: Variant = null) -> bool:
+	if kind == "airfield":
+		return AirfieldHQ23.complex_available() and absf(at.x - AirfieldHQ23.ANCHOR.x) < 0.1 and absf(at.z - AirfieldHQ23.ANCHOR.z) < 0.1 and absf(fposmod(yaw, TAU)) < 0.01 and (me != null or not full(kind))
 	var d: Dictionary = DEFS[kind]
 	var sz: Vector3 = d.size
 	var piece := is_piece(kind)
@@ -136,10 +139,12 @@ func _hits(size: Vector3, at: Vector3, yaw: float, ex: Array[RID]) -> bool:
 
 ## Het gebouw zelf: een StaticBody die kogels en mensen tegenhoudt, met het model eronder.
 func make_node(kind: String) -> StaticBody3D:
+	if kind == "airfield":
+		return AirfieldHQ23.make_complex()
 	var body := BuildingBody.new()
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
-	body.set_meta("impact_material", {"zandzak": "dirt", "muur": "concrete", "kazerne": "wood", "garage": "metal", "helipad": "concrete"}.get(kind, "concrete"))
+	body.set_meta("impact_material", {"zandzak": "dirt", "muur": "concrete", "kazerne": "wood", "garage": "metal", "helipad": "concrete", "airfield": "concrete"}.get(kind, "concrete"))
 	var sz: Vector3 = DEFS[kind].size
 	if kind != "garage" and kind != "helipad":
 		var cs := CollisionShape3D.new()
@@ -187,9 +192,17 @@ func _bags(root: Node3D, sz: Vector3) -> void:
 
 
 func place(kind: String, at: Vector3, yaw: float) -> Variant:
-	if full(kind) or not can_place(kind, at, yaw) or not Game.pay_build(DEFS[kind].cost):
+	if full(kind) or not can_place(kind, at, yaw):
 		return null
-	var node := make_node(kind)
+	var node: StaticBody3D = make_node(kind) if kind == "airfield" else null
+	if kind == "airfield" and node == null:
+		return null
+	if not Game.pay_build(DEFS[kind].cost):
+		if node != null:
+			node.free()
+		return null
+	if node == null:
+		node = make_node(kind)
 	node.position = at
 	node.rotation.y = yaw
 	add_child(node)
@@ -201,6 +214,8 @@ func place(kind: String, at: Vector3, yaw: float) -> Variant:
 	if kind == "garage":
 		b.merge({"has": {"jeep": false, "tank": false, "truck": false}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
 		_garage_init(b)
+	elif kind == "airfield":
+		b.merge({"aircraft": [], "aircraft_capacity": AirfieldHQ23.AIRCRAFT_CAPACITY, "runway_reserved_by": "", "complex": true})
 	elif kind == "helipad":
 		b.merge({"has_heli": false, "hs": "closed", "t": 0.0, "want": false, "heli": null, "spin": 0.0})
 		_pad_init(b)
@@ -248,7 +263,9 @@ func remove(b: Dictionary) -> void:
 	_clear_fx(b)
 	if b.bar != null:
 		b.bar.queue_free()
-	if b.kind == "helipad":
+	if b.kind == "airfield":
+		AirfieldHQ23.cleanup(b)
+	elif b.kind == "helipad":
 		var player = Game.player
 		if b.heli != null and is_instance_valid(b.heli):
 			if b.heli.driven and player != null:
@@ -355,6 +372,8 @@ func sell(b: Dictionary) -> void:
 
 
 func turn(b: Dictionary) -> bool:
+	if b.kind == "airfield":
+		return false
 	var ny: float = fposmod(b.yaw + PI / 2.0, TAU)
 	if not can_place(b.kind, b.at, ny, b):
 		return false
@@ -438,6 +457,8 @@ func _physics_process(delta: float) -> void:
 			continue  # een wrak doet niets
 		if b.kind == "garage":
 			_garage_step(b, delta)
+		elif b.kind == "airfield":
+			AirfieldHQ23.step(b, delta)
 		elif b.kind == "helipad":
 			_pad_step(b, delta)
 	# tijdens het bouwen staat de opleiding stil (updateStructures in 16d-base.js)
@@ -676,6 +697,12 @@ func _cut_pad() -> void:
 			mat.set_shader_parameter("pad", Vector4(b.at.x, b.at.z, cos(b.yaw), sin(b.yaw)))
 			mat.set_shader_parameter("pad_half", 4.5)
 
+
+func can_buy_aircraft(b: Dictionary, kind: String) -> bool:
+	return AirfieldHQ23.can_buy(self, b, kind)
+
+func buy_aircraft(b: Dictionary, kind: String) -> bool:
+	return AirfieldHQ23.buy(self, b, kind)
 
 func can_buy_heli(b: Dictionary) -> bool:
 	return b.kind == "helipad" and not b.has_heli and Game.points >= HELI_COST

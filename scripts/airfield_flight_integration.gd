@@ -18,8 +18,23 @@ const DEMO_LIFTOFF_SPEED_MPS := 50.0
 @onready var takeoff_path: Path3D = $P47_Takeoff_Path
 @onready var landing_path: Path3D = $P47_Landing_Path
 
+var _runway_reserved_by := ""
+
 func _ready() -> void:
 	_build_paths()
+
+func reserve_runway(aircraft_id: String) -> bool:
+	if aircraft_id.is_empty() or (not _runway_reserved_by.is_empty() and _runway_reserved_by != aircraft_id):
+		return false
+	_runway_reserved_by = aircraft_id
+	return true
+
+func release_runway(aircraft_id: String) -> void:
+	if _runway_reserved_by == aircraft_id:
+		_runway_reserved_by = ""
+
+func runway_reserved() -> bool:
+	return not _runway_reserved_by.is_empty()
 
 func clearance_report() -> Dictionary:
 	return {

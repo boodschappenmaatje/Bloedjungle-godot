@@ -63,7 +63,14 @@ func _process(_d: float) -> bool:
 	if frames > 10 and ci < cases.size():
 		t += 1
 		var p = G.player
-		if t == 2:
+		if cs_for_frame_weapon() == "m1911":
+			# A held trigger is not a valid M1911 firing pattern. Pulse it at a
+			# deliberate semiautomatic cadence and replenish this hit-test fixture.
+			G.fire = t in [2, 18, 34]
+			p.m1911_mag_rounds = 7
+			p.m1911_chambered = true
+			p._sync_m1911_ammo()
+		elif t == 2:
 			G.fire = true
 		if t == SHOOT_FRAMES:
 			G.fire = false
@@ -131,6 +138,10 @@ func _heal(c) -> void:
 	c.hp = c.HP
 	c.burning = false
 	c._fuse = 0.0
+
+
+func cs_for_frame_weapon() -> String:
+	return str(cases[ci].w) if ci >= 0 and ci < cases.size() else ""
 
 
 func _is_auto(c) -> bool:

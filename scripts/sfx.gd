@@ -25,9 +25,13 @@ const MASTER := 0.6
 var _streams := {}
 var _players: Array[AudioStreamPlayer] = []
 var _next := 0
+var m1911_test_volume := 1.0
+var m1911_use_real_sample := true
 var _rain: AudioStreamPlayer
 var _jet: AudioStreamPlayer
 var fluit: AudioStreamWAV   # fluitende val van een bom (napalm): glijdende toon met wat ruis
+const M1911_REPORT: AudioStream = preload("res://assets/audio/m1911/m1911_report.wav")
+var _m1911_stream: AudioStream = M1911_REPORT
 
 
 func _ready() -> void:
@@ -47,6 +51,18 @@ func _ready() -> void:
 
 ## Speelt een effect. pos = waar het klinkt (zacht als het ver van de speler is); zonder pos klinkt het overal even hard.
 func play(name: String, vol := 1.0, pos = null) -> void:
+	if name == "m1911_real":
+		if not m1911_use_real_sample:
+			play("pistol", vol * m1911_test_volume, pos)
+			return
+		JungleGeluid.verstoor("pistol", vol)
+		var real_player := _players[_next]
+		_next = (_next + 1) % VOICES
+		real_player.stream = _m1911_stream
+		real_player.pitch_scale = randf_range(0.98, 1.02)
+		real_player.volume_db = linear_to_db(maxf(0.001, vol * MASTER * m1911_test_volume))
+		real_player.play()
+		return
 	if not _streams.has(name):
 		return
 	JungleGeluid.verstoor(name, vol)
@@ -59,6 +75,15 @@ func play(name: String, vol := 1.0, pos = null) -> void:
 	p.pitch_scale = randf_range(0.88, 1.14)
 	p.volume_db = linear_to_db(maxf(0.001, vol * MASTER))
 	p.play()
+
+
+func set_m1911_test_volume(value: float) -> void:
+	m1911_test_volume = clampf(value, 0.0, 1.5)
+
+
+func toggle_m1911_test_ab() -> bool:
+	m1911_use_real_sample = not m1911_use_real_sample
+	return m1911_use_real_sample
 
 
 ## Straaljager: een lus van turbinegeluid (brullende ruis, gillende turbine, diepe dreun) die jet_set elke beeld luider/zachter

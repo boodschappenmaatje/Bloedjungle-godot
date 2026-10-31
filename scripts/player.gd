@@ -40,6 +40,8 @@ var _dust_t := 0.0
 var _shot_sequence := 0
 var _fire_was_down := false
 const M1911_ASSIST_MIN_INTERVAL := 0.5
+const M1911_EMPTY_RELOAD_IDLE := 0.55  # brief slide-lock pause, not 1.4 seconds of stalled audio
+var _m1911_empty_click_latched := false
 var m1911_mag_rounds := 0
 var m1911_chambered := false
 
@@ -177,14 +179,21 @@ func _physics_process(delta: float) -> void:
 	# Mouse/keyboard and Manual mode remain trigger-edge semiautomatic.
 	var assisted_touch := weapon == "m1911" and TouchSticks.m1911_touch_firing and GameSettings.get_value("m1911_fire_mode") == "assist"
 	var trigger_pressed := Game.fire and (weapon != "m1911" or m1911_trigger_request(Game.fire, _fire_was_down, assisted_touch, fire_t <= 0.0))
+	if not Game.fire:
+		_m1911_empty_click_latched = false  # a new, deliberate press may dry-click once
 	_fire_was_down = Game.fire
+	var empty_magazine := weapon == "m1911" and m1911_is_empty(m1911_chambered, m1911_mag_rounds)
 	if trigger_pressed and climb < 0.0:
-		idle_t = 0.0
+		if not empty_magazine:
+			idle_t = 0.0
 		_shoot(w)
-	else:
+	# Repeated attempts against an empty pistol must NOT reset idle_t.
+	# Otherwise a held assisted stick dry-clicks every 0.5s and blocks auto-reload forever.
+	if not trigger_pressed or empty_magazine:
 		idle_t += delta
-		if idle_t > 1.4 and _should_auto_reload():
-			_reload(w)  # M1911: alleen automatisch bij volledig leeg wapen; andere wapens blijven ongewijzigd
+	var idle_reload_delay := M1911_EMPTY_RELOAD_IDLE if weapon == "m1911" else 1.4
+	if idle_t > idle_reload_delay and _should_auto_reload():
+		_reload(w)
 	if reload_t <= 0.0 and fire_t <= 0.0:
 		model.ensure_weapon_idle()
 	model.set_shoot_pose((Game.fire if weapon != "m1911" else trigger_pressed) and reload_t <= 0.0, weapon, w.rate)
@@ -421,6 +430,21 @@ static func m1911_trigger_request(held: bool, was_held: bool, assisted: bool, re
 	return held and (not was_held or (assisted and ready))
 
 
+static func m1911_is_empty(chambered: bool, mag_rounds: int) -> bool:
+	return not chambered and mag_rounds <= 0
+
+
+## Only one dry-click per intentional trigger hold; never loop a mechanical
+## sound while the last-round slide is locked open.
+func _m1911_empty_trigger_feedback() -> bool:
+	if _m1911_empty_click_latched:
+		return false
+	_m1911_empty_click_latched = true
+	_m1911_mechanical_event("dry_fire")
+	model.play_weapon_action("leeg")
+	return true
+
+
 func _shoot(w: Dictionary) -> void:
 	if reload_t > 0.0 or fire_t > 0.0:
 		return
@@ -428,8 +452,7 @@ func _shoot(w: Dictionary) -> void:
 		# Never chamber a cartridge by pulling the trigger: a loaded magazine
 		# with an empty chamber still requires operating the slide.
 		if not m1911_chambered:
-			_m1911_mechanical_event("dry_fire")
-			model.play_weapon_action("leeg")
+			_m1911_empty_trigger_feedback()
 			return
 	else:
 		if ammo <= 0:
@@ -442,6 +465,7 @@ func _shoot(w: Dictionary) -> void:
 	fire_t = maxf(w.rate, M1911_ASSIST_MIN_INTERVAL) if weapon == "m1911" else w.rate
 	if weapon == "m1911":
 		_m1911_fire_chambered_round()
+		_m1911_empty_click_latched = true  # do not dry-click again after last shot in same hold
 	else:
 		ammo -= 1
 	_shot_sequence += 1
@@ -510,6 +534,7 @@ func equip(id: String) -> void:
 	_reload_elapsed = 0.0
 	_reload_phase = 0
 	_reload_was_empty = false
+	_m1911_empty_click_latched = false
 	fire_t = 0.3
 	Game.changed.emit()
 

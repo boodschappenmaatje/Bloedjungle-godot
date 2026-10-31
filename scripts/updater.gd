@@ -19,6 +19,7 @@ const RELEASE_TAG := "updates"
 const ONSTABIEL_MAX := 2  # zoveel starts achter elkaar die niet stabiel eindigen, dan wordt de patch teruggedraaid
 const STABIEL_NA := 20.0  # seconden spelen waarna een start als gelukt telt
 const TIMEOUT := 30.0
+const DOWNLOAD_TIMEOUT := 600.0  # Grote iOS-patches (>250 MB) kunnen minuten duren.
 
 var api_basis := "https://api.github.com"  # in tests een lokale server
 var ota_dir := "user://ota"
@@ -199,7 +200,7 @@ func _headers(accept: String, met_token := true) -> PackedStringArray:
 ## Eén aanvraag. max_redirects 0, zodat we de doorverwijzing zelf volgen (zonder token naar de opslagserver te sturen).
 func _vraag(url: String, headers: PackedStringArray, naar_bestand := "") -> Dictionary:
 	var r := HTTPRequest.new()
-	r.timeout = TIMEOUT
+	r.timeout = DOWNLOAD_TIMEOUT if naar_bestand != "" else TIMEOUT
 	r.max_redirects = 0
 	if naar_bestand != "":
 		r.download_file = naar_bestand
@@ -207,7 +208,7 @@ func _vraag(url: String, headers: PackedStringArray, naar_bestand := "") -> Dict
 	var err := r.request(url, headers)
 	if err != OK:
 		r.queue_free()
-		return {"code": -1, "fout": "kon de aanvraag niet starten (%d)" % err}
+		return {"result": -1, "code": -1, "fout": "kon de aanvraag niet starten (%d)" % err}
 	var res: Array = await r.request_completed
 	var timer_bytes := r.get_downloaded_bytes()
 	r.queue_free()
@@ -221,16 +222,36 @@ func _vraag(url: String, headers: PackedStringArray, naar_bestand := "") -> Dict
 
 ## Een bestand uit de release ophalen: eerst de API (met token), dan de doorverwijzing (zonder token).
 func _haal_asset(asset_url: String, naar_bestand := "") -> Dictionary:
-	var a: Dictionary = await _vraag(asset_url, _headers("application/octet-stream"))
+	# Also stream the FIRST GitHub API response to disk. A release asset
+	# request can return HTTP 200 directly rather than 302; buffering a
+	# 250 MB response in a PackedByteArray could exhaust iOS memory.
+	var a: Dictionary = await _vraag(asset_url, _headers("application/octet-stream"), naar_bestand)
 	var loc := str(a.get("headers", {}).get("location", ""))
-	if int(a.code) in [301, 302, 303, 307, 308] and loc != "":
+	if int(a.get("code", -1)) in [301, 302, 303, 307, 308] and loc != "":
+		# Discard any redirect response file. Never forward the GitHub token
+		# to the blob-storage host that actually serves the release asset.
+		if naar_bestand != "" and FileAccess.file_exists(naar_bestand):
+			DirAccess.remove_absolute(naar_bestand)
 		return await _vraag(loc, _headers("application/octet-stream", false), naar_bestand)
-	if naar_bestand != "" and int(a.code) == 200:
-		# de API gaf het bestand zelf terug (kleine bestanden): bewaar het
-		var f := FileAccess.open(naar_bestand, FileAccess.WRITE)
-		if f != null:
-			f.store_buffer(a.body)
 	return a
+
+
+func _download_fout(res: Dictionary) -> String:
+	var code := int(res.get("code", -1))
+	var result := int(res.get("result", -1))
+	if result == HTTPRequest.RESULT_TIMEOUT:
+		return "time-out bij grote download"
+	if result == HTTPRequest.RESULT_DOWNLOAD_FILE_CANT_OPEN:
+		return "kon downloadbestand niet openen (opslag)"
+	if result == HTTPRequest.RESULT_DOWNLOAD_FILE_WRITE_ERROR:
+		return "kon downloadbestand niet schrijven (opslagruimte)"
+	if result != HTTPRequest.RESULT_SUCCESS:
+		return str(res.get("fout", "netwerkfout (code %d)" % result))
+	if code in [401, 403, 404]:
+		return "GitHub-toegang geweigerd (HTTP %d)" % code
+	if code > 0:
+		return "HTTP %d" % code
+	return "geen verbinding"
 
 
 func _zet(s: String, tekst: String, v := 0.0) -> void:
@@ -294,9 +315,9 @@ func download_en_installeer() -> void:
 	DirAccess.remove_absolute(tmp)
 	_zet("bezig", "Downloaden… (%.1f MB)" % (float(int(p.grootte)) / 1048576.0))
 	var res: Dictionary = await _haal_asset(str(manifest._asset_url), tmp)
-	if int(res.get("code", -1)) != 200:
+	if int(res.get("code", -1)) != 200 or int(res.get("result", -1)) != HTTPRequest.RESULT_SUCCESS:
 		DirAccess.remove_absolute(tmp)
-		_zet("fout", "Downloaden mislukt (%s)." % ("geen verbinding" if int(res.get("code", -1)) <= 0 else str(res.code)))
+		_zet("fout", "Downloaden mislukt (%s)." % _download_fout(res))
 		return
 	var fout := installeer(tmp, manifest)
 	if fout != "":

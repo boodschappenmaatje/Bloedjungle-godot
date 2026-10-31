@@ -61,6 +61,8 @@ func _run() -> void:
 	# 1. beoordelen van een manifest
 	var u0 = _nieuw()
 	var m := _maak_patch("patch-a.pck", "{\"w\":1}")
+	_check(u0._download_fout({"result": HTTPRequest.RESULT_TIMEOUT, "code": 0}).contains("time-out"), "download-timeout heeft geen bruikbare melding")
+	_check(u0._download_fout({"result": HTTPRequest.RESULT_DOWNLOAD_FILE_WRITE_ERROR, "code": 0}).contains("opslagruimte"), "opslagfout heeft geen bruikbare melding")
 	_check(u0.beoordeel(m) == "beschikbaar", "nieuwere patch is niet 'beschikbaar'")
 	var oud := m.duplicate(true)
 	oud.gebouwd = 100
@@ -199,6 +201,11 @@ func _github_stroom() -> void:
 	_check(FileAccess.file_exists(DIR + "/actief.json") and FileAccess.file_exists(DIR + "/patch-gh.pck"), "gedownloade patch niet klaargezet")
 	if FileAccess.file_exists(DIR + "/patch-gh.pck"):
 		_check(FileAccess.get_sha256(DIR + "/patch-gh.pck") == str(mp.pck.sha256), "gedownloade patch heeft een andere hash")
+	# Direct HTTP 200 from a GitHub asset must stream to disk as well.
+	var direct := DIR + "/direct-download.tmp"
+	var direct_result: Dictionary = await u._haal_asset("http://127.0.0.1:%d/api-direct/2" % PORT, direct)
+	_check(int(direct_result.get("code", -1)) == 200 and int(direct_result.get("result", -1)) == HTTPRequest.RESULT_SUCCESS, "directe API-download mislukt")
+	_check(FileAccess.file_exists(direct) and FileAccess.get_sha256(direct) == str(mp.pck.sha256), "directe HTTP 200 asset-download is niet correct naar disk gestreamd")
 	# een tweede controle: nu actueel (de actieve patch is even nieuw)
 	var actief_json: Variant = JSON.parse_string(FileAccess.get_file_as_string(DIR + "/actief.json"))
 	_check(actief_json is Dictionary, "actief.json ontbreekt of is geen JSON na het installeren")

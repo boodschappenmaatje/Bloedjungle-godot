@@ -42,6 +42,10 @@ class H(http.server.BaseHTTPRequestHandler):
             if not self._auth():
                 return self._send(404, b'{"message":"Not Found"}', "application/json")
             return self._send(302, b"", extra={"Location": BASE + "/blob/" + p.rsplit("/", 1)[1]})
+        if p.startswith("/api-direct/"):
+            if not self._auth():
+                return self._send(404, b'{"message":"Not Found"}', "application/json")
+            return self._send(200, patch)
         if p.startswith("/blob/"):
             if self.headers.get("Authorization"):
                 return self._send(400, b"blobopslag weigert een Authorization-header")

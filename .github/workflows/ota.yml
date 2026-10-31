@@ -6,12 +6,23 @@ name: OTA update patch
 
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - "scripts/updater.gd"
+      - "scripts/update_panel.gd"
+      - ".github/workflows/ota.yml"
   push:
     branches: [main, feature/native-ios-complete]
     paths-ignore: ["docs/**", "*.md"]
 
 permissions:
   contents: write
+
+# Temporary staged rollout. Publish a tiny bridge update first so older
+# installed builds can download the full 250MB patch with a 10-minute timeout.
+# Set to 'false' only AFTER the user has installed/restarted the bridge.
+env:
+  OTA_BOOTSTRAP: 'true'
 
 concurrency:
   group: ota-${{ github.ref }}
@@ -46,8 +57,16 @@ jobs:
           set -euo pipefail
           BASE="$(tr -d '[:space:]' < ota/basis.txt)"
           test -n "$BASE"
-          git cat-file -e "$BASE^{commit}"
-          git worktree add "$RUNNER_TEMP/basis" "$BASE"
+          EXPORT_BASE="$BASE"
+          if [[ "$OTA_BOOTSTRAP" == "true" ]]; then
+            # Delta against previous main, not the original installed IPA.
+            # This includes the patched UpdatePanel downloader only, avoiding
+            # hundreds of megabytes in the first OTA hop.
+            EXPORT_BASE="$(git rev-parse "$GITHUB_SHA^")"
+            echo "BOOTSTRAP: preparing tiny delta against $EXPORT_BASE"
+          fi
+          git cat-file -e "$EXPORT_BASE^{commit}"
+          git worktree add "$RUNNER_TEMP/basis" "$EXPORT_BASE"
           # dezelfde exportinstellingen als nu, zodat alleen echte inhoudsverschillen in de patch komen
           cp export_presets.cfg "$RUNNER_TEMP/basis/export_presets.cfg"
           cd "$RUNNER_TEMP/basis"
@@ -71,6 +90,18 @@ jobs:
           # let op: --patches moet VOOR --export-patch staan
           "$GODOT_BIN" --headless --path . --patches "$RUNNER_TEMP/base.pck" --export-patch "iOS" "$RUNNER_TEMP/patch.pck"
           test -s "$RUNNER_TEMP/patch.pck"
+          if [[ "$OTA_BOOTSTRAP" == "true" ]]; then
+            # Godot export-patch can include ~75 MB of reimported GLB resources.
+            # Repack only the exported compiled UpdatePanel script as a small
+            # self-updating OTA bridge; all 3D assets stay out of hop one.
+            mv "$RUNNER_TEMP/patch.pck" "$RUNNER_TEMP/bootstrap-source.pck"
+            "$GODOT_BIN" --headless --path . -s tools/make_ota_bootstrap.gd -- "$RUNNER_TEMP/bootstrap-source.pck" "$RUNNER_TEMP/patch.pck"
+            BYTES="$(stat -c %s "$RUNNER_TEMP/patch.pck")"
+            if (( BYTES > 10485760 )); then
+              echo "Bootstrap patch must be <10 MB, got $BYTES. Refusing to publish." >&2
+              exit 1
+            fi
+          fi
           ls -l "$RUNNER_TEMP/patch.pck"
       - name: Prepare output folder
         shell: bash
@@ -89,12 +120,21 @@ jobs:
           path = os.path.join("out", name)
           data = open(path, "rb").read()
           m = {"schema": 1, "versie": versie, "commit": os.environ["GITHUB_SHA"], "base": base, "gebouwd": int(time.time()),
+               "phase": "bootstrap" if os.environ.get("OTA_BOOTSTRAP") == "true" else "full",
                "pck": {"naam": name, "grootte": len(data), "sha256": hashlib.sha256(data).hexdigest()}}
           json.dump(m, open("out/manifest.json", "w"), indent=1)
           print(json.dumps(m, indent=1))
           PY
           echo "PATCH_NAME=$NAME" >> "$GITHUB_ENV"
+      - name: Preview the staged OTA patch (PR only; never published)
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ota-bootstrap-preview-${{ github.sha }}
+          path: out/
+          retention-days: 7
       - name: Publish to the "updates" release
+        if: github.event_name != 'pull_request'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

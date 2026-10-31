@@ -67,7 +67,7 @@ func _ready() -> void:
 	row.add_child(save)
 	_check = _knop("Controleer op updates", "secondary", func(): Updater.controleer())
 	v.add_child(_check)
-	_download = _knop("Download en installeer", "primary", func(): Updater.download_en_installeer())
+	_download = _knop("Download en installeer", "primary", _download_met_lange_timeout)
 	v.add_child(_download)
 	_back = _knop("Terugdraaien naar de app-versie", "secondary", func(): Updater.terugdraaien())
 	v.add_child(_back)
@@ -75,6 +75,73 @@ func _ready() -> void:
 	v.add_child(_close)
 	Updater.status_changed.connect(_ververs)
 	_ververs()
+
+
+## OTA bootstrap compatibility: the original Updater autoload is instantiated
+## before loading a patch pack, and cannot update its own downloader in memory.
+## A patched UpdatePanel can therefore stream large releases independently.
+func _download_met_lange_timeout() -> void:
+	if Updater.status != "beschikbaar" or Updater.manifest.is_empty():
+		return
+	var m: Dictionary = Updater.manifest
+	var asset_url := str(m.get("_asset_url", ""))
+	if asset_url == "":
+		return
+	var dest: String = Updater._pad("download.tmp")
+	DirAccess.remove_absolute(dest)
+	var size_mb := float(int(m.pck.grootte)) / 1048576.0
+	Updater._zet("bezig", "Downloaden… (%.1f MB, maximaal 10 minuten)" % size_mb)
+	var result: Dictionary = await _grote_vraag(asset_url, true, dest)
+	var redirect := str(result.get("location", ""))
+	if int(result.get("code", -1)) in [301, 302, 303, 307, 308] and redirect != "":
+		DirAccess.remove_absolute(dest)
+		result = await _grote_vraag(redirect, false, dest)
+	if int(result.get("result", -1)) != HTTPRequest.RESULT_SUCCESS or int(result.get("code", -1)) != 200:
+		DirAccess.remove_absolute(dest)
+		Updater._zet("fout", "Downloaden mislukt (%s)." % _download_reden(result))
+		return
+	var err: String = Updater.installeer(dest, m)
+	if err != "":
+		Updater._zet("fout", "De update is afgekeurd: " + err + ".")
+		return
+	Updater._zet("gedownload", "Update %s staat klaar. Sluit de app helemaal af en open opnieuw." % str(m.versie))
+
+
+func _grote_vraag(url: String, authenticated: bool, destination: String) -> Dictionary:
+	var request := HTTPRequest.new()
+	request.timeout = 600.0
+	request.max_redirects = 0
+	request.download_file = destination
+	Updater.add_child(request)
+	var error := request.request(url, Updater._headers("application/octet-stream", authenticated))
+	if error != OK:
+		request.queue_free()
+		return {"result": -1, "code": -1, "reason": "aanvraag starten (%d)" % error}
+	var response: Array = await request.request_completed
+	request.queue_free()
+	var location := ""
+	for h in response[2] as PackedStringArray:
+		var hs := str(h)
+		if hs.to_lower().begins_with("location:"):
+			location = hs.substr(9).strip_edges()
+			break
+	return {"result": response[0], "code": response[1], "location": location}
+
+
+func _download_reden(response: Dictionary) -> String:
+	var code := int(response.get("code", -1))
+	var result := int(response.get("result", -1))
+	if result == HTTPRequest.RESULT_TIMEOUT:
+		return "time-out; controleer je verbinding"
+	if result == HTTPRequest.RESULT_DOWNLOAD_FILE_WRITE_ERROR:
+		return "te weinig opslagruimte of schrijffout"
+	if result == HTTPRequest.RESULT_DOWNLOAD_FILE_CANT_OPEN:
+		return "downloadbestand kan niet geopend worden"
+	if code in [401, 403, 404]:
+		return "GitHub-toegang geweigerd (HTTP %d)" % code
+	if code > 0:
+		return "HTTP %d" % code
+	return str(response.get("reason", "netwerkfout %d" % result))
 
 
 func _knop(text: String, kind: String, cb: Callable) -> Button:

@@ -189,7 +189,7 @@ func _physics_process(delta: float) -> void:
 		_shoot(w)
 	# Repeated attempts against an empty pistol must NOT reset idle_t.
 	# Otherwise a held assisted stick dry-clicks every 0.5s and blocks auto-reload forever.
-	if not trigger_pressed or empty_magazine:
+	if (weapon == "m1911" and m1911_should_advance_idle(trigger_pressed, m1911_chambered, m1911_mag_rounds)) or (weapon != "m1911" and not trigger_pressed):
 		idle_t += delta
 	var idle_reload_delay := M1911_EMPTY_RELOAD_IDLE if weapon == "m1911" else 1.4
 	if idle_t > idle_reload_delay and _should_auto_reload():
@@ -432,6 +432,11 @@ static func m1911_trigger_request(held: bool, was_held: bool, assisted: bool, re
 
 static func m1911_is_empty(chambered: bool, mag_rounds: int) -> bool:
 	return not chambered and mag_rounds <= 0
+
+
+static func m1911_should_advance_idle(trigger_requested: bool, chambered: bool, mag_rounds: int) -> bool:
+	# A trigger held on an empty gun must not prevent the reload timer advancing.
+	return not trigger_requested or m1911_is_empty(chambered, mag_rounds)
 
 
 ## Only one dry-click per intentional trigger hold; never loop a mechanical

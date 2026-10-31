@@ -91,6 +91,11 @@ jobs:
           "$GODOT_BIN" --headless --path . --patches "$RUNNER_TEMP/base.pck" --export-patch "iOS" "$RUNNER_TEMP/patch.pck"
           test -s "$RUNNER_TEMP/patch.pck"
           if [[ "$OTA_BOOTSTRAP" == "true" ]]; then
+            # Godot export-patch can include ~75 MB of reimported GLB resources.
+            # Repack only the exported compiled UpdatePanel script as a small
+            # self-updating OTA bridge; all 3D assets stay out of hop one.
+            mv "$RUNNER_TEMP/patch.pck" "$RUNNER_TEMP/bootstrap-source.pck"
+            "$GODOT_BIN" --headless --path . -s tools/make_ota_bootstrap.gd -- "$RUNNER_TEMP/bootstrap-source.pck" "$RUNNER_TEMP/patch.pck"
             BYTES="$(stat -c %s "$RUNNER_TEMP/patch.pck")"
             if (( BYTES > 10485760 )); then
               echo "Bootstrap patch must be <10 MB, got $BYTES. Refusing to publish." >&2

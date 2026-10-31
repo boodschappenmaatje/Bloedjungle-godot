@@ -39,6 +39,7 @@ var _reload_was_empty := false
 var _dust_t := 0.0
 var _shot_sequence := 0
 var _fire_was_down := false
+const M1911_ASSIST_MIN_INTERVAL := 0.5
 var m1911_mag_rounds := 0
 var m1911_chambered := false
 
@@ -172,7 +173,10 @@ func _physics_process(delta: float) -> void:
 			_reload_phase = 0
 			model.gun_reset()
 			Game.changed.emit()
-	var trigger_pressed := Game.fire and (weapon != "m1911" or not _fire_was_down)
+	# Only a real right-stick hold in assisted mode can repeat a M1911 shot.
+	# Mouse/keyboard and Manual mode remain trigger-edge semiautomatic.
+	var assisted_touch := weapon == "m1911" and TouchSticks.m1911_touch_firing and GameSettings.get_value("m1911_fire_mode") == "assist"
+	var trigger_pressed := Game.fire and (weapon != "m1911" or m1911_trigger_request(Game.fire, _fire_was_down, assisted_touch, fire_t <= 0.0))
 	_fire_was_down = Game.fire
 	if trigger_pressed and climb < 0.0:
 		idle_t = 0.0
@@ -411,6 +415,12 @@ func _climb_step(delta: float) -> void:
 		position.y = 0.0
 
 
+## Pure trigger rule, shared with headless regressions.
+## assisted mode only repeats after the separate physical shot cooldown.
+static func m1911_trigger_request(held: bool, was_held: bool, assisted: bool, ready: bool) -> bool:
+	return held and (not was_held or (assisted and ready))
+
+
 func _shoot(w: Dictionary) -> void:
 	if reload_t > 0.0 or fire_t > 0.0:
 		return
@@ -428,7 +438,8 @@ func _shoot(w: Dictionary) -> void:
 	if weapon != "m1911" and ammo <= 0:
 		_reload(w)
 		return
-	fire_t = w.rate
+	# At least half a second between distinct Colt shots, even after rate upgrades.
+	fire_t = maxf(w.rate, M1911_ASSIST_MIN_INTERVAL) if weapon == "m1911" else w.rate
 	if weapon == "m1911":
 		_m1911_fire_chambered_round()
 	else:

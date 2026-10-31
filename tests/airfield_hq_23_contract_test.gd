@@ -27,6 +27,32 @@ func _run() -> void:
 	var points_before: int = int(game.points)
 	assert(not AirfieldHQ23.can_buy(null, candidate, "p47"), "Missing model must prevent charge and purchase")
 	assert(game.points == points_before, "A blocked model purchase must not deduct points")
+	var shop_building := {"kind": "airfield", "down": false, "hp": 2400.0, "max_hp": 3000.0, "aircraft": [], "aircraft_capacity": 1}
+	game.buildings.append(shop_building)
+	var shop_builds := Buildings.new()
+	add_child(shop_builds)
+	game.builds = shop_builds
+	var shop_panel := GarageMenu.new()
+	add_child(shop_panel)
+	await get_tree().process_frame
+	shop_panel._sel = shop_building
+	shop_panel._refresh()
+	assert(shop_panel._panel.visible, "Tapping a placed airfield must open the existing garage-style shop panel")
+	var shop_text := ""
+	for label in shop_panel._box.find_children("*", "Label", true, false):
+		shop_text += (label as Label).text + "\n"
+	assert(shop_text.contains("VLIEGVELD — VLIEGTUIGHANGAR"), "Airfield shop must show the required title")
+	assert(shop_text.contains("schade 20%") and shop_text.contains("Vliegtuigplaatsen: 0 / 1"), "Shop must show building damage and available capacity")
+	assert(shop_text.contains("origineel Meshy Pro-vliegtuigmodel ontbreekt"), "Shop must disclose the missing P-47 source model")
+	var p47_button: Button
+	for button in shop_panel._box.find_children("*", "Button", true, false):
+		if (button as Button).text.contains("Thunderbolt"):
+			p47_button = button as Button
+	assert(p47_button != null and p47_button.disabled and p47_button.text.contains("1800 pt"), "Missing P-47 must remain visibly priced but disabled")
+	game.buildings.erase(shop_building)
+	shop_panel.free()
+	game.builds = null
+	shop_builds.free()
 	var builder := Buildings.new()
 	add_child(builder)
 	await get_tree().process_frame

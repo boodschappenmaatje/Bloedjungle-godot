@@ -7,6 +7,7 @@ const BUILD_COST := 2800
 const P47_COST := 1800
 const P47_PURCHASE_ENABLED := false # aircraft work resumes only after iPhone approval
 const AIRCRAFT_CAPACITY := 1
+const UNWANTED_WORKSHOP_LIGHT_PREFIX := "Warm workshop practical light"
 
 # BaseProps._wall() puts the outermost side-wall posts at ±(COMPOUND + .325)
 # and end posts at ±(COMPOUND + .475), including their authored caps/paling sizes.
@@ -105,10 +106,25 @@ static func _compact_approved_core(complex: Node3D) -> void:
 					keep = true
 					break
 			node.visible = keep
+	_disable_unwanted_workshop_lights(complex)
 	for collider_name in ["RunwayCollision", "ApronCollision", "TaxiCollision"]:
 		var collider := complex.get_node_or_null("GameplayCollisions/" + collider_name) as StaticBody3D
 		if collider != null:
 			collider.collision_layer = 0
+
+static func _disable_unwanted_workshop_lights(complex: Node3D) -> void:
+	# The approved HQ 2.2 source remains byte-identical. These five imported LOD0
+	# OmniLight3D nodes have a 4096 m range and ~38k energy and are not suitable as
+	# runtime lights for the placed HQ 2.3 airfield. Hide only these named lights
+	# on the newly instantiated 2.3 copy; warning-light meshes and all other nodes
+	# remain untouched.
+	var lod0 := complex.get_node_or_null("Airfield_HQ_22_LOD0")
+	if lod0 == null:
+		return
+	for node in lod0.find_children("*", "OmniLight3D", true, false):
+		var light := node as OmniLight3D
+		if light.name.begins_with(UNWANTED_WORKSHOP_LIGHT_PREFIX):
+			light.visible = false
 
 static func _add_hq23_tower(complex: Node3D) -> void:
 	var tower_root := Node3D.new()

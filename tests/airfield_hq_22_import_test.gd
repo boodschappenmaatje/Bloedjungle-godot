@@ -16,6 +16,7 @@ func _run() -> void:
 	await get_tree().process_frame
 	var metrics := {"meshes": 0, "triangles": 0, "lights": 0, "materials": 0, "missing_uv": 0, "bad_materials": 0}
 	var animations: Array[String] = []
+	var workshop_lights: Array[OmniLight3D] = []
 	_walk(model, func(n: Node) -> void:
 		if n is MeshInstance3D:
 			metrics["meshes"] += 1
@@ -31,13 +32,18 @@ func _run() -> void:
 				metrics["triangles"] += instance.mesh.get_faces().size() / 3
 		elif n is OmniLight3D:
 			metrics["lights"] += 1
+			if n.name.begins_with(AirfieldHQ23.UNWANTED_WORKSHOP_LIGHT_PREFIX):
+				workshop_lights.append(n as OmniLight3D)
 		elif n is AnimationPlayer:
 			for anim in (n as AnimationPlayer).get_animation_list(): animations.append(anim)
 	)
 	assert(metrics["meshes"] >= 4, "Expected modular environment meshes, got %s" % metrics["meshes"])
 	assert(metrics["missing_uv"] == 0, "All runtime surfaces need UVs, missing: %s" % metrics["missing_uv"])
 	assert(metrics["bad_materials"] == 0, "All runtime surfaces need materials, missing: %s" % metrics["bad_materials"])
-	assert(metrics["lights"] >= 5, "LOD0 needs its exported hangar lamps; found %s" % metrics["lights"])
+	assert(metrics["lights"] == 5 and workshop_lights.size() == 5, "Imported LOD0 must contain the five known workshop lamps, got %s total and %s matched" % [metrics["lights"], workshop_lights.size()])
+	for light in workshop_lights:
+		assert(light.visible, "The protected source GLB must retain its original lamp nodes and enabled state")
+		assert(is_equal_approx(light.omni_range, 4096.0) and absf(light.light_energy - 38045.99) < 0.1, "Unexpected imported workshop light values on %s: energy=%s range=%s" % [light.name, light.light_energy, light.omni_range])
 	assert(animations.any(func(s: String) -> bool: return "Open_Left_Door" in s), "Left door animation missing: %s" % [animations])
 	assert(animations.any(func(s: String) -> bool: return "Open_Right_Door" in s), "Right door animation missing: %s" % [animations])
 	assert(animations.any(func(s: String) -> bool: return "Blink_Red_Markers" in s), "Warning-light blink animation missing: %s" % [animations])
@@ -122,6 +128,14 @@ func _run() -> void:
 	await get_tree().process_frame
 	var compact_core := placed.get_meta("complex") as Node3D
 	var compact_lod0 := compact_core.get_node("Airfield_HQ_22_LOD0")
+	var runtime_workshop_lights: Array[OmniLight3D] = []
+	for node in compact_lod0.find_children("*", "OmniLight3D", true, false):
+		var light := node as OmniLight3D
+		if light.name.begins_with(AirfieldHQ23.UNWANTED_WORKSHOP_LIGHT_PREFIX):
+			runtime_workshop_lights.append(light)
+	assert(runtime_workshop_lights.size() == 5, "The placed 2.3 copy must retain exactly five imported workshop lamp nodes")
+	for light in runtime_workshop_lights:
+		assert(not light.visible, "The placed 2.3 copy must disable workshop lamp %s" % light.name)
 	var preserved_hangar := compact_lod0.find_child("Hangar HQ 22", true, false) as MeshInstance3D
 	assert(preserved_hangar != null and preserved_hangar.visible, "The approved hangar mesh must stay present and visible")
 	var old_tower := compact_lod0.find_child("Control Tower 22", true, false) as MeshInstance3D
@@ -173,7 +187,7 @@ func _run() -> void:
 	var runway_start_actual := (compact_core.get_node("AirfieldFlightIntegration/P47_Runway_Start") as Marker3D).global_position
 	assert(runway_start_actual.distance_to(runway_start_expected) < 0.02, "Prepared runway start marker must align with the shortened runway (%s vs %s)" % [runway_start_actual, runway_start_expected])
 	assert(AirfieldHQ23.footprint_area() <= AirfieldHQ23.MAX_GROUND_AREA, "The complete conservative construction-area allocation must remain within 6,452.435 m²")
-	print("AIRFIELD_22_GODOT_IMPORT_PASS meshes=%d materials=%d triangles=%d lights=%d animations=%s collisions=%d" % [metrics["meshes"], metrics["materials"], metrics["triangles"], metrics["lights"], animations, collision_metrics["count"]])
+	print("AIRFIELD_22_GODOT_IMPORT_PASS meshes=%d materials=%d triangles=%d imported_workshop_lights=%d placed_workshop_lights_enabled=0 animations=%s collisions=%d" % [metrics["meshes"], metrics["materials"], metrics["triangles"], metrics["lights"], animations, collision_metrics["count"]])
 	print("AIRFIELD_23_COMPACT_LAYOUT_PASS constructed_area_upper_bound=%.2fm2 max=%.2fm2 runway=%.1fx%.1fm tower_lods=3" % [AirfieldHQ23.footprint_area(), AirfieldHQ23.MAX_GROUND_AREA, AirfieldFlightIntegration.RUNWAY_LENGTH_M, AirfieldFlightIntegration.RUNWAY_WIDTH_M])
 	get_tree().quit(0)
 

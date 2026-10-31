@@ -1,0 +1,17 @@
+{
+	"frame_samples": 180,
+	"gpu": "AMD Radeon R9 M395 OpenGL Engine",
+	"mean_frame_ms": 12.9380888888889,
+	"median_fps": 80.30838419531,
+	"median_frame_ms": 12.452,
+	"one_percent_low_fps": 56.1576907957545,
+	"p99_frame_ms": 17.807,
+	"phase": "before",
+	"renderer": "gl_compatibility",
+	"roof_ray_hit_y_m": 16.5662994384766,
+	"roof_ray_obstructed_player": true,
+	"runtime_enabled_workshop_lights": 5,
+	"static_memory_bytes": 232546697,
+	"static_memory_max_bytes": 257180334,
+	"viewport": "(1280.0, 720.0)"
+}

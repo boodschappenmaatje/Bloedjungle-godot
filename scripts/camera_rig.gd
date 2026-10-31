@@ -93,7 +93,7 @@ func _build_cam(delta: float, portrait: bool) -> void:
 		var aspect := maxf(0.1, get_viewport().get_visible_rect().size.x / get_viewport().get_visible_rect().size.y)
 		var tan_v := tan(deg_to_rad(fov * 0.5))
 		var tan_h := tan_v * aspect
-		var distance := maxf(AirfieldHQ23.FOOTPRINT.x / (2.0 * tan_h), AirfieldHQ23.FOOTPRINT.z / (2.0 * tan_v)) * 1.15 / maxf(Game.bcam.z, 0.35)
+		var distance := maxf(AirfieldHQ23.FOOTPRINT.x / (2.0 * tan_h), AirfieldHQ23.FOOTPRINT.z / (2.0 * tan_v)) * 1.15 * maxf(Game.bcam.z, 0.35)
 		var target := Vector3(Game.bcam.x, 0.0, Game.bcam.y)
 		global_transform = Transform3D(Basis(Vector3.RIGHT, Vector3(0, 0, -1), Vector3.UP), target + Vector3(0, distance, 0))
 		far = maxf(220.0, distance + 80.0)

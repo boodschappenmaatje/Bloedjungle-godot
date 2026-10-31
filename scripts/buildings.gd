@@ -74,17 +74,23 @@ func _tower_feet() -> Array:
 	return out
 
 
-## Kan dit hier staan? Gebouwen binnen de muur, stukken overal behalve op de muur en in de poorten.
-func can_place(kind: String, at: Vector3, yaw: float, me: Variant = null) -> bool:
+## Shared source of truth for the preview and the final transaction.
+func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null) -> Dictionary:
 	if kind == "airfield":
-		if not AirfieldHQ23.complex_available() or not AirfieldHQ23.area_limit_ok() or (me == null and full(kind)):
-			return false
-		if not AirfieldHQ23.site_inside_world(at, yaw) or not AirfieldHQ23.site_clear_of_combat_spawns(at, yaw):
-			return false
+		if not AirfieldHQ23.complex_available() or not AirfieldHQ23.area_limit_ok():
+			return _placement_result(false, "Vliegveldassets ontbreken", 0)
+		if me == null and full(kind):
+			return _placement_result(false, "Er is al een vliegveld gebouwd", 0)
+		if not AirfieldHQ23.site_inside_world(at, yaw):
+			return _placement_result(false, "Buiten speelbaar gebied", 0)
+		if not AirfieldHQ23.site_clear_of_combat_spawns(at, yaw):
+			return _placement_result(false, "Vijandelijke spawnzone", 0)
 		if not AirfieldHQ23.site_clear_of_river(at, yaw):
-			return false
+			return _placement_result(false, "Kan niet in de rivier bouwen", 0)
+		if not AirfieldHQ23.site_clear_of_south_gate_route(at, yaw):
+			return _placement_result(false, "Belangrijke route geblokkeerd", 0)
 		if not is_inside_tree():
-			return true
+			return _placement_result(true, "Bouwen mogelijk", 0)
 		var exclusions: Array[RID] = []
 		if me != null:
 			exclusions.append(me.node.get_rid())
@@ -98,47 +104,50 @@ func can_place(kind: String, at: Vector3, yaw: float, me: Variant = null) -> boo
 			site_query.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_NATURE | Kit.LAYER_WATER
 			site_query.exclude = exclusions
 			site_query.transform = AirfieldHQ23.region_transform(at + Vector3(0.0, 0.7, 0.0), yaw, region)
-			if not get_world_3d().direct_space_state.intersect_shape(site_query, 1).is_empty():
-				return false
-		return true
+			var blocker := _first_protected_overlap(site_query)
+			if blocker != null:
+				return _placement_result(false, _overlap_message(blocker), 0)
+		var removable := Foliage.count_clearable_in_regions(_clearance_regions(kind), at, yaw)
+		return _placement_result(true, "Bouwen mogelijk — begroeiing wordt verwijderd" if removable > 0 else "Bouwen mogelijk", removable)
 	var d: Dictionary = DEFS[kind]
 	var sz: Vector3 = d.size
 	var piece := is_piece(kind)
 	if Vector2(at.x, at.z).length() > Data.WORLD_R - 3.0:
-		return false
+		return _placement_result(false, "Buiten speelbaar gebied", 0)
 	if Data.river_off(at.x, at.z) < Data.RIVER_HALF + 3.0:
-		return false  # niet in de rivier
+		return _placement_result(false, "Kan niet in de rivier bouwen", 0)
 	var feet := _tower_feet()
 	for iu in 3:
 		for iv in 3:
 			var p := _pt(at, yaw, (iu - 1) * sz.x * 0.5, (iv - 1) * sz.z * 0.5)
 			if piece:
 				if absf(maxf(absf(p.x), absf(p.z)) - C) < 0.7:
-					return false
+					return _placement_result(false, "Te dicht bij muren", 0)
 				if absf(p.x) < Data.GATE_GAP + 1.0 and absf(absf(p.z) - C) < 3.4:
-					return false
+					return _placement_result(false, "Belangrijke route geblokkeerd", 0)
 				for f in feet:
 					if p.distance_to(f[0]) < 1.2 or p.distance_to(f[1]) < 1.7:
-						return false
+						return _placement_result(false, "Te dicht bij bestaande gebouwen", 0)
 			else:
 				if maxf(absf(p.x), absf(p.z)) > C - 0.5:
-					return false
+					return _placement_result(false, "Buiten de eigen basis", 0)
 				if Vector2(p.x, p.z).distance_to(Vector2(0, signf(p.z) * C)) < 4.0:
-					return false
+					return _placement_result(false, "Belangrijke route geblokkeerd", 0)
 				for f in feet:
 					if p.distance_to(f[0]) < 1.4 or p.distance_to(f[1]) < 1.9:
-						return false
+						return _placement_result(false, "Te dicht bij bestaande gebouwen", 0)
 	var ex: Array[RID] = []
 	if me != null:
 		ex.append(me.node.get_rid())
 	if _hits(Vector3(sz.x - 0.2, 1.0, sz.z - 0.2) if piece else Vector3(sz.x + 0.4, 1.0, sz.z + 0.4), at, yaw, ex):
-		return false
+		return _placement_result(false, "Te dicht bij bestaande gebouwen", 0)
 	if piece or kind == "helipad":
-		return true
+		var removable_piece := Foliage.count_clearable_in_regions(_clearance_regions(kind), at, yaw) if is_inside_tree() else 0
+		return _placement_result(true, "Bouwen mogelijk — begroeiing wordt verwijderd" if removable_piece > 0 else "Bouwen mogelijk", removable_piece)
 	# de deur moet op vrij terrein uitkomen
 	var door := _pt(at, yaw, 0.0, sz.z / 2.0 + 0.9)
 	if maxf(absf(door.x), absf(door.z)) > C - 0.6:
-		return false
+		return _placement_result(false, "Belangrijke route geblokkeerd", 0)
 	var q2 := PhysicsShapeQueryParameters3D.new()
 	var s2 := SphereShape3D.new()
 	s2.radius = 0.5
@@ -146,7 +155,68 @@ func can_place(kind: String, at: Vector3, yaw: float, me: Variant = null) -> boo
 	q2.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER
 	q2.exclude = ex
 	q2.transform = Transform3D(Basis.IDENTITY, door + Vector3(0, 0.8, 0))
-	return get_world_3d().direct_space_state.intersect_shape(q2, 1).is_empty()
+	var door_blocker := _first_protected_overlap(q2)
+	if door_blocker != null:
+		return _placement_result(false, "Te dicht bij bestaande gebouwen", 0)
+	var removable := Foliage.count_clearable_in_regions(_clearance_regions(kind), at, yaw) if is_inside_tree() else 0
+	return _placement_result(true, "Bouwen mogelijk — begroeiing wordt verwijderd" if removable > 0 else "Bouwen mogelijk", removable)
+
+
+func can_place(kind: String, at: Vector3, yaw: float, me: Variant = null) -> bool:
+	return bool(placement_status(kind, at, yaw, me).valid)
+
+
+func _placement_result(valid: bool, reason: String, removable: int) -> Dictionary:
+	return {"valid": valid, "reason": reason, "vegetation_count": removable}
+
+
+func _clearance_regions(kind: String) -> Array:
+	if kind == "airfield":
+		return AirfieldHQ23.site_regions()
+	var size: Vector3 = DEFS[kind].size
+	return [{"name": kind, "center": Vector2.ZERO, "size": Vector2(size.x, size.z), "yaw": 0.0}]
+
+
+func _overlap_message(collider: Object) -> String:
+	if collider == null:
+		return "Te dicht bij bestaande gebouwen"
+	if collider is CollisionObject3D:
+		var object := collider as CollisionObject3D
+		if (object.collision_layer & Kit.LAYER_WATER) != 0:
+			return "Kan niet in de rivier bouwen"
+		if (object.collision_layer & Kit.LAYER_BUNKER) != 0:
+			return "Te dicht bij bestaande gebouwen"
+		if object.has_meta("protected_route") and bool(object.get_meta("protected_route")):
+			return "Belangrijke route geblokkeerd"
+		if object.has_meta("vegetation_kind") and String(object.get_meta("vegetation_kind")) == "rock":
+			return "Beschermd terreinobject overlapt"
+		if (object.collision_layer & Kit.LAYER_WALL) != 0:
+			return "Te dicht bij bestaande gebouwen"
+		return "Beschermd object overlapt"
+	return "Beschermd object overlapt"
+
+
+func _first_protected_overlap(query: PhysicsShapeQueryParameters3D) -> Object:
+	var space := get_world_3d().direct_space_state
+	var excluded := query.exclude.duplicate()
+	while true:
+		query.exclude = excluded
+		var hits := space.intersect_shape(query, 256)
+		if hits.is_empty():
+			return null
+		var found_clearable := false
+		for hit: Dictionary in hits:
+			var collider: Object = hit.get("collider")
+			if Foliage.collider_is_clearable(collider):
+				var rid: RID = hit.get("rid", RID())
+				if rid.is_valid() and not excluded.has(rid):
+					excluded.append(rid)
+					found_clearable = true
+				continue
+			return collider
+		if hits.size() < 256 or not found_clearable:
+			return null
+	return null
 
 
 func _hits(size: Vector3, at: Vector3, yaw: float, ex: Array[RID]) -> bool:
@@ -154,10 +224,10 @@ func _hits(size: Vector3, at: Vector3, yaw: float, ex: Array[RID]) -> bool:
 	shape.size = size
 	var q := PhysicsShapeQueryParameters3D.new()
 	q.shape = shape
-	q.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER
+	q.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_NATURE | Kit.LAYER_WATER
 	q.exclude = ex
 	q.transform = Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0, 0.8, 0))
-	return not get_world_3d().direct_space_state.intersect_shape(q, 1).is_empty()
+	return _first_protected_overlap(q) != null
 
 
 ## Het gebouw zelf: een StaticBody die kogels en mensen tegenhoudt, met het model eronder.
@@ -215,7 +285,8 @@ func _bags(root: Node3D, sz: Vector3) -> void:
 
 
 func place(kind: String, at: Vector3, yaw: float) -> Variant:
-	if full(kind) or not can_place(kind, at, yaw):
+	var status := placement_status(kind, at, yaw)
+	if full(kind) or not status.valid:
 		return null
 	var node: StaticBody3D = make_node(kind) if kind == "airfield" else null
 	if kind == "airfield" and node == null:
@@ -243,6 +314,7 @@ func place(kind: String, at: Vector3, yaw: float) -> Variant:
 		b.merge({"has_heli": false, "hs": "closed", "t": 0.0, "want": false, "heli": null, "spin": 0.0})
 		_pad_init(b)
 	Game.buildings.append(b)
+	Foliage.clear_for_building(node.get_instance_id(), _clearance_regions(kind), at, yaw)
 	_push_out(b)
 	_cut_pad()
 	Sfx.play("thud")
@@ -251,10 +323,14 @@ func place(kind: String, at: Vector3, yaw: float) -> Variant:
 
 
 func move_to(b: Dictionary, at: Vector3, yaw: float) -> void:
+	var status := placement_status(b.kind, at, yaw, b)
+	if not status.valid:
+		return
 	b.at = at
 	b.yaw = yaw
 	b.node.position = at
 	b.node.rotation.y = yaw
+	Foliage.clear_for_building(b.node.get_instance_id(), _clearance_regions(b.kind), at, yaw)
 	_push_out(b)
 	_cut_pad()
 	Sfx.play("thud", 0.6)
@@ -311,6 +387,8 @@ func _push_out_of_airfield(b: Dictionary) -> void:
 
 func remove(b: Dictionary) -> void:
 	_clear_fx(b)
+	if b.kind == "airfield" or b.kind in DEFS:
+		Foliage.release_building_clearance(b.node.get_instance_id())
 	if b.bar != null:
 		b.bar.queue_free()
 	if b.kind == "airfield":

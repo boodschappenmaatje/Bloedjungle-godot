@@ -21,10 +21,10 @@ var _panel: PanelContainer
 var _cards: Array = []
 var _zoom_btns: Array = []
 var _airfield_rotate_btn: Button
-var _airfield_pan_btn: Button
 var _sel: Variant = null
 var _sell_arm: Variant = null
 var _ptrs := {}
+var _pointer_map := {}
 var _drag: Dictionary = {}
 var _pinch: Dictionary = {}
 var _touch := false
@@ -36,9 +36,10 @@ var _ring: Node3D
 var _msg_t := 0.0
 var _airfield_armed := false
 var _airfield_yaw := 0.0
-var _airfield_pan_mode := false
 var _airfield_candidate := Vector3.ZERO
+var _airfield_preview_dirty := true
 var _previous_bcam := Vector3.ZERO
+const DRAG_THRESHOLD := 10.0
 
 
 class BuildIconButton:
@@ -192,15 +193,6 @@ func _ready() -> void:
 	_airfield_rotate_btn.pressed.connect(_rotate_airfield_preview)
 	_airfield_rotate_btn.visible = false
 	_ui.add_child(_airfield_rotate_btn)
-	_airfield_pan_btn = Button.new()
-	_airfield_pan_btn.add_to_group("hud_button")
-	_airfield_pan_btn.text = "PAN"
-	_airfield_pan_btn.tooltip_text = "Kaartverschuiving voor de vliegveldkavel in- of uitschakelen"
-	_airfield_pan_btn.custom_minimum_size = Vector2(78, 42)
-	UI.style_button(_airfield_pan_btn, "pause")
-	_airfield_pan_btn.pressed.connect(_toggle_airfield_pan)
-	_airfield_pan_btn.visible = false
-	_ui.add_child(_airfield_pan_btn)
 	resized.connect(_layout)
 	Game.changed.connect(_refresh)
 	_layout()
@@ -216,7 +208,7 @@ func _make_info() -> void:
 	vb.add_theme_constant_override("separation", 5)
 	_info.add_child(vb)
 	vb.add_child(UI.label("BOUWMODUS ACTIEF", UI.display(1), 17, UI.INK))
-	var hint := UI.label("Sleep een kaartje op de kaart. Sleep de grond om te schuiven, knijp of gebruik + en − om te zoomen.", UI.body(600, 0), 12, UI.INK_DIM)
+	var hint := UI.label("Sleep een kaartje op de kaart. Verschuif de kaart met één vinger; knijp met twee vingers om te zoomen.", UI.body(600, 0), 12, UI.INK_DIM)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hint.custom_minimum_size.x = 186
 	vb.add_child(hint)
@@ -258,6 +250,7 @@ func _enter() -> void:
 	_sel = null
 	_sell_arm = null
 	_ptrs.clear()
+	_pointer_map.clear()
 	_drag = {}
 	_pinch = {}
 	_ui.visible = true
@@ -271,12 +264,11 @@ func _exit() -> void:
 	Game.build_mode = false
 	Game.airfield_build_view = false
 	_airfield_armed = false
-	_airfield_pan_mode = false
 	_airfield_rotate_btn.visible = false
-	_airfield_pan_btn.visible = false
 	Game.bcam = _previous_bcam if _previous_bcam != Vector3.ZERO else Vector3(0, 0, 1)
 	_ui.visible = false
 	_ptrs.clear()
+	_pointer_map.clear()
 	_drag = {}
 	_pinch = {}
 	_sel = null
@@ -310,11 +302,9 @@ func _process(delta: float) -> void:
 			_msg.text = ""
 	if Game.build_mode:
 		_airfield_rotate_btn.visible = _airfield_armed
-		_airfield_pan_btn.visible = _airfield_armed
 		if _airfield_armed:
-			if _airfield_pan_mode:
-				_airfield_candidate = Vector3(Game.bcam.x, 0.0, Game.bcam.y)
-			_show_airfield_preview()
+			if _airfield_preview_dirty:
+				_show_airfield_preview()
 		_panel.position = Vector2(size.x - _panel.size.x - 12.0, 76.0)
 
 
@@ -326,9 +316,10 @@ func _unhandled_key_input(e: InputEvent) -> void:
 			_enter()
 
 
-func _say(t: String) -> void:
+func _say(t: String, color: Color = Color("ff7a6a"), duration := 2.2) -> void:
 	_msg.text = t
-	_msg_t = 2.2
+	_msg.add_theme_color_override("font_color", color)
+	_msg_t = duration
 
 
 # ---------------------------------------------------------------- indeling
@@ -353,8 +344,6 @@ func _layout() -> void:
 		b.position = Vector2(size.x - 12.0 - (3 - i) * 42.0 - (2 - i) * 6.0, top - 54.0)
 	if _airfield_rotate_btn != null:
 		_airfield_rotate_btn.position = Vector2(size.x - 238.0, top - 54.0)
-	if _airfield_pan_btn != null:
-		_airfield_pan_btn.position = Vector2(size.x - 328.0, top - 54.0)
 
 
 func _refresh() -> void:
@@ -367,7 +356,7 @@ func _refresh() -> void:
 		if Buildings.DEFS.has(c.kind):
 			var d: Dictionary = Buildings.DEFS[c.kind]
 			var built := Game.builds.full(c.kind)
-			c.off = built or not Game.can_afford_build(d.cost)
+			c.off = built or (c.kind != "airfield" and not Game.can_afford_build(d.cost))
 			c.sub = ("gebouwd" if not Game.builds.is_piece(c.kind) else "max") if built else UI.nl(d.cost) + " pt"
 		else:
 			c.off = true
@@ -375,6 +364,7 @@ func _refresh() -> void:
 		c.queue_redraw()
 	if not Game.build_mode:
 		return
+	_airfield_preview_dirty = true
 	_fill_panel()
 
 
@@ -550,7 +540,7 @@ func _input(event: InputEvent) -> void:
 
 
 func _over_ui(p: Vector2) -> bool:
-	var ctrls: Array = [_info, _panel, _airfield_rotate_btn, _airfield_pan_btn]
+	var ctrls: Array = [_info, _panel, _airfield_rotate_btn]
 	ctrls.append_array(_zoom_btns)
 	for c: Control in ctrls:
 		if c.is_visible_in_tree() and c.get_global_rect().has_point(p):
@@ -589,10 +579,15 @@ static func _snap(v: float) -> float:
 
 func _down(id: int, pos: Vector2) -> void:
 	_ptrs[id] = pos
-	if _ptrs.size() == 2:  # tweede vinger: knijpen om te zoomen, wat de eerste ook deed
+	_pointer_map[id] = not _over_ui(pos) and not _over_card(pos)
+	if _ptrs.size() == 2:
 		_cancel_drag()
-		var v: Array = _ptrs.values()
-		_pinch = {"d": maxf(1.0, (v[0] - v[1]).length()), "zoom": Game.bcam.z}
+		var map_pointers: Array = _pointer_map.values()
+		if map_pointers.size() == 2 and bool(map_pointers[0]) and bool(map_pointers[1]):
+			var v: Array = _ptrs.values()
+			_pinch = {"d": maxf(1.0, (v[0] - v[1]).length()), "zoom": Game.bcam.z}
+		else:
+			_pinch = {"blocked": true}
 		return
 	if _ptrs.size() > 2:
 		return
@@ -605,31 +600,20 @@ func _down(id: int, pos: Vector2) -> void:
 			elif c.kind == "airfield":
 				_airfield_armed = true
 				_airfield_yaw = 0.0
-				_airfield_pan_mode = false
 				Game.airfield_build_view = true
 				Game.bcam = Vector3(AirfieldHQ23.SUGGESTED_CENTER.x, AirfieldHQ23.SUGGESTED_CENTER.z, 1.0)
 				_airfield_candidate = AirfieldHQ23.SUGGESTED_CENTER
+				_airfield_preview_dirty = true
 				_sel = null
 				_fill_panel()
-				_say("PAN VERSCHUIFT DE KAART · TIK OP DE KAVEL OM TE PLAATSEN")
+				_clamp_pan()
+				_say("Versleep de kaart met één vinger. Tik op een geldige plek om te bouwen.", UI.INK_DIM, 3.0)
 			else:
+				_airfield_armed = false
+				Game.airfield_build_view = false
 				_drag = {"kind": c.kind, "yaw": 0.0, "ox": 0.0, "oz": 0.0, "sp": pos, "moved": false, "id": id, "st": null}
 			return
 	if _over_ui(pos):
-		return
-	if _airfield_armed:
-		if _airfield_pan_mode:
-			_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id}
-			return
-		var ground: Variant = _ground(pos)
-		if ground == null:
-			return
-		_airfield_candidate = Vector3(_snap(ground.x), 0.0, _snap(ground.z))
-		_drag = {"kind": "airfield", "yaw": _airfield_yaw, "ox": 0.0, "oz": 0.0, "sp": pos, "moved": true, "id": id, "st": null}
-		_drag.x = _airfield_candidate.x
-		_drag.z = _airfield_candidate.z
-		_drag.ok = Game.builds.can_place("airfield", _airfield_candidate, _airfield_yaw)
-		_show_ghost("airfield", _airfield_candidate, _airfield_yaw, _drag.ok)
 		return
 	var g = _ground(pos)
 	if g == null:
@@ -637,8 +621,17 @@ func _down(id: int, pos: Vector2) -> void:
 	var st = _struct_at(g)
 	if st != null:
 		_drag = {"kind": st.kind, "st": st, "yaw": st.yaw, "ox": st.at.x - g.x, "oz": st.at.z - g.z, "sp": pos, "moved": false, "id": id}
+	elif _airfield_armed:
+		_drag = {"kind": "airfield", "sp": pos, "last": pos, "moved": false, "id": id, "st": null}
 	else:
 		_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id}
+
+
+func _over_card(pos: Vector2) -> bool:
+	for card: Card in _cards:
+		if card.get_global_rect().has_point(pos):
+			return true
+	return false
 
 
 func _cancel_drag() -> void:
@@ -653,24 +646,31 @@ func _move(id: int, pos: Vector2) -> void:
 	if _ptrs.has(id):
 		_ptrs[id] = pos
 	if not _pinch.is_empty() and _ptrs.size() >= 2:
+		if _pinch.get("blocked", false):
+			return
 		var v: Array = _ptrs.values()
 		_set_zoom(_pinch.zoom * _pinch.d / maxf(1.0, (v[0] - v[1]).length()))
+		_airfield_preview_dirty = true
 		return
 	if _drag.is_empty() or id != _drag.id:
 		return
-	if _drag.get("pan", false):
-		if not _drag.moved and pos.distance_to(_drag.sp) < 8.0:
+	if _drag.get("kind", "") == "airfield" and _drag.get("st") == null and not _drag.moved:
+		if pos.distance_to(_drag.sp) < DRAG_THRESHOLD:
 			return
 		_drag.moved = true
-		var cam := get_viewport().get_camera_3d()
-		var mpp := 2.0 * cam.global_position.distance_to(Vector3(Game.bcam.x, 0, Game.bcam.y)) * tan(deg_to_rad(cam.fov * 0.5)) / size.y
-		var d: Vector2 = pos - _drag.last
+		_drag.pan = true
+		_drag.last = _drag.sp
+	if _drag.get("pan", false):
+		if not _drag.moved and pos.distance_to(_drag.sp) < DRAG_THRESHOLD:
+			return
+		_drag.moved = true
+		_pan_by_screen_drag(_drag.last, pos)
 		_drag.last = pos
-		Game.bcam.x -= d.x * mpp
-		Game.bcam.y -= d.y * mpp * 1.03
-		_clamp_pan()
+		if _airfield_armed:
+			_airfield_candidate = Vector3(Game.bcam.x, 0.0, Game.bcam.y)
+			_airfield_preview_dirty = true
 		return
-	if not _drag.moved and pos.distance_to(_drag.sp) < 10.0:
+	if not _drag.moved and pos.distance_to(_drag.sp) < DRAG_THRESHOLD:
 		return
 	_drag.moved = true
 	var g = _ground(pos)
@@ -679,14 +679,17 @@ func _move(id: int, pos: Vector2) -> void:
 	_drag.x = _snap(g.x + _drag.ox)
 	_drag.z = _snap(g.z + _drag.oz)
 	var at := Vector3(_drag.x, 0, _drag.z)
-	_drag.ok = Game.builds.can_place(_drag.kind, at, _drag.yaw, _drag.st)
+	_drag.status = Game.builds.placement_status(_drag.kind, at, _drag.yaw, _drag.st)
+	_drag.ok = _drag.status.valid
 	_show_ghost(_drag.kind, at, _drag.yaw, _drag.ok)
 	if _drag.st != null:
 		_drag.st.node.visible = false
 
 
 func _up(id: int) -> void:
+	var release_pos: Vector2 = _ptrs.get(id, Vector2.ZERO)
 	_ptrs.erase(id)
+	_pointer_map.erase(id)
 	if _ptrs.size() < 2:
 		_pinch = {}
 	if _drag.is_empty() or id != _drag.id:
@@ -701,17 +704,30 @@ func _up(id: int) -> void:
 			_sell_arm = null
 			_fill_panel()
 		return
-	if d.get("kind", "") == "airfield":
-		var site := Vector3(d.x, 0.0, d.z)
-		if d.get("ok", false) and Game.can_afford_build(AirfieldHQ23.BUILD_COST):
-			_sel = Game.builds.place("airfield", site, d.yaw)
-			if _sel != null:
-				_airfield_armed = false
-				Game.changed.emit()
-			else:
-				_say("ONGELDIGE LOCATIE OF ONVOLDOENDE BOUWTEGOED")
+	if d.get("kind", "") == "airfield" and d.get("st") == null:
+		if d.get("pan", false):
+			return
+		var ground: Variant = _ground(release_pos)
+		var site: Vector3 = Vector3(_snap(ground.x), 0.0, _snap(ground.z)) if ground != null else _airfield_candidate
+		_airfield_candidate = site
+		var status: Dictionary = Game.builds.placement_status("airfield", site, _airfield_yaw)
+		if not status.valid:
+			_show_ghost("airfield", site, _airfield_yaw, false)
+			_airfield_preview_dirty = false
+			_set_placement_message(status.reason, false)
+			return
+		if not Game.can_afford_build(AirfieldHQ23.BUILD_COST):
+			_show_ghost("airfield", site, _airfield_yaw, true)
+			_airfield_preview_dirty = false
+			_set_placement_message("Onvoldoende punten", true)
+			return
+		_sel = Game.builds.place("airfield", site, _airfield_yaw)
+		if _sel != null:
+			_airfield_armed = false
+			Game.changed.emit()
 		else:
-			_say("ONGELDIGE LOCATIE — BASIS, RIVIER, OBJECT OF KAARTRAND")
+			var retry: Dictionary = Game.builds.placement_status("airfield", site, _airfield_yaw)
+			_set_placement_message("Onvoldoende punten" if retry.valid else retry.reason, retry.valid)
 		return
 	if d.st != null:
 		d.st.node.visible = true
@@ -721,11 +737,15 @@ func _up(id: int) -> void:
 			Game.builds.move_to(d.st, Vector3(d.x, 0, d.z), d.yaw)
 			_sel = d.st
 		else:
-			Sfx.play("click", 0.5)
+			_say(String(d.get("status", {}).get("reason", "Ongeldige locatie")))
 	elif d.moved and d.get("ok", false) and Game.can_afford_build(Buildings.DEFS[d.kind].cost):
 		_sel = Game.builds.place(d.kind, Vector3(d.x, 0, d.z), d.yaw)
 	elif d.moved:
-		Sfx.play("ping", 0.6)
+		var status: Dictionary = d.get("status", {})
+		var message := String(status.get("reason", "Ongeldige locatie"))
+		if status.get("valid", false):
+			message = "Onvoldoende punten"
+		_say(message, UI.INK_DIM if message == "Onvoldoende punten" else Color("ff7a6a"))
 	_sell_arm = null
 	Game.changed.emit()
 
@@ -733,13 +753,28 @@ func _up(id: int) -> void:
 func _zoom_by(f: float) -> void:
 	if f == 0.0:
 		Game.bcam = Vector3(AirfieldHQ23.SUGGESTED_CENTER.x, AirfieldHQ23.SUGGESTED_CENTER.z, 1.0) if Game.airfield_build_view else Vector3(0, 0, 1)
+		if Game.airfield_build_view:
+			_airfield_candidate = Vector3(Game.bcam.x, 0.0, Game.bcam.y)
 	else:
 		_set_zoom(Game.bcam.z * f)
+	_airfield_preview_dirty = true
 	Sfx.play("click", 0.5)
 
 
 func _set_zoom(z: float) -> void:
 	Game.bcam.z = clampf(z, 0.35, 2.4)
+	_clamp_pan()
+	_airfield_preview_dirty = true
+
+
+func _pan_by_screen_drag(from: Vector2, to: Vector2) -> void:
+	var from_ground: Variant = _ground(from)
+	var to_ground: Variant = _ground(to)
+	if from_ground == null or to_ground == null:
+		return
+	var delta: Vector3 = Vector3(to_ground) - Vector3(from_ground)
+	Game.bcam.x -= delta.x
+	Game.bcam.y -= delta.z
 	_clamp_pan()
 
 
@@ -748,8 +783,23 @@ func _clamp_pan() -> void:
 		var quarter_turn := absf(fposmod(_airfield_yaw, PI) - PI * 0.5) < 0.01
 		var half_x := AirfieldHQ23.FOOTPRINT.z * 0.5 if quarter_turn else AirfieldHQ23.FOOTPRINT.x * 0.5
 		var half_z := AirfieldHQ23.FOOTPRINT.x * 0.5 if quarter_turn else AirfieldHQ23.FOOTPRINT.z * 0.5
-		Game.bcam.x = clampf(Game.bcam.x, -Data.WORLD_X + 1.0 + half_x, Data.WORLD_X - 1.0 - half_x)
-		Game.bcam.y = clampf(Game.bcam.y, -Data.WORLD_Z_N + 1.0 + half_z, Data.WORLD_Z_S - 1.0 - half_z)
+		var cam := get_viewport().get_camera_3d()
+		var view_half_x := half_x
+		var view_half_z := half_z
+		if cam != null:
+			var rect := get_viewport().get_visible_rect().size
+			var aspect := maxf(0.1, rect.x / maxf(1.0, rect.y))
+			var distance := maxf(AirfieldHQ23.FOOTPRINT.x / (2.0 * tan(deg_to_rad(cam.fov * 0.5)) * aspect), AirfieldHQ23.FOOTPRINT.z / (2.0 * tan(deg_to_rad(cam.fov * 0.5)))) * 1.15 * Game.bcam.z
+			var half_view_z := distance * tan(deg_to_rad(cam.fov * 0.5))
+			var half_view_x := half_view_z * aspect
+			view_half_x = maxf(half_x, half_view_x)
+			view_half_z = maxf(half_z, half_view_z)
+		var min_x := -Data.WORLD_X + 1.0 + view_half_x
+		var max_x := Data.WORLD_X - 1.0 - view_half_x
+		var min_z := -Data.WORLD_Z_N + 1.0 + view_half_z
+		var max_z := Data.WORLD_Z_S - 1.0 - view_half_z
+		Game.bcam.x = (min_x + max_x) * 0.5 if min_x > max_x else clampf(Game.bcam.x, min_x, max_x)
+		Game.bcam.y = (min_z + max_z) * 0.5 if min_z > max_z else clampf(Game.bcam.y, min_z, max_z)
 		return
 	var m := Data.WORLD_R - 6.0
 	var v := Vector2(Game.bcam.x, Game.bcam.y)
@@ -823,19 +873,28 @@ func _show_ghost(kind: String, at: Vector3, yaw: float, ok: bool) -> void:
 
 func _show_airfield_preview() -> void:
 	var at := _airfield_candidate if _airfield_candidate != Vector3.ZERO else AirfieldHQ23.SUGGESTED_CENTER
-	var ok := Game.builds.can_place("airfield", at, _airfield_yaw) and Game.can_afford_build(AirfieldHQ23.BUILD_COST)
-	_show_ghost("airfield", at, _airfield_yaw, ok)
+	var status := Game.builds.placement_status("airfield", at, _airfield_yaw)
+	_show_ghost("airfield", at, _airfield_yaw, status.valid)
+	var message := String(status.reason)
+	var funds_issue := false
+	if status.valid and not Game.can_afford_build(AirfieldHQ23.BUILD_COST):
+		message = "Onvoldoende punten"
+		funds_issue = true
+	_set_placement_message(message, funds_issue)
+	_airfield_preview_dirty = false
+
+
+func _set_placement_message(message: String, funds_issue: bool) -> void:
+	_msg.text = message
+	_msg.add_theme_color_override("font_color", Color("e0b94c") if funds_issue else (UI.GOOD if message.begins_with("Bouwen mogelijk") else Color("ff7a6a")))
+	_msg_t = 0.0
 
 func _rotate_airfield_preview() -> void:
 	_airfield_yaw = wrapf(_airfield_yaw + PI * 0.5, 0.0, TAU)
 	_clamp_pan()
 	_airfield_candidate = Vector3(Game.bcam.x, 0.0, Game.bcam.y)
+	_airfield_preview_dirty = true
 	_show_airfield_preview()
-
-func _toggle_airfield_pan() -> void:
-	_airfield_pan_mode = not _airfield_pan_mode
-	_airfield_pan_btn.text = "PAN AAN" if _airfield_pan_mode else "PAN"
-	Sfx.play("click", 0.5)
 
 
 func _place_ring(b: Dictionary) -> void:

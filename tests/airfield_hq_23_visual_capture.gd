@@ -40,34 +40,64 @@ func _run() -> void:
 			break
 	assert(airfield_card != null, "The production build menu must contain the Airfield card")
 	build_ui._down(0, airfield_card.get_global_rect().get_center())
-	var candidate_sites: Array[Vector3] = [
-		AirfieldHQ23.SUGGESTED_CENTER,
-		Vector3(120.0, 0.0, 50.0), Vector3(80.0, 0.0, 50.0), Vector3(-120.0, 0.0, 50.0),
-		Vector3(100.0, 0.0, -145.0), Vector3(100.0, 0.0, -130.0), Vector3(-100.0, 0.0, -145.0),
-		Vector3(120.0, 0.0, 20.0), Vector3(100.0, 0.0, 30.0), Vector3(-100.0, 0.0, 25.0),
-		Vector3(100.0, 0.0, -110.0), Vector3(-100.0, 0.0, -110.0), Vector3(140.0, 0.0, 20.0),
-	]
-	var build_site := Vector3.ZERO
-	for yaw in [0.0, PI * 0.5]:
-		for site in candidate_sites:
-			var placeable := Game.builds.can_place("airfield", site, yaw)
-			if placeable:
-				build_site = site
-				build_ui._airfield_yaw = yaw
-				break
-		if build_site != Vector3.ZERO:
-			break
-	assert(build_site != Vector3.ZERO, "A clear production-world location is required for the Airfield preview capture")
+	build_ui._up(0)
+	await _settle_frames(3)
+	# A swipe pans the actual construction map and never places the building.
+	var map_center := get_viewport().get_visible_rect().size * 0.5
+	var buildings_before_gesture := Game.buildings.size()
+	var pan_before := Vector2(Game.bcam.x, Game.bcam.y)
+	build_ui._down(10, map_center)
+	build_ui._move(10, map_center + Vector2(28.0, 19.0))
+	build_ui._up(10)
+	assert(Game.buildings.size() == buildings_before_gesture, "A one-finger map drag must never place the airfield")
+	assert(not Vector2(Game.bcam.x, Game.bcam.y).is_equal_approx(pan_before), "A one-finger drag must pan the airfield construction map")
+	# Pinch on the map zooms in; the same input is scoped to this build view.
+	var zoom_before := Game.bcam.z
+	build_ui._down(11, map_center - Vector2(34.0, 0.0))
+	build_ui._down(12, map_center + Vector2(34.0, 0.0))
+	build_ui._move(12, map_center + Vector2(52.0, 0.0))
+	build_ui._up(12)
+	build_ui._up(11)
+	assert(Game.bcam.z < zoom_before, "Spreading two map fingers must zoom in")
+	var zoomed_pan_before := Vector2(Game.bcam.x, Game.bcam.y)
+	build_ui._down(14, map_center)
+	build_ui._move(14, map_center + Vector2(-21.0, 17.0))
+	build_ui._up(14)
+	assert(Game.buildings.size() == buildings_before_gesture, "A zoomed one-finger drag must never place the airfield")
+	assert(not Vector2(Game.bcam.x, Game.bcam.y).is_equal_approx(zoomed_pan_before), "One-finger panning must still work while zoomed")
+	var build_site: Vector3 = AirfieldHQ23.SUGGESTED_CENTER
+	var placement: Dictionary = Game.builds.placement_status("airfield", build_site, 0.0)
+	assert(placement.valid, "The designated default site directly south of the base must be placeable in the production world: %s" % placement.reason)
+	assert(int(placement.vegetation_count) > 0, "The default south site must exercise the green vegetation-clearance preview")
+	build_ui._airfield_yaw = 0.0
 	build_ui._airfield_candidate = build_site
+	Game.bcam = Vector3(build_site.x, build_site.z, 1.0)
 	# Keep the real build HUD, but frame the complete footprint in the production
 	# camera before taking the green/red placement preview.
-	Game.bcam = Vector3(build_site.x, build_site.z, 1.0)
 	build_ui._show_airfield_preview()
 	_hide_canvas_items_except(build_ui)
 	await _settle_frames(24)
 	await _save_view("08_build_menu_preview.png")
-	var building: Variant = Game.builds.place("airfield", build_site, build_ui._airfield_yaw)
-	assert(building != null, "The actual gameplay Buildings.place path must instantiate the airfield")
+	await _save_view("14_airfield_south_site_green_vegetation_preview.png")
+	# One short map tap confirms the current location. A successful UI placement
+	# must use the same validation and economy path as a direct build action.
+	var center_ground: Variant = build_ui._ground(map_center)
+	assert(center_ground != null, "The center of the airfield build camera must project to playable terrain")
+	build_ui._down(13, map_center)
+	build_ui._up(13)
+	var building: Variant = null
+	for registered in Game.buildings:
+		if registered.kind == "airfield":
+			building = registered
+			break
+	assert(building != null, "A short map tap at the valid default preview must place the airfield")
+	assert(Game.points == 5200, "The UI placement must charge the build price exactly once")
+	assert(Game.airfield_build_view, "After placement the wide build camera must remain active so the player can find and select the airport")
+	build_ui._sel = null
+	build_ui._fill_panel()
+	build_ui._down(15, map_center)
+	build_ui._up(15)
+	assert(build_ui._sel == building and build_ui._panel.visible, "A short tap on the placed airfield must select it and show its existing building panel")
 	build_ui._airfield_armed = false
 	build_ui._ghost.visible = false
 	Game.build_mode = false
@@ -87,6 +117,15 @@ func _run() -> void:
 	_hide_canvas_items_except(null)
 	await _settle_frames(8)
 	await _save_view("09_full_airfield_game_world.png")
+	# Show the relationship between the unchanged player compound and the new
+	# airfield site south of its gate in one production-world capture.
+	_capture_camera.fov = 38.0
+	_capture_camera.global_position = Vector3(40.0, 330.0, 65.0)
+	_capture_camera.look_at(Vector3(40.0, 0.0, 65.0), Vector3.FORWARD)
+	_capture_camera.make_current()
+	await _settle_frames(8)
+	await _save_view("15_airfield_south_of_player_base.png")
+	_capture_camera.fov = 43.0
 	_capture_camera.global_position = tower_target + airport_basis * Vector3(23.0, 12.0, 25.0)
 	_capture_camera.look_at(tower_target + Vector3(0.0, 1.0, 0.0), Vector3.UP)
 	_capture_camera.make_current()

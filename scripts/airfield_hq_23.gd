@@ -39,7 +39,7 @@ const TAXI_ARC_END := Vector2(16.0, -34.5)
 
 # The unscaled approved core's original translation is retained.
 const COMPLEX_CENTER_OFFSET := Vector3(-24.125, 0.0, -0.3)
-const SUGGESTED_CENTER := Vector3(100.0, 0.0, -150.0)
+const SUGGESTED_CENTER := Vector3(70.0, 0.0, 115.0)
 const P47_SCENE := "res://assets/p47_thunderbolt.glb"
 const AIRCRAFT := {
 	"p47": {"name": "Republic P-47 Thunderbolt", "cost": P47_COST, "scene": P47_SCENE, "source_required": "original Meshy Pro GLB/FBX"},
@@ -276,6 +276,36 @@ static func site_clear_of_river(at: Vector3, yaw: float) -> bool:
 				var world := Vector2(at.x,at.z) + _rotate_local(local,yaw)
 				if Data.river_off(world.x,world.y) < Data.RIVER_HALF + 2.0:
 					return false
+	return true
+
+static func site_clear_of_south_gate_route(at: Vector3, yaw: float) -> bool:
+	# Keep the established south gate exit open into the expanded playable area.
+	var route_start := Data.COMPOUND + 2.0
+	var route_center := Vector2(0.0, (route_start + Data.WORLD_Z_S) * 0.5)
+	var route_size := Vector2(Data.GATE_GAP * 2.0 + 3.2, Data.WORLD_Z_S - route_start)
+	for region in site_regions():
+		var center: Vector2 = region.center
+		var world_center := Vector2(at.x, at.z) + _rotate_local(center, yaw)
+		var angle := yaw + float(region.get("yaw", 0.0))
+		if _rectangles_overlap(world_center, region.size, angle, route_center, route_size, 0.0):
+			return false
+	return true
+
+static func _rectangles_overlap(a_center: Vector2, a_size: Vector2, a_yaw: float, b_center: Vector2, b_size: Vector2, b_yaw: float) -> bool:
+	var axes: Array[Vector2] = [
+		Vector2(cos(a_yaw), -sin(a_yaw)), Vector2(sin(a_yaw), cos(a_yaw)),
+		Vector2(cos(b_yaw), -sin(b_yaw)), Vector2(sin(b_yaw), cos(b_yaw)),
+	]
+	var a_x := axes[0]
+	var a_z := axes[1]
+	var b_x := axes[2]
+	var b_z := axes[3]
+	var delta := b_center - a_center
+	for axis in axes:
+		var ra := absf(axis.dot(a_x)) * a_size.x * 0.5 + absf(axis.dot(a_z)) * a_size.y * 0.5
+		var rb := absf(axis.dot(b_x)) * b_size.x * 0.5 + absf(axis.dot(b_z)) * b_size.y * 0.5
+		if absf(delta.dot(axis)) > ra + rb:
+			return false
 	return true
 
 static func can_buy(_buildings, building: Dictionary, kind: String) -> bool:

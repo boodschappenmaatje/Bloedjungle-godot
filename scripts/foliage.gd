@@ -259,6 +259,153 @@ static func grass() -> ArrayMesh:
 static var trees := PackedVector2Array()  # plekken van palmen en rotsen, voor de landing van de heli
 static var _root: Node3D  # waar de jungle in hangt (de vallende bomen komen er ook in)
 static var _reg := {}  # vak (36 m) -> palmen en bomen die nog kunnen omvallen (zie fell_near)
+const VEG_CELL := 36.0
+const BUILD_CLEAR_MARGIN := 0.75
+const CLEARABLE_KINDS := ["palm", "bush", "fern", "grass"]
+const SOUTH_COUNTS := {"palm": 150, "bush": 260, "fern": 220, "grass": 1100, "rock": 32}
+static var _vegetation_cells := {}  # 36 m spatial index; each item points at one actual MultiMesh instance
+static var _vegetation_serial := 0
+static var _building_clearings := {}  # live placed building id -> regions reapplied after Level rebuild
+
+
+static func collider_is_clearable(collider: Object) -> bool:
+	return is_instance_valid(collider) and collider.has_meta("clearable_vegetation") and bool(collider.get_meta("clearable_vegetation"))
+
+
+static func _register_vegetation(entry: Dictionary) -> Dictionary:
+	var source_transform: Transform3D = entry.get("xf", Transform3D.IDENTITY)
+	var local_position: Vector3 = entry.get("local_position", source_transform.origin)
+	entry["local_position"] = local_position
+	entry["world_position"] = _root.to_global(local_position) if is_instance_valid(_root) else local_position
+	entry["vegetation_id"] = _vegetation_serial
+	entry["cleared"] = false
+	_vegetation_serial += 1
+	var position: Vector3 = entry["world_position"]
+	var cell := Vector2i(floori(position.x / VEG_CELL), floori(position.z / VEG_CELL))
+	entry["vegetation_cell"] = cell
+	if not _vegetation_cells.has(cell):
+		_vegetation_cells[cell] = []
+	_vegetation_cells[cell].append(entry)
+	if entry.get("tracks_tree", false):
+		entry["tree_local_position"] = Vector2(local_position.x, local_position.z)
+		trees.append(entry["tree_local_position"])
+	return entry
+
+
+static func register_grass_instance(local_position: Vector3, slots: Array[Dictionary]) -> Dictionary:
+	return _register_vegetation({"kind": "grass", "local_position": local_position, "slots": slots, "shapes": []})
+
+
+static func _region_world_center(at: Vector3, yaw: float, region: Dictionary) -> Vector2:
+	var center: Vector2 = region.center
+	return Vector2(at.x, at.z) + _rotate_local(center, yaw)
+
+
+static func _rotate_local(point: Vector2, yaw: float) -> Vector2:
+	return point.rotated(-yaw)
+
+
+static func _point_in_build_region(point: Vector3, at: Vector3, yaw: float, region: Dictionary, margin: float) -> bool:
+	var local := Vector2(point.x - at.x, point.z - at.z).rotated(yaw)
+	local -= region.center
+	local = local.rotated(float(region.get("yaw", 0.0)))
+	var half: Vector2 = region.size * 0.5 + Vector2.ONE * margin
+	return absf(local.x) <= half.x and absf(local.y) <= half.y
+
+
+static func _entries_for_build_regions(regions: Array, at: Vector3, yaw: float, margin: float) -> Array:
+	var found := {}
+	for region: Dictionary in regions:
+		var half: Vector2 = region.size * 0.5 + Vector2.ONE * margin
+		var angle := yaw + float(region.get("yaw", 0.0))
+		var center := _region_world_center(at, yaw, region)
+		var extent_x := absf(cos(angle)) * half.x + absf(sin(angle)) * half.y
+		var extent_z := absf(sin(angle)) * half.x + absf(cos(angle)) * half.y
+		var low := Vector2i(floori((center.x - extent_x) / VEG_CELL), floori((center.y - extent_z) / VEG_CELL))
+		var high := Vector2i(floori((center.x + extent_x) / VEG_CELL), floori((center.y + extent_z) / VEG_CELL))
+		for cx in range(low.x, high.x + 1):
+			for cz in range(low.y, high.y + 1):
+				for entry: Dictionary in _vegetation_cells.get(Vector2i(cx, cz), []):
+					if entry.get("cleared", false):
+						continue
+					if not CLEARABLE_KINDS.has(entry.get("kind", "")):
+						continue
+					if _point_in_build_region(entry.world_position, at, yaw, region, margin):
+						found[entry.vegetation_id] = entry
+	return found.values()
+
+
+static func count_clearable_in_regions(regions: Array, at: Vector3, yaw: float, margin := BUILD_CLEAR_MARGIN) -> int:
+	return _entries_for_build_regions(regions, at, yaw, margin).size()
+
+
+static func clear_for_building(building_id: int, regions: Array, at: Vector3, yaw: float, margin := BUILD_CLEAR_MARGIN) -> int:
+	_building_clearings[building_id] = {"regions": regions.duplicate(true), "at": at, "yaw": yaw, "margin": margin}
+	return _clear_regions_now(regions, at, yaw, margin)
+
+
+static func release_building_clearance(building_id: int) -> void:
+	_building_clearings.erase(building_id)
+
+
+static func reapply_building_clearings() -> void:
+	for building_id in _building_clearings.keys().duplicate():
+		var live_object := instance_from_id(int(building_id))
+		if not is_instance_valid(live_object):
+			_building_clearings.erase(building_id)
+			continue
+		var clearing: Dictionary = _building_clearings[building_id]
+		_clear_regions_now(clearing.regions, clearing.at, clearing.yaw, clearing.margin)
+
+
+static func _clear_regions_now(regions: Array, at: Vector3, yaw: float, margin: float) -> int:
+	var removed := 0
+	for entry: Dictionary in _entries_for_build_regions(regions, at, yaw, margin):
+		if _remove_vegetation_entry(entry):
+			removed += 1
+	return removed
+
+
+static func _remove_vegetation_entry(entry: Dictionary) -> bool:
+	if entry.get("cleared", false):
+		return false
+	entry["cleared"] = true
+	entry["felled"] = true
+	var hidden_slots := 0
+	for slot: Dictionary in entry.get("slots", []):
+		var multimesh: MultiMesh = slot.get("multimesh")
+		var index: int = int(slot.get("index", -1))
+		if multimesh != null and index >= 0 and index < multimesh.instance_count:
+			var transform := multimesh.get_instance_transform(index)
+			transform.origin = Vector3(0.0, -1000.0, 0.0)
+			multimesh.set_instance_transform(index, transform)
+			hidden_slots += 1
+	entry["hidden_slot_count"] = hidden_slots
+	for shape: CollisionShape3D in entry.get("shapes", []):
+		if is_instance_valid(shape):
+			shape.set_deferred("disabled", true)
+	for name in ["stump_node", "fall_node"]:
+		var leftover: Node = entry.get(name)
+		if is_instance_valid(leftover):
+			leftover.queue_free()
+	if entry.get("tracks_tree", false):
+		var tree_pos: Vector2 = entry.get("tree_local_position", Vector2.ZERO)
+		for i in range(trees.size() - 1, -1, -1):
+			if trees[i].is_equal_approx(tree_pos):
+				trees.remove_at(i)
+				break
+	if entry.has("reg_key"):
+		var reg_key: Vector2i = entry.reg_key
+		var bucket: Array = _reg.get(reg_key, [])
+		bucket.erase(entry)
+		if bucket.is_empty():
+			_reg.erase(reg_key)
+	var cell: Vector2i = entry.get("vegetation_cell", Vector2i.ZERO)
+	var vegetation_bucket: Array = _vegetation_cells.get(cell, [])
+	vegetation_bucket.erase(entry)
+	if vegetation_bucket.is_empty():
+		_vegetation_cells.erase(cell)
+	return true
 
 
 static func has_tree_near(x: float, z: float, r: float) -> bool:
@@ -272,10 +419,14 @@ static func has_tree_near(x: float, z: float, r: float) -> bool:
 static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 	trees.clear()
 	_reg.clear()
+	_vegetation_cells.clear()
+	_vegetation_serial = 0
 	_root = parent
 	logs(parent)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
+	var south_rng := RandomNumberGenerator.new()
+	south_rng.seed = seed_ + 1009
 	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
 	var meshes := {"bush": bush(), "fern": fern(), "grass": grass()}
 	for kind in sets:
@@ -286,84 +437,97 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 		var cols: Array = []
 		_scatter(rng, c[0], c[1], c[2], xf, cols, c[3], c[4], c[5])
 		_strip(rng, kind, xf.size() + STRIP_EXTRA[kind], xf, cols, c[3], c[4], c[5])
+		_south_scatter(south_rng, kind, SOUTH_COUNTS[kind], xf, cols, c[3], c[4], c[5])
 		if kind == "grass":
 			# Keep the original RNG/placement sequence for palms, rocks and all gameplay.
 			# Only grass is replaced by Blender tufts with separate geometric LODs.
 			GrassField.spawn(parent, xf)
 			continue
-		if kind == "palm" or kind == "rock":
-			for t in xf:
-				trees.append(Vector2(t.origin.x, t.origin.z))
 		if kind == "rock":
-			_collide(parent, xf, COLLIDE_R[kind], "concrete")
-		if kind == "rock":
+			var rock_shapes := _collide(parent, xf, COLLIDE_R[kind], "concrete", "rock")
 			var rm := Kit.rock().duplicate() as StandardMaterial3D
 			rm.vertex_color_use_as_albedo = true
+			var shadow := _blobs(parent, kind, [xf])
 			for v in ROCKS.size():
 				var vx: Array = []
 				var vc: Array = []
 				for i in range(v, xf.size(), ROCKS.size()):
 					vx.append(xf[i])
 					vc.append(cols[i])
-				Kit.scatter(parent, jungle_mesh(ROCKS[v]), rm, vx, vc).add_to_group("foliage_rock")
-			_blobs(parent, kind, [xf])
-		else:
-			# in vakken van 36 m, zodat de camera alleen tekent en laat schaduwen wat in beeld is
-			var cells := {}
-			for i in xf.size():
-				var o: Vector3 = xf[i].origin
-				var key := Vector2i(floori(o.x / 36.0), floori(o.z / 36.0))
-				if not cells.has(key):
-					cells[key] = [[], []]
-				cells[key][0].append(xf[i])
-				cells[key][1].append(cols[i])
-			for key in cells:
-				# palmen: elke plek een van de vormen uit PALM_POOL (palmen en jungleboom)
-				var groups := {}  # vorm -> [transforms, kleuren, plek in het vak]
-				for i in cells[key][0].size():
-					var vn: String = PALM_POOL[i % PALM_POOL.size()] if kind == "palm" else ""
-					if not groups.has(vn):
-						groups[vn] = [[], [], []]
-					var xt: Transform3D = cells[key][0][i]
-					if vn.begins_with("Boom"):
-						xt.basis = xt.basis.scaled(Vector3.ONE * BOOM_SCALE)
-					groups[vn][0].append(xt)
-					groups[vn][1].append(cells[key][1][i])
-					groups[vn][2].append(i)
-				var blob: MultiMeshInstance3D = null
-				if SHADOW_KINDS.has(kind):
-					blob = _blobs(parent, kind, [cells[key][0]])
-				for vn in groups:
-					var vx: Array = groups[vn][0]
-					var vc: Array = groups[vn][1]
-					var mesh: Mesh = jungle_mesh(vn) if kind == "palm" else meshes[kind]
-					var shapes: Array = []
+				var inst := Kit.scatter(parent, jungle_mesh(ROCKS[v]), rm, vx, vc)
+				inst.add_to_group("foliage_rock")
+				for k in vx.size():
+					var source_index := v + k * ROCKS.size()
+					_register_vegetation({"kind": "rock", "xf": xf[source_index], "tracks_tree": true,
+						"slots": [{"multimesh": inst.multimesh, "index": k}, {"multimesh": shadow.multimesh, "index": source_index}],
+						"shapes": [rock_shapes[source_index]]})
+			continue
+		# In vakken van 36 m zodat render-, schaduw- en collisiondata per instance vindbaar blijven.
+		var cells := {}
+		for i in xf.size():
+			var o: Vector3 = xf[i].origin
+			var key := Vector2i(floori(o.x / VEG_CELL), floori(o.z / VEG_CELL))
+			if not cells.has(key):
+				cells[key] = [[], []]
+			cells[key][0].append(xf[i])
+			cells[key][1].append(cols[i])
+		for key in cells:
+			# Palmen: elke plek krijgt een palm- of boomvorm; struiken/varens blijven per vak gegroepeerd.
+			var groups := {}
+			for i in cells[key][0].size():
+				var vn: String = PALM_POOL[i % PALM_POOL.size()] if kind == "palm" else ""
+				if not groups.has(vn):
+					groups[vn] = [[], [], []]
+				var xt: Transform3D = cells[key][0][i]
+				if vn.begins_with("Boom"):
+					xt.basis = xt.basis.scaled(Vector3.ONE * BOOM_SCALE)
+				groups[vn][0].append(xt)
+				groups[vn][1].append(cells[key][1][i])
+				groups[vn][2].append(i)
+			var blob: MultiMeshInstance3D = _blobs(parent, kind, [cells[key][0]]) if SHADOW_KINDS.has(kind) else null
+			for vn in groups:
+				var vx: Array = groups[vn][0]
+				var vc: Array = groups[vn][1]
+				var mesh: Mesh = jungle_mesh(vn) if kind == "palm" else meshes[kind]
+				var shapes: Array = []
+				if kind == "palm":
+					shapes = _collide(parent, vx, BOOM_COLLIDE_R if vn.begins_with("Boom") else COLLIDE_R["palm"], "wood", "palm")
+				var inst := Kit.scatter(parent, mesh, null, vx, vc)
+				inst.add_to_group("foliage_" + kind)
+				inst.visibility_range_end = VIS_END[kind]
+				inst.visibility_range_end_margin = 16.0
+				inst.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+				var far: MultiMeshInstance3D = null
+				if kind == "palm":
+					inst.visibility_range_end = PALM_NEAR
+					far = Kit.scatter(parent, jungle_mesh(vn + "_far"), null, vx, vc, false)
+					far.add_to_group("foliage_palm")
+					far.visibility_range_begin = PALM_NEAR
+					far.visibility_range_begin_margin = 16.0
+					far.visibility_range_end = VIS_END["palm"]
+					far.visibility_range_end_margin = 16.0
+					far.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+				for k in vx.size():
+					var source_index: int = groups[vn][2][k]
+					var slots: Array[Dictionary] = [{"multimesh": inst.multimesh, "index": k}]
+					if far != null:
+						slots.append({"multimesh": far.multimesh, "index": k})
+					if blob != null:
+						slots.append({"multimesh": blob.multimesh, "index": source_index})
+					var entry := {"kind": kind, "xf": vx[k], "slots": slots, "shapes": [shapes[k]] if kind == "palm" else [],
+						"tracks_tree": kind == "palm", "felled": false}
 					if kind == "palm":
-						shapes = _collide(parent, vx, BOOM_COLLIDE_R if vn.begins_with("Boom") else COLLIDE_R["palm"], "wood")
-					var inst := Kit.scatter(parent, mesh, null, vx, vc, kind != "grass")
-					inst.add_to_group("foliage_" + kind)  # de grafiekinstelling dunt gras en struiken uit
-					# vakken die ver weg liggen worden niet meer getekend; ver weg staan palmen als simpeler model
-					inst.visibility_range_end = VIS_END[kind]
-					inst.visibility_range_end_margin = 16.0
-					inst.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF  # zacht in- en uitdoven i.p.v. ploffen
-					if kind == "palm":
-						inst.visibility_range_end = PALM_NEAR
-						var far := Kit.scatter(parent, jungle_mesh(vn + "_far"), null, vx, vc, false)
-						far.add_to_group("foliage_palm")
-						far.visibility_range_begin = PALM_NEAR
-						far.visibility_range_begin_margin = 16.0
-						far.visibility_range_end = VIS_END["palm"]
-						far.visibility_range_end_margin = 16.0
-						far.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
+						entry.merge({"vn": vn, "mm": inst.multimesh, "far": far.multimesh, "blob": blob.multimesh,
+							"idx": k, "blob_idx": source_index, "shape": shapes[k], "col": vc[k], "reg_key": key}, true)
 						if not _reg.has(key):
 							_reg[key] = []
-						for k in vx.size():
-							_reg[key].append({"xf": vx[k], "vn": vn, "mm": inst.multimesh, "far": far.multimesh, "blob": blob.multimesh,
-								"idx": k, "blob_idx": groups[vn][2][k], "shape": shapes[k], "col": vc[k], "felled": false})
+						_reg[key].append(entry)
+					_register_vegetation(entry)
+	reapply_building_clearings()
 
 
 ## Onzichtbare ronde zuilen op de plek van stammen en rotsen, per vak van 36 m één lichaam (goedkoop voor de natuurkunde).
-static func _collide(parent: Node3D, xforms: Array, radius: float, impact: String) -> Array:
+static func _collide(parent: Node3D, xforms: Array, radius: float, impact: String, vegetation_kind: String) -> Array:
 	var bodies := {}
 	var shapes := {}
 	var out: Array = []
@@ -373,6 +537,8 @@ static func _collide(parent: Node3D, xforms: Array, radius: float, impact: Strin
 			var b := StaticBody3D.new()
 			b.collision_layer = Kit.LAYER_NATURE
 			b.set_meta("impact_material", impact)
+			b.set_meta("vegetation_kind", vegetation_kind)
+			b.set_meta("clearable_vegetation", vegetation_kind == "palm")
 			b.collision_mask = 0
 			parent.add_child(b)
 			bodies[key] = b
@@ -385,6 +551,7 @@ static func _collide(parent: Node3D, xforms: Array, radius: float, impact: Strin
 		var cs := CollisionShape3D.new()
 		cs.shape = shapes[r]
 		cs.position = Vector3(xt.origin.x, 1.1, xt.origin.z)
+		cs.set_meta("vegetation_kind", vegetation_kind)
 		bodies[key].add_child(cs)
 		out.append(cs)
 	return out
@@ -474,6 +641,8 @@ static func hull_tree(body: Node3D, half: Vector2) -> Dictionary:
 
 ## Eén boom omver: weg uit de MultiMesh (voet, ver-variant, nepschaduw) en uit de botsing, en een vallende boom ervoor in de plaats.
 static func fell(e: Dictionary, from: Vector3, solid := true) -> void:
+	if e.get("cleared", false) or e.get("felled", false):
+		return
 	var parent := _root
 	e["felled"] = true
 	var xf: Transform3D = e["xf"]
@@ -481,7 +650,7 @@ static func fell(e: Dictionary, from: Vector3, solid := true) -> void:
 	e["mm"].set_instance_transform(e["idx"], gone)
 	e["far"].set_instance_transform(e["idx"], gone)
 	e["blob"].set_instance_transform(e["blob_idx"], gone)
-	var p := Vector2(xf.origin.x, xf.origin.z)
+	var p: Vector2 = e.get("tree_local_position", Vector2(xf.origin.x, xf.origin.z))
 	for i in trees.size():
 		if trees[i].is_equal_approx(p):
 			trees.remove_at(i)
@@ -501,12 +670,14 @@ static func fell(e: Dictionary, from: Vector3, solid := true) -> void:
 	stump.mesh = jungle_mesh("Stomp2" if boom else "Stomp1")
 	stump.transform = Transform3D(xf.basis, xf.origin)
 	parent.add_child(stump)
+	e["stump_node"] = stump
 	var away := Vector3(xf.origin.x - from.x, 0.0, xf.origin.z - from.z)
 	if away.length() < 0.2:
 		away = Vector3.RIGHT.rotated(Vector3.UP, randf() * TAU)
 	var fall = load("res://scripts/boom_val.gd").new()
 	parent.add_child(fall)
 	fall.start(jungle_mesh(e["vn"]), xf, away.normalized(), boom, e["col"], solid)
+	e["fall_node"] = fall
 
 
 ## Vaste nepschaduwen (platte ovalen) voor één vak bomen.
@@ -536,6 +707,31 @@ static func _scatter(rng: RandomNumberGenerator, count: int, r_min: float, r_max
 		if _in_river(p):
 			continue
 		_add(rng, out, cols, p, s_min, s_max, tilt)
+
+
+## Added southern jungle on the already-rendered 440 m terrain plate. The gate exit stays clear.
+static func _south_scatter(rng: RandomNumberGenerator, kind: String, count: int, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
+	var added := 0
+	var tries := 0
+	var min_z := Data.COMPOUND + 48.0
+	var max_z := Data.WORLD_Z_S - 9.0
+	while added < count and tries < count * 50:
+		tries += 1
+		var p := Vector3(rng.randf_range(-Data.WORLD_X + 10.0, Data.WORLD_X - 10.0), 0.0, rng.randf_range(min_z, max_z))
+		if absf(p.x) < Data.GATE_GAP + 3.0 or _in_river(p):
+			continue
+		if kind == "rock":
+			var reserved := false
+			for region in AirfieldHQ23.site_regions():
+				if _point_in_build_region(p, AirfieldHQ23.SUGGESTED_CENTER, 0.0, region, 1.0):
+					reserved = true
+					break
+			if reserved:
+				continue
+		if kind != "grass" and rng.randf() > 0.30 + 0.70 * _grove(p.x, p.z):
+			continue
+		_add(rng, out, cols, p, s_min, s_max, tilt)
+		added += 1
 
 
 

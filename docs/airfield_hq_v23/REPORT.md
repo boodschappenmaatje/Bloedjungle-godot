@@ -1,8 +1,10 @@
 # Airfield HQ 2.3 — native iPhone test candidate
 
 Branch: `feature/airfield-hq-2-0`
-Review target: existing Draft PR #164
-Status: **partial; implementation and CI iOS export are complete, physical iPhone acceptance remains pending**
+PR #164: **merged** at `9880c409ac3c048d10b3259f7c1635d836a516e0` before this follow-up.
+Status: **partial; build-mode 2.0 changes are locally validated but are not part of the merged PR or the published OTA; physical iPhone acceptance remains pending**
+
+The follow-up build placement and touch-control implementation is documented in [BUILD_MODE_2_0.md](BUILD_MODE_2_0.md). PR #164 is no longer a Draft and cannot be updated in place; no new PR was created.
 
 ## Layout and measured area
 
@@ -51,6 +53,6 @@ The 107-entry protected-asset SHA-256 manifest is checked locally at delivery. N
 
 ## iOS test path
 
-The repository’s existing pull-request workflow installed Godot 4.7.2 export templates, validated/imported the project, built an unsigned iOS app with Xcode, and uploaded `bloedjungle-ios-unsigned-4f882e66bcc8a1dc2aa62681e2502c0013eb3857`. Run [41215611546](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/41215611546) completed successfully on commit `7c66cac958c9dd4fb2ab52dfbb6b31da443a6e6c`; the artifact is 878,610,959 bytes and expires **30 November 2026**. Download it from the run's Artifacts section while signed in to GitHub. The artifact ZIP contains `Bloedjungle.ipa`. No merge, OTA publication or iOS release is being performed.
+The repository’s existing pull-request workflow installed Godot 4.7.2 export templates, validated/imported the project, built an unsigned iOS app with Xcode, and uploaded `bloedjungle-ios-unsigned-4f882e66bcc8a1dc2aa62681e2502c0013eb3857`. Run [41215611546](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/41215611546) completed successfully on commit `7c66cac958c9dd4fb2ab52dfbb6b31da443a6e6c`; the artifact is 878,610,959 bytes and expires **30 November 2026**. It predates the build-mode follow-up and does not contain these placement/touch changes. The OTA test was run locally only. No new iOS artifact or OTA patch was built or published for this follow-up.
 
-To install, follow the existing [iOS/AltStore instructions](../IOS-ALTSTORE.md): install AltServer and AltStore, download and extract the artifact ZIP, then open the IPA in AltStore (**My Apps → +**) so AltStore signs and installs it. The iPhone must trust the computer during initial AltStore setup. The actual iPhone 18 Pro Max installation, on-device renderer, gameplay acceptance and device performance measurements remain pending.
+To install the older artifact, follow the existing [iOS/AltStore instructions](../IOS-ALTSTORE.md): install AltServer and AltStore, download and extract the artifact ZIP, then open the IPA in AltStore (**My Apps → +**) so AltStore signs and installs it. The iPhone must trust the computer during initial AltStore setup. The actual iPhone 18 Pro Max installation, on-device renderer, gameplay acceptance and device performance measurements remain pending. Producing a device build with these follow-up changes requires the normal branch/CI path; the existing OTA release was not modified in this task.

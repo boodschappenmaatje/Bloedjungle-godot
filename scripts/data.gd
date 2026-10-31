@@ -89,7 +89,7 @@ const HOTEL_POS := Vector3(-27.0, 0.0, -111.0)
 const RIVER_Z0 := -92.0
 const FOREST_Z0 := -30.0   # het bos begint bij de noordmuur
 const WORLD_X := 190.0     # kaartrand west/oost, zuid, en noord (voorbij de rivier)
-const WORLD_Z_S := 80.0
+const WORLD_Z_S := 180.0    # +100 m zuidelijke speelruimte; de bestaande 440 m grondplaat loopt al tot z=220
 const WORLD_Z_N := 200.0
 
 

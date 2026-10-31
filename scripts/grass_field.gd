@@ -132,6 +132,11 @@ func _populate(existing: Array) -> void:
 			nodes.append(inst)
 		batches.append({"nodes": nodes, "positions": PackedVector3Array(data.xf.map(func(t): return t.origin)),
 			"center": Vector3((data.cell.x + 0.5)*CELL, 0, (data.cell.y + 0.5)*CELL), "kind": data.kind, "lod": -2})
+		for instance_index in data.xf.size():
+			var slots: Array[Dictionary] = []
+			for node: MultiMeshInstance3D in nodes:
+				slots.append({"multimesh": node.multimesh, "index": instance_index})
+			Foliage.register_grass_instance(data.xf[instance_index].origin, slots)
 	_update_lods()
 	apply_quality(GameSettings.get_value("quality"), GameSettings.get_value("quality") == "ultra")
 

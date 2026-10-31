@@ -28,8 +28,11 @@ var _ptrs := {}
 var _drag: Dictionary = {}
 var _pinch: Dictionary = {}
 var _touch := false
-var _ghost: MeshInstance3D
-var _ring: MeshInstance3D
+var _ghost: Node3D
+var _ghost_material: StandardMaterial3D
+var _ghost_single: MeshInstance3D
+var _ghost_regions: Array[MeshInstance3D] = []
+var _ring: Node3D
 var _msg_t := 0.0
 var _airfield_armed := false
 var _airfield_yaw := 0.0
@@ -563,6 +566,14 @@ func _ground(p: Vector2) -> Variant:
 
 func _struct_at(g: Vector3) -> Variant:
 	for b in Game.buildings:
+		if b.kind == "airfield":
+			var local := Vector2(g.x - b.at.x, g.z - b.at.z).rotated(b.yaw)
+			for region in AirfieldHQ23.site_regions():
+				var rel := (local - Vector2(region.center.x, region.center.y)).rotated(float(region.get("yaw", 0.0)))
+				var half: Vector2 = region.size * 0.5 + Vector2(0.5, 0.5)
+				if absf(rel.x) <= half.x and absf(rel.y) <= half.y:
+					return b
+			continue
 		var sz: Vector3 = Buildings.DEFS[b.kind].size
 		var rel: Vector3 = g - b.at
 		var u := rel.dot(Vector3(cos(b.yaw), 0, -sin(b.yaw)))
@@ -760,23 +771,54 @@ func _mat(c: Color) -> StandardMaterial3D:
 
 func _show_ghost(kind: String, at: Vector3, yaw: float, ok: bool) -> void:
 	if _ghost == null:
-		_ghost = MeshInstance3D.new()
-		_ghost.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_ghost.material_override = _mat(Color.WHITE)
+		_ghost = Node3D.new()
+		_ghost.name = "Airfield build preview"
 		Game.builds.add_child(_ghost)
-	var sz: Vector3 = Buildings.DEFS[kind].size
+	if _ghost_material == null:
+		_ghost_material = _mat(Color.WHITE)
+	var tint := Color(0.25, 0.95, 0.35, 0.40) if ok else Color(0.95, 0.2, 0.15, 0.45)
+	_ghost_material.albedo_color = tint
 	if kind == "airfield":
-		var plane := PlaneMesh.new()
-		plane.size = Vector2(sz.x, sz.z)
-		_ghost.mesh = plane
+		var regions := AirfieldHQ23.preview_regions()
+		while _ghost_regions.size() < regions.size():
+			var region_mesh := MeshInstance3D.new()
+			region_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			region_mesh.material_override = _ghost_material
+			_ghost.add_child(region_mesh)
+			_ghost_regions.append(region_mesh)
+		for i in _ghost_regions.size():
+			var region_mesh := _ghost_regions[i]
+			region_mesh.visible = i < regions.size()
+			if i >= regions.size():
+				continue
+			var region: Dictionary = regions[i]
+			var plane := region_mesh.mesh as PlaneMesh
+			if plane == null:
+				plane = PlaneMesh.new()
+				region_mesh.mesh = plane
+			plane.size = region.size
+			var transform := AirfieldHQ23.region_transform(at, yaw, region)
+			transform.origin.y = 0.18 + float(i) * 0.001
+			region_mesh.global_transform = transform
+		if _ghost_single != null:
+			_ghost_single.visible = false
 	else:
+		if _ghost_single == null:
+			_ghost_single = MeshInstance3D.new()
+			_ghost_single.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			_ghost_single.material_override = _ghost_material
+			_ghost.add_child(_ghost_single)
+		_ghost_single.visible = true
+		for region_mesh in _ghost_regions:
+			region_mesh.visible = false
+		var sz: Vector3 = Buildings.DEFS[kind].size
 		var bm := BoxMesh.new()
 		bm.size = sz
-		_ghost.mesh = bm
+		_ghost_single.mesh = bm
 	_ghost.visible = true
-	_ghost.global_position = at + Vector3(0, 0.18 if kind == "airfield" else sz.y * 0.5, 0)
-	_ghost.rotation.y = yaw
-	(_ghost.material_override as StandardMaterial3D).albedo_color = Color(0.25, 0.95, 0.35, 0.4) if ok else Color(0.95, 0.2, 0.15, 0.45)
+	if kind != "airfield":
+		_ghost_single.global_position = at + Vector3(0, Buildings.DEFS[kind].size.y * 0.5, 0)
+		_ghost_single.rotation.y = yaw
 
 
 func _show_airfield_preview() -> void:
@@ -798,13 +840,44 @@ func _toggle_airfield_pan() -> void:
 
 func _place_ring(b: Dictionary) -> void:
 	if _ring == null:
-		_ring = MeshInstance3D.new()
-		_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-		_ring.mesh = PlaneMesh.new()
-		_ring.material_override = _mat(Color(0.84, 0.68, 0.31, 0.38))
+		_ring = Node3D.new()
+		_ring.name = "Build selection footprint"
 		Game.builds.add_child(_ring)
+	for child in _ring.get_children():
+		child.queue_free()
+	if b.kind == "airfield":
+		var lines := ImmediateMesh.new()
+		var line_material := _mat(Color(0.84, 0.68, 0.31, 0.88))
+		lines.surface_begin(Mesh.PRIMITIVE_LINES, line_material)
+		for region in AirfieldHQ23.site_regions():
+			if region.name == "taxiway":
+				continue
+			var center: Vector2 = region.center
+			var half: Vector2 = region.size * 0.5 + Vector2(0.35, 0.35)
+			var corners := [Vector2(-half.x,-half.y),Vector2(half.x,-half.y),Vector2(half.x,half.y),Vector2(-half.x,half.y)]
+			var points: Array[Vector3] = []
+			for corner in corners:
+				var p := center + (corner as Vector2).rotated(-float(region.get("yaw",0.0)))
+				points.append(Vector3(p.x,0.08,p.y))
+			for i in 4:
+				lines.surface_add_vertex(points[i])
+				lines.surface_add_vertex(points[(i+1)%4])
+		lines.surface_end()
+		var outline := MeshInstance3D.new()
+		outline.mesh = lines
+		outline.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_ring.add_child(outline)
+		_ring.position = b.at
+		_ring.rotation.y = b.yaw
+		_ring.visible = true
+		return
 	var sz: Vector3 = Buildings.DEFS[b.kind].size
-	(_ring.mesh as PlaneMesh).size = Vector2(sz.x + 0.8, sz.z + 0.8)
+	var mesh_instance := MeshInstance3D.new()
+	var plane := PlaneMesh.new()
+	plane.size = Vector2(sz.x + 0.8, sz.z + 0.8)
+	mesh_instance.mesh = plane
+	mesh_instance.material_override = _mat(Color(0.84, 0.68, 0.31, 0.38))
+	_ring.add_child(mesh_instance)
 	_ring.visible = true
 	_ring.global_position = b.at + Vector3(0, 0.06, 0)
 	_ring.rotation.y = b.yaw

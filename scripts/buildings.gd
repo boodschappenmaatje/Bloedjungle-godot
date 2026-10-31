@@ -83,19 +83,24 @@ func can_place(kind: String, at: Vector3, yaw: float, me: Variant = null) -> boo
 			return false
 		if not AirfieldHQ23.site_clear_of_river(at, yaw):
 			return false
-		var site_shape := BoxShape3D.new()
-		site_shape.size = Vector3(AirfieldHQ23.FOOTPRINT.x - 1.0, 1.0, AirfieldHQ23.FOOTPRINT.z - 1.0)
-		var site_query := PhysicsShapeQueryParameters3D.new()
-		site_query.shape = site_shape
-		site_query.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_NATURE | Kit.LAYER_WATER
-		if me != null:
-			site_query.exclude.append(me.node.get_rid())
-			for child in me.node.find_children("*", "CollisionObject3D", true, false):
-				site_query.exclude.append((child as CollisionObject3D).get_rid())
-		site_query.transform = Transform3D(Basis(Vector3.UP, yaw), at + Vector3(0.0, 0.6, 0.0))
 		if not is_inside_tree():
 			return true
-		return get_world_3d().direct_space_state.intersect_shape(site_query, 1).is_empty()
+		var exclusions: Array[RID] = []
+		if me != null:
+			exclusions.append(me.node.get_rid())
+			for child in me.node.find_children("*", "CollisionObject3D", true, false):
+				exclusions.append((child as CollisionObject3D).get_rid())
+		for region in AirfieldHQ23.site_regions():
+			var site_shape := BoxShape3D.new()
+			site_shape.size = Vector3(region.size.x + 0.2, 1.4, region.size.y + 0.2)
+			var site_query := PhysicsShapeQueryParameters3D.new()
+			site_query.shape = site_shape
+			site_query.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_NATURE | Kit.LAYER_WATER
+			site_query.exclude = exclusions
+			site_query.transform = AirfieldHQ23.region_transform(at + Vector3(0.0, 0.7, 0.0), yaw, region)
+			if not get_world_3d().direct_space_state.intersect_shape(site_query, 1).is_empty():
+				return false
+		return true
 	var d: Dictionary = DEFS[kind]
 	var sz: Vector3 = d.size
 	var piece := is_piece(kind)
@@ -257,6 +262,9 @@ func move_to(b: Dictionary, at: Vector3, yaw: float) -> void:
 
 ## Wie in het nieuwe bouwstuk staat, wordt er netjes naast gezet.
 func _push_out(b: Dictionary) -> void:
+	if b.kind == "airfield":
+		_push_out_of_airfield(b)
+		return
 	var sz: Vector3 = DEFS[b.kind].size
 	var who: Array = [Game.player]
 	who.append_array(Game.allies)
@@ -275,6 +283,30 @@ func _push_out(b: Dictionary) -> void:
 				v = signf(v if v != 0.0 else 1.0) * hv
 			var p := _pt(b.at, b.yaw, u, v)
 			w.global_position = Vector3(p.x, w.global_position.y, p.z)
+
+
+func _push_out_of_airfield(b: Dictionary) -> void:
+	var who: Array = [Game.player]
+	who.append_array(Game.allies)
+	for unit in who:
+		if unit == null or not is_instance_valid(unit):
+			continue
+		var local := Vector2(unit.global_position.x - b.at.x, unit.global_position.z - b.at.z).rotated(b.yaw)
+		for region in AirfieldHQ23.site_regions():
+			var center: Vector2 = region.center
+			var local_yaw: float = region.get("yaw", 0.0)
+			var rel := (local - center).rotated(local_yaw)
+			var half: Vector2 = region.size * 0.5
+			if absf(rel.x) > half.x + 0.3 or absf(rel.y) > half.y + 0.3:
+				continue
+			if half.x - absf(rel.x) < half.y - absf(rel.y):
+				rel.x = signf(rel.x if rel.x != 0.0 else 1.0) * (half.x + 0.7)
+			else:
+				rel.y = signf(rel.y if rel.y != 0.0 else 1.0) * (half.y + 0.7)
+			var building_local := center + rel.rotated(-local_yaw)
+			var world := Vector2(b.at.x, b.at.z) + building_local.rotated(-b.yaw)
+			unit.global_position = Vector3(world.x, unit.global_position.y, world.y)
+			break
 
 
 func remove(b: Dictionary) -> void:

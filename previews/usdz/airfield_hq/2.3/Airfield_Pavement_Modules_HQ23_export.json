@@ -1,0 +1,36 @@
+{
+  "package_status": "PASS",
+  "apple_arkit_validation": "PASS",
+  "source": "/Users/admin/Documents/Bloedjungle-Bunker-HQ-Game/source_assets/airfield_hq_v23/pavement/Airfield_Pavement_Modules_HQ23.blend",
+  "source_sha256": "064bb191019bd9ad6cddccb777e0a9c1dee3d47174720fbf48ed995ae692ddc9",
+  "output": "/Users/admin/Documents/Bloedjungle-Bunker-HQ-Game/previews/usdz/airfield_hq/2.3/Airfield_Pavement_Modules_HQ23_iPhone.usdz",
+  "output_bytes": 6603124,
+  "output_sha256": "82970a48821f9ff17c802083feca2c33f79f46fc04ab0f090055539fe8d0de6c",
+  "blender_version": "4.5.15 LTS",
+  "preview_texture_max_px": 2048,
+  "source_texture_paths_resolved": 2,
+  "animation_exported": false,
+  "static_curves_converted_to_meshes": 0,
+  "mesh_objects": 19,
+  "materials": 6,
+  "material_images": 2,
+  "animation_actions": [],
+  "scene_animation_active": false,
+  "frame_start": 1,
+  "frame_end": 250,
+  "fps": 24.0,
+  "packaged_files": [
+    "Airfield_Pavement_Modules_HQ23_iPhone.usdc",
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_nor_gl_2k.jpg",
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_diff_2k.jpg"
+  ],
+  "validation_sha256": "82970a48821f9ff17c802083feca2c33f79f46fc04ab0f090055539fe8d0de6c",
+  "validation_bytes": 6603124,
+  "validated_usd_layers": [
+    "Airfield_Pavement_Modules_HQ23_iPhone.usdc"
+  ],
+  "validated_textures": [
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_nor_gl_2k.jpg",
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_diff_2k.jpg"
+  ]
+}

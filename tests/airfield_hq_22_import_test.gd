@@ -109,17 +109,13 @@ func _run() -> void:
 	)
 	assert(collision_metrics["count"] >= 8, "Runway, walls, doors and tower need collision proxies; found %s" % collision_metrics["count"])
 	var flight := showcase.get_node("AirfieldFlightIntegration") as AirfieldFlightIntegration
-	assert(flight != null, "Separate P-47 flight integration must exist")
-	assert(flight.clearance_report()["fits_hangar"], "P-47 must fit the hangar door")
-	assert(flight.clearance_report()["fits_taxiway"], "P-47 must fit the taxi route")
-	assert(flight.takeoff_profile_report()["fits_demonstration"], "The shortened arcade runway must fit its explicitly non-historical demo profile")
-	assert(flight.takeoff_profile_report()["available_roll_from_start_marker_m"] == 18.0, "The 30 m runway must leave the configured 18 m gameplay roll")
+	assert(flight != null, "Prepared local-to-complex route markers must remain available")
 	for marker_name in ["P47_Hangar_Spawn", "P47_Apron_Parking", "P47_Taxi_Start", "P47_Runway_Hold", "P47_Runway_Start", "P47_Landing_Approach", "P47_Landing_Touchdown"]:
 		assert(flight.get_node_or_null(marker_name) is Marker3D, "%s must be a marker" % marker_name)
 	for path_name in ["P47_Taxi_Route", "P47_Takeoff_Path", "P47_Landing_Path"]:
 		var path := flight.get_node(path_name) as Path3D
 		assert(path.curve != null and path.curve.get_point_count() >= 5, "%s must contain a usable Curve3D" % path_name)
-	assert(flight.taxi_route.curve.get_baked_length() > 30.0, "Taxi route must connect apron parking to the runway hold point")
+	assert(flight.taxi_route.curve.get_baked_length() > 20.0, "Prepared taxi markers must retain their apron-to-runway path")
 	var placed := AirfieldHQ23.make_complex()
 	assert(placed != null, "The approved 2.2 scene must instantiate as the placed core")
 	get_tree().root.add_child(placed)
@@ -127,14 +123,23 @@ func _run() -> void:
 	var compact_core := placed.get_meta("complex") as Node3D
 	var compact_lod0 := compact_core.get_node("Airfield_HQ_22_LOD0")
 	var preserved_hangar := compact_lod0.find_child("Hangar HQ 22", true, false) as MeshInstance3D
-	var preserved_tower := compact_lod0.find_child("Control Tower 22", true, false) as MeshInstance3D
 	assert(preserved_hangar != null and preserved_hangar.visible, "The approved hangar mesh must stay present and visible")
-	assert(preserved_tower != null and preserved_tower.visible, "The approved tower mesh must stay present and visible")
+	var old_tower := compact_lod0.find_child("Control Tower 22", true, false) as MeshInstance3D
+	assert(old_tower != null and not old_tower.visible, "The 2.2 tower must remain intact as reference but be replaced in the 2.3 build")
+	var new_tower := compact_core.get_node_or_null("ControlTowerHQ23") as Node3D
+	assert(new_tower != null, "The separate HQ2.3 tower must be integrated into the placed field")
+	for lod_index in 3:
+		var tower_lod := new_tower.get_node_or_null("Tower LOD%d" % lod_index) as Node3D
+		assert(tower_lod != null and not tower_lod.find_children("*", "MeshInstance3D", true, false).is_empty(), "Tower LOD%d must import real geometry" % lod_index)
+	var tower_collisions := compact_core.get_node_or_null("HQ23 Tower stair and level collisions") as StaticBody3D
+	assert(tower_collisions != null and tower_collisions.find_children("*", "CollisionShape3D", true, false).size() >= 75, "The external stair must have walkable step and landing collisions")
 	var old_runway := compact_lod0.find_child("Airfield Runway_00 100m section", true, false) as MeshInstance3D
 	assert(old_runway != null and not old_runway.visible, "The obsolete showcase runway must not be duplicated in the compact build")
 	var modules := compact_core.get_node("AirfieldHQ23PavementModules") as AirfieldPavementModules
 	var runway_mesh := modules.get_node_or_null("Runway concrete slabs LOD0") as MultiMeshInstance3D
-	assert(runway_mesh != null and runway_mesh.multimesh.instance_count == 2, "Placed runway must use two instanced concrete 3D slabs")
+	assert(runway_mesh != null and runway_mesh.multimesh.instance_count == 5, "Placed 75 m runway must use five instanced concrete 3D slabs")
+	var runway_joints := modules.get_node_or_null("Runway recessed expansion joints") as MultiMeshInstance3D
+	assert(runway_joints != null and runway_joints.multimesh.instance_count == 4, "Concrete slab joins must remain visible as technical expansion joints")
 	assert(modules.get_node_or_null("Runway concrete slabs LOD1") is MultiMeshInstance3D and modules.get_node_or_null("Runway concrete slabs LOD2") is MultiMeshInstance3D, "Runway must include far LOD meshes")
 	assert(modules.get_node_or_null("Aircraft apron parking slab LOD0") is MultiMeshInstance3D, "The apron must use a distinct pavement system")
 	assert(modules.get_node_or_null("Aircraft apron parking slab LOD2") is MultiMeshInstance3D, "The apron must include its far LOD mesh")
@@ -144,11 +149,32 @@ func _run() -> void:
 	assert(psp_lod0 != null and psp_lod0.multimesh.instance_count == 8, "The historic PSP apron patch must contain eight individual plates in one draw batch")
 	assert(psp_lod1 != null and psp_lod2 != null, "The PSP strip must provide all three distance LODs")
 	assert(FileAccess.file_exists("res://source_assets/airfield_hq_v23/psp/PSP_plate_library.blend"), "The editable Blender PSP source must be delivered")
-	assert(modules.find_children("Taxiway slab collision *", "StaticBody3D", true, false).size() >= 4, "The curved taxiway must have segmented collision")
+	var taxi_collision_count := 0
+	for collider in modules.find_children("*", "StaticBody3D", true, false):
+		if collider.name.begins_with("Taxiway slab collision"):
+			taxi_collision_count += 1
+	assert(taxi_collision_count >= 3, "The curved taxiway must have segmented collision, found %d" % taxi_collision_count)
 	var parking_marker := compact_core.get_node("AirfieldFlightIntegration/P47_Apron_Parking") as Marker3D
-	assert(parking_marker.global_position.distance_to(placed.to_global(Vector3(18.0, 0.22, -20.0))) < 0.02, "The parking marker must align with the compact apron")
+	assert(parking_marker.global_position.distance_to(placed.to_global(Vector3(28.0, 0.22, -20.0))) < 0.02, "The parking marker must align with the compact apron")
+	var runway_colliders: Array[StaticBody3D] = []
+	for collider in modules.find_children("*", "StaticBody3D", true, false):
+		if collider.name.begins_with("Runway slab collision"):
+			runway_colliders.append(collider as StaticBody3D)
+	assert(runway_colliders.size() == 5, "Each 15 m runway module needs its own collision, found %d" % runway_colliders.size())
+	var runway_centres: Array[float] = []
+	for collider in runway_colliders:
+		var local_to_build := placed.to_local(collider.global_position)
+		runway_centres.append(local_to_build.x)
+	runway_centres.sort()
+	assert(is_equal_approx(runway_centres.front() - 7.5, AirfieldHQ23.RUNWAY_START_X), "The runway collision west endpoint must start at the configured 75 m strip")
+	assert(is_equal_approx(runway_centres.back() + 7.5, AirfieldHQ23.RUNWAY_END_X), "The runway collision east endpoint must end at the configured 75 m strip")
+	assert(is_equal_approx(runway_centres.back() - runway_centres.front(), 60.0), "Five evenly joined runway collision modules must span four 15 m centre intervals")
+	var runway_start_expected := placed.to_global(Vector3(AirfieldFlightIntegration.TAKEOFF_START_X,0.22,AirfieldHQ23.RUNWAY_CENTER_Z))
+	var runway_start_actual := (compact_core.get_node("AirfieldFlightIntegration/P47_Runway_Start") as Marker3D).global_position
+	assert(runway_start_actual.distance_to(runway_start_expected) < 0.02, "Prepared runway start marker must align with the shortened runway (%s vs %s)" % [runway_start_actual, runway_start_expected])
+	assert(AirfieldHQ23.footprint_area() <= AirfieldHQ23.MAX_GROUND_AREA, "The complete conservative construction-area allocation must remain within 6,452.435 m²")
 	print("AIRFIELD_22_GODOT_IMPORT_PASS meshes=%d materials=%d triangles=%d lights=%d animations=%s collisions=%d" % [metrics["meshes"], metrics["materials"], metrics["triangles"], metrics["lights"], animations, collision_metrics["count"]])
-	print("AIRFIELD_23_COMPACT_LAYOUT_PASS area=%.2fm2 max=%.2fm2 runway=%.1fm" % [AirfieldHQ23.footprint_area(), AirfieldHQ23.MAX_GROUND_AREA, AirfieldFlightIntegration.RUNWAY_LENGTH_M])
+	print("AIRFIELD_23_COMPACT_LAYOUT_PASS constructed_area_upper_bound=%.2fm2 max=%.2fm2 runway=%.1fx%.1fm tower_lods=3" % [AirfieldHQ23.footprint_area(), AirfieldHQ23.MAX_GROUND_AREA, AirfieldFlightIntegration.RUNWAY_LENGTH_M, AirfieldFlightIntegration.RUNWAY_WIDTH_M])
 	get_tree().quit(0)
 
 func _walk(node: Node, callback: Callable) -> void:

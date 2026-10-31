@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "usdz": "/Users/admin/Documents/Bloedjungle-Bunker-HQ-Game/previews/usdz/airfield_hq/2.3/Airfield_Pavement_Modules_HQ23_iPhone.usdz",
+  "bytes": 6603124,
+  "sha256": "82970a48821f9ff17c802083feca2c33f79f46fc04ab0f090055539fe8d0de6c",
+  "apple_usdchecker_arkit": "PASS",
+  "usdzip_contents": [
+    "Airfield_Pavement_Modules_HQ23_iPhone.usdc",
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_nor_gl_2k.jpg",
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_diff_2k.jpg"
+  ],
+  "usd_layers": [
+    "Airfield_Pavement_Modules_HQ23_iPhone.usdc"
+  ],
+  "texture_files": [
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_nor_gl_2k.jpg",
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_diff_2k.jpg"
+  ],
+  "usdzip_list": [
+    "Airfield_Pavement_Modules_HQ23_iPhone.usdc",
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_nor_gl_2k.jpg",
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_diff_2k.jpg"
+  ],
+  "device_quicklook_playback": "NOT_TESTED",
+  "export_receipt_updated": "/Users/admin/Documents/Bloedjungle-Bunker-HQ-Game/previews/usdz/airfield_hq/2.3/Airfield_Pavement_Modules_HQ23_export.json"
+}

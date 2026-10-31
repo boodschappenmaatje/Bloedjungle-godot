@@ -4,7 +4,7 @@ extends Node3D
 ## Shared meshes/materials keep renderer submissions low; simple per-tile shapes provide joins.
 
 const SLAB_DEPTH := 0.22
-const RUNWAY_WIDTH := 38.0
+const RUNWAY_WIDTH := AirfieldHQ23.RUNWAY_WIDTH_M
 const RUNWAY_SEGMENT := 15.0
 const TAXIWAY_WIDTH := 18.4
 const TAXI_SEGMENT := 8.0
@@ -18,6 +18,7 @@ const PSP_PATCH_CENTER := Vector2(0.0, -5.25)
 
 var _concrete: StandardMaterial3D
 var _concrete_flat: StandardMaterial3D
+var _joint_material: StandardMaterial3D
 var _runway_mesh: BoxMesh
 var _runway_mesh_lod1: BoxMesh
 var _runway_mesh_lod2: PlaneMesh
@@ -45,8 +46,11 @@ func _build_material() -> void:
 	_concrete_flat = StandardMaterial3D.new()
 	_concrete_flat.albedo_color = Color("b8b6ad")
 	_concrete_flat.roughness = 0.92
-	_runway_mesh = _make_mesh(Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT - 0.06))
-	_runway_mesh_lod1 = _make_mesh(Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT - 0.06), _concrete_flat)
+	_joint_material = StandardMaterial3D.new()
+	_joint_material.albedo_color = Color("66635c")
+	_joint_material.roughness = 0.96
+	_runway_mesh = _make_mesh(Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT))
+	_runway_mesh_lod1 = _make_mesh(Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT), _concrete_flat)
 	_runway_mesh_lod2 = _make_plane(Vector2(RUNWAY_WIDTH, RUNWAY_SEGMENT))
 	_taxi_mesh = _make_mesh(Vector3(TAXIWAY_WIDTH, SLAB_DEPTH, TAXI_SEGMENT - 0.3))
 	_taxi_mesh_lod1 = _make_mesh(Vector3(TAXIWAY_WIDTH, SLAB_DEPTH, TAXI_SEGMENT - 0.3), _concrete_flat)
@@ -100,19 +104,25 @@ func _collider(name: String, dimensions: Vector3, transform: Transform3D) -> voi
 	add_child(body)
 
 func _build_runway() -> void:
-	# Two slabs occupy the clear corridor between the hangar and tower. Their
-	# width is 38 m; the 30 m gameplay length is explicitly an arcade compromise.
+	# Five real 15 m concrete slabs form the exact 75 × 18 m strip. The field
+	# stays beside the unchanged HQ2.2 structures; joints meet without open gaps.
 	var transforms: Array[Transform3D] = []
-	for i in range(2):
+	var joint_transforms: Array[Transform3D] = []
+	for i in range(5):
 		var x := AirfieldHQ23.RUNWAY_START_X + RUNWAY_SEGMENT * 0.5 + i * RUNWAY_SEGMENT
 		var transform := Transform3D(Basis(Vector3.UP, PI * 0.5), AirfieldHQ23.layout_point(x, AirfieldHQ23.RUNWAY_CENTER_Z, SLAB_DEPTH * 0.5))
 		transforms.append(transform)
-		# Fill the narrow visual expansion joint with collision overlap so the
-		# wheels never drop through between the separate concrete slabs.
-		_collider("Runway slab collision %02d" % i, Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT + 0.12), transform)
+		_collider("Runway slab collision %02d" % i, Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT + 0.04), transform)
+		if i > 0:
+			var joint_x := AirfieldHQ23.RUNWAY_START_X + float(i) * RUNWAY_SEGMENT
+			joint_transforms.append(Transform3D(Basis.IDENTITY, AirfieldHQ23.layout_point(joint_x, AirfieldHQ23.RUNWAY_CENTER_Z, SLAB_DEPTH - 0.004)))
 	_multimesh("Runway concrete slabs LOD0", _runway_mesh, transforms, 0.0, LOD0_END_M)
 	_multimesh("Runway concrete slabs LOD1", _runway_mesh_lod1, transforms, LOD0_END_M, LOD1_END_M)
 	_multimesh("Runway concrete slabs LOD2", _runway_mesh_lod2, transforms, LOD1_END_M, LOD2_END_M, SLAB_DEPTH * 0.5)
+	var runway_joint_mesh := BoxMesh.new()
+	runway_joint_mesh.size = Vector3(0.035, 0.006, RUNWAY_WIDTH)
+	runway_joint_mesh.material = _joint_material
+	_multimesh("Runway recessed expansion joints", runway_joint_mesh, joint_transforms, 0.0, LOD0_END_M)
 
 func _build_apron() -> void:
 	# One dedicated, level parking stand for the initial single validated slot.
@@ -165,10 +175,21 @@ func _build_taxiway() -> void:
 	var curve := integration.taxi_route.curve
 	var length := curve.get_baked_length()
 	var transforms: Array[Transform3D] = []
+	var joint_transforms: Array[Transform3D] = []
+	var joint_distance := TAXI_SEGMENT - 0.3
+	while joint_distance < length:
+		var joint_position := curve.sample_baked(joint_distance)
+		var joint_before := curve.sample_baked(maxf(0.0, joint_distance - 0.5))
+		var joint_after := curve.sample_baked(minf(length, joint_distance + 0.5))
+		var joint_direction := joint_after - joint_before
+		joint_direction.y = 0.0
+		var joint_yaw := atan2(joint_direction.x, joint_direction.z)
+		joint_transforms.append(Transform3D(Basis(Vector3.UP, joint_yaw), Vector3(joint_position.x, SLAB_DEPTH - 0.004, joint_position.z)))
+		joint_distance += TAXI_SEGMENT - 0.3
 	var offset := TAXI_SEGMENT * 0.5
 	var index := 0
 	var batch := 0
-	while offset < length:
+	while offset < length + TAXI_SEGMENT * 0.5:
 		var local_position := curve.sample_baked(offset)
 		var before := curve.sample_baked(maxf(0.0, offset - 0.5))
 		var after := curve.sample_baked(minf(length, offset + 0.5))
@@ -179,7 +200,7 @@ func _build_taxiway() -> void:
 		var position := Vector3(local_position.x, SLAB_DEPTH * 0.5, local_position.z)
 		var transform := Transform3D(basis, position)
 		transforms.append(transform)
-		_collider("Taxiway slab collision %02d" % index, Vector3(TAXIWAY_WIDTH, SLAB_DEPTH, TAXI_SEGMENT - 0.26), transform)
+		_collider("Taxiway slab collision %02d" % index, Vector3(TAXIWAY_WIDTH, SLAB_DEPTH, TAXI_SEGMENT - 0.08), transform)
 		index += 1
 		if transforms.size() >= 16:
 			_flush_taxi_batch(batch, transforms)
@@ -187,6 +208,10 @@ func _build_taxiway() -> void:
 			transforms = []
 		offset += TAXI_SEGMENT - 0.3
 	_flush_taxi_batch(batch, transforms)
+	var taxi_joint_mesh := BoxMesh.new()
+	taxi_joint_mesh.size = Vector3(0.035, 0.006, TAXIWAY_WIDTH)
+	taxi_joint_mesh.material = _joint_material
+	_multimesh("Taxiway recessed module joints", taxi_joint_mesh, joint_transforms, 0.0, LOD0_END_M)
 
 func _flush_taxi_batch(batch: int, transforms: Array[Transform3D]) -> void:
 	_multimesh("Curved taxiway concrete segment %02d LOD0" % batch, _taxi_mesh, transforms, 0.0, LOD0_END_M)

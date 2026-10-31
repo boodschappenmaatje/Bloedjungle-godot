@@ -1,0 +1,74 @@
+name: Airfield HQ 2.2 iPhone Quick Look white-screen repair
+
+on:
+  push:
+    branches: [feature/airfield-hq-2-0]
+    paths:
+      - ".github/workflows/airfield-hq-v22-quicklook-fix.yml"
+
+permissions:
+  contents: write
+
+jobs:
+  iphone-preview:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Install Blender for portable USDZ export
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y blender
+          blender --version | head -3
+      - name: Build small centered hangar and tower USDZ previews
+        shell: bash
+        run: |
+          set -euo pipefail
+          blender --background --factory-startup \
+            --python tools/airfield_hq/create_iphone_quicklook_previews.py -- \
+            --source assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD1.glb \
+            --outdir preview-download 2>&1 | tee "$RUNNER_TEMP/quicklook-export.log"
+          grep -q "IPHONE_QUICKLOOK_BUNDLE_PASS" "$RUNNER_TEMP/quicklook-export.log"
+          python3 - <<'PY'
+          import json, pathlib, zipfile
+          folder = pathlib.Path('preview-download')
+          data = json.loads((folder/'iphone_quicklook_preview_report.json').read_text())
+          for kind in ('hangar', 'tower'):
+              asset = folder / f'Bloedjungle_Airfield_HQ_2_2_{kind.capitalize()}_iPhone_FIX.usdz'
+              assert asset.is_file() and asset.stat().st_size > 30000, asset
+              assert zipfile.is_zipfile(asset)
+              assert max(data[kind]['dimensions_m']) < 250, data[kind]
+              print(kind, 'bounds', data[kind]['dimensions_m'], 'size', asset.stat().st_size)
+          PY
+      - name: Create clear review ZIP
+        run: |
+          cat > preview-download/LEESMIJ-WIT-SCHERM.txt <<'TXT'
+          De originele USDZ bevat het volledige vliegveld van 900 meter.
+          iPhone Quick Look kan daardoor het model zeer klein of niet zichtbaar tonen.
+          Gebruik de twee kleinere bestanden voor het bekijken van echte details:
+          - Bloedjungle_Airfield_HQ_2_2_Hangar_iPhone_FIX.usdz
+          - Bloedjungle_Airfield_HQ_2_2_Tower_iPhone_FIX.usdz
+          Open vanuit Bestanden, niet rechtstreeks vanuit een GitHub webweergave.
+          De modellen zijn naar hun eigen middelpunt verplaatst en bevatten niet
+          de 900 meter lange startbaan. De game/GLB modellen zijn NIET veranderd.
+          Quick Look op een fysieke iPhone moet nog getest worden.
+          TXT
+          (cd preview-download && zip -q ../Bloedjungle_Airfield_HQ_2_2_iPhone_Wit_Scherm_Fix.zip *.usdz *.json *.txt)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Airfield-HQ-2-2-iPhone-QuickLook-Fix
+          path: Bloedjungle_Airfield_HQ_2_2_iPhone_Wit_Scherm_Fix.zip
+          retention-days: 14
+      - name: Publish independent preview files, never OTA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="airfield-hq-v2.2-review-20261031"
+          gh release upload "$TAG" \
+            preview-download/Bloedjungle_Airfield_HQ_2_2_Hangar_iPhone_FIX.usdz \
+            preview-download/Bloedjungle_Airfield_HQ_2_2_Tower_iPhone_FIX.usdz \
+            Bloedjungle_Airfield_HQ_2_2_iPhone_Wit_Scherm_Fix.zip \
+            --clobber

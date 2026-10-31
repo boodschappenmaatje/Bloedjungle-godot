@@ -42,18 +42,43 @@ func _run() -> void:
 	world.add_child(p)
 	await process_frame
 
-	# A legacy save with seven loaded rounds maps to one chambered and six in mag.
-	_check_loaded(p, 6, true, "legacy 7-round initialization")
+	# New game starts with a fully prepared 7+1, not a partially filled magazine.
+	_check_loaded(p, 7, true, "new-game 7+1 initialization")
+	_check(not p.can_reload(), "full magazine has no manual reload")
+	_check(not p._should_auto_reload(), "full magazine must not auto-reload")
+	# An idle period after a fired shot never starts an M1911 tactical reload.
+	_check(p._m1911_fire_chambered_round(), "first shot from 7+1")
+	_check_loaded(p, 6, true, "first shot leaves 6+1")
+	_check(p.can_reload(), "partial magazine still allows manual tactical reload")
+	_check(not p._should_auto_reload(), "partial magazine does not idle-auto-reload")
+	p._reload(game.wstat("m1911"))
+	_check(is_equal_approx(p.reload_t, game.wstat("m1911").reload * Progress.bonus().reload), "tactical reload duration")
+	p.reload_t = 0.0
+	p._reload_phase = 0
+	p._reload_elapsed = 0.0
+	p._reload_was_empty = false
+	_set_loaded(p, 0, true)
+	_check(not p._should_auto_reload(), "last chambered round must remain fire-ready")
+	_set_loaded(p, 0, false)
+	_check(p._should_auto_reload(), "fully empty pistol may auto-reload")
+	p._reload(game.wstat("m1911"))
+	_check(is_equal_approx(p.reload_t, game.wstat("m1911").reload * Progress.bonus().reload * 1.2), "empty-slide reload includes extra slide time")
+	p.reload_t = 0.0
+	p._reload_phase = 0
+	p._reload_elapsed = 0.0
+	p._reload_was_empty = false
 
 	# Every shot must write back the physical and legacy state immediately.
 	_set_loaded(p, 7, true)
 	_check(p._m1911_fire_chambered_round(), "8th loaded round can fire")
 	_check_loaded(p, 6, true, "7+1 -> 6+1")
+	_check(not p._should_auto_reload(), "shot with seven rounds remaining cannot auto-reload")
 	for _i in 6:
 		_check(p._m1911_fire_chambered_round(), "feeding next chambered round")
 	_check_loaded(p, 0, true, "last cartridge still chambered")
 	_check(p._m1911_fire_chambered_round(), "last cartridge can fire")
 	_check_loaded(p, 0, false, "slide lock after last shot")
+	_check(p._should_auto_reload(), "only after final shot can idle auto-reload")
 	_check(not p._m1911_fire_chambered_round(), "empty pistol cannot fire")
 	_check_loaded(p, 0, false, "empty trigger changes nothing")
 
@@ -61,6 +86,7 @@ func _run() -> void:
 	_set_loaded(p, 4, false)
 	_check(not p._m1911_fire_chambered_round(), "trigger does not auto-chamber")
 	_check_loaded(p, 4, false, "magazine-only state")
+	_check(not p._should_auto_reload(), "empty chamber + loaded mag requires manual racking, not auto-refill")
 
 	# Interrupted before insertion: reload creates no rounds.
 	_set_loaded(p, 1, true)

@@ -39,6 +39,17 @@ python3 tools/publish_vq2_site.py /tmp/bloedjungle-vq2-site
 
 Three.js 0.180.0 is pinned; its MIT license is in `THREE-LICENSE.txt`.
 
+## Airfield HQ 2.0
+
+Select **Airfield HQ 2.0** to inspect the isolated WWII airfield replacement:
+the hangar, tower, runway, support props and defensive perimeter. The **Afstand
+en LOD** control switches the full-detail and mobile GLBs; **Materiaalbeeld**
+shows PBR, albedo, normal, roughness and wireframe views. The clip selector
+plays both sliding doors and the blinking red marker-light morph. The iPhone
+USDZ preview is in iCloud Drive under `Bloedjungle Previews/Airfield HQ/2.0/`.
+The web viewer was checked in desktop Safari; no physical iPhone browser or
+frame-rate test was performed.
+
 ## Personenauto
 
 De viewer bevat ook `assets/auto.glb` (Personenauto, bron `bron/auto/`): zes echte GLB-clips (deuren, motorkap, kofferklep, ruitenwissers, knipperlichten, alarm) en een keuzelijst **Schadefase** (heel, beschadigd, zwaar, brandend, wrak) die de echte shape key `Deuk`, het verkoolde materiaal en losse onderdelen gebruikt. Brand, rook, ontploffing en vliegende onderdelen zijn Godot-effecten: zie `scenes/auto_demo.tscn` en `tests/auto_foto.gd`. Test: `node test-auto.mjs` (Chromium; zet `CHROMIUM=` als het pad afwijkt).

@@ -1,0 +1,71 @@
+{
+  "asset": "Bloedjungle Airfield HQ 2.0",
+  "variant": "LOD1 mobile",
+  "blender_version": "4.5.15 LTS",
+  "units": "metres",
+  "mesh_objects": 13,
+  "evaluated_triangles": 54184,
+  "material_slots": 42,
+  "unique_materials": 15,
+  "animation_clips": [
+    "Open_Left_Door",
+    "Open_Right_Door",
+    "Blink_Red_Markers"
+  ],
+  "glb_path": "assets/airfield_hq/runtime/Bloedjungle_Airfield_HQ_LOD1.glb",
+  "glb_bytes": 25681824,
+  "modules": {
+    "LOD1_Hangar HQ": {
+      "triangles": 22534,
+      "material_slots": 6
+    },
+    "LOD1_Hangar sliding door LEFT": {
+      "triangles": 3204,
+      "material_slots": 4
+    },
+    "LOD1_Hangar sliding door RIGHT": {
+      "triangles": 3204,
+      "material_slots": 4
+    },
+    "LOD1_USAAF blue insignia roundel": {
+      "triangles": 90,
+      "material_slots": 1
+    },
+    "LOD1_USAAF white star and bar stencil": {
+      "triangles": 5,
+      "material_slots": 1
+    },
+    "LOD1_USAAF blue insignia roundel.001": {
+      "triangles": 90,
+      "material_slots": 1
+    },
+    "LOD1_USAAF white star and bar stencil.001": {
+      "triangles": 5,
+      "material_slots": 1
+    },
+    "LOD1_Control Tower": {
+      "triangles": 6256,
+      "material_slots": 7
+    },
+    "LOD1_Runway and Apron": {
+      "triangles": 5308,
+      "material_slots": 6
+    },
+    "LOD1_Ground Support": {
+      "triangles": 6308,
+      "material_slots": 5
+    },
+    "LOD1_Defensive Perimeter": {
+      "triangles": 3234,
+      "material_slots": 3
+    },
+    "LOD1_Lighting": {
+      "triangles": 2622,
+      "material_slots": 2
+    },
+    "LOD1_Blinking red runway and tower markers": {
+      "triangles": 1324,
+      "material_slots": 1
+    }
+  }
+}

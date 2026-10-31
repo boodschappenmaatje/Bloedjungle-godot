@@ -1,0 +1,46 @@
+{
+  "asset": "Bloedjungle Airfield HQ 2.0",
+  "blender": "4.5.15 LTS",
+  "units": "metres",
+  "source_blend": "assets/airfield_hq/high_quality/Bloedjungle_Airfield_HQ_Source.blend",
+  "source_mesh_objects": 1572,
+  "source_evaluated_triangles": 147860,
+  "animation_actions": [
+    "Open_Left_Door",
+    "Open_Right_Door",
+    "Blink_Red_Markers"
+  ],
+  "hero_material_textures": {
+    "Aged airfield concrete": {
+      "BaseColor": "assets/airfield_hq/textures/aged_airfield_concrete_BaseColor_2K.jpg",
+      "Normal": "assets/airfield_hq/textures/aged_airfield_concrete_Normal_2K.jpg",
+      "ORM": "assets/airfield_hq/textures/aged_airfield_concrete_ORM_2K.jpg"
+    },
+    "Compacted wet earth": {
+      "BaseColor": "assets/airfield_hq/textures/compacted_wet_earth_BaseColor_2K.jpg",
+      "Normal": "assets/airfield_hq/textures/compacted_wet_earth_Normal_2K.jpg",
+      "ORM": "assets/airfield_hq/textures/compacted_wet_earth_ORM_2K.jpg"
+    },
+    "Runway concrete oil and tire wear": {
+      "BaseColor": "assets/airfield_hq/textures/runway_concrete_oil_and_tire_wear_BaseColor_2K.jpg",
+      "Normal": "assets/airfield_hq/textures/runway_concrete_oil_and_tire_wear_Normal_2K.jpg",
+      "ORM": "assets/airfield_hq/textures/runway_concrete_oil_and_tire_wear_ORM_2K.jpg"
+    },
+    "USAAF olive drab painted steel": {
+      "BaseColor": "assets/airfield_hq/textures/usaaf_olive_drab_painted_steel_BaseColor_2K.jpg",
+      "Normal": "assets/airfield_hq/textures/usaaf_olive_drab_painted_steel_Normal_2K.jpg",
+      "ORM": "assets/airfield_hq/textures/usaaf_olive_drab_painted_steel_ORM_2K.jpg"
+    },
+    "Weathered galvanized steel": {
+      "BaseColor": "assets/airfield_hq/textures/weathered_galvanized_steel_BaseColor_2K.jpg",
+      "Normal": "assets/airfield_hq/textures/weathered_galvanized_steel_Normal_2K.jpg",
+      "ORM": "assets/airfield_hq/textures/weathered_galvanized_steel_ORM_2K.jpg"
+    }
+  },
+  "note": "Generated with geometric portal frames, corrugated sheets, service details and physically-based 2K tileable maps.",
+  "warning_marker_geometry_objects": 29,
+  "warning_marker_runtime_meshes": 1,
+  "uv_repair_objects": [
+    "USAAF white star and bar stencil"
+  ]
+}

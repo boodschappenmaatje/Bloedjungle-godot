@@ -57,6 +57,15 @@ func _run() -> void:
 	animation_player.play("Open_Right_Door")
 	await create_timer(0.35).timeout
 	assert(absf(right_door.position.x - right_closed_x) > 0.05, "Right door node must move during playback")
+	var marker_player: AnimationPlayer
+	for candidate in players:
+		if candidate.has_animation("Blink_Red_Markers"):
+			marker_player = candidate
+			break
+	assert(marker_player != null, "Marker light clip must have a Godot animation player")
+	marker_player.play("Blink_Red_Markers")
+	await create_timer(0.35).timeout
+	assert(marker_player.is_playing(), "Red marker light animation must run in Godot")
 	var showcase := (load(SHOWCASE_PATH) as PackedScene).instantiate()
 	root.add_child(showcase)
 	await process_frame

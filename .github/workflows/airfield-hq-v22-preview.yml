@@ -22,9 +22,11 @@ jobs:
         run: |
           set -euo pipefail
           USDZ="previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_iPhone.usdz"
+          HANGAR="previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdz"
+          TOWER="previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_Tower_QuickLook.usdz"
           GLB="assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD1.glb"
           LOD2="assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD2.glb"
-          for asset in "$USDZ" "$GLB" "$LOD2"; do
+          for asset in "$USDZ" "$HANGAR" "$TOWER" "$GLB" "$LOD2"; do
             test -s "$asset"
             if head -c 80 "$asset" | grep -aq '^version https://git-lfs.github.com/spec/v1'; then
               echo "LFS pointer is not a real 3D file: $asset" >&2
@@ -33,6 +35,8 @@ jobs:
             stat -c '%n (%s bytes)' "$asset"
           done
           unzip -t "$USDZ" >/dev/null
+          unzip -t "$HANGAR" >/dev/null
+          unzip -t "$TOWER" >/dev/null
           python3 - <<'PY'
           import struct
           from pathlib import Path
@@ -49,14 +53,16 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p preview-download
-          cp previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_iPhone.usdz preview-download/
+          cp previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdz preview-download/
+          cp previews/usdz/airfield_hq/2.2/Bloedjungle_Airfield_HQ_2_2_Tower_QuickLook.usdz preview-download/
           cp assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD1.glb preview-download/
           cp assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD2.glb preview-download/
           cat >preview-download/LEESMIJ-iPhone.txt <<'TXT'
           Bloedjungle Airfield HQ 2.2 — ONLY a 3D review copy.
-          Open Bloedjungle_Airfield_HQ_2_2_iPhone.usdz from the iPhone Files app
-          (Bestanden). Tap to display the 3D model in Apple Quick Look and
-          rotate it with one finger and zoom with two fingers.
+          Open eerst Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdz in de
+          iPhone-app Bestanden. De toren staat in het aparte Tower_QuickLook-bestand.
+          Deze modellen zijn verkleinde tafelmodellen; de game-schaal is niet veranderd.
+          De oude iPhone.usdz bevat het volledige vliegveld en kan leeg lijken.
           If the USDZ fails in Quick Look, the LOD1/LOD2 GLB files are also
           included for inspection with a compatible glTF/GLB viewer.
           This is NOT a game update and does NOT change main or OTA.
@@ -89,7 +95,8 @@ jobs:
               --target "$GITHUB_SHA" --latest=false
           fi
           gh release upload "$TAG" \
-            "preview-download/Bloedjungle_Airfield_HQ_2_2_iPhone.usdz" \
+            "preview-download/Bloedjungle_Airfield_HQ_2_2_Hangar_QuickLook.usdz" \
+            "preview-download/Bloedjungle_Airfield_HQ_2_2_Tower_QuickLook.usdz" \
             "preview-download/Bloedjungle_Airfield_HQ_2_2_LOD1.glb" \
             "preview-download/Bloedjungle_Airfield_HQ_2_2_LOD2.glb" \
             "Bloedjungle_Airfield_HQ_2_2_3D_Review.zip" --clobber

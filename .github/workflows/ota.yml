@@ -1,9 +1,12 @@
 name: OTA update patch
 
-# Bouwt na elke wijziging een patch (.pck) met alleen de bestanden die sinds de VORIGE patch zijn gewijzigd of toegevoegd (een keten),
-# en zet die met een manifest in de GitHub-release "updates". De eerste patch na een nieuwe IPA (ota/basis.txt) vergelijkt met de IPA-commit,
-# elke volgende met de commit van de vorige patch. De app downloadt alleen de patches die hij nog mist. De app (scripts/updater.gd) haalt ze op met een alleen-lezen token
-# dat de gebruiker zelf invult. Er zijn geen extra secrets nodig: de ingebouwde GITHUB_TOKEN publiceert de release.
+# Bouwt na elke wijziging twee soorten updates en zet ze met een manifest in de GitHub-release "updates":
+#  - LICHT: één patch met alle gewijzigde scripts, scènes en kleine bestanden sinds de IPA (ota/basis.txt). Klein; de app vervangt hem bij elke update.
+#  - ZWAAR: een KETEN van patches met de gewijzigde modellen, texturen en geluiden (assets/**). Elk stuk bevat alleen wat er sinds het
+#    vorige stuk veranderde; de eerste vergelijkt met de IPA. De app downloadt alleen de stukken die hij nog mist (scripts/update_panel.gd)
+#    en laadt ze bij elke start (scripts/ota_keten.gd).
+#  - BRUG: een piepkleine patch met alleen het nieuwe updatescherm, voor apps met de oude updater in de IPA (die geeft downloads maar 30 s).
+# De splitsing staat in tools/ota_presets.py (twee extra exportpresets); zie ota/README.md.
 
 on:
   workflow_dispatch:
@@ -11,6 +14,8 @@ on:
     paths:
       - "scripts/updater.gd"
       - "scripts/update_panel.gd"
+      - "scripts/ota_keten.gd"
+      - "tools/ota_presets.py"
       - ".github/workflows/ota.yml"
   push:
     branches: [main, feature/native-ios-complete]
@@ -26,7 +31,7 @@ concurrency:
 jobs:
   patch:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -46,7 +51,7 @@ jobs:
           chmod +x "$GODOT"
           "$GODOT" --version | grep -F "${VERSION}.stable"
           echo "GODOT_BIN=$GODOT" >> "$GITHUB_ENV"
-      - name: Work out the chain (what the previous patch already contains)
+      - name: Work out the heavy chain (what the previous heavy piece already contains)
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
@@ -62,11 +67,11 @@ jobs:
           import json, sys
           base, d, sha = sys.argv[1:4]
           m = json.load(open(d + "/manifest.json"))
-          keten = m.get("patches") if m.get("schema") == 2 and m.get("base") == base else None
+          keten = m.get("zwaar") if m.get("schema") == 3 and m.get("base") == base else None
           if not keten:
               print("")
               sys.exit(0)
-          # opnieuw draaien voor dezelfde commit: die patch zelf weglaten en vanaf zijn voorganger bouwen
+          # opnieuw draaien voor dezelfde commit: dat stuk zelf weglaten en vanaf zijn voorganger bouwen
           if keten[-1].get("commit") == sha:
               keten = keten[:-1]
           json.dump(keten, open(d + "/keten.json", "w"))
@@ -79,75 +84,103 @@ jobs:
               echo '[]' > "$RUNNER_TEMP/prev/keten.json"
             fi
           fi
-          echo "Previous state: $EXPORT_BASE (chain has $(python3 -c "import json,sys;print(len(json.load(open(sys.argv[1]))))" "$RUNNER_TEMP/prev/keten.json") patches)"
+          # Zware bestanden die de scripts al bij het opstarten inladen (preload) kunnen niet via een vervolgstuk veranderen:
+          # dan begint de zware keten opnieuw (één groot stuk).
+          if [[ "$EXPORT_BASE" != "$BASE" ]]; then
+            C0="$(python3 -c "import json,sys;print(json.load(open(sys.argv[1]))[0]['commit'])" "$RUNNER_TEMP/prev/keten.json")"
+            if python3 tools/ota_vroeg.py "$C0" "$GITHUB_SHA" --alleen-assets > "$RUNNER_TEMP/prev/vroeg.txt"; then :; else
+              echo "::notice::Early-loaded assets changed since the chain started, starting a new heavy chain: $(tr '\n' ' ' < "$RUNNER_TEMP/prev/vroeg.txt")"
+              echo '[]' > "$RUNNER_TEMP/prev/keten.json"
+              EXPORT_BASE="$BASE"
+            fi
+          fi
+          echo "Heavy chain continues from $EXPORT_BASE ($(python3 -c "import json,sys;print(len(json.load(open(sys.argv[1]))))" "$RUNNER_TEMP/prev/keten.json") pieces so far)"
           echo "EXPORT_BASE=$EXPORT_BASE" >> "$GITHUB_ENV"
-      - name: Export the base pack (the state the app has after the previous patch)
-        shell: bash
-        run: |
-          set -euo pipefail
-          git cat-file -e "$EXPORT_BASE^{commit}"
-          git worktree add "$RUNNER_TEMP/basis" "$EXPORT_BASE"
-          # dezelfde exportinstellingen als nu, zodat alleen echte inhoudsverschillen in de patch komen
-          cp export_presets.cfg "$RUNNER_TEMP/basis/export_presets.cfg"
-          cd "$RUNNER_TEMP/basis"
-          "$GODOT_BIN" --headless --editor --path . --import || true
-          "$GODOT_BIN" --headless --editor --path . --import
-          "$GODOT_BIN" --headless --path . --export-pack "iOS" "$RUNNER_TEMP/base.pck"
-          test -s "$RUNNER_TEMP/base.pck"
-          ls -l "$RUNNER_TEMP/base.pck"
-      - name: Export the patch (only files that differ from the previous state)
+      - name: Export the base packs (light from the IPA commit, heavy from the previous heavy piece)
         shell: bash
         run: |
           set -euo pipefail
           BASE="$(tr -d '[:space:]' < ota/basis.txt)"
+          git worktree add "$RUNNER_TEMP/basis" "$BASE"
+          W="$RUNNER_TEMP/basis"
+          prep() {
+            # dezelfde exportinstellingen als nu, plus de twee OTA-presets
+            git -C "$W" checkout --force --detach "$1"
+            cp export_presets.cfg "$W/export_presets.cfg"
+            python3 tools/ota_presets.py "$W/export_presets.cfg"
+            (cd "$W" && "$GODOT_BIN" --headless --editor --path . --import || true)
+            (cd "$W" && "$GODOT_BIN" --headless --editor --path . --import)
+          }
+          prep "$BASE"
+          (cd "$W" && "$GODOT_BIN" --headless --path . --export-pack "iOSlicht" "$RUNNER_TEMP/licht_base.pck")
+          test -s "$RUNNER_TEMP/licht_base.pck"
+          if [[ "$EXPORT_BASE" != "$BASE" ]]; then prep "$EXPORT_BASE"; fi
+          (cd "$W" && "$GODOT_BIN" --headless --path . --export-pack "iOSzwaar" "$RUNNER_TEMP/zwaar_base.pck")
+          test -s "$RUNNER_TEMP/zwaar_base.pck"
+          ls -l "$RUNNER_TEMP"/*.pck
+      - name: Export the patches (light since the IPA, heavy since the previous heavy piece)
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="$(tr -d '[:space:]' < ota/basis.txt)"
+          W="$RUNNER_TEMP/basis"
           # Zelfde map en dezelfde importcache als de basis: een aparte map geeft voor elk model een ander
           # .scn en dan zit alles (13 MB) in de patch. Hier wisselt alleen de checkout van commit.
-          cd "$RUNNER_TEMP/basis"
-          git checkout --force --detach "$GITHUB_SHA"
-          printf '{"base":"%s","commit":"%s","gebouwd":%s}\n' "$BASE" "$GITHUB_SHA" "$(date +%s)" > build_info.json
+          git -C "$W" checkout --force --detach "$GITHUB_SHA"
+          cp export_presets.cfg "$W/export_presets.cfg"
+          python3 tools/ota_presets.py "$W/export_presets.cfg"
+          printf '{"base":"%s","commit":"%s","gebouwd":%s}\n' "$BASE" "$GITHUB_SHA" "$(date +%s)" > "$W/build_info.json"
+          cd "$W"
           "$GODOT_BIN" --headless --editor --path . --import || true
           "$GODOT_BIN" --headless --editor --path . --import
           # let op: --patches moet VOOR --export-patch staan
-          "$GODOT_BIN" --headless --path . --patches "$RUNNER_TEMP/base.pck" --export-patch "iOS" "$RUNNER_TEMP/patch.pck"
-          test -s "$RUNNER_TEMP/patch.pck"
-          ls -l "$RUNNER_TEMP/patch.pck"
-      - name: Prepare output folder
-        shell: bash
-        run: mkdir -p out
+          "$GODOT_BIN" --headless --path . --patches "$RUNNER_TEMP/licht_base.pck" --export-patch "iOSlicht" "$RUNNER_TEMP/licht.pck"
+          "$GODOT_BIN" --headless --path . --patches "$RUNNER_TEMP/zwaar_base.pck" --export-patch "iOSzwaar" "$RUNNER_TEMP/zwaar.pck"
+          test -s "$RUNNER_TEMP/licht.pck"
+          test -s "$RUNNER_TEMP/zwaar.pck"
+          # De brug: alleen het gecompileerde updatescherm uit het lichte stuk (voor apps met de oude updater uit de IPA).
+          "$GODOT_BIN" --headless --path . -s tools/make_ota_bootstrap.gd -- "$RUNNER_TEMP/licht.pck" "$RUNNER_TEMP/brug.pck"
+          BYTES="$(stat -c %s "$RUNNER_TEMP/brug.pck")"
+          if (( BYTES > 10485760 )); then echo "The bridge must be <10 MB, got $BYTES" >&2; exit 1; fi
+          ls -l "$RUNNER_TEMP"/*.pck
       - name: Write manifest
         shell: bash
         run: |
           set -euo pipefail
+          mkdir -p out
           BASE="$(tr -d '[:space:]' < ota/basis.txt)"
           VERSIE="$(date -u +%Y%m%d-%H%M%S)-${GITHUB_SHA::7}"
-          NAME="patch-${VERSIE}.pck"
-          cp "$RUNNER_TEMP/patch.pck" "out/$NAME"
-          python3 - "$NAME" "$VERSIE" "$BASE" "$RUNNER_TEMP/prev/keten.json" "$EXPORT_BASE" <<'PY'
-          import hashlib, json, os, sys, time
-          name, versie, base, keten_pad, vorige = sys.argv[1:6]
-          path = os.path.join("out", name)
-          data = open(path, "rb").read()
+          python3 - "$VERSIE" "$BASE" "$RUNNER_TEMP" "$EXPORT_BASE" <<'PY'
+          import hashlib, json, os, shutil, sys, time
+          versie, base, tmp, vorige = sys.argv[1:5]
           nu = int(time.time())
-          nieuw = {"naam": name, "grootte": len(data), "sha256": hashlib.sha256(data).hexdigest(),
-                   "versie": versie, "commit": os.environ["GITHUB_SHA"], "vorige": vorige, "gebouwd": nu}
-          keten = json.load(open(keten_pad)) + [nieuw]
-          # pck blijft de laatste patch (zelfde veld als schema 1); patches is de hele keten sinds de IPA
-          m = {"schema": 2, "versie": versie, "commit": os.environ["GITHUB_SHA"], "base": base, "gebouwd": nu,
-               "pck": {"naam": name, "grootte": nieuw["grootte"], "sha256": nieuw["sha256"]}, "patches": keten}
+          def entry(bron, naam, **extra):
+              data = open(bron, "rb").read()
+              shutil.copy(bron, os.path.join("out", naam))
+              d = {"naam": naam, "grootte": len(data), "sha256": hashlib.sha256(data).hexdigest()}
+              d.update(extra)
+              return d
+          brug = entry(tmp + "/brug.pck", "brug-%s.pck" % versie)
+          licht = entry(tmp + "/licht.pck", "licht-%s.pck" % versie, versie=versie, commit=os.environ["GITHUB_SHA"], gebouwd=nu)
+          keten = json.load(open(tmp + "/prev/keten.json"))
+          zwaar_grootte = os.path.getsize(tmp + "/zwaar.pck")
+          if zwaar_grootte > 64 * 1024 or not keten:
+              # een (bijna) lege zware patch laten we weg: de volgende vergelijkt dan met de commit van het laatste stuk
+              keten.append(entry(tmp + "/zwaar.pck", "zwaar-%s.pck" % versie, versie=versie, commit=os.environ["GITHUB_SHA"], vorige=vorige, gebouwd=nu))
+          m = {"schema": 3, "versie": versie, "commit": os.environ["GITHUB_SHA"], "base": base, "gebouwd": nu, "pck": brug, "licht": licht, "zwaar": keten}
           json.dump(m, open("out/manifest.json", "w"), indent=1)
           print(json.dumps(m, indent=1))
-          totaal = sum(p["grootte"] for p in keten)
-          print("Chain: %d patches, %.1f MB in total (a fresh install downloads all of it; new patch %.1f MB)" % (len(keten), totaal / 1048576, nieuw["grootte"] / 1048576))
-          if totaal > 400 * 1048576:
-              print("::warning::The patch chain is over 400 MB. Install a new IPA and set ota/basis.txt to its commit to start the chain from zero.")
-          open("out/keten-namen.txt", "w").write("\n".join(p["naam"] for p in keten))
+          mb = lambda b: b / 1048576
+          zw = sum(p["grootte"] for p in keten)
+          print("Light %.1f MB (replaced each update), heavy chain %d pieces %.1f MB in total, bridge %.2f MB" % (mb(licht["grootte"]), len(keten), mb(zw), mb(brug["grootte"])))
+          with open("out/namen.txt", "w") as f:
+              f.write("\n".join([brug["naam"], licht["naam"]] + [p["naam"] for p in keten]))
           PY
-          echo "PATCH_NAME=$NAME" >> "$GITHUB_ENV"
-      - name: Preview the staged OTA patch (PR only; never published)
+      - name: Preview the OTA files (PR only; never published)
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: ota-bootstrap-preview-${{ github.sha }}
+          name: ota-preview-${{ github.sha }}
           path: out/
           retention-days: 7
       - name: Publish to the "updates" release
@@ -158,12 +191,16 @@ jobs:
         run: |
           set -euo pipefail
           gh release view updates >/dev/null 2>&1 || gh release create updates --title "OTA updates" --notes "Automatisch gebouwd door .github/workflows/ota.yml. Niet handmatig wijzigen." --prerelease --target "$GITHUB_SHA"
-          # eerst het patchbestand, dan pas het manifest: de app ziet nooit een manifest zonder bestand
-          gh release upload updates "out/$PATCH_NAME" --clobber
+          # eerst de patchbestanden (alleen wat nog niet in de release staat), dan pas het manifest: de app ziet nooit een manifest zonder bestanden
+          BESTAAT="$(gh release view updates --json assets -q '.assets[].name')"
+          while read -r n; do
+            if grep -qxF "$n" <<< "$BESTAAT"; then continue; fi
+            gh release upload updates "out/$n" --clobber
+          done < out/namen.txt
           gh release upload updates out/manifest.json --clobber
-          # patches die nog in de keten staan blijven; al het andere (oude cumulatieve patches, weesbestanden) gaat weg
+          # wat niet meer in het manifest staat (oude lichte stukken, bruggen, losse resten) gaat weg
           for n in $(gh release view updates --json assets -q '.assets[].name'); do
-            if [[ "$n" == manifest.json ]] || grep -qxF "$n" out/keten-namen.txt; then continue; fi
+            if [[ "$n" == manifest.json ]] || grep -qxF "$n" out/namen.txt; then continue; fi
             gh release delete-asset updates "$n" -y
           done
           gh release view updates --json assets -q '.assets[] | "\(.name)  \(.size) bytes"'

@@ -6,6 +6,11 @@ signal banner(big: String, small: String, time: float)
 signal power_changed
 signal over(reason: String)
 
+## Laadt eerst de vervolgstukken van de OTA-keten (user://ota/keten.json); dat kan niet eerder (dit is de eerste autoload na de Updater).
+func _init() -> void:
+	preload("res://scripts/ota_keten.gd").laad()
+
+
 var state := "menu"  # "prep" (pauze tussen golven), "play" (golf bezig), "over"
 var wave := 0
 var points := 0

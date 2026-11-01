@@ -77,9 +77,285 @@ func _ready() -> void:
 	_ververs()
 
 
-## De Updater haalt alle ontbrekende patches van de keten zelf op (met 10 minuten per bestand) en controleert elk bestand.
+# ------------------------------------------------------------------ download in stukken (werkt met elke Updater-versie)
+#
+# De Updater in de IPA geeft een download maar 30 seconden. Dit scherm haalt daarom zelf bestanden op in blokken van `chunk` bytes
+# (HTTP Range), plakt ze achter elkaar in een .part-bestand en hervat na een storing waar het bleef. Het manifest (schema 3) bevat:
+#   licht: één patch met scripts, scènes en kleine bestanden sinds de IPA. Wordt de actieve patch (Updater.installeer) en vervangt de vorige.
+#   zwaar: een keten van patches met modellen, texturen en geluid. Elk stuk komt in user://ota/keten/ en wordt bij elke start door
+#          scripts/ota_keten.gd geladen (user://ota/keten.json). Alleen de stukken die nog missen worden gedownload.
+#   pck:   de brug (alleen dit scherm) voor apps die nog de oude updater uit de IPA gebruiken.
+
+const CHUNK_TIMEOUT := 120.0
+const POGINGEN := 4
+
+var chunk := 16 * 1048576  # in tests kleiner
+var _loopt := false
+var _tot_bytes := 0
+var _klaar_bytes := 0  # bytes die al op schijf staan (gelukte blokken en eerdere pogingen)
+var _snelheid := 0.0
+var _laatste_ms := 0
+var _laatste_bytes := 0
+
+
+## Welke stukken ontbreken nog? Eerst de ontbrekende zware stukken in volgorde, als laatste het lichte stuk (dat zet alles in één keer om).
+## Zonder licht/zwaar in het manifest (schema 1 of 2): leeg, dan geldt de gewone route van de Updater.
+static func stukken_nodig(m: Dictionary, actief: Dictionary, keten: Dictionary) -> Array:
+	var zwaar: Array = m.get("zwaar", []) if m.get("zwaar") is Array else []
+	var licht: Variant = m.get("licht")
+	if zwaar.is_empty() and not (licht is Dictionary):
+		return []
+	var heb: Array = keten.get("stukken", []) if str(keten.get("basis", "")) == str(m.get("base", "")) and keten.get("stukken") is Array else []
+	var n := behouden(zwaar, heb)
+	var nodig: Array = zwaar.slice(n)
+	if licht is Dictionary and str(actief.get("sha256", "")) != str((licht as Dictionary).get("sha256", "x")):
+		nodig.append(licht)
+	return nodig
+
+
+## Hoeveel van de zware stukken die we al hebben kloppen (zelfde volgorde en SHA-256 als in het manifest)?
+static func behouden(zwaar: Array, heb: Array) -> int:
+	var n := 0
+	while n < heb.size() and n < zwaar.size() and str(heb[n].get("sha256", "")) == str((zwaar[n] as Dictionary).get("sha256", "x")):
+		n += 1
+	return n if n == heb.size() else 0
+
+
+func _lees(naam: String) -> Dictionary:
+	return Updater._lees_json(Updater._pad(naam))
+
+
+func _bytes_tekst(b: float) -> String:
+	return "%.1f MB" % (b / 1048576.0)
+
+
+func _duur_tekst(sec: float) -> String:
+	var t := int(ceil(sec))
+	if t < 60:
+		return "%d sec" % t
+	return "%d min %02d sec" % [t / 60, t % 60]
+
+
+func _meld(bytes_nu: int) -> void:
+	if _tot_bytes <= 0:
+		return
+	var nu := Time.get_ticks_msec()
+	if _laatste_ms > 0 and nu > _laatste_ms and bytes_nu >= _laatste_bytes:
+		var snel := float(bytes_nu - _laatste_bytes) / (float(nu - _laatste_ms) / 1000.0)
+		_snelheid = snel if _snelheid <= 0.0 else lerpf(_snelheid, snel, 0.3)
+	_laatste_ms = nu
+	_laatste_bytes = bytes_nu
+	var klaar := mini(_klaar_bytes + bytes_nu, _tot_bytes)
+	var deel := clampf(float(klaar) / float(_tot_bytes), 0.0, 1.0)
+	var tekst := "Downloaden… %d%% (%s van %s)" % [int(deel * 100.0), _bytes_tekst(klaar), _bytes_tekst(_tot_bytes)]
+	if _snelheid > 1024.0:
+		tekst += " · %.1f MB/s · nog ca. %s" % [_snelheid / 1048576.0, _duur_tekst(float(_tot_bytes - klaar) / _snelheid)]
+	Updater._zet("bezig", tekst, deel)
+
+
+## Eén aanvraag; naar_bestand is een blok dat naar schijf wordt gestreamd. Parent is de Updater, zodat sluiten van dit scherm niets afbreekt.
+func _http(url: String, headers: PackedStringArray, naar_bestand := "") -> Dictionary:
+	var r := HTTPRequest.new()
+	r.timeout = CHUNK_TIMEOUT if naar_bestand != "" else 30.0
+	r.max_redirects = 0
+	if naar_bestand != "":
+		r.download_file = naar_bestand
+	Updater.add_child(r)
+	var err := r.request(url, headers)
+	if err != OK:
+		r.queue_free()
+		return {"result": -1, "code": -1}
+	var teller: Timer = null
+	if naar_bestand != "":
+		teller = Timer.new()
+		teller.wait_time = 0.5
+		teller.timeout.connect(func(): _meld(r.get_downloaded_bytes()))
+		Updater.add_child(teller)
+		teller.start()
+	var res: Array = await r.request_completed
+	if teller != null:
+		teller.queue_free()
+	r.queue_free()
+	var kop := {}
+	for h in res[2] as PackedStringArray:
+		var i := (h as String).find(":")
+		if i > 0:
+			kop[(h as String).substr(0, i).strip_edges().to_lower()] = (h as String).substr(i + 1).strip_edges()
+	return {"result": res[0], "code": res[1], "headers": kop}
+
+
+## Naam -> API-adres van elke asset in de release "updates".
+func _release_assets() -> Dictionary:
+	var rel: Dictionary = await Updater._vraag("%s/repos/%s/releases/tags/%s" % [Updater.api_basis, Updater.REPO, Updater.RELEASE_TAG], Updater._headers("application/vnd.github+json"))
+	var uit := {}
+	if int(rel.get("code", -1)) != 200:
+		return uit
+	var r: Variant = JSON.parse_string((rel.body as PackedByteArray).get_string_from_utf8())
+	if r is Dictionary and (r as Dictionary).has("assets"):
+		for a in (r as Dictionary).assets:
+			uit[str(a.name)] = str(a.url)
+	return uit
+
+
+## Haalt één blok op: eerst de doorverwijzing (met token), dan het blok zelf (zonder token, met Range). "" bij succes, anders de reden.
+func _haal_blok(asset_url: String, van: int, tot: int, dest: String) -> String:
+	DirAccess.remove_absolute(dest)
+	var a: Dictionary = await _http(asset_url, Updater._headers("application/octet-stream"))
+	var loc := str(a.get("headers", {}).get("location", ""))
+	if not (int(a.get("code", -1)) in [301, 302, 303, 307, 308]) or loc == "":
+		return "geen verbinding met GitHub (HTTP %d)" % int(a.get("code", -1))
+	var h := Updater._headers("application/octet-stream", false)
+	h.append("Range: bytes=%d-%d" % [van, tot])
+	var res: Dictionary = await _http(loc, h, dest)
+	var code := int(res.get("code", -1))
+	if int(res.get("result", -1)) != HTTPRequest.RESULT_SUCCESS:
+		return "netwerkfout (code %d)" % int(res.get("result", -1))
+	if code != 206 and code != 200:
+		return "HTTP %d" % code
+	return ""
+
+
+## Plakt een geslaagd blok achter het .part-bestand. Geeft de nieuwe lengte, of -1 bij een schrijffout.
+func _voeg_toe(part: String, blok: String) -> int:
+	var uit := FileAccess.open(part, FileAccess.READ_WRITE) if FileAccess.file_exists(part) else FileAccess.open(part, FileAccess.WRITE)
+	var inn := FileAccess.open(blok, FileAccess.READ)
+	if uit == null or inn == null:
+		return -1
+	uit.seek_end()
+	while inn.get_position() < inn.get_length():
+		uit.store_buffer(inn.get_buffer(4 * 1048576))
+	var n := uit.get_position()
+	uit.close()
+	inn = null
+	DirAccess.remove_absolute(blok)
+	return n
+
+
+## Downloadt één stuk compleet naar `part` (hervat als er al een deel staat). "" bij succes, anders de reden.
+func _haal_stuk(e: Dictionary, asset_url: String, part: String) -> String:
+	var totaal := int(e.grootte)
+	var heb := 0
+	if FileAccess.file_exists(part):
+		var f := FileAccess.open(part, FileAccess.READ)
+		heb = f.get_length() if f != null else 0
+		f = null
+		if heb > totaal:
+			DirAccess.remove_absolute(part)
+			heb = 0
+	var blok := Updater._pad("blok.tmp")
+	_klaar_bytes += heb
+	while heb < totaal:
+		var tot := mini(heb + chunk, totaal) - 1
+		var fout := "?"
+		for poging in POGINGEN:
+			fout = await _haal_blok(asset_url, heb, tot, blok)
+			if fout == "":
+				break
+			await Updater.get_tree().create_timer(2.0 * (poging + 1)).timeout
+		if fout != "":
+			DirAccess.remove_absolute(blok)
+			return fout
+		var gelezen := FileAccess.open(blok, FileAccess.READ)
+		var lengte := gelezen.get_length() if gelezen != null else 0
+		gelezen = null
+		if lengte == totaal and heb == 0:
+			DirAccess.remove_absolute(part)  # de server negeerde Range en gaf het hele bestand
+		var nieuw := _voeg_toe(part, blok)
+		if nieuw < 0:
+			return "kon niet schrijven (opslagruimte vol?)"
+		_klaar_bytes += nieuw - heb
+		heb = nieuw
+		_laatste_ms = 0
+		_laatste_bytes = 0
+	return ""
+
+
+func _schrijf(naam: String, d: Dictionary) -> void:
+	Updater._schrijf_json(Updater._pad(naam), d)
+
+
 func _download_met_lange_timeout() -> void:
-	await Updater.download_en_installeer()
+	if _loopt:
+		return
+	var m: Dictionary = Updater.manifest
+	var actief := _lees("actief.json")
+	var keten := _lees("keten.json")
+	var nodig := stukken_nodig(m, actief, keten)
+	if nodig.is_empty():
+		# geen keten in het manifest: de gewone route van de Updater (kleine patch)
+		await Updater.download_en_installeer()
+		return
+	_loopt = true
+	_tot_bytes = 0
+	_klaar_bytes = 0
+	_snelheid = 0.0
+	_laatste_ms = 0
+	_laatste_bytes = 0
+	for e in nodig:
+		_tot_bytes += int(e.grootte)
+	Updater.status = "bezig"
+	Updater._zet("bezig", "Downloaden voorbereiden…", 0.0)
+	var urls := await _release_assets()
+	DirAccess.make_dir_recursive_absolute(Updater._pad("keten"))
+	# de zware stukken die we al hebben en kloppen blijven; de rest van de oude keten gaat weg
+	var zwaar: Array = m.get("zwaar", []) if m.get("zwaar") is Array else []
+	var heb: Array = keten.get("stukken", []) if str(keten.get("basis", "")) == str(m.get("base", "")) and keten.get("stukken") is Array else []
+	var lijst: Array = heb.slice(0, behouden(zwaar, heb))
+	_schrijf("keten.json", {"basis": str(m.base), "stukken": lijst})
+	_ruim_keten_op(lijst)
+	var licht_sha := str((m.get("licht", {}) as Dictionary).get("sha256", "")) if m.get("licht") is Dictionary else ""
+	for e in nodig:
+		var naam := str(e.naam).get_file()
+		if not naam.ends_with(".pck") or naam.contains(".."):
+			Updater._zet("fout", "De update is afgekeurd: ongeldige bestandsnaam.")
+			_loopt = false
+			return
+		if not urls.has(naam):
+			Updater._zet("fout", "Downloaden mislukt (%s staat niet in de release). Tik opnieuw op controleren." % naam)
+			_loopt = false
+			return
+		var part := Updater._pad(naam + ".part")
+		var fout := await _haal_stuk(e, str(urls[naam]), part)
+		if fout != "":
+			Updater._zet("fout", "Downloaden mislukt (%s). Tik opnieuw op download: het gaat verder waar het bleef." % fout)
+			_loopt = false
+			return
+		Updater._zet("bezig", "Controleren…", 1.0)
+		if licht_sha != "" and str(e.sha256) == licht_sha:
+			# het lichte stuk wordt de actieve patch (de Updater controleert grootte en SHA-256 en ruimt de vorige op)
+			var m0 := {"versie": str(m.versie), "base": str(m.base), "gebouwd": int(m.gebouwd), "pck": {"naam": naam, "grootte": int(e.grootte), "sha256": str(e.sha256)}}
+			var err: String = Updater.installeer(part, m0)
+			if err != "":
+				DirAccess.remove_absolute(part)
+				Updater._zet("fout", "De update is afgekeurd: " + err + ".")
+				_loopt = false
+				return
+		else:
+			var d := {"naam": naam, "bestand": Updater._pad("keten/" + naam), "sha256": str(e.sha256), "grootte": int(e.grootte)}
+			if FileAccess.get_sha256(part) != str(e.sha256):
+				DirAccess.remove_absolute(part)
+				Updater._zet("fout", "De update is afgekeurd: SHA-256 klopt niet. Tik opnieuw op download.")
+				_loopt = false
+				return
+			DirAccess.rename_absolute(part, str(d.bestand))
+			lijst.append(d)
+			_schrijf("keten.json", {"basis": str(m.base), "stukken": lijst})
+	_loopt = false
+	Updater.herstart_nodig = true
+	Updater._zet("gedownload", "Update %s staat klaar. Sluit de app helemaal af en open opnieuw." % str(m.versie))
+
+
+## Verwijdert stukken uit user://ota/keten die niet (meer) in de lijst staan.
+func _ruim_keten_op(houd: Array) -> void:
+	var blijf := {}
+	for p in houd:
+		blijf[str(p.get("bestand", "")).get_file()] = true
+	var dir := DirAccess.open(Updater._pad("keten"))
+	if dir == null:
+		return
+	for f in dir.get_files():
+		if not blijf.has(f):
+			dir.remove(f)
 
 
 func _knop(text: String, kind: String, cb: Callable) -> Button:
@@ -113,5 +389,11 @@ func _ververs() -> void:
 	_balk.step = 0.001
 	_balk.value = Updater.voortgang
 	_check.disabled = bezig or Updater.app_base == "dev"
-	_download.visible = Updater.status == "beschikbaar"
+	var nodig: Array = [] if bezig or _loopt or Updater.herstart_nodig else stukken_nodig(Updater.manifest, _lees("actief.json"), _lees("keten.json"))
+	var mb := 0.0
+	for e in nodig:
+		mb += float(int(e.grootte)) / 1048576.0
+	if not nodig.is_empty() and Updater.status in ["actueel", "beschikbaar"]:
+		_status.text = "Update beschikbaar: %s (%.1f MB in %d %s)." % [str(Updater.manifest.get("versie", "?")), mb, nodig.size(), "stuk" if nodig.size() == 1 else "stukken"]
+	_download.visible = Updater.status == "beschikbaar" or not nodig.is_empty()
 	_back.visible = Updater.patch_geladen and not Updater.herstart_nodig

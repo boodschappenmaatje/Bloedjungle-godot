@@ -18,7 +18,12 @@ const MAX_GROUND_AREA := 2.0 * BASE_GROUND_SIZE.x * BASE_GROUND_SIZE.y
 # hangar/tower and separate paving lobes. Its map-placement bounds include empty
 # existing terrain between components; only the conservative surface sum below
 # is charged against the 2× land-take limit.
-const FOOTPRINT := Vector3(75.0, 23.0, 53.0) # symmetric component bounds for build-camera framing only
+## Generals-verhoudingen (v24): de hele vliegveldscène (hangar, toren, platform, taxibaan, baan) is uniform met deze factor
+## verkleind. Alle maten hieronder zijn "vliegveldmaten" (de ongeschaalde, getekende maten in de scène); wat in de wereld
+## gebeurt (plaatsing, voetafdruk, camera) wordt met SCALE vermenigvuldigd. Modellen, texturen, animaties en botsing zijn
+## dus ongewijzigd, alleen kleiner. Jager (schaal 0,55, ~8,1 m) is nog iets langer dan de tank (7,9 m).
+const SCALE := 0.6
+const FOOTPRINT := Vector3(75.0, 23.0, 53.0) * SCALE # symmetric component bounds for build-camera framing only
 
 const HANGAR_CENTER := Vector2(0.0, 2.5)
 const HANGAR_SIZE := Vector2(28.0, 24.0) # construction zone around a 22 × 20 m shell
@@ -27,9 +32,9 @@ const TOWER_SIZE := Vector2(8.0, 8.0) # tower core; exterior stair access has it
 const TOWER_STAIR_CENTER := Vector2(-22.0, 19.5)
 const TOWER_STAIR_SIZE := Vector2(4.0, 8.0)
 
-const RUNWAY_LENGTH_M := 75.0
+const RUNWAY_LENGTH_M := 45.0  # drie dekplaten van 15 m (was vijf: 75 m)
 const RUNWAY_WIDTH_M := 18.0
-const RUNWAY_START_X := -37.5
+const RUNWAY_START_X := 37.5 - RUNWAY_LENGTH_M
 const RUNWAY_END_X := RUNWAY_START_X + RUNWAY_LENGTH_M
 const RUNWAY_CENTER_Z := -17.5
 const APRON_CENTER := Vector2(0.0, 19.5)
@@ -43,7 +48,7 @@ const TAXI_RUNWAY_END := Vector2(28.0, -8.5)
 const TAXI_RUNWAY_HOLD := Vector2(28.0, -4.5)
 
 # The derived compact hangar is centred at its authored floor origin.
-const COMPLEX_CENTER_OFFSET := Vector3(0.0, 0.0, HANGAR_CENTER.y)
+const COMPLEX_CENTER_OFFSET := Vector3(0.0, 0.0, HANGAR_CENTER.y)  # in vliegveldmaten (lokaal in de scène)
 const SUGGESTED_CENTER := Vector3(70.0, 0.0, 115.0)
 const P47_SCENE := "res://assets/p47_thunderbolt.glb"
 const HQ22_ANIMATED_TOWER_SCENE := "res://assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD0.glb"
@@ -85,7 +90,8 @@ static func make_complex() -> StaticBody3D:
 	body.add_child(slab_collision)
 	var complex := packed.instantiate()
 	complex.name = "AirfieldHQ23CompactCore"
-	complex.position = COMPLEX_CENTER_OFFSET
+	complex.position = COMPLEX_CENTER_OFFSET * SCALE
+	complex.scale = Vector3.ONE * SCALE
 	body.add_child(complex)
 	_compact_approved_core(complex)
 	_add_hq23_tower(complex)
@@ -234,12 +240,13 @@ static func _add_tower_stair_collisions(complex: Node3D) -> void:
 			var t := (float(step) + 0.5) / 18.0
 			var z := low + 3.03 * t
 			var y := y_start + (y_end - y_start) * t
-			_add_box_collision(body, Vector3(x, z, -y), Vector3(1.0, 0.12, 0.30))
+			# trede-breedte 1 m in de wereld (spelercapsule is 0,9 m breed): in vliegveldmaat dus 1 / SCALE
+			_add_box_collision(body, Vector3(x, z, -y), Vector3(1.0 / SCALE, 0.12, 0.30))
 	for level in range(1, 5):
 		var high := 0.45 + float(level) * 3.03
 		var x: float = flight_xs[level - 1]
 		var y := (-2.65 if level % 2 == 1 else 2.65) * 0.54
-		_add_box_collision(body, Vector3((x + 4.55) * 0.5 * 0.54, high - 0.06, -y), Vector3((absf(x - 4.55) + 1.4) * 0.54, 0.14, 1.0))
+		_add_box_collision(body, Vector3((x + 4.55) * 0.5 * 0.54, high - 0.06, -y), Vector3((absf(x - 4.55) + 1.4) * 0.54, 0.14, 1.0 / SCALE))
 
 static func _add_box_collision(parent: Node, at: Vector3, dimensions: Vector3) -> void:
 	var node := CollisionShape3D.new()
@@ -298,7 +305,13 @@ static func site_regions() -> Array[Dictionary]:
 		{"name": "apron", "center": APRON_CENTER, "size": Vector2(18.0, 14.0), "yaw": 0.0},
 	]
 	regions.append_array(_taxi_regions())
-	return regions
+	var out: Array[Dictionary] = []
+	for region in regions:
+		var scaled := region.duplicate()
+		scaled.center = region.center * SCALE
+		scaled.size = region.size * SCALE
+		out.append(scaled)
+	return out
 
 static func preview_regions() -> Array[Dictionary]:
 	return site_regions()
@@ -317,7 +330,7 @@ static func footprint_area() -> float:
 	# A full 8 m of modular end coverage is added as a safe upper bound. Areas at
 	# the apron, runway, and structure joints are intentionally counted twice.
 	var taxi_with_endcaps := (taxi_length + 8.0) * TAXIWAY_WIDTH_M
-	return HANGAR_SIZE.x * HANGAR_SIZE.y + TOWER_SIZE.x * TOWER_SIZE.y + TOWER_STAIR_SIZE.x * TOWER_STAIR_SIZE.y + RUNWAY_LENGTH_M * RUNWAY_WIDTH_M + 18.0 * 14.0 + taxi_with_endcaps
+	return (HANGAR_SIZE.x * HANGAR_SIZE.y + TOWER_SIZE.x * TOWER_SIZE.y + TOWER_STAIR_SIZE.x * TOWER_STAIR_SIZE.y + RUNWAY_LENGTH_M * RUNWAY_WIDTH_M + 18.0 * 14.0 + taxi_with_endcaps) * SCALE * SCALE
 
 static func area_limit_ok() -> bool:
 	return footprint_area() <= MAX_GROUND_AREA

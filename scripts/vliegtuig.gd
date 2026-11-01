@@ -14,7 +14,7 @@ extends Node3D
 enum Mode { PARKED, GROUND, AIR, ROLLOUT, TAXI, WRECK }
 
 const MODEL_PATH := "res://assets/straaljager.glb"   # plaatsvervanger tot Dennis' Meshy-toestel er is
-const MODEL_SCALE := 0.62                             # straaljager is op schaal 1 ~16 m: zo past hij in de hangar
+const MODEL_SCALE := 0.55                             # straaljager op schaal 1 is ~14,8 m: nu ~8,1 m, iets langer dan de tank (7,9 m); past in de verkleinde hangar
 const MODEL_YAW := 0.0                                # de neus van het model kijkt naar -Z
 const FLY_CLIP := "Vliegen"
 
@@ -34,7 +34,9 @@ const TREE_TOP := 8.0          # boven deze hoogte vlieg je over de bomen
 const CRASH_R := 1.7
 const TAXI_SPEED := 6.0
 const BOARD_DIST := 5.0
-const PAVEMENT_Y := 0.22
+const PAVEMENT_LOCAL_Y := 0.22   # bovenkant van de dekplaten in de scène (vliegveldmaat)
+const PAVEMENT_Y := PAVEMENT_LOCAL_Y * AirfieldHQ23.SCALE   # dezelfde hoogte in de wereld
+const HANGAR_INTERIOR_DEPTH_M := 20.0   # echte binnendiepte van de hangar (vliegveldmaat); de vrije ruimte voor het toestel is 13 m breed/diep gereserveerd
 const DEADZONE := 0.15
 const BLAST_RADIUS := 11.0
 const BLAST_HURT := 420.0
@@ -130,7 +132,8 @@ func _ready() -> void:
 	_make_trails()
 	_make_ui()
 	_set_shadow()
-	_hangar_fit = _span <= AirfieldFlightIntegration.DOOR_CLEAR_WIDTH_M - 2.5 and _len <= AirfieldFlightIntegration.INTERIOR_CLEAR_LENGTH_M - 0.5
+	# maten van de scène zijn vliegveldmaten; het toestel is in wereldmaten: eerst omrekenen
+	_hangar_fit = _span <= (AirfieldFlightIntegration.DOOR_CLEAR_WIDTH_M - 2.5) * AirfieldHQ23.SCALE and _len <= HANGAR_INTERIOR_DEPTH_M * AirfieldHQ23.SCALE - 2.0
 	add_to_group("vliegtuigen")
 
 
@@ -302,18 +305,19 @@ func _stick_label(txt: String, left: bool) -> Label:
 
 ## Parkeerplek: in de hangar als het toestel erin past, anders op het platform ervoor.
 func _park_transform() -> Transform3D:
-	var local := Vector3(0.0, PAVEMENT_Y, 0.0) if _hangar_fit else AirfieldHQ23.layout_point(AirfieldHQ23.APRON_CENTER.x, AirfieldHQ23.APRON_CENTER.y, PAVEMENT_Y)
-	return complex.global_transform * Transform3D(Basis.IDENTITY, local)
+	var local := Vector3(0.0, PAVEMENT_LOCAL_Y, 0.0) if _hangar_fit else AirfieldHQ23.layout_point(AirfieldHQ23.APRON_CENTER.x, AirfieldHQ23.APRON_CENTER.y, PAVEMENT_LOCAL_Y)
+	# alleen positie en draairichting van de scène, nooit de schaal (anders wordt het toestel zelf verkleind)
+	return Transform3D(complex.global_transform.basis.orthonormalized(), complex.to_global(local))
 
 
 ## Vliegveldcoördinaten (zoals AirfieldHQ23.layout_point ze omzet) van een wereldpunt.
 func _airport_xy(world: Vector3) -> Vector2:
-	var l := complex.to_local(world)
+	var l := complex.to_local(world)   # lokaal in de scène = vliegveldmaten (schaal zit in de scène)
 	return Vector2(l.x + AirfieldHQ23.COMPLEX_CENTER_OFFSET.x, l.z + AirfieldHQ23.COMPLEX_CENTER_OFFSET.z)
 
 
 func _world_of(ax: float, az: float) -> Vector3:
-	return complex.to_global(AirfieldHQ23.layout_point(ax, az, PAVEMENT_Y))
+	return complex.to_global(AirfieldHQ23.layout_point(ax, az, PAVEMENT_LOCAL_Y))
 
 
 ## Ligt dit punt op asfalt (baan, platform of taxibaan)? Alleen daar kun je landen.
@@ -385,7 +389,7 @@ func _leave(p, auto: bool) -> void:
 		p.visible = true
 		var out: Vector3
 		if mode == Mode.PARKED and _hangar_fit:
-			out = complex.to_global(Vector3(0.0, 0.0, 11.5))   # voor de hangardeur
+			out = complex.to_global(Vector3(0.0, 0.0, 11.5))   # voor de hangardeur (to_global rekent de schaal mee)
 		else:
 			out = global_position + global_transform.basis.x * (_span * 0.5 + 2.0)
 		p.global_position = Vector3(out.x, 0.0, out.z)
@@ -503,7 +507,8 @@ func _ground(delta: float, live: bool) -> void:
 		# eerst de neus naar de stick draaien: staat de stick ver naast de koers, dan maar stapvoets (draaien op de plaats)
 		var off := absf(wrapf(atan2(-mv.x, -mv.y) - rotation.y, -PI, PI))
 		if off > 0.8:
-			target = minf(target, 3.0)
+			# in de (verkleinde) hangar echt op de plaats draaien: een gewone bocht zwaait de neus tegen de deurstijl
+			target = minf(target, 0.5 if _inside_hangar() else 3.0)
 	speed = move_toward(speed, target, (ACCEL if target > speed else BRAKE) * delta)
 	if mag >= 0.12:
 		_steer(delta, TURN_GROUND * clampf(0.5 + speed / 6.0, 0.5, 1.0), mv)
@@ -617,7 +622,7 @@ func _taxi(delta: float) -> void:
 	var to := Vector3(tgt.x - global_position.x, 0.0, tgt.z - global_position.z)
 	var d := to.length()
 	var last := _route.size() == 1
-	if d < (0.6 if last else 3.0):
+	if d < (0.6 if last else 3.0) * AirfieldHQ23.SCALE:
 		_route.pop_front()
 		return
 	var want := atan2(-to.x, -to.z)

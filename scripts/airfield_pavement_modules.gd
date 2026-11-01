@@ -99,9 +99,9 @@ func _collider(name: String, dimensions: Vector3, transform: Transform3D) -> voi
 	add_child(body)
 
 func _build_runway() -> void:
-	# Five bevelled 15 m HQ23 PBR concrete modules share one exact straight axis.
+	# Drie bevelled 15 m HQ23 PBR-betonmodules (RUNWAY_LENGTH_M / 15) delen één rechte as.
 	var transforms: Array[Transform3D] = []
-	for i in range(5):
+	for i in range(roundi(AirfieldHQ23.RUNWAY_LENGTH_M / RUNWAY_SEGMENT)):
 		var x := AirfieldHQ23.RUNWAY_START_X + RUNWAY_SEGMENT * 0.5 + i * RUNWAY_SEGMENT
 		var transform := Transform3D(Basis(Vector3.UP, PI * 0.5), AirfieldHQ23.layout_point(x, AirfieldHQ23.RUNWAY_CENTER_Z, SLAB_DEPTH * 0.5))
 		transforms.append(transform)

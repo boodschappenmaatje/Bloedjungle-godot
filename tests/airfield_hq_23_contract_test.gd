@@ -14,10 +14,11 @@ func _run() -> void:
 	assert(is_equal_approx(AirfieldHQ23.BASE_GROUND_SIZE.x, 56.65) and is_equal_approx(AirfieldHQ23.BASE_GROUND_SIZE.y, 56.95), "Base ground size must use the exact authored BaseProps wall extents")
 	assert(is_equal_approx(AirfieldHQ23.MAX_GROUND_AREA, 6452.435), "Area ceiling must equal exactly twice the authored base ground area")
 	assert(AirfieldHQ23.footprint_area() <= AirfieldHQ23.MAX_GROUND_AREA, "The conservative sum of constructed regions must stay within twice the base area")
-	assert(is_equal_approx(AirfieldHQ23.footprint_area(), 3267.2920), "The conservative compact-layout area must include hangar, tower/access, 75x18 runway, apron and taxi end coverage")
+	assert(is_equal_approx(AirfieldHQ23.footprint_area(), 981.8251), "Generals-schaal (0,6): het voorzichtige oppervlak (hangar, toren/trap, 45x18 baan, platform, taxibaan) is (2727,292 m² in vliegveldmaat) x 0,36")
 	assert(AirfieldHQ23.HANGAR_SIZE.is_equal_approx(Vector2(28.0, 24.0)), "Hangar construction zone must be 28 × 24 m")
 	assert(AirfieldHQ23.TOWER_SIZE.is_equal_approx(Vector2(8.0, 8.0)), "Tower core zone must be 8 × 8 m")
-	assert(is_equal_approx(AirfieldFlightIntegration.RUNWAY_LENGTH_M, 75.0), "The revised runway must be exactly 75 m long")
+	assert(is_equal_approx(AirfieldFlightIntegration.RUNWAY_LENGTH_M, 45.0), "De baan is drie dekplaten van 15 m (45 m vliegveldmaat, 27 m in de wereld)")
+	assert(is_equal_approx(AirfieldHQ23.SCALE, 0.6), "De vliegveldscène is uniform met 0,6 geschaald")
 	assert(is_equal_approx(AirfieldFlightIntegration.RUNWAY_WIDTH_M, 18.0), "The revised runway must be exactly 18 m wide")
 	assert(is_equal_approx(AirfieldFlightIntegration.DOOR_CLEAR_WIDTH_M, 15.0), "The compact hangar door must clear 15 m")
 	assert(is_equal_approx(AirfieldFlightIntegration.DOOR_CLEAR_HEIGHT_M, 5.89), "The compact hangar door must clear 5.89 m")
@@ -29,8 +30,8 @@ func _run() -> void:
 	assert(AirfieldHQ23.taxi_centerline_points().front() == AirfieldHQ23.TAXI_START, "Taxi route must start at the distinct apron edge")
 	assert(AirfieldHQ23.taxi_centerline_points().back() == AirfieldHQ23.TAXI_RUNWAY_END, "Taxi route must end at the runway edge after its separate curve")
 	assert(AirfieldHQ23.RUNWAY_END_X - AirfieldHQ23.RUNWAY_START_X == AirfieldFlightIntegration.RUNWAY_LENGTH_M, "Runway slab span must match route/runway configuration")
-	assert(absf(AirfieldHQ23.RUNWAY_START_X) <= AirfieldHQ23.FOOTPRINT.x * 0.5 and absf(AirfieldHQ23.RUNWAY_END_X) <= AirfieldHQ23.FOOTPRINT.x * 0.5, "Runway longitudinal bounds must be within the airport's map-view bounds")
-	assert(absf(AirfieldHQ23.RUNWAY_CENTER_Z) + AirfieldFlightIntegration.RUNWAY_WIDTH_M * 0.5 <= AirfieldHQ23.FOOTPRINT.z * 0.5, "Runway cross-section must be within the airport's map-view bounds")
+	assert(absf(AirfieldHQ23.RUNWAY_START_X) * AirfieldHQ23.SCALE <= AirfieldHQ23.FOOTPRINT.x * 0.5 and absf(AirfieldHQ23.RUNWAY_END_X) * AirfieldHQ23.SCALE <= AirfieldHQ23.FOOTPRINT.x * 0.5, "Runway longitudinal bounds must be within the airport's map-view bounds")
+	assert((absf(AirfieldHQ23.RUNWAY_CENTER_Z) + AirfieldFlightIntegration.RUNWAY_WIDTH_M * 0.5) * AirfieldHQ23.SCALE <= AirfieldHQ23.FOOTPRINT.z * 0.5, "Runway cross-section must be within the airport's map-view bounds")
 	assert(AirfieldHQ23.AIRCRAFT.p47.cost == 1800, "P-47 price must remain centralized at 1,800")
 	assert(not ResourceLoader.exists(AirfieldHQ23.P47_SCENE), "No surrogate P-47 scene may be present")
 	assert(AirfieldHQ23.shop_status("p47").contains("uitgesteld tot na de iPhone-vliegveldtest") and AirfieldHQ23.shop_status("p47").contains("origineel Meshy Pro-model ontbreekt"), "P-47 purchase must remain explicitly deferred and disclose the missing model")
@@ -98,7 +99,7 @@ func _run() -> void:
 	Foliage._root = null
 	Foliage._reg.clear()
 	Foliage.trees.clear()
-	var tree_at := AirfieldHQ23.SUGGESTED_CENTER + Vector3(AirfieldHQ23.HANGAR_CENTER.x, 0.0, AirfieldHQ23.HANGAR_CENTER.y)
+	var tree_at := AirfieldHQ23.SUGGESTED_CENTER + Vector3(AirfieldHQ23.HANGAR_CENTER.x, 0.0, AirfieldHQ23.HANGAR_CENTER.y) * AirfieldHQ23.SCALE
 	var tree_near := StaticBody3D.new()
 	tree_near.collision_layer = Kit.LAYER_NATURE
 	tree_near.set_meta("clearable_vegetation", true)
@@ -129,7 +130,7 @@ func _run() -> void:
 	var tree_entry := {"kind": "palm", "local_position": tree_at, "slots": tree_slots, "shapes": [tree_shape], "tracks_tree": true, "reg_key": tree_key}
 	Foliage._register_vegetation(tree_entry)
 	Foliage._reg[tree_key] = [tree_entry]
-	var grass_at := AirfieldHQ23.SUGGESTED_CENTER + Vector3(AirfieldHQ23.APRON_CENTER.x, 0.0, AirfieldHQ23.APRON_CENTER.y)
+	var grass_at := AirfieldHQ23.SUGGESTED_CENTER + Vector3(AirfieldHQ23.APRON_CENTER.x, 0.0, AirfieldHQ23.APRON_CENTER.y) * AirfieldHQ23.SCALE
 	var grass_nodes: Array[MultiMeshInstance3D] = []
 	var grass_slots: Array[Dictionary] = []
 	for _lod in 3:

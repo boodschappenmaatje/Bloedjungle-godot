@@ -1,6 +1,6 @@
 # Asset Design Specification: Generals-verhoudingen voor de basis
 
-Status: **ONTWERP, wacht op goedkeuring. De maten hieronder zijn voorlopig en worden herzien op basis van de echte Generals-data (zie de sectie 'Echte Generals-maten').** Er is nog niets gebouwd of gewijzigd in de game.
+Status: **UITGEVOERD op deze branch (Draft, niet gemerged, geen OTA).** Zie [REPORT.md](REPORT.md) voor resultaten en open punten.
 Aanleiding: referentieplaatje uit Command & Conquer Generals. Het huidige vliegveld (footprint 75 × 53 m, baan 75 m) is groter dan de basis (56 × 56 m) en veel groter dan kazerne en garage.
 
 Vergelijking op schaal: [basis_oud_vs_nieuw.png](basis_oud_vs_nieuw.png) (bron: `.svg`). De plaatsing daarin is schematisch.
@@ -42,20 +42,22 @@ Niet opgezocht: de helipad uit je plaatje en de Chinese en GLA-gebouwen.
 - **Strikt op kazerne-schaal** (kazerne 5,8 m = 110 eenheden, 1 eenheid ≈ 0,053 m): vliegveld ≈ **11,8 × 7,8 m**, ongeveer 82 m² (nu ~3975 m²).
 - **Eenheden:** in Generals zijn voertuigen en jagers ~¼ van een kazerne, en een soldaat ~1/8. Bij jou is een soldaat ~1/3 van de kazerne en een straaljager (schaal 0,62) ~1,7× de kazerne. Strikt volgen kan dus niet: een jager van 1,5 m is onspeelbaar. De gebouwen onderling volgen Generals, de eenheden blijven speelbaar.
 
-## Maten (meter, doel), versie 2 na Generals-data en keuze optie 2
-Gemeten in de GLB-bestanden (ruwe modelafmetingen). De schaal van de voertuigscènes in Godot is nog niet gecontroleerd.
+## Maten (meter), uitgevoerd: uniforme schaal 0,6 van de bestaande vliegveldscène
+De hele scène (hangar, toren, platform, taxibaan, baan) is uniform met `AirfieldHQ23.SCALE = 0,6` verkleind, dus dezelfde modellen, texturen,
+animaties en botsing. Alleen de baan is korter (3 in plaats van 5 dekplaten). De eerdere voorlopige maten (24 × 21 m) bleken niet haalbaar:
+een jager die niet kleiner is dan de tank (8,1 m) past pas in een hangar met schaal ≥ ~0,6. Gemeten in Godot (`tests/airfield_scale_test.gd`):
 
-| Onderdeel | Nu | Doel | Opmerking |
-|---|---|---|---|
-| Kazerne | 5,8 × 4,5 | ongewijzigd | referentie; soldaten komen uit de deur (`DOOR` = 2,5 m) |
-| Garage | ~6,1 × 6,2 (model 9,3 × 9,5 × `GS` 0,66) | ongewijzigd | War Factory is 1,28× kazerne, dus klopt al |
-| Helipad | 12,8 plaat, schacht 9 × 9 | **ongewijzigd (goedgekeurd)** | de schacht met lift is al 9 m; Apache-schaal 0,45 (~7,8 m) past er net op |
-| Vliegveld totaal | 75 × 53 | **~24 × 21 (optie 2, herzien)** | bebouwd ~360 m², ~11% van de basis van 56 × 56 m |
-| Hangar | 22,5 × 21 | ~10 × 11, opening ~8 m | jager 8,1 × 5,2 m + ~1,3 m speling per kant |
-| Platform | 18 × 14 | ~10 × 9 | |
-| Baan | 75 × 18 | ~24 × 6,5 | arcade-vliegen; breedte = spanwijdte + speling |
-| Toren | 8 × 8 | ~2,5 × 2,5 | trapcollision opnieuw |
-| Jager | schaal 0,62 (~5,8 × 9,2 m) | **schaal ~0,55 (~5,2 × 8,1 m)** | nooit kleiner dan de tank (3,9 × 7,9 m) of jeep (1,7 × 3,8 m); Raptor ≈ Crusader in Generals |
+| Onderdeel | Voor | Na (wereld) |
+|---|---|---|
+| Hangarschil | 22,5 × 21 | 13,5 × 12,6 m |
+| Hangaropening | 15 × 5,9 | 9 × 3,5 m |
+| Baan | 75 × 18 | 27 × 10,8 m (3 dekplaten) |
+| Platform | 18 × 14 | 10,8 × 8,4 m |
+| Taxibaan | 18 breed | 10,8 breed |
+| Toren | 8 × 8 | 4,8 × 4,8 m |
+| Hele vliegveld (omvattend) | 75 × 53 (~3975 m²) | 36,9 × 33,0 m (voorzichtig oppervlak 982 m², was 3267 m²) |
+| Jager | schaal 0,62 | schaal 0,55: ~8,1 × 5,2 m (iets langer dan de tank, 7,9 m) |
+| Kazerne, garage, helipad, voertuigen | - | ongewijzigd |
 
 ## Voertuigen en soldaten
 - **Soldaten:** komen uit de kazerne naar een punt 2,5 m voor de deur. Kazerne blijft gelijk, dus geen wijziging. Rond de deur komt een vrije zone van minstens 3 m, die de plaatsing bewaakt.

@@ -93,7 +93,7 @@ func _run() -> void:
 	_check("toestel past in de hangar (span %.1f m, lengte %.1f m)" % [plane._span, plane._len], plane._hangar_fit)
 	_check("toestel geparkeerd en in de hangar", plane.mode == V.Mode.PARKED and plane.on_pavement(plane.global_position) == false and plane._inside_hangar())
 	var gl: Vector3 = plane.global_position
-	_check("model staat met de wielen op de vloer (y=%.2f)" % gl.y, absf(gl.y - 0.22) < 0.03)
+	_check("model staat met de wielen op de vloer (y=%.2f)" % gl.y, absf(gl.y - V.PAVEMENT_Y) < 0.03)
 	# schaduw en camera-extra bij stilstand
 	_check("camera_extra in rust is 0 (alt 0, snelheid 0)", plane.camera_extra() == 0.0)
 
@@ -133,7 +133,7 @@ func _run() -> void:
 	_check("te langzaam om op te stijgen (v=%.1f)" % plane.speed, plane.mode == V.Mode.GROUND and plane.speed < V.LIFTOFF)
 	var lifted := await _until(func(): return plane.mode == V.Mode.AIR, 240)
 	var local_x: float = cx.to_local(plane.global_position).x
-	_check("opgestegen na rol (x=%.1f van baan -37.5..37.5, v=%.1f)" % [local_x, plane.speed], lifted and local_x > AH.RUNWAY_START_X + 2.0)
+	_check("opgestegen na rol (x=%.1f van baan %.1f..%.1f, v=%.1f)" % [local_x, AH.RUNWAY_START_X, AH.RUNWAY_END_X, plane.speed], lifted and local_x > AH.RUNWAY_START_X + 2.0)
 	await _frames(60)
 	_check("klimt (hoogte %.1f m)" % plane.alt, plane.alt > 4.0)
 	_check("camera zoomt mee uit (+%.1f m)" % plane.camera_extra(), plane.camera_extra() > 5.0)
@@ -158,7 +158,7 @@ func _run() -> void:
 
 	# ---------------------------------------------------------------- landen
 	# laag aanvliegen boven asfalt, langzaam, stick omhoog (dalen)
-	_put(-30.0, AH.RUNWAY_CENTER_Z + 2.0, -PI * 0.5, 6.0, 15.0, V.Mode.AIR)   # koers oost over de baan
+	_put(AH.RUNWAY_START_X - 8.0, AH.RUNWAY_CENTER_Z + 2.0, -PI * 0.5, 6.0, 15.0, V.Mode.AIR)   # koers oost over de baan (net voor het begin)
 	plane.override_move = Vector2(0.14, 0)   # net boven de dode zone: ~minimaal
 	plane.override_climb = -1.0
 	var landed := await _until(func(): return plane.mode == V.Mode.ROLLOUT, 600)
@@ -178,8 +178,9 @@ func _run() -> void:
 	await _frames(5)
 	plane._press()
 	var gx := Vector3.ZERO   # open gras (geen asfalt, geen boom, geen muur) in de buurt
-	for gz in range(-60, 100, 6):
-		for gxx in range(-70, 70, 6):
+	# vliegveldmaten: het zoekgebied is 1/SCALE groter zodat de grasplek even ver van de gebouwen ligt als vroeger
+	for gz in range(-100, 166, 10):
+		for gxx in range(-116, 116, 10):
 			var cand: Vector3 = cx.to_global(AH.layout_point(float(gxx), float(gz), 0.0))
 			plane.global_position = Vector3(cand.x, 0.0, cand.z)
 			if not plane.on_pavement(cand) and not FO.has_tree_near(cand.x, cand.z, 14.0) and not plane._blocked(8.0, 1.0):

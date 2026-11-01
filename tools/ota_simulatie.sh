@@ -4,7 +4,7 @@
 # Omgeving: OTA_BASE (commit van de IPA, verplicht), OTA_WERKMAP (standaard een tijdelijke map), OTA_PROJECTNAAM (standaard: uit project.godot).
 # Exit 0 = goed, 1 = de update zou het spel breken (niets publiceren).
 set -euo pipefail
-GODOT="$1"; BASIS="$2"; LICHT="$3"; shift 3
+GODOT="$(readlink -f "$1")"; BASIS="$2"; LICHT="$3"; shift 3
 ZWAAR=("$@")
 : "${OTA_BASE:?OTA_BASE (commit van de IPA) ontbreekt}"
 HIER="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -35,8 +35,12 @@ json.dump({"basis": base, "stukken": stukken}, open(d + '/keten.json', 'w'))
 json.dump({"onstabiel": 0}, open(d + '/opstart.json', 'w'))
 PY
 LOG="$WERK/simulatie.log"
+# Altijd vanuit een lege map starten: staat er een project.godot in de huidige map (zoals in de workflow of in de repo), dan gebruikt Godot
+# de lokale bestanden in plaats van de pack en lijkt alles goed terwijl een telefoon het niet is.
+BASIS="$(readlink -f "$BASIS")"
+LEEG="$WERK/leeg"; mkdir -p "$LEEG"
 set +e
-XDG_DATA_HOME="$WERK/xdg" timeout 900 "$GODOT" --headless --main-pack "$BASIS" -s "$HIER/tools/ota_simulatie.gd" > "$LOG" 2>&1
+(cd "$LEEG" && XDG_DATA_HOME="$WERK/xdg" timeout 900 "$GODOT" --headless --main-pack "$BASIS" -s "$HIER/tools/ota_simulatie.gd" > "$LOG" 2>&1)
 CODE=$?
 set -e
 grep -E "^SIM |OTA_SIM_" "$LOG" || true

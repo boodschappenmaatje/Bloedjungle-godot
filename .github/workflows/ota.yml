@@ -63,11 +63,21 @@ jobs:
           echo '[]' > "$RUNNER_TEMP/prev/keten.json"
           EXPORT_BASE="$BASE"
           if gh release download updates -p manifest.json -D "$RUNNER_TEMP/prev" --clobber 2>/dev/null; then
+            gh release view updates --json assets -q '.assets[].name' > "$RUNNER_TEMP/prev/assets.txt"
             python3 - "$BASE" "$RUNNER_TEMP/prev" "$GITHUB_SHA" > "$RUNNER_TEMP/prev/uitkomst.txt" <<'PY'
           import json, sys
           base, d, sha = sys.argv[1:4]
           m = json.load(open(d + "/manifest.json"))
           keten = m.get("zwaar") if m.get("schema") == 3 and m.get("base") == base else None
+          if not keten:
+              print("")
+              sys.exit(0)
+          # stukken die in het manifest staan maar niet (meer) in de release: de keten stopt vóór het eerste ontbrekende stuk
+          aanwezig = set(open(d + "/assets.txt").read().split())
+          for i, p in enumerate(keten):
+              if p["naam"] not in aanwezig:
+                  keten = keten[:i]
+                  break
           if not keten:
               print("")
               sys.exit(0)

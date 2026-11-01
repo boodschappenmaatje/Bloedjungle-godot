@@ -118,7 +118,7 @@ static func behouden(zwaar: Array, heb: Array) -> int:
 	var n := 0
 	while n < heb.size() and n < zwaar.size() and str(heb[n].get("sha256", "")) == str((zwaar[n] as Dictionary).get("sha256", "x")):
 		n += 1
-	return n if n == heb.size() else 0
+	return n  # een gedeeld begin van de keten blijft bruikbaar: elk stuk bouwt op het vorige
 
 
 func _lees(naam: String) -> Dictionary:
@@ -301,8 +301,11 @@ func _download_met_lange_timeout() -> void:
 	var zwaar: Array = m.get("zwaar", []) if m.get("zwaar") is Array else []
 	var heb: Array = keten.get("stukken", []) if str(keten.get("basis", "")) == str(m.get("base", "")) and keten.get("stukken") is Array else []
 	var lijst: Array = heb.slice(0, behouden(zwaar, heb))
-	_schrijf("keten.json", {"basis": str(m.base), "stukken": lijst})
-	_ruim_keten_op(lijst)
+	if not lijst.is_empty():
+		_schrijf("keten.json", {"basis": str(m.base), "stukken": lijst})
+		_ruim_keten_op(lijst)
+	# Is er niets te behouden (een nieuwe zware keten), dan blijft de oude keten staan tot het eerste nieuwe stuk binnen is:
+	# een onderbroken download laat de speler zo nooit zonder modellen en vliegveld achter.
 	var licht_sha := str((m.get("licht", {}) as Dictionary).get("sha256", "")) if m.get("licht") is Dictionary else ""
 	for e in nodig:
 		var naam := str(e.naam).get_file()
@@ -340,6 +343,7 @@ func _download_met_lange_timeout() -> void:
 			DirAccess.rename_absolute(part, str(d.bestand))
 			lijst.append(d)
 			_schrijf("keten.json", {"basis": str(m.base), "stukken": lijst})
+			_ruim_keten_op(lijst)
 	_loopt = false
 	Updater.herstart_nodig = true
 	Updater._zet("gedownload", "Update %s staat klaar. Sluit de app helemaal af en open opnieuw." % str(m.versie))

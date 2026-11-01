@@ -3,7 +3,7 @@ extends CanvasLayer
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
 const VLIEGTUIG := preload("res://scripts/vliegtuig.gd")
-const VERSION := "v170"
+const VERSION := "v171"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -126,7 +126,12 @@ func _process(delta: float) -> void:
 	info.visible = false  # de versie staat nu achter de fps-teller (HudExtra); hier zat hij onder de TACTISCH-knoppen
 	if _banner_t > 0.0:
 		_banner_t -= delta
-	var temporary_banner := _banner_t > 0.0
+	var waiting: bool = Game.player != null and is_instance_valid(Game.player) and Game.player.dead \
+			and Game.player.respawn_t > 0.0 and Game.state != "over"
+	if waiting:
+		big.text = "GESNEUVELD"
+		small.text = ("TERUG OVER %d S" % ceili(Game.player.respawn_t))
+	var temporary_banner := _banner_t > 0.0 or waiting
 	if not temporary_banner:
 		big.text = "GOLF %d" % maxi(Game.wave, 1) if Game.state == "prep" or Game.state == "play" else ""
 		if Game.state == "prep":

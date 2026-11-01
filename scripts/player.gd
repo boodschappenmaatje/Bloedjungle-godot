@@ -12,6 +12,11 @@ var fire_t := 0.0
 var reload_t := 0.0
 var idle_t := 0.0
 var dead := false
+var respawn_t := 0.0         # > 0 terwijl je dood bent en wacht om terug te komen
+var shield_t := 0.0          # korte onkwetsbaarheid direct na terugkomen
+var home := Vector3(0, 0, 4)  # terugkomplek bij de bunker (startplek in de basis)
+const RESPAWN_TIME := 8.0
+const RESPAWN_SHIELD := 2.5
 var airborne := false        # vliegt in de helikopter: onkwetsbaar voor kogels van beneden
 var in_tank := false       # zit in de tank: alleen raketten (en tankgranaten) doen hem iets, kogels en messen niet
 var driving := false         # zit in de jeep: dan rijdt jeep.gd en loopt hij niet zelf
@@ -64,6 +69,7 @@ const DODGE_SAFE := 0.32     # zo lang van de rol raken kogels hem niet
 
 func _ready() -> void:
 	Game.player = self
+	home = global_position
 	refresh_look()
 	model.scale = Vector3.ONE * Data.SOLDIER_SCALE
 	weapon = Game.cur
@@ -96,6 +102,11 @@ func refresh_look() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	shield_t = maxf(0.0, shield_t - delta)
+	if dead and respawn_t > 0.0 and Game.state != "over":
+		respawn_t -= delta
+		if respawn_t <= 0.0:
+			respawn()
 	if dead or Game.state == "shop" or Game.state == "menu":
 		model.set_shoot_pose(false, weapon, Game.wstat(weapon).rate)
 		return
@@ -729,8 +740,8 @@ func hit(dmg: float, dir: Vector3, from_player: bool, heavy := false) -> void:
 			Fx.spark(get_parent(), global_position + Vector3.UP * 1.2, dir)  # kogels en messen ketsen af op het pantser
 			return
 		dmg *= 0.5  # pantser
-	if dodge_t > DODGE_TIME - DODGE_SAFE:
-		return  # midden in de rol
+	if dodge_t > DODGE_TIME - DODGE_SAFE or shield_t > 0.0:
+		return  # midden in de rol, of net teruggekomen
 	var cover := 0.45 if Game.defs and Game.defs.in_trench(global_position) else 1.0  # in een loopgraaf mis je ruim de helft
 	hp -= dmg * (1.0 - 0.08 * Game.upg.armor) * Progress.bonus().taken * cover
 	model.flash()
@@ -747,4 +758,25 @@ func hit(dmg: float, dir: Vector3, from_player: bool, heavy := false) -> void:
 		if in_tank:
 			Fx.explosion(get_parent(), global_position + Vector3.UP * 0.5, 1.8)  # de tank wordt opgeblazen
 		model.play("dood1", 0.1)
-		Game.end_game("Je bent gesneuveld in golf %d" % Game.wave)
+		# niet meer game over: na 8 s kom je terug bij de bunker; ondertussen mag je het bouwscherm gebruiken
+		respawn_t = RESPAWN_TIME
+		Sfx.play("thud", 0.8)
+		Game.changed.emit()
+
+
+## Terugkomen na sneuvelen (Generals-plan 2d): vol leven, bij de bunker, even onkwetsbaar.
+func respawn() -> void:
+	dead = false
+	respawn_t = 0.0
+	hp = Game.max_hp()
+	in_tank = false
+	tower = null
+	elev = 0.0
+	climb = -1.0
+	dodge_t = 0.0
+	stance = 0
+	global_position = home
+	shield_t = RESPAWN_SHIELD
+	model.play("stil")
+	Game.banner.emit("JE BENT TERUG", "", 1.4)
+	Game.changed.emit()

@@ -356,8 +356,9 @@ func _refresh() -> void:
 		if Buildings.DEFS.has(c.kind):
 			var d: Dictionary = Buildings.DEFS[c.kind]
 			var built := Game.builds.full(c.kind)
-			c.off = built or (c.kind != "airfield" and not Game.can_afford_build(d.cost))
-			c.sub = ("gebouwd" if not Game.builds.is_piece(c.kind) else "max") if built else UI.nl(d.cost) + " pt"
+			var need: String = Game.builds.missing(c.kind)
+			c.off = built or need != "" or (c.kind != "airfield" and not Game.can_afford_build(d.cost))
+			c.sub = ("gebouwd" if not Game.builds.is_piece(c.kind) else "max") if built else ("eerst " + String(Buildings.DEFS[need].name) if need != "" else UI.nl(d.cost) + " pt")
 		else:
 			c.off = true
 			c.sub = "binnenkort"
@@ -420,7 +421,10 @@ func _fill_panel() -> void:
 	row.add_theme_constant_override("v_separation", 6)
 	vb.add_child(row)
 	var tip := ""
-	if b.kind == "kazerne":
+	if Buildings.under_construction(b):
+		info.text = "In aanbouw: nog %d s · sterkte %d" % [ceili(b.build_t), ceili(b.hp)]
+		tip = "Het gebouw is nog niet klaar. Training, wagens en vliegtuigen kunnen pas als de steigers weg zijn."
+	elif b.kind == "kazerne":
 		var lv: Dictionary = Buildings.LEVELS[b.lv]
 		var nx: Variant = Buildings.LEVELS[b.lv + 1] if b.lv + 1 < Buildings.LEVELS.size() else null
 		info.text = "Soldaten %d / %d%s · %ds per man · sterkte %d" % [Game.builds.soldiers_alive(), lv.max, " · in training %d" % b.queue if b.queue else "", lv.time, ceili(b.hp)]
@@ -723,7 +727,7 @@ func _up(id: int) -> void:
 			_airfield_preview_dirty = false
 			_set_placement_message("Onvoldoende punten", true)
 			return
-		_sel = Game.builds.place("airfield", site, _airfield_yaw)
+		_sel = Game.builds.place("airfield", site, _airfield_yaw, true)
 		if _sel != null:
 			_airfield_armed = false
 			Game.changed.emit()
@@ -741,7 +745,7 @@ func _up(id: int) -> void:
 		else:
 			_say(String(d.get("status", {}).get("reason", "Ongeldige locatie")))
 	elif d.moved and d.get("ok", false) and Game.can_afford_build(Buildings.DEFS[d.kind].cost):
-		_sel = Game.builds.place(d.kind, Vector3(d.x, 0, d.z), d.yaw)
+		_sel = Game.builds.place(d.kind, Vector3(d.x, 0, d.z), d.yaw, true)
 	elif d.moved:
 		var status: Dictionary = d.get("status", {})
 		var message := String(status.get("reason", "Ongeldige locatie"))

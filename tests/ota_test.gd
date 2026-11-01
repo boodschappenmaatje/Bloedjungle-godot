@@ -220,6 +220,7 @@ func _run() -> void:
 	_check(nodig_d.size() == 1 and str(nodig_d[0].naam) == "zwaar-2.pck", "met stuk 1 en licht moet alleen zwaar stuk 2 ontbreken")
 	_check(Panel.stukken_nodig(m3d, {"sha256": lt.pck.sha256}, {"basis": "BASIS1", "stukken": [{"sha256": z1.pck.sha256}, {"sha256": z2.pck.sha256}]}).is_empty(), "alles binnen: niets meer nodig")
 	_check(Panel.stukken_nodig(m3d, {"sha256": lt.pck.sha256}, {"basis": "ANDERS", "stukken": [{"sha256": z1.pck.sha256}]}).size() == 2, "een keten van een andere basis telt niet mee")
+	_check(Panel.behouden([z1.pck, z2.pck], [{"sha256": z1.pck.sha256}, {"sha256": "x"}]) == 1, "een gedeeld begin van de keten moet blijven")
 	_check(Panel.stukken_nodig({"versie": "x", "pck": lt.pck}, {}, {}).is_empty(), "een manifest zonder licht/zwaar valt terug op de gewone route")
 	var Keten: Script = load("res://scripts/ota_keten.gd")
 	DirAccess.make_dir_recursive_absolute(DIR + "/keten")
@@ -242,7 +243,7 @@ func _run() -> void:
 	_check(Keten.laad(DIR) == 2, "twee zware stukken horen te laden")
 	_check(FileAccess.get_file_as_string("res://ota_test/hallo.json") == "{\"w\":9}", "het lichte stuk moet voorrang houden op de zware stukken")
 	DirAccess.remove_absolute(DIR + "/keten/zwaar-2.pck")
-	_check(Keten.laad(DIR) == 0, "een ontbrekend stuk: de keten mag niet half geladen worden")
+	_check(Keten.laad(DIR) == 1, "een ontbrekend laatste stuk: het gezonde begin van de keten moet toch laden")
 
 	# 8. de hele GitHub-stroom tegen de nepserver
 	await _github_stroom()

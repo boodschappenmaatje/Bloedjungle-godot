@@ -42,11 +42,15 @@ func _process(_d: float) -> bool:
 		_check("annuleren haalt er een uit", kz.queue == 4)
 		_check("annuleren geeft 250 terug", pts0 - g.points == 4 * 250)
 		_check("rijbalk bestaat", kz.rij != null)
+		var oud = load("res://scripts/ally.gd").new()
+		main.add_child(oud)
+		oud.global_position = Vector3(-4, 0, -4)
+		oud.setup(100.0, 16.0, 0)
+		g.allies.append(oud)
 		b.set_rally(kz, Vector3(-30, 0, -20))
+		_check("al klare soldaat loopt naar de vlag", oud.command == "defend" and oud.command_target.is_equal_approx(Vector3(-30, 0, -20)))
 		_check("vlag staat", kz.has_rally and kz.flag != null and kz.flag.position.is_equal_approx(Vector3(-30, 0, -20)))
-		_check("standaard: nieuwe soldaten volgen", kz.rally_mode == "volgen")
-		b.toggle_rally_mode(kz)
-		_check("wissel naar vlag", kz.rally_mode == "vlag" and kz.flag.visible)
+		_check("vlag zetten zet de stand op vlag", kz.rally_mode == "vlag" and kz.flag.visible)
 		kz.train_t = 0.05
 	if frames == 30:
 		var b = root.get_node("Game").builds

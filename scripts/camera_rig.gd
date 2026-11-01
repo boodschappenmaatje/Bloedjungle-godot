@@ -191,7 +191,7 @@ func _process(delta: float) -> void:
 	if plane != null:
 		lead_dist = plane.camera_lead()
 	var want: Vector3 = Vector3(sin(p.face), 0.0, cos(p.face)) * lead_dist
-	_lead = _lead.lerp(want, 1.0 - exp(-3.0 * delta))
+	_lead = _lead.lerp(want, 1.0 - exp(-(6.0 if plane != null else 3.0) * delta))
 	# De groepsuitsnede is een verschuiving t.o.v. de speler die zacht in- en uitglijdt. Een vast wereldpunt
 	# per scan liet de camera elke 0,4 s verspringen en tussendoor achter de lopende speler blijven hangen.
 	var group_f := 1.0 - exp(-2.5 * delta)
@@ -203,7 +203,7 @@ func _process(delta: float) -> void:
 	focus = target + Vector3(0.0, 0.0, -dist * (0.05 if portrait else 0.07))
 	var goal: Vector3 = focus + Vector3(0.0, h, back)
 	goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)
-	var follow := 1.0 - exp(-5.0 * delta)
+	var follow := 1.0 - exp(-(8.0 if plane != null else 5.0) * delta)
 	global_position = goal if _snap else global_position.lerp(goal, follow)
 	# Kijkpunt en positie volgen met dezelfde snelheid: de kijkhoek blijft gelijk en draait niet abrupt.
 	_look = focus if _snap else _look.lerp(focus, follow)

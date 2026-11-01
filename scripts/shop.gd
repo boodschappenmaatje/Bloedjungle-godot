@@ -4,6 +4,7 @@ extends Control
 ## wapens, upgrades, basis en soldaat. Bevat ook de knoppen "Wapenkamer" (in de pauze) en "Wissel"
 ## (wapen wisselen, een ronde knop rechts zoals in de web-HUD).
 
+const VLIEGTUIG := preload("res://scripts/vliegtuig.gd")
 const TABS := ["Wapens", "Upgrades", "Basis", "Soldaat"]
 const TIER_COLORS := [Color(0, 0, 0, 0), Color8(111, 174, 74), Color8(74, 143, 214), Color8(154, 95, 208), Color8(224, 180, 58)]
 
@@ -132,6 +133,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 
 func _sync() -> void:
 	_open_btn.visible = Game.state == "prep" and not Game.build_mode
+	_open_btn.modulate.a = 0.22 if is_instance_valid(VLIEGTUIG.driven_plane) else 1.0
+	_open_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE if is_instance_valid(VLIEGTUIG.driven_plane) else Control.MOUSE_FILTER_STOP
 	_swap_btn.visible = (Game.state == "play" or Game.state == "prep") and not Game.build_mode
 	_swap_btn.disabled = Game.loadout.size() < 2
 

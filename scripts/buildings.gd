@@ -20,6 +20,7 @@ const VEHICLES := {
 	"truck": {"name": "Truck", "cost": 700, "scene": "res://scenes/vrachtwagen.tscn"},
 }
 const HELI_COST := 500
+const GARAGE_RIJ_MAX := 3  # wagens die tegelijk in de garagerij mogen staan; van elk type mag je er zoveel kopen als je wilt
 # Generals-plan stap 1 (docs/GENERALS_PLAN.md): bouwtijd in seconden en wat je eerst nodig hebt (techboom).
 # Muren en zandzakken staan er meteen. Tests en code die place() zonder bouwtijd aanroepen bouwen direct.
 const BUILD_TIME := {"kazerne": 12.0, "garage": 15.0, "helipad": 20.0, "airfield": 30.0}
@@ -335,7 +336,7 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false) -> Variant
 	if kind == "garage":
 		b.rij = RijBalk.new()
 		add_child(b.rij)
-		b.merge({"has": {"jeep": false, "tank": false, "truck": false}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
+		b.merge({"has": {"jeep": 0, "tank": 0, "truck": 0}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
 		_garage_init(b)
 	elif kind == "airfield":
 		b.merge({"aircraft": [], "aircraft_capacity": AirfieldHQ23.AIRCRAFT_CAPACITY, "runway_reserved_by": "", "complex": true})
@@ -872,14 +873,14 @@ func vehicle_cost(kind: String) -> int:
 
 
 func can_buy_vehicle(b: Dictionary, kind: String) -> bool:
-	return b.kind == "garage" and not under_construction(b) and not b.has[kind] and Game.points >= VEHICLES[kind].cost
+	return b.kind == "garage" and not under_construction(b) and b.order.size() < GARAGE_RIJ_MAX and Game.points >= VEHICLES[kind].cost
 
 
 ## Koop een jeep of tank; hij rijdt uit zodra je het bouwscherm verlaat.
 func buy_vehicle(b: Dictionary, kind: String) -> void:
 	if not can_buy_vehicle(b, kind) or not Game.pay_points(VEHICLES[kind].cost):
 		return
-	b.has[kind] = true
+	b.has[kind] += 1
 	b.order.append(kind)
 	Sfx.play("buy")
 	Game.changed.emit()
@@ -890,7 +891,7 @@ func cancel_order(b: Dictionary, kind: String) -> void:
 	if b.kind != "garage" or not b.order.has(kind):
 		return
 	b.order.erase(kind)
-	b.has[kind] = false
+	b.has[kind] = maxi(0, int(b.has[kind]) - 1)
 	Game.points += VEHICLES[kind].cost
 	Sfx.play("ping", 0.5)
 	Game.changed.emit()

@@ -196,7 +196,7 @@ func _refresh() -> void:
 			var v: Dictionary = Buildings.VEHICLES[k]
 			var btn := Button.new()
 			btn.add_to_group("hud_button")
-			btn.text = v.name + "\n" + ("gekocht" if b.has[k] else "%d pt" % v.cost)
+			btn.text = v.name + "\n" + ("%d pt" % v.cost)
 			UI.style_button(btn, "buy")
 			btn.add_theme_font_size_override("font_size", 13)
 			btn.custom_minimum_size = Vector2(110, 44)

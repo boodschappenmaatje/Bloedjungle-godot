@@ -29,6 +29,7 @@ var kills := 0
 var base_hp := Data.BASE_HP
 var rocket_seen := false
 var base_max := Data.BASE_HP
+var hq_level := 1   # niveau van het hoofdkwartier (1..3)
 var prep_t := 0.0
 var routes: Array = []  # vaste aanvalsroutes van de komende of lopende golf (AanvalRoutes)
 var bonus := 0  # bonus van de laatste overleefde golf, getoond in de wapenkamer
@@ -157,6 +158,7 @@ func reset() -> void:
 	bonus = 0
 	base_hp = Data.BASE_HP
 	base_max = Data.BASE_HP
+	hq_level = 1
 	enemies.clear()
 	barrels.clear()
 	if is_inside_tree():
@@ -290,7 +292,7 @@ func damage_base(dmg: float) -> void:
 	base_hp = maxf(0.0, base_hp - dmg)
 	changed.emit()
 	if base_hp <= 0.0:
-		end_game("De bunker is gevallen in golf %d" % wave)
+		end_game("Het hoofdkwartier is gevallen in golf %d" % wave)
 
 
 func end_game(reason: String) -> void:

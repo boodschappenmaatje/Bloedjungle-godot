@@ -77,15 +77,14 @@ static func _bunker(root: Node3D) -> void:
 	collision.shape = shape
 	collision.position.y = BUNKER_COLLISION_SIZE.y / 2.0
 	b.add_child(collision)
-	var visual := (load(BUNKER_GAME_ASSET_PAD) as PackedScene).instantiate() as Node3D
-	visual.name = "Bunker_High_Quality_Showcase"
-	# Fit the 8.4 × 7.2 m source footprint to the existing 4.6 m gameplay
-	# footprint while retaining the authored vertical silhouette and door.
-	visual.scale = Vector3(0.547619, 0.55, 0.638889)
+	# Het hoofdkwartier (assets/hoofdkwartier.glb) staat op de plek van de bunker; model 5,0 m x 0,92 = 4,6 m botsblok.
+	var visual := Node3D.new()
+	visual.name = "Hoofdkwartier"
+	visual.set_script(preload("res://scripts/hoofdkwartier.gd"))
 	b.add_child(visual)
 	root.add_child(b)
 	# zandzakkenring met een opening bij de deur
-	var r := 3.05
+	var r := 3.6
 	Kit.sandbags(root, Vector3(-r, 0, -r), Vector3(r, 0, -r), 2, 21)
 	Kit.sandbags(root, Vector3(-r, 0, r), Vector3(-r, 0, -r), 2, 22)
 	Kit.sandbags(root, Vector3(r, 0, -r), Vector3(r, 0, r), 2, 23)

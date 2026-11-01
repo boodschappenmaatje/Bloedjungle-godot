@@ -778,7 +778,7 @@ func _base_cards() -> void:
 		if Game.buy(Defenses.GUARD_COST):
 			d.buy_guard())
 	var missing := Game.base_max - Game.base_hp
-	_plain_card("Bunker repareren", "Herstelt 350 punten structuur.", "%d / %d" % [ceili(Game.base_hp), roundi(Game.base_max)], 0, 0, "Repareer · 250", Game.points >= 250 and missing > 0.0, func():
+	_plain_card("Hoofdkwartier repareren", "Herstelt 350 punten structuur van het hoofdkwartier.", "%d / %d" % [ceili(Game.base_hp), roundi(Game.base_max)], 0, 0, "Repareer · 250", Game.points >= 250 and missing > 0.0, func():
 		if Game.buy(250):
 			Game.base_hp = minf(Game.base_max, Game.base_hp + 350.0))
 	var gcost: int = Game.gates.total_repair_cost()
@@ -802,6 +802,13 @@ func _base_cards() -> void:
 	_plain_card("Poorten versterken", "Dikker staal: +40%% stevigheid voor beide poorten (nu %d). Tip: houd bij een beschadigde poort de knop ingedrukt." % roundi(Game.gates.max_hp()), "", gl, 5, "Max" if gl >= 5 else "Versterk · %s" % UI.nl(350 * (gl + 1)), gl < 5 and Game.points >= 350 * (gl + 1), func():
 		if Game.buy(350 * (gl + 1)):
 			Game.gates.upgrade())
+	var hq: int = Game.hq_level
+	var hq_cost: int = [0, 1500, 2500][clampi(hq, 1, 2)]
+	_plain_card("Hoofdkwartier upgraden", "Niveau %d van 3: meer sterkte en nieuwe onderdelen op het dak. Niveau 2 kost 1.500, niveau 3 kost 2.500 punten." % hq, "Niveau %d" % hq, hq, 3, "Max" if hq >= 3 else "Upgrade · %s" % UI.nl(hq_cost), hq < 3 and Game.points >= hq_cost, func():
+		if hq < 3 and Game.buy(hq_cost):
+			Game.hq_level += 1
+			Game.base_max += 400.0 if Game.hq_level == 2 else 500.0
+			Game.base_hp = Game.base_max)
 	_tiered("Beton versterken", "+300 maximale structuur en direct hersteld.", "fort", 5, 400, "Versterk", func():
 		Game.base_max += 300.0
 		Game.base_hp = Game.base_max)

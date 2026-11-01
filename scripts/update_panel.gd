@@ -3,6 +3,8 @@ extends CanvasLayer
 ## Updatescherm (Hoofdmenu en Pauze > Updates): toont de app- en patchversie, laat je het GitHub-token invullen, controleert op een
 ## nieuwe patch en downloadt die pas als jij dat bevestigt. Na het installeren de app helemaal afsluiten en opnieuw openen.
 
+const OTA := preload("res://scripts/ota_keten.gd")
+
 var _status: Label
 var _info: Label
 var _token: LineEdit
@@ -380,7 +382,7 @@ func _ververs() -> void:
 		return
 	var app := "app-versie %s" % Updater.app_base.left(7) if Updater.app_base != "dev" else "ontwikkelbuild"
 	var patch := "actieve update: %s" % str(Updater.actief.get("versie", "?")) if Updater.patch_geladen else "geen update actief (zoals in de IPA)"
-	_info.text = "%s · %s\n%s\n%s" % [app, patch, preload("res://scripts/ota_keten.gd").status, preload("res://scripts/soldier_model.gd").player_status]
+	_info.text = "%s · %s\n%s\nspeler: %s\nvliegtuig: %s" % [app, patch, OTA.status, OTA.speler if OTA.speler != "" else "nog niet aangemaakt", OTA.vliegtuig if OTA.vliegtuig != "" else "nog geen melding"]
 	_status.text = Updater.status_tekst
 	var bezig: bool = Updater.status == "bezig"
 	_balk.visible = bezig

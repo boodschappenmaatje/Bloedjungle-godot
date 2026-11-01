@@ -190,6 +190,10 @@ func _run() -> void:
 	var vegetation_sale_value: int = builder.sell_value(vegetation_build)
 	builder.sell(vegetation_build)
 	assert(not Foliage._building_clearings.has(vegetation_build.node.get_instance_id()) and game.build_credit == vegetation_sale_value, "Selling must release the saved clearance registry")
+	# The sold airfield's node is freed at the end of the frame. Its hangar walls are solid (wall layer),
+	# so wait for the physics server to drop them before placing a second airfield at the same site.
+	await get_tree().physics_frame
+	await get_tree().physics_frame
 	tree_near.free()
 	for node in tree_mm_nodes:
 		node.free()

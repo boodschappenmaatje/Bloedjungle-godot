@@ -35,6 +35,7 @@ const LEVELS := [null,
 	{"max": 4, "time": 7.0, "hp": 115.0, "dmg": 18.0, "cost": 1200},
 	{"max": 6, "time": 5.0, "hp": 130.0, "dmg": 21.0, "cost": 1800}]
 const TRAIN_COST := 250
+const RIJ_MAX := 5  # soldaten tegelijk in de bouwrij van een kazerne (Generals-plan stap 2)
 const DOOR := 2.5  # afstand van het midden tot het punt voor de deur
 const GS := 0.66      # schaal van het garagemodel (breedte en diepte); in de hoogte GSH
 const GSH := 0.92
@@ -323,10 +324,14 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false) -> Variant
 	node.rotation.y = yaw
 	add_child(node)
 	var b := {"kind": kind, "node": node, "at": at, "yaw": yaw, "lv": 1, "queue": 0, "train_t": 0.0,
-		"hp": DEFS[kind].hp, "max_hp": DEFS[kind].hp, "down": false, "cracked": false, "fx": null, "bar": null}
+		"hp": DEFS[kind].hp, "max_hp": DEFS[kind].hp, "down": false, "cracked": false, "fx": null, "bar": null,
+		"rij": null, "rally": Vector3.ZERO, "has_rally": false, "rally_mode": "volgen", "flag": null}
 	node.ref = b
 	b.bar = HpBar.new()
 	add_child(b.bar)
+	if kind == "kazerne":
+		b.rij = RijBalk.new()
+		add_child(b.rij)
 	if kind == "garage":
 		b.merge({"has": {"jeep": false, "tank": false, "truck": false}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
 		_garage_init(b)
@@ -478,6 +483,10 @@ func remove(b: Dictionary) -> void:
 		Foliage.release_building_clearance(b.node.get_instance_id())
 	if b.bar != null:
 		b.bar.queue_free()
+	if b.get("rij") != null and is_instance_valid(b.rij):
+		b.rij.queue_free()
+	if b.get("flag") != null and is_instance_valid(b.flag):
+		b.flag.queue_free()
 	if b.kind == "airfield":
 		AirfieldHQ23.cleanup(b)
 	elif b.kind == "helipad":
@@ -620,12 +629,96 @@ func room(b: Dictionary) -> int:
 
 
 func recruit(b: Dictionary) -> void:
-	if b.down or under_construction(b) or room(b) <= 0 or not Game.pay_points(TRAIN_COST):
+	if b.down or under_construction(b) or room(b) <= 0 or b.queue >= RIJ_MAX or not Game.pay_points(TRAIN_COST):
 		return
 	if b.queue == 0:
 		b.train_t = LEVELS[b.lv].time
 	b.queue += 1
 	Game.changed.emit()
+
+
+## Haal de laatste soldaat uit de rij en geef de punten terug.
+func cancel_recruit(b: Dictionary) -> void:
+	if b.queue <= 0:
+		return
+	b.queue -= 1
+	Game.points += TRAIN_COST
+	if b.queue == 0:
+		b.train_t = 0.0
+	Sfx.play("ping", 0.5)
+	Game.changed.emit()
+
+
+## Verzamelpunt: nieuwe soldaten lopen erheen als de stand op "vlag" staat.
+func set_rally(b: Dictionary, at: Vector3) -> void:
+	b.rally = Vector3(at.x, 0.0, at.z)
+	b.has_rally = true
+	if b.flag == null or not is_instance_valid(b.flag):
+		b.flag = _make_flag()
+		add_child(b.flag)
+	b.flag.position = b.rally
+	_flag_visible(b)
+	Game.changed.emit()
+
+
+func toggle_rally_mode(b: Dictionary) -> void:
+	b.rally_mode = "vlag" if b.rally_mode == "volgen" else "volgen"
+	_flag_visible(b)
+	Game.changed.emit()
+
+
+func _flag_visible(b: Dictionary) -> void:
+	if b.flag != null and is_instance_valid(b.flag):
+		b.flag.visible = b.has_rally and (b.rally_mode == "vlag" or Game.build_mode)
+
+
+func _make_flag() -> Node3D:
+	var f := Node3D.new()
+	f.name = "Verzamelvlag"
+	var mat_pole := StandardMaterial3D.new()
+	mat_pole.albedo_color = Color("5b4a30")
+	mat_pole.roughness = 0.9
+	var mat_cloth := StandardMaterial3D.new()
+	mat_cloth.albedo_color = Color("4b5a2c")
+	mat_cloth.roughness = 0.8
+	mat_cloth.cull_mode = BaseMaterial3D.CULL_DISABLED
+	var pole := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = 0.035
+	cm.bottom_radius = 0.045
+	cm.height = 2.3
+	pole.mesh = cm
+	pole.material_override = mat_pole
+	pole.position.y = 1.15
+	f.add_child(pole)
+	var cloth := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.8, 0.5, 0.02)
+	cloth.mesh = bm
+	cloth.material_override = mat_cloth
+	cloth.position = Vector3(0.43, 2.0, 0.0)
+	f.add_child(cloth)
+	var band := MeshInstance3D.new()
+	var bb := BoxMesh.new()
+	bb.size = Vector3(0.8, 0.09, 0.025)
+	band.mesh = bb
+	var mat_gold := StandardMaterial3D.new()
+	mat_gold.albedo_color = Color("d9b83a")
+	band.material_override = mat_gold
+	band.position = Vector3(0.43, 2.2, 0.0)
+	f.add_child(band)
+	var base := MeshInstance3D.new()
+	var bc := CylinderMesh.new()
+	bc.top_radius = 0.28
+	bc.bottom_radius = 0.34
+	bc.height = 0.12
+	base.mesh = bc
+	base.material_override = mat_pole
+	base.position.y = 0.06
+	f.add_child(base)
+	for mi in f.get_children():
+		(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return f
 
 
 func upgrade(b: Dictionary) -> void:
@@ -650,6 +743,8 @@ func _spawn(b: Dictionary) -> void:
 	a.face = b.yaw
 	a.setup(lv.hp, lv.dmg, Game.allies.size())
 	Game.allies.append(a)
+	if b.rally_mode == "vlag" and b.has_rally:
+		a.set_command("defend", b.rally)
 	Sfx.play("reload")
 	Game.banner.emit("NIEUWE REKRUUT", "", 1.0)
 	Game.changed.emit()
@@ -674,6 +769,11 @@ func _physics_process(delta: float) -> void:
 		var hurt: bool = b.hp < b.max_hp
 		bar.set_value(b.hp / b.max_hp, (hurt or Game.build_mode) and not b.down)
 		bar.global_position = b.at + Vector3(0, DEFS[b.kind].size.y + 1.0, 0)
+		if b.kind == "kazerne" and b.rij != null:
+			var prog: float = 1.0 - clampf(float(b.train_t) / float(LEVELS[b.lv].time), 0.0, 1.0) if b.queue > 0 else 0.0
+			b.rij.set_value(b.queue, prog)
+			b.rij.global_position = b.at + Vector3(0, DEFS[b.kind].size.y + 1.55, 0)
+		_flag_visible(b)
 	for b in Game.buildings:
 		if b.down or under_construction(b):
 			continue  # een wrak of bouwplaats doet niets

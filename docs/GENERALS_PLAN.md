@@ -58,6 +58,7 @@ Bloedjungle krijgt het ritme en de systemen van *Command & Conquer: Generals* (2
 **Fase 4 — later (P3):** A5, C6, D3, F4, G5.
 
 ## Hoe we werken (voor Claude én Codex)
+- **Begeleiding met keuzes (Dennis, 2026-11-01):** begin elke stap met een korte keuzekaart of keuzepagina over uiterlijk, gevoel, techniek en prestaties, met een aanbeveling. Bouw daarna de gekozen variant.
 - **Eén stap per keer.** Dennis test elke stap voordat de volgende begint. Begin geen volgende fase zonder zijn "ga door".
 - **Per stap:** korte voorstelbeschrijving, eigen featurebranch, **Draft PR**, tests (`tests/`) en voor/na-opnames. **Niet naar `main` mergen en niet naar de gedeelde OTA publiceren** zonder afzonderlijke uitdrukkelijke goedkeuring (zie `CLAUDE.md`/`AGENTS.md`).
 - **Nieuwe 3D-modellen** (hoofdkwartier, voorraadtruck, olietoren, gebouwen, soldatensoorten): volg `docs/ASSET_QUALITY_STANDARD.md` en eerst ontwerpoverleg; viewer in `tools/blender-vq2-viewer/`.
@@ -76,3 +77,10 @@ Het vliegveld op basismaat wordt in een aparte thread afgehandeld (`docs`/PR daa
 Opmerking bij Tegenstander: "De golven (waves) zoals we nu hebben moet eruit dit past niet bij onze game meer."
 Aangevinkt: A1-A5, B1 B3 B4 B5 B6, C1-C6, D2 D3 D4, E1 E2, F2 F4, G1-G5, H1 H2 H3, volgorde "Generals-kern eerst".
 Keuzepagina: https://claude.ai/artifact/VNoxTR8VvsKn44oDdD3Jq1
+
+## Stap 2 (keuzes van Dennis, 2026-11-01)
+- **Bouwrij kazerne:** rij in het gebouwpaneel (blokjes, tik = annuleren met terugbetaling) en pictogrammen boven het gebouw; maximaal 5 in de rij en nooit meer dan de limiet van het kazerneniveau; ook een rij voor de garage (later).
+- **Verzamelpunt:** vlag plaatsen (nu via het bouwscherm, tik op de grond), schakelaar "Nieuwe: volgen of vlag", later een mooie vlag in de wereld (nieuw model, eerst overleg).
+- **Radiomeldingen:** Dennis spreekt zelf in; de stem wordt omgebouwd tot een niet herkenbare radiostem (toonhoogte, smalle klank, ruis, klik). Meldingen: bouw voltooid, basis onder vuur, gebouw vernield, eenheid gereed (elk twee varianten).
+- **Terugkomen na sneuvelen:** na 8 seconden, met de wachttijd in een commandostand (tactische kaart met bevelen en bestellen). Eerst bij de bunker, later bij het hoofdkwartier.
+- **Volgorde:** eerst bouwrij + verzamelpunt, dan radiomeldingen, dan terugkomen.

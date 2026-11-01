@@ -61,7 +61,7 @@ func _load_module_meshes(paths: Array) -> Array[Mesh]:
 		root.free()
 	return meshes
 
-func _multimesh(name: String, mesh: Mesh, transforms: Array[Transform3D], range_begin: float, range_end: float, plane_offset_y: float = 0.0) -> void:
+func _multimesh(name: String, mesh: Mesh, transforms: Array[Transform3D], range_begin: float, range_end: float, plane_offset_y: float = 0.0, override: Material = null) -> void:
 	if transforms.is_empty():
 		return
 	var mm := MultiMesh.new()
@@ -78,6 +78,8 @@ func _multimesh(name: String, mesh: Mesh, transforms: Array[Transform3D], range_
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	instance.visibility_range_begin = range_begin
 	instance.visibility_range_end = range_end
+	if override != null:
+		instance.material_override = override
 	add_child(instance)
 
 func _collider(name: String, dimensions: Vector3, transform: Transform3D) -> void:
@@ -145,9 +147,23 @@ func _build_psp_apron_patch() -> void:
 	for index in PSP_PLATE_COUNT:
 		var x := (float(index) - float(PSP_PLATE_COUNT - 1) * 0.5) * plate_width
 		transforms.append(Transform3D(Basis.IDENTITY, origin + Vector3(x, 0.0, 0.0)))
-	_multimesh("Historic PSP apron patch LOD0", lod_meshes[0], transforms, 0.0, LOD0_END_M)
-	_multimesh("Historic PSP apron patch LOD1", lod_meshes[1], transforms, LOD0_END_M, LOD1_END_M)
-	_multimesh("Historic PSP apron patch LOD2", lod_meshes[2], transforms, LOD1_END_M, LOD2_END_M)
+	var psp_material := _psp_material(lod_meshes[0])
+	_multimesh("Historic PSP apron patch LOD0", lod_meshes[0], transforms, 0.0, LOD0_END_M, 0.0, psp_material)
+	_multimesh("Historic PSP apron patch LOD1", lod_meshes[1], transforms, LOD0_END_M, LOD1_END_M, 0.0, psp_material)
+	_multimesh("Historic PSP apron patch LOD2", lod_meshes[2], transforms, LOD1_END_M, LOD2_END_M, 0.0, psp_material)
+
+static func _psp_material(mesh: Mesh) -> Material:
+	# The PSP GLB exports an untextured pure-white base colour (1.0) with 0.68
+	# metallic, which clips to white in the game sun. Phosphate-coated wartime
+	# Marston mat reads as a dark, dull grey; keep its roughness/metal response.
+	var source := mesh.surface_get_material(0) as BaseMaterial3D if mesh.get_surface_count() > 0 else null
+	if source == null or source.albedo_texture != null:
+		return null
+	var material := source.duplicate() as BaseMaterial3D
+	material.albedo_color = Color(0.29, 0.30, 0.28)
+	material.metallic = 0.45
+	material.roughness = 0.78
+	return material
 
 func _build_taxiway() -> void:
 	var integration := get_parent().get_node_or_null("AirfieldFlightIntegration") as AirfieldFlightIntegration

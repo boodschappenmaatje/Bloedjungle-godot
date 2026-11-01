@@ -4,4 +4,6 @@
 *.import
 !assets/**/*.glb.import
 !assets/meshy_jungle_commando_texture_*.png.import
+!assets/airfield_hq_v23/**/*.jpg.import
+!assets/airfield_hq_v23/tower/*_1k.png.import
 __pycache__/

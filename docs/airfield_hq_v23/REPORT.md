@@ -41,6 +41,53 @@ by default. Existing Godot views still show clipped highlights in the hangar
 and tower, so in-engine material/light parity is not accepted. A matched
 light-on/light-off render has not been completed in this environment.
 
+## In-game exposure / moiré fix (2026-11-01)
+
+Root cause of the bleached airfield (white untextured-looking runway, white
+tower with grainy spots, flickering hangar roof), found by probing the placed
+airfield in the production world:
+
+1. **Unbounded lights from the motion source.** `AirfieldHQ23._add_hq22_tower_motion`
+   instances the complete protected HQ2.2 LOD0 GLB only for the tower door and
+   windsock clips. That glTF import carries the five "Warm workshop practical"
+   point lights *without* their 6 m range: Godot gave them energy ≈38,046 and
+   range 4096 m, visible. They flooded the whole field and the surrounding
+   grass. Fix: `_strip_motion_source_lights` removes every Light3D from the
+   instanced motion copy. The protected source GLB is unchanged.
+2. **Textures without mipmaps, uncompressed.** All 63 extracted HQ2.3 texture
+   imports were lossless, `mipmaps/generate=false` (and `*.import` is
+   git-ignored, so every fresh import repeated this). Distant concrete and
+   masonry sparkled. Fix: VRAM compression (ETC2/ASTC + S3TC), mipmaps on,
+   normal maps flagged, LOD1 capped at 1K and LOD2 at 512 px. The 63 texture
+   `.import` files are now tracked via a narrow `.gitignore` exception.
+   Texture memory: about 830 MB uncompressed RGBA8 before (calculated from
+   pixel sizes) versus 89.7 MB imported ETC2/ASTC files after (measured file
+   size). Not measured on an iPhone.
+3. **Geometric moiré on the hangar shell.** The corrugation is real geometry;
+   beyond ~30 m the ridges are thinner than a pixel. LOD0 now ends at 32 m and
+   LOD1/LOD2 use ~1.2 m neighbourhood-averaged shading normals on the two
+   corrugated sheet materials (geometry, UVs and normal maps unchanged).
+4. **PSP plates.** The PSP GLB exports pure-white untextured albedo with 0.68
+   metallic; the runtime instance now uses a dull phosphate grey override.
+
+Matched captures (same five cameras, Godot 4.7.2 **Mobile** renderer on
+Vulkan/llvmpipe software rendering under Xvfb, 1280×720, production
+`main.tscn`, Atmosphere day/clear, airfield placed at the suggested site):
+
+| View | Clipped white before | After |
+|---|---|---|
+| 01 gameplay camera (player on apron) | 38.6 % | 0.0 % |
+| 02 outside overview | 54.5 % | 0.0 % |
+| 03 tower | 38.8 % | 0.0 % |
+| 04 hangar | 52.8 % | 0.0 % |
+| 05 runway top-down | 52.1 % | 0.0 % |
+
+Images: `exposure_fix/before/`, `exposure_fix/after/` and side-by-side
+`exposure_fix/compare_*.png`; capture script
+`tests/airfield_hq_23_game_camera_capture.gd`, material probe
+`tests/airfield_hq_23_material_probe.gd` (0 problems). Software rendering is
+not representative of iPhone GPU output, FPS or memory.
+
 ## Build and aircraft state
 
 The existing building placement path includes the 2,800-point airfield,
@@ -94,11 +141,12 @@ remains **NOT_TESTED**.
 | HQ2.3 tower door / wind-sock animation | **PASS (Godot headless scene test)** | The compact tower reuses visible HQ2.2 moving meshes. Godot test verifies the exact source door clip drives the visible door after nested GLTF animation evaluation, door collision follows, and an independent HQ2.2 wind-sock loop changes the shape key. The protected sources remain hash-identical. |
 | Player walk, stair climb, hangar-door traversal and vehicle traversal | **NOT_TESTED** | The contract checks stair collision modules, doorway dimensions and animation-driven door collision, but does not simulate a player walking/climbing through them or a vehicle crossing the route. P-47 clearance is dimensional only; model absent. |
 | Build, repair, rebuild, sale, foliage clearance and disabled P-47 purchase | **PASS (contract)** | Godot contract covers points/cost, one-airfield guard, valid/blocked placement, payment-before-foliage-clearance, repair/rebuild/sale and missing-model purchase block. HUD visuals and touch operation are **NOT_TESTED**. |
-| Current Godot visual capture / matched 2.2 parity | **NOT_TESTED / visual issue found** | New capture exceeded 180 seconds without new PNGs. Existing Godot evidence has visibly clipped highlights. No quality-parity claim. |
+| In-game exposure (Godot Mobile renderer, software Vulkan) | **PASS (fixed 2026-11-01)** | Five matched captures: clipped white 38–55 % before, 0 % after. Root cause: unbounded HQ2.2 workshop lights in the motion-detail instance. Matched HQ2.2 parity and iPhone GPU appearance remain **NOT_TESTED**. |
+| Hangar roof moiré | **PASS (software capture)** | Visible moiré in before captures 04/05, gone after LOD0 range 32 m + filtered far-LOD normals. Native iPhone flicker check **NOT_TESTED**. |
 | P-47 model, purchase or flight | **NOT_TESTED / blocked** | Original model absent; purchase disabled. No taxi/takeoff/landing claim. |
 | Other existing regression tests (bunker, soldier, M1911 reload, build, HUD layout/equipment, weapon clips) | **PASS** | These separate tests pass on the current checkout; bus damage and team-command fixture results are listed separately. |
-| `auto_spel_test.gd` bus cases | **FAIL / main baseline inconclusive** | Feature run fails M1911 against bus at 4 m; other bus weapon/range cases pass. A main worktree run emitted two M1911 failures (4 m and 12 m), but a clean editor import was still running when stopped, so that result is not a valid same-condition baseline. These cases do not cover airfield code. |
-| Team-command fixture tests | **FAIL (reproduces on main and feature)** | Both branches report `Streak.armed` parse failure and missing `NapalmPlace` in the HUD-wheel test. The team-controller fixture itself reports 68 checks passed. The wrapper's final fixture is a running game and required manual stop. |
+| `auto_spel_test.gd` bus cases | **PASS after test fix; not a regression** | With a clean two-pass import, `main` (c445f57) and the feature branch fail identically: M1911 vs bus at 4 m and 12 m, 0 hp. Cause: since the v162 M1911 magazine model the test only reset `ammo`, so the pistol was empty after the car setups. The test now refills `m1911_mag_rounds`/`m1911_chambered`; 0 failures on both main and feature. |
+| Team-command fixture tests | **PASS** | Fixture stubs gained `Streak.armed` and a `NapalmPlace` stub. Wrapper exits 0: controller 68, HUD wheel 16, barracks recruit 2 and adapter 23 checks passed. |
 | OTA test | **NOT_TESTED / environment-blocked** | Local mock server could not bind sockets in the sandbox. No OTA action was attempted. |
 | Protected HQ2.2 source SHA-256 manifest | **PASS** | All listed protected source assets match. |
 | `git diff --check` | **PASS** | No whitespace errors in candidate diff. |
@@ -112,8 +160,8 @@ review. No quality-parity or iPhone acceptance claim is made.
 
 ## Remaining work before acceptance
 
-1. Run the live Godot captures in a display-backed renderer and correct the
-   clipped highlights before accepting the in-game visual parity.
+1. ~~Correct the clipped highlights~~ (done 2026-11-01, see above). Confirm
+   the look on the native iPhone app and compare against HQ2.2 there.
 2. Walk a player through the hangar and up/down tower stairs; test door passage,
    vehicle clearance, the construction UI and the disabled shop interactively.
 3. Produce the missing same-camera Godot hangar/interior/construction-detail
@@ -121,7 +169,6 @@ review. No quality-parity or iPhone acceptance claim is made.
 4. Review compact shell dimensions and the taxi/apron/P-47 clearance with the
    actual approved aircraft when available. Keep purchase disabled until the
    original plane asset and native iPhone acceptance are in place.
-5. Run the blocked regression fixtures in their supported environment and
-   resolve or classify the bus bullet test against a main-branch baseline.
+5. ~~Bus and team fixtures~~ (resolved 2026-11-01).
 
 No paid asset service, API key, merge, release or OTA publication was used.

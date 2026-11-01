@@ -466,8 +466,8 @@ func _fill_panel() -> void:
 	elif b.kind == "garage":
 		var have: Array = []
 		for k in Buildings.VEHICLES:
-			if b.has[k]:
-				have.append(Buildings.VEHICLES[k].name)
+			if b.has[k] > 0:
+				have.append("%s ×%d" % [Buildings.VEHICLES[k].name, b.has[k]])
 		info.text = "In dienst: %s · in de rij %d · sterkte %d" % [", ".join(have) if have else "nog niets", b.order.size(), ceili(b.hp)]
 		# de garagerij: gevulde blokjes zijn gekochte wagens die nog moeten uitrijden, tik erop om te annuleren (punten terug)
 		var grij := HBoxContainer.new()
@@ -484,7 +484,7 @@ func _fill_panel() -> void:
 		vb.move_child(grij, row.get_index())
 		for k in Buildings.VEHICLES:
 			var v: Dictionary = Buildings.VEHICLES[k]
-			_act(row, v.name, "gekocht" if b.has[k] else "%d pt" % v.cost, Game.builds.can_buy_vehicle(b, k), func(): Game.builds.buy_vehicle(b, k))
+			_act(row, v.name, "%d pt" % v.cost, Game.builds.can_buy_vehicle(b, k), func(): Game.builds.buy_vehicle(b, k))
 		tip = "Een gekochte wagen staat in de rij en rijdt de garage uit zodra je het bouwscherm verlaat; tik op het blokje om te annuleren. Jeep, tank en truck bestuur je zelf: loop erheen en tik INSTAPPEN. Stuur je ze niet, dan bewaakt de tank de basis. De truck neemt tot 10 soldaten mee."
 	elif b.kind == "airfield":
 		var aircraft: Array = b.get("aircraft", [])

@@ -38,10 +38,13 @@ func _process(_d: float) -> bool:
 		var p0: int = g.points
 		b.buy_vehicle(gar, "jeep")
 		b.buy_vehicle(gar, "tank")
-		_check("twee wagens in de rij", gar.order.size() == 2)
+		b.buy_vehicle(gar, "jeep")
+		_check("tweede jeep mag, rij heeft 3 wagens", gar.order.size() == 3 and gar.order.count("jeep") == 2)
+		_check("rij is vol bij 3 wagens", not b.can_buy_vehicle(gar, "truck"))
 		b.cancel_order(gar, "tank")
-		_check("annuleren haalt de tank eruit", gar.order == ["jeep"] and not gar.has["tank"])
-		_check("annuleren geeft de tank terug", g.points == p0 - 400)
+		b.cancel_order(gar, "jeep")
+		_check("annuleren laat een jeep over", gar.order == ["jeep"] and gar.has["tank"] == 0 and gar.has["jeep"] == 1)
+		_check("punten kloppen na annuleren", g.points == p0 - 400)
 		_check("rijbalk boven de garage", gar.rij != null)
 	if frames == 8 + 120:
 		_check("in het bouwscherm rijdt niets uit", gar.order.size() == 1 and gar.phase == "idle")

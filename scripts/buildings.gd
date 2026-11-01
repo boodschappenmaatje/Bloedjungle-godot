@@ -20,6 +20,10 @@ const VEHICLES := {
 	"truck": {"name": "Truck", "cost": 700, "scene": "res://scenes/vrachtwagen.tscn"},
 }
 const HELI_COST := 500
+# Generals-plan stap 1 (docs/GENERALS_PLAN.md): bouwtijd in seconden en wat je eerst nodig hebt (techboom).
+# Muren en zandzakken staan er meteen. Tests en code die place() zonder bouwtijd aanroepen bouwen direct.
+const BUILD_TIME := {"kazerne": 12.0, "garage": 15.0, "helipad": 20.0, "airfield": 30.0}
+const REQUIRES := {"garage": "kazerne", "helipad": "garage", "airfield": "helipad"}
 const PAD_T := 4.5  # seconden dat de luiken en de lift nodig hebben (de clips Open en Dicht)
 const INFO := {
 	"zandzak": "Lage dekking: kogels stoppen erop, jij schiet eroverheen.",
@@ -284,9 +288,27 @@ func _bags(root: Node3D, sz: Vector3) -> void:
 			root.add_child(mi)
 
 
-func place(kind: String, at: Vector3, yaw: float) -> Variant:
+## Welk gebouw ontbreekt er nog voor dit gebouw? Leeg als je mag bouwen. Een gebouw in aanbouw of een wrak telt niet mee.
+func missing(kind: String) -> String:
+	var need: String = REQUIRES.get(kind, "")
+	if need == "":
+		return ""
+	for b in Game.buildings:
+		if b.kind == need and not b.down and not under_construction(b):
+			return ""
+	return need
+
+
+static func under_construction(b: Dictionary) -> bool:
+	return float(b.get("build_t", 0.0)) > 0.0
+
+
+## with_time = true (bouwmodus): het gebouw groeit op in BUILD_TIME seconden met steigers en een voortgangsbalk.
+func place(kind: String, at: Vector3, yaw: float, with_time := false) -> Variant:
 	var status := placement_status(kind, at, yaw)
 	if full(kind) or not status.valid:
+		return null
+	if with_time and missing(kind) != "":
 		return null
 	var node: StaticBody3D = make_node(kind) if kind == "airfield" else null
 	if kind == "airfield" and node == null:
@@ -313,6 +335,8 @@ func place(kind: String, at: Vector3, yaw: float) -> Variant:
 	elif kind == "helipad":
 		b.merge({"has_heli": false, "hs": "closed", "t": 0.0, "want": false, "heli": null, "spin": 0.0})
 		_pad_init(b)
+	if with_time and BUILD_TIME.has(kind):
+		_site_start(b)
 	Game.buildings.append(b)
 	Foliage.clear_for_building(node.get_instance_id(), _clearance_regions(kind), at, yaw)
 	_push_out(b)
@@ -320,6 +344,69 @@ func place(kind: String, at: Vector3, yaw: float) -> Variant:
 	Sfx.play("thud")
 	Game.changed.emit()
 	return b
+
+
+## Bouwplaats: steigers rond het gebouw en het gebouw zelf groeit omhoog (alleen het zichtbare deel, de botsvorm blijft).
+func _site_start(b: Dictionary) -> void:
+	b.build_total = BUILD_TIME[b.kind]
+	b.build_t = b.build_total
+	var node: Node3D = b.node
+	var sz: Vector3 = DEFS[b.kind].size
+	var site := Node3D.new()
+	site.name = "Steiger"
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color("8a6a3c")
+	mat.roughness = 0.9
+	var hx := sz.x * 0.5 + 0.2
+	var hz := sz.z * 0.5 + 0.2
+	for sx in [-1, 1]:
+		for sz_ in [-1, 1]:
+			site.add_child(_plank(Vector3(0.12, sz.y + 0.6, 0.12), Vector3(sx * hx, (sz.y + 0.6) * 0.5, sz_ * hz), mat))
+	for lvl in [0.45, 0.95]:
+		var y: float = sz.y * lvl
+		for sx in [-1, 1]:
+			site.add_child(_plank(Vector3(0.08, 0.08, hz * 2.0), Vector3(sx * hx, y, 0), mat))
+		for sz_ in [-1, 1]:
+			site.add_child(_plank(Vector3(hx * 2.0, 0.08, 0.08), Vector3(0, y, sz_ * hz), mat))
+	node.add_child(site)
+	b.site = site
+	var vis: Array = []
+	for c in node.get_children():
+		if c is Node3D and not (c is CollisionShape3D) and c != site:
+			vis.append(c)
+	b.vis = vis
+	_site_scale(b)
+
+
+func _plank(size: Vector3, at: Vector3, mat: Material) -> MeshInstance3D:
+	var mi := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = size
+	mi.mesh = bm
+	mi.material_override = mat
+	mi.position = at
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	return mi
+
+
+func _site_scale(b: Dictionary) -> void:
+	var frac: float = 1.0 - float(b.build_t) / float(b.build_total)
+	var k: float = lerpf(0.1, 1.0, smoothstep(0.0, 1.0, frac)) if b.build_t > 0.0 else 1.0
+	for c in b.get("vis", []):
+		if is_instance_valid(c):
+			c.scale.y = k
+
+
+func _site_done(b: Dictionary) -> void:
+	b.build_t = 0.0
+	_site_scale(b)
+	if b.get("site") != null and is_instance_valid(b.site):
+		b.site.queue_free()
+	b.site = null
+	b.vis = []
+	Sfx.play("thud")
+	Game.banner.emit("BOUW KLAAR", String(DEFS[b.kind].name).to_upper(), 1.4)
+	Game.changed.emit()
 
 
 func move_to(b: Dictionary, at: Vector3, yaw: float) -> void:
@@ -533,7 +620,7 @@ func room(b: Dictionary) -> int:
 
 
 func recruit(b: Dictionary) -> void:
-	if b.down or room(b) <= 0 or not Game.pay_points(TRAIN_COST):
+	if b.down or under_construction(b) or room(b) <= 0 or not Game.pay_points(TRAIN_COST):
 		return
 	if b.queue == 0:
 		b.train_t = LEVELS[b.lv].time
@@ -542,7 +629,7 @@ func recruit(b: Dictionary) -> void:
 
 
 func upgrade(b: Dictionary) -> void:
-	if b.down:
+	if b.down or under_construction(b):
 		return
 	var nx: Variant = LEVELS[b.lv + 1] if b.lv + 1 < LEVELS.size() else null
 	if nx == null or not Game.pay_build(nx.cost):
@@ -575,12 +662,21 @@ func _physics_process(delta: float) -> void:
 		var bar: HpBar = b.bar
 		if bar == null:
 			continue
+		if under_construction(b):
+			b.build_t = maxf(0.0, float(b.build_t) - delta)
+			bar.set_value(1.0 - float(b.build_t) / float(b.build_total), true)
+			bar.global_position = b.at + Vector3(0, DEFS[b.kind].size.y + 1.0, 0)
+			if b.build_t <= 0.0:
+				_site_done(b)
+			else:
+				_site_scale(b)
+			continue
 		var hurt: bool = b.hp < b.max_hp
 		bar.set_value(b.hp / b.max_hp, (hurt or Game.build_mode) and not b.down)
 		bar.global_position = b.at + Vector3(0, DEFS[b.kind].size.y + 1.0, 0)
 	for b in Game.buildings:
-		if b.down:
-			continue  # een wrak doet niets
+		if b.down or under_construction(b):
+			continue  # een wrak of bouwplaats doet niets
 		if b.kind == "garage":
 			_garage_step(b, delta)
 		elif b.kind == "airfield":
@@ -591,7 +687,7 @@ func _physics_process(delta: float) -> void:
 	if Game.build_mode:
 		return
 	for b in Game.buildings:
-		if b.kind == "kazerne" and not b.down and b.queue > 0:
+		if b.kind == "kazerne" and not b.down and not under_construction(b) and b.queue > 0:
 			b.train_t -= delta
 			if b.train_t <= 0.0:
 				b.queue -= 1
@@ -666,7 +762,7 @@ func vehicle_cost(kind: String) -> int:
 
 
 func can_buy_vehicle(b: Dictionary, kind: String) -> bool:
-	return b.kind == "garage" and not b.has[kind] and Game.points >= VEHICLES[kind].cost
+	return b.kind == "garage" and not under_construction(b) and not b.has[kind] and Game.points >= VEHICLES[kind].cost
 
 
 ## Koop een jeep of tank; hij rijdt uit zodra je het bouwscherm verlaat.
@@ -825,13 +921,13 @@ func _cut_pad() -> void:
 
 
 func can_buy_aircraft(b: Dictionary, kind: String) -> bool:
-	return AirfieldHQ23.can_buy(self, b, kind)
+	return not under_construction(b) and AirfieldHQ23.can_buy(self, b, kind)
 
 func buy_aircraft(b: Dictionary, kind: String) -> bool:
 	return AirfieldHQ23.buy(self, b, kind)
 
 func can_buy_heli(b: Dictionary) -> bool:
-	return b.kind == "helipad" and not b.has_heli and Game.points >= HELI_COST
+	return b.kind == "helipad" and not under_construction(b) and not b.has_heli and Game.points >= HELI_COST
 
 
 ## Koop de Apache: de luiken gaan open en de lift tilt hem omhoog.

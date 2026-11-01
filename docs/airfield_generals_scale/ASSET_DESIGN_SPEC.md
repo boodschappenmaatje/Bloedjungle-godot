@@ -6,11 +6,11 @@ Aanleiding: referentieplaatje uit Command & Conquer Generals. Het huidige vliegv
 Vergelijking op schaal: [basis_oud_vs_nieuw.png](basis_oud_vs_nieuw.png) (bron: `.svg`). De plaatsing daarin is schematisch.
 
 ## Gekozen door de gebruiker
-- Compact Generals-vliegveld.
-- Helipad kleiner (12,8 → ~9 m) en garage groter (~6,4 → ~8 m).
+- Compact Generals-vliegveld, optie 2 (~20 × 14 m).
+- Helipad kleiner (12,8 → ~9 m): wordt herzien, de schacht is al 9 m. Garage groter: vervalt na de Generals-data.
 - Betonplaten onder elk gebouw.
 - Rook en kleine details op de gebouwen (pas na de maten).
-- Vliegtuig kleiner (schaal 0,62 → ~0,40).
+- Vliegtuig kleiner (schaal 0,62 → ~0,45 na herziening).
 - Voertuigen controleren ten opzichte van de nieuwe maten.
 - Eerst vergelijkingsbeeld (dit document).
 
@@ -42,20 +42,25 @@ Niet opgezocht: de helipad uit je plaatje en de Chinese en GLA-gebouwen.
 - **Strikt op kazerne-schaal** (kazerne 5,8 m = 110 eenheden, 1 eenheid ≈ 0,053 m): vliegveld ≈ **11,8 × 7,8 m**, ongeveer 82 m² (nu ~3975 m²).
 - **Eenheden:** in Generals zijn voertuigen en jagers ~¼ van een kazerne, en een soldaat ~1/8. Bij jou is een soldaat ~1/3 van de kazerne en een straaljager (schaal 0,62) ~1,7× de kazerne. Strikt volgen kan dus niet: een jager van 1,5 m is onspeelbaar. De gebouwen onderling volgen Generals, de eenheden blijven speelbaar.
 
-## Maten (meter, doel) - VOORLOPIG, wordt herzien
+## Maten (meter, doel), versie 2 na Generals-data en keuze optie 2
+Gemeten in de GLB-bestanden (ruwe modelafmetingen). De schaal van de voertuigscènes in Godot is nog niet gecontroleerd.
+
 | Onderdeel | Nu | Doel | Opmerking |
 |---|---|---|---|
-| Kazerne | ~5,8 × 4,2 (collider 4,4 × 3,2) | ongewijzigd | referentie (B ≈ 6 m) |
-| Garage | ~6,4 × 5,7 | ~8 × 7,1 (×1,25) | meeschalen van mesh, deur, collider en `GS`/`FRONT`/`DOOR_U` |
-| Helipad | 12,8 × 12,8 | ~9 × 9 | luiken en lift meeschalen |
-| Hangar | 22,5 × 21 | ~11 × 10 | opening past bij vliegtuig ~0,40 |
-| Platform | 18 × 14 | ~11 × 8 | |
-| Baan | 75 × 18 | ~30 × 7 | arcade-vliegen, geen echte startlengte nodig |
-| Toren | 8 × 8 (+ trap 4 × 8) | ~3 × 3 | trapcollision opnieuw |
-| Vliegveld totaal | 75 × 53 (~3975 m²) | ~30 × 26 (~780 m²) | ~25% van de basis |
-| Vliegtuig | schaal 0,62 (~10 m) | schaal ~0,40 (~6,5 m) | `MODEL_SCALE` in `vliegtuig.gd` |
+| Kazerne | 5,8 × 4,5 | ongewijzigd | referentie; soldaten komen uit de deur (`DOOR` = 2,5 m) |
+| Garage | ~6,1 × 6,2 (model 9,3 × 9,5 × `GS` 0,66) | ongewijzigd | War Factory is 1,28× kazerne, dus klopt al |
+| Helipad | 12,8 plaat, schacht 9 × 9 | open keuze (zie onder) | de schacht met lift is al 9 m; Apache-schaal 0,45 (~7,8 m) past er net op |
+| Vliegveld totaal | 75 × 53 | **~20 × 14 (optie 2)** | past ruim in de basis van 56 × 56 m |
+| Hangar | 22,5 × 21 | ~8 × 7 | opening past bij jager ~0,45 |
+| Platform | 18 × 14 | ~8 × 6 | |
+| Baan | 75 × 18 | ~20 × 5 | arcade-vliegen |
+| Toren | 8 × 8 | ~2,5 × 2,5 | trapcollision opnieuw |
+| Jager | schaal 0,62 (~5,8 × 9,2 m) | schaal ~0,45 (~4,2 × 6,7 m) | ongeveer even lang als de tank (7,9 m), zoals Raptor ≈ Crusader in Generals |
 
-Bronnen in de code: `scripts/airfield_hq_23.gd` (constanten), `scripts/buildings.gd` (`DEFS`, `GS`, `GSH`), `scripts/vliegtuig.gd`, `Data.COMPOUND = 28`.
+## Voertuigen en soldaten
+- **Soldaten:** komen uit de kazerne naar een punt 2,5 m voor de deur. Kazerne blijft gelijk, dus geen wijziging. Rond de deur komt een vrije zone van minstens 3 m, die de plaatsing bewaakt.
+- **Garage en voertuigen:** een voertuig rijdt van binnen (0,5 m van het midden) kaarsrecht de deur uit, tot 6 tot 9,5 m ervoor, en gaat dan opzij (`_spawn_vehicle`, `_free_run`). Ruwe afmetingen: jeep 1,7 × 3,8, tank 3,9 × 7,9, truck 3,0 × 8,1 m. Tank en truck zijn dus langer dan de garage diep is (~6,2 m). Dat kan nu al; testen in Godot.
+- Uitrijroute van de garage (tot ~10 m vrij voor de deur) en de zone voor de kazerne mogen niet door het vliegveld of de helipad worden afgesloten. Het vliegveld wordt daarom aan een kant van de basis geplaatst, niet tussen kazerne, garage en poorten.
 
 ## Open punten / aannames
 - De Generals-verhoudingen zijn geschat op basis van het plaatje, niet nagemeten in de originele bestanden.

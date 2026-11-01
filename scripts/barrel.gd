@@ -11,7 +11,7 @@ const CLUSTERS := 9
 const LAYER := 2  # hetzelfde als muren: kogels en soldaten botsen ertegen, en kogels roepen hit() aan
 
 static var _spots: Array[Vector3] = []
-const VAT := preload("res://assets/fx/vat.glb")  # bron/explosie/maak_vat.py: drie vaten met deuken, roest en een waarschuwingsband
+const VAT_PAD := "res://assets/fx/vat.glb"  # zwaar OTA-bestand: pas laden als het nodig is (zie tests/ota_vroeg_test.gd)
 static var _vat_mat: StandardMaterial3D
 static var _lid_mat: StandardMaterial3D
 
@@ -111,7 +111,7 @@ func _build() -> void:
 		_lid_mat = _mat(Color.WHITE, 0.6, 0.1)
 		_lid_mat.vertex_color_use_as_albedo = true
 	var n := (absi(int(spot.x * 7.0 + spot.z * 13.0)) % 3) + 1  # drie varianten met andere deuken en roest
-	var holder := VAT.instantiate()
+	var holder := (load(VAT_PAD) as PackedScene).instantiate()
 	var body := holder.find_child("Vat%d" % n, true, false) as MeshInstance3D
 	var lid := holder.find_child("Deksel%d" % n, true, false) as MeshInstance3D
 	_body = MeshInstance3D.new()

@@ -5,7 +5,7 @@ extends StaticBody3D
 ## clip Spuit (dop vliegt eraf, straal en druppels komen op gang) gevolgd door Spuiten (lus). Mist, druppels en een groeiende plas zijn
 ## deeltjes en een schijf in code. Na SPRAY_TIME seconden is de leiding leeg.
 
-const MODEL := preload("res://assets/brandkraan.glb")
+const MODEL_PAD := "res://assets/brandkraan.glb"  # zwaar OTA-bestand: pas laden als het nodig is (zie tests/ota_vroeg_test.gd)
 const HP := 30.0
 const SPRAY_TIME := 45.0
 const DRIVE_OVER := 0.9   # marge rond de botsvorm van een voertuig; de kraan is massief, dus het voertuig staat er tegenaan
@@ -34,7 +34,7 @@ func _ready() -> void:
 	cs.shape = b
 	cs.position = Vector3(0, 0.7, 0)
 	add_child(cs)
-	_model = MODEL.instantiate()
+	_model = (load(MODEL_PAD) as PackedScene).instantiate()
 	add_child(_model)
 	_anim = _model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	for n in _model.find_children("*", "Node3D", true, false):

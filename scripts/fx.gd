@@ -828,9 +828,9 @@ const FIREBALL_TIME := 2.4  # seconden voor de hele beeldreeks
 const MAX_FIREBALLS := 4  # meer tegelijk tekenen kost een telefoon te veel; extra explosies houden vonken, licht en puin
 # Elke variant komt uit een eigen Blender-render (bron/explosie, andere ruis en vorm); size = afmeting in meters van het uitgesneden beeld
 const FIREBALLS := [
-	{"sheet": preload("res://assets/fx/explosie_vuur.png"), "cols": 6, "rows": 5, "frames": 30, "size": Vector2(5.9, 7.9)},  # middelhoog
-	{"sheet": preload("res://assets/fx/explosie_vuur2.png"), "cols": 6, "rows": 5, "frames": 30, "size": Vector2(5.95, 8.0)},  # hoog met een grote rookkop
-	{"sheet": preload("res://assets/fx/explosie_vuur3.png"), "cols": 6, "rows": 5, "frames": 30, "size": Vector2(7.74, 6.8)},  # laag en breed: een grondexplosie
+	{"sheet": "res://assets/fx/explosie_vuur.png", "cols": 6, "rows": 5, "frames": 30, "size": Vector2(5.9, 7.9)},  # middelhoog
+	{"sheet": "res://assets/fx/explosie_vuur2.png", "cols": 6, "rows": 5, "frames": 30, "size": Vector2(5.95, 8.0)},  # hoog met een grote rookkop
+	{"sheet": "res://assets/fx/explosie_vuur3.png", "cols": 6, "rows": 5, "frames": 30, "size": Vector2(7.74, 6.8)},  # laag en breed: een grondexplosie
 ]
 static var _fire_quad := {}
 static var _fireballs_live := 0
@@ -855,7 +855,7 @@ static func _fireball(parent: Node, pos: Vector3, scale: float) -> void:
 	var size := 1.2 * scale * randf_range(0.92, 1.1)  # in Blender is de vuurbal zo'n 4 m breed; bij schaal 1 wordt hij ~5 m
 	var m := ShaderMaterial.new()
 	m.shader = FLIPBOOK
-	m.set_shader_parameter("sheet", def.sheet)
+	m.set_shader_parameter("sheet", load(def.sheet))
 	m.set_shader_parameter("cols", def.cols)
 	m.set_shader_parameter("rows", def.rows)
 	m.set_shader_parameter("frames", def.frames)
@@ -878,7 +878,7 @@ static func _fireball(parent: Node, pos: Vector3, scale: float) -> void:
 			_fireballs_live = maxi(0, _fireballs_live - 1))
 
 
-const FLAME_SHEET := preload("res://assets/fx/vlam.png")  # bron/explosie/maak_vlam.py: lus van 16 beeldjes
+const FLAME_SHEET_PAD := "res://assets/fx/vlam.png"  # bron/explosie/maak_vlam.py: lus van 16 beeldjes
 const FLAME_FRAME := 3.2  # meter per beeld in Blender
 const FLAME_HEIGHT := 2.24  # zichtbare hoogte van de vlam in dat beeld
 static var _flame_quad: QuadMesh
@@ -896,7 +896,7 @@ static func flame(parent: Node3D, local_pos: Vector3, height: float, light := tr
 	root.position = local_pos
 	var m := ShaderMaterial.new()
 	m.shader = FLIPBOOK
-	m.set_shader_parameter("sheet", FLAME_SHEET)
+	m.set_shader_parameter("sheet", load(FLAME_SHEET_PAD))
 	m.set_shader_parameter("cols", 4)
 	m.set_shader_parameter("rows", 4)
 	m.set_shader_parameter("frames", 16)
@@ -1016,7 +1016,7 @@ static func wreck(parent: Node, pos: Vector3) -> void:
 		mi.queue_free())
 
 
-const DEBRIS_MODELS := preload("res://assets/fx/brokstukken.glb")  # bron/explosie: stukken vatblik, splinters, aardkluiten
+const DEBRIS_MODELS_PAD := "res://assets/fx/brokstukken.glb"  # bron/explosie: stukken vatblik, splinters, aardkluiten
 const CHUNKS_GROUND := ["Kluit1", "Kluit2", "Splinter1", "Splinter2"]
 const CHUNKS_BARREL := ["Plaat1", "Plaat2", "Plaat3", "Band", "Splinter1", "Kluit1"]
 static var _chunk_mesh := {}
@@ -1024,7 +1024,7 @@ static var _chunk_mesh := {}
 
 static func _chunk(name: String) -> Mesh:
 	if not _chunk_mesh.has(name):
-		var holder := DEBRIS_MODELS.instantiate()
+		var holder := (load(DEBRIS_MODELS_PAD) as PackedScene).instantiate()
 		var mi := holder.find_child(name, true, false) as MeshInstance3D
 		_chunk_mesh[name] = mi.mesh if mi != null else null
 		holder.queue_free()
@@ -1108,7 +1108,7 @@ static func _smoke_trail() -> CPUParticles3D:
 	return p
 
 
-const CRATER_MODELS := preload("res://assets/fx/krater.glb")  # bron/explosie/maak_krater.py: drie kraters met opgeworpen rand
+const CRATER_MODELS_PAD := "res://assets/fx/krater.glb"  # bron/explosie/maak_krater.py: drie kraters met opgeworpen rand
 const MAX_CRATERS := 40  # daarboven verdwijnt de oudste, zodat het terrein niet eindeloos vol raakt
 static var _crater_mesh := {}
 static var _crater_mat: ShaderMaterial
@@ -1121,7 +1121,7 @@ static func crater(parent: Node, pos: Vector3, scale: float, force := false) -> 
 		return
 	var n := 1 + randi() % 3
 	if not _crater_mesh.has(n):
-		var holder := CRATER_MODELS.instantiate()
+		var holder := (load(CRATER_MODELS_PAD) as PackedScene).instantiate()
 		var mi0 := holder.find_child("Krater%d" % n, true, false) as MeshInstance3D
 		_crater_mesh[n] = mi0.mesh if mi0 != null else null
 		holder.queue_free()

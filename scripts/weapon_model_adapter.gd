@@ -1,7 +1,7 @@
 extends Node3D
 ## Scheidt het zichtbare wapen en benoemde grip/effectpunten van speler- en combatlogica.
 
-const DEFAULT_WEAPONS := preload("res://assets/wapens.glb")
+const DEFAULT_WEAPONS_PAD := "res://assets/wapens.glb"  # zwaar OTA-bestand: pas laden als het nodig is
 const PROFILE_SCRIPT := preload("res://scripts/weapon_model_profile.gd")
 
 var profile: Resource
@@ -20,7 +20,7 @@ func configure(visual_name: String, profile_: Resource = null) -> bool:
 	profile = profile_ if profile_ != null else _default_profile(visual_name)
 	position = profile.mount_position
 	rotation = profile.mount_rotation
-	var source_scene: PackedScene = profile.model_scene if profile.model_scene is PackedScene else DEFAULT_WEAPONS
+	var source_scene: PackedScene = profile.model_scene if profile.model_scene is PackedScene else (load(DEFAULT_WEAPONS_PAD) as PackedScene)
 	var selected_name := String(profile.model_node) if String(profile.model_node) != "" else visual_name
 	var holder := source_scene.instantiate()
 	var selected := holder.find_child(selected_name, true, false) as Node3D
@@ -59,7 +59,7 @@ func _marker(marker_name: String, at: Vector3) -> Marker3D:
 func _default_profile(visual_name: String) -> Resource:
 	var result: Resource = PROFILE_SCRIPT.new()
 	result.model_node = StringName(visual_name)
-	result.model_scene = DEFAULT_WEAPONS
+	result.model_scene = load(DEFAULT_WEAPONS_PAD) as PackedScene
 	# Model-specific values can be stored as .tres profiles without changing the controller.
 	var left_grips := {
 		"M1911": Vector3(-0.02, -0.01, -0.07), "Thompson": Vector3(-0.03, 0.0, -0.28),

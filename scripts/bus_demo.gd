@@ -3,7 +3,7 @@ extends Node3D
 ## het kale Blender-model met alle zes echte GLB-clips. Knoppen onderin; tik/sleep op het scherm draait de camera niet (vaste gamecamera).
 ## Draaien: godot --path . scenes/bus_demo.tscn  (of open de scène in de editor / Xogot en start hem).
 
-const MODEL := preload("res://assets/bus.glb")
+const MODEL_PAD := "res://assets/bus.glb"  # zwaar OTA-bestand: pas laden als het nodig is (zie tests/ota_vroeg_test.gd)
 
 var car: Bus
 var raw: Node3D
@@ -40,7 +40,7 @@ func _ready() -> void:
 	cam.position = Vector3(0, sin(deg_to_rad(58.0)) * 26.0, cos(deg_to_rad(58.0)) * 26.0 + 0.5)
 	cam.look_at(Vector3(0.5, 0, 0.5))
 	_spawn()
-	raw = MODEL.instantiate()
+	raw = (load(MODEL_PAD) as PackedScene).instantiate()
 	add_child(raw)
 	raw.position = Vector3(7.5, 0, 0)
 	raw_anim = raw.find_child("AnimationPlayer", true, false)

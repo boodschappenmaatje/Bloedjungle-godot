@@ -5,7 +5,7 @@ extends Node3D
 ## brandende napalm achter; vijanden die in de strook staan of erin lopen vatten vlam, rennen 5 s panisch rond en vallen dan dood. De speler brandt een beetje mee als hij erin staat.
 ## Schade telt als "lucht": die kills tellen niet mee voor je eigen streak.
 
-const JET := preload("res://assets/straaljager.glb")
+const JET_PAD := "res://assets/straaljager.glb"  # zwaar OTA-bestand: pas laden als het nodig is (zie tests/ota_vroeg_test.gd)
 const SPEED := 30.0       # m/s: veel langzamer dan eerst (58), zodat het toestel langer in beeld blijft
 const HEIGHT := 13.0      # m boven de grond
 const LEAD := 70.0        # m voor de strook waar het toestel begint
@@ -51,7 +51,7 @@ func start(target: Vector3, d: Vector3) -> void:
 	dir = Vector3(d.x, 0.0, d.z).normalized()
 	if dir.length() < 0.1:
 		dir = Vector3.FORWARD
-	jet = JET.instantiate()
+	jet = (load(JET_PAD) as PackedScene).instantiate()
 	add_child(jet)
 	jet.top_level = true
 	jet.scale = Vector3.ONE * 0.8   # 13 m lang: past op het scherm en leest als een toestel boven de strook

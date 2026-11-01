@@ -9,6 +9,16 @@ signal over(reason: String)
 ## Laadt eerst de vervolgstukken van de OTA-keten (user://ota/keten.json); dat kan niet eerder (dit is de eerste autoload na de Updater).
 func _init() -> void:
 	preload("res://scripts/ota_keten.gd").laad()
+	_warm_up()
+
+
+## Zware modellen worden niet meer met preload bij het compileren geladen (de OTA-keten komt daarna), maar met load() als ze nodig zijn.
+## Om haperingen bij het eerste gebruik te voorkomen vragen we de grootste alvast in een achtergrond-thread aan.
+static func _warm_up() -> void:
+	for pad in ["res://assets/soldaat_jungle_commando.glb", "res://assets/soldaat_vq2.glb", "res://assets/wapens.glb", "res://assets/uitrusting.glb",
+			"res://assets/klimmen.glb", "res://assets/zitten.glb", "res://assets/acties.glb"]:
+		if ResourceLoader.exists(pad):
+			ResourceLoader.load_threaded_request(pad)
 
 
 var state := "menu"  # "prep" (pauze tussen golven), "play" (golf bezig), "over"

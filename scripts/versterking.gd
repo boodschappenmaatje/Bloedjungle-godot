@@ -4,7 +4,7 @@ extends Node3D
 ## eruit en blijven bij de speler. De truck rijdt direct daarna weg (zit de speler zelf in de truck, dan blijft hij staan).
 ## De soldaten (Ally met helper = true) tellen niet mee voor je streak (Game.hit_src = "soldaat" via hun kogels).
 
-const TRUCK := preload("res://scenes/vrachtwagen.tscn")
+const TRUCK_PAD := "res://scenes/vrachtwagen.tscn"  # verwijst naar een zwaar OTA-bestand (vrachtwagen.glb): pas laden als het nodig is
 const APPROACH := 46.0   # m waar de truck vandaan komt
 const STOP_DIST := 6.5   # m van de speler waar hij stopt
 
@@ -24,7 +24,7 @@ func start(player_pos: Vector3) -> void:
 	var from := _stop + toward * APPROACH
 	from = _in_world(from, _stop)
 	_exit = from
-	truck = TRUCK.instantiate()
+	truck = (load(TRUCK_PAD) as PackedScene).instantiate()
 	get_parent().add_child(truck)
 	truck.global_position = Vector3(from.x, 0.0, from.z)
 	truck.rotation.y = atan2(-(_stop.x - from.x), -(_stop.z - from.z))

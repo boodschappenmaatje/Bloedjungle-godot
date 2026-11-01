@@ -17,8 +17,8 @@ class ArrowGlyph:
 
 
 const IDS := ["m1911", "thompson", "garand", "trench", "mg42", "bazooka"]
-const GUNS := preload("res://assets/wapens.glb")
-const MESHY_M1911 := preload("res://assets/meshy_m1911.glb")
+const GUNS_PAD := "res://assets/wapens.glb"  # zwaar OTA-bestand: pas laden als het nodig is
+const MESHY_M1911_PAD := "res://assets/meshy_m1911.glb"
 const OPEN_TIME := 3.0
 const ICON_SIZE := Vector2i(256, 96)
 
@@ -122,9 +122,9 @@ func _render_icons() -> void:
 	var cam := Camera3D.new()
 	cam.projection = Camera3D.PROJECTION_ORTHOGONAL
 	vp.add_child(cam)
-	var holder := GUNS.instantiate()
+	var holder := (load(GUNS_PAD) as PackedScene).instantiate()
 	vp.add_child(holder)
-	var meshy_holder := MESHY_M1911.instantiate() as Node3D
+	var meshy_holder := (load(MESHY_M1911_PAD) as PackedScene).instantiate() as Node3D
 	vp.add_child(meshy_holder)
 	meshy_holder.visible = false
 	for i in IDS.size():

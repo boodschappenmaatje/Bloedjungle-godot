@@ -14,7 +14,7 @@ const COST := 400
 const TAKE := {"bullet": 0.6, "melee": 0.5, "explosive": 1.0}
 const BLAST_R := 7.0
 const BLAST_DMG := 110.0
-const LOOP := preload("res://assets/geluid/generator.wav")
+const LOOP_PAD := "res://assets/geluid/generator.wav"  # zwaar OTA-bestand: pas laden als het nodig is
 
 var hp := HP
 var down := false
@@ -81,7 +81,7 @@ func _spawn() -> void:
 	cs.position = Vector3(0.0, 0.75, 0.0)
 	body.add_child(cs)
 	model.add_child(body)
-	var st: AudioStreamWAV = LOOP.duplicate()
+	var st: AudioStreamWAV = (load(LOOP_PAD) as AudioStreamWAV).duplicate()
 	st.loop_mode = AudioStreamWAV.LOOP_FORWARD
 	st.loop_begin = 0
 	st.loop_end = int(st.get_length() * st.mix_rate)

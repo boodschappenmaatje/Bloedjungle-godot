@@ -4,12 +4,13 @@ extends Node3D
 ## beide met de Mixamo-geweeranimaties), gebruikt door de speler, bondgenoten en vijanden. Kleurt het uniform en hangt een
 ## wapen in de rechterhand.
 
-const SCENE := preload("res://assets/soldaat.glb")
+## Zware bestanden uit de OTA-keten worden pas geladen als ze nodig zijn (niet met preload): de keten komt na het compileren van de scripts.
+const SCENE_PAD := "res://assets/soldaat.glb"
 ## VQ2-mannetje (bron/soldaat_vq2): realistisch MakeHuman-lichaam op hetzelfde DEF-skelet met dezelfde clips, vier
 ## lichaamsvarianten en uitrusting per type. Instelling "soldaat" = "v1" valt terug op het oude model.
-const SCENE_V2 := preload("res://assets/soldaat_vq2.glb")
+const SCENE_V2_PAD := "res://assets/soldaat_vq2.glb"
 ## Player-only Showcase variant: Tiger Stripe + compact commando equipment; shared VQ2 stays unchanged for allies/enemies.
-const SCENE_PLAYER := preload("res://assets/soldaat_jungle_commando.glb")
+const SCENE_PLAYER_PAD := "res://assets/soldaat_jungle_commando.glb"
 ## Experimental player-only Meshy/Mixamo rig from the isolated, already-reviewed lab.
 ## The file is byte-identical to the user-supplied remesh/rig export; NPCs never select it.
 const SCENE_MESHY_PLAYER_PATH := "res://assets/meshy_jungle_commando.glb"
@@ -35,8 +36,8 @@ const MESHY_STOW_OFFSET := Transform3D(Basis(Vector3.BACK, deg_to_rad(-32.0)) * 
 ## Alleen in deze clips houdt de Meshy-speler het geweer vast (IK aan, wapen in de handen); in de andere (rollen, vallen,
 ## klimmen, zitten, mes) hangt het wapen op de rug.
 const MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten", "hurken_stil", "hurken_lopen", "hurken_achteruit", "liggen_stil", "kruipen"]
-const MESHY_GARAND_PROFILE = preload("res://resources/weapon_profiles/garand_meshy.tres")
-const MESHY_M1911_PROFILE = preload("res://resources/weapon_profiles/m1911_meshy.tres")
+const MESHY_GARAND_PROFILE_PAD := "res://resources/weapon_profiles/garand_meshy.tres"   # verwijst naar zware bestanden: pas laden als het nodig is
+const MESHY_M1911_PROFILE_PAD := "res://resources/weapon_profiles/m1911_meshy.tres"
 const MESHY_WEAPON_ADAPTER_SCRIPT := preload("res://scripts/weapon_model_adapter.gd")
 const LOOKS := {
 	"eigen": ["Lijf_Uniform", "Helm", "Vest", "Koppel", "Rugzak", "Laarzen"],
@@ -54,9 +55,9 @@ const LOOKS := {
 }
 const LOOPS := ["stil", "lopen", "rennen", "achteruit", "schieten", "klimmen", "zitten", "sprinten"]  # herladen en rollen spelen één keer
 const LOCOMOTION := ["lopen", "rennen", "achteruit"]
-const CLIMB := preload("res://assets/klimmen.glb")  # klim-animatie uit bron/klimmen
-const SIT := preload("res://assets/zitten.glb")  # zitten in de vrachtwagen, uit bron/zitten
-const ACTIONS := preload("res://assets/acties.glb")  # rollen, sprinten en een nieuwe herlaadbeweging, uit bron/acties
+const CLIMB_PAD := "res://assets/klimmen.glb"  # klim-animatie uit bron/klimmen
+const SIT_PAD := "res://assets/zitten.glb"  # zitten in de vrachtwagen, uit bron/zitten
+const ACTIONS_PAD := "res://assets/acties.glb"  # rollen, sprinten en een nieuwe herlaadbeweging, uit bron/acties
 
 var anim: AnimationPlayer
 var current := ""
@@ -95,6 +96,15 @@ var _mesh_clip_map: Dictionary = {}
 static var player_status := "speler nog niet aangemaakt"
 
 
+## Laadt een scène uit de (OTA-)bestanden; null als het bestand er (nog) niet is, zodat de aanroeper een terugval kan kiezen.
+static func _laad_scene(pad: String) -> PackedScene:
+	return load(pad) as PackedScene if ResourceLoader.exists(pad) else null
+
+
+static func _laad_hulp(pad: String) -> Resource:
+	return load(pad) if ResourceLoader.exists(pad) else null
+
+
 ## uniform = kleur van het uniform; look = sleutel uit LOOKS ("eigen" voor bondgenoten en wachten,
 ## "speler:<bovenlijf>" voor de speler, "vijand:<type>" voor vijanden).
 func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
@@ -118,7 +128,18 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 	elif look_.begins_with("speler:"):
 		player_status = "gewone speler (instelling: %s)" % GameSettings.get_value("soldaat")
 	if not meshy_player:
-		model_scene = SCENE if not v2 else (SCENE_PLAYER if look.begins_with("speler:") else SCENE_V2)
+		var kandidaten: Array = [SCENE_PAD]
+		if v2:
+			kandidaten = [SCENE_PLAYER_PAD, SCENE_V2_PAD, SCENE_PAD] if look.begins_with("speler:") else [SCENE_V2_PAD, SCENE_PAD]
+		for kandidaat in kandidaten:
+			model_scene = _laad_scene(kandidaat)
+			if model_scene != null:
+				break
+		if model_scene == null:
+			push_error("SoldierModel: geen enkel mannetjesmodel beschikbaar (%s)" % str(kandidaten))
+			if look_.begins_with("speler:"):
+				player_status = "geen enkel spelermodel beschikbaar"
+			return
 	var model := model_scene.instantiate()
 	add_child(model)
 	anim = model.find_child("AnimationPlayer", true, false)
@@ -129,16 +150,19 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 		SoldierMark.attach(self)
 		return
 	# de klim-animatie komt uit een eigen glb met hetzelfde skelet en wordt aan dit mannetje gehangen
-	var cp: AnimationPlayer = CLIMB.instantiate().find_child("AnimationPlayer", true, false)
 	var lib := anim.get_animation_library("")
-	if not lib.has_animation("klimmen"):
+	var climb_scene := _laad_scene(CLIMB_PAD)
+	if climb_scene != null and not lib.has_animation("klimmen"):
+		var cp: AnimationPlayer = climb_scene.instantiate().find_child("AnimationPlayer", true, false)
 		lib.add_animation("klimmen", cp.get_animation("klimmen"))
-	if not lib.has_animation("zitten"):
-		var sp: AnimationPlayer = SIT.instantiate().find_child("AnimationPlayer", true, false)
+	var sit_scene := _laad_scene(SIT_PAD)
+	if sit_scene != null and not lib.has_animation("zitten"):
+		var sp: AnimationPlayer = sit_scene.instantiate().find_child("AnimationPlayer", true, false)
 		lib.add_animation("zitten", sp.get_animation("zitten"))
 	# rollen, sprinten en de nieuwe herlaadbeweging (die de oude, trage lus vervangt) komen uit bron/acties
-	if not lib.has_animation("rollen"):
-		var ap: AnimationPlayer = ACTIONS.instantiate().find_child("AnimationPlayer", true, false)
+	var actions_scene := _laad_scene(ACTIONS_PAD)
+	if actions_scene != null and not lib.has_animation("rollen"):
+		var ap: AnimationPlayer = actions_scene.instantiate().find_child("AnimationPlayer", true, false)
 		for n in ["rollen", "sprinten", "herladen", "explosie_dood", "brand_rennen", "brand_val"]:
 			if lib.has_animation(n):
 				lib.remove_animation(n)
@@ -377,7 +401,7 @@ func _attach_gun_meshy(skel: Skeleton3D, gun_kind: String) -> void:
 	_mesh_weapon_adapter.name = "WeaponModelAdapter"
 	actor.add_child(_mesh_weapon_adapter)
 	var visual_name: String = GUN_OF.get(gun_kind, "Garand")
-	var profile: Resource = MESHY_GARAND_PROFILE if visual_name == "Garand" else (MESHY_M1911_PROFILE if visual_name == "M1911" else null)
+	var profile: Resource = _laad_hulp(MESHY_GARAND_PROFILE_PAD) if visual_name == "Garand" else (_laad_hulp(MESHY_M1911_PROFILE_PAD) if visual_name == "M1911" else null)
 	if not _mesh_weapon_adapter.configure(visual_name, profile):
 		_mesh_weapon_adapter.queue_free()
 		_mesh_weapon_adapter = null
@@ -702,7 +726,7 @@ func set_band(c: Color) -> void:
 	(_band.material_override as StandardMaterial3D).albedo_color = c
 
 
-const GUNS := preload("res://assets/wapens.glb")  # bron/wapens: M1911, Thompson, Garand, Trench, MG42, Bazooka
+const GUNS_PAD := "res://assets/wapens.glb"  # bron/wapens: M1911, Thompson, Garand, Trench, MG42, Bazooka
 const GUN_OF := {"rifle": "Garand", "rocket": "Bazooka", "heavy": "MG42", "m1911": "M1911", "thompson": "Thompson",
 	"garand": "Garand", "trench": "Trench", "mg42": "MG42", "bazooka": "Bazooka"}
 
@@ -726,14 +750,17 @@ func _attach_gun(model: Node, gun_kind := "rifle") -> void:
 	set_gun(gun_kind)
 
 
-const GEAR := preload("res://assets/uitrusting.glb")  # bron/uitrusting: helm, rugzak, koppel, laarzen
+const GEAR_PAD := "res://assets/uitrusting.glb"  # bron/uitrusting: helm, rugzak, koppel, laarzen
 const GEAR_BONE := {"Helm": "DEF-head", "Rugzak": "DEF-spine003", "Koppel": "DEF-hips", "LaarsL": "DEF-footL", "LaarsR": "DEF-footR"}
 
 
 ## Hangt de uitrusting aan de botten. De delen zijn gemodelleerd in de ruimte van het mannetje in de stilstaande houding;
 ## de omgekeerde botpose zet ze in de ruimte van het bot.
 func _attach_gear(skel: Skeleton3D) -> void:
-	var holder := GEAR.instantiate()
+	var gear_scene := _laad_scene(GEAR_PAD)
+	if gear_scene == null:
+		return
+	var holder := gear_scene.instantiate()
 	for part in GEAR_BONE:
 		var node := holder.find_child(part, true, false) as Node3D
 		var bone := skel.find_bone(GEAR_BONE[part])
@@ -769,7 +796,10 @@ func set_gun(kind: String) -> void:
 		_gun = null
 	if not GUN_OF.has(kind) or _hand == null:
 		return
-	var holder := GUNS.instantiate()
+	var guns_scene := _laad_scene(GUNS_PAD)
+	if guns_scene == null:
+		return
+	var holder := guns_scene.instantiate()
 	var node := holder.find_child(GUN_OF[kind], true, false) as Node3D
 	if node == null:
 		holder.queue_free()

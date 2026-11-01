@@ -30,8 +30,8 @@ var m1911_use_real_sample := true
 var _rain: AudioStreamPlayer
 var _jet: AudioStreamPlayer
 var fluit: AudioStreamWAV   # fluitende val van een bom (napalm): glijdende toon met wat ruis
-const M1911_REPORT: AudioStream = preload("res://assets/audio/m1911/m1911_report.wav")
-var _m1911_stream: AudioStream = M1911_REPORT
+const M1911_REPORT_PAD := "res://assets/audio/m1911/m1911_report.wav"  # zwaar OTA-bestand: pas laden als het nodig is
+var _m1911_stream: AudioStream
 
 
 func _ready() -> void:
@@ -54,6 +54,11 @@ func play(name: String, vol := 1.0, pos = null) -> void:
 	if name == "m1911_real":
 		if not m1911_use_real_sample:
 			play("pistol", vol * m1911_test_volume, pos)
+			return
+		if _m1911_stream == null and ResourceLoader.exists(M1911_REPORT_PAD):
+			_m1911_stream = load(M1911_REPORT_PAD) as AudioStream
+		if _m1911_stream == null:
+			play("pistol", vol * m1911_test_volume, pos)  # het opgenomen geluid is er (nog) niet: het gewone pistool
 			return
 		JungleGeluid.verstoor("pistol", vol)
 		var real_player := _players[_next]

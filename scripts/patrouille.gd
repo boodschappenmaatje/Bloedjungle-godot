@@ -6,7 +6,7 @@ extends Node
 
 const GUARDS := 4
 const HUT_GUARD := 3   # deze wacht zit in het wachthuisje (zie Wachtpost)
-const ALARM_STREAM := preload("res://assets/geluid/alarm.mp3")
+const ALARM_PAD := "res://assets/geluid/alarm.mp3"  # zwaar OTA-bestand: pas laden als het nodig is
 
 ## De wandellijn van wacht i: twee punten langs de binnenkant van de muur (halve breedte van de basis = Data.COMPOUND).
 static func line(i: int) -> Array:
@@ -44,7 +44,7 @@ func _process(delta: float) -> void:
 func alarm() -> void:
 	if _sirene == null:
 		_sirene = AudioStreamPlayer.new()
-		_sirene.stream = ALARM_STREAM
+		_sirene.stream = load(ALARM_PAD) as AudioStream
 		_sirene.volume_db = -3.0
 		add_child(_sirene)
 	_sirene.play()

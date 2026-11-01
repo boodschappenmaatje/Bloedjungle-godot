@@ -681,51 +681,8 @@ func _flag_visible(b: Dictionary) -> void:
 
 
 func _make_flag() -> Node3D:
-	var f := Node3D.new()
-	f.name = "Verzamelvlag"
-	var mat_pole := StandardMaterial3D.new()
-	mat_pole.albedo_color = Color("5b4a30")
-	mat_pole.roughness = 0.9
-	var mat_cloth := StandardMaterial3D.new()
-	mat_cloth.albedo_color = Color("4b5a2c")
-	mat_cloth.roughness = 0.8
-	mat_cloth.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var pole := MeshInstance3D.new()
-	var cm := CylinderMesh.new()
-	cm.top_radius = 0.035
-	cm.bottom_radius = 0.045
-	cm.height = 2.3
-	pole.mesh = cm
-	pole.material_override = mat_pole
-	pole.position.y = 1.15
-	f.add_child(pole)
-	var cloth := MeshInstance3D.new()
-	var bm := BoxMesh.new()
-	bm.size = Vector3(0.8, 0.5, 0.02)
-	cloth.mesh = bm
-	cloth.material_override = mat_cloth
-	cloth.position = Vector3(0.43, 2.0, 0.0)
-	f.add_child(cloth)
-	var band := MeshInstance3D.new()
-	var bb := BoxMesh.new()
-	bb.size = Vector3(0.8, 0.09, 0.025)
-	band.mesh = bb
-	var mat_gold := StandardMaterial3D.new()
-	mat_gold.albedo_color = Color("d9b83a")
-	band.material_override = mat_gold
-	band.position = Vector3(0.43, 2.2, 0.0)
-	f.add_child(band)
-	var base := MeshInstance3D.new()
-	var bc := CylinderMesh.new()
-	bc.top_radius = 0.28
-	bc.bottom_radius = 0.34
-	bc.height = 0.12
-	base.mesh = bc
-	base.material_override = mat_pole
-	base.position.y = 0.06
-	f.add_child(base)
-	for mi in f.get_children():
-		(mi as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	var f := RallyFlag.new()
+	f.setup(GameSettings.get_value("time") != "day")
 	return f
 
 

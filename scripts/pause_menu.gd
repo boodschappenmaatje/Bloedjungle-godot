@@ -6,6 +6,7 @@ extends CanvasLayer
 const ROWS := [
 	["soldaat", "Mannetjes (na nieuw spel)", [["vq2", "Realistisch"], ["meshy", "Meshy-speler (nieuw)"], ["v1", "Oud model"]]],
 	["m1911_fire_mode", "M1911 schieten", [["assist", "Rustig (0,5 s)"], ["manual", "Handmatig"]]],
+	["vliegtuig_hoogte", "Vliegtuig: hoogte (rechterstick)", [["normaal", "Normaal (omlaag = stijgen)"], ["omgekeerd", "Omgekeerd (omhoog = stijgen)"]]],
 	["ragdoll", "Doodsval vijanden", [["on", "Ragdoll"], ["off", "Animatie"]]],
 	["markeringen", "Markeringen soldaten", [["on", "Aan"], ["tact", "Alleen Tactisch"], ["off", "Uit"]]],
 	["quality", "Grafiek", [["low", "Laag"], ["high", "Hoog"], ["ultra", "Ultra"]]],

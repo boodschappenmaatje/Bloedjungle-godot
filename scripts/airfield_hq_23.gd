@@ -437,8 +437,29 @@ static func buy(_buildings, building: Dictionary, kind: String) -> bool:
 	Game.changed.emit()
 	return true
 
-static func step(_building: Dictionary, _delta: float) -> void:
-	pass
+## Testversie vliegen (stap 1): het vliegveld zet vanzelf een gratis toestel klaar (plaatsvervanger-model); na neerstorten komt
+## er na RESPAWN_S een nieuw. Kopen met punten volgt samen met het Meshy-toestel.
+const TEST_PLANE := true
+const RESPAWN_S := 20.0
+
+static func step(building: Dictionary, delta: float) -> void:
+	if not TEST_PLANE or building.get("down", false) or building.get("hp", 1.0) <= 0.0:
+		return
+	var list: Array = building.aircraft
+	for i in range(list.size() - 1, -1, -1):
+		var n = list[i].get("node")
+		if n == null or not is_instance_valid(n):
+			list.remove_at(i)
+	if not list.is_empty():
+		return
+	building["spawn_t"] = building.get("spawn_t", 1.0) - delta
+	if building.spawn_t > 0.0 or not building.node.has_meta("complex"):
+		return
+	var v := Vliegtuig.spawn(building)
+	if v == null:
+		return
+	building["spawn_t"] = RESPAWN_S
+	list.append({"kind": "test", "node": v, "state": "PARKED", "slot": 0, "health": 1.0})
 
 static func cleanup(building: Dictionary) -> void:
 	for aircraft in building.get("aircraft", []):

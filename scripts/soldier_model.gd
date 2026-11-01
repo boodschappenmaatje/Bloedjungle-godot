@@ -102,11 +102,14 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 	_uniform = uniform
 	var model_scene: PackedScene
 	if meshy_player:
-		model_scene = ResourceLoader.load(SCENE_MESHY_PLAYER_PATH) as PackedScene
+		if ResourceLoader.exists(SCENE_MESHY_PLAYER_PATH):
+			model_scene = ResourceLoader.load(SCENE_MESHY_PLAYER_PATH) as PackedScene
 		if model_scene == null:
-			push_error("Meshy player GLB did not import as a PackedScene")
-			return
-	else:
+			# Zwaar OTA-stuk met het Meshy-model nog niet binnen (of import mislukt): val terug op het
+			# gewone spelermodel, zodat de speler nooit onzichtbaar is.
+			push_warning("Meshy player GLB niet beschikbaar, terugval op het gewone spelermodel")
+			meshy_player = false
+	if not meshy_player:
 		model_scene = SCENE if not v2 else (SCENE_PLAYER if look.begins_with("speler:") else SCENE_V2)
 	var model := model_scene.instantiate()
 	add_child(model)

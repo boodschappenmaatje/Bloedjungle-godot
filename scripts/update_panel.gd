@@ -380,7 +380,7 @@ func _ververs() -> void:
 		return
 	var app := "app-versie %s" % Updater.app_base.left(7) if Updater.app_base != "dev" else "ontwikkelbuild"
 	var patch := "actieve update: %s" % str(Updater.actief.get("versie", "?")) if Updater.patch_geladen else "geen update actief (zoals in de IPA)"
-	_info.text = "%s · %s" % [app, patch]
+	_info.text = "%s · %s\n%s" % [app, patch, preload("res://scripts/ota_keten.gd").status]
 	_status.text = Updater.status_tekst
 	var bezig: bool = Updater.status == "bezig"
 	_balk.visible = bezig

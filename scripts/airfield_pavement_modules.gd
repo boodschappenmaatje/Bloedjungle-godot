@@ -1,77 +1,67 @@
 class_name AirfieldPavementModules
 extends Node3D
-## Separate, repeatable concrete paving layer for the 2.3 buildable complex.
-## Shared meshes/materials keep renderer submissions low; simple per-tile shapes provide joins.
+## Authored, bevelled HQ23 concrete modules with separate simplified physics proxies.
 
 const SLAB_DEPTH := 0.22
 const RUNWAY_WIDTH := AirfieldHQ23.RUNWAY_WIDTH_M
 const RUNWAY_SEGMENT := 15.0
-const TAXIWAY_WIDTH := 18.4
-const TAXI_SEGMENT := 8.0
+const TAXIWAY_WIDTH := AirfieldHQ23.TAXIWAY_WIDTH_M
+const TAXI_COLLISION_STEP := 4.0
 const APRON_SIZE := Vector2(18.0, 14.0)
 const LOD0_END_M := 140.0
 const LOD1_END_M := 700.0
 const LOD2_END_M := 2500.0
 const PSP_LIBRARY_SCENE := "res://assets/airfield_hq_v23/psp/PSP_plate_library.glb"
+const RUNWAY_MODULES := [
+	"res://assets/airfield_hq_v23/pavement/Airfield_Runway_Slab_HQ23_LOD0.glb",
+	"res://assets/airfield_hq_v23/pavement/Airfield_Runway_Slab_HQ23_LOD1.glb",
+	"res://assets/airfield_hq_v23/pavement/Airfield_Runway_Slab_HQ23_LOD2.glb",
+]
+const APRON_MODULES := [
+	"res://assets/airfield_hq_v23/pavement/Airfield_Apron_Slab_HQ23_LOD0.glb",
+	"res://assets/airfield_hq_v23/pavement/Airfield_Apron_Slab_HQ23_LOD1.glb",
+	"res://assets/airfield_hq_v23/pavement/Airfield_Apron_Slab_HQ23_LOD2.glb",
+]
+const TAXI_MODULES := [
+	"res://assets/airfield_hq_v23/pavement/Airfield_Taxiway_HQ23_Compact_LOD0.glb",
+	"res://assets/airfield_hq_v23/pavement/Airfield_Taxiway_HQ23_Compact_LOD1.glb",
+	"res://assets/airfield_hq_v23/pavement/Airfield_Taxiway_HQ23_Compact_LOD2.glb",
+]
 const PSP_PLATE_COUNT := 8
 const PSP_PATCH_CENTER := Vector2(0.0, -5.25)
 
-var _concrete: StandardMaterial3D
-var _concrete_flat: StandardMaterial3D
-var _joint_material: StandardMaterial3D
-var _runway_mesh: BoxMesh
-var _runway_mesh_lod1: BoxMesh
-var _runway_mesh_lod2: PlaneMesh
-var _taxi_mesh: BoxMesh
-var _taxi_mesh_lod1: BoxMesh
-var _taxi_mesh_lod2: PlaneMesh
-var _apron_mesh: BoxMesh
-var _apron_mesh_lod1: BoxMesh
-var _apron_mesh_lod2: PlaneMesh
+var _runway_meshes: Array[Mesh] = []
+var _taxi_meshes: Array[Mesh] = []
+var _apron_meshes: Array[Mesh] = []
 
 func _ready() -> void:
-	_build_material()
+	_runway_meshes = _load_module_meshes(RUNWAY_MODULES)
+	_taxi_meshes = _load_module_meshes(TAXI_MODULES)
+	_apron_meshes = _load_module_meshes(APRON_MODULES)
 	_build_runway()
 	_build_apron()
 	_build_taxiway()
 
-func _build_material() -> void:
-	_concrete = StandardMaterial3D.new()
-	_concrete.albedo_color = Color("b8b6ad")
-	_concrete.albedo_texture = load("res://assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_diff_2k.jpg")
-	_concrete.normal_enabled = true
-	_concrete.normal_texture = load("res://assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_nor_gl_2k.jpg")
-	_concrete.roughness = 0.88
-	_concrete.uv1_scale = Vector3(6.0, 6.0, 6.0)
-	_concrete_flat = StandardMaterial3D.new()
-	_concrete_flat.albedo_color = Color("b8b6ad")
-	_concrete_flat.roughness = 0.92
-	_joint_material = StandardMaterial3D.new()
-	_joint_material.albedo_color = Color("66635c")
-	_joint_material.roughness = 0.96
-	_runway_mesh = _make_mesh(Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT))
-	_runway_mesh_lod1 = _make_mesh(Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT), _concrete_flat)
-	_runway_mesh_lod2 = _make_plane(Vector2(RUNWAY_WIDTH, RUNWAY_SEGMENT))
-	_taxi_mesh = _make_mesh(Vector3(TAXIWAY_WIDTH, SLAB_DEPTH, TAXI_SEGMENT - 0.3))
-	_taxi_mesh_lod1 = _make_mesh(Vector3(TAXIWAY_WIDTH, SLAB_DEPTH, TAXI_SEGMENT - 0.3), _concrete_flat)
-	_taxi_mesh_lod2 = _make_plane(Vector2(TAXIWAY_WIDTH, TAXI_SEGMENT))
-	_apron_mesh = _make_mesh(Vector3(APRON_SIZE.x - 0.06, SLAB_DEPTH, APRON_SIZE.y - 0.06))
-	_apron_mesh_lod1 = _make_mesh(Vector3(APRON_SIZE.x - 0.06, SLAB_DEPTH, APRON_SIZE.y - 0.06), _concrete_flat)
-	_apron_mesh_lod2 = _make_plane(APRON_SIZE)
+func _load_module_meshes(paths: Array) -> Array[Mesh]:
+	var meshes: Array[Mesh] = []
+	for path in paths:
+		var packed := load(path) as PackedScene
+		if packed == null:
+			push_error("Missing authored concrete module: %s" % path)
+			continue
+		var root := packed.instantiate()
+		var candidates := root.find_children("*", "MeshInstance3D", true, false)
+		if root is MeshInstance3D:
+			candidates.push_front(root)
+		var mesh: Mesh = (candidates.front() as MeshInstance3D).mesh if not candidates.is_empty() else null
+		if mesh == null:
+			push_error("Authored concrete module contains no mesh: %s" % path)
+		else:
+			meshes.append(mesh)
+		root.free()
+	return meshes
 
-func _make_mesh(dimensions: Vector3, material: StandardMaterial3D = null) -> BoxMesh:
-	var mesh := BoxMesh.new()
-	mesh.size = dimensions
-	mesh.material = _concrete if material == null else material
-	return mesh
-
-func _make_plane(dimensions: Vector2) -> PlaneMesh:
-	var mesh := PlaneMesh.new()
-	mesh.size = dimensions
-	mesh.material = _concrete_flat
-	return mesh
-
-func _multimesh(name: String, mesh: Mesh, transforms: Array[Transform3D], range_begin: float, range_end: float, plane_offset_y: float = 0.0) -> void:
+func _multimesh(name: String, mesh: Mesh, transforms: Array[Transform3D], range_begin: float, range_end: float, plane_offset_y: float = 0.0, override: Material = null) -> void:
 	if transforms.is_empty():
 		return
 	var mm := MultiMesh.new()
@@ -88,6 +78,8 @@ func _multimesh(name: String, mesh: Mesh, transforms: Array[Transform3D], range_
 	instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	instance.visibility_range_begin = range_begin
 	instance.visibility_range_end = range_end
+	if override != null:
+		instance.material_override = override
 	add_child(instance)
 
 func _collider(name: String, dimensions: Vector3, transform: Transform3D) -> void:
@@ -104,32 +96,23 @@ func _collider(name: String, dimensions: Vector3, transform: Transform3D) -> voi
 	add_child(body)
 
 func _build_runway() -> void:
-	# Five real 15 m concrete slabs form the exact 75 × 18 m strip. The field
-	# stays beside the unchanged HQ2.2 structures; joints meet without open gaps.
+	# Five bevelled 15 m HQ23 PBR concrete modules share one exact straight axis.
 	var transforms: Array[Transform3D] = []
-	var joint_transforms: Array[Transform3D] = []
 	for i in range(5):
 		var x := AirfieldHQ23.RUNWAY_START_X + RUNWAY_SEGMENT * 0.5 + i * RUNWAY_SEGMENT
 		var transform := Transform3D(Basis(Vector3.UP, PI * 0.5), AirfieldHQ23.layout_point(x, AirfieldHQ23.RUNWAY_CENTER_Z, SLAB_DEPTH * 0.5))
 		transforms.append(transform)
 		_collider("Runway slab collision %02d" % i, Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT + 0.04), transform)
-		if i > 0:
-			var joint_x := AirfieldHQ23.RUNWAY_START_X + float(i) * RUNWAY_SEGMENT
-			joint_transforms.append(Transform3D(Basis.IDENTITY, AirfieldHQ23.layout_point(joint_x, AirfieldHQ23.RUNWAY_CENTER_Z, SLAB_DEPTH - 0.004)))
-	_multimesh("Runway concrete slabs LOD0", _runway_mesh, transforms, 0.0, LOD0_END_M)
-	_multimesh("Runway concrete slabs LOD1", _runway_mesh_lod1, transforms, LOD0_END_M, LOD1_END_M)
-	_multimesh("Runway concrete slabs LOD2", _runway_mesh_lod2, transforms, LOD1_END_M, LOD2_END_M, SLAB_DEPTH * 0.5)
-	var runway_joint_mesh := BoxMesh.new()
-	runway_joint_mesh.size = Vector3(0.035, 0.006, RUNWAY_WIDTH)
-	runway_joint_mesh.material = _joint_material
-	_multimesh("Runway recessed expansion joints", runway_joint_mesh, joint_transforms, 0.0, LOD0_END_M)
+	_multimesh("Runway concrete slabs LOD0", _runway_meshes[0], transforms, 0.0, LOD0_END_M)
+	_multimesh("Runway concrete slabs LOD1", _runway_meshes[1], transforms, LOD0_END_M, LOD1_END_M)
+	_multimesh("Runway concrete slabs LOD2", _runway_meshes[2], transforms, LOD1_END_M, LOD2_END_M)
 
 func _build_apron() -> void:
 	# One dedicated, level parking stand for the initial single validated slot.
 	var transform := Transform3D(Basis.IDENTITY, AirfieldHQ23.layout_point(AirfieldHQ23.APRON_CENTER.x, AirfieldHQ23.APRON_CENTER.y, SLAB_DEPTH * 0.5))
-	_multimesh("Aircraft apron parking slab LOD0", _apron_mesh, [transform], 0.0, LOD0_END_M)
-	_multimesh("Aircraft apron parking slab LOD1", _apron_mesh_lod1, [transform], LOD0_END_M, LOD1_END_M)
-	_multimesh("Aircraft apron parking slab LOD2", _apron_mesh_lod2, [transform], LOD1_END_M, LOD2_END_M, SLAB_DEPTH * 0.5)
+	_multimesh("Aircraft apron parking slab LOD0", _apron_meshes[0], [transform], 0.0, LOD0_END_M)
+	_multimesh("Aircraft apron parking slab LOD1", _apron_meshes[1], [transform], LOD0_END_M, LOD1_END_M)
+	_multimesh("Aircraft apron parking slab LOD2", _apron_meshes[2], [transform], LOD1_END_M, LOD2_END_M)
 	_collider("Aircraft apron parking collision", Vector3(APRON_SIZE.x, SLAB_DEPTH, APRON_SIZE.y), transform)
 	_build_psp_apron_patch()
 
@@ -164,9 +147,23 @@ func _build_psp_apron_patch() -> void:
 	for index in PSP_PLATE_COUNT:
 		var x := (float(index) - float(PSP_PLATE_COUNT - 1) * 0.5) * plate_width
 		transforms.append(Transform3D(Basis.IDENTITY, origin + Vector3(x, 0.0, 0.0)))
-	_multimesh("Historic PSP apron patch LOD0", lod_meshes[0], transforms, 0.0, LOD0_END_M)
-	_multimesh("Historic PSP apron patch LOD1", lod_meshes[1], transforms, LOD0_END_M, LOD1_END_M)
-	_multimesh("Historic PSP apron patch LOD2", lod_meshes[2], transforms, LOD1_END_M, LOD2_END_M)
+	var psp_material := _psp_material(lod_meshes[0])
+	_multimesh("Historic PSP apron patch LOD0", lod_meshes[0], transforms, 0.0, LOD0_END_M, 0.0, psp_material)
+	_multimesh("Historic PSP apron patch LOD1", lod_meshes[1], transforms, LOD0_END_M, LOD1_END_M, 0.0, psp_material)
+	_multimesh("Historic PSP apron patch LOD2", lod_meshes[2], transforms, LOD1_END_M, LOD2_END_M, 0.0, psp_material)
+
+static func _psp_material(mesh: Mesh) -> Material:
+	# The PSP GLB exports an untextured pure-white base colour (1.0) with 0.68
+	# metallic, which clips to white in the game sun. Phosphate-coated wartime
+	# Marston mat reads as a dark, dull grey; keep its roughness/metal response.
+	var source := mesh.surface_get_material(0) as BaseMaterial3D if mesh.get_surface_count() > 0 else null
+	if source == null or source.albedo_texture != null:
+		return null
+	var material := source.duplicate() as BaseMaterial3D
+	material.albedo_color = Color(0.29, 0.30, 0.28)
+	material.metallic = 0.45
+	material.roughness = 0.78
+	return material
 
 func _build_taxiway() -> void:
 	var integration := get_parent().get_node_or_null("AirfieldFlightIntegration") as AirfieldFlightIntegration
@@ -174,22 +171,12 @@ func _build_taxiway() -> void:
 		return
 	var curve := integration.taxi_route.curve
 	var length := curve.get_baked_length()
-	var transforms: Array[Transform3D] = []
-	var joint_transforms: Array[Transform3D] = []
-	var joint_distance := TAXI_SEGMENT - 0.3
-	while joint_distance < length:
-		var joint_position := curve.sample_baked(joint_distance)
-		var joint_before := curve.sample_baked(maxf(0.0, joint_distance - 0.5))
-		var joint_after := curve.sample_baked(minf(length, joint_distance + 0.5))
-		var joint_direction := joint_after - joint_before
-		joint_direction.y = 0.0
-		var joint_yaw := atan2(joint_direction.x, joint_direction.z)
-		joint_transforms.append(Transform3D(Basis(Vector3.UP, joint_yaw), Vector3(joint_position.x, SLAB_DEPTH - 0.004, joint_position.z)))
-		joint_distance += TAXI_SEGMENT - 0.3
-	var offset := TAXI_SEGMENT * 0.5
+	_add_taxi_surface(_taxi_meshes[0], "Taxiway continuous PBR curve LOD0", 0.0, LOD0_END_M)
+	_add_taxi_surface(_taxi_meshes[1], "Taxiway continuous PBR curve LOD1", LOD0_END_M, LOD1_END_M)
+	_add_taxi_surface(_taxi_meshes[2], "Taxiway continuous PBR curve LOD2", LOD1_END_M, LOD2_END_M)
+	var offset := TAXI_COLLISION_STEP * 0.5
 	var index := 0
-	var batch := 0
-	while offset < length + TAXI_SEGMENT * 0.5:
+	while offset < length:
 		var local_position := curve.sample_baked(offset)
 		var before := curve.sample_baked(maxf(0.0, offset - 0.5))
 		var after := curve.sample_baked(minf(length, offset + 0.5))
@@ -199,21 +186,16 @@ func _build_taxiway() -> void:
 		var basis := Basis(Vector3.UP, yaw)
 		var position := Vector3(local_position.x, SLAB_DEPTH * 0.5, local_position.z)
 		var transform := Transform3D(basis, position)
-		transforms.append(transform)
-		_collider("Taxiway slab collision %02d" % index, Vector3(TAXIWAY_WIDTH, SLAB_DEPTH, TAXI_SEGMENT - 0.08), transform)
+		_collider("Taxiway slab collision %02d" % index, Vector3(TAXIWAY_WIDTH, SLAB_DEPTH, TAXI_COLLISION_STEP + 0.15), transform)
 		index += 1
-		if transforms.size() >= 16:
-			_flush_taxi_batch(batch, transforms)
-			batch += 1
-			transforms = []
-		offset += TAXI_SEGMENT - 0.3
-	_flush_taxi_batch(batch, transforms)
-	var taxi_joint_mesh := BoxMesh.new()
-	taxi_joint_mesh.size = Vector3(0.035, 0.006, TAXIWAY_WIDTH)
-	taxi_joint_mesh.material = _joint_material
-	_multimesh("Taxiway recessed module joints", taxi_joint_mesh, joint_transforms, 0.0, LOD0_END_M)
+		offset += TAXI_COLLISION_STEP
 
-func _flush_taxi_batch(batch: int, transforms: Array[Transform3D]) -> void:
-	_multimesh("Curved taxiway concrete segment %02d LOD0" % batch, _taxi_mesh, transforms, 0.0, LOD0_END_M)
-	_multimesh("Curved taxiway concrete segment %02d LOD1" % batch, _taxi_mesh_lod1, transforms, LOD0_END_M, LOD1_END_M)
-	_multimesh("Curved taxiway concrete segment %02d LOD2" % batch, _taxi_mesh_lod2, transforms, LOD1_END_M, LOD2_END_M, SLAB_DEPTH * 0.5)
+func _add_taxi_surface(mesh: Mesh, label: String, range_begin: float, range_end: float) -> void:
+	var surface := MeshInstance3D.new()
+	surface.name = label
+	surface.mesh = mesh
+	surface.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	surface.visibility_range_begin = range_begin
+	surface.visibility_range_end = range_end
+	surface.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+	add_child(surface)

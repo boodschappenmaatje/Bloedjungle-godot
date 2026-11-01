@@ -1,0 +1,28 @@
+{
+  "package_status": "PASS",
+  "apple_arkit_validation": "NOT_RUN_BY_EXPORTER",
+  "source": "/workspace/Bloedjungle-godot/assets/airfield_hq_v23/pavement/Airfield_Taxiway_HQ23_Compact_LOD0.glb",
+  "source_sha256": "a1d99b326661d2b75d647599164f479700a63e163aa387b778185122cdd38944",
+  "output": "/workspace/Bloedjungle-godot/previews/usdz/airfield_hq/2.3/compact/Curved_Taxiway_PBR_iPhone.usdz",
+  "output_bytes": 6443541,
+  "output_sha256": "96afaca4bf45d93659c7ead6562252443e7b4611b0b363a2686136f19a08e38f",
+  "blender_version": "4.5.15 LTS",
+  "preview_texture_max_px": 2048,
+  "centered_preview": true,
+  "source_texture_paths_resolved": 0,
+  "animation_exported": false,
+  "static_curves_converted_to_meshes": 0,
+  "mesh_objects": 1,
+  "materials": 1,
+  "material_images": 2,
+  "animation_actions": [],
+  "scene_animation_active": false,
+  "frame_start": 1,
+  "frame_end": 250,
+  "fps": 24.0,
+  "packaged_files": [
+    "Curved_Taxiway_PBR_iPhone.usdc",
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_nor_gl_2k.jpg",
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_diff_2k.jpg"
+  ]
+}

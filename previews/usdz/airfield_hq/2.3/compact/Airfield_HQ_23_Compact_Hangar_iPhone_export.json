@@ -1,0 +1,37 @@
+{
+  "package_status": "PASS",
+  "apple_arkit_validation": "NOT_RUN_BY_EXPORTER",
+  "source": "/workspace/Bloedjungle-godot/assets/airfield_hq_v23/hangar/Airfield_HQ_23_Compact_LOD0.glb",
+  "source_sha256": "c4c4873e422150dc277f56c5aba6523bcad11c44353bce5355ed941815d64e92",
+  "output": "/workspace/Bloedjungle-godot/previews/usdz/airfield_hq/2.3/compact/Airfield_HQ_23_Compact_Hangar_iPhone.usdz",
+  "output_bytes": 29854330,
+  "output_sha256": "bdefa5e7166b6b120a42fe95fdc7fa2e4248d38b310944e317655083e066aa81",
+  "blender_version": "4.5.15 LTS",
+  "preview_texture_max_px": 2048,
+  "centered_preview": true,
+  "source_texture_paths_resolved": 0,
+  "animation_exported": true,
+  "static_curves_converted_to_meshes": 0,
+  "mesh_objects": 8,
+  "materials": 9,
+  "material_images": 9,
+  "animation_actions": [
+    "Open_Left_Door"
+  ],
+  "scene_animation_active": true,
+  "frame_start": 1,
+  "frame_end": 250,
+  "fps": 24.0,
+  "packaged_files": [
+    "Airfield_HQ_23_Compact_Hangar_iPhone.usdc",
+    "textures/hangar_concrete_floor_nor_gl_2k.jpg",
+    "textures/hangar_concrete_floor_arm_2k.jpg",
+    "textures/hangar_concrete_floor_diff_2k.jpg",
+    "textures/concrete_floor_01_nor_gl_2k.jpg",
+    "textures/concrete_floor_01_arm_2k.jpg",
+    "textures/concrete_floor_01_diff_2k.jpg",
+    "textures/corrugated_iron_02_nor_gl_2k.jpg",
+    "textures/corrugated_iron_02_arm_2k.jpg",
+    "textures/corrugated_iron_02_diff_2k.jpg"
+  ]
+}

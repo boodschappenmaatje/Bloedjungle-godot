@@ -6,9 +6,12 @@ class_name AirfieldFlightIntegration
 const P47_LENGTH_M := 11.0
 const P47_WINGSPAN_M := 12.44
 const P47_HEIGHT_M := 4.45
-const DOOR_CLEAR_WIDTH_M := 39.4
-const DOOR_CLEAR_HEIGHT_M := 13.0
-const TAXIWAY_WIDTH_M := 18.4
+const DOOR_CLEAR_WIDTH_M := 15.0
+const DOOR_CLEAR_HEIGHT_M := 5.89
+const INTERIOR_CLEAR_WIDTH_M := 15.0
+const INTERIOR_CLEAR_LENGTH_M := 13.0
+const INTERIOR_CLEAR_HEIGHT_M := 6.0
+const TAXIWAY_WIDTH_M := AirfieldHQ23.TAXIWAY_WIDTH_M
 const RUNWAY_WIDTH_M := AirfieldHQ23.RUNWAY_WIDTH_M
 const RUNWAY_LENGTH_M := AirfieldHQ23.RUNWAY_LENGTH_M
 const RUNWAY_END_X := AirfieldHQ23.RUNWAY_END_X
@@ -44,7 +47,8 @@ func clearance_report() -> Dictionary:
 		"door_wing_margin_each_side_m": (DOOR_CLEAR_WIDTH_M - P47_WINGSPAN_M) / 2.0,
 		"door_height_margin_m": DOOR_CLEAR_HEIGHT_M - P47_HEIGHT_M,
 		"taxi_wing_margin_each_side_m": (TAXIWAY_WIDTH_M - P47_WINGSPAN_M) / 2.0,
-		"fits_hangar": DOOR_CLEAR_WIDTH_M > P47_WINGSPAN_M + 3.0 and DOOR_CLEAR_HEIGHT_M > P47_HEIGHT_M + 2.0,
+		"clear_interior_m": Vector3(INTERIOR_CLEAR_WIDTH_M, INTERIOR_CLEAR_HEIGHT_M, INTERIOR_CLEAR_LENGTH_M),
+		"fits_hangar": DOOR_CLEAR_WIDTH_M >= P47_WINGSPAN_M + 2.5 and DOOR_CLEAR_HEIGHT_M >= P47_HEIGHT_M + 1.25,
 		"fits_taxiway": TAXIWAY_WIDTH_M > P47_WINGSPAN_M + 4.0,
 	}
 
@@ -73,8 +77,8 @@ func _build_paths() -> void:
 	$P47_Hangar_Spawn.position = Vector3(0.0, 0.22, 0.0)
 	var parking := AirfieldHQ23.layout_point(AirfieldHQ23.APRON_CENTER.x, AirfieldHQ23.APRON_CENTER.y)
 	$P47_Apron_Parking.position = parking
-	$P47_Taxi_Start.position = parking
-	$P47_Runway_Hold.position = AirfieldHQ23.layout_point(AirfieldHQ23.TAXI_ARC_END.x, AirfieldHQ23.TAXI_ARC_END.y)
+	$P47_Taxi_Start.position = AirfieldHQ23.layout_point(AirfieldHQ23.TAXI_START.x, AirfieldHQ23.TAXI_START.y)
+	$P47_Runway_Hold.position = AirfieldHQ23.layout_point(AirfieldHQ23.TAXI_RUNWAY_HOLD.x, AirfieldHQ23.TAXI_RUNWAY_HOLD.y)
 	$P47_Runway_Start.position = AirfieldHQ23.layout_point(TAKEOFF_START_X, AirfieldHQ23.RUNWAY_CENTER_Z)
 	$P47_Landing_Touchdown.position = AirfieldHQ23.layout_point(AirfieldHQ23.RUNWAY_START_X + 3.0, AirfieldHQ23.RUNWAY_CENTER_Z)
 	$P47_Landing_Approach.position = AirfieldHQ23.layout_point(AirfieldHQ23.RUNWAY_START_X - 25.0, AirfieldHQ23.RUNWAY_CENTER_Z, 24.0)

@@ -1,0 +1,28 @@
+{
+  "package_status": "PASS",
+  "apple_arkit_validation": "NOT_RUN_BY_EXPORTER",
+  "source": "/workspace/Bloedjungle-godot/assets/airfield_hq_v23/pavement/Airfield_Runway_Slab_HQ23_LOD0.glb",
+  "source_sha256": "e31d81918be4f45fa33a87397d4c6eb77d2ab39fc9bb0b5c11e1dbf8e44cc3a3",
+  "output": "/workspace/Bloedjungle-godot/previews/usdz/airfield_hq/2.3/compact/Runway_15m_Concrete_Slab_iPhone.usdz",
+  "output_bytes": 6250929,
+  "output_sha256": "7effaff5f223dc716977a6c43acb622eac9b1378ad2f4a521fbec0521d485e81",
+  "blender_version": "4.5.15 LTS",
+  "preview_texture_max_px": 2048,
+  "centered_preview": true,
+  "source_texture_paths_resolved": 0,
+  "animation_exported": false,
+  "static_curves_converted_to_meshes": 0,
+  "mesh_objects": 1,
+  "materials": 1,
+  "material_images": 2,
+  "animation_actions": [],
+  "scene_animation_active": false,
+  "frame_start": 1,
+  "frame_end": 250,
+  "fps": 24.0,
+  "packaged_files": [
+    "Runway_15m_Concrete_Slab_iPhone.usdc",
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_nor_gl_2k.jpg",
+    "textures/Bloedjungle_Airfield_HQ_2_2_LOD0_concrete_floor_01_diff_2k.jpg"
+  ]
+}

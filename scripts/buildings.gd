@@ -45,7 +45,13 @@ const FRONT := 4.2 * GS    # afstand van het midden tot de deur
 const C := Data.COMPOUND
 
 
+var radio: Radio
+
+
 func _ready() -> void:
+	radio = Radio.new()
+	radio.name = "Radio"
+	add_child(radio)
 	add_to_group("buildings")
 	add_child(GarageMenu.new())
 
@@ -414,6 +420,7 @@ func _site_done(b: Dictionary) -> void:
 	b.vis = []
 	Sfx.play("thud")
 	Game.banner.emit("BOUW KLAAR", String(DEFS[b.kind].name).to_upper(), 1.4)
+	radio.say("bouw_klaar")
 	Game.changed.emit()
 
 
@@ -511,6 +518,8 @@ func damage(b: Dictionary, dmg: float) -> void:
 	if b.down or dmg <= 0.0 or (Game.state != "play" and Game.state != "prep") or not Game.buildings.has(b):
 		return
 	b.hp -= dmg
+	if b.hp > 0.0 and not is_piece(b.kind):
+		radio.say("basis_aanval")
 	var node: Node3D = b.node
 	if randf() < 0.5:
 		Fx.dust(self, node.global_position + Vector3(randf_range(-1, 1), 0.8, randf_range(-1, 1)))
@@ -541,6 +550,7 @@ func _break(b: Dictionary) -> void:
 	b.fx = Fx.burning(self, at, true)
 	Fx.explosion(self, at + Vector3.UP * 1.0, 1.2)
 	Game.banner.emit("%s VERWOEST" % DEFS[b.kind].name.to_upper(), "Herbouw hem in de bouwmodus.", 2.2)
+	radio.say("gebouw_vernield")
 
 
 func _clear_fx(b: Dictionary) -> void:
@@ -712,6 +722,7 @@ func _spawn(b: Dictionary) -> void:
 		a.set_command("defend", b.rally)
 	Sfx.play("reload")
 	Game.banner.emit("NIEUWE REKRUUT", "", 1.0)
+	radio.say("eenheid_klaar")
 	Game.changed.emit()
 
 
@@ -894,6 +905,7 @@ func _spawn_vehicle(b: Dictionary, kind: String) -> void:
 			fleet.remove_at(i)
 	var slot := fleet.size()
 	fleet.append(v)
+	radio.say("eenheid_klaar")
 	# eerst kaarsrecht de poort uit tot de hele wagen buiten staat, dan pas opzij naar de parkeerplek
 	if kind == "truck":
 		# lange wagen: kaarsrecht naar buiten tot hij helemaal uit de poort is en dan stilstaan

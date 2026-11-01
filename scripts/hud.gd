@@ -2,7 +2,8 @@ extends CanvasLayer
 ## Meldingen en knoppen midden op het scherm (golf-titel, "Start nu", gesneuveld). De balken, punten
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
-const VERSION := "v160"
+const VLIEGTUIG := preload("res://scripts/vliegtuig.gd")
+const VERSION := "v161"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -138,6 +139,12 @@ func _process(delta: float) -> void:
 				small.text += "  ·  VIA " + " + ".join(names)
 		else:
 			small.text = ""
+	# Tijdens het vliegen: golf-plaat en knoppen worden doorzichtig en pakken geen tikken, zodat je niet per ongeluk "Start nu" raakt.
+	var flying := is_instance_valid(VLIEGTUIG.driven_plane)
+	var dim := 0.22 if flying else 1.0
+	$BannerPlate.modulate.a = dim
+	start_btn.modulate.a = dim
+	start_btn.mouse_filter = Control.MOUSE_FILTER_IGNORE if flying else Control.MOUSE_FILTER_STOP
 	var shown: bool = Game.state != "shop" and Game.state != "menu" and Game.state != "over"
 	# De bestaande plaat blijft tijdens prep de golf en timer tonen. In play verschijnen alleen
 	# tijdelijke Game.banner-meldingen; na hun bestaande timer verdwijnt de hele Control.

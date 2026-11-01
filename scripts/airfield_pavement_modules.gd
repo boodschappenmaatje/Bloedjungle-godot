@@ -3,6 +3,9 @@ extends Node3D
 ## Authored, bevelled HQ23 concrete modules with separate simplified physics proxies.
 
 const SLAB_DEPTH := 0.22
+## De taxibaan ligt deels over de dekplaten van platform en baan met dezelfde bovenkant (y 0,22): twee vlakken op dezelfde diepte
+## met verschillende textuurfase = z-fighting (flikkerende baan). Ze komt daarom 2 cm hoger te liggen.
+const TAXI_LIFT := 0.02
 const RUNWAY_WIDTH := AirfieldHQ23.RUNWAY_WIDTH_M
 const RUNWAY_SEGMENT := 15.0
 const TAXIWAY_WIDTH := AirfieldHQ23.TAXIWAY_WIDTH_M
@@ -195,6 +198,7 @@ func _add_taxi_surface(mesh: Mesh, label: String, range_begin: float, range_end:
 	surface.name = label
 	surface.mesh = mesh
 	surface.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	surface.position.y = TAXI_LIFT
 	surface.visibility_range_begin = range_begin
 	surface.visibility_range_end = range_end
 	surface.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED

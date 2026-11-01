@@ -54,6 +54,14 @@ var complex: Node3D            # de vliegveldscène (voor pavement en taxiroute)
 var home: Transform3D          # parkeerplek (wereld)
 var exploded := false
 var _model: Node3D
+var _meter: Control
+var _bar_bg: ColorRect
+var _bar: ColorRect
+var _hint: Label
+var _lbl_left: Label
+var _lbl_right: Label
+var _hint_t := 0.0
+static var _sticks_seen := 0   # stick-labels tonen we de eerste twee vluchten
 var _wrap: Node3D
 var _anim: AnimationPlayer
 var _shadow: MeshInstance3D
@@ -182,19 +190,73 @@ func _make_ui() -> void:
 	_btn.pressed.connect(_press)
 	_layer.add_child(_btn)
 	_btn.hide()
+	# Meter onderaan tussen de sticks (niet meer over de golf-knoppen bovenin): hoogte met balk, snelheid, korte hint.
+	_meter = Control.new()
+	_meter.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
+	_meter.offset_left = -130.0
+	_meter.offset_right = 130.0
+	_meter.offset_top = -92.0
+	_meter.offset_bottom = -20.0
+	_meter.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_meter.hide()
+	_layer.add_child(_meter)
 	_info = Label.new()
-	_info.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	_info.offset_left = -170.0
-	_info.offset_right = 170.0
-	_info.offset_top = 86.0
+	_info.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	_info.offset_bottom = 22.0
 	_info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_info.add_theme_font_size_override("font_size", 15)
-	_info.add_theme_color_override("font_color", Color(UI.INK, 0.9))
-	_info.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.8))
+	_info.add_theme_color_override("font_color", Color(UI.INK, 0.95))
+	_info.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
 	_info.add_theme_constant_override("outline_size", 4)
 	_info.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_info.hide()
-	_layer.add_child(_info)
+	_meter.add_child(_info)
+	_bar_bg = ColorRect.new()
+	_bar_bg.color = Color(0, 0, 0, 0.55)
+	_bar_bg.position = Vector2(20.0, 26.0)
+	_bar_bg.size = Vector2(220.0, 7.0)
+	_bar_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_meter.add_child(_bar_bg)
+	_bar = ColorRect.new()
+	_bar.color = Color(UI.BRASS, 0.95)
+	_bar.position = Vector2(1.0, 1.0)
+	_bar.size = Vector2(0.0, 5.0)
+	_bar.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bar_bg.add_child(_bar)
+	_hint = Label.new()
+	_hint.position = Vector2(-60.0, 38.0)
+	_hint.size = Vector2(380.0, 30.0)
+	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_hint.add_theme_font_size_override("font_size", 13)
+	_hint.add_theme_color_override("font_color", Color(UI.INK, 0.9))
+	_hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	_hint.add_theme_constant_override("outline_size", 4)
+	_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_meter.add_child(_hint)
+	# Stick-labels bij de eerste vluchten
+	_lbl_left = _stick_label("GAS + RICHTING", true)
+	_lbl_right = _stick_label("HOOGTE: omlaag = stijgen", false)
+
+
+func _stick_label(txt: String, left: bool) -> Label:
+	var l := Label.new()
+	l.text = txt
+	l.add_theme_font_size_override("font_size", 12)
+	l.add_theme_color_override("font_color", Color(UI.INK, 0.95))
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.85))
+	l.add_theme_constant_override("outline_size", 4)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_LEFT if left else Control.PRESET_BOTTOM_RIGHT)
+	if left:
+		l.offset_left = 40.0
+		l.offset_top = -205.0
+	else:
+		l.offset_left = -230.0
+		l.offset_right = -30.0
+		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		l.offset_top = -205.0
+	l.hide()
+	_layer.add_child(l)
+	return l
 
 
 # ------------------------------------------------------------------ plaats en grond
@@ -254,6 +316,8 @@ func _board(p) -> void:
 		return
 	driven = true
 	driven_plane = self
+	_hint_t = 9.0
+	_sticks_seen += 1
 	mode = Mode.GROUND
 	speed = 0.0
 	alt = 0.0
@@ -323,6 +387,7 @@ func _altitude_input() -> float:
 
 func _physics_process(delta: float) -> void:
 	_t += delta
+	_hint_t = maxf(0.0, _hint_t - delta)
 	var live: bool = Game.state == "play" or Game.state == "prep"
 	var p = Game.player
 	if driven and (p == null or p.dead):
@@ -630,6 +695,9 @@ func _visuals(delta: float) -> void:
 	if mode == Mode.WRECK:
 		return
 	var in_air := mode == Mode.AIR
+	# Hoger = dichter bij de camera: het toestel wordt tot ~30% groter, zodat hoogte ook zonder getal te zien is.
+	var up := 1.0 + clampf(alt / MAX_ALT, 0.0, 1.0) * 0.3 if in_air else 1.0
+	_wrap.scale = _wrap.scale.lerp(Vector3.ONE * up, minf(1.0, delta * 5.0))
 	_wrap.rotation.z = lerpf(_wrap.rotation.z, _bank if in_air else _bank * 0.15, minf(1.0, delta * 6.0))
 	_wrap.rotation.x = lerpf(_wrap.rotation.x, _pitch if in_air else 0.0, minf(1.0, delta * 6.0))
 	if _anim != null and _anim.has_animation(FLY_CLIP):
@@ -646,19 +714,19 @@ func _set_shadow() -> void:
 	var gy := ground_y(global_position) + 0.04
 	var sc := 1.0 / (1.0 + a * 0.02)
 	(_shadow.mesh as PlaneMesh).size = Vector2(_span * 1.05 * sc, _len * 1.05 * sc)
-	_shadow.global_position = Vector3(global_position.x + a * 0.22, gy, global_position.z + a * 0.3)
+	_shadow.global_position = Vector3(global_position.x + a * 0.4, gy, global_position.z + a * 0.55)
 	_shadow.global_rotation = Vector3(0.0, rotation.y + _wrap.rotation.y, 0.0)
-	_shadow_mat.set_shader_parameter("strength", clampf(0.55 - a * 0.012, 0.22, 0.55))
+	_shadow_mat.set_shader_parameter("strength", clampf(0.55 - a * 0.015, 0.16, 0.55))
 	_shadow.visible = true
 
 
 func camera_extra() -> float:
 	## Extra camera-afstand: hoger vliegen en sneller = meer overzicht (de tactische camera blijft, hij zoomt alleen mee).
-	return alt * 1.3 + speed * 0.25
+	return minf(alt * 1.3 + speed * 0.45, 34.0)
 
 
 func camera_lead() -> float:
-	return clampf(speed * 0.4, 0.7, 10.0)
+	return clampf(speed * 0.8, 0.7, 22.0)
 
 
 func _update_ui(p, live: bool) -> void:
@@ -674,18 +742,26 @@ func _update_ui(p, live: bool) -> void:
 		_btn.kind = "enter" if what == "in" else "exit"
 		_btn.set_caption("IN" if what == "in" else "UIT")
 		_btn.queue_redraw()
-	_info.visible = driven and (mode == Mode.AIR or mode == Mode.GROUND or mode == Mode.ROLLOUT or mode == Mode.TAXI)
-	if _info.visible:
+	var show_meter := driven and (mode == Mode.AIR or mode == Mode.GROUND or mode == Mode.ROLLOUT or mode == Mode.TAXI)
+	_meter.visible = show_meter
+	if show_meter:
 		var inv := GameSettings.get_value("vliegtuig_hoogte") == "omgekeerd"
-		var line1 := "HOOGTE %d m   SNELHEID %d" % [roundi(alt), roundi(speed * 3.6)]
-		var line2 := ""
+		_info.text = "HOOGTE %d m   ·   %d km/u" % [roundi(alt), roundi(speed * 3.6)]
+		_bar.size.x = 218.0 * clampf(alt / MAX_ALT, 0.0, 1.0)
+		var hint := ""
 		match mode:
 			Mode.GROUND:
-				line2 = "Gas geven, dan rechterstick %s om op te stijgen" % ("omhoog" if inv else "omlaag")
+				if _hint_t > 0.0:
+					hint = "Gas geven, dan rechterstick %s om op te stijgen" % ("omhoog" if inv else "omlaag")
 			Mode.AIR:
-				line2 = "Landen: laag boven asfalt en langzaam" if alt < 6.0 else ""
+				hint = "Landen: laag boven asfalt en langzaam" if alt < 6.0 else ""
 			Mode.ROLLOUT:
-				line2 = "Uitrollen…"
+				hint = "Uitrollen…"
 			Mode.TAXI:
-				line2 = "Terug naar de hangar…"
-		_info.text = line1 + ("\n" + line2 if line2 != "" else "")
+				hint = "Terug naar de hangar…"
+		_hint.text = hint
+	var labels := show_meter and _sticks_seen <= 2 and (mode == Mode.GROUND or mode == Mode.AIR) and _hint_t > 0.0
+	_lbl_left.visible = labels
+	_lbl_right.visible = labels
+	if labels:
+		_lbl_right.text = "HOOGTE: %s = stijgen" % ("omhoog" if GameSettings.get_value("vliegtuig_hoogte") == "omgekeerd" else "omlaag")

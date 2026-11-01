@@ -6,7 +6,7 @@ Aanleiding: referentieplaatje uit Command & Conquer Generals. Het huidige vliegv
 Vergelijking op schaal: [basis_oud_vs_nieuw.png](basis_oud_vs_nieuw.png) (bron: `.svg`). De plaatsing daarin is schematisch.
 
 ## Gekozen door de gebruiker
-- Compact Generals-vliegveld, optie 2 (~20 × 14 m).
+- Compact Generals-vliegveld, optie 2 (~24 × 21 m).
 - Helipad blijft ongewijzigd (12,8 m). Garage groter: vervalt na de Generals-data.
 - Betonplaten onder elk gebouw.
 - Rook en kleine details op de gebouwen (pas na de maten).
@@ -63,7 +63,7 @@ Gemeten in de GLB-bestanden (ruwe modelafmetingen). De schaal van de voertuigsc�
 - Uitrijroute van de garage (tot ~10 m vrij voor de deur) en de zone voor de kazerne mogen niet door het vliegveld of de helipad worden afgesloten. Het vliegveld wordt daarom aan een kant van de basis geplaatst, niet tussen kazerne, garage en poorten.
 
 ## Besluiten
-- Vliegveld optie 2 (~20 × 14 m), jager ~0,55 (niet kleiner dan de tank), helipad en garage ongewijzigd.
+- Vliegveld optie 2 (~24 × 21 m), jager ~0,55 (niet kleiner dan de tank), helipad en garage ongewijzigd.
 - Voertuigen blijven zoals ze zijn; in Godot testen of tank en truck netjes door de garagedeur rijden en corrigeer alleen waar nodig.
 
 ## Open punten / aannames

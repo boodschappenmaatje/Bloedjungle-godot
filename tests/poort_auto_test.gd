@@ -57,7 +57,12 @@ func _process(_d: float) -> bool:
 	if frames == 40 + 200 * 2:
 		var gt = g.gates.list[0]
 		_check(gt.open < 0.05, "vergrendelde poort blijft dicht ook al staat de speler erbij (open %.2f)" % gt.open)
+		# een nepsoldaat met de eigenschappen die het teamcommando (team_commands.gd) van elke bondgenoot leest
+		var nep := GDScript.new()
+		nep.source_code = "extends Node3D\nvar helper := false\nvar guard := false\nvar truck = null\n"
+		nep.reload()
 		_dummy = Node3D.new()
+		_dummy.set_script(nep)
 		root.add_child(_dummy)
 		_dummy.global_position = g.gates.pos_of(gt) + Vector3(0, 0, -2.5)
 		g.allies.append(_dummy)
@@ -77,26 +82,23 @@ func _process(_d: float) -> bool:
 		var gt = g.gates.list[0]
 		_check(gt.open > 0.95, "ontgrendelde poort opent weer (open %.2f)" % gt.open)
 		g.player.global_position = Vector3(0, 0, 0)
-		# voertuigmodus: wapenbalk, voetsoldaatknoppen en uitrustingskiezer verdwijnen
+		# voertuigmodus: wapenbalk en voetsoldaatknoppen (incl. GEBRUIK voor de uitrusting) verdwijnen
 		var strip := _hud_child("weapon_strip.gd")
 		var combat := _hud_child("combat_buttons.gd")
-		var equip := main.get_node("Hud").find_child("EquipmentSelector", true, false) as Control
-		_check(strip != null and combat != null and equip != null, "HUD-onderdelen gevonden")
-		_check(strip.visible and combat.visible and equip.visible, "te voet: wapenbalk, knoppen en uitrusting zichtbaar")
+		_check(strip != null and combat != null, "HUD-onderdelen gevonden")
+		_check(strip.visible and combat.visible, "te voet: wapenbalk en knoppen zichtbaar (balk %s, knoppen %s)" % [strip.visible, combat.visible])
 		g.player.driving = true
 	if frames == 40 + 200 * 5 + 3:
 		var strip := _hud_child("weapon_strip.gd")
 		var combat := _hud_child("combat_buttons.gd")
-		var equip := main.get_node("Hud").find_child("EquipmentSelector", true, false) as Control
 		_check(not strip.visible, "in een voertuig: wapenbalk weg")
 		_check(not combat.visible, "in een voertuig: granaat/herlaad/sprint/rol weg")
-		_check(not equip.visible, "in een voertuig: uitrustingskiezer weg")
 		g.player.driving = false
 	if frames == 40 + 200 * 5 + 8:
 		var strip := _hud_child("weapon_strip.gd")
 		var combat := _hud_child("combat_buttons.gd")
-		var equip := main.get_node("Hud").find_child("EquipmentSelector", true, false) as Control
-		_check(strip.visible and combat.visible and equip.visible, "uitgestapt: alles komt terug")
+		_check(strip.visible and combat.visible, "uitgestapt: alles komt terug")
 		print("POORT_AUTO_TEST fouten=", fails)
+		quit(1 if fails > 0 else 0)  # exitcode 1 bij een fout, zodat tools/run_tests.sh het ziet
 		return true
 	return false

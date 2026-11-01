@@ -10,7 +10,7 @@ extends CharacterBody3D
 ## kettingreactie naar andere auto's, vaten en pompen. Het verkoolde wrak blijft staan (met collision) en brandt nog even na.
 ## Zoals bij de brandkraan zijn vuur en rook deeltjes in code (Fx), niet in de glb.
 
-const MODEL := preload("res://assets/bus.glb")
+const MODEL_PAD := "res://assets/bus.glb"  # zwaar OTA-bestand: pas laden als het nodig is (zie tests/ota_vroeg_test.gd)
 const HP := 1600.0
 const BULLET_ARMOR := 0.9            # v95: Thompson ~10 s tot brand, MG 42 ~4 s (was 0,35x: veel te lang)
 const BLAST_DAMAGE := 900.0          # ontploffing vlakbij; neemt af met de afstand
@@ -103,7 +103,7 @@ func _ready() -> void:
 	_shape.shape = b
 	_shape.position = Vector3(0, 1.525, 0)
 	add_child(_shape)
-	_model = MODEL.instantiate()
+	_model = (load(MODEL_PAD) as PackedScene).instantiate()
 	add_child(_model)
 	_root = _model.get_node("Bus")
 	_car = _root.get_node("Carrosserie")

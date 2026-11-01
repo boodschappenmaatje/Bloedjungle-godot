@@ -5,7 +5,7 @@ class_name BaseProps
 
 const C := Data.COMPOUND
 const G := Data.GATE_GAP
-const BUNKER_GAME_ASSET := preload("res://assets/tests/bunker/bloedjungle_bunker_hq.glb")
+const BUNKER_GAME_ASSET_PAD := "res://assets/tests/bunker/bloedjungle_bunker_hq.glb"  # zwaar OTA-bestand: pas laden als het nodig is (zie tests/ota_vroeg_test.gd)
 const BUNKER_COLLISION_SIZE := Vector3(4.6, 2.0, 4.6)
 
 
@@ -77,7 +77,7 @@ static func _bunker(root: Node3D) -> void:
 	collision.shape = shape
 	collision.position.y = BUNKER_COLLISION_SIZE.y / 2.0
 	b.add_child(collision)
-	var visual := BUNKER_GAME_ASSET.instantiate() as Node3D
+	var visual := (load(BUNKER_GAME_ASSET_PAD) as PackedScene).instantiate() as Node3D
 	visual.name = "Bunker_High_Quality_Showcase"
 	# Fit the 8.4 × 7.2 m source footprint to the existing 4.6 m gameplay
 	# footprint while retaining the authored vertical silhouette and door.

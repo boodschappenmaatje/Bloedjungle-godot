@@ -443,6 +443,7 @@ const TEST_PLANE := true
 const RESPAWN_S := 20.0
 ## Via preload i.p.v. de klassenaam: een klasse die pas via een OTA-patch bijkomt staat niet in de klassenlijst van de IPA.
 const VLIEGTUIG := preload("res://scripts/vliegtuig.gd")
+const OTA_DIAG := preload("res://scripts/ota_keten.gd")
 
 static func step(building: Dictionary, delta: float) -> void:
 	if not TEST_PLANE or building.get("down", false) or building.get("hp", 1.0) <= 0.0:
@@ -457,16 +458,20 @@ static func step(building: Dictionary, delta: float) -> void:
 	building["spawn_t"] = building.get("spawn_t", 1.0) - delta
 	if building.spawn_t > 0.0:
 		building["spawn_status"] = "toestel wordt klaargezet…"
+		OTA_DIAG.vliegtuig = building["spawn_status"]
 		return
 	if not building.node.has_meta("complex"):
 		building["spawn_status"] = "geen toestel: vliegveldscène mist (complex)"
+		OTA_DIAG.vliegtuig = building["spawn_status"]
 		return
 	var v = VLIEGTUIG.spawn(building)
 	if v == null:
 		building["spawn_status"] = "geen toestel: spawn mislukt"
+		OTA_DIAG.vliegtuig = building["spawn_status"]
 		building["spawn_t"] = RESPAWN_S
 		return
 	building["spawn_status"] = "toestel staat klaar" if v._model != null else "toestel staat klaar, maar het model laadt niet (%s)" % VLIEGTUIG.MODEL_PATH
+	OTA_DIAG.vliegtuig = building["spawn_status"]
 	building["spawn_t"] = RESPAWN_S
 	list.append({"kind": "test", "node": v, "state": "PARKED", "slot": 0, "health": 1.0})
 

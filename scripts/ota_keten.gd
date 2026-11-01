@@ -11,6 +11,9 @@ const DIR := "user://ota"
 
 ## Wat er bij de laatste start met de keten gebeurde (voor het updatescherm, zodat te zien is waarom zware stukken wel of niet laden).
 static var status := "keten nog niet gecontroleerd"
+## Diagnose voor het Updates-scherm: laatste spelermodel- en vliegtuigmelding (leeg = nooit gezet).
+static var speler := ""
+static var vliegtuig := ""
 
 
 static func _json(pad: String) -> Dictionary:

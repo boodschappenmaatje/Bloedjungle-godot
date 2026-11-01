@@ -8,8 +8,13 @@ class_name AirfieldHQ23CompactShowcase
 @onready var left_collision: Node3D = $GameplayCollisions/LeftDoorCollision
 @onready var right_collision: Node3D = $GameplayCollisions/RightDoorCollision
 
-const LOD0_END := 70.0
+# LOD0 keeps the modelled corrugation only for close views. Beyond ~32 m the
+# ridges are thinner than a screen pixel (moire/flicker on iPhone), so the
+# LOD1/LOD2 shell uses filtered shading normals (see _filter_corrugation_normals).
+const LOD0_END := 32.0
 const LOD1_END := 125.0
+const CORRUGATED_MATERIALS := ["USAAF olive drab painted steel", "Weathered galvanized steel"]
+const NORMAL_FILTER_CELL_M := 1.2
 const DOOR_CLOSED_X := 3.75
 const DOOR_OPEN_X := 11.25
 var _door_tweens: Dictionary = {}
@@ -24,6 +29,8 @@ func _ready() -> void:
 	_set_range(lod0, 0.0, LOD0_END)
 	_set_range(lod1, LOD0_END, LOD1_END)
 	_set_range(lod2, LOD1_END, 0.0)
+	_filter_corrugation_normals(lod1)
+	_filter_corrugation_normals(lod2)
 	_set_door_collisions(false)
 	var tower_collision := $GameplayCollisions/TowerDoorCollision as Node3D
 	_tower_door_closed_y = tower_collision.rotation.y
@@ -62,6 +69,73 @@ func _set_range(root_node: Node, begin: float, end: float) -> void:
 		mesh.visibility_range_begin = begin
 		mesh.visibility_range_end = end
 		mesh.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+
+## Geometric corrugation on the distant hangar shell aliases into moire: each
+## ridge alternates lit/unlit faces faster than the pixel grid. Replace the
+## shading normals of the corrugated sheet surfaces by their ~1 m neighbourhood
+## average (the sheet's macro orientation). Geometry, UVs and the PBR normal map
+## stay unchanged, so the filtered corrugation texture still reads at distance.
+static func _filter_corrugation_normals(root_node: Node) -> void:
+	var filtered := {}
+	for node in root_node.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := node as MeshInstance3D
+		var source := mesh_instance.mesh as ArrayMesh
+		if source == null or not mesh_instance.visible or source.get_blend_shape_count() > 0:
+			continue
+		if filtered.has(source):
+			mesh_instance.mesh = filtered[source]
+			continue
+		var touched := false
+		var result := ArrayMesh.new()
+		for surface in source.get_surface_count():
+			var material := source.surface_get_material(surface)
+			var arrays := source.surface_get_arrays(surface)
+			if material != null and CORRUGATED_MATERIALS.has(String(material.resource_name)):
+				_average_normals(arrays)
+				touched = true
+			result.add_surface_from_arrays(source.surface_get_primitive_type(surface), arrays)
+			result.surface_set_material(surface, material)
+			result.surface_set_name(surface, source.surface_get_name(surface))
+		if not touched:
+			filtered[source] = source
+			continue
+		result.resource_name = source.resource_name
+		result.shadow_mesh = source.shadow_mesh
+		filtered[source] = result
+		mesh_instance.mesh = result
+
+static func _average_normals(arrays: Array) -> void:
+	var positions: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+	var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+	if positions.is_empty() or normals.size() != positions.size():
+		return
+	var sums := {}
+	var keys := PackedInt64Array()
+	keys.resize(positions.size())
+	for i in positions.size():
+		var p := positions[i] / NORMAL_FILTER_CELL_M
+		var key := (int(floor(p.x)) + 4096) | ((int(floor(p.y)) + 4096) << 16) | ((int(floor(p.z)) + 4096) << 32)
+		keys[i] = key
+		sums[key] = sums.get(key, Vector3.ZERO) + normals[i]
+	for i in normals.size():
+		var averaged: Vector3 = sums[keys[i]]
+		if averaged.length_squared() > 0.0001:
+			normals[i] = averaged.normalized()
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	var tangents = arrays[Mesh.ARRAY_TANGENT]
+	if tangents is PackedFloat32Array and (tangents as PackedFloat32Array).size() == normals.size() * 4:
+		var t := tangents as PackedFloat32Array
+		for i in normals.size():
+			var n := normals[i]
+			var tangent := Vector3(t[i * 4], t[i * 4 + 1], t[i * 4 + 2])
+			tangent = (tangent - n * n.dot(tangent))
+			if tangent.length_squared() < 0.000001:
+				continue
+			tangent = tangent.normalized()
+			t[i * 4] = tangent.x
+			t[i * 4 + 1] = tangent.y
+			t[i * 4 + 2] = tangent.z
+		arrays[Mesh.ARRAY_TANGENT] = t
 
 func set_workshop_lights_enabled(enabled: bool) -> void:
 	## A local, reversible toggle used by the paired visual comparison.

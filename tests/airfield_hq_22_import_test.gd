@@ -179,6 +179,9 @@ func _run() -> void:
 	assert(tower_collisions != null and tower_collisions.find_children("*", "CollisionShape3D", true, false).size() >= 75, "The external stair must have walkable step and landing collisions")
 	var tower_motion := compact_core.get_node_or_null("HQ22 Approved Tower Motion Details") as Node3D
 	assert(tower_motion != null, "The compact tower must reuse the approved HQ2.2 moving door and windsock geometry")
+	assert(tower_motion.find_children("*", "Light3D", true, false).is_empty(), "The HQ2.2 motion details must not add the unbounded imported workshop lights (≈38,000 energy, 4 km range) that bleached the airfield")
+	for light in compact_core.find_children("*", "Light3D", true, false):
+		assert(not light.is_visible_in_tree() or ((light as OmniLight3D) != null and (light as OmniLight3D).omni_range <= 8.0), "No airfield light may light the field beyond its local 8 m range by default: %s" % light.name)
 	var compact_tower_door := tower_motion.find_child("Tower access door | animated", true, false) as MeshInstance3D
 	var compact_windsock := tower_motion.find_child("Tower wind sock | wind animation", true, false) as MeshInstance3D
 	assert(compact_tower_door != null and compact_tower_door.visible, "The imported HQ2.2 animated tower-door leaf must be visible in HQ2.3")

@@ -94,6 +94,12 @@ func _run() -> void:
 			p.fire_t = 0.0
 			p.reload_t = 0.0
 			p.ammo = load("res://scripts/data.gd").WEAPONS[w].mag
+			if w == "m1911":
+				# Since v162 the M1911 keeps its own magazine + chambered round; ammo alone
+				# no longer refills it, so the 4th setup onwards fired an empty pistol.
+				p.m1911_mag_rounds = 7
+				p.m1911_chambered = true
+				p._sync_m1911_ammo()
 			await _frames(2)
 			# duim richting de auto zoals op het scherm: rechts = +x, omlaag = +z (zoals touch_sticks)
 			var to: Vector3 = target.global_position - p.global_position

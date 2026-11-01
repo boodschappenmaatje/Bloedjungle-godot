@@ -152,6 +152,17 @@ static func _add_hq23_tower(complex: Node3D) -> void:
 			mesh.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
 		tower_root.add_child(root)
 
+static func _strip_motion_source_lights(motion_root: Node) -> void:
+	# The full HQ2.2 LOD0 GLB is instanced only for the door and windsock clips.
+	# Its glTF import carries the five workshop point lights WITHOUT their 6 m
+	# range: Godot gives them energy ≈38,000 and range 4096 m, which floods the
+	# whole airfield (white runway, clipped tower, hangar roof). The motion
+	# details must add no light at all, so the instanced copies are removed;
+	# the protected source GLB stays byte-identical.
+	for node in motion_root.find_children("*", "Light3D", true, false):
+		node.get_parent().remove_child(node)
+		node.free()
+
 static func _add_hq22_tower_motion(complex: Node3D) -> void:
 	# Reuse the approved HQ2.2 animated access door and shape-key windsock as
 	# separate motion details. All other HQ2.2 tower geometry stays hidden; the
@@ -174,6 +185,7 @@ static func _add_hq22_tower_motion(complex: Node3D) -> void:
 	for node in motion_root.find_children("*", "MeshInstance3D", true, false):
 		var mesh := node as MeshInstance3D
 		mesh.visible = mesh.name == "Tower access door | animated" or mesh.name == "Tower wind sock | wind animation"
+	_strip_motion_source_lights(motion_root)
 	var source_animator: AnimationPlayer
 	for node in motion_root.find_children("*", "AnimationPlayer", true, false):
 		var animator := node as AnimationPlayer

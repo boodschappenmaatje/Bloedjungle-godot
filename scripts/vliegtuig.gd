@@ -55,6 +55,7 @@ var home: Transform3D          # parkeerplek (wereld)
 var exploded := false
 var _model: Node3D
 var _meter: Control
+var _trails: Array[CPUParticles3D] = []
 var _bar_bg: ColorRect
 var _bar: ColorRect
 var _hint: Label
@@ -110,6 +111,8 @@ static func spawn(b: Dictionary) -> Vliegtuig:
 
 
 func _ready() -> void:
+	set_physics_process(false)
+	process_priority = -50   # eerst het toestel, dan de camera die hem volgt
 	_wrap = Node3D.new()
 	add_child(_wrap)
 	var packed := load(MODEL_PATH) as PackedScene
@@ -124,6 +127,7 @@ func _ready() -> void:
 		_measure()
 		_strip_lights(_model)
 	_make_shadow()
+	_make_trails()
 	_make_ui()
 	_set_shadow()
 	_hangar_fit = _span <= AirfieldFlightIntegration.DOOR_CLEAR_WIDTH_M - 2.5 and _len <= AirfieldFlightIntegration.INTERIOR_CLEAR_LENGTH_M - 0.5
@@ -175,6 +179,41 @@ func _make_shadow() -> void:
 	_shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_shadow.top_level = true
 	add_child(_shadow)
+
+
+## Lichte condensstrepen achter de vleugelpunten: geven snelheid en richting, en blijven in de wereld achter (local_coords uit).
+func _make_trails() -> void:
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	mat.vertex_color_use_as_albedo = true
+	mat.albedo_color = Color(1, 1, 1, 0.5)
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.5, 0.5)
+	quad.material = mat
+	var fade := Gradient.new()
+	fade.set_color(0, Color(1, 1, 1, 0.55))
+	fade.set_color(1, Color(1, 1, 1, 0.0))
+	for side in [-1.0, 1.0]:
+		var t := CPUParticles3D.new()
+		t.mesh = quad
+		t.amount = 40
+		t.lifetime = 1.1
+		t.local_coords = false
+		t.emitting = false
+		t.direction = Vector3.ZERO
+		t.spread = 0.0
+		t.initial_velocity_min = 0.0
+		t.initial_velocity_max = 0.0
+		t.gravity = Vector3.ZERO
+		t.color_ramp = fade
+		t.scale_amount_min = 0.6
+		t.scale_amount_max = 1.0
+		t.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		t.position = Vector3(side * maxf(_span, 4.0) * 0.45, 0.3, maxf(_len, 6.0) * 0.12)
+		_wrap.add_child(t)
+		_trails.append(t)
 
 
 func _make_ui() -> void:
@@ -385,7 +424,14 @@ func _altitude_input() -> float:
 
 # ------------------------------------------------------------------ fysica
 
-func _physics_process(delta: float) -> void:
+## Het toestel rekent in elk getekend beeld (niet in de 60-Hz physics-tik): de camera loopt ook per beeld, en een toestel dat op 120 Hz
+## beeld maar 60 keer per seconde stapt (30 m/s = 0,5 m per stap) schokt ten opzichte van de camera, ook bij hoge fps.
+## De stap is begrensd zodat een haperend beeld geen sprong geeft.
+func _process(delta: float) -> void:
+	_step(minf(delta, 0.05))
+
+
+func _step(delta: float) -> void:
 	_t += delta
 	_hint_t = maxf(0.0, _hint_t - delta)
 	var live: bool = Game.state == "play" or Game.state == "prep"
@@ -427,7 +473,7 @@ func _steer(delta: float, rate: float, mv: Vector2) -> void:
 	var diff := wrapf(want - rotation.y, -PI, PI)
 	var turn := clampf(diff, -rate * delta, rate * delta)
 	rotation.y += turn
-	_bank = lerpf(_bank, clampf(turn / maxf(delta, 0.001) * 0.32, -0.7, 0.7), minf(1.0, delta * 5.0))
+	_bank = lerpf(_bank, clampf(turn / maxf(delta, 0.001) * 0.45, -0.9, 0.9), minf(1.0, delta * 5.0))
 
 
 func _forward() -> Vector3:
@@ -663,6 +709,8 @@ func crash() -> void:
 	_bank = 0.0
 	_pitch = 0.0
 	alt = 0.0
+	for t in _trails:
+		t.emitting = false
 	if _shadow != null:
 		_shadow.visible = false
 	var fire := Fx.flame(self, Vector3(0.0, 0.8, 0.0), 2.4)
@@ -703,6 +751,9 @@ func _visuals(delta: float) -> void:
 	if _anim != null and _anim.has_animation(FLY_CLIP):
 		if (driven or mode == Mode.TAXI or mode == Mode.ROLLOUT) and not _anim.is_playing():
 			_anim.play(FLY_CLIP)
+	var trail_on := in_air and speed > 16.0 and alt > 2.0
+	for t in _trails:
+		t.emitting = trail_on
 	_set_shadow()
 
 

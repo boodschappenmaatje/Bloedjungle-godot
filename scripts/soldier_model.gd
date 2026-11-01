@@ -91,6 +91,8 @@ var _mesh_action_player: AnimationPlayer
 var _mesh_animation_tree: AnimationTree
 var _mesh_animation_playback: AnimationNodeStateMachinePlayback
 var _mesh_clip_map: Dictionary = {}
+## Laatste spelermodel-keuze, zichtbaar in het Updates-scherm (diagnose onzichtbare speler).
+static var player_status := "speler nog niet aangemaakt"
 
 
 ## uniform = kleur van het uniform; look = sleutel uit LOOKS ("eigen" voor bondgenoten en wachten,
@@ -102,13 +104,19 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 	_uniform = uniform
 	var model_scene: PackedScene
 	if meshy_player:
+		player_status = "Meshy gekozen, GLB bestaat niet in de app"
 		if ResourceLoader.exists(SCENE_MESHY_PLAYER_PATH):
+			player_status = "Meshy GLB gevonden, laden mislukt"
 			model_scene = ResourceLoader.load(SCENE_MESHY_PLAYER_PATH) as PackedScene
 		if model_scene == null:
 			# Zwaar OTA-stuk met het Meshy-model nog niet binnen (of import mislukt): val terug op het
 			# gewone spelermodel, zodat de speler nooit onzichtbaar is.
 			push_warning("Meshy player GLB niet beschikbaar, terugval op het gewone spelermodel")
 			meshy_player = false
+		else:
+			player_status = "Meshy-speler geladen"
+	elif look_.begins_with("speler:"):
+		player_status = "gewone speler (instelling: %s)" % GameSettings.get_value("soldaat")
 	if not meshy_player:
 		model_scene = SCENE if not v2 else (SCENE_PLAYER if look.begins_with("speler:") else SCENE_V2)
 	var model := model_scene.instantiate()
@@ -240,6 +248,7 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 	var skels := _model.find_children("*", "Skeleton3D", true, false)
 	if skels.is_empty() or anim == null:
 		push_error("Meshy player GLB has no Skeleton3D or AnimationPlayer")
+		player_status = "Meshy: geen skelet of animatiespeler"
 		return
 	var skel := skels[0] as Skeleton3D
 	_mesh_skeleton = skel
@@ -248,6 +257,7 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 	for bone in required:
 		if skel.find_bone(bone) < 0:
 			push_error("Meshy player rig is missing expected Mixamo bone: " + bone)
+			player_status = "Meshy: bot ontbreekt (" + bone + ")"
 			return
 	# Duplicate the centrally extracted animation-only resource per player instance. The
 	# original GLB remains untouched and its mesh/skin are not duplicated into the library.

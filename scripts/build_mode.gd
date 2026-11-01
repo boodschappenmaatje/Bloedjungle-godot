@@ -434,13 +434,10 @@ func _fill_panel() -> void:
 		# de bouwrij: gevulde blokjes zijn soldaten in de rij, tik erop om de laatste te annuleren (punten terug)
 		var rij := HBoxContainer.new()
 		rij.add_theme_constant_override("separation", 4)
+		var usable: int = mini(Buildings.RIJ_MAX, b.queue + maxi(0, Game.builds.room(b)))
 		for i in Buildings.RIJ_MAX:
-			var slot := Button.new()
-			slot.add_to_group("hud_button")
-			slot.custom_minimum_size = Vector2(34, 30)
-			slot.text = "■" if i < b.queue else "□"
-			slot.disabled = i >= b.queue
-			UI.style_button(slot, "buy")
+			var slot := RijSlot.new()
+			slot.setup(i, b, i >= usable, float(lv.time))
 			slot.pressed.connect(func(): Game.builds.cancel_recruit(b))
 			rij.add_child(slot)
 		vb.add_child(rij)

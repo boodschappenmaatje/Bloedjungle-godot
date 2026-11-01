@@ -32,7 +32,9 @@ func _process(_d: float) -> bool:
 		bm._fill_panel()
 		var knoppen: Array = bm.find_children("*", "Button", true, false).map(func(b): return b.text)
 		print("knoppen: ", knoppen)
-		var ok: bool = knoppen.any(func(t): return t.begins_with("Vlag")) and knoppen.any(func(t): return t.begins_with("Nieuwe:")) and knoppen.count("■") == 2
+		var ok: bool = knoppen.any(func(t): return t.begins_with("Vlag")) and knoppen.any(func(t): return t.begins_with("Nieuwe:")) and bm.find_children("*", "Button", true, false).filter(func(n): return n is RijSlot and n.filled).size() == 2 and bm.find_children("*", "Button", true, false).filter(func(n): return n is RijSlot).size() == 5
+		var sl: Array = bm.find_children("*", "Button", true, false).filter(func(n): return n is RijSlot)
+		print("slots ", sl.size(), " gevuld ", sl.filter(func(n): return n.filled).size())
 		print("PANEEL ", "OK" if ok else "FOUT")
 		quit(0 if ok else 1)
 	return false

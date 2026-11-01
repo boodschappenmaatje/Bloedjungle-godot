@@ -653,6 +653,11 @@ func cancel_recruit(b: Dictionary) -> void:
 func set_rally(b: Dictionary, at: Vector3) -> void:
 	b.rally = Vector3(at.x, 0.0, at.z)
 	b.has_rally = true
+	b.rally_mode = "vlag"
+	# soldaten die al klaar waren lopen ook naar het nieuwe verzamelpunt
+	for a in Game.allies:
+		if is_instance_valid(a):
+			a.set_command("defend", b.rally)
 	if b.flag == null or not is_instance_valid(b.flag):
 		b.flag = _make_flag()
 		add_child(b.flag)

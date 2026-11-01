@@ -17,6 +17,7 @@ const CORRUGATED_MATERIALS := ["USAAF olive drab painted steel", "Weathered galv
 const NORMAL_FILTER_CELL_M := 1.2
 const DOOR_CLOSED_X := 3.75
 const DOOR_OPEN_X := 11.25
+const DOOR_SLIDE_S := 3.0
 var _door_tweens: Dictionary = {}
 var _tower_door_closed_y := 0.0
 
@@ -49,6 +50,7 @@ func _ready() -> void:
 	_set_range(lod2, LOD1_END, 0.0)
 	_filter_corrugation_normals(lod1)
 	_filter_corrugation_normals(lod2)
+	_stop_door_clips()
 	_set_door_collisions(false)
 	var tower_collision := $GameplayCollisions/TowerDoorCollision as Node3D
 	_tower_door_closed_y = tower_collision.rotation.y
@@ -283,28 +285,39 @@ func _set_door_collisions(opening: bool) -> void:
 	left_collision.position.x = -DOOR_OPEN_X if opening else -DOOR_CLOSED_X
 	right_collision.position.x = DOOR_OPEN_X if opening else DOOR_CLOSED_X
 
+## Beide deuren staan als clips in dezelfde AnimationPlayer van de LOD0-glb: een tweede
+## play() op die speler verving de eerste, dus er bewoog maar een deur (of geen). LOD1/LOD2
+## hadden helemaal geen speler, waardoor de deuren op afstand dicht bleven en bij het wisselen
+## van LOD flikkerden. Daarom schuiven we de deurmeshes van alle LODs en de botsing met een
+## en dezelfde tween (zelfde beweging als de clip: x van +-3,75 naar +-11,25).
 func _toggle_door(side: StringName, opening: bool) -> void:
-	var label := "Left" if side == &"left" else "Right"
-	var animation_name := "Open_%s_Door" % label
 	var collision: Node3D = left_collision if side == &"left" else right_collision
 	var sign := -1.0 if side == &"left" else 1.0
 	var destination_x := sign * (DOOR_OPEN_X if opening else DOOR_CLOSED_X)
-	for player in _animation_players(lod0):
-		if not player.has_animation(animation_name):
-			continue
-		if opening:
-			player.speed_scale = 1.0
-			player.play(animation_name)
-		else:
-			player.play(animation_name)
-			player.seek(player.get_animation(animation_name).length, true)
-			player.speed_scale = -1.0
 	var key := String(side)
 	if _door_tweens.has(key):
 		_door_tweens[key].kill()
-	var tween := create_tween()
-	tween.tween_property(collision, "position:x", destination_x, 3.0).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	var tween := create_tween().set_parallel(true)
+	tween.tween_property(collision, "position:x", destination_x, DOOR_SLIDE_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	for door in _door_meshes(side):
+		tween.tween_property(door, "position:x", destination_x, DOOR_SLIDE_S).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	_door_tweens[key] = tween
+
+func _door_meshes(side: StringName) -> Array[Node3D]:
+	var found: Array[Node3D] = []
+	var door_name := "Hangar sliding door LEFT" if side == &"left" else "Hangar sliding door RIGHT"
+	for lod in [lod0, lod1, lod2]:
+		var door := lod.find_child(door_name, true, false) as Node3D
+		if door != null:
+			found.append(door)
+	return found
+
+## De glTF-clips staan uit: de deuren worden door _toggle_door bestuurd.
+func _stop_door_clips() -> void:
+	for lod in [lod0, lod1, lod2]:
+		for player in _animation_players(lod):
+			player.stop()
+			player.active = false
 
 func open_tower_door() -> void:
 	_set_legacy_tower_door(true)

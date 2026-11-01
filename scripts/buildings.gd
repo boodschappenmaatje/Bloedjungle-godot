@@ -333,6 +333,8 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false) -> Variant
 		b.rij = RijBalk.new()
 		add_child(b.rij)
 	if kind == "garage":
+		b.rij = RijBalk.new()
+		add_child(b.rij)
 		b.merge({"has": {"jeep": false, "tank": false, "truck": false}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
 		_garage_init(b)
 	elif kind == "airfield":
@@ -778,6 +780,9 @@ func _physics_process(delta: float) -> void:
 			var prog: float = 1.0 - clampf(float(b.train_t) / float(LEVELS[b.lv].time), 0.0, 1.0) if b.queue > 0 else 0.0
 			b.rij.set_value(b.queue, prog)
 			b.rij.global_position = b.at + Vector3(0, DEFS[b.kind].size.y + 1.55, 0)
+		if b.kind == "garage" and b.rij != null:
+			b.rij.set_value(b.order.size(), -1.0)
+			b.rij.global_position = b.at + Vector3(0, DEFS[b.kind].size.y + 1.55, 0)
 		_flag_visible(b)
 	for b in Game.buildings:
 		if b.down or under_construction(b):
@@ -880,6 +885,17 @@ func buy_vehicle(b: Dictionary, kind: String) -> void:
 	Game.changed.emit()
 
 
+## Haal een gekochte wagen uit de rij zolang hij nog niet is uitgereden en geef de punten terug.
+func cancel_order(b: Dictionary, kind: String) -> void:
+	if b.kind != "garage" or not b.order.has(kind):
+		return
+	b.order.erase(kind)
+	b.has[kind] = false
+	Game.points += VEHICLES[kind].cost
+	Sfx.play("ping", 0.5)
+	Game.changed.emit()
+
+
 func _front(b: Dictionary) -> Vector3:
 	return Vector3(sin(b.yaw), 0, cos(b.yaw))
 
@@ -934,7 +950,8 @@ const DOOR_T := 0.7  # seconden dat de poort open of dicht gaat (de clip duurt 2
 func _garage_step(b: Dictionary, delta: float) -> void:
 	match b.phase:
 		"idle":
-			if not b.order.is_empty():
+			# in het bouwscherm wacht de rij: je kunt een wagen nog annuleren, hij rijdt uit als je terug het veld in gaat
+			if not b.order.is_empty() and not Game.build_mode:
 				b.phase = "opening"
 				b.t = DOOR_T
 				b.anim.speed_scale = 2.0 / DOOR_T

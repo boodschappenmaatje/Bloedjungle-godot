@@ -13,14 +13,16 @@ var locked := false
 var filled := false
 var b: Dictionary = {}
 var time := 10.0
+var glyph := "soldier"
 
 
-func setup(i: int, building: Dictionary, is_locked: bool, train_time: float) -> void:
+func setup(i: int, building: Dictionary, is_locked: bool, train_time: float, item_icon := "soldier", is_filled := false) -> void:
 	time = train_time
+	glyph = item_icon
 	index = i
 	b = building
 	locked = is_locked
-	filled = i < int(b.queue)
+	filled = is_filled if glyph != "soldier" else i < int(b.queue)
 	disabled = not filled
 	custom_minimum_size = Vector2(40, 40)
 	focus_mode = Control.FOCUS_NONE
@@ -39,7 +41,7 @@ func setup(i: int, building: Dictionary, is_locked: bool, train_time: float) -> 
 		var sfx := get_node_or_null("/root/Sfx")
 		if sfx != null:
 			sfx.play("click"))
-	set_process(filled and index == 0)
+	set_process(filled and index == 0 and glyph == "soldier")
 
 
 func _process(_d: float) -> void:
@@ -61,10 +63,28 @@ func _draw() -> void:
 		draw_arc(Vector2(c.x, c.y - 1.0), 4.5, PI, TAU, 12, LOCK, 2.0)
 		return
 	var col := OLIVE if filled else DIM
-	# soldaat: hoofd met helm en schouders
-	draw_circle(c + Vector2(0, -6), 5.0, col)
-	draw_rect(Rect2(c.x - 6.0, c.y - 11.0, 12.0, 4.0), col.darkened(0.2))
-	draw_rect(Rect2(c.x - 9.0, c.y + 1.0, 18.0, 10.0), col)
-	if filled and index == 0:
+	match glyph:
+		"leeg":
+			pass
+		"jeep":
+			draw_rect(Rect2(c.x - 11.0, c.y - 3.0, 22.0, 8.0), col)
+			draw_rect(Rect2(c.x - 4.0, c.y - 9.0, 9.0, 6.0), col.darkened(0.2))
+			draw_circle(c + Vector2(-7, 7), 3.0, col.darkened(0.45))
+			draw_circle(c + Vector2(7, 7), 3.0, col.darkened(0.45))
+		"tank":
+			draw_rect(Rect2(c.x - 12.0, c.y, 24.0, 8.0), col)
+			draw_rect(Rect2(c.x - 6.0, c.y - 7.0, 12.0, 7.0), col.darkened(0.2))
+			draw_rect(Rect2(c.x + 5.0, c.y - 5.0, 9.0, 2.5), col.darkened(0.2))
+		"truck":
+			draw_rect(Rect2(c.x - 12.0, c.y - 8.0, 16.0, 13.0), col)
+			draw_rect(Rect2(c.x + 5.0, c.y - 4.0, 8.0, 9.0), col.darkened(0.2))
+			draw_circle(c + Vector2(-6, 7), 3.0, col.darkened(0.45))
+			draw_circle(c + Vector2(8, 7), 3.0, col.darkened(0.45))
+		_:
+			# soldaat: hoofd met helm en schouders
+			draw_circle(c + Vector2(0, -6), 5.0, col)
+			draw_rect(Rect2(c.x - 6.0, c.y - 11.0, 12.0, 4.0), col.darkened(0.2))
+			draw_rect(Rect2(c.x - 9.0, c.y + 1.0, 18.0, 10.0), col)
+	if filled and index == 0 and glyph == "soldier":
 		var p := _progress()
 		draw_arc(c, size.x * 0.5 - 3.0, -PI * 0.5, -PI * 0.5 + TAU * maxf(p, 0.02), 32, GOLD, 3.0)

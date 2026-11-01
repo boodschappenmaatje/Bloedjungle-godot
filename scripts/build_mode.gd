@@ -468,11 +468,24 @@ func _fill_panel() -> void:
 		for k in Buildings.VEHICLES:
 			if b.has[k]:
 				have.append(Buildings.VEHICLES[k].name)
-		info.text = "In dienst: %s · sterkte %d" % [", ".join(have) if have else "nog niets", ceili(b.hp)]
+		info.text = "In dienst: %s · in de rij %d · sterkte %d" % [", ".join(have) if have else "nog niets", b.order.size(), ceili(b.hp)]
+		# de garagerij: gevulde blokjes zijn gekochte wagens die nog moeten uitrijden, tik erop om te annuleren (punten terug)
+		var grij := HBoxContainer.new()
+		grij.add_theme_constant_override("separation", 4)
+		for i in Buildings.VEHICLES.size():
+			var kind: String = b.order[i] if i < b.order.size() else ""
+			var gs := RijSlot.new()
+			gs.setup(i, b, false, 0.0, kind if kind != "" else "soldier", kind != "")
+			if kind == "":
+				gs.glyph = "leeg"
+			gs.pressed.connect(func(): Game.builds.cancel_order(b, kind))
+			grij.add_child(gs)
+		vb.add_child(grij)
+		vb.move_child(grij, row.get_index())
 		for k in Buildings.VEHICLES:
 			var v: Dictionary = Buildings.VEHICLES[k]
 			_act(row, v.name, "gekocht" if b.has[k] else "%d pt" % v.cost, Game.builds.can_buy_vehicle(b, k), func(): Game.builds.buy_vehicle(b, k))
-		tip = "Een gekochte wagen rijdt meteen de garage uit. Jeep, tank en truck bestuur je zelf: loop erheen en tik INSTAPPEN. Stuur je ze niet, dan bewaakt de tank de basis. De truck neemt tot 10 soldaten mee."
+		tip = "Een gekochte wagen staat in de rij en rijdt de garage uit zodra je het bouwscherm verlaat; tik op het blokje om te annuleren. Jeep, tank en truck bestuur je zelf: loop erheen en tik INSTAPPEN. Stuur je ze niet, dan bewaakt de tank de basis. De truck neemt tot 10 soldaten mee."
 	elif b.kind == "airfield":
 		var aircraft: Array = b.get("aircraft", [])
 		var parked: Array[String] = []

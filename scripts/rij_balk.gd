@@ -63,7 +63,7 @@ func _init() -> void:
 	visible = false
 
 
-## count = soldaten in de rij (0..5), progress = 0..1 van de soldaat die nu klaar komt
+## count = eenheden in de rij (0..5), progress = 0..1 van de eenheid die nu klaar komt; progress < 0 = geen voortgangsbalk (garage)
 func set_value(count: int, progress: float) -> void:
 	var show := count > 0
 	if visible != show:
@@ -72,9 +72,9 @@ func set_value(count: int, progress: float) -> void:
 		return
 	var x0 := -STEP * (SLOTS - 1) * 0.5
 	for i in SLOTS:
-		_full[i].visible = i < count and i > 0
+		_full[i].visible = i < count and (i > 0 or progress < 0.0)
 	var p := clampf(progress, 0.0, 1.0)
 	# het eerste vakje: balk die van links naar rechts vult
-	_prog.visible = true
+	_prog.visible = progress >= 0.0
 	_prog.scale = Vector3(maxf(0.02, SIZE * p), SIZE, 1)
 	_prog.position.x = x0 - SIZE * 0.5 + SIZE * p * 0.5

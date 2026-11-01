@@ -22,6 +22,7 @@ var _cards: Array = []
 var _zoom_btns: Array = []
 var _airfield_rotate_btn: Button
 var _sel: Variant = null
+var _flag_for: Variant = null  # kazerne die op een tik op de grond een verzamelvlag krijgt
 var _sell_arm: Variant = null
 var _ptrs := {}
 var _pointer_map := {}
@@ -248,6 +249,7 @@ func _enter() -> void:
 	Game.airfield_build_view = false
 	_previous_bcam = Game.bcam
 	_sel = null
+	_flag_for = null
 	_sell_arm = null
 	_ptrs.clear()
 	_pointer_map.clear()
@@ -272,6 +274,7 @@ func _exit() -> void:
 	_drag = {}
 	_pinch = {}
 	_sel = null
+	_flag_for = null
 	if _ghost:
 		_ghost.visible = false
 	if _ring:
@@ -427,8 +430,26 @@ func _fill_panel() -> void:
 	elif b.kind == "kazerne":
 		var lv: Dictionary = Buildings.LEVELS[b.lv]
 		var nx: Variant = Buildings.LEVELS[b.lv + 1] if b.lv + 1 < Buildings.LEVELS.size() else null
-		info.text = "Soldaten %d / %d%s · %ds per man · sterkte %d" % [Game.builds.soldiers_alive(), lv.max, " · in training %d" % b.queue if b.queue else "", lv.time, ceili(b.hp)]
-		_act(row, "Schutter", "%d pt" % Buildings.TRAIN_COST, Game.builds.room(b) > 0 and Game.points >= Buildings.TRAIN_COST, func(): Game.builds.recruit(b))
+		info.text = "Soldaten %d / %d%s · %ds per man · sterkte %d" % [Game.builds.soldiers_alive(), lv.max, " · in de rij %d / %d" % [b.queue, Buildings.RIJ_MAX] if b.queue else "", lv.time, ceili(b.hp)]
+		# de bouwrij: gevulde blokjes zijn soldaten in de rij, tik erop om de laatste te annuleren (punten terug)
+		var rij := HBoxContainer.new()
+		rij.add_theme_constant_override("separation", 4)
+		for i in Buildings.RIJ_MAX:
+			var slot := Button.new()
+			slot.add_to_group("hud_button")
+			slot.custom_minimum_size = Vector2(34, 30)
+			slot.text = "■" if i < b.queue else "□"
+			slot.disabled = i >= b.queue
+			UI.style_button(slot, "buy")
+			slot.pressed.connect(func(): Game.builds.cancel_recruit(b))
+			rij.add_child(slot)
+		vb.add_child(rij)
+		vb.move_child(rij, row.get_index())
+		_act(row, "Schutter", "%d pt" % Buildings.TRAIN_COST, Game.builds.room(b) > 0 and b.queue < Buildings.RIJ_MAX and Game.points >= Buildings.TRAIN_COST, func(): Game.builds.recruit(b))
+		_act(row, "Vlag", "zet punt", true, func():
+			_flag_for = b
+			_say("Tik op de grond voor het verzamelpunt", UI.INK_DIM, 3.0))
+		_act(row, "Nieuwe: " + ("vlag" if b.rally_mode == "vlag" else "volgen"), "wissel", b.has_rally, func(): Game.builds.toggle_rally_mode(b))
 		if nx:
 			_act(row, "Upgrade", "%d pt" % nx.cost, Game.can_afford_build(nx.cost), func(): Game.builds.upgrade(b))
 		else:
@@ -623,6 +644,14 @@ func _down(id: int, pos: Vector2) -> void:
 		return
 	var g = _ground(pos)
 	if g == null:
+		return
+	if _flag_for != null:
+		var kz: Dictionary = _flag_for
+		_flag_for = null
+		if Game.builds.has_method("set_rally") and Game.buildings.has(kz):
+			Game.builds.set_rally(kz, Vector3(g.x, 0.0, g.z))
+			_say("Verzamelpunt gezet", UI.INK_DIM, 1.6)
+		_fill_panel()
 		return
 	var st = _struct_at(g)
 	if st != null:

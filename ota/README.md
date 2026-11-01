@@ -3,11 +3,19 @@
 `basis.txt` bevat de commit waar de IPA van gebouwd is (de "base"). Een IPA krijgt deze waarde bij het bouwen mee in
 `build_info.json`; de app past alleen patches toe die dezelfde base hebben.
 
-- **Keten:** elke patch bevat alleen wat er sinds de VORIGE patch is veranderd (de eerste vergelijkt met de IPA-commit). In het manifest
-  (`schema` 2) staat de hele keten sinds de IPA onder `patches`; de app downloadt alleen de patches die hij nog niet heeft en laadt ze
-  in volgorde. Een gelukte deelpatch wordt bij een nieuwe poging niet opnieuw gedownload.
-- **Een nieuwe installatie** (of een toestel zonder patches) haalt de hele keten op. Wordt de keten te groot (> 400 MB, de workflow geeft
-  een waarschuwing), installeer dan een nieuwe IPA: zet in `basis.txt` een recentere commit, bouw een IPA (`ios.yml` zet de base erin)
-  en installeer die. Apps met een oudere base melden dan "installeer eerst de nieuwste IPA".
-- `.github/workflows/ota.yml` bouwt de patch en zet `manifest.json` + de patches van de keten in de GitHub-release `updates`;
-  patches die niet meer in de keten staan worden verwijderd.
+Een update bestaat uit twee soorten stukken (manifest `schema` 3, gemaakt door `.github/workflows/ota.yml`):
+
+- **Licht** (`licht`): alle gewijzigde scripts, scènes en kleine bestanden sinds de IPA. Klein; de app vervangt dit stuk bij elke
+  update en laadt het als eerste (Updater), dus ook scripts en autoloads veranderen via een update.
+- **Zwaar** (`zwaar`, een keten): gewijzigde modellen, texturen en geluid (`assets/**`, `source_assets/**`, `previews/**`). Elk stuk
+  bevat alleen wat er sinds het vorige stuk veranderde; de eerste vergelijkt met de IPA (één groot stuk, eenmalig). De app downloadt alleen
+  de stukken die hij mist en laadt ze bij elke start (`scripts/ota_keten.gd`, aangeroepen vanuit `Game._init`).
+- **Brug** (`pck`): een piepkleine patch met alleen het nieuwe updatescherm. Apps met de oude updater uit de IPA geven downloads maar
+  30 seconden; deze brug past daarin, daarna downloadt het nieuwe scherm zelf in blokken (hervatbaar, met procent, snelheid en tijd).
+
+De splitsing is twee extra exportpresets (`tools/ota_presets.py`, afgeleid van "iOS"). Zware bestanden die scripts al bij het opstarten
+met `preload` inladen kunnen niet via een vervolgstuk veranderen; `tools/ota_vroeg.py` ziet dat en de workflow begint dan een nieuwe
+zware keten (één groot stuk).
+
+Nieuwe IPA geïnstalleerd en wil je weer een lege keten? Zet in `basis.txt` een recentere commit, bouw een IPA (de workflow `ios.yml`
+zet de base erin) en installeer die. Apps met een oudere base melden dan "installeer eerst de nieuwste IPA".

@@ -207,6 +207,43 @@ func _run() -> void:
 	_check(uv.status_tekst.contains("37%") and uv.status_tekst.contains("MB/s") and uv.status_tekst.contains("nog ca."), "voortgangstekst klopt niet: " + uv.status_tekst)
 	_check(U._duur_tekst(5.2) == "6 sec" and U._duur_tekst(125.0) == "2 min 05 sec", "duurtekst klopt niet")
 
+	# 7d. zware keten + licht stuk (updatescherm en laadhaak): ontbrekende stukken, laden in volgorde, licht heeft voorrang
+	_schoon()
+	var z1 := _maak_patch("zwaar-1.pck", "{\"w\":1}", "BASIS1", 300)
+	var z2 := _maak_patch("zwaar-2.pck", "{\"w\":2}", "BASIS1", 301)
+	var lt := _maak_patch("licht-1.pck", "{\"w\":9}", "BASIS1", 302)
+	var m3d := {"schema": 3, "versie": "v3", "base": "BASIS1", "gebouwd": 302, "pck": lt.pck, "licht": lt.pck, "zwaar": [z1.pck, z2.pck]}
+	var Panel: Script = load("res://scripts/update_panel.gd")
+	_check(Panel.stukken_nodig(m3d, {}, {}).size() == 3, "zonder iets moeten 2 zware stukken en het lichte stuk ontbreken")
+	var eerst := {"basis": "BASIS1", "stukken": [{"sha256": z1.pck.sha256}]}
+	var nodig_d: Array = Panel.stukken_nodig(m3d, {"sha256": lt.pck.sha256}, eerst)
+	_check(nodig_d.size() == 1 and str(nodig_d[0].naam) == "zwaar-2.pck", "met stuk 1 en licht moet alleen zwaar stuk 2 ontbreken")
+	_check(Panel.stukken_nodig(m3d, {"sha256": lt.pck.sha256}, {"basis": "BASIS1", "stukken": [{"sha256": z1.pck.sha256}, {"sha256": z2.pck.sha256}]}).is_empty(), "alles binnen: niets meer nodig")
+	_check(Panel.stukken_nodig(m3d, {"sha256": lt.pck.sha256}, {"basis": "ANDERS", "stukken": [{"sha256": z1.pck.sha256}]}).size() == 2, "een keten van een andere basis telt niet mee")
+	_check(Panel.stukken_nodig({"versie": "x", "pck": lt.pck}, {}, {}).is_empty(), "een manifest zonder licht/zwaar valt terug op de gewone route")
+	var Keten: Script = load("res://scripts/ota_keten.gd")
+	DirAccess.make_dir_recursive_absolute(DIR + "/keten")
+	var lijst_d: Array = []
+	for z in [z1, z2]:
+		var doel: String = DIR + "/keten/" + str(z.pck.naam)
+		DirAccess.copy_absolute(DIR + "/" + str(z.pck.naam), doel)
+		lijst_d.append({"naam": z.pck.naam, "bestand": doel, "sha256": z.pck.sha256, "grootte": z.pck.grootte})
+	var fk := FileAccess.open(DIR + "/keten.json", FileAccess.WRITE)
+	fk.store_string(JSON.stringify({"basis": "BASIS1", "stukken": lijst_d}))
+	fk.close()
+	_check(Keten.laad(DIR) == 0, "zonder actieve patch mag er niets geladen worden")
+	var fa := FileAccess.open(DIR + "/actief.json", FileAccess.WRITE)
+	fa.store_string(JSON.stringify({"versie": "v3", "bestand": DIR + "/licht-1.pck", "sha256": lt.pck.sha256, "grootte": lt.pck.grootte, "base": "ANDERS", "gebouwd": 302}))
+	fa.close()
+	_check(Keten.laad(DIR) == 0, "keten van een andere basis mag niet geladen worden")
+	fa = FileAccess.open(DIR + "/actief.json", FileAccess.WRITE)
+	fa.store_string(JSON.stringify({"versie": "v3", "bestand": DIR + "/licht-1.pck", "sha256": lt.pck.sha256, "grootte": lt.pck.grootte, "base": "BASIS1", "gebouwd": 302}))
+	fa.close()
+	_check(Keten.laad(DIR) == 2, "twee zware stukken horen te laden")
+	_check(FileAccess.get_file_as_string("res://ota_test/hallo.json") == "{\"w\":9}", "het lichte stuk moet voorrang houden op de zware stukken")
+	DirAccess.remove_absolute(DIR + "/keten/zwaar-2.pck")
+	_check(Keten.laad(DIR) == 0, "een ontbrekend stuk: de keten mag niet half geladen worden")
+
 	# 8. de hele GitHub-stroom tegen de nepserver
 	await _github_stroom()
 
@@ -262,6 +299,31 @@ func _github_stroom() -> void:
 		u.actief = actief_json
 	await u.controleer()
 	_check(u.status == "actueel", "na installeren is de status '%s' in plaats van 'actueel'" % u.status)
+	# 8b. het updatescherm haalt een bestand in blokken op (Range), en hervat na een onderbreking
+	var upd = root.get_node("Updater")
+	upd.ota_dir = DIR + "/panel"
+	DirAccess.make_dir_recursive_absolute(upd.ota_dir)
+	upd.api_basis = "http://127.0.0.1:%d" % PORT
+	upd.set_token("testtoken")
+	var pn = load("res://scripts/update_panel.gd").new()
+	pn.chunk = 100
+	var assets: Dictionary = await pn._release_assets()
+	_check(assets.has("patch-gh.pck"), "release-assets niet gelezen: %s" % str(assets.keys()))
+	var part: String = upd._pad("patch-gh.pck.part")
+	pn._tot_bytes = int(mp.pck.grootte)
+	var fout: String = await pn._haal_stuk(mp.pck, str(assets.get("patch-gh.pck", "")), part)
+	_check(fout == "", "blokken downloaden mislukt: " + fout)
+	_check(FileAccess.file_exists(part) and FileAccess.get_sha256(part) == str(mp.pck.sha256), "samengevoegd bestand klopt niet")
+	var halve := FileAccess.get_file_as_bytes(part).slice(0, 150)
+	var fh := FileAccess.open(part, FileAccess.WRITE)
+	fh.store_buffer(halve)
+	fh.close()
+	pn._klaar_bytes = 0
+	fout = await pn._haal_stuk(mp.pck, str(assets.get("patch-gh.pck", "")), part)
+	_check(fout == "" and FileAccess.get_sha256(part) == str(mp.pck.sha256), "hervatten vanaf 150 bytes klopt niet: " + fout)
+	pn.free()
+	DirAccess.remove_absolute(part)
+
 	u.queue_free()
 	OS.kill(pid)
 

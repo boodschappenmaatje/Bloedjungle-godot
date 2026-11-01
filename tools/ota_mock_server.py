@@ -49,7 +49,15 @@ class H(http.server.BaseHTTPRequestHandler):
         if p.startswith("/blob/"):
             if self.headers.get("Authorization"):
                 return self._send(400, b"blobopslag weigert een Authorization-header")
-            return self._send(200, manifest if p.endswith("/1") else patch)
+            body = manifest if p.endswith("/1") else patch
+            rng = self.headers.get("Range", "")
+            if rng.startswith("bytes="):
+                # zoals echte blobopslag: een deel van het bestand (HTTP 206)
+                a, _, b = rng[6:].partition("-")
+                van, tot = int(a), min(int(b) if b else len(body) - 1, len(body) - 1)
+                deel = body[van:tot + 1]
+                return self._send(206, deel, extra={"Content-Range": "bytes %d-%d/%d" % (van, tot, len(body))})
+            return self._send(200, body)
         self._send(404, b"?")
 
 

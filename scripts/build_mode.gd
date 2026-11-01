@@ -457,6 +457,8 @@ func _fill_panel() -> void:
 		for item in aircraft:
 			parked.append(String(item.get("kind", "aircraft")).to_upper())
 		info.text = "Vliegtuigplaatsen %d / %d · %s · sterkte %d" % [aircraft.size(), AirfieldHQ23.AIRCRAFT_CAPACITY, ", ".join(parked) if parked.size() > 0 else "geen vliegtuigen", ceili(b.hp)]
+		if String(b.get("spawn_status", "")) != "":
+			info.text += "\n" + String(b.spawn_status)
 		var aircraft_status := AirfieldHQ23.shop_status("p47")
 		var aircraft_def: Dictionary = AirfieldHQ23.AIRCRAFT["p47"]
 		_act(row, "P-47 Thunderbolt", "%d pt" % aircraft_def.cost, Game.builds.can_buy_aircraft(b, "p47"), func(): Game.builds.buy_aircraft(b, "p47"))

@@ -2,6 +2,8 @@ extends Camera3D
 ## Schuin van boven meekijkende camera (22-camera.js): staand scherm hoger, liggend dichterbij,
 ## en een stukje vooruit in de kijkrichting, verder als je richt.
 
+const VLIEGTUIG := preload("res://scripts/vliegtuig.gd")
+
 var _lead := Vector3.ZERO
 var _blook := Vector3.ZERO
 var _nlook := Vector3.ZERO
@@ -169,7 +171,7 @@ func _process(delta: float) -> void:
 	_group_hold = maxf(0.0, _group_hold - delta)
 	var base_distance := 20.0 if combat_view else 22.5
 	var wanted_distance: float = base_distance
-	var plane: Vliegtuig = Vliegtuig.driven_plane if is_instance_valid(Vliegtuig.driven_plane) else null
+	var plane = VLIEGTUIG.driven_plane if is_instance_valid(VLIEGTUIG.driven_plane) else null
 	if plane != null:
 		wanted_distance += plane.camera_extra()   # hoger en sneller vliegen: de tactische camera zoomt rustig mee uit
 	# Alleen automatische tank-/groepskadrering kan de vaste speelcamera tijdelijk verruimen.

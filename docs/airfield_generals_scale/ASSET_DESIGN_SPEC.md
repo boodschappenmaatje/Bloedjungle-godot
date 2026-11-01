@@ -7,7 +7,7 @@ Vergelijking op schaal: [basis_oud_vs_nieuw.png](basis_oud_vs_nieuw.png) (bron: 
 
 ## Gekozen door de gebruiker
 - Compact Generals-vliegveld, optie 2 (~20 × 14 m).
-- Helipad kleiner (12,8 → ~9 m): wordt herzien, de schacht is al 9 m. Garage groter: vervalt na de Generals-data.
+- Helipad blijft ongewijzigd (12,8 m). Garage groter: vervalt na de Generals-data.
 - Betonplaten onder elk gebouw.
 - Rook en kleine details op de gebouwen (pas na de maten).
 - Vliegtuig kleiner (schaal 0,62 → ~0,45 na herziening).
@@ -49,7 +49,7 @@ Gemeten in de GLB-bestanden (ruwe modelafmetingen). De schaal van de voertuigsc�
 |---|---|---|---|
 | Kazerne | 5,8 × 4,5 | ongewijzigd | referentie; soldaten komen uit de deur (`DOOR` = 2,5 m) |
 | Garage | ~6,1 × 6,2 (model 9,3 × 9,5 × `GS` 0,66) | ongewijzigd | War Factory is 1,28× kazerne, dus klopt al |
-| Helipad | 12,8 plaat, schacht 9 × 9 | open keuze (zie onder) | de schacht met lift is al 9 m; Apache-schaal 0,45 (~7,8 m) past er net op |
+| Helipad | 12,8 plaat, schacht 9 × 9 | **ongewijzigd (goedgekeurd)** | de schacht met lift is al 9 m; Apache-schaal 0,45 (~7,8 m) past er net op |
 | Vliegveld totaal | 75 × 53 | **~20 × 14 (optie 2)** | past ruim in de basis van 56 × 56 m |
 | Hangar | 22,5 × 21 | ~8 × 7 | opening past bij jager ~0,45 |
 | Platform | 18 × 14 | ~8 × 6 | |
@@ -61,6 +61,10 @@ Gemeten in de GLB-bestanden (ruwe modelafmetingen). De schaal van de voertuigsc�
 - **Soldaten:** komen uit de kazerne naar een punt 2,5 m voor de deur. Kazerne blijft gelijk, dus geen wijziging. Rond de deur komt een vrije zone van minstens 3 m, die de plaatsing bewaakt.
 - **Garage en voertuigen:** een voertuig rijdt van binnen (0,5 m van het midden) kaarsrecht de deur uit, tot 6 tot 9,5 m ervoor, en gaat dan opzij (`_spawn_vehicle`, `_free_run`). Ruwe afmetingen: jeep 1,7 × 3,8, tank 3,9 × 7,9, truck 3,0 × 8,1 m. Tank en truck zijn dus langer dan de garage diep is (~6,2 m). Dat kan nu al; testen in Godot.
 - Uitrijroute van de garage (tot ~10 m vrij voor de deur) en de zone voor de kazerne mogen niet door het vliegveld of de helipad worden afgesloten. Het vliegveld wordt daarom aan een kant van de basis geplaatst, niet tussen kazerne, garage en poorten.
+
+## Besluiten
+- Vliegveld optie 2 (~20 × 14 m), jager ~0,45, helipad en garage ongewijzigd.
+- Voertuigen blijven zoals ze zijn; in Godot testen of tank en truck netjes door de garagedeur rijden en corrigeer alleen waar nodig.
 
 ## Open punten / aannames
 - De Generals-verhoudingen zijn geschat op basis van het plaatje, niet nagemeten in de originele bestanden.

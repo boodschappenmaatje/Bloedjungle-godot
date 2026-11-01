@@ -66,6 +66,13 @@ func _run() -> void:
 	Game.player = walker
 	await _frames(240)
 	_check("deuren staan open als je ervoor staat", showcase._doors_open and absf(showcase.left_collision.position.x) > 10.5 and absf(showcase.right_collision.position.x) > 10.5)
+	var open_ok := true
+	for side in [&"left", &"right"]:
+		var meshes: Array = showcase._door_meshes(side)
+		open_ok = open_ok and meshes.size() == 3
+		for m in meshes:
+			open_ok = open_ok and absf(m.position.x) > 10.9
+	_check("beide deurmeshes in alle 3 LODs staan open", open_ok)
 	await _walk(walker, Vector3(0, 0, -1), 150)
 	var z_in := showcase.to_local(walker.global_position).z
 	_check("je loopt door de open deur naar binnen (z=%.1f)" % z_in, z_in < 5.0)
@@ -78,5 +85,10 @@ func _run() -> void:
 	await _frames(300)
 	_check("dak is terug buiten", not showcase._roof_hidden and showcase._roof_nodes.all(func(n): return n.visible and is_zero_approx(n.transparency)))
 	_check("deuren zijn weer dicht", not showcase._doors_open and absf(showcase.left_collision.position.x) < 3.9)
+	var closed_ok := true
+	for side in [&"left", &"right"]:
+		for m in showcase._door_meshes(side):
+			closed_ok = closed_ok and absf(m.position.x) < 3.9
+	_check("beide deurmeshes zijn weer dicht", closed_ok)
 	print("AIRFIELD HQ 2.3 HANGAR GAMEPLAY TEST fouten: ", failures)
 	get_tree().quit(1 if failures > 0 else 0)

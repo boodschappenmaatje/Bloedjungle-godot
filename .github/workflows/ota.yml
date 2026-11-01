@@ -174,7 +174,7 @@ jobs:
           zw = sum(p["grootte"] for p in keten)
           print("Light %.1f MB (replaced each update), heavy chain %d pieces %.1f MB in total, bridge %.2f MB" % (mb(licht["grootte"]), len(keten), mb(zw), mb(brug["grootte"])))
           with open("out/namen.txt", "w") as f:
-              f.write("\n".join([brug["naam"], licht["naam"]] + [p["naam"] for p in keten]))
+              f.write("\n".join([brug["naam"], licht["naam"]] + [p["naam"] for p in keten]) + "\n")
           PY
       - name: Preview the OTA files (PR only; never published)
         if: github.event_name == 'pull_request'
@@ -193,7 +193,7 @@ jobs:
           gh release view updates >/dev/null 2>&1 || gh release create updates --title "OTA updates" --notes "Automatisch gebouwd door .github/workflows/ota.yml. Niet handmatig wijzigen." --prerelease --target "$GITHUB_SHA"
           # eerst de patchbestanden (alleen wat nog niet in de release staat), dan pas het manifest: de app ziet nooit een manifest zonder bestanden
           BESTAAT="$(gh release view updates --json assets -q '.assets[].name')"
-          while read -r n; do
+          while read -r n || [[ -n "$n" ]]; do
             if grep -qxF "$n" <<< "$BESTAAT"; then continue; fi
             gh release upload updates "out/$n" --clobber
           done < out/namen.txt

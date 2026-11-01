@@ -241,7 +241,10 @@ func _make_info() -> void:
 # ---------------------------------------------------------------- in en uit
 
 func _enter() -> void:
-	if Game.build_mode or Game.state != "prep" or Game.player == null:
+	if Game.build_mode or Game.player == null:
+		return
+	# tijdens een golf mag het alleen als je gesneuveld bent en wacht om terug te komen
+	if Game.state != "prep" and not (Game.state == "play" and Game.player.dead):
 		return
 	if Game.player.elev > 0.5:
 		Game.banner.emit("KOM EERST VAN DE TOREN", "", 1.4)

@@ -12,10 +12,10 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - "scripts/updater.gd"
-      - "scripts/update_panel.gd"
-      - "scripts/ota_keten.gd"
-      - "tools/ota_presets.py"
+      - "scripts/**"
+      - "tools/ota_*"
+      - "tests/ota_*"
+      - "export_presets.cfg"
       - ".github/workflows/ota.yml"
   push:
     branches: [main, feature/native-ios-complete]
@@ -124,6 +124,11 @@ jobs:
           prep "$BASE"
           (cd "$W" && "$GODOT_BIN" --headless --path . --export-pack "iOSlicht" "$RUNNER_TEMP/licht_base.pck")
           test -s "$RUNNER_TEMP/licht_base.pck"
+          # De hele IPA-inhoud (zoals ios.yml die inpakt, met build_info.json) voor de simulatie hieronder; daarna weer weg zodat de basisstukken gelijk blijven.
+          printf '{"base":"%s","commit":"%s","gebouwd":1}\n' "$BASE" "$BASE" > "$W/build_info.json"
+          (cd "$W" && "$GODOT_BIN" --headless --path . --export-pack "iOS" "$RUNNER_TEMP/sim_ios.pck")
+          rm -f "$W/build_info.json"
+          test -s "$RUNNER_TEMP/sim_ios.pck"
           if [[ "$EXPORT_BASE" != "$BASE" ]]; then prep "$EXPORT_BASE"; fi
           (cd "$W" && "$GODOT_BIN" --headless --path . --export-pack "iOSzwaar" "$RUNNER_TEMP/zwaar_base.pck")
           test -s "$RUNNER_TEMP/zwaar_base.pck"
@@ -148,11 +153,23 @@ jobs:
           "$GODOT_BIN" --headless --path . --patches "$RUNNER_TEMP/zwaar_base.pck" --export-patch "iOSzwaar" "$RUNNER_TEMP/zwaar.pck"
           test -s "$RUNNER_TEMP/licht.pck"
           test -s "$RUNNER_TEMP/zwaar.pck"
+          # alle zware bestanden van deze commit: wat de telefoon na de hele keten heeft (alleen voor de simulatie)
+          "$GODOT_BIN" --headless --path . --export-pack "iOSzwaar" "$RUNNER_TEMP/zwaar_voll.pck"
           # De brug: alleen het gecompileerde updatescherm uit het lichte stuk (voor apps met de oude updater uit de IPA).
           "$GODOT_BIN" --headless --path . -s tools/make_ota_bootstrap.gd -- "$RUNNER_TEMP/licht.pck" "$RUNNER_TEMP/brug.pck"
           BYTES="$(stat -c %s "$RUNNER_TEMP/brug.pck")"
           if (( BYTES > 10485760 )); then echo "The bridge must be <10 MB, got $BYTES" >&2; exit 1; fi
           ls -l "$RUNNER_TEMP"/*.pck
+      - name: Safety net - start the app with these OTA files (a broken update is never published)
+        shell: bash
+        run: |
+          set -euo pipefail
+          BASE="$(tr -d '[:space:]' < ota/basis.txt)"
+          # 1) statische regel: geen zware bestanden met preload in de scripts die bij het opstarten compileren (tests/ota_vroeg_test.gd)
+          (cd "$RUNNER_TEMP/basis" && "$GODOT_BIN" --headless --path . -s tests/ota_vroeg_test.gd)
+          # 2) de app nabootsen: IPA-basis + lichte patch + alle zware bestanden; de speler moet een zichtbaar model hebben (tools/ota_simulatie.sh)
+          OTA_BASE="$BASE" OTA_WERKMAP="$RUNNER_TEMP/sim" tools/ota_simulatie.sh "$GODOT_BIN" "$RUNNER_TEMP/sim_ios.pck" "$RUNNER_TEMP/licht.pck" "$RUNNER_TEMP/zwaar_voll.pck"
+          rm -rf "$RUNNER_TEMP/sim" "$RUNNER_TEMP/zwaar_voll.pck" "$RUNNER_TEMP/sim_ios.pck"
       - name: Write manifest
         shell: bash
         run: |

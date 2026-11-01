@@ -195,6 +195,18 @@ func _run() -> void:
 	u8.terugdraaien()
 	_check(not FileAccess.file_exists(DIR + "/patch-k1.pck") and not FileAccess.file_exists(DIR + "/patch-k2.pck"), "terugdraaien ruimt niet de hele keten op")
 
+	# 7c. voortgang in procenten, snelheid en resterende tijd
+	var uv = _nieuw()
+	uv.status = "bezig"
+	uv.dl_totaal = 200 * 1048576
+	uv.dl_klaar = 50 * 1048576
+	uv._meld_voortgang(0)
+	uv._dl_laatste_ms -= 1000  # een seconde geleden: 25 MB erbij = 25 MB/s
+	uv._meld_voortgang(25 * 1048576)
+	_check(absf(uv.voortgang - 0.375) < 0.001, "voortgang is %.3f in plaats van 0.375" % uv.voortgang)
+	_check(uv.status_tekst.contains("37%") and uv.status_tekst.contains("MB/s") and uv.status_tekst.contains("nog ca."), "voortgangstekst klopt niet: " + uv.status_tekst)
+	_check(U._duur_tekst(5.2) == "6 sec" and U._duur_tekst(125.0) == "2 min 05 sec", "duurtekst klopt niet")
+
 	# 8. de hele GitHub-stroom tegen de nepserver
 	await _github_stroom()
 

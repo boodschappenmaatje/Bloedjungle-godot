@@ -108,7 +108,10 @@ func _ververs() -> void:
 	_status.text = Updater.status_tekst
 	var bezig: bool = Updater.status == "bezig"
 	_balk.visible = bezig
-	_balk.indeterminate = true
+	_balk.indeterminate = Updater.voortgang <= 0.0
+	_balk.max_value = 1.0
+	_balk.step = 0.001
+	_balk.value = Updater.voortgang
 	_check.disabled = bezig or Updater.app_base == "dev"
 	_download.visible = Updater.status == "beschikbaar"
 	_back.visible = Updater.patch_geladen and not Updater.herstart_nodig

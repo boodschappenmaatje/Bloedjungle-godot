@@ -36,6 +36,13 @@ var status_tekst := ""
 var voortgang := 0.0
 var herstart_nodig := false
 
+# voortgang van een lopende download (alle ontbrekende patches samen)
+var dl_totaal := 0  # bytes die in totaal gedownload moeten worden
+var dl_klaar := 0  # bytes van patches die al binnen zijn
+var _dl_laatste_bytes := 0
+var _dl_laatste_ms := 0
+var _dl_snelheid := 0.0  # bytes per seconde, afgevlakt
+
 
 ## Normaal zonder argumenten (autoload). Tests geven een eigen map en zetten de start uit.
 func _init(map := "user://ota", start := true) -> void:
@@ -252,8 +259,17 @@ func _vraag(url: String, headers: PackedStringArray, naar_bestand := "") -> Dict
 	if err != OK:
 		r.queue_free()
 		return {"result": -1, "code": -1, "fout": "kon de aanvraag niet starten (%d)" % err}
+	var teller: Timer = null
+	if naar_bestand != "" and dl_totaal > 0:
+		teller = Timer.new()
+		teller.wait_time = 0.5
+		teller.timeout.connect(func(): _meld_voortgang(r.get_downloaded_bytes()))
+		add_child(teller)
+		teller.start()
 	var res: Array = await r.request_completed
 	var timer_bytes := r.get_downloaded_bytes()
+	if teller != null:
+		teller.queue_free()
 	r.queue_free()
 	var kop := {}
 	for h in res[2] as PackedStringArray:
@@ -302,6 +318,32 @@ func _zet(s: String, tekst: String, v := 0.0) -> void:
 	status_tekst = tekst
 	voortgang = v
 	status_changed.emit()
+
+
+## Zet voortgang (0..1), snelheid en resterende tijd in de status terwijl er gedownload wordt.
+func _meld_voortgang(bytes_nu: int) -> void:
+	if dl_totaal <= 0 or status != "bezig":
+		return
+	var nu := Time.get_ticks_msec()
+	if _dl_laatste_ms > 0 and nu > _dl_laatste_ms and bytes_nu >= _dl_laatste_bytes:
+		var snel := float(bytes_nu - _dl_laatste_bytes) / (float(nu - _dl_laatste_ms) / 1000.0)
+		_dl_snelheid = snel if _dl_snelheid <= 0.0 else lerpf(_dl_snelheid, snel, 0.3)
+	_dl_laatste_ms = nu
+	_dl_laatste_bytes = bytes_nu
+	var klaar := mini(dl_klaar + bytes_nu, dl_totaal)
+	var deel := clampf(float(klaar) / float(dl_totaal), 0.0, 1.0)
+	var tekst := "Downloaden… %d%%" % int(deel * 100.0)
+	if _dl_snelheid > 1024.0:
+		tekst += " · %.1f MB/s" % (_dl_snelheid / 1048576.0)
+		tekst += " · nog ca. " + _duur_tekst(float(dl_totaal - klaar) / _dl_snelheid)
+	_zet("bezig", tekst, deel)
+
+
+static func _duur_tekst(sec: float) -> String:
+	var t := int(ceil(sec))
+	if t < 60:
+		return "%d sec" % t
+	return "%d min %02d sec" % [t / 60, t % 60]
 
 
 ## Kijkt in de release "updates" of er een nieuwere patch voor deze app is. stil = geen foutmelding in beeld bij geen netwerk.
@@ -369,6 +411,16 @@ func download_en_installeer() -> void:
 	var heb := _actieve_lijst()
 	var nieuwe: Array = heb.slice(0, keten.size() - todo.size())
 	var tmp := _pad("download.tmp")
+	dl_totaal = 0
+	dl_klaar = 0
+	_dl_laatste_ms = 0
+	_dl_laatste_bytes = 0
+	_dl_snelheid = 0.0
+	for e0 in todo:
+		var d0 := {"bestand": _pad(str(e0.naam).get_file()), "sha256": str(e0.sha256), "grootte": int(e0.grootte)}
+		dl_totaal += int(e0.grootte)
+		if controleer_patchbestand(d0) == "":
+			dl_klaar += int(e0.grootte)
 	for i in todo.size():
 		var e: Dictionary = todo[i]
 		var naam := str(e.naam).get_file()
@@ -384,17 +436,24 @@ func download_en_installeer() -> void:
 				_zet("fout", "Downloaden mislukt (updatebestand staat niet in de release).")
 				return
 			DirAccess.remove_absolute(tmp)
-			_zet("bezig", "Downloaden… deel %d van %d (%.1f MB)" % [i + 1, todo.size(), float(int(e.grootte)) / 1048576.0])
+			_dl_laatste_ms = 0
+			_dl_laatste_bytes = 0
+			status = "bezig"
+			_meld_voortgang(0)
 			var res: Dictionary = await _haal_asset(url, tmp)
 			if int(res.get("code", -1)) != 200 or int(res.get("result", -1)) != HTTPRequest.RESULT_SUCCESS:
 				DirAccess.remove_absolute(tmp)
+				dl_totaal = 0
 				_zet("fout", "Downloaden mislukt (%s)." % _download_fout(res))
 				return
 			var fout := _neem_patch_aan(tmp, d)
 			if fout != "":
+				dl_totaal = 0
 				_zet("fout", "De update is afgekeurd: " + fout + ".")
 				return
+			dl_klaar += int(e.grootte)
 		nieuwe.append(d)
+	dl_totaal = 0
 	_bewaar_keten(manifest, nieuwe)
 	_zet("gedownload", "Update %s staat klaar. Sluit de app helemaal af en open hem opnieuw om hem te gebruiken." % str(manifest.versie))
 

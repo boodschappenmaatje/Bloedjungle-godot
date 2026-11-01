@@ -169,6 +169,9 @@ func _process(delta: float) -> void:
 	_group_hold = maxf(0.0, _group_hold - delta)
 	var base_distance := 20.0 if combat_view else 22.5
 	var wanted_distance: float = base_distance
+	var plane: Vliegtuig = Vliegtuig.driven_plane if is_instance_valid(Vliegtuig.driven_plane) else null
+	if plane != null:
+		wanted_distance += plane.camera_extra()   # hoger en sneller vliegen: de tactische camera zoomt rustig mee uit
 	# Alleen automatische tank-/groepskadrering kan de vaste speelcamera tijdelijk verruimen.
 	if _group_hold > 0.0:
 		wanted_distance = maxf(wanted_distance, _group_distance)
@@ -183,6 +186,8 @@ func _process(delta: float) -> void:
 	var back: float = cos(angle) * dist
 	var aiming: bool = not is_nan(Game.aim)
 	var lead_dist: float = (5.0 if combat_view else 6.0) if aiming else 0.7
+	if plane != null:
+		lead_dist = plane.camera_lead()
 	var want: Vector3 = Vector3(sin(p.face), 0.0, cos(p.face)) * lead_dist
 	_lead = _lead.lerp(want, 1.0 - exp(-3.0 * delta))
 	# De groepsuitsnede is een verschuiving t.o.v. de speler die zacht in- en uitglijdt. Een vast wereldpunt

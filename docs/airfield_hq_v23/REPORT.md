@@ -88,6 +88,17 @@ Images: `exposure_fix/before/`, `exposure_fix/after/` and side-by-side
 `tests/airfield_hq_23_material_probe.gd` (0 problems). Software rendering is
 not representative of iPhone GPU output, FPS or memory.
 
+## Hangar walls, doors and roof (2026-11-01)
+
+Found in Dennis' iPhone recording: you walked through the closed hangar, the doors never opened, and the roof stayed on indoors.
+
+- **Walls:** the hangar wall, jamb and door boxes sat on the default physics layer 1 (ground), which the player mask (250) ignores. They are now on the wall layer (`Kit.LAYER_WALL`).
+- **Doors:** the open/close clips and collision tween already existed, but nothing called them in the game. They now open when the player or a vehicle (group `voertuigen`) is within ~8 m in front of the doors, stay open while anyone is inside, and close again afterwards.
+- **Roof:** the shell mesh is split at runtime (triangles above 5.3 m) into walls and a separate roof node per LOD (copy of the mesh, imported resource untouched). The roof fades out (0.45 s) while the player is inside and returns outside, with hysteresis.
+- **Tests:** `tests/airfield_hq_23_hangar_gameplay_test_scene.tscn` PASS (19 checks: wall layers, closed doors and side wall block a player-mask body, doors open, walking in through the open door, roof hidden and restored, doors close). Existing HQ2.2 import and HQ2.3 contract tests PASS; the contract test now waits two physics frames after selling the first airfield, because its solid walls would otherwise still block placing a second one.
+- **Captures:** `hangar_gameplay/` (Mobile renderer, software Vulkan): outside with closed doors, doors opening, inside with roof gone, outside with roof back.
+- **NOT_TESTED:** native iPhone feel, FPS and memory (the roof split adds one extra mesh copy per LOD and runs once at placement; not measured). Vehicles driving through the doors, enemies and allies using the doors, and bullets against the hangar walls are not tested. The roof uses the player position only; a vehicle driver inside keeps the roof on if the player node stays outside.
+
 ## Build and aircraft state
 
 The existing building placement path includes the 2,800-point airfield,

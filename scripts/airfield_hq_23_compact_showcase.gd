@@ -20,12 +20,30 @@ const DOOR_OPEN_X := 11.25
 var _door_tweens: Dictionary = {}
 var _tower_door_closed_y := 0.0
 
+# Hangar gameplay (showcase-local metres; the hangar floor centre is the origin, doors at z = +9.775).
+const HANGAR_WALL_BODIES := ["LeftHangarWallCollision", "RightHangarWallCollision", "RearHangarWallCollision", "LeftHangarDoorJambCollision", "RightHangarDoorJambCollision", "LeftDoorCollision", "RightDoorCollision"]
+const ROOF_MIN_Y := 5.3            # triangles of the hangar shell above this height belong to the roof
+const INSIDE_HALF := Vector2(10.2, 9.6)   # standing inside the walls: roof fades away
+const INSIDE_MARGIN := 1.5         # hysteresis so the roof does not flicker on the threshold
+const DOOR_APPROACH_X := 9.5
+const DOOR_APPROACH_Z := Vector2(9.0, 17.0)  # in front of the doors: they slide open
+const PROXIMITY_STEP_S := 0.15
+const ROOF_FADE_S := 0.45
+var _roof_nodes: Array[MeshInstance3D] = []
+var _roof_hidden := false
+var _roof_tween: Tween
+var _doors_open := false
+var _proximity_clock := 0.0
+
 func _ready() -> void:
 	set_process(true)
 	# Run after the nested glTF AnimationPlayer so this retargeted pose is the
 	# final transform for the frame instead of being overwritten by its source
 	# track earlier in the idle process cycle.
 	process_priority = 100
+	_make_hangar_walls_solid()
+	for lod in [lod0, lod1, lod2]:
+		_split_roof(lod)
 	_set_range(lod0, 0.0, LOD0_END)
 	_set_range(lod1, LOD0_END, LOD1_END)
 	_set_range(lod2, LOD1_END, 0.0)
@@ -39,7 +57,11 @@ func _ready() -> void:
 	if wind_player != null and wind_player.has_animation("Wind_Sock_Gust"):
 		wind_player.play("Wind_Sock_Gust")
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	_proximity_clock += delta
+	if _proximity_clock >= PROXIMITY_STEP_S:
+		_proximity_clock = 0.0
+		_update_hangar_proximity()
 	# The source glTF clip is nested under the placed BuildingBody. Keep the exact
 	# HQ2.2 quaternion keys, but explicitly apply its tower-door rotation track to
 	# the retargeted compact detail so the animation also evaluates in this nested
@@ -136,6 +158,114 @@ static func _average_normals(arrays: Array) -> void:
 			t[i * 4 + 1] = tangent.y
 			t[i * 4 + 2] = tangent.z
 		arrays[Mesh.ARRAY_TANGENT] = t
+
+## The scene's hangar wall, jamb and door boxes were left on the default physics layer 1
+## (ground), which the player and vehicles never collide with horizontally: you walked
+## through the closed hangar. Put them on the wall layer like every other building.
+func _make_hangar_walls_solid() -> void:
+	for body_name in HANGAR_WALL_BODIES:
+		var body := get_node_or_null("GameplayCollisions/" + body_name) as CollisionObject3D
+		if body != null:
+			body.collision_layer = Kit.LAYER_WALL
+			body.collision_mask = 0
+
+## Splits the hangar shell mesh into walls (kept) and roof (a separate MeshInstance3D that
+## fades out when you stand inside). Runs on a copy: the imported shared mesh is untouched.
+func _split_roof(lod: Node3D) -> void:
+	for node in lod.find_children("Hangar HQ 22*", "MeshInstance3D", true, false):
+		var shell := node as MeshInstance3D
+		var source := shell.mesh as ArrayMesh
+		if source == null or source.get_blend_shape_count() > 0:
+			continue
+		var to_local := global_transform.affine_inverse() * shell.global_transform
+		var row := Vector3(to_local.basis.x.y, to_local.basis.y.y, to_local.basis.z.y)
+		var walls := ArrayMesh.new()
+		var roof := ArrayMesh.new()
+		for surface in source.get_surface_count():
+			if source.surface_get_primitive_type(surface) != Mesh.PRIMITIVE_TRIANGLES:
+				continue
+			var arrays := source.surface_get_arrays(surface)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+			if indices.is_empty():
+				continue
+			var wall_indices := PackedInt32Array()
+			var roof_indices := PackedInt32Array()
+			for t in range(0, indices.size() - 2, 3):
+				var a := indices[t]
+				var b := indices[t + 1]
+				var c := indices[t + 2]
+				var y := (row.dot(vertices[a]) + row.dot(vertices[b]) + row.dot(vertices[c])) / 3.0 + to_local.origin.y
+				var target := roof_indices if y > ROOF_MIN_Y else wall_indices
+				target.append(a)
+				target.append(b)
+				target.append(c)
+			var material := source.surface_get_material(surface)
+			for pair in [[walls, wall_indices], [roof, roof_indices]]:
+				var part: ArrayMesh = pair[0]
+				var part_indices: PackedInt32Array = pair[1]
+				if part_indices.is_empty():
+					continue
+				arrays[Mesh.ARRAY_INDEX] = part_indices
+				part.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
+				part.surface_set_material(part.get_surface_count() - 1, material)
+		if roof.get_surface_count() == 0:
+			continue
+		shell.mesh = walls
+		var roof_node := MeshInstance3D.new()
+		roof_node.name = "Hangar HQ 22 roof (fades indoors)"
+		roof_node.mesh = roof
+		roof_node.transform = shell.transform
+		roof_node.cast_shadow = shell.cast_shadow
+		shell.get_parent().add_child(roof_node)
+		_roof_nodes.append(roof_node)
+
+func _update_hangar_proximity() -> void:
+	var near_door := false
+	var inside := false
+	var watchers: Array = [Game.player]
+	watchers.append_array(get_tree().get_nodes_in_group("voertuigen"))
+	for who in watchers:
+		var body := who as Node3D
+		if body == null or not is_instance_valid(body):
+			continue
+		var p := to_local(body.global_position)
+		if absf(p.x) < INSIDE_HALF.x and absf(p.z) < INSIDE_HALF.y:
+			near_door = true  # never close the doors on someone standing inside
+		elif absf(p.x) < DOOR_APPROACH_X and p.z > DOOR_APPROACH_Z.x and p.z < DOOR_APPROACH_Z.y:
+			near_door = true
+		if who == Game.player:
+			var margin := INSIDE_MARGIN if _roof_hidden else 0.0
+			inside = absf(p.x) < INSIDE_HALF.x + margin and absf(p.z) < INSIDE_HALF.y + margin and p.y < ROOF_MIN_Y
+	if near_door != _doors_open:
+		_doors_open = near_door
+		for side in [&"left", &"right"]:
+			if near_door:
+				open_door(side)
+			else:
+				close_door(side)
+	if inside != _roof_hidden:
+		_set_roof_hidden(inside)
+
+func _set_roof_hidden(hidden_now: bool) -> void:
+	_roof_hidden = hidden_now
+	if _roof_tween != null:
+		_roof_tween.kill()
+	if _roof_nodes.is_empty():
+		return
+	for roof in _roof_nodes:
+		if not hidden_now:
+			roof.visible = true
+	_roof_tween = create_tween().set_parallel(true)
+	for roof in _roof_nodes:
+		_roof_tween.tween_property(roof, "transparency", 1.0 if hidden_now else 0.0, ROOF_FADE_S)
+	if hidden_now:
+		_roof_tween.chain().tween_callback(_hide_roof_nodes)
+
+func _hide_roof_nodes() -> void:
+	if _roof_hidden:
+		for roof in _roof_nodes:
+			roof.visible = false
 
 func set_workshop_lights_enabled(enabled: bool) -> void:
 	## A local, reversible toggle used by the paired visual comparison.

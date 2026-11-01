@@ -336,7 +336,7 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false) -> Variant
 	if kind == "garage":
 		b.rij = RijBalk.new()
 		add_child(b.rij)
-		b.merge({"has": {"jeep": 0, "tank": 0, "truck": 0}, "order": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
+		b.merge({"has": {"jeep": 0, "tank": 0, "truck": 0}, "order": [], "fleet": [], "phase": "idle", "t": 0.0, "veh": null, "spin": 0.0, "sway": 0.0})
 		_garage_init(b)
 	elif kind == "airfield":
 		b.merge({"aircraft": [], "aircraft_capacity": AirfieldHQ23.AIRCRAFT_CAPACITY, "runway_reserved_by": "", "complex": true})
@@ -930,19 +930,38 @@ func _spawn_vehicle(b: Dictionary, kind: String) -> void:
 	v.global_transform = Transform3D(Basis(Vector3.UP, b.yaw + PI), Vector3(inside.x, 0.0, inside.z))
 	var run := _free_run(b)
 	var goals: Array = []
+	# elke wagen krijgt een eigen parkeerplek naast de garage, zodat ze niet in elkaar staan
+	var fleet: Array = b.fleet
+	for i in range(fleet.size() - 1, -1, -1):
+		if not is_instance_valid(fleet[i]):
+			fleet.remove_at(i)
+	var slot := fleet.size()
+	fleet.append(v)
 	# eerst kaarsrecht de poort uit tot de hele wagen buiten staat, dan pas opzij naar de parkeerplek
 	if kind == "truck":
 		# lange wagen: kaarsrecht naar buiten tot hij helemaal uit de poort is en dan stilstaan
 		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + clampf(run * 0.9, 5.0, 9.5)))
-	elif kind == "jeep":
-		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + minf(6.0, run * 0.7)))
-		goals.append(_pt(b.at, b.yaw, DOOR_U - 3.3, FRONT + minf(8.0, run * 0.9)))
 	else:
-		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + minf(7.5, run * 0.8)))
-		goals.append(_pt(b.at, b.yaw, DOOR_U + 2.2, FRONT + minf(9.0, run * 0.95)))
+		var out := minf(6.0 if kind == "jeep" else 7.5, run * (0.7 if kind == "jeep" else 0.8))
+		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + out))
+		goals.append(_park_spot(b, slot, run))
 	v.goals = goals
 	b.veh = v
 	Sfx.play("thud", 0.8, v.global_position)
+
+
+## Parkeerplek n naast de garage: om en om links en rechts van de poort, daarna een rij verder naar achteren.
+func _park_spot(b: Dictionary, slot: int, run: float) -> Vector3:
+	var side := -1.0 if slot % 2 == 0 else 1.0
+	var col := slot / 2 % 3
+	var row := slot / 6
+	var u := DOOR_U + side * (3.3 + col * 3.1)
+	var v := FRONT + minf(8.0, run * 0.9) + row * 4.2
+	var p := _pt(b.at, b.yaw, u, v)
+	var lim := C - 1.5
+	p.x = clampf(p.x, -lim, lim)
+	p.z = clampf(p.z, -lim, lim)
+	return p
 
 
 const DOOR_T := 0.7  # seconden dat de poort open of dicht gaat (de clip duurt 2 s en wordt sneller afgespeeld)

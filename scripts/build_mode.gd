@@ -22,6 +22,8 @@ var _cards: Array = []
 var _zoom_btns: Array = []
 var _airfield_rotate_btn: Button
 var _sel: Variant = null
+var _build_info: Label = null  # label van "In aanbouw" dat live aftelt
+var _build_b: Variant = null
 var _flag_for: Variant = null  # kazerne die op een tik op de grond een verzamelvlag krijgt
 var _sell_arm: Variant = null
 var _ptrs := {}
@@ -284,7 +286,22 @@ func _exit() -> void:
 	Game.changed.emit()
 
 
+func _build_text(b: Dictionary) -> String:
+	return ("In aanbouw: nog %.1f s · sterkte %d" % [maxf(0.0, float(b.build_t)), ceili(b.hp)]).replace(".", ",")
+
+
 func _process(delta: float) -> void:
+	# "In aanbouw" telt live af; is het gebouw klaar dan springt het paneel om naar de gewone knoppen
+	if _build_b != null:
+		if not is_instance_valid(_build_info) or not Game.buildings.has(_build_b):
+			_build_info = null
+			_build_b = null
+		elif Buildings.under_construction(_build_b):
+			_build_info.text = _build_text(_build_b)
+		else:
+			_build_info = null
+			_build_b = null
+			_fill_panel()
 	# Build access is merged into the BOUW/TEAM action in TeamCommands.
 	_btn.visible = false
 	var safe := UI.safe_margins(size)
@@ -424,8 +441,12 @@ func _fill_panel() -> void:
 	row.add_theme_constant_override("v_separation", 6)
 	vb.add_child(row)
 	var tip := ""
+	_build_info = null
+	_build_b = null
 	if Buildings.under_construction(b):
-		info.text = "In aanbouw: nog %d s · sterkte %d" % [ceili(b.build_t), ceili(b.hp)]
+		_build_info = info
+		_build_b = b
+		info.text = _build_text(b)
 		tip = "Het gebouw is nog niet klaar. Training, wagens en vliegtuigen kunnen pas als de steigers weg zijn."
 	elif b.kind == "kazerne":
 		var lv: Dictionary = Buildings.LEVELS[b.lv]

@@ -158,6 +158,55 @@ func _run() -> void:
 	u7.terugdraaien()
 	_check(not FileAccess.file_exists(DIR + "/actief.json"), "terugdraaien laat actief.json staan")
 
+	# 7b. keten van patches: alleen wat nog mist wordt gehaald, en ze laden in volgorde (de laatste wint)
+	_schoon()
+	var k1 := _maak_patch("patch-k1.pck", "{\"w\":10}", "BASIS1", 201)
+	var k2 := _maak_patch("patch-k2.pck", "{\"w\":20}", "BASIS1", 202)
+	var keten_m: Dictionary = k2.duplicate(true)
+	keten_m["schema"] = 2
+	keten_m["patches"] = [k1.pck, k2.pck]
+	var uk = _nieuw()
+	_check(uk.manifest_patches(keten_m).size() == 2, "keten uit manifest niet gelezen")
+	_check(uk.manifest_patches(k1).size() == 1, "schema 1 geeft niet één patch")
+	_check(uk.ontbrekende_patches(keten_m).size() == 2, "zonder patches zou de hele keten ontbreken")
+	_check(uk.beoordeel(keten_m) == "beschikbaar", "keten is niet 'beschikbaar'")
+	DirAccess.copy_absolute(DIR + "/patch-k1.pck", tmp)
+	_check(uk.installeer(tmp, k1) == "", "eerste patch van de keten installeren mislukt")
+	uk.actief = uk._lees_json(DIR + "/actief.json")  # (de app doet dit pas bij de volgende start)
+	var ontbrekend: Array = uk.ontbrekende_patches(keten_m)
+	_check(ontbrekend.size() == 1 and str(ontbrekend[0].naam) == "patch-k2.pck", "met patch 1 erop moet alleen patch 2 ontbreken")
+	var andere_keten: Dictionary = keten_m.duplicate(true)
+	andere_keten.patches[0].sha256 = "0".repeat(64)
+	_check(uk.ontbrekende_patches(andere_keten).size() == 2, "een afwijkende keten moet helemaal opnieuw")
+	var lijst: Array = []
+	for pe in [k1.pck, k2.pck]:
+		lijst.append({"naam": pe.naam, "bestand": DIR + "/" + str(pe.naam), "sha256": pe.sha256, "grootte": pe.grootte})
+	uk._bewaar_keten(keten_m, lijst)
+	uk.actief = uk._lees_json(DIR + "/actief.json")
+	_check(uk.ontbrekende_patches(keten_m).is_empty(), "na het bewaren van de hele keten ontbreekt er niets meer")
+	var fik := FileAccess.open(info, FileAccess.WRITE)
+	fik.store_string("{\"base\":\"BASIS1\",\"gebouwd\":100}")
+	fik.close()
+	var u8 = U.new(DIR, false)
+	u8.app_info_pad = info
+	u8.opstarten()
+	_check(u8.patch_geladen, "keten is niet geladen (reden: %s)" % u8.teruggedraaid_reden)
+	_check(FileAccess.get_file_as_string("res://ota_test/hallo.json") == "{\"w\":20}", "de laatste patch van de keten moet winnen")
+	u8.terugdraaien()
+	_check(not FileAccess.file_exists(DIR + "/patch-k1.pck") and not FileAccess.file_exists(DIR + "/patch-k2.pck"), "terugdraaien ruimt niet de hele keten op")
+
+	# 7c. voortgang in procenten, snelheid en resterende tijd
+	var uv = _nieuw()
+	uv.status = "bezig"
+	uv.dl_totaal = 200 * 1048576
+	uv.dl_klaar = 50 * 1048576
+	uv._meld_voortgang(0)
+	uv._dl_laatste_ms -= 1000  # een seconde geleden: 25 MB erbij = 25 MB/s
+	uv._meld_voortgang(25 * 1048576)
+	_check(absf(uv.voortgang - 0.375) < 0.001, "voortgang is %.3f in plaats van 0.375" % uv.voortgang)
+	_check(uv.status_tekst.contains("37%") and uv.status_tekst.contains("MB/s") and uv.status_tekst.contains("nog ca."), "voortgangstekst klopt niet: " + uv.status_tekst)
+	_check(U._duur_tekst(5.2) == "6 sec" and U._duur_tekst(125.0) == "2 min 05 sec", "duurtekst klopt niet")
+
 	# 8. de hele GitHub-stroom tegen de nepserver
 	await _github_stroom()
 

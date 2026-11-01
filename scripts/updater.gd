@@ -36,6 +36,13 @@ var status_tekst := ""
 var voortgang := 0.0
 var herstart_nodig := false
 
+# voortgang van een lopende download (alle ontbrekende patches samen)
+var dl_totaal := 0  # bytes die in totaal gedownload moeten worden
+var dl_klaar := 0  # bytes van patches die al binnen zijn
+var _dl_laatste_bytes := 0
+var _dl_laatste_ms := 0
+var _dl_snelheid := 0.0  # bytes per seconde, afgevlakt
+
 
 ## Normaal zonder argumenten (autoload). Tests geven een eigen map en zetten de start uit.
 func _init(map := "user://ota", start := true) -> void:
@@ -98,16 +105,54 @@ func _pas_actieve_patch_toe() -> void:
 		_deactiveer("de app startte %d keer niet goed met deze update" % onstabiel)
 		return
 	_schrijf_json(_pad("opstart.json"), {"onstabiel": onstabiel + 1})
-	var reden := controleer_patchbestand(actief)
-	if reden != "":
-		_deactiveer(reden)
+	var lijst := _actieve_lijst()
+	if lijst.is_empty():
+		_deactiveer("de update bevat geen patchbestanden")
 		return
+	for p in lijst:
+		var reden := controleer_patchbestand(p)
+		if reden != "":
+			_deactiveer(reden)
+			return
 	if str(actief.get("base", "")) != app_base:
 		_deactiveer("deze update hoort bij een andere app-versie")
 		return
-	patch_geladen = ProjectSettings.load_resource_pack(str(actief.bestand), true)
-	if not patch_geladen:
-		_deactiveer("Godot kon de update niet laden")
+	# de keten wordt in volgorde geladen: elke patch overschrijft wat de vorige al veranderde
+	for p in lijst:
+		if not ProjectSettings.load_resource_pack(str(p.bestand), true):
+			_deactiveer("Godot kon de update niet laden")
+			return
+	patch_geladen = true
+
+
+## De geladen patches in volgorde. Oud formaat (één patch direct in actief.json) wordt als keten van één gelezen.
+func _actieve_lijst() -> Array:
+	var l: Variant = actief.get("patches")
+	if l is Array:
+		return l
+	if actief.has("bestand"):
+		return [actief]
+	return []
+
+
+## De patches van een manifest in volgorde. Schema 1 heeft er één (pck), schema 2 de hele keten sinds de IPA (patches).
+func manifest_patches(m: Dictionary) -> Array:
+	var l: Variant = m.get("patches")
+	if l is Array and not (l as Array).is_empty():
+		return l
+	return [m.pck] if m.get("pck") is Dictionary else []
+
+
+## Welke patches uit het manifest staan nog niet op dit toestel (in volgorde)? Wijkt de bestaande keten af, dan alles opnieuw.
+func ontbrekende_patches(m: Dictionary) -> Array:
+	var keten := manifest_patches(m)
+	var heb := _actieve_lijst()
+	var n := 0
+	while n < heb.size() and n < keten.size() and str(heb[n].get("sha256", "")) == str((keten[n] as Dictionary).get("sha256", "x")):
+		n += 1
+	if n < heb.size():
+		n = 0
+	return keten.slice(n)
 
 
 ## Klopt het bestand van een patch (bestaat, grootte, SHA-256)? Geeft "" als het goed is, anders de reden.
@@ -128,12 +173,14 @@ func _deactiveer(reden: String) -> void:
 	teruggedraaid_reden = reden
 	patch_geladen = false
 	var oud := actief.duplicate()
+	var oude_lijst := _actieve_lijst()
 	actief = {}
 	DirAccess.remove_absolute(_pad("actief.json"))
 	_schrijf_json(_pad("opstart.json"), {"onstabiel": 0})
 	_schrijf_json(_pad("laatste_terugdraai.json"), {"reden": reden, "patch": oud.get("versie", "?")})
-	if oud.has("bestand") and FileAccess.file_exists(str(oud.bestand)):
-		DirAccess.remove_absolute(str(oud.bestand))
+	for p in oude_lijst:
+		if FileAccess.file_exists(str(p.get("bestand", ""))):
+			DirAccess.remove_absolute(str(p.bestand))
 	push_warning("Updater: terug naar de app-versie: " + reden)
 
 
@@ -179,9 +226,12 @@ func beoordeel(m: Dictionary) -> String:
 	for k in ["versie", "base", "gebouwd", "pck"]:
 		if not m.has(k):
 			return "fout"
-	var p: Variant = m.pck
-	if not (p is Dictionary) or not (p as Dictionary).has("naam") or not (p as Dictionary).has("sha256") or not (p as Dictionary).has("grootte"):
+	if not (m.pck is Dictionary):
 		return "fout"
+	var lijst := manifest_patches(m)
+	for p in lijst:
+		if not (p is Dictionary) or not (p as Dictionary).has("naam") or not (p as Dictionary).has("sha256") or not (p as Dictionary).has("grootte"):
+			return "fout"
 	if str(m.base) != app_base:
 		return "app_te_oud"
 	var huidig := maxi(app_gebouwd, int(actief.get("gebouwd", 0)))
@@ -209,8 +259,17 @@ func _vraag(url: String, headers: PackedStringArray, naar_bestand := "") -> Dict
 	if err != OK:
 		r.queue_free()
 		return {"result": -1, "code": -1, "fout": "kon de aanvraag niet starten (%d)" % err}
+	var teller: Timer = null
+	if naar_bestand != "" and dl_totaal > 0:
+		teller = Timer.new()
+		teller.wait_time = 0.5
+		teller.timeout.connect(func(): _meld_voortgang(r.get_downloaded_bytes()))
+		add_child(teller)
+		teller.start()
 	var res: Array = await r.request_completed
 	var timer_bytes := r.get_downloaded_bytes()
+	if teller != null:
+		teller.queue_free()
 	r.queue_free()
 	var kop := {}
 	for h in res[2] as PackedStringArray:
@@ -261,6 +320,32 @@ func _zet(s: String, tekst: String, v := 0.0) -> void:
 	status_changed.emit()
 
 
+## Zet voortgang (0..1), snelheid en resterende tijd in de status terwijl er gedownload wordt.
+func _meld_voortgang(bytes_nu: int) -> void:
+	if dl_totaal <= 0 or status != "bezig":
+		return
+	var nu := Time.get_ticks_msec()
+	if _dl_laatste_ms > 0 and nu > _dl_laatste_ms and bytes_nu >= _dl_laatste_bytes:
+		var snel := float(bytes_nu - _dl_laatste_bytes) / (float(nu - _dl_laatste_ms) / 1000.0)
+		_dl_snelheid = snel if _dl_snelheid <= 0.0 else lerpf(_dl_snelheid, snel, 0.3)
+	_dl_laatste_ms = nu
+	_dl_laatste_bytes = bytes_nu
+	var klaar := mini(dl_klaar + bytes_nu, dl_totaal)
+	var deel := clampf(float(klaar) / float(dl_totaal), 0.0, 1.0)
+	var tekst := "Downloaden… %d%%" % int(deel * 100.0)
+	if _dl_snelheid > 1024.0:
+		tekst += " · %.1f MB/s" % (_dl_snelheid / 1048576.0)
+		tekst += " · nog ca. " + _duur_tekst(float(dl_totaal - klaar) / _dl_snelheid)
+	_zet("bezig", tekst, deel)
+
+
+static func _duur_tekst(sec: float) -> String:
+	var t := int(ceil(sec))
+	if t < 60:
+		return "%d sec" % t
+	return "%d min %02d sec" % [t / 60, t % 60]
+
+
 ## Kijkt in de release "updates" of er een nieuwere patch voor deze app is. stil = geen foutmelding in beeld bij geen netwerk.
 func controleer(stil := false) -> void:
 	if app_base == "dev":
@@ -293,9 +378,15 @@ func controleer(stil := false) -> void:
 		return
 	manifest = m
 	manifest["_asset_url"] = str(assets.get(str(manifest.get("pck", {}).get("naam", "")), {}).get("url", ""))
+	var urls := {}
+	for pe in manifest_patches(manifest):
+		urls[str(pe.get("naam", ""))] = str(assets.get(str(pe.get("naam", "")), {}).get("url", ""))
+	manifest["_urls"] = urls
 	match beoordeel(manifest):
 		"beschikbaar":
-			var mb := float(int(manifest.pck.grootte)) / 1048576.0
+			var mb := 0.0
+			for pe in ontbrekende_patches(manifest):
+				mb += float(int(pe.grootte)) / 1048576.0
 			_zet("beschikbaar", "Update beschikbaar: %s (%.1f MB)." % [str(manifest.versie), mb])
 			update_beschikbaar.emit(manifest)
 		"app_te_oud":
@@ -306,28 +397,96 @@ func controleer(stil := false) -> void:
 			_zet("fout", "Het manifest klopt niet; de update wordt niet gebruikt.")
 
 
-## Downloadt de patch uit het laatste manifest, controleert grootte en SHA-256 en zet hem klaar voor de volgende start.
+## Downloadt alle ontbrekende patches uit het laatste manifest (in volgorde), controleert grootte en SHA-256 van elk
+## en zet de hele keten klaar voor de volgende start. Een eerder gelukte deelpatch wordt niet opnieuw gedownload.
 func download_en_installeer() -> void:
-	if status != "beschikbaar" or manifest.is_empty() or str(manifest.get("_asset_url", "")) == "":
+	if status != "beschikbaar" or manifest.is_empty():
 		return
-	var p: Dictionary = manifest.pck
+	var todo := ontbrekende_patches(manifest)
+	if todo.is_empty():
+		_zet("actueel", "Je hebt de nieuwste update.")
+		return
+	var keten := manifest_patches(manifest)
+	var urls: Dictionary = manifest.get("_urls", {})
+	var heb := _actieve_lijst()
+	var nieuwe: Array = heb.slice(0, keten.size() - todo.size())
 	var tmp := _pad("download.tmp")
-	DirAccess.remove_absolute(tmp)
-	_zet("bezig", "Downloaden… (%.1f MB)" % (float(int(p.grootte)) / 1048576.0))
-	var res: Dictionary = await _haal_asset(str(manifest._asset_url), tmp)
-	if int(res.get("code", -1)) != 200 or int(res.get("result", -1)) != HTTPRequest.RESULT_SUCCESS:
-		DirAccess.remove_absolute(tmp)
-		_zet("fout", "Downloaden mislukt (%s)." % _download_fout(res))
-		return
-	var fout := installeer(tmp, manifest)
-	if fout != "":
-		_zet("fout", "De update is afgekeurd: " + fout + ".")
-		return
+	dl_totaal = 0
+	dl_klaar = 0
+	_dl_laatste_ms = 0
+	_dl_laatste_bytes = 0
+	_dl_snelheid = 0.0
+	for e0 in todo:
+		var d0 := {"bestand": _pad(str(e0.naam).get_file()), "sha256": str(e0.sha256), "grootte": int(e0.grootte)}
+		dl_totaal += int(e0.grootte)
+		if controleer_patchbestand(d0) == "":
+			dl_klaar += int(e0.grootte)
+	for i in todo.size():
+		var e: Dictionary = todo[i]
+		var naam := str(e.naam).get_file()
+		if not naam.ends_with(".pck") or naam.contains(".."):
+			_zet("fout", "De update is afgekeurd: ongeldige bestandsnaam.")
+			return
+		var doel := _pad(naam)
+		var d := {"naam": naam, "bestand": doel, "sha256": str(e.sha256), "grootte": int(e.grootte)}
+		# al eerder binnengehaald (bijvoorbeeld een vorige poging die halverwege stopte)?
+		if controleer_patchbestand(d) != "":
+			var url := str(urls.get(str(e.naam), manifest.get("_asset_url", "") if keten.size() == 1 else ""))
+			if url == "":
+				_zet("fout", "Downloaden mislukt (updatebestand staat niet in de release).")
+				return
+			DirAccess.remove_absolute(tmp)
+			_dl_laatste_ms = 0
+			_dl_laatste_bytes = 0
+			status = "bezig"
+			_meld_voortgang(0)
+			var res: Dictionary = await _haal_asset(url, tmp)
+			if int(res.get("code", -1)) != 200 or int(res.get("result", -1)) != HTTPRequest.RESULT_SUCCESS:
+				DirAccess.remove_absolute(tmp)
+				dl_totaal = 0
+				_zet("fout", "Downloaden mislukt (%s)." % _download_fout(res))
+				return
+			var fout := _neem_patch_aan(tmp, d)
+			if fout != "":
+				dl_totaal = 0
+				_zet("fout", "De update is afgekeurd: " + fout + ".")
+				return
+			dl_klaar += int(e.grootte)
+		nieuwe.append(d)
+	dl_totaal = 0
+	_bewaar_keten(manifest, nieuwe)
 	_zet("gedownload", "Update %s staat klaar. Sluit de app helemaal af en open hem opnieuw om hem te gebruiken." % str(manifest.versie))
 
 
-## Controleert een gedownload bestand tegen het manifest en maakt het de actieve patch (voor de volgende start).
-## Geeft "" bij succes, anders de reden van afkeuren. De vorige patch wordt vervangen.
+## Controleert een gedownload bestand tegen de verwachte grootte en hash en zet het op zijn plek.
+func _neem_patch_aan(tmp_pad: String, d: Dictionary) -> String:
+	var f := FileAccess.open(tmp_pad, FileAccess.READ)
+	if f == null or f.get_length() != int(d.grootte):
+		return "de grootte klopt niet"
+	f = null
+	if FileAccess.get_sha256(tmp_pad) != str(d.sha256):
+		return "SHA-256 klopt niet"
+	if DirAccess.rename_absolute(tmp_pad, str(d.bestand)) != OK:
+		return "kon het bestand niet opslaan"
+	return ""
+
+
+## Maakt de keten actief voor de volgende start en ruimt patchbestanden op die er niet meer bij horen.
+func _bewaar_keten(m: Dictionary, lijst: Array) -> void:
+	var nieuwe_paden := {}
+	for p in lijst:
+		nieuwe_paden[str(p.bestand)] = true
+	for p in _actieve_lijst():
+		var pad := str(p.get("bestand", ""))
+		if pad != "" and not nieuwe_paden.has(pad) and FileAccess.file_exists(pad):
+			DirAccess.remove_absolute(pad)
+	_schrijf_json(_pad("actief.json"), {"versie": str(m.versie), "base": str(m.base), "gebouwd": int(m.gebouwd), "patches": lijst})
+	_schrijf_json(_pad("opstart.json"), {"onstabiel": 0})
+	herstart_nodig = true
+
+
+## Controleert een gedownload bestand tegen het manifest en maakt het de enige actieve patch (voor de volgende start; schema 1).
+## Geeft "" bij succes, anders de reden van afkeuren. Voor een hele keten gebruikt de app download_en_installeer().
 func installeer(tmp_pad: String, m: Dictionary) -> String:
 	if beoordeel(m) not in ["beschikbaar", "actueel"]:
 		return "het manifest hoort niet bij deze app"
@@ -335,30 +494,19 @@ func installeer(tmp_pad: String, m: Dictionary) -> String:
 	var naam := str(p.naam).get_file()
 	if not naam.ends_with(".pck") or naam.contains(".."):
 		return "ongeldige bestandsnaam"
-	var d := {"versie": str(m.versie), "bestand": _pad(naam), "sha256": str(p.sha256), "grootte": int(p.grootte), "base": str(m.base), "gebouwd": int(m.gebouwd)}
-	var f := FileAccess.open(tmp_pad, FileAccess.READ)
-	if f == null or f.get_length() != int(p.grootte):
-		return "de grootte klopt niet"
-	f = null
-	if FileAccess.get_sha256(tmp_pad) != str(p.sha256):
-		return "SHA-256 klopt niet"
-	# oude patchbestanden opruimen, de nieuwe op zijn plek zetten
-	var oud := _lees_json(_pad("actief.json"))
-	if DirAccess.rename_absolute(tmp_pad, str(d.bestand)) != OK:
-		return "kon het bestand niet opslaan"
-	if oud.has("bestand") and str(oud.bestand) != str(d.bestand) and FileAccess.file_exists(str(oud.bestand)):
-		DirAccess.remove_absolute(str(oud.bestand))
-	_schrijf_json(_pad("actief.json"), d)
-	_schrijf_json(_pad("opstart.json"), {"onstabiel": 0})
-	herstart_nodig = true
+	var d := {"naam": naam, "bestand": _pad(naam), "sha256": str(p.sha256), "grootte": int(p.grootte)}
+	var fout := _neem_patch_aan(tmp_pad, d)
+	if fout != "":
+		return fout
+	_bewaar_keten(m, [d])
 	return ""
 
 
 ## De patch uitzetten: bij de volgende start draait de app weer precies zoals in de IPA.
 func terugdraaien() -> void:
-	var oud := _lees_json(_pad("actief.json"))
+	for p in _actieve_lijst():
+		if FileAccess.file_exists(str(p.get("bestand", ""))):
+			DirAccess.remove_absolute(str(p.bestand))
 	DirAccess.remove_absolute(_pad("actief.json"))
-	if oud.has("bestand") and FileAccess.file_exists(str(oud.bestand)):
-		DirAccess.remove_absolute(str(oud.bestand))
 	herstart_nodig = true
-	_zet("actueel", "Teruggezet naar de app-versie. Sluit de app helemaal af en open hem opnieuw.")
+	_zet("actueel", "Teruggezet naar de app-versie. Sluit de app helemaal af en open opnieuw.")

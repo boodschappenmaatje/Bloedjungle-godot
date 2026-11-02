@@ -67,7 +67,7 @@ func _process(_delta: float) -> bool:
 
 func _setup(g) -> void:
 	var sup = g.supply
-	var depots := sup.depots()
+	var depots: Array = sup.depots()
 	_check("startdepot bestaat", depots.size() > 0)
 	if depots.is_empty():
 		quit(1)
@@ -96,7 +96,7 @@ func _setup(g) -> void:
 			var b = all_trucks[j]
 			_check("spawn zonder overlap %d/%d" % [i, j], a.global_position.distance_to(b.global_position) >= 3.2)
 	for item in all_trucks:
-		var truck := item
+		var truck = item
 		starts[truck.get_instance_id()] = Vector2(truck.global_position.x, truck.global_position.z)
 
 func _sample(g) -> void:

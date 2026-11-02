@@ -538,7 +538,7 @@ func _die(dir: Vector3, clip := "") -> void:
 	Progress.stats.kills += 1
 	if Progress.stats.kills % 25 == 0:
 		Progress.save()
-	Game.add_points(t.pts)
+	Game.add_score(t.pts)   # geen geld meer voor kills (Generals-stap 4): geld komt uit voorraad
 	collision_layer = 0
 	collision_mask = 0
 	Fx.blood(get_parent(), global_position + Vector3.UP, dir, 26)

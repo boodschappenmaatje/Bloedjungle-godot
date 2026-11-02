@@ -39,6 +39,9 @@ func _process(_d: float) -> bool:
 	if frames == 4:
 		main.begin()
 		g.player.global_position = Vector3(0, 0, -40)  # ver van beide poorten
+		# de voorraadtruck van het eerste depot rijdt meteen weg en opent dan zelf de poort; die heeft zijn eigen test (voorraad_test)
+		for t in get_nodes_in_group("voorraadtruck"):
+			t.queue_free()
 	if frames == 40:
 		var gt = g.gates.list[0]
 		_check(gt.open == 0.0, "poort dicht als niemand in de buurt is")

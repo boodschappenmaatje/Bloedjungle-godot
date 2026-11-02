@@ -52,6 +52,7 @@ var place_armed := false  # spookbeeld en neerzetten aan/uit
 const BUILD_CREDIT := 1000
 var build_credit := BUILD_CREDIT
 var builds: Buildings
+var supply: Voorraad   # voorraadstapels, depot en trucks (voorraad.gd, Generals-plan stap 4)
 var gates: Gates
 var bridge  # de ophaalbrug (bridge.gd)
 var airfield_build_view := false
@@ -95,6 +96,7 @@ var blast_r := 0.0
 func note_blast(at: Vector3, radius: float) -> void:
 	Brandkraan.catch_blast(at, radius)   # een kraan vlakbij knalt open
 	Auto.catch_blast(at, radius)         # auto's vlakbij raken beschadigd, of ontploffen
+	VoorraadTruck.catch_blast(at, radius)   # voorraadtrucks ook
 	Bus.catch_blast(at, radius)          # bussen ook (zwaarder: er is veel nodig)
 	Foliage.fell_near(at, radius)   # bomen vlakbij vallen om
 	blast_at = at
@@ -182,6 +184,8 @@ func reset() -> void:
 	editing = false
 	bcam = Vector3(0.0, 0.0, 1.0)
 	buildings.clear()
+	if supply != null and is_instance_valid(supply):
+		supply.reset()
 	allies.clear()
 	troop_mode = "follow"
 	squad_order = "follow"
@@ -285,6 +289,18 @@ func add_points(n: int) -> void:
 	n = roundi(n * Progress.bonus().points)
 	points += n
 	score += n
+	changed.emit()
+
+
+## Alleen score, geen geld: vijanden die je neerhaalt geven sinds Generals-stap 4 geen punten meer; geld komt uit voorraad (voorraad.gd).
+func add_score(n: int) -> void:
+	score += roundi(n * Progress.bonus().points)
+	changed.emit()
+
+
+## Geld uit voorraad: een truck levert af in het depot. Telt niet mee voor je score.
+func add_income(n: int) -> void:
+	points += roundi(n * Progress.bonus().points)
 	changed.emit()
 
 

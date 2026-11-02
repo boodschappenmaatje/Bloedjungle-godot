@@ -1261,8 +1261,8 @@ func _collapse(rule: Dictionary) -> void:
 		_dust_wave(c, span)
 		_shake(0.05)
 	if buried > 0:
-		Game.add_points(40 * buried)
-		get_tree().create_timer(1.2).timeout.connect(func(): Game.banner.emit("BEDOLVEN x%d" % buried, "+%d punten" % (40 * buried), 1.3))
+		Game.add_score(40 * buried)   # score, geen geld (Generals-stap 4)
+		get_tree().create_timer(1.2).timeout.connect(func(): Game.banner.emit("BEDOLVEN x%d" % buried, "+%d score" % (40 * buried), 1.3))
 
 
 ## Vijanden onder het deel dat instort: bij een ruïne is het meestal raak, bij een zakkende verdieping overleven alleen de zwaarsten.

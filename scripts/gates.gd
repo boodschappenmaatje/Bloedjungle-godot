@@ -10,6 +10,7 @@ const G := Data.GATE_GAP
 const HP := 900.0
 const REACH := 4.4
 const ALLY_REACH := 4.6
+const TRUCK_REACH := 11.0   # voorraadtrucks (voorraad.gd) openen de poort ruim van tevoren: hij schuift in 2,5 s open
 const SLIDE_T := 2.5
 const TAKE := {"bullet": 0.25, "melee": 0.5, "explosive": 1.0}
 
@@ -280,6 +281,11 @@ func _physics_process(delta: float) -> void:
 			# je soldaten openen de poort altijd zelf, ook als je er niet bij bent of hij vergrendeld is
 			for a in Game.allies:
 				if is_instance_valid(a) and a.global_position.distance_to(pos_of(g)) < ALLY_REACH:
+					friend = true
+					break
+		if live and not friend:
+			for t in get_tree().get_nodes_in_group("voorraadtruck"):
+				if is_instance_valid(t) and t.wants_gate() and (t as Node3D).global_position.distance_to(pos_of(g)) < TRUCK_REACH:
 					friend = true
 					break
 		g.hold = 0.9 if friend else g.hold - delta

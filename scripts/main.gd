@@ -16,6 +16,8 @@ func _ready() -> void:
 	add_child(Game.defs)
 	Game.builds = Buildings.new()
 	add_child(Game.builds)
+	Game.supply = Voorraad.new()
+	add_child(Game.supply)
 	Game.gates = Gates.new()
 	add_child(Game.gates)
 	GameSettings.apply_hz()
@@ -29,6 +31,7 @@ func _ready() -> void:
 	if Progress.autostart:
 		Progress.autostart = false
 		await _load_world()
+		Game.supply.start_game()
 		_start_prep()
 	else:
 		Game.changed.emit()
@@ -42,6 +45,7 @@ func begin() -> void:
 	Game.reset()
 	if Game.player:
 		Game.player.refresh_look()
+	Game.supply.start_game()   # eerste depot met een gratis truck en de eerste voorraadstapels
 	_start_prep()
 
 

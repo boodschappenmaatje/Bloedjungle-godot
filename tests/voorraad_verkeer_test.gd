@@ -56,7 +56,7 @@ func _process(_delta: float) -> bool:
 	if simulation_frames % 6 == 0:
 		_sample(g)
 	if simulation_frames >= 900:
-		var sup: Voorraad = g.supply
+		var sup = g.supply
 		_check("maximaal één actieve truck op gedeelde weg", multi_active == 0)
 		_check("geen truck-overlap", overlaps == 0)
 		_check("minimale afstand %.2f m" % min_separation, min_separation >= 3.2)
@@ -66,7 +66,7 @@ func _process(_delta: float) -> bool:
 	return false
 
 func _setup(g) -> void:
-	var sup: Voorraad = g.supply
+	var sup = g.supply
 	var depots := sup.depots()
 	_check("startdepot bestaat", depots.size() > 0)
 	if depots.is_empty():
@@ -92,20 +92,20 @@ func _setup(g) -> void:
 	var all_trucks := get_nodes_in_group("voorraadtruck")
 	for i in all_trucks.size():
 		for j in range(i + 1, all_trucks.size()):
-			var a = all_trucks[i] as VoorraadTruck
-			var b = all_trucks[j] as VoorraadTruck
+			var a = all_trucks[i]
+			var b = all_trucks[j]
 			_check("spawn zonder overlap %d/%d" % [i, j], a.global_position.distance_to(b.global_position) >= 3.2)
 	for item in all_trucks:
-		var truck := item as VoorraadTruck
+		var truck := item
 		starts[truck.get_instance_id()] = Vector2(truck.global_position.x, truck.global_position.z)
 
 func _sample(g) -> void:
-	var sup: Voorraad = g.supply
+	var sup = g.supply
 	var trucks := get_nodes_in_group("voorraadtruck")
 	var operating := 0
 	for a in trucks:
 		if a is VoorraadTruck:
-			if a.state != VoorraadTruck.S.WACHT and a.state != VoorraadTruck.S.WRAK:
+			if a.state != 0 and a.state != 5:
 				operating += 1
 			var orig: Vector2 = starts.get(a.get_instance_id(), Vector2(a.global_position.x, a.global_position.z))
 			max_travel = maxf(max_travel, orig.distance_to(Vector2(a.global_position.x, a.global_position.z)))
@@ -113,9 +113,9 @@ func _sample(g) -> void:
 		multi_active += 1
 	for i in trucks.size():
 		for j in range(i + 1, trucks.size()):
-			var a = trucks[i] as VoorraadTruck
-			var b = trucks[j] as VoorraadTruck
-			if a == null or b == null or a.state == VoorraadTruck.S.WRAK or b.state == VoorraadTruck.S.WRAK:
+			var a = trucks[i]
+			var b = trucks[j]
+			if a == null or b == null or a.state == 5 or b.state == 5:
 				continue
 			var ap := Vector2(a.global_position.x, a.global_position.z)
 			var bp := Vector2(b.global_position.x, b.global_position.z)

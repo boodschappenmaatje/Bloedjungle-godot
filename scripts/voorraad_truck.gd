@@ -289,6 +289,11 @@ func _unload_step(delta: float) -> void:
 		_set_state(S.WACHT)
 
 
+## Alleen een rijdende truck laat een poort opengaan; een truck die wacht of laadt houdt hem niet open.
+func wants_gate() -> bool:
+	return state == S.HEEN or state == S.TERUG
+
+
 # ---------------------------------------------------------------- schade
 
 func hit(dmg: float, _dir: Vector3, _from_player: bool) -> void:

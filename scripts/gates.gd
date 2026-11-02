@@ -285,7 +285,7 @@ func _physics_process(delta: float) -> void:
 					break
 		if live and not friend:
 			for t in get_tree().get_nodes_in_group("voorraadtruck"):
-				if is_instance_valid(t) and (t as Node3D).global_position.distance_to(pos_of(g)) < TRUCK_REACH:
+				if is_instance_valid(t) and t.wants_gate() and (t as Node3D).global_position.distance_to(pos_of(g)) < TRUCK_REACH:
 					friend = true
 					break
 		g.hold = 0.9 if friend else g.hold - delta

@@ -49,6 +49,8 @@ var _ids := {}                 # knooppuntnaam -> id
 var _pos := {}                 # knooppuntnaam -> Vector2 (x, z)
 var _used := {}                # plek-id -> true: ligt er, of is leeg gegaan
 var _claims := {}              # slot -> aantal trucks onderweg
+var _traffic_owner: VoorraadTruck = null
+var _traffic_queue: Array = []
 var _roads := {}               # plek-id -> Node3D (eigenaar van de vrijgemaakte weg)
 var _engine: AudioStreamWAV
 var _tick := 0.0
@@ -127,6 +129,8 @@ func start_game() -> void:
 	trips = 0
 	_used.clear()
 	_claims.clear()
+	_traffic_owner = null
+	_traffic_queue.clear()
 	for i in SLOTS:
 		if i < SITES.size():
 			_spawn_stapel(i, SITES[i])
@@ -145,6 +149,8 @@ func reset() -> void:
 		t.queue_free()
 	_used.clear()
 	_claims.clear()
+	_traffic_owner = null
+	_traffic_queue.clear()
 
 
 func _spawn_stapel(slot: int, site: Dictionary) -> void:
@@ -305,18 +311,72 @@ func buy_truck(b: Dictionary) -> bool:
 
 
 func _spawn_truck(b: Dictionary) -> VoorraadTruck:
+	var used := {}
+	for other in trucks_of(b):
+		if other.state != VoorraadTruck.S.WRAK:
+			used[other.number] = true
+	var bay := 0
+	while used.has(bay) and bay < TRUCKS_MAX:
+		bay += 1
+	if bay >= TRUCKS_MAX:
+		return null
 	var t := VoorraadTruck.new()
 	add_child(t)
-	t.setup(self, b, trucks_of(b).size())
+	t.setup(self, b, bay)
 	Game.changed.emit()
 	return t
 
 
 func _cleanup_trucks() -> void:
-	# een depot dat verkocht is, neemt zijn trucks mee
+	# Een verkocht depot geeft ook zijn verkeersreservering vrij.
 	for t in get_children():
 		if t is VoorraadTruck and is_instance_valid(t) and not Game.buildings.has(t.depot):
+			traffic_release(t)
 			t.queue_free()
+
+
+## Parkeerhavens buiten de centrale laadplek, minimaal 6,5 m tussen de voertuigen.
+func parking_point(b: Dictionary, number: int) -> Vector2:
+	var side := Vector2(cos(float(b.yaw)), -sin(float(b.yaw)))
+	var front := Vector2(sin(float(b.yaw)), cos(float(b.yaw)))
+	var offsets := [-6.5, 6.5, 13.0]
+	# Vier meter naast/ter hoogte van het depot, niet op de weg van het tegenoverliggende depot.
+	return dock_point(b) - front * 4.0 + side * float(offsets[clampi(number, 0, 2)])
+
+
+func road_staging(b: Dictionary) -> Vector2:
+	var front := Vector2(sin(float(b.yaw)), cos(float(b.yaw)))
+	return dock_point(b) + front * 8.0
+
+
+func parking_staging(b: Dictionary, number: int) -> Vector2:
+	var front := Vector2(sin(float(b.yaw)), cos(float(b.yaw)))
+	return parking_point(b, number) + front * 8.0
+
+
+## Exclusieve verkeerszone over het smalle gedeelde wegennet.
+## FIFO zorgt dat elke truck na de huidige volledige rit aan de beurt komt.
+func traffic_request(truck: VoorraadTruck) -> bool:
+	if _traffic_owner != null and not is_instance_valid(_traffic_owner):
+		_traffic_owner = null
+	for i in range(_traffic_queue.size() - 1, -1, -1):
+		var queued = _traffic_queue[i]
+		if not is_instance_valid(queued) or queued.state == VoorraadTruck.S.WRAK:
+			_traffic_queue.remove_at(i)
+	if _traffic_owner == truck:
+		return true
+	if not _traffic_queue.has(truck):
+		_traffic_queue.append(truck)
+	if _traffic_owner == null and not _traffic_queue.is_empty() and _traffic_queue[0] == truck:
+		_traffic_queue.pop_front()
+		_traffic_owner = truck
+	return _traffic_owner == truck
+
+
+func traffic_release(truck: VoorraadTruck) -> void:
+	if _traffic_owner == truck:
+		_traffic_owner = null
+	_traffic_queue.erase(truck)
 
 
 ## Kiest de plek waar een truck heen rijdt: de bestemming van het depot, of automatisch de dichtstbijzijnde met voorraad.

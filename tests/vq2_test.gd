@@ -102,7 +102,7 @@ func _run() -> void:
 	check(placed != null, "existing barracks placement failed")
 	if placed != null:
 		var collider: CollisionShape3D = placed.node.get_child(0)
-		check(collider.shape.size.is_equal_approx(Vector3(4.4, 2.2, 3.2)), "barracks footprint changed")
+		check(collider.shape.size.is_equal_approx(Vector3(6.4, 3.5, 4.8)), "HQ2 barracks footprint changed")
 	# Verify original exported animation tracks visibly transform real jeep nodes.
 	var raw: Node3D = load("res://assets/jeep.glb").instantiate()
 	root.add_child(raw)

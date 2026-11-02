@@ -6,7 +6,7 @@ extends Node3D
 
 const DEFS := {
 	"depot": {"name": "Voorraaddepot", "cost": 800, "size": Vector3(8.0, 3.0, 6.0), "max": 3, "hp": 900.0},   # Generals-stap 4: trucks leveren hier voorraad af (voorraad.gd)
-	"kazerne": {"name": "Kazerne", "cost": 1000, "size": Vector3(4.4, 2.2, 3.2), "max": 1, "hp": 600.0},
+	"kazerne": {"name": "Kazerne", "cost": 1000, "size": Vector3(6.4, 3.5, 4.8), "max": 1, "hp": 600.0},
 	"garage": {"name": "Garage", "cost": 800, "size": Vector3(5.15, 3.1, 5.7), "max": 1, "hp": 900.0},
 	"helipad": {"name": "Heliplatform", "cost": 1000, "size": Vector3(12.8, 2.0, 12.8), "max": 1, "hp": 1200.0},
 	"airfield": {"name": "Vliegveld", "cost": AirfieldHQ23.BUILD_COST, "size": AirfieldHQ23.FOOTPRINT, "max": 1, "hp": 3000.0},
@@ -38,7 +38,7 @@ const LEVELS := [null,
 	{"max": 6, "time": 5.0, "hp": 130.0, "dmg": 21.0, "cost": 1800}]
 const TRAIN_COST := 250
 const RIJ_MAX := 5  # soldaten tegelijk in de bouwrij van een kazerne (Generals-plan stap 2)
-const DOOR := 2.5  # afstand van het midden tot het punt voor de deur
+const DOOR := 3.35  # HQ2: 4.8 m diepte / 2 + 0.95 m ruimte voor de entree en de collider
 const HQ_SPEEDUP := 0.75  # hoofdkwartier niveau 2: alle bouw- en opleidingstijden 25% korter (Generals-plan stap 3)
 const GS := 0.66      # schaal van het garagemodel (breedte en diepte); in de hoogte GSH
 const GSH := 0.92
@@ -101,6 +101,8 @@ func _tower_feet() -> Array:
 
 ## Shared source of truth for the preview and the final transaction.
 func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null) -> Dictionary:
+	if kind == "kazerne" and not ResourceLoader.exists("res://assets/kazerne_hq2.glb"):
+		return _placement_result(false, "Kazerne HQ2-model ontbreekt", 0)
 	if kind == "airfield":
 		if not AirfieldHQ23.complex_available() or not AirfieldHQ23.area_limit_ok():
 			return _placement_result(false, "Vliegveldassets ontbreken", 0)
@@ -279,8 +281,15 @@ func make_node(kind: String) -> StaticBody3D:
 		"depot":
 			_depot_node(body, sz)
 		"kazerne":
-			var model: Node = (load("res://assets/kazerne.glb") as PackedScene).instantiate()
-			Kit.skin(model, "kazerne")
+			# HQ2 is the actual approved Meshy 2K-PBR GLB. Keep original VQ2 under assets/kazerne.glb for comparison.
+			# Do NOT call Kit.skin: new Meshy textures are embedded and must not be overwritten.
+			var scene := load("res://assets/kazerne_hq2.glb") as PackedScene
+			if scene == null:
+				push_error("KAZERNE HQ2: assets/kazerne_hq2.glb is missing; no valid HQ2 build can be placed")
+				body.free()
+				return null
+			var model := scene.instantiate() as Node3D
+			model.name = "Kazerne_HQ2_Meshy"
 			body.add_child(model)
 		"muur":
 			Kit.box(body, Vector3.ZERO, Vector3(sz.x, sz.y, sz.z), Kit.concrete())
@@ -355,8 +364,9 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 		return null
 	if with_time and missing(kind) != "":
 		return null
-	var node: StaticBody3D = make_node(kind) if kind == "airfield" else null
-	if kind == "airfield" and node == null:
+	# Fail safely before payment for required imported HQ2 / airfield resources.
+	var node: StaticBody3D = make_node(kind) if kind == "airfield" or kind == "kazerne" else null
+	if (kind == "airfield" or kind == "kazerne") and node == null:
 		return null
 	if not free and not Game.pay_build(DEFS[kind].cost):
 		if node != null:

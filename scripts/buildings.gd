@@ -5,6 +5,7 @@ extends Node3D
 ## De rekruten zelf zijn Ally (ally.gd); het bouwscherm staat in build_mode.gd.
 
 const DEFS := {
+	"depot": {"name": "Voorraaddepot", "cost": 800, "size": Vector3(8.0, 3.0, 6.0), "max": 3, "hp": 900.0},   # Generals-stap 4: trucks leveren hier voorraad af (voorraad.gd)
 	"kazerne": {"name": "Kazerne", "cost": 1000, "size": Vector3(4.4, 2.2, 3.2), "max": 1, "hp": 600.0},
 	"garage": {"name": "Garage", "cost": 800, "size": Vector3(5.15, 3.1, 5.7), "max": 1, "hp": 900.0},
 	"helipad": {"name": "Heliplatform", "cost": 1000, "size": Vector3(12.8, 2.0, 12.8), "max": 1, "hp": 1200.0},
@@ -23,7 +24,7 @@ const HELI_COST := 500
 const GARAGE_RIJ_MAX := 3  # wagens die tegelijk in de garagerij mogen staan; van elk type mag je er zoveel kopen als je wilt
 # Generals-plan stap 1 (docs/GENERALS_PLAN.md): bouwtijd in seconden en wat je eerst nodig hebt (techboom).
 # Muren en zandzakken staan er meteen. Tests en code die place() zonder bouwtijd aanroepen bouwen direct.
-const BUILD_TIME := {"kazerne": 12.0, "garage": 15.0, "helipad": 20.0, "airfield": 30.0}
+const BUILD_TIME := {"depot": 12.0, "kazerne": 12.0, "garage": 15.0, "helipad": 20.0, "airfield": 30.0}
 const REQUIRES := {"garage": "kazerne", "helipad": "garage", "airfield": "helipad"}
 const PAD_T := 4.5  # seconden dat de luiken en de lift nodig hebben (de clips Open en Dicht)
 const INFO := {
@@ -261,7 +262,7 @@ func make_node(kind: String) -> StaticBody3D:
 	var body := BuildingBody.new()
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
-	body.set_meta("impact_material", {"zandzak": "dirt", "muur": "concrete", "kazerne": "wood", "garage": "metal", "helipad": "concrete", "airfield": "concrete"}.get(kind, "concrete"))
+	body.set_meta("impact_material", {"zandzak": "dirt", "muur": "concrete", "kazerne": "wood", "depot": "metal", "garage": "metal", "helipad": "concrete", "airfield": "concrete"}.get(kind, "concrete"))
 	var sz: Vector3 = DEFS[kind].size
 	if kind != "garage" and kind != "helipad":
 		var cs := CollisionShape3D.new()
@@ -275,6 +276,8 @@ func make_node(kind: String) -> StaticBody3D:
 			_garage_node(body)
 		"helipad":
 			_pad_node(body)
+		"depot":
+			_depot_node(body, sz)
 		"kazerne":
 			var model: Node = (load("res://assets/kazerne.glb") as PackedScene).instantiate()
 			Kit.skin(model, "kazerne")
@@ -286,6 +289,28 @@ func make_node(kind: String) -> StaticBody3D:
 		"zandzak":
 			_bags(body, sz)
 	return body
+
+
+## Voorraaddepot (4a: blokken): betonnen laadperron met een schuur achterin, een portaalkraan en kisten. Het echte model komt in 4b.
+## De voorkant (waar de trucks komen) is +Z.
+func _depot_node(root: Node3D, sz: Vector3) -> void:
+	var olive := Kit.flat(Color("55603a"), 0.85)
+	var dark := Kit.flat(Color("2b2f22"), 0.9)
+	var steel := Kit.flat(Color("6b6f68"), 0.6, 0.5)
+	var gold := Kit.flat(Color("c9a227"), 0.7)
+	var wood := Kit.flat(Color("6e5a3c"), 0.95)
+	Kit.box(root, Vector3(0, 0.1, 0), Vector3(sz.x + 0.4, 0.2, sz.z + 0.4), Kit.concrete())
+	Kit.box(root, Vector3(0, 1.55, -1.6), Vector3(sz.x - 0.8, 2.7, 2.8), olive)           # schuur
+	Kit.box(root, Vector3(0, 3.0, -1.6), Vector3(sz.x - 0.4, 0.25, 3.2), dark)             # dak
+	Kit.box(root, Vector3(0, 1.1, -0.18), Vector3(3.2, 1.9, 0.12), dark)                   # openstaande laaddeur
+	Kit.box(root, Vector3(0, 2.55, -0.14), Vector3(2.4, 0.5, 0.08), gold)                  # bord boven de deur
+	for sx in [-3.2, 3.2]:
+		Kit.box(root, Vector3(sx, 1.6, 1.4), Vector3(0.3, 3.0, 0.3), steel)                  # portaalkraan
+	Kit.box(root, Vector3(0, 3.15, 1.4), Vector3(6.9, 0.3, 0.3), steel)
+	Kit.box(root, Vector3(0.6, 2.7, 1.4), Vector3(0.5, 0.6, 0.5), dark)                    # loopkat
+	for p in [Vector3(-2.9, 0.75, 2.3), Vector3(-2.9, 0.75, 0.8), Vector3(-2.9, 1.5, 1.55), Vector3(3.0, 0.75, 2.4)]:
+		Kit.box(root, p, Vector3(1.25, 0.72, 1.5), wood if p.y > 1.0 else olive)             # kisten
+	Kit.box(root, Vector3(0, 0.23, sz.z * 0.5 + 0.1), Vector3(sz.x, 0.04, 0.3), gold)      # gele rand voorop
 
 
 func _bags(root: Node3D, sz: Vector3) -> void:
@@ -324,7 +349,7 @@ static func under_construction(b: Dictionary) -> bool:
 
 
 ## with_time = true (bouwmodus): het gebouw groeit op in BUILD_TIME seconden met steigers en een voortgangsbalk.
-func place(kind: String, at: Vector3, yaw: float, with_time := false) -> Variant:
+func place(kind: String, at: Vector3, yaw: float, with_time := false, free := false) -> Variant:
 	var status := placement_status(kind, at, yaw)
 	if full(kind) or not status.valid:
 		return null
@@ -333,7 +358,7 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false) -> Variant
 	var node: StaticBody3D = make_node(kind) if kind == "airfield" else null
 	if kind == "airfield" and node == null:
 		return null
-	if not Game.pay_build(DEFS[kind].cost):
+	if not free and not Game.pay_build(DEFS[kind].cost):
 		if node != null:
 			node.free()
 		return null
@@ -370,6 +395,14 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false) -> Variant
 	Sfx.play("thud")
 	Game.changed.emit()
 	return b
+
+
+## Het eerste voorraaddepot staat er vanaf het begin (gratis, meteen klaar). Geeft het gebouw of null als geen plek vrij is.
+func place_start_depot() -> Variant:
+	for spot in Voorraad.START_SPOTS:
+		if placement_status("depot", spot[0], spot[1]).valid:
+			return place("depot", spot[0], spot[1], false, true)
+	return null
 
 
 ## Bouwplaats: steigers rond het gebouw en het gebouw zelf groeit omhoog (alleen het zichtbare deel, de botsvorm blijft).

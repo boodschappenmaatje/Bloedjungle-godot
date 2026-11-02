@@ -84,3 +84,12 @@ Keuzepagina: https://claude.ai/artifact/VNoxTR8VvsKn44oDdD3Jq1
 - **Radiomeldingen:** Dennis spreekt zelf in; de stem wordt omgebouwd tot een niet herkenbare radiostem (toonhoogte, smalle klank, ruis, klik). Meldingen: bouw voltooid, basis onder vuur, gebouw vernield, eenheid gereed (elk twee varianten).
 - **Terugkomen na sneuvelen:** na 8 seconden, met de wachttijd in een commandostand (tactische kaart met bevelen en bestellen). Eerst bij de bunker, later bij het hoofdkwartier.
 - **Volgorde:** eerst bouwrij + verzamelpunt, dan radiomeldingen, dan terugkomen.
+
+## Stap 4 (keuzes van Dennis, 2026-11-02): voorraadstapels, depot en voorraadtruck (A1)
+- **Stapels:** vier tegelijk op de kaart (Bosrand ±65 m, Zuid ±110 m, Stad ±130 m, Oost ±130 m), elk 2.500; eindig. Is een stapel leeg, dan komt er een nieuwe verder weg. Je ziet de stapel in drie standen (vol, half, bijna leeg) en er staat een markering met teller op de tactische kaart.
+- **Bomen:** voertuigen kunnen niet door bomen rijden (die vallen om). Oplossing: elke vaste truckroute krijgt een 6 m brede strook waar bomen, struiken, varens en rotsen worden weggehaald; trucks rijden kinematisch langs wegpunten en volgen de bestaande bospad- en straatroutes.
+- **Depot:** het eerste depot staat er vanaf het begin met één gratis truck; extra depots koop je (800, bouwtijd). Per depot 600 per extra truck, maximaal 3. Een kapotte truck wordt een wrak en de lading is kwijt.
+- **Geld:** kills geven geen geld meer (wel score); de killstreaks blijven. Geld komt uit voorraad (een rit levert 100 tot 400 op naar afstand), plus startgeld en golfbonus zoals voorheen.
+- **Geen** zwevende +150 en **geen** radiomelding bij aflevering; wel stofwolk en zacht motorgeluid.
+- **Zelf meedoen** (A2) nu niet. **Modellen** volgen in stap 4b (depot minimaal 40.000 driehoeken, 2K-texturen, kranen en schuur; truck met kraan en grijper die zichtbaar kisten in de bak legt) na een goedgekeurde Asset Design Specification (`modellen/voorraad/ASSET_DESIGN_SPEC.md`).
+- **Volgorde:** 4a speelbaar met blokken (logica, wegen, paneel), daarna 4b de echte modellen.

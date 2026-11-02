@@ -313,7 +313,7 @@ static func _point_in_build_region(point: Vector3, at: Vector3, yaw: float, regi
 	return absf(local.x) <= half.x and absf(local.y) <= half.y
 
 
-static func _entries_for_build_regions(regions: Array, at: Vector3, yaw: float, margin: float) -> Array:
+static func _entries_for_build_regions(regions: Array, at: Vector3, yaw: float, margin: float, rocks := false) -> Array:
 	var found := {}
 	for region: Dictionary in regions:
 		var half: Vector2 = region.size * 0.5 + Vector2.ONE * margin
@@ -328,7 +328,8 @@ static func _entries_for_build_regions(regions: Array, at: Vector3, yaw: float, 
 				for entry: Dictionary in _vegetation_cells.get(Vector2i(cx, cz), []):
 					if entry.get("cleared", false):
 						continue
-					if not CLEARABLE_KINDS.has(entry.get("kind", "")):
+					var kind: String = entry.get("kind", "")
+					if not CLEARABLE_KINDS.has(kind) and not (rocks and kind == "rock"):
 						continue
 					if _point_in_build_region(entry.world_position, at, yaw, region, margin):
 						found[entry.vegetation_id] = entry
@@ -339,9 +340,10 @@ static func count_clearable_in_regions(regions: Array, at: Vector3, yaw: float, 
 	return _entries_for_build_regions(regions, at, yaw, margin).size()
 
 
-static func clear_for_building(building_id: int, regions: Array, at: Vector3, yaw: float, margin := BUILD_CLEAR_MARGIN) -> int:
-	_building_clearings[building_id] = {"regions": regions.duplicate(true), "at": at, "yaw": yaw, "margin": margin}
-	return _clear_regions_now(regions, at, yaw, margin)
+## rocks = true: ook rotsen verdwijnen (de wegen van de voorraadtrucks, voorraad.gd).
+static func clear_for_building(building_id: int, regions: Array, at: Vector3, yaw: float, margin := BUILD_CLEAR_MARGIN, rocks := false) -> int:
+	_building_clearings[building_id] = {"regions": regions.duplicate(true), "at": at, "yaw": yaw, "margin": margin, "rocks": rocks}
+	return _clear_regions_now(regions, at, yaw, margin, rocks)
 
 
 static func release_building_clearance(building_id: int) -> void:
@@ -355,12 +357,12 @@ static func reapply_building_clearings() -> void:
 			_building_clearings.erase(building_id)
 			continue
 		var clearing: Dictionary = _building_clearings[building_id]
-		_clear_regions_now(clearing.regions, clearing.at, clearing.yaw, clearing.margin)
+		_clear_regions_now(clearing.regions, clearing.at, clearing.yaw, clearing.margin, bool(clearing.get("rocks", false)))
 
 
-static func _clear_regions_now(regions: Array, at: Vector3, yaw: float, margin: float) -> int:
+static func _clear_regions_now(regions: Array, at: Vector3, yaw: float, margin: float, rocks := false) -> int:
 	var removed := 0
-	for entry: Dictionary in _entries_for_build_regions(regions, at, yaw, margin):
+	for entry: Dictionary in _entries_for_build_regions(regions, at, yaw, margin, rocks):
 		if _remove_vegetation_entry(entry):
 			removed += 1
 	return removed

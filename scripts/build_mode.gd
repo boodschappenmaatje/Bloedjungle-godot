@@ -7,7 +7,7 @@ extends Control
 
 const CARD_H := 78.0
 const GAP := 8.0
-const ORDER := ["kazerne", "garage", "helipad", "airfield", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "muur"]
+const ORDER := ["depot", "kazerne", "garage", "helipad", "airfield", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "muur"]
 const ORDERS := {"follow": "Volgen", "hold": "Posten"}
 
 var _ui: Control
@@ -99,6 +99,14 @@ class Card:
 				_rc(r, 22, 20, 16, 4, Color("c9a227"))
 				_rc(r, 51, 4, 2, 34, Color("8a8a80"))
 				_rc(r, 53, 4, 9, 6, Color("3e6b2a"))
+			"depot":
+				_rc(r, 6, 10, 52, 30, Color("7a786c"))
+				_rc(r, 12, 14, 40, 12, Color("55603a"))
+				_rc(r, 10, 30, 3, 8, Color("6b6f68"))
+				_rc(r, 51, 30, 3, 8, Color("6b6f68"))
+				_rc(r, 10, 29, 44, 2, Color("6b6f68"))
+				_rc(r, 20, 32, 9, 7, Color("6e5a3c"))
+				_rc(r, 6, 38, 52, 2, Color("c9a227"))
 			"zandzak":
 				for p in [[14, 36], [32, 36], [50, 36], [23, 27], [41, 27], [32, 18]]:
 					_ell(r, p[0], p[1], 9, 5, Color("8a7a50"))

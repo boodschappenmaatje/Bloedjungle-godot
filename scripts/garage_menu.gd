@@ -74,7 +74,7 @@ func _tap(pos: Vector2) -> void:
 	var found: Variant = null
 	if hit != null:
 		for b in Game.buildings:
-			if b.kind != "garage" and b.kind != "helipad" and b.kind != "airfield":
+			if b.kind != "garage" and b.kind != "helipad" and b.kind != "airfield" and b.kind != "depot":
 				continue
 			var sz: Vector3 = Buildings.DEFS[b.kind].size
 			var rel: Vector3 = hit - b.at
@@ -107,7 +107,7 @@ func _refresh() -> void:
 	var b: Dictionary = _sel
 	var head := HBoxContainer.new()
 	_box.add_child(head)
-	var title := "GARAGE" if b.kind == "garage" else ("VLIEGVELD — VLIEGTUIGHANGAR" if b.kind == "airfield" else "HELIPLATFORM")
+	var title := "GARAGE" if b.kind == "garage" else ("VLIEGVELD — VLIEGTUIGHANGAR" if b.kind == "airfield" else ("VOORRAADDEPOT" if b.kind == "depot" else "HELIPLATFORM"))
 	head.add_child(UI.label(title, UI.display(1), 18, UI.INK))
 	var sp := Control.new()
 	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -171,6 +171,8 @@ func _refresh() -> void:
 		status.add_theme_color_override("font_color", UI.INK_DIM)
 		status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		_box.add_child(status)
+	elif b.kind == "depot":
+		_depot_panel(b, row)
 	elif b.kind == "helipad":
 		var apache := Button.new()
 		apache.add_to_group("hud_button")
@@ -204,7 +206,9 @@ func _refresh() -> void:
 			btn.pressed.connect(func(): Game.builds.buy_vehicle(b, k))
 			row.add_child(btn)
 	var tip := Label.new()
-	if b.kind == "garage":
+	if b.kind == "depot":
+		tip.text = "Trucks halen voorraad bij een stapel en brengen die hier. Kies waar ze heen rijden, of laat ze zelf kiezen. Een vernielde truck koop je opnieuw."
+	elif b.kind == "garage":
 		tip.text = "De wagen rijdt meteen de garage uit."
 	elif b.kind == "helipad":
 		tip.text = "De lift tilt de Apache uit de grond. Loop erheen en tik IN."
@@ -214,3 +218,59 @@ func _refresh() -> void:
 	tip.add_theme_font_size_override("font_size", 12)
 	tip.add_theme_color_override("font_color", UI.INK_DIM)
 	_box.add_child(tip)
+
+
+## Voorraaddepot: de trucks van dit depot, een nieuwe truck kopen en kiezen waar ze heen rijden (voorraad.gd).
+func _depot_panel(b: Dictionary, row: HFlowContainer) -> void:
+	var sup: Voorraad = Game.supply
+	if sup == null:
+		return
+	if Buildings.under_construction(b):
+		_box.add_child(_info("In aanbouw."))
+		return
+	var trucks := sup.trucks_of(b)
+	var n := 0
+	for t in trucks:
+		n += 1
+		_box.add_child(_info("Truck %d: %s" % [n, (t as VoorraadTruck).describe()]))
+	if trucks.is_empty():
+		_box.add_child(_info("Nog geen trucks."))
+	var buy := Button.new()
+	buy.add_to_group("hud_button")
+	buy.text = "Truck\n%d pt" % Voorraad.TRUCK_COST if sup.alive_trucks_of(b) < Voorraad.TRUCKS_MAX else "Truck\nmax %d" % Voorraad.TRUCKS_MAX
+	UI.style_button(buy, "buy")
+	buy.add_theme_font_size_override("font_size", 13)
+	buy.custom_minimum_size = Vector2(110, 44)
+	buy.disabled = not sup.can_buy_truck(b)
+	buy.pressed.connect(func(): sup.buy_truck(b))
+	row.add_child(buy)
+	var dest: int = int(b.get("dest", -1))
+	var auto := Button.new()
+	auto.add_to_group("hud_button")
+	auto.text = "Zelf kiezen\n" + ("✓" if dest < 0 else "")
+	UI.style_button(auto, "buy" if dest < 0 else "pause")
+	auto.add_theme_font_size_override("font_size", 13)
+	auto.custom_minimum_size = Vector2(110, 44)
+	auto.pressed.connect(func(): sup.set_dest(b, -1))
+	row.add_child(auto)
+	for i in Voorraad.SLOTS:
+		var s = sup.stapels[i]
+		if s == null:
+			continue
+		var sb := Button.new()
+		sb.add_to_group("hud_button")
+		sb.text = "Stapel %d · %s\n%s pt" % [i + 1, s.site.name, UI.nl(s.left)]
+		UI.style_button(sb, "buy" if dest == i else "pause")
+		sb.add_theme_font_size_override("font_size", 12)
+		sb.custom_minimum_size = Vector2(130, 44)
+		sb.pressed.connect(func(): sup.set_dest(b, i))
+		row.add_child(sb)
+
+
+func _info(text: String) -> Label:
+	var l := Label.new()
+	l.text = text
+	l.add_theme_font_override("font", UI.body(600, 0))
+	l.add_theme_font_size_override("font_size", 12)
+	l.add_theme_color_override("font_color", UI.INK_DIM)
+	return l

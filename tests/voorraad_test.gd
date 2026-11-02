@@ -1,5 +1,5 @@
 extends SceneTree
-## Generals stap 4a: voorraadstapels, depot en trucks (scripts/voorraad*.gd). Eerste depot met gratis truck, vier stapels met een vrije weg,
+## Generals stap 4a (en het gameplaycontract voor 4b): voorraadstapels, depot en trucks (scripts/voorraad*.gd). Eerste depot met gratis truck, vier stapels met een vrije weg,
 ## een truck die haalt en brengt (geld komt binnen), een wrak, een lege stapel die een nieuwe plek krijgt, kills zonder geld,
 ## poorten die voor trucks opengaan, het depotpaneel en een tweede depot bouwen.
 ## godot --headless --path . --script tests/voorraad_test.gd --fixed-fps 60
@@ -41,15 +41,15 @@ func _process(_d: float) -> bool:
 		g.prep_t = 1e9   # geen golf tijdens deze test
 	if frames == 40:
 		_check_start(g)
-	if frames > 40 and frames < 4000 and not cycle_done:
+	if frames > 40 and frames < 5000 and not cycle_done:
 		_watch_cycle(g)
-	if frames == 4000:
-		_check("een volledige rit is binnen 66 s gebeurd", cycle_done)
-	if frames == 4002:
+	if frames == 5000:
+		_check("een volledige rit is binnen 83 s gebeurd", cycle_done)
+	if frames == 5002:
 		_check_rest(g)
-	if frames == 4100:
+	if frames == 5100:
 		_check_gate(g)
-	if frames == 4200:
+	if frames == 5200:
 		_check_panel(g)
 		print("klaar, fouten: ", fails)
 		quit(1 if fails > 0 else 0)
@@ -64,6 +64,17 @@ func _check_start(g) -> void:
 		if s != null and s.left == 2500:
 			n += 1
 	_check("vier voorraadstapels van 2.500", n == 4)
+	var ok_afhaal := true
+	for s in sup.stapels:
+		# elke stapel heeft drie standen met elk een afhaalkist (4b); pickup_taken verbergt ze alle drie
+		if s._afhaal.size() != 3:
+			ok_afhaal = false
+		s.pickup_taken(true)
+		for a in s._afhaal:
+			if a.visible:
+				ok_afhaal = false
+		s.pickup_taken(false)
+	_check("elke stapel heeft drie afhaalkisten (vol, half, leeg) die verdwijnen als de truck ze pakt", ok_afhaal)
 	var depots: Array = sup.depots()
 	_check("eerste depot staat er vanaf het begin", depots.size() == 1)
 	if depots.is_empty():

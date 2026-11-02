@@ -2,22 +2,37 @@ class_name VoorraadStapel
 extends Node3D
 ## Een voorraadstapel op de kaart (Generals-plan stap 4, A1): kisten op een pallet die leegraakt als de trucks er voorraad uit halen.
 ## De stapel is in drie standen te zien (vol, half, bijna leeg) en heeft een markering met teller die je vooral in de tactische stand ziet.
-## 4a: eenvoudige blokken. Het echte model (4b) komt in drie versies in plaats van deze blokken.
+## 4b: het echte model (bron/voorraad/maak_stapel.py): één glb met de drie standen naast elkaar (`Stapel_vol`, `Stapel_half`, `Stapel_leeg`);
+## elke stand heeft een afhaalkist (`Afhaal`) op een klein pallet aan de voorkant (+Z): daar pakt de grijper van de truck hem. De stapel draait
+## zijn voorkant naar de kant waar de trucks vandaan komen.
 
 const SIZE := Vector3(5.0, 0.0, 4.0)   # voetafdruk (m) van de pallet
+const MODEL := "res://assets/voorraadstapel.glb"
+const STANDS := ["Stapel_vol", "Stapel_half", "Stapel_leeg"]
+const PICKUP_Z := 2.8                  # m voor het midden van de stapel: de afhaalkist
 
 var site: Dictionary = {}
 var slot := 0
 var left := 0
 var full := 0
-var _stand: Array[Node3D] = []   # per stand de kisten die erbij horen
+var _stand: Array[Node3D] = []   # per stand het model (Stapel_vol, Stapel_half, Stapel_leeg)
+var _afhaal: Array[Node3D] = []  # per stand de afhaalkist
 var _label: Label3D
 var _mark: MeshInstance3D
 var _shown := -1
 var _cam_check := 0.0
 
 
-func setup(site_: Dictionary, slot_: int, amount: int) -> void:
+## De afhaalkist-pivot van een stand. Blender maakt de namen uniek (Afhaal, Afhaal.001, Afhaal.002), Godot maakt daar Afhaal, Afhaal_001, Afhaal_002 van.
+static func _find_afhaal(stand: Node) -> Node3D:
+	for c in stand.get_children():
+		var nm := String(c.name)
+		if c is Node3D and (nm == "Afhaal" or (nm.begins_with("Afhaal_") and nm.substr(7).is_valid_int())):
+			return c as Node3D
+	return null
+
+
+func setup(site_: Dictionary, slot_: int, amount: int, face := Vector2.ZERO) -> void:
 	site = site_
 	slot = slot_
 	left = amount
@@ -25,31 +40,18 @@ func setup(site_: Dictionary, slot_: int, amount: int) -> void:
 	position = Vector3(site.pos.x, 0.0, site.pos.y)
 	name = "Stapel%d" % (slot + 1)
 	add_to_group("voorraadstapel")
-	var olive := Kit.flat(Color("55603a"), 0.85)
-	var dark := Kit.flat(Color("3a4128"), 0.9)
-	var wood := Kit.flat(Color("6e5a3c"), 0.95)
-	var gold := Kit.flat(Color("c9a227"), 0.7)
-	Kit.box(self, Vector3(0, 0.1, 0), Vector3(SIZE.x, 0.2, SIZE.z), wood)   # pallet
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 1000 + slot
-	# drie standen: 14 / 7 / 3 kisten; elke stand bevat alleen de kisten die erbij horen (stand 0 is de vollere, bevat ze allemaal)
-	for i in 3:
-		var holder := Node3D.new()
-		holder.name = "Stand%d" % i
-		add_child(holder)
-		_stand.append(holder)
-	var spots := []
-	for layer in 3:
-		for cx in 3:
-			for cz in 2:
-				spots.append(Vector3(-1.5 + cx * 1.5, 0.2 + layer * 0.78 + 0.35, -0.9 + cz * 1.8))
-	var counts := [14, 7, 3]
-	for i in 3:
-		for k in counts[i]:
-			var p: Vector3 = spots[k] + Vector3(rng.randf_range(-0.08, 0.08), 0.0, rng.randf_range(-0.08, 0.08))
-			Kit.box(_stand[i], p, Vector3(1.25, 0.72, 1.5), olive if k % 3 != 1 else dark, rng.randf_range(-0.12, 0.12))
-			if k % 4 == 0:
-				Kit.box(_stand[i], p + Vector3(0, 0.37, 0), Vector3(1.0, 0.04, 0.4), gold)   # gele band op het deksel
+	if face.length() > 0.01:
+		rotation.y = atan2(face.x, face.y)   # lokale +Z wijst naar de kant van de trucks
+	var m := VoorraadModellen.laad(MODEL, self)
+	for n in STANDS:
+		var st := m.find_child(n, true, false) as Node3D
+		if st == null:
+			continue
+		st.position.x = 0.0      # in de glb staan de standen naast elkaar; hier staat er één op het midden
+		_stand.append(st)
+		var ah := _find_afhaal(st)
+		if ah != null:
+			_afhaal.append(ah)
 	# markering: een gouden ruit boven de stapel, met de teller eronder
 	_mark = MeshInstance3D.new()
 	var qm := QuadMesh.new()
@@ -87,6 +89,12 @@ func take(amount: int) -> int:
 	return got
 
 
+## De truck heeft de afhaalkist gepakt (weg) of is weg (de kist ligt er weer).
+func pickup_taken(taken: bool) -> void:
+	for a in _afhaal:
+		a.visible = not taken
+
+
 func fraction() -> float:
 	return float(left) / maxf(1.0, float(full))
 
@@ -98,7 +106,7 @@ func refresh() -> void:
 		s = -1
 	if s != _shown:
 		_shown = s
-		for i in 3:
+		for i in _stand.size():
 			_stand[i].visible = (i == s)
 	_label.text = "STAPEL %d · %s" % [slot + 1, UI.nl(left)]
 

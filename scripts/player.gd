@@ -778,5 +778,6 @@ func respawn() -> void:
 	global_position = home
 	shield_t = RESPAWN_SHIELD
 	model.play("stil")
+	get_tree().call_group("hq", "open_door")
 	Game.banner.emit("JE BENT TERUG", "", 1.4)
 	Game.changed.emit()

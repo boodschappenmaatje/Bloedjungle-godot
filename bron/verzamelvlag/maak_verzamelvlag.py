@@ -447,4 +447,5 @@ def main():
             print("USDZ-export mislukt:", exc)
 
 
-main()
+if __name__ == "__main__":
+    main()

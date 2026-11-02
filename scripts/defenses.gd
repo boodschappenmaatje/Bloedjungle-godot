@@ -84,6 +84,8 @@ func refill() -> void:
 	for d in items:
 		if d.kind == "sentry":
 			d.ammo = sentry_ammo()
+	for g in get_tree().get_nodes_in_group("hq_gun"):
+		g.refill()   # dakgeweer van het hoofdkwartier (niveau 3)
 
 
 # ---------------------------------------------------------------- neerzetten

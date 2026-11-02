@@ -12,6 +12,7 @@ var _stance_down_ms := 0
 var _sprint_down_ms := 0
 var _air2: ActionBtn         # kiezer: de andere beloning die klaarstaat (tik om te wisselen)
 var _air: ActionBtn          # luchtsteun (killstreak): staat naast GEBRUIK en verschijnt alleen als er een beloning klaarstaat
+var _arty: ActionBtn         # artilleriecommando (hoofdkwartier niveau 3): boven de luchtsteun-knop, 90 s afkoeling
 var _state := ""
 
 ## Granaat richten: knop vasthouden en slepen zet de landingscirkel neer (2-12 m), loslaten gooit.
@@ -31,6 +32,13 @@ var _air_start := Vector2.ZERO
 var _air_out := false
 var _air_vis: NapalmAim
 var _place: NapalmPlace       # napalm staat neergezet en wacht op START
+
+## Artilleriecommando: knop vasthouden en slepen richt de ring (14-60 m), loslaten roept de granaten, tikken richt op de dichtstbijzijnde vijand.
+var arty_finger := -2
+var arty_drag := Vector2.ZERO
+var _arty_start := Vector2.ZERO
+var _arty_out := false
+var _arty_vis: ArtillerieAim
 
 ## A held support/equipment button promotes to a four-way selector. The pointer remains owned here,
 ## so opening a wheel can never send its release through to the weapon/fire controls.
@@ -69,6 +77,7 @@ func _ready() -> void:
 		Sfx.play("click")
 		Game.changed.emit())
 	_air = _make("lucht", "STEUN", func(): pass)  # de aanraking loopt via _input (tik of slepen)
+	_arty = _make("artillerie", "ARTILLERIE", func(): pass)  # de aanraking loopt via _input (tik of slepen)
 	_wheel_ui = Control.new()
 	_wheel_ui.name = "WheelLayer"
 	_wheel_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -88,6 +97,7 @@ func _cancel_gesture() -> void:
 	_wheel_sector = -1
 	cancel_aim()
 	cancel_air()
+	cancel_arty()
 	queue_redraw()
 
 
@@ -142,6 +152,7 @@ func _input(event: InputEvent) -> void:
 		return
 	_track_wheel_press(event)
 	_air_input(event)
+	_arty_input(event)
 	if Game.equipment_sel != "grenade" or not is_visible_in_tree():
 		if aim_finger != -2:
 			cancel_aim()
@@ -181,6 +192,89 @@ func _air_input(event: InputEvent) -> void:
 			release_air()
 	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION and air_finger == -1:
 		drag_air(event.position - _air_start)
+
+
+func _arty_input(event: InputEvent) -> void:
+	if not is_visible_in_tree() or not _arty.visible:
+		if arty_finger != -2:
+			cancel_arty()
+		return
+	if event is InputEventScreenTouch:
+		if event.pressed and arty_finger == -2 and _arty.get_global_rect().has_point(event.position):
+			_begin_arty(event.index, event.position)
+		elif not event.pressed and event.index == arty_finger:
+			release_arty()
+	elif event is InputEventScreenDrag and event.index == arty_finger:
+		drag_arty(event.position - _arty_start)
+	elif event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION and event.button_index == MOUSE_BUTTON_LEFT:
+		if event.pressed and arty_finger == -2 and _arty.get_global_rect().has_point(event.position):
+			_begin_arty(-1, event.position)
+		elif not event.pressed and arty_finger == -1:
+			release_arty()
+	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION and arty_finger == -1:
+		drag_arty(event.position - _arty_start)
+
+
+func _begin_arty(finger: int, at: Vector2) -> void:
+	var p = Game.player
+	if _arty.disabled or p == null or not is_instance_valid(p) or p.dead or p.driving:
+		return
+	arty_finger = finger
+	_arty_start = at
+	arty_drag = Vector2.ZERO
+	_arty_out = false
+	_update_arty()
+
+
+func drag_arty(d: Vector2) -> void:
+	arty_drag = d
+	if d.length() > AIM_DEAD:
+		_arty_out = true
+	_update_arty()
+
+
+func release_arty() -> void:
+	var cancel := _arty_out and arty_drag.length() <= AIM_DEAD   # terug naar de knop slepen breekt af
+	var p = Game.player
+	if not cancel and p != null and is_instance_valid(p) and not p.dead and Artillerie.ready_now():
+		Artillerie.call_in(p.get_parent(), arty_target())
+	cancel_arty()
+	if cancel:
+		Sfx.play("click")
+
+
+func cancel_arty() -> void:
+	arty_finger = -2
+	_arty_out = false
+	if _arty_vis != null and is_instance_valid(_arty_vis):
+		_arty_vis.queue_free()
+	_arty_vis = null
+
+
+## Doelpunt van het artilleriecommando: schermrichting = wereldrichting, net als bij granaat en napalm.
+func arty_target() -> Vector3:
+	var p = Game.player
+	var l := arty_drag.length()
+	if l <= AIM_DEAD:
+		return Artillerie.tap_target(p.global_position, Vector3(sin(p.face), 0.0, cos(p.face)))
+	var d := Vector3(arty_drag.x, 0.0, arty_drag.y).normalized()
+	return Artillerie.drag_target(p.global_position, d, (l - AIM_DEAD) / (AIM_FULL - AIM_DEAD))
+
+
+func _update_arty() -> void:
+	var p = Game.player
+	if arty_finger == -2 or p == null or not is_instance_valid(p):
+		cancel_arty()
+		return
+	if _arty_out and arty_drag.length() <= AIM_DEAD:
+		if _arty_vis != null:
+			_arty_vis.visible = false
+		return
+	if _arty_vis == null or not is_instance_valid(_arty_vis):
+		_arty_vis = ArtillerieAim.new()
+		p.get_parent().add_child(_arty_vis)
+	_arty_vis.visible = true
+	_arty_vis.show_at(arty_target())
 
 
 func _track_wheel_press(event: InputEvent) -> void:
@@ -407,7 +501,7 @@ func _draw() -> void:
 		return
 	# zolang een wiel open is, verdwijnen de knoppen eronder: geen door elkaar lopende pictogrammen
 	var open := _wheel_kind != ""
-	for b in [_reload, _sprint, _grenade, _roll, _air, _air2, _stance]:
+	for b in [_reload, _sprint, _grenade, _roll, _air, _air2, _stance, _arty]:
 		b.modulate.a = 0.0 if open else 1.0
 	_wheel_ui.queue_redraw()
 
@@ -630,8 +724,28 @@ func _layout() -> void:
 	_air2.position = Vector2(x1, y0 - g)   # rechts van de luchtsteun-knop
 	_stance.position = Vector2(x1, y0 - 2.0 * g)   # vrij van plaatsingsvakken en de rechter joystick
 	_air.position = Vector2(x0, y0 - g)   # boven GEBRUIK: links ervan staat de wapenstrip, erboven de uitrustingskiezer
-	for b in [_reload, _sprint, _grenade, _roll, _air, _air2, _stance]:
+	_arty.position = Vector2(x0, y0 - 2.0 * g)   # boven de luchtsteun-knop (alleen met hoofdkwartier niveau 3)
+	for b in [_reload, _sprint, _grenade, _roll, _air, _air2, _stance, _arty]:
 		b.size = ActionBtn.SIZE
+
+
+## Artillerieknop: alleen met hoofdkwartier niveau 3; tijdens de afkoeling grijs met een ring en de seconden erbij.
+func _update_arty_button(p) -> void:
+	_arty.visible = Game.hq_level >= 3 and not p.driving and not p.dead
+	if not _arty.visible:
+		return
+	var cd: float = Game.artillery_cd
+	var ready_ := cd <= 0.0
+	var key := "%s|%d" % [str(ready_), ceili(cd)]
+	if ready_:
+		_arty.queue_redraw()   # de ring pulseert zolang het commando klaarstaat
+	if key == _arty.get_meta("ak", ""):
+		return
+	_arty.set_meta("ak", key)
+	_arty.disabled = not ready_
+	_arty.bar = -1.0 if ready_ else 1.0 - cd / Artillerie.COOLDOWN
+	_arty.badge = "" if ready_ else "%ds" % ceili(cd)
+	_arty.queue_redraw()
 
 
 func _process(_delta: float) -> void:
@@ -644,6 +758,8 @@ func _process(_delta: float) -> void:
 			cancel_aim()
 		if air_finger != -2:
 			cancel_air()
+		if arty_finger != -2:
+			cancel_arty()
 		_wheel_kind = ""
 		_held_pointer = -2
 		_held_action = ""
@@ -665,6 +781,9 @@ func _process(_delta: float) -> void:
 		_update_aim()  # de speler loopt door tijdens het richten: de boog loopt mee
 	if air_finger != -2:
 		_update_air()
+	if arty_finger != -2:
+		_update_arty()
+	_update_arty_button(p)
 	var rid := _air_id()
 	_air.visible = rid != "" and not p.driving and not p.dead
 	var others: Array = Game.streak_others()

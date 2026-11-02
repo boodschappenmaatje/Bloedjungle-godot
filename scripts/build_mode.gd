@@ -454,14 +454,14 @@ func _fill_panel() -> void:
 	elif b.kind == "kazerne":
 		var lv: Dictionary = Buildings.LEVELS[b.lv]
 		var nx: Variant = Buildings.LEVELS[b.lv + 1] if b.lv + 1 < Buildings.LEVELS.size() else null
-		info.text = "Soldaten %d / %d%s · %ds per man · sterkte %d" % [Game.builds.soldiers_alive(), lv.max, " · in de rij %d / %d" % [b.queue, Buildings.RIJ_MAX] if b.queue else "", lv.time, ceili(b.hp)]
+		info.text = "Soldaten %d / %d%s · %ds per man · sterkte %d" % [Game.builds.soldiers_alive(), lv.max, " · in de rij %d / %d" % [b.queue, Buildings.RIJ_MAX] if b.queue else "", roundi(float(lv.time) * Buildings.time_factor()), ceili(b.hp)]
 		# de bouwrij: gevulde blokjes zijn soldaten in de rij, tik erop om de laatste te annuleren (punten terug)
 		var rij := HBoxContainer.new()
 		rij.add_theme_constant_override("separation", 4)
 		var usable: int = mini(Buildings.RIJ_MAX, b.queue + maxi(0, Game.builds.room(b)))
 		for i in Buildings.RIJ_MAX:
 			var slot := RijSlot.new()
-			slot.setup(i, b, i >= usable, float(lv.time))
+			slot.setup(i, b, i >= usable, float(lv.time) * Buildings.time_factor())
 			slot.pressed.connect(func(): Game.builds.cancel_recruit(b))
 			rij.add_child(slot)
 		vb.add_child(rij)
@@ -486,7 +486,7 @@ func _fill_panel() -> void:
 					if is_instance_valid(soldier) and not soldier.helper and not soldier.guard and soldier.truck == null:
 						soldier.set_command(Game.troop_mode, Vector3.ZERO)
 				Game.changed.emit())
-		tip = ("Niveau %d: %d soldaten, %ds training, sterker." % [b.lv + 1, nx.max, nx.time] if nx else "Volledig opgewaardeerd.") + (" Je soldaten bewaken de muur." if Game.troop_mode == "hold" else " Je soldaten lopen met je mee.")
+		tip = ("Niveau %d: %d soldaten, %ds training, sterker." % [b.lv + 1, nx.max, roundi(float(nx.time) * Buildings.time_factor())] if nx else "Volledig opgewaardeerd.") + (" Je soldaten bewaken de muur." if Game.troop_mode == "hold" else " Je soldaten lopen met je mee.")
 	elif b.kind == "garage":
 		var have: Array = []
 		for k in Buildings.VEHICLES:

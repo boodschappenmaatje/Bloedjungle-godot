@@ -172,14 +172,30 @@ def empty(name, parent, loc=(0, 0, 0), scale=1.0):
 
 # ------------------------------------------------------------------ textuur: camonet en schade
 def make_net_texture(res):
+    """Camouflagenet: dicht bladerpatroon (ongeveer 70% dekking) in lichte olijf-, bruin- en donkergroentinten,
+    met een zichtbaar touwnet van ruiten en een stevige zoom. Van boven moet het net als net te lezen zijn."""
     rng = np.random.default_rng(11)
-    lo = rng.random((res // 32, res // 32)).astype(np.float32)
-    big = np.asarray(Image.fromarray((lo * 255).astype(np.uint8)).resize((res, res), Image.BICUBIC), dtype=np.float32) / 255.0
-    fine = np.asarray(Image.fromarray((rng.random((res // 6, res // 6)) * 255).astype(np.uint8)).resize((res, res), Image.BICUBIC), dtype=np.float32) / 255.0
-    alpha = ((big * 0.7 + fine * 0.5) > 0.50).astype(np.float32)
-    cols = np.array([[0.13, 0.17, 0.07], [0.20, 0.23, 0.10], [0.25, 0.20, 0.11], [0.09, 0.11, 0.06]], dtype=np.float32)
-    idx = np.clip((big * 3.99).astype(np.int32), 0, 3)
+
+    def noise(n):
+        return np.asarray(Image.fromarray((rng.random((n, n)) * 255).astype(np.uint8)).resize((res, res), Image.BICUBIC), dtype=np.float32) / 255.0
+
+    big, mid, fine = noise(res // 24), noise(res // 9), noise(res // 3)
+    cover = big * 0.5 + mid * 0.32 + fine * 0.22
+    alpha = (cover > np.percentile(cover, 30)).astype(np.float32)
+    cols = np.array([[0.13, 0.19, 0.07], [0.22, 0.29, 0.10], [0.31, 0.34, 0.14], [0.27, 0.19, 0.10]], dtype=np.float32)   # donkergroen, olijf, lichte olijf, bruin
+    idx = np.clip(((big * 0.6 + mid * 0.4) * 3.99).astype(np.int32), 0, 3)
     rgb = cols[idx] * (0.8 + 0.4 * fine[..., None])
+    # touwnet: ruiten van res/20 px, 3 px dik, ook zichtbaar in de gaten
+    step = max(8, res // 20)
+    yy, xx = np.mgrid[0:res, 0:res]
+    rope = ((xx % step) < 3) | ((yy % step) < 3)
+    rgb = np.where(rope[..., None], np.array([0.12, 0.10, 0.06], dtype=np.float32), rgb)
+    alpha = np.where(rope, 1.0, alpha)
+    # zoom rondom
+    hem = max(10, res // 40)
+    edge = (xx < hem) | (yy < hem) | (xx >= res - hem) | (yy >= res - hem)
+    rgb = np.where(edge[..., None], np.array([0.16, 0.21, 0.08], dtype=np.float32), rgb)
+    alpha = np.where(edge, 1.0, alpha)
     img = np.dstack([np.clip(rgb, 0, 1), alpha])
     p = OUT / f"camonet_{res}.png"
     Image.fromarray((img * 255 + 0.5).astype(np.uint8), "RGBA").save(p)
@@ -758,8 +774,8 @@ def build_net(M, root):
     nx, ny = (16, 22) if D >= 1 else (4, 6)
     bm = bmesh.new()
     verts = []
-    x_in, x_out = -W / 2 - 0.02, -W / 2 - 2.1
-    y0, y1 = -1.9, 2.3
+    x_in, x_out = -W / 2 - 0.02, -W / 2 - 2.6
+    y0, y1 = -2.3, 2.5
     rng = random.Random(3)
     for j in range(ny + 1):
         row = []
@@ -778,12 +794,13 @@ def build_net(M, root):
                 lp[uv].uv = (jj / ny * 1.6, ii / nx)
     F.new_obj("Camonet", bm, M["net"], smooth=True, parent=root)
     g = G()
-    for (y, h) in ((-1.9, 1.9), (0.2, 1.8), (2.3, 1.85)):
+    for (y, h) in ((-2.3, 1.9), (0.1, 1.8), (2.5, 1.85)):
         cy(g, T(x_out, y, h / 2 + Z0 * 0.2), 0.045, h + 0.5, seg=SEGC)
         cy(g, T(x_out, y, 0.04), 0.14, 0.06, seg=SEGC)
         st(g, (x_out, y, h * 0.9), (x_out - 0.5, y + (0.35 if y < 0.5 else -0.35), 0.02), 0.01, seg=4)   # tuidraad
-    for y in (-1.9, -0.8, 0.2, 1.2, 2.3):
+    for y in (-2.3, -1.1, 0.1, 1.3, 2.5):
         st(g, (x_in, y, 2.52), (x_out, y, 1.86), 0.012, seg=4)
+    bx(g, T(x_in - 0.03, (y0 + y1) / 2, 2.57), (0.06, y1 - y0, 0.08))        # lat waaraan het net hangt
     commit("Netpalen", g, M["donker"], root, tile=1.0)
 
 
@@ -916,6 +933,85 @@ def build_extra(M, root):
     vine(gs, gl, 3, -0.4, 2.9, 1.2, UW / 2, 6)    # bovenverdieping west
     commit("Rankstam", gs, M["stam"], root, tile=1.0, bevel=False)
     commit("Ranken", gl, M["blad"], root, tile=1.0, smooth=False, bevel=False)
+
+
+# ------------------------------------------------------------------ niveau 1 voller: leidingen, kratten, lampen, airco
+def crate(g, gd, M4, sz):
+    bx(g, M4, sz)
+    for k in (-0.28, 0.28):          # stalen banden
+        bx(gd, M4 @ T(sz[0] * k, 0, 0), (0.03, sz[1] + 0.02, sz[2] + 0.02), bevel=False)
+
+
+def build_vol(M, root):
+    """Niveau 1 af: het lagere dak en de wanden zijn niet langer kaal. Leidingen, kratten, regenpijpen, luchtroosters, een kooilamp,
+    een betonnen stoep, op het dak een airco, ventilatiekappen en antennes. Altijd zichtbaar (geen niveau-onderdeel)."""
+    gc = G()
+    bx(gc, WM(0, 1.2, 0.63, 0.06), (2.4, 0.72, 0.12))                          # stoep voor de pantserdeur
+    bx(gc, WM(0, 1.2, 0.95, 0.03), (2.1, 0.5, 0.06))
+    commit("Vol_beton", gc, M["beton"], root, tile=2.0)
+    if D < 1:
+        return
+    gs, gd, ga = G(), G(), G()
+    uh = UW / 2
+    # lagere dak, voorkant: leidingstrang met beugels en twee aansluitkastjes
+    cy(gd, WM(0, 0, 0.09, ZL + 0.07, half=uh) @ RY(math.pi / 2), 0.045, 3.5, seg=SEGC)
+    for u in (-1.6, -0.8, 0.0, 0.8, 1.6):
+        bx(gd, WM(0, u, 0.09, ZL + 0.03, half=uh), (0.07, 0.11, 0.06))
+    for u in (-0.95, 0.95):
+        bx(gs, WM(0, u, 0.15, ZL + 0.15, half=uh), (0.22, 0.12, 0.2))
+        cy(gd, WM(0, u, 0.15, ZL + 0.3, half=uh), 0.02, 0.1, seg=SEGC)
+    # lagere dak, westkant: voorraadkratten met banden en een opgerold zeil
+    crate(gs, gd, WM(3, -1.0, 0.17, ZL + 0.14, half=uh) @ RZ(0.05), (0.55, 0.27, 0.28))
+    crate(gs, gd, WM(3, -0.35, 0.17, ZL + 0.14, half=uh) @ RZ(-0.04), (0.5, 0.27, 0.28))
+    crate(gs, gd, WM(3, -0.95, 0.17, ZL + 0.42, half=uh) @ RZ(-0.09), (0.48, 0.25, 0.26))
+    cy(gs, WM(3, 0.55, 0.16, ZL + 0.1, half=uh) @ RY(math.pi / 2), 0.1, 0.85, seg=SEGC + 2)
+    for u in (0.3, 0.8):
+        cy(gd, WM(3, u, 0.16, ZL + 0.1, half=uh) @ RY(math.pi / 2), 0.103, 0.03, seg=SEGC + 2)
+    # lagere dak, achterkant: regenpijp-trechters
+    for u in (-2.0, 1.95):
+        bx(gs, WM(2, u, 0.12, ZL + 0.06, half=uh), (0.22, 0.2, 0.12))
+    # regenpijpen langs de achterwand met beugels en een knie onderaan
+    for u in (-2.0, 1.95):
+        cy(gd, WM(2, u, 0.09, 1.7), 0.045, 2.5, seg=SEGC)
+        for z in (0.7, 1.35, 2.0, 2.6):
+            bx(gd, WM(2, u, 0.06, z), (0.1, 0.07, 0.05))
+        cy(gd, WM(2, u, 0.2, 0.46) @ RX(math.pi / 2), 0.045, 0.2, seg=SEGC)
+    # westwand: twee luchtroosters met schuine lamellen
+    for u in (-1.05, 1.05):
+        bx(gs, WM(3, u, 0.045, 1.35), (0.74, 0.06, 0.5))
+        for k in range(6):
+            bx(gd, WM(3, u, 0.085, 1.16 + k * 0.075) @ RX(math.radians(-35)), (0.64, 0.028, 0.045), bevel=False)
+    # voorwand: kooilamp links van de deur met lens en kabel
+    u, z = -0.55, 2.0
+    bx(gd, WM(0, u, 0.05, z), (0.1, 0.1, 0.18))
+    cy(gd, WM(0, u, 0.15, z) @ RX(math.pi / 2), 0.085, 0.14, seg=SEGC + 2)
+    for k in range(6):
+        a = k * math.pi / 3
+        Pn = Vector((0.095 * math.cos(a), 0.0, 0.095 * math.sin(a)))
+        st(gd, WM(0, u, 0.09, z) @ Pn, WM(0, u, 0.24, z) @ Pn, 0.006, seg=4)
+    cy(ga, WM(0, u, 0.245, z) @ RX(math.pi / 2), 0.07, 0.03, seg=SEGC + 2)
+    st(gd, WM(0, u, 0.04, z + 0.09).translation, WM(0, u, 0.04, z + 0.55).translation, 0.012, seg=4)
+    commit("Lamp_Wand", ga, M["amber"], root, tile=1.0)
+    # dak: airco-kast met ventilator, twee ventilatiekappen, twee zweepantennes, luikgreep
+    bx(gs, T(-0.55, 1.42, ROOF + 0.27), (0.7, 0.42, 0.5))
+    for sx in (-0.28, 0.28):
+        bx(gd, T(-0.55 + sx, 1.42, ROOF + 0.06), (0.08, 0.5, 0.12))
+    cy(gd, T(-0.7, 1.42, ROOF + 0.53), 0.16, 0.03, seg=SEGC + 4)
+    for k in range(4):
+        bx(gd, T(-0.7, 1.42, ROOF + 0.545) @ RZ(k * math.pi / 4), (0.3, 0.014, 0.012), bevel=False)
+    for k in range(5):
+        bx(gd, T(-0.2, 1.42, ROOF + 0.14 + k * 0.07), (0.015, 0.36, 0.03), bevel=False)
+    for (x, y, h) in ((-1.62, -0.78, 0.55), (-1.42, -1.02, 0.42)):
+        cy(gd, T(x, y, ROOF + h / 2), 0.06, h, seg=SEGC)
+        cy(gd, T(x, y, ROOF + h + 0.03), 0.11, 0.06, seg=SEGC, r2=0.02)
+        cy(gd, T(x, y, ROOF + 0.03), 0.09, 0.04, seg=SEGC)
+    for (x, y, h) in ((0.2, -1.72, 1.4), (-0.95, 1.78, 1.1)):
+        cy(gd, T(x, y, ROOF + 0.03), 0.05, 0.06, seg=SEGC)
+        st(gd, (x, y, ROOF + 0.05), (x + 0.02, y, ROOF + h), 0.007, seg=4)
+        cy(gd, T(x + 0.02, y, ROOF + h), 0.014, 0.05, seg=SEGC)
+    bx(gd, T(0.44, -1.0, ROOF + 0.13), (0.2, 0.03, 0.03))
+    commit("Vol_staal", gs, M["staal"], root, tile=1.2)
+    commit("Vol_donker", gd, M["donker"], root, tile=1.0)
 
 
 # ------------------------------------------------------------------ niveaus
@@ -1086,7 +1182,8 @@ def animate(radar, door, rig):
 
 # ------------------------------------------------------------------ bakken
 DETAIL_NAMES = {"Trap", "Trap_markering", "Radarvoet", "Radarhoorn", "Schotel", "Antennes", "Netpalen", "Niveau2_schotel",
-                "Niveau2_rek", "Niveau3_zakken", "Niveau3_zoeklicht", "Niveau3_luiken", "Paal", "Messing", "Binnen", "Ranken", "Rankstam"}
+                "Niveau2_rek", "Niveau3_zakken", "Niveau3_zoeklicht", "Niveau3_luiken", "Paal", "Messing", "Binnen", "Ranken", "Rankstam",
+                "Vol_staal", "Vol_donker"}
 
 
 def bake_all(root, M, bake_names):
@@ -1178,6 +1275,7 @@ def main():
     build_masts(M, root)
     build_net(M, root)
     build_extra(M, root)
+    build_vol(M, root)
     build_levels(M, root)
     build_damage(M, root)
     vlag = empty("Vlag", root, (-1.55, 1.55, ROOF + 0.03), scale=0.8)
@@ -1220,4 +1318,5 @@ def main():
             print("USDZ-export mislukt:", exc)
 
 
-main()
+if __name__ == "__main__":
+    main()

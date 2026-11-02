@@ -89,6 +89,7 @@ static func _bunker(root: Node3D) -> void:
 	Kit.sandbags(root, Vector3(-r, 0, r), Vector3(-r, 0, -r), 2, 22)
 	Kit.sandbags(root, Vector3(r, 0, -r), Vector3(r, 0, r), 2, 23)
 	Kit.sandbags(root, Vector3(-r, 0, r), Vector3(0.1, 0, r), 2, 24)
+	root.add_child(HqOmgeving.new())   # voorplein met belijning, lichtmasten, afzetblokken, vaten en kisten
 
 
 ## Houten wachttoren met platform, reling, ladder en golfplaten dak.

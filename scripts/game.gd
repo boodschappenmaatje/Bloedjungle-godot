@@ -30,6 +30,7 @@ var base_hp := Data.BASE_HP
 var rocket_seen := false
 var base_max := Data.BASE_HP
 var hq_level := 1   # niveau van het hoofdkwartier (1..3)
+var artillery_cd := 0.0   # s tot het artilleriecommando (HK niveau 3) weer klaar is; loopt in HqPerks
 var prep_t := 0.0
 var routes: Array = []  # vaste aanvalsroutes van de komende of lopende golf (AanvalRoutes)
 var bonus := 0  # bonus van de laatste overleefde golf, getoond in de wapenkamer
@@ -159,6 +160,7 @@ func reset() -> void:
 	base_hp = Data.BASE_HP
 	base_max = Data.BASE_HP
 	hq_level = 1
+	artillery_cd = 0.0
 	enemies.clear()
 	barrels.clear()
 	if is_inside_tree():

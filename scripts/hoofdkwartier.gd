@@ -28,6 +28,9 @@ func _ready() -> void:
 	_night = GameSettings.get_value("time") != "day"
 	_apply_level(1)
 	_apply_damage(1.0)
+	var perks := HqPerks.new()   # radar en bouwtijd (niveau 2), dakgeweer en artillerie (niveau 3)
+	perks.name = "Voordelen"
+	add_child(perks)
 	set_process(true)
 
 
@@ -36,6 +39,9 @@ func _load(path: String, range_begin: float, range_end: float) -> Node:
 	add_child(m)
 	for mi in m.find_children("*", "MeshInstance3D", true, false):
 		var g := mi as MeshInstance3D
+		if String(g.name).begins_with("Icosphere"):
+			g.visible = false   # losse bol zonder materiaal uit de Blender-export (zit toch binnen in het gebouw)
+			continue
 		g.visibility_range_begin = range_begin
 		g.visibility_range_end = range_end
 		g.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON

@@ -1,8 +1,10 @@
-import bpy, os
+import bpy, os, sys
 from mathutils import Vector
 root=os.path.abspath(os.path.join(os.path.dirname(__file__),'../..'))
-glb=os.path.join(root,'source_assets/enemy_assault/rig_test/enemy_assault_rigged_test.glb')
-out=os.path.join(root,'source_assets/enemy_assault/rig_test')
+args=sys.argv[sys.argv.index('--')+1:] if '--' in sys.argv else []
+glb=os.path.abspath(args[0]) if args else os.path.join(root,'source_assets/enemy_assault/rig_test/enemy_assault_rigged_test.glb')
+out=os.path.dirname(os.path.abspath(args[1])) if len(args)>1 else os.path.join(root,'source_assets/enemy_assault/rig_test')
+capture_name=os.path.basename(args[1]) if len(args)>1 else 'capture_aim_test.png'
 bpy.ops.wm.read_factory_settings(use_empty=True); bpy.ops.import_scene.gltf(filepath=glb)
 arm=next(o for o in bpy.context.scene.objects if o.type=='ARMATURE')
 mesh=next(o for o in bpy.context.scene.objects if o.type=='MESH')
@@ -15,4 +17,4 @@ poses={'aim_test':{'mixamorig:RightArm':(0.0,0.0,-0.35),'mixamorig:RightForeArm'
 for pose,rots in poses.items():
  for b in arm.pose.bones: b.rotation_mode='XYZ'; b.rotation_euler=(0,0,0)
  for n,r in rots.items(): arm.pose.bones[n].rotation_euler=r
- sc.render.filepath=os.path.join(out,'capture_'+pose+'.png'); bpy.ops.render.render(write_still=True)
+ sc.render.filepath=os.path.join(out,capture_name if len(poses)==1 else 'capture_'+pose+'.png'); bpy.ops.render.render(write_still=True)

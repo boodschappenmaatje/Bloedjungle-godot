@@ -1,9 +1,11 @@
 extends SceneTree
-const SCENE_PATH := "res://source_assets/enemy_assault/rig_test/enemy_assault_rigged_test.glb"
+var scene_path := "res://source_assets/enemy_assault/rig_test/enemy_assault_body_rigged_garand_test.glb"
 const LIB_PATH := "res://resources/animations/meshy_player_animation_library.res"
 func _initialize() -> void: call_deferred("_run")
 func _run() -> void:
-	var packed := load(SCENE_PATH) as PackedScene
+	var args := OS.get_cmdline_user_args()
+	if not args.is_empty(): scene_path = args[0]
+	var packed := load(scene_path) as PackedScene
 	var root := packed.instantiate()
 	get_root().add_child(root)
 	var skeleton := _find_skeleton(root)

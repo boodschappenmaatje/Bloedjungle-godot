@@ -14,6 +14,7 @@ const SCENE_PLAYER_PAD := "res://assets/soldaat_jungle_commando.glb"
 ## Experimental player-only Meshy/Mixamo rig from the isolated, already-reviewed lab.
 ## The file is byte-identical to the user-supplied remesh/rig export; NPCs never select it.
 const SCENE_MESHY_PLAYER_PATH := "res://assets/meshy_jungle_commando.glb"
+const SCENE_ASSAULT_RIG_TEST_PATH := "res://source_assets/enemy_assault/rig_test/enemy_assault_body_rigged_garand_test.glb"
 ## Mesh-free shared animation source extracted from the supplied same-rig library.
 const MESHY_ANIMATION_LIBRARY := preload("res://resources/animations/meshy_player_animation_library.res")
 const MESHY_API_LIBRARY := preload("res://resources/animations/meshy_player_animation_library_api.res")   # 62 clips uit de Meshy-API, zie bron/meshy_speler_animaties
@@ -79,6 +80,7 @@ var _recoil := 0.0
 var _gun_anim: AnimationPlayer   # echte GLB-clips van de bewegende wapendelen (slede, hendel, pomp), zie bron/wapens
 var v2 := false
 var meshy_player := false
+var assault_rig_test := false
 var look := ""
 var _uniform := Color.WHITE
 var _mesh_skeleton: Skeleton3D
@@ -109,16 +111,18 @@ static func _laad_hulp(pad: String) -> Resource:
 ## uniform = kleur van het uniform; look = sleutel uit LOOKS ("eigen" voor bondgenoten en wachten,
 ## "speler:<bovenlijf>" voor de speler, "vijand:<type>" voor vijanden).
 func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
-	meshy_player = GameSettings.get_value("soldaat") == "meshy" and look_.begins_with("speler:")
+	assault_rig_test = look_ == "vijand:assault" and ResourceLoader.exists(SCENE_ASSAULT_RIG_TEST_PATH)
+	meshy_player = assault_rig_test or (GameSettings.get_value("soldaat") == "meshy" and look_.begins_with("speler:"))
 	v2 = GameSettings.get_value("soldaat") != "v1"
-	look = look_ if LOOKS.has(look_) else "eigen"
+	look = look_ if LOOKS.has(look_) else ("vijand:assault" if assault_rig_test else "eigen")
 	_uniform = uniform
 	var model_scene: PackedScene
 	if meshy_player:
 		player_status = "Meshy gekozen, GLB bestaat niet in de app"
-		if ResourceLoader.exists(SCENE_MESHY_PLAYER_PATH):
+		var mesh_path := SCENE_ASSAULT_RIG_TEST_PATH if assault_rig_test else SCENE_MESHY_PLAYER_PATH
+		if ResourceLoader.exists(mesh_path):
 			player_status = "Meshy GLB gevonden, laden mislukt"
-			model_scene = ResourceLoader.load(SCENE_MESHY_PLAYER_PATH) as PackedScene
+			model_scene = ResourceLoader.load(mesh_path) as PackedScene
 		if model_scene == null:
 			# Zwaar OTA-stuk met het Meshy-model nog niet binnen (of import mislukt): val terug op het
 			# gewone spelermodel, zodat de speler nooit onzichtbaar is.
@@ -144,6 +148,11 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 	var model := model_scene.instantiate()
 	add_child(model)
 	anim = model.find_child("AnimationPlayer", true, false)
+	if assault_rig_test and anim == null:
+		anim = AnimationPlayer.new()
+		anim.name = "AnimationPlayer"
+		anim.root_node = NodePath("..")
+		model.add_child(anim)
 	if meshy_player:
 		_model = model
 		_setup_meshy_player(uniform, gun_kind)
@@ -286,7 +295,7 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 			return
 	# Duplicate the centrally extracted animation-only resource per player instance. The
 	# original GLB remains untouched and its mesh/skin are not duplicated into the library.
-	var old_lib := anim.get_animation_library("")
+	var old_lib: AnimationLibrary = anim.get_animation_library("") if anim.has_animation_library("") else null
 	var lib := MESHY_ANIMATION_LIBRARY.duplicate(true) as AnimationLibrary
 	if old_lib != null:
 		for old_name in old_lib.get_animation_list():

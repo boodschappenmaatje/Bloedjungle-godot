@@ -71,12 +71,19 @@ for sv in verts:
     source_weights.append([(idx_to_name[g.group],g.weight) for g in sv.groups if g.group in idx_to_name and g.weight>0.001])
 smooth_vertices=0
 rigid_islands=0
+weapon_hand_islands=0
+weapon_parts=[]
 for part in enemy_parts:
     verts_part=part.data.vertices
     center=Vector([sum(v.co[i] for v in verts_part)/len(verts_part) for i in range(3)])
     _co,center_idx,_dist=tree.find(proxy(type('V',(),{'co':center})()))
     center_weights=source_weights[center_idx]
 
+    # Preview separation candidate: collect the disconnected front rifle region as a removable part set.
+    if center.y < -0.22 and -0.25 < center.z < 0.16:
+        weapon_parts.append(part)
+        weapon_hand_islands += 1
+        continue
     if len(verts_part) < 1600:
         if center_weights:
             dominant=max(center_weights,key=lambda x:x[1])[0]
@@ -96,9 +103,12 @@ for part in enemy_parts:
         for qw,indices in enumerate(bins):
             if indices: groups_by_part[part][name].add(indices,qw/32.0,'REPLACE')
     smooth_vertices+=len(verts_part)
-# Join all original islands back into one draw surface; vertex groups with matching names merge.
+# Remove the candidate built-in rifle islands for a visual check; retain body islands and join them.
+for part in weapon_parts:
+    if part.name in bpy.data.objects: bpy.data.objects.remove(part,do_unlink=True)
+remaining_parts=[p for p in enemy_parts if p not in weapon_parts and p.name in bpy.data.objects]
 bpy.ops.object.select_all(action='DESELECT')
-for part in enemy_parts: part.select_set(True)
+for part in remaining_parts: part.select_set(True)
 bpy.context.view_layer.objects.active=enemy
 bpy.ops.object.join()
 enemy=bpy.context.view_layer.objects.active
@@ -115,6 +125,6 @@ bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); enemy.select
 os.makedirs(os.path.dirname(OUT),exist_ok=True)
 bpy.ops.export_scene.gltf(filepath=OUT,export_format='GLB',use_selection=True,export_apply=False,export_animations=False,export_skins=True,export_materials='EXPORT',export_image_format='AUTO')
 # Blender-side validation and machine-readable report.
-report={'source':SRC_ENEMY,'player_rig_source':SRC_PLAYER,'output':OUT,'bones':len(arm.data.bones),'bone_names':[b.name for b in arm.data.bones],'mesh_vertices':len(enemy.data.vertices),'mesh_triangles':sum(len(p.vertices)-2 for p in enemy.data.polygons),'vertex_groups':len(enemy.vertex_groups),'weight_vertices':sum(1 for v in enemy.data.vertices if v.groups),'textures':[{'name':im.name,'size':list(im.size)} for im in bpy.data.images if im.source=='FILE'],'enemy_bounds':[[float(x) for x in pair] for pair in bounds],'proxy_scales':[float(x) for x in scales],'source_islands':len(enemy_parts),'rigid_islands':rigid_islands,'smooth_weight_vertices':smooth_vertices}
+report={'source':SRC_ENEMY,'player_rig_source':SRC_PLAYER,'output':OUT,'bones':len(arm.data.bones),'bone_names':[b.name for b in arm.data.bones],'mesh_vertices':len(enemy.data.vertices),'mesh_triangles':sum(len(p.vertices)-2 for p in enemy.data.polygons),'vertex_groups':len(enemy.vertex_groups),'weight_vertices':sum(1 for v in enemy.data.vertices if v.groups),'textures':[{'name':im.name,'size':list(im.size)} for im in bpy.data.images if im.source=='FILE'],'enemy_bounds':[[float(x) for x in pair] for pair in bounds],'proxy_scales':[float(x) for x in scales],'source_islands':len(enemy_parts),'rigid_islands':rigid_islands,'smooth_weight_vertices':smooth_vertices,'weapon_islands_removed_preview':weapon_hand_islands}
 with open(os.path.splitext(OUT)[0]+'.json','w') as f: json.dump(report,f,indent=2)
 print('ASSAULT_RIG_REPORT='+json.dumps(report))

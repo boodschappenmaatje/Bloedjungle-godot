@@ -39,3 +39,11 @@ godot --headless --path . --script res://tools/enemy_assault/test_animation_clip
 ## Current gameplay handoff
 
 The rig test remains outside the gameplay scene. It is 164,784,068 bytes and has not been optimized for mobile. The current isolated test confirms clip tracks and bone movement only; weapon/muzzle alignment, enemy firing, hit/death visuals, AI behavior, and wave spawn are not yet integrated or validated.
+
+## Existing Garand hookup test
+
+A second test export removes 79 disconnected front-rifle islands (84,000 vertices) from the Meshy body so the existing Garand can be attached by the game's `WeaponModelAdapter`; the original high-quality source GLB remains untouched. Test body: `enemy_assault_body_rigged_garand_test.glb`, 158,514,924 bytes, SHA-256 `68a8df217eb6881a5c784db7a7843d75109d09c6dd753650cc850071955be4c4`.
+
+The canonical `assault` type now selects this test body when it exists. It uses the shared Meshy animation libraries, Garand adapter, both `SkeletonIK3D` hand chains, existing enemy AI and existing bullet firing path. `tests/assault_weapon_test.tscn` passed: both hand targets were within 6 mm and 3 mm respectively at `modification_processed`, and firing spawned one bullet through the existing path. `tests/ai_test.gd` also passed with assertions for the 28-bone Assault rig, Garand adapter, both IK chains and walk/aim/death clips.
+
+This is still a local test asset, not a release asset. The 158.5 MB GLB is unoptimized, the mesh has not had an in-engine human visual review with the attached Garand, and native iPhone performance is untested. It is intentionally not committed; mobile retopology/texture optimization and final visual review remain required before release.

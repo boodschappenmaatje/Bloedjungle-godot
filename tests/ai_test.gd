@@ -9,6 +9,7 @@ var a: Node
 var b: Node
 var c: Node
 var d: Node
+var assault_model: SoldierModel
 
 
 func _check(ok: bool, msg: String) -> void:
@@ -47,6 +48,12 @@ func _process(_dt: float) -> bool:
 		_check(zs.size() == 2, "schutters kiezen niet allebei de poorten")
 		# 2. dekking: een geraakte schutter loopt naar een plek achter het gebouw
 		a = _spawn("assault", Vector3(-4, 0, -16))
+		assault_model = a.get_node("Model") as SoldierModel
+		_check(assault_model.meshy_player, "Assault did not load the rigged Meshy body")
+		_check(assault_model._mesh_skeleton != null and assault_model._mesh_skeleton.get_bone_count() == 28, "Assault is not using the 28-bone rig")
+		_check(assault_model._mesh_weapon_adapter != null and assault_model._mesh_weapon_adapter.profile != null, "Assault did not attach the existing Garand adapter")
+		_check(assault_model._mesh_right_ik != null and assault_model._mesh_left_ik != null, "Assault Garand hand IK chains are missing")
+		_check(assault_model.anim.has_animation("Walking") and assault_model.anim.has_animation("Rifle_Aim_Turn_Right") and assault_model.anim.has_animation("dying_backwards"), "Assault walk, aim or death clips were not made available")
 		a.set("gate_z", 0.0)
 		a.set("role", "assault")
 		a.set("cover_cd", 0.0)
@@ -62,6 +69,17 @@ func _process(_dt: float) -> bool:
 		d.set("role", "flank")
 		d.set("gate_z", 0.0)
 	if frames == 12:
+		if assault_model != null and assault_model._mesh_skeleton != null and assault_model._mesh_weapon_adapter != null:
+			var skel: Skeleton3D = assault_model._mesh_skeleton
+			var right_idx := skel.find_bone("mixamorig_RightHand")
+			var left_idx := skel.find_bone("mixamorig_LeftHand")
+			if right_idx >= 0 and left_idx >= 0:
+				var right_hand := skel.to_global(skel.get_bone_global_pose(right_idx).origin)
+				var left_hand := skel.to_global(skel.get_bone_global_pose(left_idx).origin)
+				var right_error := right_hand.distance_to(assault_model._mesh_right_target.global_position)
+				var left_error := left_hand.distance_to(assault_model._mesh_weapon_adapter.left_hand_grip.global_position)
+				_check(right_error < 0.12, "Assault right hand misses Garand grip (%.3fm)" % right_error)
+				_check(left_error < 0.12, "Assault left hand misses Garand grip (%.3fm)" % left_error)
 		_check(str(a.get("mode")) == "cover", "geraakte schutter zoekt geen dekking (mode=%s)" % str(a.get("mode")))
 		_check(str(b.get("mode")) == "retreat", "zwaar gewonde schutter trekt zich niet terug (mode=%s)" % str(b.get("mode")))
 		_check(float(c.get("alert_t")) > 0.0, "de buurman wordt niet gewaarschuwd")

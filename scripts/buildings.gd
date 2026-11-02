@@ -7,7 +7,7 @@ extends Node3D
 const DEFS := {
 	"depot": {"name": "Voorraaddepot", "cost": 800, "size": Vector3(9.0, 3.6, 6.5), "max": 3, "hp": 900.0},   # Generals-stap 4: trucks leveren hier voorraad af (voorraad.gd)
 	"kazerne": {"name": "Kazerne", "cost": 1000, "size": Vector3(4.4, 2.2, 3.2), "max": 1, "hp": 600.0},
-	"garage": {"name": "Garage", "cost": 800, "size": Vector3(8.8, 7.3, 12.6), "max": 1, "hp": 900.0},   # Meshy-motorpool (bron/garage_meshy), maat B, poort 4,4 m hoog voor de truck
+	"garage": {"name": "Garage", "cost": 800, "size": Vector3(7.7, 7.3, 8.0), "max": 1, "hp": 900.0},   # Meshy-motorpool (bron/garage_meshy), compact (keuze A), poort 3,7 x 4,4 m voor de truck
 	"helipad": {"name": "Heliplatform", "cost": 1000, "size": Vector3(12.8, 2.0, 12.8), "max": 1, "hp": 1200.0},
 	"airfield": {"name": "Vliegveld", "cost": AirfieldHQ23.BUILD_COST, "size": AirfieldHQ23.FOOTPRINT, "max": 1, "hp": 3000.0},
 	"zandzak": {"name": "Zandzakken", "cost": 150, "size": Vector3(3.1, 0.95, 0.8), "max": 40, "hp": 380.0, "piece": true},
@@ -40,8 +40,8 @@ const TRAIN_COST := 250
 const RIJ_MAX := 5  # soldaten tegelijk in de bouwrij van een kazerne (Generals-plan stap 2)
 const DOOR := 2.5  # afstand van het midden tot het punt voor de deur
 const HQ_SPEEDUP := 0.75  # hoofdkwartier niveau 2: alle bouw- en opleidingstijden 25% korter (Generals-plan stap 3)
-const DOOR_U := -0.04   # midden van de garagepoort (assets/garage.glb, poort 4,2 x 2,3 m)
-const FRONT := 4.22     # afstand van het midden van de garage tot de voorkant van de poort
+const DOOR_U := -0.04   # midden van de garagepoort (assets/garage.glb, poort 3,7 x 4,4 m)
+const FRONT := 1.93     # afstand van het midden van de garage tot de voorkant van de poort
 const GARAGE_LOD := 45.0  # vanaf hier (m) toont de garage Romp_LOD1 in plaats van Romp
 const C := Data.COMPOUND
 
@@ -810,17 +810,17 @@ func _physics_process(delta: float) -> void:
 ## Gebouw van assets/garage.glb (Meshy-motorpool, bron/garage_meshy). Muren, luifels en spullen zijn losse kasten, zodat
 ## de poort open blijft; de poort is een kast die uitgaat als hij open is. Maten in meters, voorkant = +Z.
 const GARAGE_KASTEN := [
-	[Vector3(-3.45, 2.5, 0.0), Vector3(0.3, 5.0, 8.2)],      # linkerwand hal
-	[Vector3(2.95, 2.5, 0.0), Vector3(0.3, 5.0, 8.2)],       # rechterwand hal
-	[Vector3(-0.25, 2.5, -4.0), Vector3(6.7, 5.0, 0.3)],     # achterwand hal
-	[Vector3(-2.875, 2.5, 4.1), Vector3(1.45, 5.0, 0.4)],    # voorgevel links van de poort
-	[Vector3(2.58, 2.5, 4.1), Vector3(1.04, 5.0, 0.4)],      # voorgevel rechts van de poort
-	[Vector3(-0.04, 4.7, 4.1), Vector3(4.3, 0.6, 0.4)],      # latei boven de poort
-	[Vector3(-4.05, 1.0, 0.0), Vector3(0.9, 2.0, 6.8)],      # linkerluifel met kisten en banden
-	[Vector3(3.6, 1.0, 0.0), Vector3(1.0, 2.0, 6.8)],       # rechterluifel met werkbank en vaten
-	[Vector3(-0.25, 1.0, -5.25), Vector3(7.5, 2.0, 2.1)],    # achterluifel met kisten
-	[Vector3(-3.3, 0.5, 4.85), Vector3(1.8, 1.0, 1.1)],      # zandzakken, vaten en jerrycans links voor
-	[Vector3(2.85, 0.65, 4.8), Vector3(1.5, 1.3, 1.0)],      # kabelhaspel en kisten rechts voor
+	[Vector3(-3.04, 2.5, -0.50), Vector3(0.26, 5.0, 4.62)],   # linkerwand hal
+	[Vector3(2.60, 2.5, -0.50), Vector3(0.26, 5.0, 4.62)],    # rechterwand hal
+	[Vector3(-0.22, 2.5, -2.76), Vector3(5.90, 5.0, 0.26)],   # achterwand hal
+	[Vector3(-2.53, 2.5, 1.81), Vector3(1.28, 5.0, 0.40)],    # voorgevel links van de poort
+	[Vector3(2.27, 2.5, 1.81), Vector3(0.92, 5.0, 0.40)],     # voorgevel rechts van de poort
+	[Vector3(-0.04, 4.7, 1.81), Vector3(3.78, 0.6, 0.40)],    # latei boven de poort
+	[Vector3(-3.56, 1.0, -0.59), Vector3(0.79, 2.0, 3.69)],   # linkerluifel met kisten en banden
+	[Vector3(3.17, 1.0, -0.59), Vector3(0.88, 2.0, 3.69)],    # rechterluifel met werkbank en vaten
+	[Vector3(-0.22, 1.0, -3.44), Vector3(6.60, 2.0, 1.14)],   # achterluifel met kisten
+	[Vector3(-2.90, 0.5, 2.56), Vector3(1.58, 1.0, 1.10)],    # zandzakken, vaten en jerrycans links voor
+	[Vector3(2.51, 0.65, 2.51), Vector3(1.32, 1.3, 1.00)],    # kabelhaspel en kisten rechts voor
 ]
 
 
@@ -830,7 +830,7 @@ func _garage_node(body: StaticBody3D) -> void:
 	body.set_meta("model", model)
 	for pt in GARAGE_KASTEN:
 		body.add_child(_box_shape(pt[0], pt[1]))
-	var door := _box_shape(Vector3(DOOR_U, 2.2, 4.1), Vector3(4.2, 4.4, 0.35))
+	var door := _box_shape(Vector3(DOOR_U, 2.2, 1.81), Vector3(3.7, 4.4, 0.35))
 	door.name = "Poortkast"
 	body.add_child(door)
 	# dichtbij de volle romp, ver weg (tactische camera) de lichte LOD1 met dezelfde texturen
@@ -938,7 +938,8 @@ func _free_run(b: Dictionary) -> float:
 func _spawn_vehicle(b: Dictionary, kind: String) -> void:
 	var v: Node3D = (load(VEHICLES[kind].scene) as PackedScene).instantiate()
 	add_child(v)
-	var inside := _pt(b.at, b.yaw, DOOR_U, 0.5)
+	# De hal is maar 4,7 m diep: de lange truck (8,5 m) staat met zijn neus 1,2 m buiten de open poort, de jeep en tank staan in de hal
+	var inside := _pt(b.at, b.yaw, DOOR_U, FRONT + 1.2 - 4.25 if kind == "truck" else -0.4)
 	v.global_transform = Transform3D(Basis(Vector3.UP, b.yaw + PI), Vector3(inside.x, 0.0, inside.z))
 	var run := _free_run(b)
 	var goals: Array = []

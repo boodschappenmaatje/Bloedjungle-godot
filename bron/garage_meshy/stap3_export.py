@@ -47,10 +47,13 @@ def lamp(naam, soort, loc, energie, rot=(0, 0, 0), kleur=(1.0, 0.82, 0.55)):
     return ob
 neer = (math.radians(35), 0, 0)    # schuin naar voren omlaag, het voorplein op
 HX = M.get("hoogte_extra", 0.0)   # stap 1b: alles boven de poort zit zoveel hoger
-lamp("DeurLampL", "SPOT", (-1.75, -4.5, 3.6 + HX), 2.0, neer)
-lamp("DeurLampM", "SPOT", (0.0, -4.6, 4.15 + HX), 2.0, neer)
-lamp("DeurLampR", "SPOT", (1.75, -4.5, 3.55 + HX), 2.0, neer)
-lamp("BinnenLamp", "POINT", ((PX0 + PX1) / 2, PY + 3.0, 3.4 + 0.55 * HX), 1.2)
+XS = M.get("x_schaal", 1.0)
+YV = M["y_voor"] if "y_voor" in M else [0, 0, 1, 0]
+YF = YV[3]   # het plein voor de poort is alleen opgeschoven
+lamp("DeurLampL", "SPOT", (-1.75 * XS, -4.5 + YF, 3.6 + HX), 2.0, neer)
+lamp("DeurLampM", "SPOT", (0.0, -4.6 + YF, 4.15 + HX), 2.0, neer)
+lamp("DeurLampR", "SPOT", (1.75 * XS, -4.5 + YF, 3.55 + HX), 2.0, neer)
+lamp("BinnenLamp", "POINT", ((PX0 + PX1) / 2, (PY + M["bbox_max"][1]) / 2, 3.4 + 0.55 * HX), 1.2)
 
 # clips: deuren draaien naar buiten (L: -88°, R: +88° om Z)
 def zacht(t):

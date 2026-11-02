@@ -105,5 +105,22 @@ func _run() -> void:
 		_look(Vector3(-7.5, 8.5, 8.0), Vector3(-0.3, 2.6, 0.0), 45.0)
 		await _frames(4)
 		_shot("6_niveau%d_linksvoor" % lvl)
+	# dakgeweer met zandzaknest: bouw in beeld (1,5 s, 3,5 s, 6 s) en klaar
+	game.hq_level = 3
+	var gun: Node3D = load("res://scripts/hq_dakgeweer.gd").new()
+	hq.add_child(gun)
+	gun.start(true)
+	gun.set_process(false)
+	for tt in [1.5, 3.5, 6.0, 10.0]:
+		gun.build_t = tt
+		gun._apply_build(tt)
+		await _frames(3)
+		_look(Vector3(5.5, 10.5, 6.5), Vector3(1.0, 4.4, 0.2), 45.0)
+		await _frames(3)
+		_shot("7_dakgeweer_%02d" % int(tt * 10))
+	# uitgezoomd (LOD1 vanaf 45 m): niveau 3 van veraf
+	_look(Vector3(0.0, 40.0, 62.0), Vector3(0.0, 3.0, 0.0), 14.0)
+	await _frames(4)
+	_shot("8_veraf_lod1")
 	print("klaar")
 	quit(0)

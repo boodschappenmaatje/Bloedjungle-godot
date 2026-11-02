@@ -46,7 +46,20 @@ function applyWachtpost(){
 function applyHk(){
  if($('asset').value!=='hoofdkwartier'||!slots.v2)return;const niv=Number($('hk-niv').value),sch=Number($('hk-schade').value);
  slots.v2.root.traverse(o=>{if(o.name==='Niveau2')o.visible=niv>=2;if(o.name==='Niveau3')o.visible=niv>=3;if(o.name==='Schade1')o.visible=sch>=1;if(o.name==='Schade2')o.visible=sch>=2;});
+ hkFlag(niv);
  stats();dirty=true;
+}
+// vlag: een ster per niveau (Godot wisselt dezelfde albedo-texturen); niveau 1 is het doek uit de glb.
+const HK_FLAG_TEX={};
+function hkFlag(niv){
+ slots.v2.root.traverse(o=>{
+  if(!o.isMesh||o.name!=='Doek')return;const m=o.material;if(!m)return;
+  if(!m.userData.stars1)m.userData.stars1=m.map;
+  if(niv<2){if(m.map!==m.userData.stars1){m.map=m.userData.stars1;m.needsUpdate=true;dirty=true;}return;}
+  const url=`../../assets/hoofdkwartier_vlag_s${Math.min(niv,3)}_albedo_1024.jpg`;
+  if(!HK_FLAG_TEX[url]){const t=new THREE.TextureLoader().load(url,()=>{dirty=true;});t.colorSpace=THREE.SRGBColorSpace;t.flipY=false;t.wrapS=m.userData.stars1.wrapS;t.wrapT=m.userData.stars1.wrapT;t.anisotropy=m.userData.stars1.anisotropy;HK_FLAG_TEX[url]=t;}
+  m.map=HK_FLAG_TEX[url];m.needsUpdate=true;
+ });
 }
 // generator: heel model (clip Draaien: de ventilator) en het gebrande wrak staan in één glb; de keuzelijst toont beide of één van de twee.
 const GEN_NODES=['Generator','Wrak'];

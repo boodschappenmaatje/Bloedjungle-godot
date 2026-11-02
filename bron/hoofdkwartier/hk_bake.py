@@ -292,11 +292,32 @@ def cull_hidden(objs, res=1024, thr=0.06):
     sc.cycles.device = "CPU"
     sc.cycles.samples = 24
     sc.cycles.use_denoising = False
-    bpy.ops.object.bake(type="AO", margin=1, margin_type="EXTEND", use_clear=True)
-    px = np.array(img.pixels[:], dtype=np.float32).reshape(res, res, 4)[..., 0]
+    # Onderdelen die Godot per niveau aan/uit zet (Niveau2_*, Niveau3_*) mogen geen schaduw werpen op wat op elk niveau zichtbaar is:
+    # anders verdwijnen vlakken die alleen door de dikke wal van niveau 3 bedekt worden (de kniemuur!) ook voor niveau 1 en 2.
+    # Daarom twee snoeibakes: de vaste onderdelen beoordelen we met de niveau-onderdelen onzichtbaar voor stralen, de niveau-onderdelen
+    # zelf met alles zichtbaar (hun eigen onderlinge bedekking mag wel).
+    flags = ("visible_diffuse", "visible_glossy", "visible_transmission", "visible_shadow", "visible_volume_scatter")
+    toggled = [o for o in objs if o.name.startswith("Niveau")]
+    saved = [(o, {f: getattr(o, f) for f in flags}) for o in toggled]
+
+    def ao_pixels(hide_levels):
+        for o, vals in saved:
+            for f, v in vals.items():
+                setattr(o, f, False if hide_levels else v)
+        bpy.ops.object.bake(type="AO", margin=1, margin_type="EXTEND", use_clear=True)
+        return np.array(img.pixels[:], dtype=np.float32).reshape(res, res, 4)[..., 0]
+
+    px_fixed = ao_pixels(True) if toggled else None
+    px_all = ao_pixels(False)
+    for o, vals in saved:
+        for f, v in vals.items():
+            setattr(o, f, v)
+    if px_fixed is None:
+        px_fixed = px_all
     removed = 0
     total = 0
     for o in objs:
+        px = px_all if o.name.startswith("Niveau") else px_fixed
         bm = bmesh.new()
         bm.from_mesh(o.data)
         uvl = bm.loops.layers.uv["Atlas"]

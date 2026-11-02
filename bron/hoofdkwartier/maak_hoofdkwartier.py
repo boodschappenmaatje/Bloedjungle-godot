@@ -1021,7 +1021,8 @@ def sandbag(g, M4, sz=(0.5, 0.28, 0.17)):
 
 def build_levels(M, root):
     """Zandzakwal rond het lagere dak: hoort bij elk niveau (sluit de open dakrand). Niveau 2: radardeel (tweede schotel, antennerek,
-    pantserlijsten). Niveau 3: zoeklicht, luiken, ruimte voor het dakgeschut."""
+    pantserlijsten). Niveau 3: dikke wal (vijf lagen en een binnenrij), zoeklicht, luiken, ruimte voor het dakgeschut (het zandzaknest
+    om het geweer bouwt Godot zelf). De vlag krijgt een ster per niveau: zie doek_*_s2/_s3 bij de export."""
     n2 = empty("Niveau2", root)
     g = G()
     # antennerek met kast (dak, oosthoek achter)
@@ -1062,6 +1063,32 @@ def build_levels(M, root):
                 sandbag(g, m4, (span / n * 1.02, 0.30, 0.18))
     commit("Zandzakwal", g, M["zak"], root, tile=1.2, bevel=True, bw=0.045)
     n3 = empty("Niveau3", root)
+    # dikke wal (niveau 3): twee extra lagen op de buitenrij (samen vijf lagen) en een tweede, binnenste rij van drie lagen
+    g = G()
+    rng = random.Random(9)
+    for layer in (3, 4):
+        for side in range(4):
+            n = 11
+            span = W - 0.9
+            for i in range(n):
+                u = -span / 2 + (i + 0.5 + (0.5 if layer % 2 else 0.0)) * span / n
+                if abs(u) > span / 2:
+                    continue
+                m4 = WM(side, u + rng.uniform(-0.02, 0.02), -0.15, ZL + 0.11 + layer * 0.17, half=ring_h) @ RZ(rng.uniform(-0.05, 0.05))
+                sandbag(g, m4, (span / n * 1.02, 0.30, 0.18))
+    commit("Niveau3_wal_buiten", g, M["zak"], n3, tile=1.2, bevel=True, bw=0.045)
+    g = G()
+    for layer in range(3):
+        for side in range(4):
+            n = 9
+            span = UW - 0.4
+            for i in range(n):
+                u = -span / 2 + (i + 0.5 + (0.5 if layer % 2 else 0.0)) * span / n
+                if abs(u) > span / 2:
+                    continue
+                m4 = WM(side, u + rng.uniform(-0.02, 0.02), -0.40, ZL + 0.11 + layer * 0.17, half=ring_h) @ RZ(rng.uniform(-0.05, 0.05))
+                sandbag(g, m4, (span / n * 1.02, 0.30, 0.18))
+    commit("Niveau3_wal_binnen", g, M["zak"], n3, tile=1.2, bevel=True, bw=0.045)
     g = G()
     # zoeklicht op paal met steunen en kabel
     cy(g, T(1.5, -1.5, ROOF + 0.9), 0.045, 1.4, seg=SEGC)
@@ -1183,7 +1210,7 @@ def animate(radar, door, rig):
 
 # ------------------------------------------------------------------ bakken
 DETAIL_NAMES = {"Trap", "Trap_markering", "Radarvoet", "Radarhoorn", "Schotel", "Antennes", "Netpalen", "Niveau2_schotel",
-                "Niveau2_rek", "Zandzakwal", "Niveau3_zoeklicht", "Niveau3_luiken", "Paal", "Messing", "Binnen", "Ranken", "Rankstam",
+                "Niveau2_rek", "Zandzakwal", "Niveau3_wal_buiten", "Niveau3_wal_binnen", "Niveau3_zoeklicht", "Niveau3_luiken", "Paal", "Messing", "Binnen", "Ranken", "Rankstam",
                 "Vol_staal", "Vol_donker"}
 
 
@@ -1207,6 +1234,15 @@ def bake_all(root, M, bake_names):
             tri_total += sum(len(p.vertices) - 2 for p in me.polygons)
     print(f"[{LEVEL}] driehoeken na snoeien: {tri_total}")
     if os.environ.get("HK_STOP_AFTER_CULL"):
+        # controle: de kniemuur onder de ramen (grote verticale vlakken tussen z 2,8 en 3,7) moet in de Romp zitten
+        romp = bpy.data.objects.get("Romp")
+        if romp is not None:
+            n_wall = 0
+            for p in romp.data.polygons:
+                zs = [(romp.matrix_world @ romp.data.vertices[i].co).z for i in p.vertices]
+                if p.area > 0.4 and abs(p.normal.z) < 0.3 and min(zs) >= 2.8 and max(zs) <= 3.7:
+                    n_wall += 1
+            print(f"[cull] kniemuurvlakken in de Romp: {n_wall}")
         sys.exit(0)
     suffix = "" if LEVEL != "lod1" else "_lod1"
     groups = (("romp", [o for o in objs if o.name not in DETAIL_NAMES]), ("details", [o for o in objs if o.name in DETAIL_NAMES]))
@@ -1258,6 +1294,10 @@ def main():
         "schade": alpha_mat("HK_Schade", make_damage_texture(512 if D else 256)),
     }
     t_alb, t_nrm, t_orm = F.make_cloth_textures(1024 if D else 512)
+    if LEVEL != "hq":
+        # vlag: een ster per niveau; Godot wisselt de doektextuur bij niveau 2 (twee sterren) en 3 (drie sterren)
+        for n_stars in (2, 3):
+            F.make_cloth_textures(1024 if D else 512, stars=n_stars)
     M["doek"] = F.pbr("Vlagdoek_olijf_goud", t_alb, t_nrm, t_orm, normal_strength=1.0, double_sided=True)
     # de vlaghelper (paal, lamp) krijgt bakeable materialen: de paal gebruikt 'staal' en 'donker'
 
@@ -1310,6 +1350,11 @@ def main():
         export_materials="EXPORT", export_image_format="AUTO", export_lights=False, export_cameras=False,
     )
     print("geschreven:", glb)
+    res = 1024 if D else 512
+    for n_stars in (2, 3):   # vlag met twee en drie sterren voor niveau 2 en 3 (Godot wisselt de albedo-textuur)
+        dst = ROOT / "assets" / f"{stem}_vlag_s{n_stars}_albedo_{res}.jpg"
+        Image.open(OUT / f"doek_albedo_{res}_s{n_stars}.png").convert("RGB").save(dst, quality=90)
+        print("geschreven:", dst)
     if LEVEL == "game":
         usdz = OUT / "Hoofdkwartier.usdz"
         try:

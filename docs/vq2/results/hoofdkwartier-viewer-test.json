@@ -1,0 +1,23 @@
+{
+ "stats": {
+  "niveau1": {
+   "zandzakwal": true,
+   "dikkeWal": false,
+   "vlag": null
+  },
+  "niveau2": {
+   "zandzakwal": true,
+   "dikkeWal": false,
+   "vlag": "http://127.0.0.1:45585/assets/hoofdkwartier_vlag_s2_albedo_1024.jpg"
+  },
+  "niveau3": {
+   "zandzakwal": true,
+   "dikkeWal": true,
+   "vlag": "http://127.0.0.1:45585/assets/hoofdkwartier_vlag_s3_albedo_1024.jpg"
+  }
+ },
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "clips": {},
+ "errors": [],
+ "ok": true
+}

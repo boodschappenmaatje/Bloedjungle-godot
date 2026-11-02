@@ -9,6 +9,9 @@ const LOD_SWITCH := 45.0
 const MODEL := "res://assets/hoofdkwartier.glb"
 const MODEL_LOD := "res://assets/hoofdkwartier_lod1.glb"
 const MODEL_SCALE := 0.92   # 5,0 m model op het 4,6 m botsblok van de bunker
+## Vlag: een ster per niveau. Niveau 1 is het doek uit de glb, niveau 2 en 3 wisselen de albedo-textuur (gemaakt door de Blender-bron).
+const FLAG_ALBEDO := {2: "res://assets/hoofdkwartier_vlag_s2_albedo_1024.jpg", 3: "res://assets/hoofdkwartier_vlag_s3_albedo_1024.jpg"}
+const FLAG_ALBEDO_LOD := {2: "res://assets/hoofdkwartier_lod1_vlag_s2_albedo_512.jpg", 3: "res://assets/hoofdkwartier_lod1_vlag_s3_albedo_512.jpg"}
 
 var model: Node
 var model_lod: Node
@@ -18,6 +21,7 @@ var _t := 0.0
 var _night := false
 var _door_anim: AnimationPlayer
 var _levels_shown := -1
+var _flags: Array = []   # [{mat, tex1, lod}]: doekmateriaal per model met zijn oorspronkelijke textuur (een ster)
 
 
 func _ready() -> void:
@@ -50,6 +54,10 @@ func _load(path: String, range_begin: float, range_end: float) -> Node:
 			continue
 		var sm := mat as StandardMaterial3D
 		match sm.resource_name:
+			"Vlagdoek_olijf_goud":
+				var cloth := sm.duplicate() as StandardMaterial3D
+				g.material_override = cloth
+				_flags.append({"mat": cloth, "tex1": cloth.albedo_texture, "lod": path == MODEL_LOD})
 			"HK_Camonet":
 				var own := sm.duplicate() as StandardMaterial3D
 				own.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA_SCISSOR
@@ -119,6 +127,13 @@ func _process(delta: float) -> void:
 
 func _apply_level(lvl: int) -> void:
 	_levels_shown = lvl
+	for f in _flags:
+		var mat := f["mat"] as StandardMaterial3D
+		var files: Dictionary = FLAG_ALBEDO_LOD if f["lod"] else FLAG_ALBEDO
+		if lvl >= 2 and files.has(mini(lvl, 3)) and ResourceLoader.exists(files[mini(lvl, 3)]):
+			mat.albedo_texture = load(files[mini(lvl, 3)]) as Texture2D
+		else:
+			mat.albedo_texture = f["tex1"] as Texture2D
 	for m in [model, model_lod]:
 		if m == null:
 			continue

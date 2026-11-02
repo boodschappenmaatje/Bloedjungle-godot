@@ -14,6 +14,10 @@ const AMMO := 300
 const MOUNT_Y := 0.62         # hoogte van de wieg boven het dak
 const SPOT_LOCAL := Vector3(1.65, 5.17, 0.1)   # dakplek in modelruimte van het hoofdkwartier (vrij van schotel, luik en zoeklicht)
 const GUN_PAD := "res://assets/wapens.glb"
+const NEST_R := 0.66          # straal van het zandzaknest (hart van de zakken)
+const NEST_BAG := 0.6         # schaal van de zandzakken uit assets/props.glb (0,37 m lang)
+const NEST_COURSES := 3
+const NEST_OPEN := Vector2(60.0, 300.0)   # hoekbereik (graden, 0 = oost) waar het nest dicht is: west, noord en zuid; oost is de dakrand
 
 var ammo := AMMO
 var built := false
@@ -33,6 +37,7 @@ var _gun: Node3D
 var _weld: OmniLight3D
 var _spark_t := 0.0
 var _stage_done := {}
+var _nest: Array[Node3D] = []   # de lagen van het zandzaknest; vallen een voor een neer tijdens de bouw
 
 
 func _ready() -> void:
@@ -118,6 +123,44 @@ func _build_parts() -> void:
 	_gun = _load_gun()
 	if _gun != null:
 		_mount.add_child(_gun)
+	_build_nest()
+
+
+## Zandzaknest: een hoefijzer van drie lagen om het geweer, open naar de dakrand (oost) die de rug dekt. Echte zandzakken uit
+## assets/props.glb (Kit.prop_mesh), per laag een eigen knooppunt zodat de lagen tijdens de bouw een voor een neervallen.
+func _build_nest() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 42
+	var arc := deg_to_rad(NEST_OPEN.y - NEST_OPEN.x)
+	var n := int(arc * NEST_R / (0.62 * NEST_BAG * 0.92))
+	var bag_h := 0.2 * NEST_BAG * 1.15
+	for c in NEST_COURSES:
+		var layer := Node3D.new()
+		layer.name = "NestLaag%d" % (c + 1)
+		add_child(layer)
+		var xf: Array = [[], [], []]
+		for i in n:
+			var th := deg_to_rad(NEST_OPEN.x) + arc * (float(i) + 0.5 + (0.5 if c % 2 == 1 else 0.0)) / float(n)
+			if th > deg_to_rad(NEST_OPEN.y):
+				continue
+			var yaw := atan2(-cos(th), -sin(th)) + rng.randf_range(-0.1, 0.1) + (PI if rng.randf() < 0.5 else 0.0)
+			var pos := Vector3(cos(th) * NEST_R, 0.06 + bag_h * 0.5 + float(c) * bag_h * 0.9, sin(th) * NEST_R)
+			var b := Basis.from_euler(Vector3(0.0, yaw, 0.0)).scaled(Vector3(NEST_BAG, NEST_BAG * 1.15, NEST_BAG))
+			xf[rng.randi() % 3].append(Transform3D(b, pos))
+		for v in 3:
+			if not xf[v].is_empty():
+				Kit.scatter(layer, Kit.prop_mesh(Kit.BAGS[v]), _nest_material(Kit.prop_mesh(Kit.BAGS[v])), xf[v])
+		_nest.append(layer)
+
+
+## De props-zakken zijn geelbruin; in het zonlicht op het dak worden ze oranje. Iets grijzer, zodat ze bij de beige wal eronder passen.
+func _nest_material(mesh: Mesh) -> Material:
+	var base := mesh.surface_get_material(0) as StandardMaterial3D
+	if base == null:
+		return null
+	var m := base.duplicate() as StandardMaterial3D
+	m.albedo_color = Color(0.74, 0.72, 0.66)
+	return m
 
 
 ## De MG 42 uit assets/wapens.glb: de loop wijst naar -Z in het model, het draaipunt kijkt naar +Z, dus een halve slag.
@@ -153,9 +196,13 @@ func _stage(t: float, from: float, to: float) -> float:
 	return smoothstep(0.0, 1.0, clampf((t - from) / (to - from), 0.0, 1.0))
 
 
-## Opbouw in vijf fasen: plaat, poten, paal, schild en kist, geweer neerlaten (BUILD_TIME = 10 s).
+## Opbouw in fasen: zandzaknest (drie lagen vallen neer), plaat, poten, paal, schild en kist, geweer neerlaten (BUILD_TIME = 10 s).
 func _apply_build(t: float) -> void:
 	var k := t / BUILD_TIME
+	for c in _nest.size():
+		var sn := _stage(t, 0.4 + float(c), 1.4 + float(c))
+		_nest[c].visible = sn > 0.0
+		_nest[c].position.y = (1.0 - sn) * 0.6
 	var s1 := _stage(t, 0.0, 1.5)
 	_plate.scale = Vector3(s1, maxf(s1, 0.01), s1)
 	_plate.visible = s1 > 0.0
@@ -185,7 +232,7 @@ func _apply_build(t: float) -> void:
 		# laatste halve seconde: het geweer draait even heen en weer als test
 		var w := (t - BUILD_TIME * 0.96) / (BUILD_TIME * 0.04)
 		_mount.rotation.y = sin(w * TAU) * 0.5
-	for mark in [[1.5, "plaat"], [3.0, "poten"], [5.5, "paal"], [7.5, "schild"]]:
+	for mark in [[1.5, "plaat"], [3.4, "nest"], [3.0, "poten"], [5.5, "paal"], [7.5, "schild"]]:
 		if t >= mark[0] and not _stage_done.has(mark[1]):
 			_stage_done[mark[1]] = true
 			Sfx.play("thud", 0.8, global_position)

@@ -131,8 +131,9 @@ def plain(name, color, rough, metal=0.0, emission=None, alpha=None):
 
 
 # ------------------------------------------------------------------ doektextuur
-def make_cloth_textures(res):
-    """Olijfgroen canvas met gouden rand, gestikte zoom en een ster. Geeft paden naar albedo, normal en orm."""
+def make_cloth_textures(res, stars=1):
+    """Olijfgroen canvas met gouden rand, gestikte zoom en 1 tot 3 sterren (hoofdkwartier: een ster per niveau). Geeft paden naar albedo,
+    normal en orm; met stars > 1 krijgen de bestanden het achtervoegsel _s2 of _s3 (stars = 1 is het oorspronkelijke doek)."""
     W, H = res, int(res * 0.625)  # 2048x1280, 1024x640, 512x320
     cw = np.asarray(Image.open(TEX / "canvas/albedo.jpg").convert("RGB"), dtype=np.float32) / 255.0
     cn = np.asarray(Image.open(TEX / "canvas/normal.jpg").convert("RGB"), dtype=np.float32) / 255.0
@@ -160,15 +161,18 @@ def make_cloth_textures(res):
     d = np.minimum(dx, dy)
     band = (d < border).astype(np.float32)  # gouden zoom
     stitch = ((np.abs(d - inner) < 0.0035) & (((mx * 60).astype(int) % 2) == 0)).astype(np.float32)  # stippellijn
-    # ster in het midden (5 punten), straal 0.2 m
-    cx, cy, R, r = CLOTH_W * 0.5, CLOTH_H * 0.5, 0.20, 0.08
-    pts = []
-    for i in range(10):
-        a = -math.pi / 2 + i * math.pi / 5
-        rad = R if i % 2 == 0 else r
-        pts.append((cx + rad * math.cos(a), cy + rad * math.sin(a)))
+    # sterren in het midden (5 punten): een grote, twee of drie kleinere naast elkaar
+    R, r = {1: (0.20, 0.08), 2: (0.15, 0.06), 3: (0.13, 0.052)}[stars]
+    offsets = {1: (0.0,), 2: (-0.24, 0.24), 3: (-0.31, 0.0, 0.31)}[stars]
     star_img = Image.new("L", (W, H), 0)
-    ImageDraw.Draw(star_img).polygon([(px * ppm_x, py * ppm_y) for px, py in pts], fill=255)
+    for off in offsets:
+        cx, cy = CLOTH_W * 0.5 + off, CLOTH_H * 0.5
+        pts = []
+        for i in range(10):
+            a = -math.pi / 2 + i * math.pi / 5
+            rad = R if i % 2 == 0 else r
+            pts.append((cx + rad * math.cos(a), cy + rad * math.sin(a)))
+        ImageDraw.Draw(star_img).polygon([(px * ppm_x, py * ppm_y) for px, py in pts], fill=255)
     star = np.asarray(star_img, dtype=np.float32) / 255.0
     gold_mask = np.clip(band + star, 0, 1)[..., None]
 
@@ -198,7 +202,7 @@ def make_cloth_textures(res):
     o[..., 0] = 1.0
 
     def save(arr, name):
-        p = OUT / f"doek_{name}_{res}.png"
+        p = OUT / (f"doek_{name}_{res}.png" if stars == 1 else f"doek_{name}_{res}_s{stars}.png")
         Image.fromarray((np.clip(arr, 0, 1) * 255 + 0.5).astype(np.uint8)).save(p)
         return p
 

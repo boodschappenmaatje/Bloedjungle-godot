@@ -31,6 +31,8 @@ const CLIMB_T := 1.3        # s om het trapje op te klimmen
 
 var driven := false
 var goals: Array = []
+## Uit de garage: rechtdoor tot hij helemaal buiten de poort is. {"yaw": float, "from": Vector3, "dir": Vector3, "dist": float}; leeg = geen slot.
+var exit_lock: Dictionary = {}
 var goal_speed := 2.5   # m/s waarmee hij naar zijn doelpunten rijdt: stapvoets uit de garage, hard bij de versterking
 var _speed := 0.0
 var _steer := 0.0
@@ -595,6 +597,13 @@ func _drive(delta: float, live: bool) -> void:
 			goals.pop_front()
 		else:
 			want_steer = clampf(atan(2.0 * WHEELBASE * sin(alpha) / maxf(to.length(), 3.0)), -MAX_STEER, MAX_STEER)
+			if not exit_lock.is_empty():
+				# in de poort niet sturen: de hele truck blijft in lijn met de garage tot de achterkant buiten is
+				if (global_position - exit_lock.from).dot(exit_lock.dir) > float(exit_lock.dist):
+					exit_lock = {}
+				else:
+					rotation.y = float(exit_lock.yaw)
+					want_steer = 0.0
 			# de motor staat uit: hij rolt rustig de garage uit en komt recht tot stilstand
 			want_speed = clampf(to.length() * 0.5, 0.6, goal_speed)
 	elif driven and live and can_go and mv.length() > 0.15:

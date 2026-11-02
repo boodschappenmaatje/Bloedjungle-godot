@@ -15,6 +15,7 @@ De oude garage blijft als vergelijking in de viewer: `assets/vq2_baseline/garage
 
     CACHE=/tmp/garage_cache
     python3 stap1_laag.py    <bron.glb> $CACHE 6.5 36000   # schaal 6,5 = keuze B, voxel-remesh 3,5 cm, vereenvoudigen
+    python3 stap1b_hoogte.py $CACHE $CACHE2 1.8            # hogere poort (truck past): wand 1,8 m hoger; daarna stap 2 en 3 op $CACHE2
     python3 stap2_bakken.py  $CACHE 2048 8                # poort uitsnijden, deuren + binnenbak, UV, 2K bakken
     python3 stap3_export.py  $CACHE uit                   # scharnieren, lampen, LOD1, clips, uit/garage.blend + uit/garage.glb
     cp uit/garage.glb ../../assets/garage.glb
@@ -23,7 +24,7 @@ De oude garage blijft als vergelijking in de viewer: `assets/vq2_baseline/garage
 
 ## Wat er gebeurt
 
-1. **Op maat (keuze B, 2 nov 2026):** schaal 6,5 → terrein 8,8 × 12,6 m, nok 4,9 m (ventilatiekap 5,5 m), poort 4,2 × 2,3 m (net als de oude 3,9 × 2,5 m). Voorkant naar −Y in Blender (+Z in Godot), midden van het terrein in de oorsprong, onderkant op de grond.
+1. **Op maat (keuze B, 2 nov 2026):** schaal 6,5 → terrein 8,8 × 12,6 m, nok 4,9 m (ventilatiekap 5,5 m), poort 4,2 × 2,3 m. **Stap 1b (2 nov 2026, op Dennis' verzoek):** de legertruck is 3,9 m hoog, dus het model wordt in Z uitgerekt: wand tussen 1,0 m en de poortbovenkant 1,8 m hoger, alles erboven (latei, bord, dak, lampen) schuift 1,8 m omhoog. Poort nu 4,2 × 4,4 m, nok 6,7 m en ventilatiekap 7,3 m; alleen de twee uitlaatpijpen van de truck (5,7 m) steken nog door de latei. Voorkant naar −Y in Blender (+Z in Godot), midden van het terrein in de oorsprong, onderkant op de grond.
 2. **Gesloten schil:** voxel-remesh (3,5 cm) van het hele model, daarna vereenvoudigd tot ±35.500 driehoeken (zelfde aanpak als de Tiger-tank: decimeren van de losse Meshy-schilfers geeft scherven).
 3. **Poort:** elk vlak met een hoekpunt in de poortopening gaat weg (de onderste 10 cm blijft als drempel). Twee nieuwe deuren (`DeurL`, `DeurR`) op de plek van de oude deurplaat; ze worden gebakken van de bron, dus ze zien er hetzelfde uit. De achterkant krijgt dezelfde planken (gespiegeld).
 4. **Binnen:** `Binnen` is een donkere bak met de vlakken naar binnen (vloer, wanden, plafond onder het dak), alleen zichtbaar door de open poort.
@@ -43,7 +44,7 @@ De oude garage blijft als vergelijking in de viewer: `assets/vq2_baseline/garage
 
 | | oude garage | Meshy-bron | motorpool (spel) |
 | --- | ---: | ---: | ---: |
-| Driehoeken | 13.712 | 3.706.042 | 35.576 dichtbij (romp 35.516 + deuren + binnenbak), 5.000 LOD1 |
+| Driehoeken | 13.712 | 3.706.042 | 46.237 dichtbij (romp 46.189 + deuren + binnenbak), 5.647 LOD1 |
 | Meshes | 29 | 1 | 4 (+ LOD1) |
 | Materialen | 20 | 1 | 2 (`Garage` met texturen, `Garage_binnen` effen) |
 | Texturen | 2 × 512 | 3 × 2K | 3 × 2K (albedo, normal, ORM) |

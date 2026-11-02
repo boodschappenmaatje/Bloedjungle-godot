@@ -1,0 +1,83 @@
+{
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "assets": {
+  "voorraadtruck": {
+   "clips": {
+    "Laden": {
+     "duration": 4.5,
+     "moved": [
+      "Kolom",
+      "Grijper",
+      "Giek",
+      "Lading"
+     ]
+    },
+    "Lossen": {
+     "duration": 4.5,
+     "moved": [
+      "Giek",
+      "Grijper",
+      "Lading",
+      "Kolom"
+     ]
+    }
+   },
+   "nodes": {
+    "Wiel_FL": true,
+    "Wiel_RR": true,
+    "Kist_vast": true
+   },
+   "stats": "Voorraadtruck (spelversie): 16.603 driehoeken · 59 meshes · 6 materialen · 4 texturen · clips: Laden, Lossen. HQ-bron 52.938 driehoeken. Geen iPhone-FPS gemeten.",
+   "status": "Voorraadtruck · kraan en grijper (Intendance) · Voorraadtruck uit bron/voorraad: echte clips Laden en Lossen (kraan zwenkt, grijper pakt een kist en legt hem in de bak of op de grond), zes wielen los voor Godot, 2K-PBR (geen V1) · 360° draaien en zoomen actief."
+  },
+  "voorraaddepot": {
+   "clips": {
+    "Poort": {
+     "duration": 2,
+     "moved": [
+      "Poort",
+      "Poort_balk"
+     ]
+    },
+    "Kraan-lossen": {
+     "duration": 4.5,
+     "moved": [
+      "Brug",
+      "Loopkat",
+      "Haak",
+      "Kist_perron",
+      "Kist_opslag"
+     ]
+    }
+   },
+   "nodes": {
+    "Perron": true,
+    "Schuur": true,
+    "Lampen": true
+   },
+   "stats": "Voorraaddepot (spelversie): 33.278 driehoeken · 68 meshes · 5 materialen · 4 texturen · clips: Kraan-lossen, Poort. HQ-bron 141.644 driehoeken (live procedurele materialen, .blend). Geen iPhone-FPS gemeten.",
+   "status": "Voorraaddepot · schuur, rolpoort en portaalkraan (Intendance) · Voorraaddepot uit bron/voorraad: echte clips Poort (rolpoort open/dicht) en Kraan-lossen (portaalkraan pakt de kist van de laadplaat en zet hem op het opslagpallet), 2K-PBR, stencil en gevaarbanden (geen V1) · 360° draaien en zoomen actief."
+  },
+  "voorraadtruck_wrak": {
+   "clips": {},
+   "nodes": {
+    "Voorraadtruck_wrak": true
+   },
+   "stats": "Voorraadtruck (spelversie): 16.492 driehoeken · 52 meshes · 1 materialen · 3 texturen · clips: geen. HQ-bron 48.916 driehoeken. Geen iPhone-FPS gemeten.",
+   "status": "Voorraadtruck · wrak · Uitgebrand wrak van de voorraadtruck, scheef op platte banden met verkoolde kisten, 2K-PBR (geen V1) · 360° draaien en zoomen actief."
+  },
+  "voorraadstapel": {
+   "clips": {},
+   "nodes": {
+    "Stapel_vol": true,
+    "Stapel_half": true,
+    "Stapel_leeg": true,
+    "Afhaal": true
+   },
+   "stats": "Voorraadstapel (spelversie): 8.997 driehoeken · 34 meshes · 3 materialen · 5 texturen · clips: geen. HQ-bron 82.008 driehoeken voor de drie standen samen. Geen iPhone-FPS gemeten.",
+   "status": "Voorraadstapel · vol, half en leeg (Intendance) · Voorraadstapel in drie standen naast elkaar (vol links, half midden, leeg rechts); Godot laat er één tegelijk zien, de teller en de gouden ruit zijn Godot (geen V1) · 360° draaien en zoomen actief."
+  }
+ },
+ "errors": [],
+ "ok": true
+}

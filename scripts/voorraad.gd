@@ -15,7 +15,9 @@ const TRUCKS_MAX := 3          # per depot
 const TRIP_BASE := 100         # punten per rit, plus TRIP_PER_M per meter enkele reis
 const TRIP_PER_M := 0.5
 const ROAD_W := 6.0            # breedte (m) van de vrijgemaakte weg
-const STOP_BEFORE := 4.5       # de truck stopt zoveel meter voor de stapel
+const STOP_BEFORE := 9.44      # de truck stopt zoveel meter voor het midden van de stapel: zijn grijper (6,64 m voor de truck) staat dan op de afhaalkist (2,8 m voor de stapel)
+const DOCK_OFFSET := 4.39      # m voor de voorkant van het depot staat de truck bij het lossen: de grijper (5,64 m) zet de kist dan op de laadplaat (2 m in het depot)
+const PRE_DOCK := 9.0          # m voor het depot ligt een punt op de as, zodat de truck recht op het depot af komt
 const FIRE_RANGE := 13.0       # vijanden schieten op trucks binnen dit bereik
 const FIRE_TAKE := 0.5         # en doen zoveel van hun normale schade (er is geen echt richten op een truck)
 const START_SPOTS := [         # waar het eerste depot komt (het eerste dat vrij is), met de voorkant naar de dichtstbijzijnde poort
@@ -148,7 +150,7 @@ func reset() -> void:
 func _spawn_stapel(slot: int, site: Dictionary) -> void:
 	var s := VoorraadStapel.new()
 	add_child(s)
-	s.setup(site, slot, STACK)
+	s.setup(site, slot, STACK, _face_of(site))
 	stapels[slot] = s
 	_used[site.id] = true
 	_make_road(site)
@@ -219,8 +221,21 @@ func depots() -> Array:
 func dock_point(b: Dictionary) -> Vector2:
 	var sz: Vector3 = Buildings.DEFS["depot"].size
 	var front := Vector2(sin(float(b.yaw)), cos(float(b.yaw)))
-	var p := Vector2(b.at.x, b.at.z) + front * (sz.z * 0.5 + 2.0)
+	var p := Vector2(b.at.x, b.at.z) + front * (sz.z * 0.5 + DOCK_OFFSET)
 	return p
+
+
+## Een punt PRE_DOCK meter vóór het depot op de as van de voorkant: de truck rijdt van daar recht op het depot af.
+func pre_dock_point(b: Dictionary) -> Vector2:
+	var front := Vector2(sin(float(b.yaw)), cos(float(b.yaw)))
+	return dock_point(b) + front * PRE_DOCK
+
+
+## De richting (x, z) van een stapel naar de kant waar de truck vandaan komt: de voorkant van de stapel.
+func _face_of(site: Dictionary) -> Vector2:
+	var via: Vector2 = _pos[site.via]
+	var d: Vector2 = via - site.pos
+	return d.normalized() if d.length() > 0.1 else Vector2(0, 1)
 
 
 func trucks_of(b: Dictionary) -> Array:
@@ -292,7 +307,7 @@ func route(d: Dictionary, slot: int) -> Array:
 	var site: Dictionary = stapels[slot].site
 	var dock := dock_point(d)
 	var gate := "poort_n_in" if dock.distance_to(_pos["poort_n_in"]) <= dock.distance_to(_pos["poort_z_in"]) else "poort_z_in"
-	var out: Array = [dock]
+	var out: Array = [dock, pre_dock_point(d)]
 	for p in _polyline(gate, site):
 		if out[out.size() - 1].distance_to(p) > 0.3:
 			out.append(p)

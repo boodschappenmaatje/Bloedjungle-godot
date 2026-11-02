@@ -2,13 +2,22 @@ class_name VoorraadTruck
 extends StaticBody3D
 ## Een voorraadtruck (Generals-plan stap 4, A1): rijdt vanuit het depot over een vaste route met wegpunten naar een stapel, laadt daar met
 ## zijn kraan en grijper, rijdt terug en levert af. Hij kan kapot: dan blijft een wrak liggen en de lading is weg.
-## 4a: eenvoudige blokken en een eenvoudige kraan; het echte model met kraan, grijper en geanimeerd laden komt in 4b.
+## 4b: het echte model (bron/voorraad/maak_truck.py): kraan en grijper pakken een kist van de stapel (clip `Laden`) en zetten hem bij het depot
+## op de laadplaat (clip `Lossen`, daarna tilt de portaalkraan van het depot hem weg). Wrakmodel apart. Wielen draaien mee met de snelheid.
 
 enum S { WACHT, HEEN, LADEN, TERUG, LOSSEN, WRAK }
 const SPEED := 6.0        # m/s
 const TURN := 2.4         # rad/s
-const LOAD_T := 3.0       # s laden
-const UNLOAD_T := 2.2     # s lossen
+const MODEL := "res://assets/voorraadtruck.glb"
+const MODEL_LOD := "res://assets/voorraadtruck_lod1.glb"
+const WRECK_MODEL := "res://assets/voorraadtruck_wrak.glb"
+const LOD_SWITCH := 70.0   # m: daarachter het eenvoudige model
+const LOAD_T := 4.5       # s laden (lengte van de clip `Laden`)
+const UNLOAD_T := 4.5     # s lossen (lengte van de clip `Lossen`)
+const LOAD_TAKE := 0.5    # op dit deel van het laden zit de kist in de klauwen: dan gaat de voorraad van de stapel
+const UNLOAD_DROP := 0.7  # op dit deel van het lossen staat de kist op de laadplaat: dan komt het geld binnen en pakt de portaalkraan hem
+const REACH_UNLOAD := 5.64 # m voor de truck waar de grijper de kist neerzet (clip `Lossen`)
+const WHEEL_R := 0.55
 const HP_MAX := 400.0
 const WRECK_T := 90.0     # s dat het wrak blijft liggen
 const BULLET_TAKE := 0.5  # een kogel doet de helft van zijn schade aan het pantser
@@ -27,9 +36,11 @@ var _back: Array = []      # de route terug (omgekeerd van de heenweg)
 var _t := 0.0
 var _model: Node3D
 var _wreck: Node3D
-var _arm: Node3D
-var _grab: Node3D
-var _load: Node3D          # de lading in de bak
+var _anim: AnimationPlayer # de clips Laden en Lossen
+var _lading: Node3D        # de kisten in de bak (de clips schalen ze aan en uit)
+var _wheels: Array = []    # {node, base, sign}
+var _wheel_ang := 0.0
+var _dropped := false
 var _dust: CPUParticles3D
 var _snd: AudioStreamPlayer3D
 var _speed_now := 0.0
@@ -64,57 +75,45 @@ func _build_model() -> void:
 	_model = Node3D.new()
 	_model.name = "Model"
 	add_child(_model)
-	var olive := Kit.flat(Color("55603a"), 0.8, 0.1)
-	var dark := Kit.flat(Color("2b2f22"), 0.9)
-	var steel := Kit.flat(Color("6b6f68"), 0.6, 0.5)
-	var gold := Kit.flat(Color("c9a227"), 0.7)
-	var glass := Kit.flat(Color("1b2420"), 0.2, 0.3)
-	Kit.box(_model, Vector3(0, 0.75, -0.2), Vector3(2.3, 0.45, 5.8), dark)          # chassis
-	Kit.box(_model, Vector3(0, 1.75, 2.0), Vector3(2.3, 1.5, 1.9), olive)            # cabine
-	Kit.box(_model, Vector3(0, 2.0, 2.97), Vector3(2.0, 0.7, 0.05), glass)           # voorruit
-	Kit.box(_model, Vector3(0, 1.45, -1.2), Vector3(2.4, 0.3, 3.9), olive)          # laadbak
-	for sx in [-1.1, 1.1]:
-		Kit.box(_model, Vector3(sx, 1.95, -1.2), Vector3(0.08, 0.7, 3.9), olive)     # zijborden
-	Kit.box(_model, Vector3(0, 1.95, -3.15), Vector3(2.3, 0.7, 0.08), olive)         # achterbord
-	for z in [-2.4, -0.4, 2.0]:
-		for sx in [-1.2, 1.2]:
-			Kit.box(_model, Vector3(sx, 0.45, z), Vector3(0.35, 0.9, 0.9), dark)     # wielen
-	Kit.box(_model, Vector3(0, 0.95, 3.05), Vector3(2.3, 0.2, 0.15), gold)           # gele bumper
-	# de kraan staat achter de cabine, de grijper hangt aan de arm
-	Kit.box(_model, Vector3(0, 2.0, 0.55), Vector3(0.5, 1.0, 0.5), steel)
-	_arm = Node3D.new()
-	_arm.name = "Arm"
-	_arm.position = Vector3(0, 2.6, 0.55)
-	_model.add_child(_arm)
-	Kit.box(_arm, Vector3(0, 0, 1.6), Vector3(0.28, 0.28, 3.4), steel)
-	_grab = Node3D.new()
-	_grab.name = "Grijper"
-	_grab.position = Vector3(0, -0.3, 3.2)
-	_arm.add_child(_grab)
-	Kit.box(_grab, Vector3(0, -0.4, 0), Vector3(0.9, 0.12, 0.9), steel)
-	Kit.box(_grab, Vector3(-0.42, -0.65, 0), Vector3(0.08, 0.5, 0.9), steel)
-	Kit.box(_grab, Vector3(0.42, -0.65, 0), Vector3(0.08, 0.5, 0.9), steel)
-	# de lading: twee kisten in de bak
-	_load = Node3D.new()
-	_load.name = "Lading"
-	_model.add_child(_load)
-	Kit.box(_load, Vector3(-0.5, 2.05, -1.9), Vector3(1.1, 0.7, 1.3), Kit.flat(Color("6e5a3c"), 0.9))
-	Kit.box(_load, Vector3(0.55, 2.05, -1.5), Vector3(1.1, 0.7, 1.3), olive)
-	Kit.box(_load, Vector3(0.0, 2.75, -1.7), Vector3(1.1, 0.7, 1.3), Kit.flat(Color("3a4128"), 0.9))
-	_load.visible = false
-	_crane(0.0)
+	var m := VoorraadModellen.laad(MODEL, _model, 0.0, LOD_SWITCH)
+	VoorraadModellen.laad(MODEL_LOD, _model, LOD_SWITCH, 0.0)
+	_anim = m.find_child("AnimationPlayer", true, false)
+	_lading = m.find_child("Lading", true, false) as Node3D
+	for n in ["Wiel_FL", "Wiel_FR", "Wiel_ML", "Wiel_MR", "Wiel_RL", "Wiel_RR"]:
+		var w := m.find_child(n, true, false) as Node3D
+		if w != null:
+			# de linkerwielen staan 180 graden gedraaid (as naar binnen): hun voorwaartse draairichting is omgekeerd
+			_wheels.append({"node": w, "base": w.transform.basis, "sign": -1.0 if n.ends_with("L") else 1.0})
+	_set_lading(false)
 
 
 func _build_wreck() -> void:
 	_wreck = Node3D.new()
 	_wreck.name = "Wrak"
 	add_child(_wreck)
-	var burnt := Kit.flat(Color("1c1b18"), 0.95)
-	var rust := Kit.flat(Color("4a3322"), 0.95)
-	Kit.box(_wreck, Vector3(0, 0.6, 0), Vector3(2.3, 0.7, 5.6), burnt, 0.05)
-	Kit.box(_wreck, Vector3(0.2, 1.3, 2.0), Vector3(2.1, 1.1, 1.8), rust, -0.12)
-	Kit.box(_wreck, Vector3(-0.3, 1.1, -1.4), Vector3(2.0, 0.5, 3.0), burnt, 0.1)
+	VoorraadModellen.laad(WRECK_MODEL, _wreck)
 	_wreck.visible = false
+
+
+## De kisten in de bak aan of uit (buiten de clips om).
+func _set_lading(on: bool) -> void:
+	if _lading != null:
+		_lading.scale = Vector3.ONE if on else Vector3.ONE * 0.001
+
+
+func _play(clip: String) -> void:
+	if _anim != null and _anim.has_animation(clip):
+		_anim.stop()
+		_anim.play(clip)
+
+
+## De wielen draaien met de snelheid mee.
+func _spin_wheels(delta: float) -> void:
+	if _wheels.is_empty() or _speed_now < 0.05:
+		return
+	_wheel_ang = fmod(_wheel_ang + _speed_now * delta / WHEEL_R, TAU)
+	for w in _wheels:
+		(w.node as Node3D).transform.basis = (w.base as Basis) * Basis(Vector3.RIGHT, _wheel_ang * float(w.sign))
 
 
 func _build_dust() -> void:
@@ -170,12 +169,6 @@ func _set_state(s: int) -> void:
 		Game.changed.emit()
 
 
-## Kraan: f = 0 in rust (arm omhoog), 1 = grijper bij de kist. Een eenvoudige stand zonder echte clip.
-func _crane(f: float) -> void:
-	_arm.rotation.x = lerpf(-0.35, 0.55, f)
-	_grab.position.y = lerpf(-0.3, -1.1, f)
-
-
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(sup):
 		return
@@ -196,6 +189,7 @@ func _physics_process(delta: float) -> void:
 			_t += delta
 			if _t > WRECK_T:
 				queue_free()
+	_spin_wheels(delta)
 	var moving := _speed_now > 0.5 and (state == S.HEEN or state == S.TERUG)
 	_dust.emitting = moving
 	if moving and not _snd.playing:
@@ -252,41 +246,65 @@ func _drive(delta: float) -> bool:
 
 func _load_step(delta: float) -> void:
 	_speed_now = 0.0
-	if _t == 0.0 and not sup.has_stock(slot, site_id):
-		_go_home(0)   # de stapel is intussen leeg: met lege handen terug, daar kiest hij een andere
-		return
+	if _t == 0.0:
+		if not sup.has_stock(slot, site_id):
+			_go_home(0)   # de stapel is intussen leeg: met lege handen terug, daar kiest hij een andere
+			return
+		_play("Laden")
 	_t += delta
 	var f := _t / LOAD_T
-	_crane(sin(clampf(f, 0.0, 1.0) * PI))
-	if f >= 0.5 and cargo == 0:
+	if f >= LOAD_TAKE and cargo == 0:
 		cargo = sup.take(slot, site_id, sup.trip_value(depot, slot))
-		_load.visible = cargo > 0
+		var st = sup.stapels[slot] if slot >= 0 and slot < sup.stapels.size() else null
+		if st != null and is_instance_valid(st):
+			st.pickup_taken(true)
 	if f >= 1.0:
-		_crane(0.0)
 		_go_home(cargo)
 
 
 func _go_home(amount: int) -> void:
 	sup.claim(slot, -1)
 	cargo = amount
-	_load.visible = cargo > 0
+	_set_lading(cargo > 0)
+	if cargo <= 0 and _anim != null:
+		_anim.stop()
+	var st = sup.stapels[slot] if slot >= 0 and slot < sup.stapels.size() else null
+	if st != null and is_instance_valid(st):
+		st.pickup_taken(false)
 	path = _back.duplicate()
 	_set_state(S.TERUG)
 
 
 func _unload_step(delta: float) -> void:
 	_speed_now = 0.0
+	if _t == 0.0:
+		_dropped = false
+		if cargo > 0:
+			_play("Lossen")
 	_t += delta
+	_align_to_dock(delta)
+	if cargo <= 0:
+		if _t > 0.6:
+			_set_state(S.WACHT)
+		return
 	var f := _t / UNLOAD_T
-	if cargo > 0:
-		_crane(sin(clampf(f, 0.0, 1.0) * PI))
-	if f >= 0.5 and _load.visible:
-		_load.visible = false
-		sup.deliver(cargo, global_position)
+	if f >= UNLOAD_DROP and not _dropped:
+		_dropped = true
+		sup.deliver(cargo, to_global(Vector3(0, 0, REACH_UNLOAD)))
 		cargo = 0
+		var dm = depot.node.get_meta("depot_model", null) if depot.has("node") and is_instance_valid(depot.node) else null
+		if dm != null:
+			dm.play_unload()
 	if f >= 1.0:
-		_crane(0.0)
 		_set_state(S.WACHT)
+
+
+## Bij het lossen schuift de truck zachtjes precies op zijn plek voor het depot (de grijper zet de kist op de laadplaat).
+func _align_to_dock(delta: float) -> void:
+	var at: Vector2 = sup.dock_point(depot)
+	global_position = global_position.move_toward(Vector3(at.x, 0.0, at.y), 1.5 * delta)
+	var want := float(depot.yaw) + PI
+	rotation.y += clampf(angle_difference(rotation.y, want), -1.2 * delta, 1.2 * delta)
 
 
 ## Alleen een rijdende truck laat een poort opengaan; een truck die wacht of laadt houdt hem niet open.
@@ -315,6 +333,8 @@ func _destroy() -> void:
 		sup.claim(slot, -1)
 	cargo = 0
 	path.clear()
+	if _anim != null:
+		_anim.stop()
 	_model.visible = false
 	_wreck.visible = true
 	_dust.emitting = false

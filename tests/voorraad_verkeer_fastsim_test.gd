@@ -48,7 +48,7 @@ func _run(g) -> void:
 	if g.supply == null or not is_instance_valid(g.supply):
 		_check("Game.supply ontbreekt voor fastsim", false)
 		return
-	var sup: Voorraad = g.supply
+	var sup = g.supply
 	var depots := sup.depots()
 	_check("startdepot bestaat", depots.size() > 0)
 	if depots.is_empty():
@@ -76,23 +76,23 @@ func _run(g) -> void:
 	var delivered := sup.trips
 	for tick in range(SIM_SECONDS * HZ):
 		for item in trucks:
-			var t := item as VoorraadTruck
-			if is_instance_valid(t) and t.state != VoorraadTruck.S.WRAK:
+			var t := item
+			if is_instance_valid(t) and t.state != 5:
 				t._physics_process(DT)
 		if tick % 3 != 0:
 			continue
 		var moving := 0
 		for item in trucks:
-			var truck := item as VoorraadTruck
-			if truck.state != VoorraadTruck.S.WACHT and truck.state != VoorraadTruck.S.WRAK:
+			var truck := item
+			if truck.state != 0 and truck.state != 5:
 				moving += 1
 		if moving > 1:
 			simultaneous += 1
 		for i in trucks.size():
 			for j in range(i + 1, trucks.size()):
-				var a := trucks[i] as VoorraadTruck
-				var b := trucks[j] as VoorraadTruck
-				if a.state == VoorraadTruck.S.WRAK or b.state == VoorraadTruck.S.WRAK:
+				var a := trucks[i]
+				var b := trucks[j]
+				if a.state == 5 or b.state == 5:
 					continue
 				var av := Vector2(a.global_position.x, a.global_position.z)
 				var bv := Vector2(b.global_position.x, b.global_position.z)

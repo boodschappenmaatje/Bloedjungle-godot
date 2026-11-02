@@ -9,7 +9,7 @@ Status: rigged test GLB exported and imported by Godot; this is **not yet animat
 - Rig source: `assets/meshy_jungle_commando.glb`
 - Output: `source_assets/enemy_assault/rig_test/enemy_assault_rigged_test.glb`
 - Output size: 164,784,064 bytes (HQ texture maps retained)
-- Output SHA-256: `68b90e994afc3127f397ac035822f9117b17012ccb77f1bb772cf183e9b3f2da`
+- Output SHA-256: `00a722d5940974c3bbc408ce9dd2e443e7f8b9b5a2ee9bdbd0969989d69fcb8e`
 
 ## Build and static checks
 
@@ -18,14 +18,14 @@ Status: rigged test GLB exported and imported by Godot; this is **not yet animat
 - One enemy mesh, 28 named Mixamo bones, 28 vertex groups; all mesh vertices have skin weights.
 - Vertex weights were copied from the existing skinned player mesh by nearest spatial proxy sample, normalized and quantized in 1/32 increments. The script never exports player geometry.
 - Enemy body was foot-aligned to the Mixamo armature (source body centered at Z=0; body offset +0.952 m).
-- Godot 4.6.3 headless resource check passed: one Skeleton3D, one MeshInstance3D with Skin, 28 bones.
+- Godot 4.6.3 headless resource check passed: one Skeleton3D, one MeshInstance3D with Skin, 28 bones. The skeleton node is named `target_character/Skeleton3D`, matching the existing animation track paths.
 - Blender warned that Draco compression is unavailable and that multiple shader image nodes reference texture slots. Export succeeded; Draco compression was not required.
 
 ## Visual pose review
 
 Captures are Blender Workbench renders: `capture_neutral.png` and `capture_aim_test.png`. They use the actual exported GLB. The aim image uses manually rotated arm bones, not a named production animation clip.
 
-The original static appearance is recognizable, but the synthetic arm pose shows stretched artifacts around the rifle/forearm. The rifle and other equipment are part of the single source mesh and nearest-surface weight transfer does not yet provide acceptable deformation for those pieces. This output is a rigging test, **not validated for walk, aim, or death clips**. Those source clips have not been attached or played in this phase. Do not integrate this GLB into gameplay yet.
+The original static appearance is recognizable, but the synthetic arm pose shows stretched artifacts around the rifle/forearm. The rifle and other equipment are part of the single source mesh and nearest-surface weight transfer does not yet provide acceptable deformation for those pieces. This output is a rigging test, **not validated for walk, aim, or death clips**. Godot test `tools/enemy_assault/test_animation_clips.gd` loaded the existing library and played `Walking`, `Rifle_Aim_Turn_Right`, and `dying_backwards`. Each clip has 26 tracks, all resolved after correcting the exported node name; each changed the skeleton pose. This confirms track compatibility and playback, but does not certify visual deformation over the full clips. The synthetic Blender arm pose still shows stretched artifacts around the rifle/forearm. Do not integrate this GLB into gameplay yet.
 
 ## Reproduction
 
@@ -33,4 +33,5 @@ The original static appearance is recognizable, but the synthetic arm pose shows
 blender -b --python tools/enemy_assault/rig_enemy_assault.py
 godot --headless --path . --script res://tools/enemy_assault/validate_rig.gd
 blender -b --python tools/enemy_assault/capture_rig_poses.py
+godot --headless --path . --script res://tools/enemy_assault/test_animation_clips.gd
 ```

@@ -32,7 +32,7 @@ for ob in list(bpy.context.scene.objects):
     if ob is not enemy and ob is not player_mesh:
         bpy.data.objects.remove(ob,do_unlink=True)
 player_mesh.hide_viewport=True; player_mesh.hide_render=True
-arm=bpy.data.objects.new('Assault_Mixamo28',arm_data); bpy.context.collection.objects.link(arm)
+arm=bpy.data.objects.new('target_character',arm_data); bpy.context.collection.objects.link(arm)
 # Build a KD tree from the player skin, with coordinates remapped to the enemy dimensions.
 # The source skeleton spans Z=0..1.70m. Enemy feet/head span approximately -0.95..0.95m.
 verts=player_mesh.data.vertices

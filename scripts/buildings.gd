@@ -55,6 +55,7 @@ func _ready() -> void:
 	add_child(radio)
 	add_to_group("buildings")
 	add_child(GarageMenu.new())
+	add_child(HqMenu.new())   # tik op het hoofdkwartier = upgradepaneel
 
 
 ## Tijdsfactor van het hoofdkwartier: 1.0 op niveau 1, 0,75 vanaf niveau 2 (bouwen en soldaten opleiden).

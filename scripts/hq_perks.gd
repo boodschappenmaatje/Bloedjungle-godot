@@ -5,6 +5,12 @@ extends Node
 ##            een nieuwe groep meldt zich met een waarschuwing; bouw- en opleidingstijden zijn 25% korter (Buildings.time_factor).
 ##  Niveau 3: automatisch dakgeweer (HqRoofGun, in 10 s zichtbaar gebouwd) en het artilleriecommando (Artillerie, 90 s afkoeling).
 
+## Wat de volgende upgrade geeft, per huidig niveau (wapenkamer en tikmenu op het hoofdkwartier).
+const UPGRADE_TEXT := {
+	1: "Niveau 2 (1.500 punten): radar met stippen en waarschuwing tot 85 m, bouwen en opleiden 25% sneller, +400 sterkte.",
+	2: "Niveau 3 (2.500 punten): automatisch dakgeweer (je ziet het in 10 s gebouwd worden), artilleriecommando met 5 granaten en 90 s afkoeling, +500 sterkte.",
+	3: "Volledig opgewaardeerd: radar, 25% sneller bouwen, dakgeweer en artillerie (knop boven de luchtsteun-knop).",
+}
 const RADAR_RANGE := 85.0       # m rond het hoofdkwartier (wereldnulpunt)
 const ALERT_PAUSE := 14.0       # s tussen twee radarwaarschuwingen
 const ALERT_SCAN := 0.3         # s tussen twee scans

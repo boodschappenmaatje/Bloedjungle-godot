@@ -767,6 +767,11 @@ func _bag_card(title: String, desc: String, kind: String) -> void:
 
 func _base_cards() -> void:
 	var d: Defenses = Game.defs
+	# Het hoofdkwartier staat bovenaan: dit was te ver naar beneden verstopt (2 november 2026). Tikken op het hoofdkwartier zelf kan ook (hq_menu.gd).
+	var hq: int = Game.hq_level
+	var hq_cost: int = Game.hq_upgrade_cost()
+	_plain_card("Hoofdkwartier upgraden", "Niveau %d van 3. %s" % [hq, HqPerks.UPGRADE_TEXT[clampi(hq, 1, 3)]], "Niveau %d" % hq, hq, 3, "Max" if hq >= 3 else "Upgrade · %s" % UI.nl(hq_cost), hq < 3 and Game.points >= hq_cost, func():
+		Game.upgrade_hq())
 	_bag_card("Loopgraaf graven", "Je zakt tot je borst weg: vijanden missen ruim de helft van hun schoten.", "trench")
 	_bag_card("Zandzakmuur", "Lage dekking. Vijandelijke kogels stoppen erop, jij schiet eroverheen.", "bags")
 	var mg := d.towers_with_mg()
@@ -802,18 +807,6 @@ func _base_cards() -> void:
 	_plain_card("Poorten versterken", "Dikker staal: +40%% stevigheid voor beide poorten (nu %d). Tip: houd bij een beschadigde poort de knop ingedrukt." % roundi(Game.gates.max_hp()), "", gl, 5, "Max" if gl >= 5 else "Versterk · %s" % UI.nl(350 * (gl + 1)), gl < 5 and Game.points >= 350 * (gl + 1), func():
 		if Game.buy(350 * (gl + 1)):
 			Game.gates.upgrade())
-	var hq: int = Game.hq_level
-	var hq_cost: int = [0, 1500, 2500][clampi(hq, 1, 2)]
-	var hq_text := {
-		1: "Niveau 2 (1.500 punten): radar met stippen en waarschuwing tot 85 m, bouwen en opleiden 25% sneller, +400 sterkte.",
-		2: "Niveau 3 (2.500 punten): automatisch dakgeweer (je ziet het in 10 s gebouwd worden), artilleriecommando met 5 granaten en 90 s afkoeling, +500 sterkte.",
-		3: "Volledig opgewaardeerd: radar, 25% sneller bouwen, dakgeweer en artillerie (knop boven de luchtsteun-knop).",
-	}
-	_plain_card("Hoofdkwartier upgraden", "Niveau %d van 3. %s" % [hq, hq_text[clampi(hq, 1, 3)]], "Niveau %d" % hq, hq, 3, "Max" if hq >= 3 else "Upgrade · %s" % UI.nl(hq_cost), hq < 3 and Game.points >= hq_cost, func():
-		if hq < 3 and Game.buy(hq_cost):
-			Game.hq_level += 1
-			Game.base_max += 400.0 if Game.hq_level == 2 else 500.0
-			Game.base_hp = Game.base_max)
 	_tiered("Beton versterken", "+300 maximale structuur en direct hersteld.", "fort", 5, 400, "Versterk", func():
 		Game.base_max += 300.0
 		Game.base_hp = Game.base_max)

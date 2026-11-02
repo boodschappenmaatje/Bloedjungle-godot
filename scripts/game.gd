@@ -336,6 +336,24 @@ func buy(cost: int) -> bool:
 	return true
 
 
+## Wat de volgende upgrade van het hoofdkwartier kost (0 = het staat al op niveau 3).
+func hq_upgrade_cost() -> int:
+	return 0 if hq_level >= 3 else [0, 1500, 2500][clampi(hq_level, 1, 2)]
+
+
+## Koopt de volgende upgrade van het hoofdkwartier (wapenkamer en tikmenu op het hoofdkwartier gebruiken dit).
+## Niveau 2: +400 sterkte, niveau 3: +500; de structuur is daarna weer vol. false = te weinig punten of al niveau 3.
+func upgrade_hq() -> bool:
+	var cost := hq_upgrade_cost()
+	if cost <= 0 or not buy(cost):
+		return false
+	hq_level += 1
+	base_max += 400.0 if hq_level == 2 else 500.0
+	base_hp = base_max
+	changed.emit()
+	return true
+
+
 func loadout_full() -> bool:
 	return loadout.size() >= LOADOUT_MAX
 

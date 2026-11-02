@@ -81,13 +81,21 @@ Uitgevoerd in de cloudsandbox met Godot 4.6.3 (headless; beelden met xvfb + open
 
 * `tests/voorraad_modellen_test.gd` (bijgewerkt voor het nieuwe model): **fouten=0**. Namen, clips (lengte, kanalen, onderdelen bewegen echt), driehoeksbudgetten, materialen, LOD1, wrak.
 * `tests/voorraad_test.gd` (contract, rit, lading, wrak, stoppunten): **fouten=0** met de echte modellen.
-* `tests/voorraad_baan_test.gd` (nieuw, vloeiend rijden: bogen, kromming-snelheid, wielhoek, drie-puntskeer): zie §8.
+* `tests/voorraad_baan_test.gd` (nieuw, vloeiend rijden: bogen, kromming-snelheid, wielhoek, drie-puntskeer): **groen** (zie §8).
 * `tools/blender-vq2-viewer/test-voorraad.mjs`: **ok**; de vier modellen laden uit de echte GLB, de clips spelen en de onderdelen (Kolom, Giek, GiekUit, Grijper, Klauw_LV, Lading) bewegen; zie `docs/vq2/results/voorraad-viewer-test.json`.
 * Regressie: zie §8.
 
 ## 8. Regressie
 
-REGRESSIE_PLAATSHOUDER
+90 bestaande tests (alle tests uit de lijst van stap 4b plus `voorraad_baan_test`, `voorraad_modellen_test`, `garage_meshy_test`, `garage_hoogte_test`, `garage_truck_uit_test`), uitgevoerd na het samenvoegen met main (v181) en na de versie-ophoging naar v182, Godot 4.6.3 headless:
+
+* **82 groen** (`fouten=0`/exit 0).
+* **`magazijn_dak_test`** gaf in de batch één fout (`fouten=1`) en bij herhaling `fouten=0`: een tijdsgevoelige test, geen vaste fout.
+* **Rood, maar identiek op een schone `origin/main` (2e18f65, v181)**, dus niet van deze wijziging: `besturing_test`, `wiel_richten_test` (3 fouten), `grass_3d_test` (palm- en rotsposities), `soldaat_markering_test` (de speler heeft nog een ring) en `animatie_test` (loopt na 400 s tegen de tijdgrens).
+* **`kwaliteit_regel_test`** (resolutieregel) faalt ook op main (bij stap 4b op 4e2bc0a geverifieerd); `meshy_player_gameplay_video` is een video-opname, geen test, en eindigt met exit 1 zonder GPU.
+* Ook zonder fouten: `voorraad_baan_test` (nieuw), `voorraad_modellen_test`, `voorraad_test`, `garage_*`, `hoofdkwartier_test`, `hq_*`, `bouw_test`, `truck_test`, `poort_test` en de overige bouw-, stad-, schade- en explosietests.
+
+De volledige uitvoer per test staat niet in de repo (sandbox-logs); de tests zijn opnieuw uit te voeren met `godot --headless --path . --script tests/<naam>.gd --fixed-fps 60`.
 
 ## 9. Voor/na met de echte spelcamera
 

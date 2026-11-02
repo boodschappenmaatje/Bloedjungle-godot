@@ -60,7 +60,7 @@ func setup(kind: String, wave: int) -> void:
 	speed_mul = randf_range(0.9, 1.12)
 	strafe = 1.0 if randf() < 0.5 else -1.0
 	slot = Game.next_slot()
-	if kind == "rifle" and slot % 3 == 1:
+	if kind in ["rifle", "assault"] and slot % 3 == 1:
 		role = "flank"
 	if not t.get("melee", false):
 		gate_z = Route.OUT if slot % 2 == 0 else -Route.OUT

@@ -50,6 +50,7 @@ const LOOKS := {
 	"speler:vest": ["Lijf_Uniform", "Hoofdband", "Vest", "Koppel", "Laarzen"],
 	"vijand:knife": ["Lijf_Vijand", "Bandana", "Laarzen_V"],
 	"vijand:rifle": ["Lijf_Vijand", "Boonie", "Borsttuig", "Laarzen_V"],
+	"vijand:assault": ["Lijf_Vijand", "Boonie", "Borsttuig", "Laarzen_V"],
 	"vijand:rocket": ["Lijf_Vijand", "Pet", "Raketzak", "Laarzen_V"],
 	"vijand:heavy": ["Lijf_Vijand", "Staalhelm", "Patroongordels", "Laarzen_V"],
 }

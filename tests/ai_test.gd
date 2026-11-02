@@ -41,24 +41,24 @@ func _process(_dt: float) -> bool:
 		# 1. spreiding: schutters nemen om beurten de noord- en zuidpoort
 		var zs := {}
 		for i in 8:
-			var e := _spawn("rifle", Vector3(50, 0, 50 + i))
+			var e := _spawn("assault", Vector3(50, 0, 50 + i))
 			zs[signf(e.get("gate_z"))] = true
 			e.queue_free()
 		_check(zs.size() == 2, "schutters kiezen niet allebei de poorten")
 		# 2. dekking: een geraakte schutter loopt naar een plek achter het gebouw
-		a = _spawn("rifle", Vector3(-4, 0, -16))
+		a = _spawn("assault", Vector3(-4, 0, -16))
 		a.set("gate_z", 0.0)
 		a.set("role", "assault")
 		a.set("cover_cd", 0.0)
 		a.call("hit", 20.0, Vector3.DOWN, true)
 		# 3. terugtrekken en helpen
-		b = _spawn("rifle", Vector3(20, 0, -3))
+		b = _spawn("assault", Vector3(20, 0, -3))
 		b.set("role", "assault")
 		b.set("gate_z", 0.0)
 		c = _spawn("knife", Vector3(26, 0, -3))
 		b.call("hit", b.get("max_hp") * 0.72, Vector3.RIGHT, true)  # hp onder 30 procent
 		# 4. flankeren
-		d = _spawn("rifle", Vector3(-8, 0, 8))
+		d = _spawn("assault", Vector3(-8, 0, 8))
 		d.set("role", "flank")
 		d.set("gate_z", 0.0)
 	if frames == 12:

@@ -33,7 +33,7 @@ func _process(_d: float) -> bool:
 		g.points = 100000
 		g.build_credit = 100000
 		b.place("kazerne", Vector3(-6, 0, -8), PI)
-		gar = b.place("garage", Vector3(8, 0, -8), 0.0)
+		gar = b.place("garage", Vector3(16, 0, 2), 0.0)
 		g.build_mode = true
 		var p0: int = g.points
 		b.buy_vehicle(gar, "jeep")

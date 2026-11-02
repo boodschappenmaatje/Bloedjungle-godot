@@ -85,3 +85,7 @@ Model **Munitiekist** vergelijkt de procedurele `Kist_Munitie` uit `assets/props
 ## Meshy M1911
 
 Model **M1911 · Meshy** vergelijkt de oorspronkelijke M1911 uit `assets/wapens.glb` met `assets/meshy_m1911.glb`. De Meshy-bron blijft ongewijzigd in `assets/meshy_weapon.glb`; `bron/wapens/maak_meshy_m1911.py` maakt de geoptimaliseerde 1K-PBR-gameversie met frame en bewegende slede als aparte meshes, vijf echte GLB-clips en circa 29.000 driehoeken. De Meshy-speler houdt het pistool via het M1911-profiel en tweehandige IK vast. Test: `node test-m1911.mjs`. Geen fysieke iPhone/Safari/Xogot-meting uitgevoerd.
+
+## Garage (Meshy-motorpool)
+
+Model **Garage** vergelijkt de oude golfplaat-garage (`assets/vq2_baseline/garage_v1.glb`, V1) met Dennis' Meshy-motorpool (`assets/garage.glb`, bron `bron/garage_meshy/`). Echte GLB-clips `Open`, `Dicht` en `Show-loop` draaien de twee poortdeuren; de keuze **Afstand en LOD** wisselt tussen `Romp` (35.500 driehoeken) en `Romp_LOD1` (5.000), zoals Godot vanaf 45 m. Test: `node test-garage.mjs`. Geen iPhone/Safari-meting uitgevoerd.

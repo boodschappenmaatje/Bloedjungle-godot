@@ -28,10 +28,13 @@ func _process(_delta: float) -> bool:
 			menu._show("")
 	if frames > 4 and g.state == "prep":
 		g.prep_t = 1e9
-	if frames == 40:
+	if frames >= 40 and g.supply != null and g.supply.started:
 		_run(g)
 		print("VERKEER_V185_UNIT_RESULT=", "PASS" if fails == 0 else "FAIL", " fouten=", fails)
 		quit(1 if fails > 0 else 0)
+	elif frames > 1200:
+		_check("voorraadbeheer niet actief binnen 1200 frames", false)
+		quit(1)
 	return false
 
 func _run(g) -> void:

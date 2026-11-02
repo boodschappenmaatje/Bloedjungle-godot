@@ -954,6 +954,8 @@ func _spawn_vehicle(b: Dictionary, kind: String) -> void:
 	if kind == "truck":
 		# lange wagen: kaarsrecht naar buiten tot hij helemaal uit de poort is en dan stilstaan
 		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + clampf(run * 0.9, 5.0, 9.5)))
+		# tot de achterkant (4,4 m achter het midden) voorbij de poort is, rijdt hij strak recht
+		v.exit_lock = {"yaw": b.yaw + PI, "from": _pt(b.at, b.yaw, DOOR_U, 0.0), "dir": _front(b), "dist": FRONT + 4.6 + 0.8}
 	else:
 		var out := minf(6.0 if kind == "jeep" else 7.5, run * (0.7 if kind == "jeep" else 0.8))
 		goals.append(_pt(b.at, b.yaw, DOOR_U, FRONT + out))

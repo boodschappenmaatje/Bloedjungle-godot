@@ -39,13 +39,36 @@ def alleen(*objs, active=None):
 # 1. poortopening uitsnijden (de vaste deurplaat van de voorgevel); de onderste 10 cm blijft staan als drempel,
 #    bovenin gaat 6 cm extra weg zodat er geen tanden van de oude plaat onder de rail hangen
 bm = bmesh.new(); bm.from_mesh(romp.data)
-def in_poort(co):
-    return PX0 + 0.03 < co.x < PX1 - 0.03 and PZ0 + 0.10 < co.z < PZ1 + 0.02 and PY_VOOR - 0.30 < co.y < PY_VOOR + 0.70
 
 
-# elk vlak met een hoekpunt in de poortopening gaat weg (ook de "tanden" die van boven in de opening hangen)
-weg = [f for f in bm.faces if any(in_poort(v.co) for v in f.verts)]
+def in_poort(p):
+    return PX0 < p.x < PX1 and PZ0 + 0.10 < p.z < PZ1 and PY_VOOR - 0.30 < p.y < PY_VOOR + 0.70
+
+
+# Eerst netjes doorsnijden langs de vier randen van de opening (links, rechts, onder, boven), zodat er geen grote
+# driehoeken meer zijn die half in en half buiten de opening liggen; dan alleen de vlakken wegdoen die echt in de opening liggen.
+# (Eerst werd elk vlak met een hoekpunt in de opening weggegooid: bij de grote driehoeken van de voorgevel gaf dat een gat naast de poort.)
+for co_, no_ in (((PX0, 0, 0), (1, 0, 0)), ((PX1, 0, 0), (1, 0, 0)), ((0, 0, PZ0 + 0.10), (0, 0, 1)), ((0, 0, PZ1), (0, 0, 1))):
+    bmesh.ops.bisect_plane(bm, geom=list(bm.verts) + list(bm.edges) + list(bm.faces), dist=1e-5, plane_co=co_, plane_no=no_)
+bm.faces.ensure_lookup_table()
+weg = [f for f in bm.faces if in_poort(f.calc_center_median())]
+wy = [v.co.y for f in weg for v in f.verts]
+Y0, Y1 = min(wy), max(wy)
 bmesh.ops.delete(bm, geom=weg, context="FACES")
+# De voorgevel is een holle schil: de snede liet de binnenkant van de muur open, zodat je naast de poort door de muur
+# heen keek (gat). Vier vlakken in de opening sluiten de snede (links, rechts, boven, drempel); ze kijken naar de opening.
+ZB, ZT = PZ0 + 0.10, PZ1
+
+
+def vlak(punten):
+    bm.faces.new([bm.verts.new(p) for p in punten])
+
+
+vlak([(PX0, Y0, ZB), (PX0, Y1, ZB), (PX0, Y1, ZT), (PX0, Y0, ZT)])   # linker wang, kijkt naar +X
+vlak([(PX1, Y0, ZB), (PX1, Y0, ZT), (PX1, Y1, ZT), (PX1, Y1, ZB)])   # rechter wang, kijkt naar -X
+vlak([(PX0, Y0, ZT), (PX0, Y1, ZT), (PX1, Y1, ZT), (PX1, Y0, ZT)])   # bovenkant, kijkt naar -Z (omlaag)
+vlak([(PX0, Y0, ZB), (PX1, Y0, ZB), (PX1, Y1, ZB), (PX0, Y1, ZB)])   # drempel, kijkt naar +Z (omhoog)
+bm.normal_update()
 bm.to_mesh(romp.data); bm.free()
 print("poort uitgesneden: %d vlakken weg" % len(weg), flush=True)
 

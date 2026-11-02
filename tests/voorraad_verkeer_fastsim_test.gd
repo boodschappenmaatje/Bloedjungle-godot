@@ -49,7 +49,7 @@ func _run(g) -> void:
 		_check("Game.supply ontbreekt voor fastsim", false)
 		return
 	var sup = g.supply
-	var depots := sup.depots()
+	var depots: Array = sup.depots()
 	_check("startdepot bestaat", depots.size() > 0)
 	if depots.is_empty():
 		return
@@ -73,7 +73,7 @@ func _run(g) -> void:
 	_check("zes trucks actief", trucks.size() == 6)
 	if trucks.size() != 6:
 		return
-	var delivered := sup.trips
+	var delivered: int = sup.trips
 	for tick in range(SIM_SECONDS * HZ):
 		for item in trucks:
 			var t := item

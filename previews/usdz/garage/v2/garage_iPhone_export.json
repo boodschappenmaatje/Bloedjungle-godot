@@ -1,0 +1,36 @@
+{
+  "package_status": "PASS",
+  "apple_arkit_validation": "NOT_RUN_BY_EXPORTER",
+  "source": "/tmp/claude-0/garage_usdz.blend",
+  "source_sha256": "fffe8c0a39faa98c4132a884b6bb673d6acfd882ea96ad2bd53f8a96b436449e",
+  "output": "/home/user/bloedjungle-godot/previews/usdz/garage/v2/garage_iPhone.usdz",
+  "output_bytes": 15170295,
+  "output_sha256": "bb01457dd684329d32ed324baf72323ef8636a28e7febda666c04d9f6100fe35",
+  "blender_version": "5.2.3 LTS",
+  "preview_texture_max_px": 2048,
+  "centered_preview": false,
+  "source_texture_paths_resolved": 0,
+  "animation_exported": true,
+  "static_curves_converted_to_meshes": 0,
+  "mesh_objects": 4,
+  "materials": 2,
+  "material_images": 3,
+  "animation_actions": [
+    "Dicht_DeurL",
+    "Dicht_DeurR",
+    "Open_DeurL",
+    "Open_DeurR",
+    "Show-loop_DeurL",
+    "Show-loop_DeurR"
+  ],
+  "scene_animation_active": true,
+  "frame_start": 0,
+  "frame_end": 60,
+  "fps": 30.0,
+  "packaged_files": [
+    "garage_iPhone.usdc",
+    "textures/garage_normal.png",
+    "textures/garage_orm.png",
+    "textures/garage_albedo.png"
+  ]
+}

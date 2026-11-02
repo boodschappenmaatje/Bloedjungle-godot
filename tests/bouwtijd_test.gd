@@ -31,7 +31,7 @@ func _process(_d: float) -> bool:
 		var b = g.builds
 		g.points = 100000
 		g.build_credit = 100000
-		_check("garage zonder kazerne geweigerd", b.missing("garage") == "kazerne" and b.place("garage", Vector3(8, 0, -8), 0.0, true) == null)
+		_check("garage zonder kazerne geweigerd", b.missing("garage") == "kazerne" and b.place("garage", Vector3(16, 0, 2), 0.0, true) == null)
 		_check("muur heeft geen eisen", b.missing("muur") == "")
 		kz = b.place("kazerne", Vector3(-6, 0, -8), PI, true)
 		_check("kazerne geplaatst in aanbouw", kz != null and b.under_construction(kz) and kz.build_t > 11.0)
@@ -51,7 +51,7 @@ func _process(_d: float) -> bool:
 		_check("steiger weg", kz.site == null and kz.node.get_node_or_null("Steiger") == null)
 		_check("garage nu toegestaan", b2.missing("garage") == "")
 		_check("training werkt weer", (func(): b2.recruit(kz); return kz.queue == 1).call())
-		var gar = b2.place("garage", Vector3(8, 0, -8), 0.0)
+		var gar = b2.place("garage", Vector3(16, 0, 2), 0.0)
 		_check("place() zonder bouwtijd bouwt direct (bestaande tests)", gar != null and not b2.under_construction(gar))
 		print("klaar, fouten: ", fails)
 		quit(1 if fails > 0 else 0)

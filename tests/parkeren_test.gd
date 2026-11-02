@@ -36,7 +36,7 @@ func _process(_d: float) -> bool:
 		g.points = 100000
 		g.build_credit = 100000
 		b.place("kazerne", Vector3(-6, 0, -8), PI)
-		gar = b.place("garage", Vector3(8, 0, -8), 0.0)
+		gar = b.place("garage", Vector3(16, 0, 2), 0.0)
 		for i in 3:
 			b.buy_vehicle(gar, "jeep")
 		var _build_mode = load("res://scripts/build_mode.gd")

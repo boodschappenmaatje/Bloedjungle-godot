@@ -7,7 +7,7 @@ extends Node3D
 const DEFS := {
 	"depot": {"name": "Voorraaddepot", "cost": 800, "size": Vector3(9.0, 3.6, 6.5), "max": 3, "hp": 900.0},   # Generals-stap 4: trucks leveren hier voorraad af (voorraad.gd)
 	"kazerne": {"name": "Kazerne", "cost": 1000, "size": Vector3(4.4, 2.2, 3.2), "max": 1, "hp": 600.0},
-	"garage": {"name": "Garage", "cost": 800, "size": Vector3(5.15, 3.1, 5.7), "max": 1, "hp": 900.0},
+	"garage": {"name": "Garage", "cost": 800, "size": Vector3(8.8, 5.5, 12.6), "max": 1, "hp": 900.0},   # Meshy-motorpool (bron/garage_meshy), maat B
 	"helipad": {"name": "Heliplatform", "cost": 1000, "size": Vector3(12.8, 2.0, 12.8), "max": 1, "hp": 1200.0},
 	"airfield": {"name": "Vliegveld", "cost": AirfieldHQ23.BUILD_COST, "size": AirfieldHQ23.FOOTPRINT, "max": 1, "hp": 3000.0},
 	"zandzak": {"name": "Zandzakken", "cost": 150, "size": Vector3(3.1, 0.95, 0.8), "max": 40, "hp": 380.0, "piece": true},
@@ -40,10 +40,9 @@ const TRAIN_COST := 250
 const RIJ_MAX := 5  # soldaten tegelijk in de bouwrij van een kazerne (Generals-plan stap 2)
 const DOOR := 2.5  # afstand van het midden tot het punt voor de deur
 const HQ_SPEEDUP := 0.75  # hoofdkwartier niveau 2: alle bouw- en opleidingstijden 25% korter (Generals-plan stap 3)
-const GS := 0.66      # schaal van het garagemodel (breedte en diepte); in de hoogte GSH
-const GSH := 0.92
-const DOOR_U := -0.7 * GS  # de garagedeur zit niet in het midden maar iets naar links
-const FRONT := 4.2 * GS    # afstand van het midden tot de deur
+const DOOR_U := -0.04   # midden van de garagepoort (assets/garage.glb, poort 4,2 x 2,3 m)
+const FRONT := 4.22     # afstand van het midden van de garage tot de voorkant van de poort
+const GARAGE_LOD := 45.0  # vanaf hier (m) toont de garage Romp_LOD1 in plaats van Romp
 const C := Data.COMPOUND
 
 
@@ -808,45 +807,57 @@ func _physics_process(delta: float) -> void:
 
 # ---------------------------------------------------------------- garage
 
-## Gebouw van assets/garage.glb. Muren zijn losse kasten, zodat de ingang open blijft; de poort is een kast die uitgaat als hij open is.
+## Gebouw van assets/garage.glb (Meshy-motorpool, bron/garage_meshy). Muren, luifels en spullen zijn losse kasten, zodat
+## de poort open blijft; de poort is een kast die uitgaat als hij open is. Maten in meters, voorkant = +Z.
+const GARAGE_KASTEN := [
+	[Vector3(-3.45, 1.6, 0.0), Vector3(0.3, 3.2, 8.2)],      # linkerwand hal
+	[Vector3(2.95, 1.6, 0.0), Vector3(0.3, 3.2, 8.2)],       # rechterwand hal
+	[Vector3(-0.25, 1.6, -4.0), Vector3(6.7, 3.2, 0.3)],     # achterwand hal
+	[Vector3(-2.875, 1.6, 4.1), Vector3(1.45, 3.2, 0.4)],    # voorgevel links van de poort
+	[Vector3(2.58, 1.6, 4.1), Vector3(1.04, 3.2, 0.4)],      # voorgevel rechts van de poort
+	[Vector3(-0.04, 2.9, 4.1), Vector3(4.3, 0.6, 0.4)],      # latei boven de poort
+	[Vector3(-4.05, 1.0, 0.0), Vector3(0.9, 2.0, 6.8)],      # linkerluifel met kisten en banden
+	[Vector3(3.6, 1.0, 0.0), Vector3(1.0, 2.0, 6.8)],       # rechterluifel met werkbank en vaten
+	[Vector3(-0.25, 1.0, -5.25), Vector3(7.5, 2.0, 2.1)],    # achterluifel met kisten
+	[Vector3(-3.3, 0.5, 4.85), Vector3(1.8, 1.0, 1.1)],      # zandzakken, vaten en jerrycans links voor
+	[Vector3(2.85, 0.65, 4.8), Vector3(1.5, 1.3, 1.0)],      # kabelhaspel en kisten rechts voor
+]
+
+
 func _garage_node(body: StaticBody3D) -> void:
 	var model: Node = (load("res://assets/garage.glb") as PackedScene).instantiate()
 	body.add_child(model)
 	body.set_meta("model", model)
-	var parts := [
-		[Vector3(-3.85, 1.6, 0.0), Vector3(0.2, 3.2, 8.6)],      # linkerwand
-		[Vector3(2.45, 1.6, 0.0), Vector3(0.2, 3.2, 8.6)],       # rechterwand
-		[Vector3(-0.7, 1.6, -4.15), Vector3(6.4, 3.2, 0.2)],     # achterwand
-		[Vector3(-3.775, 1.6, 4.15), Vector3(0.25, 3.2, 0.2)],   # pilaar links van de deur
-		[Vector3(2.375, 1.6, 4.15), Vector3(0.25, 3.2, 0.2)],    # pilaar rechts van de deur
-		[Vector3(-0.7, 2.95, 4.15), Vector3(5.9, 0.5, 0.2)],     # latei
-		[Vector3(-0.7, 3.3, 0.0), Vector3(6.6, 0.2, 8.6)],       # dak
-	]
-	for pt in parts:
-		body.add_child(_box_shape(_gs(pt[0]), _gs(pt[1])))
-	var door := _box_shape(_gs(Vector3(-0.7, 1.35, 4.1)), _gs(Vector3(5.9, 2.7, 0.3)))
+	for pt in GARAGE_KASTEN:
+		body.add_child(_box_shape(pt[0], pt[1]))
+	var door := _box_shape(Vector3(DOOR_U, 1.3, 4.1), Vector3(4.2, 2.6, 0.35))
 	door.name = "Poortkast"
 	body.add_child(door)
+	# dichtbij de volle romp, ver weg (tactische camera) de lichte LOD1 met dezelfde texturen
+	var romp := model.find_child("Romp", true, false) as GeometryInstance3D
+	var lod := model.find_child("Romp_LOD1", true, false) as GeometryInstance3D
+	if romp and lod:
+		romp.visibility_range_end = GARAGE_LOD
+		lod.visibility_range_begin = GARAGE_LOD
 	var ap: AnimationPlayer = model.find_child("AnimationPlayer", true, false)
-	# Open en Dicht bewegen alleen de poort; de rest (zwaailicht, takel) doet de code
+	# Open en Dicht bewegen alleen de deuren (DeurL, DeurR)
 	for clip in ["Open", "Dicht"]:
 		var a := ap.get_animation(clip)
 		for i in range(a.get_track_count() - 1, -1, -1):
-			if not String(a.track_get_path(i)).get_slice(":", 0).ends_with("Deur"):
+			if not String(a.track_get_path(i)).get_slice(":", 0).get_file().begins_with("Deur"):
 				a.remove_track(i)
+	# lampen boven de poort en binnen: alleen bij Avond/Nacht, met een kort bereik (glTF-lampen hebben geen bereik)
 	var night := GameSettings.get_value("time") != "day"
-	for n in ["DeurLampL", "DeurLampR", "BinnenLamp"]:
-		var l := model.find_child(n, true, false)
-		if l:
-			l.visible = night
-	var z := model.find_child("ZwaaiLicht", true, false)
-	if z:
-		z.visible = false
-
-
-## Maten van het model (Blender-meters) omzetten naar het kleinere model in het spel.
-func _gs(v: Vector3) -> Vector3:
-	return Vector3(v.x * GS, v.y * GSH, v.z * GS)
+	for n in ["DeurLampL", "DeurLampM", "DeurLampR", "BinnenLamp"]:
+		var l := model.find_child(n, true, false) as Light3D
+		if l == null:
+			continue
+		l.visible = night
+		l.shadow_enabled = false
+		if l is SpotLight3D:
+			(l as SpotLight3D).spot_range = 9.0
+		elif l is OmniLight3D:
+			(l as OmniLight3D).omni_range = 6.0
 
 
 func _box_shape(pos: Vector3, size: Vector3) -> CollisionShape3D:
@@ -861,6 +872,7 @@ func _box_shape(pos: Vector3, size: Vector3) -> CollisionShape3D:
 func _garage_init(b: Dictionary) -> void:
 	var model: Node = b.node.get_meta("model")
 	b.anim = model.find_child("AnimationPlayer", true, false)
+	# de oude garage had een zwaailicht en een takel; de motorpool niet (dan blijven deze null)
 	b.zwaai = model.find_child("Zwaai", true, false)
 	b.light = model.find_child("ZwaaiLicht", true, false)
 	b.arm = model.find_child("Arm", true, false)
@@ -965,7 +977,7 @@ func _park_spot(b: Dictionary, slot: int, run: float) -> Vector3:
 	return p
 
 
-const DOOR_T := 0.7  # seconden dat de poort open of dicht gaat (de clip duurt 2 s en wordt sneller afgespeeld)
+const DOOR_T := 1.0  # seconden dat de poort open of dicht gaat (de clip duurt 2 s en wordt sneller afgespeeld)
 
 
 func _garage_step(b: Dictionary, delta: float) -> void:
@@ -977,7 +989,8 @@ func _garage_step(b: Dictionary, delta: float) -> void:
 				b.t = DOOR_T
 				b.anim.speed_scale = 2.0 / DOOR_T
 				b.anim.play("Open")
-				b.light.visible = true
+				if b.light:
+					b.light.visible = true
 				Sfx.play("thud", 0.5, b.node.global_position)
 		"opening":
 			b.t -= delta
@@ -1001,13 +1014,16 @@ func _garage_step(b: Dictionary, delta: float) -> void:
 			b.t -= delta
 			if b.t <= 0.0:
 				b.door_shape.disabled = false
-				b.light.visible = false
+				if b.light:
+					b.light.visible = false
 				b.phase = "idle"
 	# zwaailicht draait zolang de poort in beweging is; de takel wiegt altijd een beetje
 	var moving: bool = b.phase == "opening" or b.phase == "closing" or b.phase == "rolling"
-	if moving:
+	if moving and b.zwaai:
 		b.spin += delta * 6.0
 		b.zwaai.rotation.y = b.spin
+	if b.arm == null or b.haak == null:
+		return
 	b.sway += delta
 	b.arm.rotation.y = deg_to_rad(14.0) * sin(b.sway * TAU / 8.0)
 	b.haak.rotation.x = deg_to_rad(4.0) * sin(b.sway * TAU / 2.0 + 1.0)

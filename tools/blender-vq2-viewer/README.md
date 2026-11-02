@@ -86,6 +86,10 @@ Model **Munitiekist** vergelijkt de procedurele `Kist_Munitie` uit `assets/props
 
 Model **M1911 · Meshy** vergelijkt de oorspronkelijke M1911 uit `assets/wapens.glb` met `assets/meshy_m1911.glb`. De Meshy-bron blijft ongewijzigd in `assets/meshy_weapon.glb`; `bron/wapens/maak_meshy_m1911.py` maakt de geoptimaliseerde 1K-PBR-gameversie met frame en bewegende slede als aparte meshes, vijf echte GLB-clips en circa 29.000 driehoeken. De Meshy-speler houdt het pistool via het M1911-profiel en tweehandige IK vast. Test: `node test-m1911.mjs`. Geen fysieke iPhone/Safari/Xogot-meting uitgevoerd.
 
+## Garage (Meshy-motorpool)
+
+Model **Garage** vergelijkt de oude golfplaat-garage (`assets/vq2_baseline/garage_v1.glb`, V1) met Dennis' Meshy-motorpool (`assets/garage.glb`, bron `bron/garage_meshy/`). Echte GLB-clips `Open`, `Dicht` en `Show-loop` draaien de twee poortdeuren; de keuze **Afstand en LOD** wisselt tussen `Romp` (35.500 driehoeken) en `Romp_LOD1` (5.000), zoals Godot vanaf 45 m. Test: `node test-garage.mjs`. Geen iPhone/Safari-meting uitgevoerd.
+
 ## Voorraaddepot, voorraadtruck en voorraadstapel (stap 4b, stijl Intendance)
 
 De viewer bevat vier invoeren uit `bron/voorraad/`: **Voorraaddepot** (`assets/voorraaddepot.glb`, clips `Poort` en `Kraan-lossen`), **Voorraadtruck** (`voorraadtruck.glb`, clips `Laden` en `Lossen`: kraan zwenkt, grijper pakt een kist en legt hem in de bak of op de grond), **Voorraadtruck · wrak** (`voorraadtruck_wrak.glb`) en **Voorraadstapel** (`voorraadstapel.glb`: de drie standen vol, half en leeg naast elkaar; Godot laat er één tegelijk zien). Er is geen V1 (nieuwe modellen). Kies de clip, druk op Afspelen of sleep de tijdlijn. Wielrotatie, vering, stof, geluid, nachtlampen, de teller en de gouden ruit van de stapel zijn Godot en dus niet in de viewer. Test: `node test-voorraad.mjs` (Chromium; schrijft `docs/vq2/results/voorraad-viewer-test.json` en beelden naar `docs/vq2/renders/`).

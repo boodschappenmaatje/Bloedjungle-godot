@@ -1,0 +1,28 @@
+{
+ "stats": {
+  "v2": "Garage (zichtbaar): oud 13.712 driehoeken · 29 meshes · 20 materialen · texturen 512×512. Motorpool 35.474 driehoeken · 4 meshes · 2 materialen · texturen 2048×2048. Meshy-bron 3.706.042 driehoeken. Geen iPhone-FPS gemeten.",
+  "v1": "Garage (zichtbaar): oud 13.712 driehoeken · 29 meshes · 20 materialen · texturen 512×512. Motorpool 35.474 driehoeken · 4 meshes · 2 materialen · texturen 2048×2048. Meshy-bron 3.706.042 driehoeken. Geen iPhone-FPS gemeten.",
+  "split": "Garage (zichtbaar): oud 13.712 driehoeken · 29 meshes · 20 materialen · texturen 512×512. Motorpool 35.474 driehoeken · 4 meshes · 2 materialen · texturen 2048×2048. Meshy-bron 3.706.042 driehoeken. Geen iPhone-FPS gemeten."
+ },
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "errors": [],
+ "clips": [
+  "Dicht",
+  "Open",
+  "Show-loop"
+ ],
+ "lod1": "Garage (zichtbaar): oud 13.712 driehoeken · 29 meshes · 20 materialen · texturen 512×512. Motorpool 4.951 driehoeken · 4 meshes · 2 materialen · texturen 2048×2048. Meshy-bron 3.706.042 driehoeken. Geen iPhone-FPS gemeten.",
+ "openHalf": [
+  -0.008818311448252356,
+  0.008818311448252356
+ ],
+ "open": [
+  -1.5358904102155302,
+  1.5358904102155302
+ ],
+ "dicht": [
+  0,
+  0
+ ],
+ "ok": true
+}

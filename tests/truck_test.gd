@@ -32,7 +32,7 @@ func _process(_d: float) -> bool:
 		main.begin()
 		game.points = 9000
 		game.build_credit = 9000 if "build_credit" in game else 0
-		var r = game.builds.place("garage", Vector3(-8.6, 0, -6), 0.0)
+		var r = game.builds.place("garage", Vector3(-18, 0, 2), 0.0)
 		print("garage: ", r != null)
 		var b: Dictionary = game.buildings.back()
 		game.builds.buy_vehicle(b, "truck")

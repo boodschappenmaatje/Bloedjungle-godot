@@ -1,0 +1,74 @@
+{
+  "source": "/workspace/Bloedjungle-godot/source_assets/enemy_assault/rig_test/enemy_assault_meshy_weapon_rigged_test.glb",
+  "output": "/workspace/Bloedjungle-godot/assets/enemies/assault/assault_meshy_hq2_runtime.glb",
+  "bones": 28,
+  "lods": [
+    {
+      "level": "LOD0",
+      "body_triangles": 11999,
+      "weapon_triangles": 1800,
+      "combined_triangles": 13799,
+      "body_source_triangles": 3296450,
+      "weapon_source_triangles": 158446
+    },
+    {
+      "level": "LOD1",
+      "body_triangles": 3500,
+      "weapon_triangles": 700,
+      "combined_triangles": 4200,
+      "body_source_triangles": 11999,
+      "weapon_source_triangles": 1800
+    },
+    {
+      "level": "LOD2",
+      "body_triangles": 1400,
+      "weapon_triangles": 300,
+      "combined_triangles": 1700,
+      "body_source_triangles": 11999,
+      "weapon_source_triangles": 1800
+    }
+  ],
+  "textures": [
+    {
+      "name": "Image_0",
+      "source_resolution": [
+        4096,
+        4096
+      ],
+      "runtime_resolution": [
+        2048,
+        2048
+      ],
+      "temp_bytes": 1350738
+    },
+    {
+      "name": "Image_1",
+      "source_resolution": [
+        2048,
+        2048
+      ],
+      "runtime_resolution": [
+        1024,
+        1024
+      ],
+      "temp_bytes": 195935
+    },
+    {
+      "name": "Image_2",
+      "source_resolution": [
+        4096,
+        4096
+      ],
+      "runtime_resolution": [
+        2048,
+        2048
+      ],
+      "temp_bytes": 580672
+    }
+  ],
+  "source_materials": 1,
+  "runtime_body_vertices_total": 39314,
+  "runtime_weapon_vertices_total": 3120,
+  "runtime_bytes": 3600908,
+  "sha256": "be2e3cbda4eaace34ddeedfca078539376f5446020923b2046ba6e787d36d1d8"
+}

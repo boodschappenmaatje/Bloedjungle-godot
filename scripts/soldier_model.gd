@@ -14,7 +14,7 @@ const SCENE_PLAYER_PAD := "res://assets/soldaat_jungle_commando.glb"
 ## Experimental player-only Meshy/Mixamo rig from the isolated, already-reviewed lab.
 ## The file is byte-identical to the user-supplied remesh/rig export; NPCs never select it.
 const SCENE_MESHY_PLAYER_PATH := "res://assets/meshy_jungle_commando.glb"
-const SCENE_ASSAULT_RIG_TEST_PATH := "res://source_assets/enemy_assault/rig_test/enemy_assault_body_rigged_garand_test.glb"
+const SCENE_ASSAULT_MODEL_PATH := "res://assets/enemies/assault/assault_meshy_hq2_runtime.glb"
 ## Mesh-free shared animation source extracted from the supplied same-rig library.
 const MESHY_ANIMATION_LIBRARY := preload("res://resources/animations/meshy_player_animation_library.res")
 const MESHY_API_LIBRARY := preload("res://resources/animations/meshy_player_animation_library_api.res")   # 62 clips uit de Meshy-API, zie bron/meshy_speler_animaties
@@ -89,7 +89,7 @@ var _mesh_left_ik: SkeletonIK3D
 var _mesh_armed := true
 var stance := 0            # 0 staan, 1 hurken, 2 liggen (alleen de Meshy-speler)
 var _stance_off := Vector3.ZERO
-var _mesh_right_target: Marker3D
+var _mesh_right_target: Node3D
 var _mesh_weapon_adapter: Variant
 var _mesh_action_player: AnimationPlayer
 var _mesh_animation_tree: AnimationTree
@@ -111,7 +111,7 @@ static func _laad_hulp(pad: String) -> Resource:
 ## uniform = kleur van het uniform; look = sleutel uit LOOKS ("eigen" voor bondgenoten en wachten,
 ## "speler:<bovenlijf>" voor de speler, "vijand:<type>" voor vijanden).
 func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
-	assault_rig_test = look_ == "vijand:assault" and ResourceLoader.exists(SCENE_ASSAULT_RIG_TEST_PATH)
+	assault_rig_test = look_ == "vijand:assault" and ResourceLoader.exists(SCENE_ASSAULT_MODEL_PATH)
 	meshy_player = assault_rig_test or (GameSettings.get_value("soldaat") == "meshy" and look_.begins_with("speler:"))
 	v2 = GameSettings.get_value("soldaat") != "v1"
 	look = look_ if LOOKS.has(look_) else ("vijand:assault" if assault_rig_test else "eigen")
@@ -119,7 +119,7 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 	var model_scene: PackedScene
 	if meshy_player:
 		player_status = "Meshy gekozen, GLB bestaat niet in de app"
-		var mesh_path := SCENE_ASSAULT_RIG_TEST_PATH if assault_rig_test else SCENE_MESHY_PLAYER_PATH
+		var mesh_path := SCENE_ASSAULT_MODEL_PATH if assault_rig_test else SCENE_MESHY_PLAYER_PATH
 		if ResourceLoader.exists(mesh_path):
 			player_status = "Meshy GLB gevonden, laden mislukt"
 			model_scene = ResourceLoader.load(mesh_path) as PackedScene
@@ -286,6 +286,8 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 		return
 	var skel := skels[0] as Skeleton3D
 	_mesh_skeleton = skel
+	if assault_rig_test:
+		_setup_assault_lods()
 	var required := ["mixamorig_RightShoulder", "mixamorig_RightArm", "mixamorig_RightForeArm", "mixamorig_RightHand",
 		"mixamorig_LeftShoulder", "mixamorig_LeftArm", "mixamorig_LeftForeArm", "mixamorig_LeftHand"]
 	for bone in required:
@@ -320,6 +322,10 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 		_add_meshy_idle(lib, skel)
 	if not lib.has_animation("stil"):
 		_alias_meshy_clip(lib, "stil", "Idle")
+	# Enemy AI calls "schieten" while stationary. The reviewed Meshy source has no
+	# compatible fire clip for these weapon anchors, so hold its authored ready
+	# pose and let the detached weapon adapter provide the shot recoil.
+	_alias_meshy_clip(lib, "schieten", "Idle")
 	_build_meshy_animation_tree(lib)
 	for mi: MeshInstance3D in _model.find_children("*", "MeshInstance3D", true, false):
 		if mi.name == "Icosphere":
@@ -328,6 +334,28 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 	_setup_meshy_weapon_ik(skel)
 	_setup_meshy_actions()
 	set_uniform(uniform)
+
+
+## The compact Assault GLB contains three body and three detached rifle meshes.
+## Godot's visibility ranges select one shared-material level by camera distance.
+func _setup_assault_lods() -> void:
+	var lod_begin := {"LOD0": 0.0, "LOD1": 18.0, "LOD2": 36.0}
+	var lod_end := {"LOD0": 18.0, "LOD1": 36.0, "LOD2": 0.0}
+	var configured := 0
+	for mesh: MeshInstance3D in _model.find_children("*", "MeshInstance3D", true, false):
+		var level := ""
+		for suffix in lod_begin:
+			if mesh.name.ends_with(suffix) and (mesh.name.begins_with("Assault_Body_") or mesh.name.begins_with("Assault_Meshy_Weapon_Mesh_")):
+				level = suffix
+				break
+		if level.is_empty():
+			continue
+		mesh.visibility_range_begin = lod_begin[level]
+		mesh.visibility_range_end = lod_end[level]
+		mesh.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+		configured += 1
+	if configured != 6:
+		push_error("Assault runtime GLB must expose 3 body and 3 detached-rifle LOD meshes; found %d" % configured)
 
 
 ## Godot 4.7's imported clips are routed through three explicit posture states. Each
@@ -409,23 +437,33 @@ func _attach_gun_meshy(skel: Skeleton3D, gun_kind: String) -> void:
 		return
 	_mesh_weapon_adapter = MESHY_WEAPON_ADAPTER_SCRIPT.new()
 	_mesh_weapon_adapter.name = "WeaponModelAdapter"
-	actor.add_child(_mesh_weapon_adapter)
-	var visual_name: String = GUN_OF.get(gun_kind, "Garand")
-	var profile: Resource = _laad_hulp(MESHY_GARAND_PROFILE_PAD) if visual_name == "Garand" else (_laad_hulp(MESHY_M1911_PROFILE_PAD) if visual_name == "M1911" else null)
-	if not _mesh_weapon_adapter.configure(visual_name, profile):
+	var weapon_parent: Node3D = _model if assault_rig_test else actor
+	weapon_parent.add_child(_mesh_weapon_adapter)
+	var configured := false
+	if assault_rig_test:
+		var assault_weapon := _model.find_child("Assault_Meshy_Weapon", true, false) as Node3D
+		configured = _mesh_weapon_adapter.configure_existing_meshy(assault_weapon)
+	else:
+		var visual_name: String = GUN_OF.get(gun_kind, "Garand")
+		var profile: Resource = _laad_hulp(MESHY_GARAND_PROFILE_PAD) if visual_name == "Garand" else (_laad_hulp(MESHY_M1911_PROFILE_PAD) if visual_name == "M1911" else null)
+		configured = _mesh_weapon_adapter.configure(visual_name, profile)
+	if not configured:
 		_mesh_weapon_adapter.queue_free()
 		_mesh_weapon_adapter = null
-		push_error("WeaponModelAdapter could not load visual: " + visual_name)
+		push_error("WeaponModelAdapter could not configure Assault/weapon visual")
 		return
 	_gun = _mesh_weapon_adapter.weapon
 	_weapon_mount = _mesh_weapon_adapter
 	_gun_anim = _mesh_weapon_adapter.animation_player
 	_weapon_kind = gun_kind
-	if _mesh_right_target == null:
+	if assault_rig_test:
+		_mesh_right_target = _mesh_weapon_adapter.right_hand_grip
+	elif _mesh_right_target == null:
 		_mesh_right_target = Marker3D.new()
 		_mesh_right_target.name = "MeshyRightHandGripTarget"
 		actor.add_child(_mesh_right_target)
-	_mesh_right_target.position = _mesh_weapon_adapter.profile.mount_position
+	if not assault_rig_test:
+		_mesh_right_target.position = _mesh_weapon_adapter.profile.mount_position
 	if _mesh_right_ik == null:
 		_mesh_right_ik = _make_meshy_arm_ik(skel, "MeshyRightArmIK", "mixamorig_RightShoulder", "mixamorig_RightHand", _mesh_right_target)
 	if _mesh_left_ik == null:
@@ -462,7 +500,7 @@ func _setup_meshy_actions() -> void:
 		_mesh_action_player = null
 	if _mesh_weapon_adapter == null or _mesh_weapon_adapter.profile == null:
 		return
-	var actor := get_parent() as Node3D
+	var actor: Node3D = _model if assault_rig_test else get_parent() as Node3D
 	_mesh_action_player = AnimationPlayer.new()
 	_mesh_action_player.name = "MeshyWeaponActions"
 	_mesh_action_player.root_node = NodePath("..")
@@ -473,11 +511,12 @@ func _setup_meshy_actions() -> void:
 	reload.length = 1.5
 	reload.loop_mode = Animation.LOOP_NONE
 	var track := reload.add_track(Animation.TYPE_POSITION_3D)
-	reload.track_set_path(track, NodePath("WeaponModelAdapter/%s/LeftHandGrip:position" % _mesh_weapon_adapter.weapon.name))
-	var grip: Vector3 = _mesh_weapon_adapter.profile.left_hand_grip
-	var mag: Vector3 = _mesh_weapon_adapter.profile.magazine_local
+	var grip: Vector3 = _mesh_weapon_adapter.left_hand_grip.position
+	var mag: Vector3 = _mesh_weapon_adapter.magazine.position
+	var grip_path := actor.get_path_to(_mesh_weapon_adapter.left_hand_grip)
 	for key in [[0.0, grip], [0.30, mag], [0.78, mag], [1.5, grip]]:
 		reload.track_insert_key(track, key[0], key[1])
+	reload.track_set_path(track, NodePath(String(grip_path) + ":position"))
 	lib.add_animation("herladen", reload)
 	_mesh_action_player.add_animation_library("", lib)
 
@@ -1067,7 +1106,7 @@ func _process(delta: float) -> void:
 	elif _mesh_weapon_adapter != null and _mesh_weapon_adapter.profile != null:
 		# het geweer en de rechterhand-greep zakken mee met de houding (hurken, liggen) zodat de armen-IK ze kan bereiken
 		_stance_off = _stance_off.lerp(STANCE_MOUNT[stance] * scale.y, minf(1.0, delta * 9.0))
-		if _mesh_right_target != null:
+		if _mesh_right_target != null and not assault_rig_test:
 			_mesh_right_target.position = _mesh_weapon_adapter.profile.mount_position + _stance_off
 		_mesh_weapon_adapter.position = _mesh_weapon_adapter.profile.mount_position + _stance_off + Vector3(0.0, 0.0, -_recoil * 0.06)
 		_mesh_weapon_adapter.rotation = _mesh_weapon_adapter.profile.mount_rotation + Vector3(-_recoil * 0.2, 0.0, 0.0)

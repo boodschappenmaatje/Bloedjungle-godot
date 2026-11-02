@@ -1,5 +1,5 @@
 extends SceneTree
-var scene_path := "res://source_assets/enemy_assault/rig_test/enemy_assault_body_rigged_garand_test.glb"
+var scene_path := "res://assets/enemies/assault/assault_meshy_hq2_runtime.glb"
 const LIB_PATH := "res://resources/animations/meshy_player_animation_library.res"
 func _initialize() -> void: call_deferred("_run")
 func _run() -> void:

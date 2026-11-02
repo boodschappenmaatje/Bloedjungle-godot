@@ -114,9 +114,40 @@ for part in enemy_parts:
         for qw,indices in enumerate(bins):
             if indices: group.add(indices,qw/32.0,'REPLACE')
     smooth_vertices+=len(verts_part)
-# Remove the candidate built-in rifle islands for a visual check; retain body islands and join them.
-for part in weapon_parts:
-    if part.name in bpy.data.objects: bpy.data.objects.remove(part,do_unlink=True)
+# Keep the source Meshy rifle as a separate rigid prop. Its geometry stays out of
+# the skinned body so arm IK cannot bend the gun; both retain the source material.
+if not weapon_parts: raise RuntimeError('Could not isolate the Meshy rifle components')
+bpy.ops.object.select_all(action='DESELECT')
+for part in weapon_parts: part.select_set(True)
+bpy.context.view_layer.objects.active=weapon_parts[0]
+bpy.ops.object.join()
+weapon_mesh=bpy.context.view_layer.objects.active
+weapon_mesh.name='Assault_Meshy_Weapon_Mesh'
+weapon_root=bpy.data.objects.new('Assault_Meshy_Weapon',None)
+bpy.context.collection.objects.link(weapon_root)
+weapon_root.parent=arm
+weapon_root.location=(0.0,0.0,-float(e_lo[2]))
+weapon_mesh.parent=weapon_root
+weapon_mesh.location=(0,0,0); weapon_mesh.rotation_euler=(0,0,0); weapon_mesh.scale=(1,1,1)
+# These source-space anchors match the original two-hand hold and muzzle direction.
+# They are kept in the GLB so the Godot adapter can use the authored Meshy weapon.
+weapon_anchors={
+    'Assault_RightHandGrip':(-0.015,-0.292,0.050),
+    'Assault_LeftHandGrip':(0.205,-0.300,-0.090),
+    'Assault_Muzzle':(0.345,-0.285,-0.220),
+    'Assault_CasingEject':(0.030,-0.285,0.120),
+    'Assault_Magazine':(0.105,-0.300,-0.105),
+    'Assault_Sight':(0.185,-0.290,0.075),
+}
+anchor_objects=[]
+for name,position in weapon_anchors.items():
+    marker=bpy.data.objects.new(name,None)
+    bpy.context.collection.objects.link(marker)
+    marker.parent=weapon_root
+    marker.location=position
+    marker.empty_display_type='SPHERE'
+    marker.empty_display_size=0.025
+    anchor_objects.append(marker)
 remaining_parts=[p for p in enemy_parts if p not in weapon_parts and p.name in bpy.data.objects]
 bpy.ops.object.select_all(action='DESELECT')
 for part in remaining_parts: part.select_set(True)
@@ -131,11 +162,13 @@ enemy.name='Assault_Body_Meshy'
 # Enemy GLB is centered at origin; Mixamo rig is foot-rooted. Lift body so soles align at z=0.
 enemy.location=(0.0,0.0,-float(e_lo[2]))
 arm.location=(0,0,0)
-# Use original textures/materials from enemy mesh; export only assault armature and body.
-bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); enemy.select_set(True); bpy.context.view_layer.objects.active=arm
+# Use the same source material/textures for both body and separate weapon.
+bpy.ops.object.select_all(action='DESELECT')
+for ob in [arm,enemy,weapon_root,weapon_mesh]+anchor_objects: ob.select_set(True)
+bpy.context.view_layer.objects.active=arm
 os.makedirs(os.path.dirname(OUT),exist_ok=True)
 bpy.ops.export_scene.gltf(filepath=OUT,export_format='GLB',use_selection=True,export_apply=False,export_animations=False,export_skins=True,export_materials='EXPORT',export_image_format='AUTO')
 # Blender-side validation and machine-readable report.
-report={'source':SRC_ENEMY,'player_rig_source':SRC_PLAYER,'output':OUT,'bones':len(arm.data.bones),'bone_names':[b.name for b in arm.data.bones],'mesh_vertices':len(enemy.data.vertices),'mesh_triangles':sum(len(p.vertices)-2 for p in enemy.data.polygons),'vertex_groups':len(enemy.vertex_groups),'weight_vertices':sum(1 for v in enemy.data.vertices if v.groups),'textures':[{'name':im.name,'size':list(im.size)} for im in bpy.data.images if im.source=='FILE'],'enemy_bounds':[[float(x) for x in pair] for pair in bounds],'proxy_scales':[float(x) for x in scales],'source_islands':len(enemy_parts),'smooth_weight_vertices':smooth_vertices,'weapon_islands_removed_preview':weapon_hand_islands}
+report={'source':SRC_ENEMY,'player_rig_source':SRC_PLAYER,'output':OUT,'bones':len(arm.data.bones),'bone_names':[b.name for b in arm.data.bones],'mesh_vertices':len(enemy.data.vertices),'mesh_triangles':sum(len(p.vertices)-2 for p in enemy.data.polygons),'weapon_vertices':len(weapon_mesh.data.vertices),'weapon_triangles':sum(len(p.vertices)-2 for p in weapon_mesh.data.polygons),'weapon_anchors':weapon_anchors,'vertex_groups':len(enemy.vertex_groups),'weight_vertices':sum(1 for v in enemy.data.vertices if v.groups),'textures':[{'name':im.name,'size':list(im.size)} for im in bpy.data.images if im.source=='FILE'],'enemy_bounds':[[float(x) for x in pair] for pair in bounds],'proxy_scales':[float(x) for x in scales],'source_islands':len(enemy_parts),'smooth_weight_vertices':smooth_vertices,'weapon_islands_extracted':weapon_hand_islands}
 with open(os.path.splitext(OUT)[0]+'.json','w') as f: json.dump(report,f,indent=2)
 print('ASSAULT_RIG_REPORT='+json.dumps(report))

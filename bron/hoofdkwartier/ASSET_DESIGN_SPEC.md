@@ -19,8 +19,13 @@ Godot-gestuurd: rood lampje knippert (1,6 s), amberlampen en schermen gloeien st
 ## Onderdelen die Godot aan/uit zet
 `Niveau2` (tweede schotel, antennerek, pantserplaten onder het glas), `Niveau3` (zoeklicht, zandzakrand, stalen luiken), `Schade1` (roet, onder 60% sterkte) en `Schade2` (brandplekken en scheuren, onder 30%). Bij vernietiging: bestaande rook en vuur, dan game over.
 
-## Budget en materialen (keuze 6B)
-Spelversie 5.842 driehoeken (gepland ca. 8.000), HQ-bron 15.1k, LOD1 3.3k (vanaf 45 m). 10 materialen: beton, olijfstaal, donker metaal, glas, rood lampje, amber lampje, witte verf, camonet, schade, vlagdoek. Texturen: de VQ2-brontexturen (concrete, olive, steel) zijn native 1024 px en niet eerlijk op te schalen naar 2K; het gegenereerde net/schade/doek gebruikt 1024. Nieuwe 2K-bronnen (Poly Haven) alleen na jouw goedkeuring van de materialen.
+## Budget en materialen (herzien 2 november 2026: bunkerkwaliteit)
+Dennis' eisen na de eerste versie: gelijk aan bunker en vliegveld, foto-realistisch, minimaal 40.000 driehoeken, 2K-texturen. Het hoofdkwartier is het centrale gebouw van de basis.
+- **Spelversie** `assets/hoofdkwartier.glb`: ca. 42.600 driehoeken (alle niveaus en schadelagen samen), 8 materialen: twee gebakken atlassen (`HK_Gebakken_romp`, `HK_Gebakken_details`, elk 2048 px albedo, ORM met AO en normal), glas, rood en amber lampje, camonet (alfa), schadelagen (alfa) en het vlagdoek (1024 px).
+- **Hoe de textuur ontstaat** (`bron/hoofdkwartier/hk_bake.py`): verweerde Cycles-materialen op de VQ2-brontexturen, met AO-vuil in hoeken, randslijtage met roest, regenstrepen, algen onderaan, stof op bovenvlakken, modder en microreliëf. Alles wordt in één unieke atlas gebakken (Smart UV, onzichtbare vlakken eerst weggesneden). De VQ2-brontexturen zijn native 1024 px; de gebakken atlas is uniek en 2K.
+- **LOD1** `assets/hoofdkwartier_lod1.glb` (vanaf 45 m, 1024 px atlas) en **HQ-bron** `bron/hoofdkwartier/uit/Hoofdkwartier_HQ.blend` (zwaardere afronding, levende procedurele materialen, bewerkbaar).
+- **Detail**: bekistingspanelen met ankergaten, pantserluiken met klinknagels en lasnaden, buitentrap met geel gemarkeerde treden, airco's, ventilatieschacht, leidingen en kabelgoten, vuurblusser, waarschuwingsbordjes, raamwerk met scharnieren, ribbenschotel met voedingsarm, vakwerkmasten met tuidraden, dakbedekking met naden, klimop, zandzakken (niveau 3).
+- Geen iPhone-, Safari- of Quick Look-meting gedaan (NIET GETEST).
 
 ## Niveaus (4B)
 Zie de afspraken in de PR; het huidige niveau staat in `Game.hq_level` (1 tot 3).

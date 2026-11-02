@@ -338,8 +338,10 @@ func _cleanup_trucks() -> void:
 ## Parkeerhavens buiten de centrale laadplek, minimaal 6,5 m tussen de voertuigen.
 func parking_point(b: Dictionary, number: int) -> Vector2:
 	var side := Vector2(cos(float(b.yaw)), -sin(float(b.yaw)))
+	var front := Vector2(sin(float(b.yaw)), cos(float(b.yaw)))
 	var offsets := [-6.5, 6.5, 13.0]
-	return dock_point(b) + side * float(offsets[clampi(number, 0, 2)])
+	# Vier meter naast/ter hoogte van het depot, niet op de weg van het tegenoverliggende depot.
+	return dock_point(b) - front * 4.0 + side * float(offsets[clampi(number, 0, 2)])
 
 
 func road_staging(b: Dictionary) -> Vector2:

@@ -25,7 +25,7 @@ Status: rigged test GLB exported and imported by Godot; this is **not yet animat
 
 Captures are Blender Workbench renders: `capture_neutral.png` and `capture_aim_test.png`. They use the actual exported GLB. The aim image uses manually rotated arm bones, not a named production animation clip.
 
-The original static appearance is recognizable, but the synthetic arm pose shows stretched artifacts around the rifle/forearm. The rifle and other equipment are part of the single source mesh and nearest-surface weight transfer does not yet provide acceptable deformation for those pieces. This output is a rigging test, **not validated for walk, aim, or death clips**. Godot test `tools/enemy_assault/test_animation_clips.gd` loaded the existing library and played `Walking`, `Rifle_Aim_Turn_Right`, and `dying_backwards`. Each clip has 26 tracks, all resolved after correcting the exported node name; each changed the skeleton pose. This confirms track compatibility and playback, but does not certify visual deformation over the full clips. The synthetic Blender arm pose still shows stretched artifacts around the rifle/forearm. Do not integrate this GLB into gameplay yet.
+The original static appearance is recognizable, but the synthetic arm pose shows stretched artifacts around the rifle/forearm. The rifle and other equipment are part of the single source mesh and nearest-surface weight transfer does not yet provide acceptable deformation for those pieces. This output is a rigging test, **not validated for walk, aim, or death clips**. Godot test `tools/enemy_assault/test_animation_clips.gd` loaded the existing library and played `Walking`, `Rifle_Aim_Turn_Right`, and `dying_backwards`. Each clip has 26 tracks, all resolved after correcting the exported node name and AnimationPlayer root path; each changed the skeleton pose. Godot emitted no unresolved-track warnings in the passing run. This confirms track compatibility and playback, but does not certify visual deformation over the full clips. The synthetic Blender arm pose still shows stretched artifacts around the rifle/forearm. Do not integrate this GLB into gameplay yet.
 
 ## Reproduction
 
@@ -35,3 +35,7 @@ godot --headless --path . --script res://tools/enemy_assault/validate_rig.gd
 blender -b --python tools/enemy_assault/capture_rig_poses.py
 godot --headless --path . --script res://tools/enemy_assault/test_animation_clips.gd
 ```
+
+## Current gameplay handoff
+
+The rig test remains outside the gameplay scene. It is 164,784,064 bytes and has not been optimized for mobile. The current isolated test confirms clip tracks and bone movement only; weapon/muzzle alignment, enemy firing, hit/death visuals, AI behavior, and wave spawn are not yet integrated or validated.

@@ -16,7 +16,6 @@ func _run() -> void:
 		if source.has_animation(clip): lib.add_animation(clip, source.get_animation(clip))
 	player.add_animation_library("", lib)
 	var passed := skeleton != null and skeleton.get_bone_count() == 28
-	print("ASSAULT_BONES=", skeleton.get_bone_name(0), ",", skeleton.get_bone_name(1), ",", skeleton.get_bone_name(15))
 	for clip in lib.get_animation_list():
 		var animation := lib.get_animation(clip)
 		player.play(clip)

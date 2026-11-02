@@ -1,0 +1,63 @@
+{
+  "filename": "assets/kazerne_hq2.glb",
+  "size": 29123684,
+  "sha256": "bfaf62e2acbd2adbadb5ed83a61a76cd45ec2fb4fd4a041b8ed895a402e22991",
+  "chunks": [
+    {
+      "name": "chunk_00.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_01.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_02.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_03.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_04.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_05.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_06.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_07.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_08.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_09.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_10.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_11.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_12.part",
+      "bytes": 2097152
+    },
+    {
+      "name": "chunk_13.part",
+      "bytes": 1860708
+    }
+  ]
+}

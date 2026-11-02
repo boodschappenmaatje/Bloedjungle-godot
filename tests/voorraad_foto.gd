@@ -93,11 +93,11 @@ func _process(_d: float) -> bool:
 				truck._set_state(4)
 				_go(2)
 		2:
-			# lossen: 4,5 s; fotos bij 1,5 s, 3,1 s (net voor de kist neerkomt), 3,5 s (portaalkraan pakt) en 5,5 s
+			# lossen: 6 s; fotos bij 2,0 s, 3,5 s, 4,1 s (net voor de kist neerkomt), 4,7 s (portaalkraan pakt) en 6,5 s
 			var secs := float(_dt()) / 60.0
-			if _dt() == 60 * 1.5 or _dt() == 60 * 3.1 or _dt() == 60 * 3.6 or _dt() == 60 * 4.6 or _dt() == 60 * 6.0:
+			if _dt() == 60 * 2.0 or _dt() == 60 * 3.5 or _dt() == 60 * 4.1 or _dt() == 60 * 4.7 or _dt() == 60 * 6.5:
 				_shot("lossen_%02d" % int(round(secs * 10.0)))
-			if _dt() > 60 * 7:
+			if _dt() > 60 * 8:
 				# naar een stapel: de truck laadt
 				var s = sup.stapels[0]
 				var via: Vector2 = sup._pos[s.site.via]
@@ -116,9 +116,9 @@ func _process(_d: float) -> bool:
 				_go(3)
 		3:
 			var secs := float(_dt()) / 60.0
-			if _dt() == 60 * 1.5 or _dt() == 60 * 2.6 or _dt() == 60 * 3.4 or _dt() == 60 * 4.2:
+			if _dt() == 60 * 2.0 or _dt() == 60 * 3.4 or _dt() == 60 * 4.4 or _dt() == 60 * 5.2:
 				_shot("laden_%02d" % int(round(secs * 10.0)))
-			if _dt() > 60 * 6:
+			if _dt() > 60 * 7.5:
 				# de drie standen van de stapel
 				var s = sup.stapels[0]
 				truck.set_physics_process(false)

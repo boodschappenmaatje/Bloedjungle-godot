@@ -15,8 +15,8 @@ const TRUCKS_MAX := 3          # per depot
 const TRIP_BASE := 100         # punten per rit, plus TRIP_PER_M per meter enkele reis
 const TRIP_PER_M := 0.5
 const ROAD_W := 6.0            # breedte (m) van de vrijgemaakte weg
-const STOP_BEFORE := 9.44      # de truck stopt zoveel meter voor het midden van de stapel: zijn grijper (6,64 m voor de truck) staat dan op de afhaalkist (2,8 m voor de stapel)
-const DOCK_OFFSET := 4.39      # m voor de voorkant van het depot staat de truck bij het lossen: de grijper (5,64 m) zet de kist dan op de laadplaat (2 m in het depot)
+const STOP_BEFORE := 7.70      # de truck stopt zoveel meter voor het midden van de stapel: zijn grijper (4,90 m voor de truck) staat dan op de afhaalkist (2,8 m voor de stapel)
+const DOCK_OFFSET := 3.65      # m voor de voorkant van het depot staat de truck bij het lossen: de grijper (4,90 m) zet de kist dan op de laadplaat (2 m in het depot)
 const PRE_DOCK := 9.0          # m voor het depot ligt een punt op de as, zodat de truck recht op het depot af komt
 const FIRE_RANGE := 13.0       # vijanden schieten op trucks binnen dit bereik
 const FIRE_TAKE := 0.5         # en doen zoveel van hun normale schade (er is geen echt richten op een truck)
@@ -188,6 +188,9 @@ func road_regions(site: Dictionary) -> Array:
 
 
 ## De punten van de weg van een poort (binnenkant) naar een plek, in volgorde.
+## Het knooppunt waar de weg naar de stapel aftakt ("via") ligt vaak opzij van de stapel, zodat de route er een scherpe haakse bocht om maakt.
+## Daarom buigt de weg eerder af: op het punt waar de lijn door via en de stapel het dichtst bij het vorige knooppunt komt, zodat de truck met één
+## ronde bocht op het laatste rechte stuk naar de stapel komt (dat stuk wijst nog steeds precies naar de stapel). Een poortas blijft recht.
 func _polyline(gate_in: String, site: Dictionary) -> Array:
 	var out: Array = []
 	var ids := _astar.get_id_path(_ids[gate_in], _ids[site.via])
@@ -195,8 +198,32 @@ func _polyline(gate_in: String, site: Dictionary) -> Array:
 		out.append(_astar.get_point_position(id))
 	var via: Vector2 = _pos[site.via]
 	var stop := stop_point(site, via)
+	if out.size() >= 2:
+		var prev: Vector2 = out[out.size() - 2]
+		var gate_axis: bool = absf(prev.x - via.x) < 0.01 and String(site.via).begins_with("poort_") and _name_of(ids[ids.size() - 2]).begins_with("poort_")
+		var dir: Vector2 = site.pos - via
+		if not gate_axis and dir.length() > 0.1:
+			dir = dir.normalized()
+			var t_join: float = (prev - via).dot(dir)
+			var t_stop: float = via.distance_to(site.pos) - STOP_BEFORE
+			var join: Vector2 = via + dir * t_join
+			var hoek: float = absf(angle_difference((via - prev).angle(), dir.angle()))
+			var zijwaarts: float = prev.distance_to(join)
+			# alleen bij een scherpe bocht bij via (of als het stoppunt vóór via ligt: dan zou de truck er voorbij rijden en terugkeren), en als de nieuwe
+			# aftakking niet vlak na het vorige knooppunt komt (dan zijn het twee bochten vlak achter elkaar)
+			if (hoek > 1.0 or t_stop < 0.0) and t_stop - t_join >= 6.0 and (zijwaarts < 0.5 or zijwaarts >= 8.0):
+				out.pop_back()   # via zelf valt weg
+				if zijwaarts >= 0.5:
+					out.append(join)
 	out.append(stop)
 	return out
+
+
+func _name_of(id: int) -> String:
+	for n in _ids:
+		if _ids[n] == id:
+			return n
+	return ""
 
 
 ## Waar de truck bij een plek stopt: STOP_BEFORE meter voor de stapel, aan de kant waar hij vandaan komt.
@@ -229,6 +256,18 @@ func dock_point(b: Dictionary) -> Vector2:
 func pre_dock_point(b: Dictionary) -> Vector2:
 	var front := Vector2(sin(float(b.yaw)), cos(float(b.yaw)))
 	return dock_point(b) + front * PRE_DOCK
+
+
+## Het punt waar de truck van de as van de voorkant van het depot afbuigt naar de poort: waar de as van de voorkant de as van de poort kruist
+## (dan rijdt hij met één ronde bocht van het depot naar de poort, zonder omweg). Kan dat niet, dan het punt PRE_DOCK meter voor het depot.
+func dock_lead(b: Dictionary, gate_name: String) -> Vector2:
+	var dock := dock_point(b)
+	var front := Vector2(sin(float(b.yaw)), cos(float(b.yaw)))
+	if absf(front.x) > 0.5:
+		var k: float = (float(_pos[gate_name].x) - dock.x) / front.x
+		if k >= 4.5 and k <= PRE_DOCK + 3.0:
+			return dock + front * k
+	return pre_dock_point(b)
 
 
 ## De richting (x, z) van een stapel naar de kant waar de truck vandaan komt: de voorkant van de stapel.
@@ -307,7 +346,7 @@ func route(d: Dictionary, slot: int) -> Array:
 	var site: Dictionary = stapels[slot].site
 	var dock := dock_point(d)
 	var gate := "poort_n_in" if dock.distance_to(_pos["poort_n_in"]) <= dock.distance_to(_pos["poort_z_in"]) else "poort_z_in"
-	var out: Array = [dock, pre_dock_point(d)]
+	var out: Array = [dock, dock_lead(d, gate)]
 	for p in _polyline(gate, site):
 		if out[out.size() - 1].distance_to(p) > 0.3:
 			out.append(p)

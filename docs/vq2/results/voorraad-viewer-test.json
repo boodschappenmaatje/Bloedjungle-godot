@@ -4,31 +4,37 @@
   "voorraadtruck": {
    "clips": {
     "Laden": {
-     "duration": 4.5,
+     "duration": 6,
      "moved": [
       "Kolom",
-      "Grijper",
       "Giek",
+      "GiekUit",
+      "Klauw_LV",
+      "Grijper",
       "Lading"
      ]
     },
     "Lossen": {
-     "duration": 4.5,
+     "duration": 6,
      "moved": [
       "Giek",
-      "Grijper",
+      "Klauw_LV",
       "Lading",
-      "Kolom"
+      "Kolom",
+      "GiekUit",
+      "Grijper"
      ]
     }
    },
    "nodes": {
     "Wiel_FL": true,
     "Wiel_RR": true,
-    "Kist_vast": true
+    "Kist_vast": true,
+    "Kettingpunt": true,
+    "Telescoop": true
    },
-   "stats": "Voorraadtruck (spelversie): 16.603 driehoeken · 59 meshes · 6 materialen · 4 texturen · clips: Laden, Lossen. HQ-bron 52.938 driehoeken. Geen iPhone-FPS gemeten.",
-   "status": "Voorraadtruck · kraan en grijper (Intendance) · Voorraadtruck uit bron/voorraad: echte clips Laden en Lossen (kraan zwenkt, grijper pakt een kist en legt hem in de bak of op de grond), zes wielen los voor Godot, 2K-PBR (geen V1) · 360° draaien en zoomen actief."
+   "stats": "Voorraadtruck (spelversie): 52.147 driehoeken · 18 meshes · 3 materialen · 4 texturen · clips: Laden, Lossen. Bron: Meshy-model van Dennis, 3.729.764 driehoeken (niet in de repo); spelversie op 2K gebakken. V1 = vorige truck, 16.603 driehoeken. Geen iPhone-FPS gemeten.",
+   "status": "Voorraadtruck · Meshy-kraanwagen met telescoopgiek en grijper (V1 = vorige procedurele truck) · Voorraadtruck (Meshy) uit bron/voorraad_meshy: echte clips Laden en Lossen (6 s: kraan zwenkt over de cabine, telescoopgiek schuift uit, grijper zakt aan de ketting, drie klauwen openen en sluiten, kist verschijnt in de klauwen en in de bak), zes wielen los voor Godot, 2K-PBR; V1 is de vorige procedurele truck met dezelfde clipnamen · 360° draaien en zoomen actief."
   },
   "voorraaddepot": {
    "clips": {
@@ -63,8 +69,8 @@
    "nodes": {
     "Voorraadtruck_wrak": true
    },
-   "stats": "Voorraadtruck (spelversie): 16.492 driehoeken · 52 meshes · 1 materialen · 3 texturen · clips: geen. HQ-bron 48.916 driehoeken. Geen iPhone-FPS gemeten.",
-   "status": "Voorraadtruck · wrak · Uitgebrand wrak van de voorraadtruck, scheef op platte banden met verkoolde kisten, 2K-PBR (geen V1) · 360° draaien en zoomen actief."
+   "stats": "Voorraadtruck (spelversie): 52.111 driehoeken · 2 meshes · 2 materialen · 3 texturen · clips: geen. Bron: dezelfde Meshy-bron, statische kraanpose, verkoold. V1 = vorig wrak. Geen iPhone-FPS gemeten.",
+   "status": "Voorraadtruck · wrak · Uitgebrand wrak van de Meshy-voorraadtruck (statische pose, ingestorte kraan, verkoolde textuur), 2K-PBR; V1 is het vorige wrak · 360° draaien en zoomen actief."
   },
   "voorraadstapel": {
    "clips": {},

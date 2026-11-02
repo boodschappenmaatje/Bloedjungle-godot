@@ -122,6 +122,7 @@ func _watch_cycle(g) -> void:
 		left0 = sup.stapels[truck.slot].left + 1   # (+1 zodat 0 niet "niet gezien" betekent)
 	if sup.trips >= 1 and not cycle_done:
 		cycle_done = true
+		print("  eerste rit afgeleverd na %.1f s spelertijd" % (float(frames - 40) / 60.0))
 		_check("de truck heeft één rit afgeleverd", sup.trips == 1)
 		_check("het geld kwam binnen (%d punten)" % sup.income_total, g.points == points0 + sup.income_total and sup.income_total >= 100)
 		_check("de stapel is leger geworden", left0 > 0 and sup.stapels[truck.slot].left < left0 - 1 + 1 and sup.stapels[truck.slot].left == 2500 - sup.income_total)

@@ -9,6 +9,7 @@ on:
       - "scripts/voorraad_truck.gd"
       - "tests/voorraad_verkeer_test.gd"
       - "tests/voorraad_verkeer_unit_test.gd"
+      - "tests/voorraad_verkeer_fastsim_test.gd"
       - ".github/workflows/voorraad-verkeer-v185.yml"
   pull_request:
     paths:
@@ -16,6 +17,7 @@ on:
       - "scripts/voorraad_truck.gd"
       - "tests/voorraad_verkeer_test.gd"
       - "tests/voorraad_verkeer_unit_test.gd"
+      - "tests/voorraad_verkeer_fastsim_test.gd"
       - ".github/workflows/voorraad-verkeer-v185.yml"
   workflow_dispatch:
 
@@ -41,6 +43,16 @@ jobs:
         run: timeout 900 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --import
       - name: Fast traffic FIFO and parking contract
         run: timeout 90 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voorraad_verkeer_unit_test.gd
+      - name: Deterministic 240-second truck logic simulation
+        shell: bash
+        run: |
+          set +e
+          timeout 120 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voorraad_verkeer_fastsim_test.gd > "$RUNNER_TEMP/fastsim.log" 2>&1
+          RC=$?
+          set -e
+          grep -E 'FOUT|OK |VERKEER_V185_FASTSIM_RESULT|SCRIPT ERROR|Parse Error|ERROR:' "$RUNNER_TEMP/fastsim.log" | tail -n 80 || true
+          tail -n 25 "$RUNNER_TEMP/fastsim.log"
+          exit "$RC"
       - name: Existing supply and driving regression
         run: |
           set -e

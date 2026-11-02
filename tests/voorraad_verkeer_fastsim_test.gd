@@ -36,12 +36,18 @@ func _process(_delta: float) -> bool:
 			m._show("")
 	if frames > 4 and g.state == "prep":
 		g.prep_t = 1e9
-	if frames == 40:
+	if frames >= 40 and g.supply != null and g.supply.started:
 		_run(g)
 		quit(1 if fails > 0 else 0)
+	elif frames > 1200:
+		_check("voorraadbeheer niet actief binnen 1200 frames", false)
+		quit(1)
 	return false
 
 func _run(g) -> void:
+	if g.supply == null or not is_instance_valid(g.supply):
+		_check("Game.supply ontbreekt voor fastsim", false)
+		return
 	var sup: Voorraad = g.supply
 	var depots := sup.depots()
 	_check("startdepot bestaat", depots.size() > 0)

@@ -104,7 +104,7 @@ func _sample(g) -> void:
 	var trucks := get_nodes_in_group("voorraadtruck")
 	var operating := 0
 	for a in trucks:
-		if a is VoorraadTruck:
+		if a != null and is_instance_valid(a):
 			if a.state != 0 and a.state != 5:
 				operating += 1
 			var orig: Vector2 = starts.get(a.get_instance_id(), Vector2(a.global_position.x, a.global_position.z))

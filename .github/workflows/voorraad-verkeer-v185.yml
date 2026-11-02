@@ -21,6 +21,11 @@ on:
       - ".github/workflows/voorraad-verkeer-v185.yml"
   workflow_dispatch:
 
+# Bij nieuwe fixes slechts de nieuwste kandidaat testen; branch-push en PR delen dezelfde groep.
+concurrency:
+  group: voorraad-v185-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   verkeer:
     runs-on: ubuntu-latest

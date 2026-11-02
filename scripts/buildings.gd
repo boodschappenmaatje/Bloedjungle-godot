@@ -101,6 +101,8 @@ func _tower_feet() -> Array:
 
 ## Shared source of truth for the preview and the final transaction.
 func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null) -> Dictionary:
+	if kind == "kazerne" and not ResourceLoader.exists("res://assets/kazerne_hq2.glb"):
+		return _placement_result(false, "Kazerne HQ2-model ontbreekt", 0)
 	if kind == "airfield":
 		if not AirfieldHQ23.complex_available() or not AirfieldHQ23.area_limit_ok():
 			return _placement_result(false, "Vliegveldassets ontbreken", 0)
@@ -362,8 +364,9 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 		return null
 	if with_time and missing(kind) != "":
 		return null
-	var node: StaticBody3D = make_node(kind) if kind == "airfield" else null
-	if kind == "airfield" and node == null:
+	# Fail safely before payment for required imported HQ2 / airfield resources.
+	var node: StaticBody3D = make_node(kind) if kind == "airfield" or kind == "kazerne" else null
+	if (kind == "airfield" or kind == "kazerne") and node == null:
 		return null
 	if not free and not Game.pay_build(DEFS[kind].cost):
 		if node != null:

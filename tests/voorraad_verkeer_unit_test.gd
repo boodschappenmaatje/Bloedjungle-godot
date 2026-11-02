@@ -4,9 +4,9 @@ extends SceneTree
 
 var fails := 0
 
-func _check(label: String, pass: bool) -> void:
-	print(("OK " if pass else "FOUT ") + label)
-	if not pass:
+func _check(label: String, ok: bool) -> void:
+	print(("OK " if ok else "FOUT ") + label)
+	if not ok:
 		fails += 1
 
 func _initialize() -> void:

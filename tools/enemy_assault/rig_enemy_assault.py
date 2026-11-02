@@ -20,7 +20,15 @@ bpy.ops.import_scene.gltf(filepath=SRC_ENEMY)
 enemy_meshes=[o for o in bpy.context.scene.objects if o.type=='MESH']
 if len(enemy_meshes)!=1: raise RuntimeError(f'Expected one enemy mesh, got {len(enemy_meshes)}')
 enemy=enemy_meshes[0]
+# Meshy exports this body as thousands of disconnected surface islands inside one object.
+# Split them temporarily so small hard-surface equipment islands can receive one stable bone influence.
+bpy.context.view_layer.objects.active=enemy; enemy.select_set(True)
+bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT'); bpy.ops.mesh.separate(type='LOOSE'); bpy.ops.object.mode_set(mode='OBJECT')
+enemy_parts=[o for o in bpy.context.scene.objects if o.type=='MESH' and o.name.startswith('Mesh_0')]
+if len(enemy_parts)<2: raise RuntimeError('Expected disconnected Meshy body islands for component-aware binding')
+enemy=max(enemy_parts,key=lambda o:len(o.data.vertices)); enemy.name='Mesh_0'
 # Preserve enemy object geometry/materials as imported. Keep an untouched copy of mesh data in memory.
+bpy.ops.object.select_all(action='DESELECT')
 bpy.ops.import_scene.gltf(filepath=SRC_PLAYER)
 player_arm=next((o for o in bpy.context.scene.objects if o.type=='ARMATURE' and len(o.data.bones)==28),None)
 player_mesh=next((o for o in bpy.context.scene.objects if o.type=='MESH' and len(o.data.vertices)>10000 and len(o.vertex_groups)>=28),None)
@@ -29,14 +37,14 @@ if len(player_arm.data.bones)!=28: raise RuntimeError('Unexpected rig bone count
 # Reuse only armature data; hide and remove all visible player geometry and its scene nodes.
 arm_data=player_arm.data.copy(); arm_data.name='Assault_Mixamo28'
 for ob in list(bpy.context.scene.objects):
-    if ob is not enemy and ob is not player_mesh:
+    if ob not in enemy_parts and ob is not player_mesh:
         bpy.data.objects.remove(ob,do_unlink=True)
 player_mesh.hide_viewport=True; player_mesh.hide_render=True
 arm=bpy.data.objects.new('target_character',arm_data); bpy.context.collection.objects.link(arm)
 # Build a KD tree from the player skin, with coordinates remapped to the enemy dimensions.
 # The source skeleton spans Z=0..1.70m. Enemy feet/head span approximately -0.95..0.95m.
 verts=player_mesh.data.vertices
-bounds=[(min(v.co[i] for v in enemy.data.vertices),max(v.co[i] for v in enemy.data.vertices)) for i in range(3)]
+bounds=[(min(v.co[i] for part in enemy_parts for v in part.data.vertices),max(v.co[i] for part in enemy_parts for v in part.data.vertices)) for i in range(3)]
 e_lo=Vector([pair[0] for pair in bounds]); e_hi=Vector([pair[1] for pair in bounds])
 p_bounds=[(min(v.co[i] for v in verts),max(v.co[i] for v in verts)) for i in range(3)]
 # Fit proxy axes to source body bounds, and map enemy ground to player ground.
@@ -54,24 +62,47 @@ valid={b.name for b in arm.data.bones}
 source_groups={g.name:g.index for g in player_mesh.vertex_groups if g.name in valid}
 group_names=list(source_groups)
 if len(group_names)<20: raise RuntimeError(f'Only {len(group_names)} matching bone groups found')
-groups={n:enemy.vertex_groups.new(name=n) for n in group_names}
-# Nearest-surface transfer: cache source vertex influences once, then bulk-assign by bone.
+groups_by_part={part:{n:part.vertex_groups.new(name=n) for n in group_names} for part in enemy_parts}
+# Cache player influences, then transfer smooth weights on large body surfaces. Assign each small
+# disconnected detail island rigidly to its dominant nearest source influence to avoid cross-bone spikes.
 idx_to_name={g.index:g.name for g in player_mesh.vertex_groups if g.name in valid}
 source_weights=[]
 for sv in verts:
     source_weights.append([(idx_to_name[g.group],g.weight) for g in sv.groups if g.group in idx_to_name and g.weight>0.001])
-assigned={name:[[] for _ in range(33)] for name in group_names}
-for vi,v in enumerate(enemy.data.vertices):
-    _co,idx,_dist=tree.find(proxy(v))
-    ws=source_weights[idx]
-    total=sum(w for _,w in ws)
-    if total<=0: continue
-    for name,w in ws:
-        qw=max(1,min(32,round(w/total*32)))
-        assigned[name][qw].append(vi)
-for name,bins in assigned.items():
-    for qw,indices in enumerate(bins):
-        if indices: groups[name].add(indices,qw/32.0,'REPLACE')
+smooth_vertices=0
+rigid_islands=0
+for part in enemy_parts:
+    verts_part=part.data.vertices
+    center=Vector([sum(v.co[i] for v in verts_part)/len(verts_part) for i in range(3)])
+    _co,center_idx,_dist=tree.find(proxy(type('V',(),{'co':center})()))
+    center_weights=source_weights[center_idx]
+
+    if len(verts_part) < 1600:
+        if center_weights:
+            dominant=max(center_weights,key=lambda x:x[1])[0]
+            groups_by_part[part][dominant].add(list(range(len(verts_part))),1.0,'REPLACE')
+        rigid_islands+=1
+        continue
+    assigned={name:[[] for _ in range(33)] for name in group_names}
+    for vi,v in enumerate(verts_part):
+        _co,idx,_dist=tree.find(proxy(v))
+        ws=source_weights[idx]
+        total=sum(w for _,w in ws)
+        if total<=0: continue
+        for name,w in ws:
+            qw=max(1,min(32,round(w/total*32)))
+            assigned[name][qw].append(vi)
+    for name,bins in assigned.items():
+        for qw,indices in enumerate(bins):
+            if indices: groups_by_part[part][name].add(indices,qw/32.0,'REPLACE')
+    smooth_vertices+=len(verts_part)
+# Join all original islands back into one draw surface; vertex groups with matching names merge.
+bpy.ops.object.select_all(action='DESELECT')
+for part in enemy_parts: part.select_set(True)
+bpy.context.view_layer.objects.active=enemy
+bpy.ops.object.join()
+enemy=bpy.context.view_layer.objects.active
+enemy.name='Assault_Body_Meshy'
 # Attach original enemy mesh to the copied rig; no player mesh/materials are included.
 mod=enemy.modifiers.new('Assault_28Bone_Skin','ARMATURE'); mod.object=arm; mod.use_vertex_groups=True
 enemy.parent=arm
@@ -84,6 +115,6 @@ bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); enemy.select
 os.makedirs(os.path.dirname(OUT),exist_ok=True)
 bpy.ops.export_scene.gltf(filepath=OUT,export_format='GLB',use_selection=True,export_apply=False,export_animations=False,export_skins=True,export_materials='EXPORT',export_image_format='AUTO')
 # Blender-side validation and machine-readable report.
-report={'source':SRC_ENEMY,'player_rig_source':SRC_PLAYER,'output':OUT,'bones':len(arm.data.bones),'bone_names':[b.name for b in arm.data.bones],'mesh_vertices':len(enemy.data.vertices),'mesh_triangles':sum(len(p.vertices)-2 for p in enemy.data.polygons),'vertex_groups':len(enemy.vertex_groups),'weight_vertices':sum(1 for v in enemy.data.vertices if v.groups),'textures':[{'name':im.name,'size':list(im.size)} for im in bpy.data.images if im.source=='FILE'],'enemy_bounds':[[float(x) for x in pair] for pair in bounds],'proxy_scales':[float(x) for x in scales]}
+report={'source':SRC_ENEMY,'player_rig_source':SRC_PLAYER,'output':OUT,'bones':len(arm.data.bones),'bone_names':[b.name for b in arm.data.bones],'mesh_vertices':len(enemy.data.vertices),'mesh_triangles':sum(len(p.vertices)-2 for p in enemy.data.polygons),'vertex_groups':len(enemy.vertex_groups),'weight_vertices':sum(1 for v in enemy.data.vertices if v.groups),'textures':[{'name':im.name,'size':list(im.size)} for im in bpy.data.images if im.source=='FILE'],'enemy_bounds':[[float(x) for x in pair] for pair in bounds],'proxy_scales':[float(x) for x in scales],'source_islands':len(enemy_parts),'rigid_islands':rigid_islands,'smooth_weight_vertices':smooth_vertices}
 with open(os.path.splitext(OUT)[0]+'.json','w') as f: json.dump(report,f,indent=2)
 print('ASSAULT_RIG_REPORT='+json.dumps(report))

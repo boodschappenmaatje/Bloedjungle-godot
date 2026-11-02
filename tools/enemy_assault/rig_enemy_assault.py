@@ -57,51 +57,62 @@ def proxy(v):
 tree=KDTree(len(verts))
 for i,v in enumerate(verts): tree.insert(v.co,i)
 tree.balance()
-# Map source group names to armature groups by exact name; retain only groups backed by the 28-bone rig.
+# Map source group names to the existing 28-bone armature by exact name.
 valid={b.name for b in arm.data.bones}
 source_groups={g.name:g.index for g in player_mesh.vertex_groups if g.name in valid}
 group_names=list(source_groups)
 if len(group_names)<20: raise RuntimeError(f'Only {len(group_names)} matching bone groups found')
-groups_by_part={part:{n:part.vertex_groups.new(name=n) for n in group_names} for part in enemy_parts}
-# Cache player influences, then transfer smooth weights on large body surfaces. Assign each small
-# disconnected detail island rigidly to its dominant nearest source influence to avoid cross-bone spikes.
+groups_by_part={part:{} for part in enemy_parts}
+# Cache player influences, then transfer interpolated, normalized weights to every body vertex.
 idx_to_name={g.index:g.name for g in player_mesh.vertex_groups if g.name in valid}
 source_weights=[]
 for sv in verts:
     source_weights.append([(idx_to_name[g.group],g.weight) for g in sv.groups if g.group in idx_to_name and g.weight>0.001])
 smooth_vertices=0
-rigid_islands=0
 weapon_hand_islands=0
 weapon_parts=[]
 for part in enemy_parts:
     verts_part=part.data.vertices
     center=Vector([sum(v.co[i] for v in verts_part)/len(verts_part) for i in range(3)])
-    _co,center_idx,_dist=tree.find(proxy(type('V',(),{'co':center})()))
-    center_weights=source_weights[center_idx]
-
     # Preview separation candidate: collect the disconnected front rifle region as a removable part set.
     if center.y < -0.22 and -0.25 < center.z < 0.16:
         weapon_parts.append(part)
         weapon_hand_islands += 1
         continue
-    if len(verts_part) < 1600:
-        if center_weights:
-            dominant=max(center_weights,key=lambda x:x[1])[0]
-            groups_by_part[part][dominant].add(list(range(len(verts_part))),1.0,'REPLACE')
-        rigid_islands+=1
-        continue
-    assigned={name:[[] for _ in range(33)] for name in group_names}
+    # Keep small disconnected straps, gloves, and armor details smoothly bound.
+    # A single center-sampled rigid influence caused visible shoulder/arm islands
+    # to detach when IK posed the arms.
+    assigned={}
     for vi,v in enumerate(verts_part):
-        _co,idx,_dist=tree.find(proxy(v))
-        ws=source_weights[idx]
+        neighbors=tree.find_n(proxy(v),4)
+        if not neighbors: continue
+        merged={}
+        if neighbors[0][2] < 0.001:
+            samples=[(neighbors[0][1],1.0)]
+        else:
+            samples=[(idx,1.0/max(dist*dist,1e-6)) for _co,idx,dist in neighbors]
+        sample_total=sum(weight for _idx,weight in samples)
+        for idx,sample_weight in samples:
+            for name,weight in source_weights[idx]:
+                merged[name]=merged.get(name,0.0)+weight*sample_weight/sample_total
+        ws=sorted(((name,weight) for name,weight in merged.items() if weight > 0.015),key=lambda item:item[1],reverse=True)[:4]
         total=sum(w for _,w in ws)
         if total<=0: continue
-        for name,w in ws:
-            qw=max(1,min(32,round(w/total*32)))
-            assigned[name][qw].append(vi)
+        normalized=[(name,w/total) for name,w in ws]
+        exact=[w*32.0 for _name,w in normalized]
+        units=[int(math.floor(w)) for w in exact]
+        remainder=32-sum(units)
+        for idx in sorted(range(len(exact)),key=lambda j:exact[j]-units[j],reverse=True)[:remainder]: units[idx]+=1
+        for (name,_weight),unit_weight in zip(normalized,units):
+            if unit_weight <= 0: continue
+            assigned.setdefault(name,[[] for _ in range(33)])[unit_weight].append(vi)
     for name,bins in assigned.items():
+        group=groups_by_part[part].get(name)
+        if group is None:
+            group=part.vertex_groups.new(name=name)
+            groups_by_part[part][name]=group
         for qw,indices in enumerate(bins):
-            if indices: groups_by_part[part][name].add(indices,qw/32.0,'REPLACE')
+            if indices: group.add(indices,qw/32.0,'REPLACE')
     smooth_vertices+=len(verts_part)
 # Remove the candidate built-in rifle islands for a visual check; retain body islands and join them.
 for part in weapon_parts:
@@ -125,6 +136,6 @@ bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); enemy.select
 os.makedirs(os.path.dirname(OUT),exist_ok=True)
 bpy.ops.export_scene.gltf(filepath=OUT,export_format='GLB',use_selection=True,export_apply=False,export_animations=False,export_skins=True,export_materials='EXPORT',export_image_format='AUTO')
 # Blender-side validation and machine-readable report.
-report={'source':SRC_ENEMY,'player_rig_source':SRC_PLAYER,'output':OUT,'bones':len(arm.data.bones),'bone_names':[b.name for b in arm.data.bones],'mesh_vertices':len(enemy.data.vertices),'mesh_triangles':sum(len(p.vertices)-2 for p in enemy.data.polygons),'vertex_groups':len(enemy.vertex_groups),'weight_vertices':sum(1 for v in enemy.data.vertices if v.groups),'textures':[{'name':im.name,'size':list(im.size)} for im in bpy.data.images if im.source=='FILE'],'enemy_bounds':[[float(x) for x in pair] for pair in bounds],'proxy_scales':[float(x) for x in scales],'source_islands':len(enemy_parts),'rigid_islands':rigid_islands,'smooth_weight_vertices':smooth_vertices,'weapon_islands_removed_preview':weapon_hand_islands}
+report={'source':SRC_ENEMY,'player_rig_source':SRC_PLAYER,'output':OUT,'bones':len(arm.data.bones),'bone_names':[b.name for b in arm.data.bones],'mesh_vertices':len(enemy.data.vertices),'mesh_triangles':sum(len(p.vertices)-2 for p in enemy.data.polygons),'vertex_groups':len(enemy.vertex_groups),'weight_vertices':sum(1 for v in enemy.data.vertices if v.groups),'textures':[{'name':im.name,'size':list(im.size)} for im in bpy.data.images if im.source=='FILE'],'enemy_bounds':[[float(x) for x in pair] for pair in bounds],'proxy_scales':[float(x) for x in scales],'source_islands':len(enemy_parts),'smooth_weight_vertices':smooth_vertices,'weapon_islands_removed_preview':weapon_hand_islands}
 with open(os.path.splitext(OUT)[0]+'.json','w') as f: json.dump(report,f,indent=2)
 print('ASSAULT_RIG_REPORT='+json.dumps(report))

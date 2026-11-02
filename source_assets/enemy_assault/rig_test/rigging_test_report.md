@@ -58,3 +58,11 @@ This is still a local test asset, not a release asset. The 158.5 MB GLB is unopt
 - Blender 4.3.2 produced `capture_garand_arm_test.png` from the Garand test GLB after applying a synthetic arm pose. This is a grey Workbench rig/weight inspection capture, not a Godot gameplay screenshot or approval of the complete animation deformation.
 
 Remaining gate for this stage: inspect the actual body and attached Garand in an in-engine camera view and review arm/shoulder deformation through the clips. The existing weapon/IK and firing paths are functionally attached, but this unoptimized 158.5 MB candidate is still a local rig test and is not suitable for an OTA release.
+
+## Smooth-weight transfer experiment
+
+- Updated `tools/enemy_assault/rig_enemy_assault.py` to interpolate each source weight from up to four nearby player vertices, keep at most four influences, and quantize normalized weights so their sum remains 1. This replaces rigid single-bone assignment on small disconnected body/detail islands.
+- Generated local comparison asset `enemy_assault_body_rigged_smoothweights_test.glb`: 1,777,586 vertices, 3,296,450 triangles, all vertices weighted, 28-bone skeleton, 24 used vertex groups, 158,514,924 bytes; SHA-256 `dd8ba30f695eb368f69e0d7d07b98af9587bd62740e613fc73f1f39e6e3101a9`.
+- Godot 4.6.3 import/skin validation passed, and the existing `Walking`, `Rifle_Aim_Turn_Right`, and `dying_backwards` clips each resolved 26 tracks and changed the skeleton pose.
+- `tools/enemy_assault/dump_runtime_pose.gd` records the actual Godot pose and grip transforms. The runtime IK sample measured roughly 11 mm right-hand error and 3 mm left-hand error in its last run.
+- I did not promote this alternate mesh into `soldier_model.gd`: Blender's custom IK pose preview showed severe deformation, while its pose evaluation did not reproduce the Godot skeleton transforms reliably. That capture is not treated as proof of the in-game appearance. Final arm/shoulder deformation still needs a real Godot rendered view or a reliable skinning-equivalent capture; this host currently runs Godot headlessly.

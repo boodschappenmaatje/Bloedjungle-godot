@@ -8,12 +8,14 @@ on:
       - "scripts/voorraad.gd"
       - "scripts/voorraad_truck.gd"
       - "tests/voorraad_verkeer_test.gd"
+      - "tests/voorraad_verkeer_unit_test.gd"
       - ".github/workflows/voorraad-verkeer-v185.yml"
   pull_request:
     paths:
       - "scripts/voorraad.gd"
       - "scripts/voorraad_truck.gd"
       - "tests/voorraad_verkeer_test.gd"
+      - "tests/voorraad_verkeer_unit_test.gd"
       - ".github/workflows/voorraad-verkeer-v185.yml"
   workflow_dispatch:
 
@@ -37,6 +39,8 @@ jobs:
           .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --version
       - name: Import project
         run: timeout 900 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --import
+      - name: Fast traffic FIFO and parking contract
+        run: timeout 90 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voorraad_verkeer_unit_test.gd
       - name: Existing supply and driving regression
         run: |
           set -e

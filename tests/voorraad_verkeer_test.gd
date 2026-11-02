@@ -13,6 +13,8 @@ var max_travel := 0.0
 var starts := {}
 var first_depot: Dictionary = {}
 var second_depot: Dictionary = {}
+var simulation_frames := 0
+var simulation_started := false
 
 func _initialize() -> void:
 	Engine.physics_ticks_per_second = 30
@@ -35,18 +37,32 @@ func _process(_delta: float) -> bool:
 		for menu in get_nodes_in_group("menus"):
 			menu._show("")
 	if frames > 4 and g.state == "prep":
-		g.prep_t = 1e9  # Geen vijandgolven tijdens verkeerproef.
-	if frames == 40:
-		_setup(g)
-	if frames > 40 and frames % 6 == 0:
+		g.prep_t = 1e9
+	if not simulation_started:
+		if frames >= 40 and g.supply != null and g.supply.started:
+			_setup(g)
+			simulation_started = true
+		elif frames > 1200:
+			_check("voorraadbeheer na async wereldbouw actief", false)
+			print("VERKEER_V185_RESULT=FAIL: geen actieve voorraadsessie")
+			quit(1)
+		return false
+	simulation_frames += 1
+	if g.supply == null:
+		_check("voorraadbeheer blijft actief", false)
+		print("VERKEER_V185_RESULT=FAIL: supply verdwenen")
+		quit(1)
+		return false
+	if simulation_frames % 6 == 0:
 		_sample(g)
-	if frames == 940:
+	if simulation_frames >= 7200:
 		var sup: Voorraad = g.supply
-		_check("één bewegende/ladende truck tegelijk (smalle wegen)", multi_active == 0)
-		_check("geen truck-clipping in 240 s", overlaps == 0)
-		_check("minimale afstand voertuigen %.2f m" % min_separation, min_separation >= 3.2)
-		_check("vrachtwagen reed minimaal 5 meter (%.2f m)" % max_travel, max_travel >= 5.0)
-		print("VERKEER_V185_LIVE_RESULT=", "PASS" if fails == 0 else "FAIL", " fouten=", fails, " ritten=", sup.trips)
+		_check("maximaal één actieve truck op gedeelde weg", multi_active == 0)
+		_check("geen truck-overlap", overlaps == 0)
+		_check("minimale afstand %.2f m" % min_separation, min_separation >= 3.2)
+		_check("voorraad afgeleverd: %d ritten" % sup.trips, sup.trips >= 2)
+		_check("geen stilstand langer dan 120 sec", simulation_frames - last_progress_frame < 3600)
+		print("VERKEER_V185_RESULT=", "PASS" if fails == 0 else "FAIL", " fouten=", fails, " ritten=", sup.trips)
 		quit(1 if fails > 0 else 0)
 	return false
 

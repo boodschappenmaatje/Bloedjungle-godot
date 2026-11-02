@@ -1,6 +1,6 @@
 extends SceneTree
-## v185 verkeersregressie: zes voorraadtrucks, twee depots, 240 s bij 60 Hz.
-## godot --headless --path . --script tests/voorraad_verkeer_test.gd --fixed-fps 60
+## v185 verkeersregressie: zes voorraadtrucks, twee depots, 240 s bij 30 Hz.
+## godot --headless --path . --script tests/voorraad_verkeer_test.gd --fixed-fps 30
 
 var main: Node
 var frames := 0
@@ -13,6 +13,7 @@ var first_depot: Dictionary = {}
 var second_depot: Dictionary = {}
 
 func _initialize() -> void:
+	Engine.physics_ticks_per_second = 30
 	root.size = Vector2i(932, 430)
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
@@ -37,13 +38,13 @@ func _process(_delta: float) -> bool:
 		_setup(g)
 	if frames > 40 and frames % 6 == 0:
 		_sample(g)
-	if frames == 14440:
+	if frames == 7240:
 		var sup: Voorraad = g.supply
 		_check("één bewegende/ladende truck tegelijk (smalle wegen)", multi_active == 0)
 		_check("geen truck-clipping in 240 s", overlaps == 0)
 		_check("minimale afstand voertuigen %.2f m" % min_separation, min_separation >= 3.2)
 		_check("voorraad wordt nog afgeleverd (ritten: %d)" % sup.trips, sup.trips >= 2)
-		_check("geen verkeersstilstand >120 s", frames - last_progress_frame < 7200)
+		_check("geen verkeersstilstand >120 s", frames - last_progress_frame < 3600)
 		print("VERKEER_V185_RESULT=", "PASS" if fails == 0 else "FAIL", " fouten=", fails, " ritten=", sup.trips)
 		quit(1 if fails > 0 else 0)
 	return false

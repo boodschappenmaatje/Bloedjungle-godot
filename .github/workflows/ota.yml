@@ -169,7 +169,10 @@ jobs:
           (cd "$RUNNER_TEMP/basis" && "$GODOT_BIN" --headless --path . -s tests/ota_vroeg_test.gd)
           # 2) de app nabootsen: IPA-basis + lichte patch + alle zware bestanden; de speler moet een zichtbaar model hebben (tools/ota_simulatie.sh)
           OTA_BASE="$BASE" OTA_WERKMAP="$RUNNER_TEMP/sim" tools/ota_simulatie.sh "$GODOT_BIN" "$RUNNER_TEMP/sim_ios.pck" "$RUNNER_TEMP/licht.pck" "$RUNNER_TEMP/zwaar_voll.pck"
-          rm -rf "$RUNNER_TEMP/sim" "$RUNNER_TEMP/zwaar_voll.pck" "$RUNNER_TEMP/sim_ios.pck"
+          # 3) de brug nabootsen: IPA-basis + alleen brug.pck. Het updatescherm moet daar laden, anders kom je niet meer in het updatemenu
+          #    (tools/ota_brug_simulatie.sh; precies dit ging mis in v174)
+          OTA_BASE="$BASE" OTA_WERKMAP="$RUNNER_TEMP/sim_brug" tools/ota_brug_simulatie.sh "$GODOT_BIN" "$RUNNER_TEMP/sim_ios.pck" "$RUNNER_TEMP/brug.pck"
+          rm -rf "$RUNNER_TEMP/sim" "$RUNNER_TEMP/sim_brug" "$RUNNER_TEMP/zwaar_voll.pck" "$RUNNER_TEMP/sim_ios.pck"
       - name: Write manifest
         shell: bash
         run: |

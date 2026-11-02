@@ -375,12 +375,28 @@ func _sla_token_op() -> void:
 	_token.placeholder_text = "(ingevuld; plak een nieuw token om te vervangen)"
 
 
+## Extra regels onder de versie: wat de zware keten en het spelermodel bij de laatste start deden.
+## Dit scherm draait ook als "brug" bovenop een oude IPA, en die heeft ota_keten.gd en soldier_model.player_status nog niet.
+## Daarom hier NOOIT preload of een directe verwijzing naar scripts of leden die niet in elke IPA zitten (dan laadt het hele scherm niet
+## meer en kom je niet meer in het updatemenu): alleen load() na een controle en get(). tools/ota_brug_simulatie.sh bewaakt dit in de workflow.
+static func _extra_regels() -> String:
+	var uit := ""
+	for bron in [["res://scripts/ota_keten.gd", "status"], ["res://scripts/soldier_model.gd", "player_status"]]:
+		if not ResourceLoader.exists(bron[0]):
+			continue
+		var s: Variant = load(bron[0])
+		var waarde: Variant = s.get(bron[1]) if s != null else null
+		if waarde != null:
+			uit += "\n" + str(waarde)
+	return uit
+
+
 func _ververs() -> void:
 	if not is_inside_tree():
 		return
 	var app := "app-versie %s" % Updater.app_base.left(7) if Updater.app_base != "dev" else "ontwikkelbuild"
 	var patch := "actieve update: %s" % str(Updater.actief.get("versie", "?")) if Updater.patch_geladen else "geen update actief (zoals in de IPA)"
-	_info.text = "%s · %s\n%s\n%s" % [app, patch, preload("res://scripts/ota_keten.gd").status, preload("res://scripts/soldier_model.gd").player_status]
+	_info.text = "%s · %s" % [app, patch] + _extra_regels()
 	_status.text = Updater.status_tekst
 	var bezig: bool = Updater.status == "bezig"
 	_balk.visible = bezig

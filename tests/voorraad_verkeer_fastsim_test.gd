@@ -69,29 +69,29 @@ func _run(g) -> void:
 		return
 	for i in 3:
 		sup._spawn_truck(second)
-	var trucks := get_nodes_in_group("voorraadtruck")
+	var trucks: Array = get_nodes_in_group("voorraadtruck")
 	_check("zes trucks actief", trucks.size() == 6)
 	if trucks.size() != 6:
 		return
 	var delivered: int = sup.trips
 	for tick in range(SIM_SECONDS * HZ):
 		for item in trucks:
-			var t := item
+			var t = item
 			if is_instance_valid(t) and t.state != 5:
 				t._physics_process(DT)
 		if tick % 3 != 0:
 			continue
 		var moving := 0
 		for item in trucks:
-			var truck := item
+			var truck = item
 			if truck.state != 0 and truck.state != 5:
 				moving += 1
 		if moving > 1:
 			simultaneous += 1
 		for i in trucks.size():
 			for j in range(i + 1, trucks.size()):
-				var a := trucks[i]
-				var b := trucks[j]
+				var a = trucks[i]
+				var b = trucks[j]
 				if a.state == 5 or b.state == 5:
 					continue
 				var av := Vector2(a.global_position.x, a.global_position.z)

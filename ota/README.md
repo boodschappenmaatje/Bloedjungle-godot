@@ -29,6 +29,7 @@ dat het nodig is, met een terugval als het bestand ontbreekt (zie `SoldierModel.
 
 - `tests/ota_vroeg_test.gd` faalt als er toch een zwaar bestand met preload staat (ook transitief, via scènes/resources).
 - `tools/ota_simulatie.sh` bootst een telefoon na: IPA-basis + lichte patch + zware stukken, en start het spel (speler moet een zichtbaar model hebben).
+- `tools/ota_brug_simulatie.sh` bootst de brug na: IPA-basis + alleen `brug.pck`; het updatescherm moet dan laden en zich opbouwen. Het scherm mag dus nooit een script of lid nodig hebben dat pas na de IPA bestaat (geen `preload` in `scripts/update_panel.gd`, alleen `load()` na een controle en `get()`). Brak dit, dan kom je op een telefoon met de brug niet meer in het updatemenu (v174, 2 november 2026). Snelle controle vooraf: `tests/ota_brug_test.gd`.
 - `ota.yml` draait beide vlak vóór het manifest en de publicatie ("Safety net"). Slaagt dat niet, dan wordt er niets gepubliceerd.
   Bij een pull request levert de workflow alleen een preview (nooit gepubliceerd).
 

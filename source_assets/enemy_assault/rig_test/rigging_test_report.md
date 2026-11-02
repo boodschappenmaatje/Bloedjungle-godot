@@ -47,3 +47,14 @@ A second test export removes 79 disconnected front-rifle islands (84,000 vertice
 The canonical `assault` type now selects this test body when it exists. It uses the shared Meshy animation libraries, Garand adapter, both `SkeletonIK3D` hand chains, existing enemy AI and existing bullet firing path. `tests/assault_weapon_test.tscn` passed: both hand targets were within 6 mm and 3 mm respectively at `modification_processed`, and firing spawned one bullet through the existing path. `tests/ai_test.gd` also passed with assertions for the 28-bone Assault rig, Garand adapter, both IK chains and walk/aim/death clips.
 
 This is still a local test asset, not a release asset. The 158.5 MB GLB is unoptimized, the mesh has not had an in-engine human visual review with the attached Garand, and native iPhone performance is untested. It is intentionally not committed; mobile retopology/texture optimization and final visual review remain required before release.
+
+## Follow-up: arm IK and Assault AI verification
+
+- Re-ran `tests/assault_weapon_test.tscn` on Godot 4.6.3: passed. `SkeletonIK3D.modification_processed` measured 5.4 mm from the right-hand target and 2.5 mm from the left-hand Garand grip; calling the existing `_shoot()` path created one live bullet.
+- Re-ran `tests/ai_test.gd`. Its original hand assertion read the Skeleton pose from `SceneTree._process`, before the IK modifier had updated that frame, so it reported stale hand positions. The test now samples from each IK `modification_processed` callback. AI regression passed for cover, retreat/help, flank and staggered gates; during the run, the right and left hand errors measured 1.7 mm and 8.2 mm.
+- Re-ran `tests/assault_type_test.gd`: first-wave Assault, class identity, Garand configuration and rifle-equivalent balance passed.
+- Re-ran `tools/enemy_assault/validate_rig.gd`: one skinned mesh, one Skeleton3D, 28 bones.
+- Re-ran the clip playback check on `enemy_assault_body_rigged_garand_test.glb`: `Walking`, `Rifle_Aim_Turn_Right`, and `dying_backwards` each resolved 26 tracks and changed the skeleton pose.
+- Blender 4.3.2 produced `capture_garand_arm_test.png` from the Garand test GLB after applying a synthetic arm pose. This is a grey Workbench rig/weight inspection capture, not a Godot gameplay screenshot or approval of the complete animation deformation.
+
+Remaining gate for this stage: inspect the actual body and attached Garand in an in-engine camera view and review arm/shoulder deformation through the clips. The existing weapon/IK and firing paths are functionally attached, but this unoptimized 158.5 MB candidate is still a local rig test and is not suitable for an OTA release.

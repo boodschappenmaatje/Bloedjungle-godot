@@ -1020,7 +1020,8 @@ def sandbag(g, M4, sz=(0.5, 0.28, 0.17)):
 
 
 def build_levels(M, root):
-    """Niveau 2: radardeel (tweede schotel, antennerek, pantserlijsten). Niveau 3: zandzakwal, zoeklicht, luiken, ruimte voor het dakgeschut."""
+    """Zandzakwal rond het lagere dak: hoort bij elk niveau (sluit de open dakrand). Niveau 2: radardeel (tweede schotel, antennerek,
+    pantserlijsten). Niveau 3: zoeklicht, luiken, ruimte voor het dakgeschut."""
     n2 = empty("Niveau2", root)
     g = G()
     # antennerek met kast (dak, oosthoek achter)
@@ -1045,8 +1046,7 @@ def build_levels(M, root):
                               matrix=T(sp.x, sp.y, ROOF + 0.86) @ RX(math.radians(-30)) @ Matrix.Diagonal((1, 1, 0.34, 1)))
     st(g, (sp.x, sp.y, ROOF + 0.5), (sp.x + 0.1, sp.y - 0.12, ROOF + 1.05), 0.02, seg=5)
     commit("Niveau2_schotel", g, M["wit_g"], n2, smooth=False, tile=1.0)
-    n3 = empty("Niveau3", root)
-    # zandzakwal rond het lagere dak: drie lagen, verspringend
+    # zandzakwal rond het lagere dak: drie lagen, verspringend; staat op de wortel (niet onder Niveau3), dus op elk niveau zichtbaar
     g = G()
     rng = random.Random(8)
     ring_h = W / 2 + 0.02
@@ -1060,7 +1060,8 @@ def build_levels(M, root):
                     continue
                 m4 = WM(side, u + rng.uniform(-0.02, 0.02), -0.15, ZL + 0.11 + layer * 0.17, half=ring_h) @ RZ(rng.uniform(-0.05, 0.05))
                 sandbag(g, m4, (span / n * 1.02, 0.30, 0.18))
-    commit("Niveau3_zakken", g, M["zak"], n3, tile=1.2, bevel=True, bw=0.045)
+    commit("Zandzakwal", g, M["zak"], root, tile=1.2, bevel=True, bw=0.045)
+    n3 = empty("Niveau3", root)
     g = G()
     # zoeklicht op paal met steunen en kabel
     cy(g, T(1.5, -1.5, ROOF + 0.9), 0.045, 1.4, seg=SEGC)
@@ -1182,7 +1183,7 @@ def animate(radar, door, rig):
 
 # ------------------------------------------------------------------ bakken
 DETAIL_NAMES = {"Trap", "Trap_markering", "Radarvoet", "Radarhoorn", "Schotel", "Antennes", "Netpalen", "Niveau2_schotel",
-                "Niveau2_rek", "Niveau3_zakken", "Niveau3_zoeklicht", "Niveau3_luiken", "Paal", "Messing", "Binnen", "Ranken", "Rankstam",
+                "Niveau2_rek", "Zandzakwal", "Niveau3_zoeklicht", "Niveau3_luiken", "Paal", "Messing", "Binnen", "Ranken", "Rankstam",
                 "Vol_staal", "Vol_donker"}
 
 

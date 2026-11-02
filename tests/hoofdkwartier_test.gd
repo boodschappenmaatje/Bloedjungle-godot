@@ -35,7 +35,7 @@ func _process(_d: float) -> bool:
 		var hq := bunker.get_node_or_null("Hoofdkwartier")
 		_check("hoofdkwartier is de visual", hq != null and hq.is_in_group("hq"))
 		_check("model en LOD1 geladen", hq.model != null and hq.model_lod != null)
-		for n in ["Romp", "Platen", "Glas", "Deur", "Radar", "Vlag", "Doek", "Lamp_Rood", "Camonet", "Niveau2", "Niveau3", "Schade1", "Schade2"]:
+		for n in ["Romp", "Platen", "Glas", "Deur", "Radar", "Vlag", "Doek", "Lamp_Rood", "Camonet", "Zandzakwal", "Niveau2", "Niveau3", "Schade1", "Schade2"]:
 			_check("onderdeel " + n, hq.model.find_child(n, true, false) != null)
 		var ap: AnimationPlayer = hq.model.find_child("AnimationPlayer", true, false)
 		_check("clips Open en Dicht", ap != null and ap.has_animation("Open") and ap.has_animation("Dicht"))
@@ -48,6 +48,8 @@ func _process(_d: float) -> bool:
 		var n2 := hq.model.find_child("Niveau2", true, false) as Node3D
 		var n3 := hq.model.find_child("Niveau3", true, false) as Node3D
 		_check("niveau 1: geen extra onderdelen", not n2.visible and not n3.visible)
+		var wal := hq.model.find_child("Zandzakwal", true, false) as Node3D
+		_check("zandzakwal sluit de dakrand al op niveau 1", wal != null and wal.is_visible_in_tree() and wal.get_parent() == n3.get_parent())
 		g.hq_level = 2
 		hq._process(0.0)
 		_check("niveau 2 toont onderdelen", n2.visible and not n3.visible)

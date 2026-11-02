@@ -5,6 +5,7 @@ extends SceneTree
 ## xvfb-run -a -s "-screen 0 1400x800x24" godot --rendering-driver opengl3 --path . -s tests/hq_licht_foto.gd --fixed-fps 60
 
 var out := "/tmp/claude-0/hql_%s.png"
+var tag := OS.get_environment("HQ_FOTO_TAG")
 var cam: Camera3D
 
 
@@ -19,7 +20,7 @@ func _frames(n: int) -> void:
 
 
 func _shot(name: String) -> void:
-	root.get_viewport().get_texture().get_image().save_png(out % name)
+	root.get_viewport().get_texture().get_image().save_png(out % (tag + name))
 	print("foto ", name)
 
 
@@ -97,5 +98,12 @@ func _run() -> void:
 	_look(Vector3(0, 17.0, 14.0), Vector3(0, 0.6, 0.8), 45.0)
 	await _frames(4)
 	_shot("5_niveau3")
+	# niveau 1 en 3 vanuit dezelfde hoek, zoals in de viewer (linksvoor, hoog): de zandzakken horen op elk niveau het lagere dak te sluiten
+	for lvl in [1, 2, 3]:
+		game.hq_level = lvl
+		await _frames(6)
+		_look(Vector3(-7.5, 8.5, 8.0), Vector3(-0.3, 2.6, 0.0), 45.0)
+		await _frames(4)
+		_shot("6_niveau%d_linksvoor" % lvl)
 	print("klaar")
 	quit(0)

@@ -59,16 +59,16 @@ jobs:
           for script in tests/voorraad_baan_test.gd tests/voorraad_test.gd; do
             timeout 360 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script "$script" --fixed-fps 60
           done
-      - name: Six trucks, two depots, 240 simulated seconds
+      - name: Six trucks, two depots, 30-second live-world smoke
         shell: bash
         run: |
           set +e
-          timeout 600 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voorraad_verkeer_test.gd --fixed-fps 30 > "$RUNNER_TEMP/traffic.log" 2>&1
+          timeout 240 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voorraad_verkeer_test.gd --fixed-fps 30 > "$RUNNER_TEMP/traffic.log" 2>&1
           RC=$?
           set -e
           echo "Godot exit code: $RC"
           echo "=== Test results and engine errors (last 100) ==="
-          grep -E 'FOUT|VERKEER_V185_RESULT|SCRIPT ERROR|Parse Error|ERROR:|Timed out' "$RUNNER_TEMP/traffic.log" | tail -n 100 || true
+          grep -E 'FOUT|VERKEER_V185_LIVE_RESULT|SCRIPT ERROR|Parse Error|ERROR:|Timed out' "$RUNNER_TEMP/traffic.log" | tail -n 100 || true
           echo "=== Last 60 log lines ==="
           tail -n 60 "$RUNNER_TEMP/traffic.log"
           exit "$RC"

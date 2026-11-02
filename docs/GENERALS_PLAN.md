@@ -6,7 +6,7 @@
 Bloedjungle krijgt het ritme en de systemen van *Command & Conquer: Generals* (2003): voorraad ophalen, basis opbouwen in een techboom, eenheden produceren met tegen-eenheden (counters), een vijandelijke basis slopen, en generaalskrachten. **De eigen twist:** de speler is zelf een soldaat in het leger en loopt, schiet en bestuurt voertuigen terwijl hij ook de basis en het team commandeert. Visuele stijl blijft onze realistische militaire jungle (zie `referentie-stijl.png`), geen kopie van de Generals-look. Kopieer geen assets, namen, stemmen of teksten van het originele spel.
 
 ## Beslissingen van Dennis
-1. **De huidige golven (waves) gaan eruit.** Ze passen niet meer bij de game. De tegenstander wordt een **vijandelijke basis in de stad** die je moet slopen (D2). Bestaande golfcode, golf-HUD en de gebieden/kaart-PR #69 worden dan herbruikt of verwijderd: overleg bij die stap eerst wat blijft (bijvoorbeeld routes, bezette gebieden, kaart).
+1. **De huidige golven (waves) gaan eruit.** Ze passen niet meer bij de game. De tegenstander wordt een **vijandelijke basis** die je moet slopen (D2). Dennis wil daarvoor NIET de bestaande stad gebruiken: de basis komt ver in het noorden achter de stad (keuzes 2 november, zie "Stap D2" onderaan). Bestaande golfcode, golf-HUD en de gebieden/kaart-PR #69 worden dan herbruikt of verwijderd: overleg bij die stap eerst wat blijft (bijvoorbeeld routes, bezette gebieden, kaart).
 2. **Volgorde: de Generals-kern eerst** (fase 1 hieronder).
 3. Realistische stijl, weinig op het scherm, native iPhone-app is de acceptatietest (zie `CLAUDE.md`/`AGENTS.md`).
 
@@ -29,7 +29,7 @@ Bloedjungle krijgt het ritme en de systemen van *Command & Conquer: Generals* (2
 | C4 | Veteraanrangen met strepen | P2 | S |
 | C5 | Upgrades per gebouw | P2 | M |
 | C6 | Artillerie of luchtafweervoertuig (nieuw model) | P3 | L |
-| D2 | **Vijandelijke basis in de stad slopen om te winnen** | P1 | L |
+| D2 | **Vijandelijke basis (ver in het noorden achter de stad) slopen om te winnen** | P1 | L |
 | D3 | Vijand die zelf voorraad haalt en bouwt | P3 | L |
 | D4 | Facties met eigen kleur (wij olijfgroen, vijand rood/zand) | P2 | M |
 | E1 | Generaalsrang met sterren; elke rang laat een kracht kiezen; killstreaks blijven als snelle beloning | P1 | M |
@@ -47,7 +47,7 @@ Bloedjungle krijgt het ritme en de systemen van *Command & Conquer: Generals* (2
 
 ## Niet gekozen (niet bouwen zonder nieuwe vraag)
 - B2 "Jij bent de bouwer" (gebouw groeit alleen als de speler erbij staat) en een bulldozer: **niet gekozen.** Bouwen gaat via de bestaande bouwmodus met bouwtijd (B1). Vraag Dennis nog wie de bouwer is voordat je dit uitwerkt.
-- D1 Vijandelijke voertuigen als golf-uitbreiding: niet gekozen. Counters (C3) en de vijandelijke basis (D2) hebben wel vijandelijke voertuigen nodig; stem dit af bij de start van fase 2.
+- D1 Vijandelijke voertuigen als golf-uitbreiding: niet gekozen. De vijandelijke basis (D2) krijgt wel tank en jeep uit zijn garage: zie "Stap D2" (keuze G).
 - E3 Superwapen, F1 Fog of war, F3 Techgebouwen veroveren (olie A3 wel), H4 Vijandelijke generaal.
 - A2-twist en andere ideeën zonder vinkje staan niet op de planning.
 
@@ -101,3 +101,29 @@ Keuzepagina: https://claude.ai/artifact/VNoxTR8VvsKn44oDdD3Jq1
 - **Stapel** (`voorraadstapel.glb`, één glb met `Stapel_vol`, `Stapel_half`, `Stapel_leeg`): de stapel draait zijn voorkant naar de kant van de trucks; de afhaalkist verdwijnt als de grijper hem heeft en ligt er weer als de truck weg is.
 - **Contract van 4a blijft:** botsblok van de truck (2,6 x 2,4 x 6,4), route langs wegpunten, wrak en verloren lading, poortopening alleen voor rijdende trucks, depotpaneel, tests in `tests/voorraad_test.gd`.
 - **Niet getest:** iPhone/native FPS (NIET GETEST), Safari/Xogot.
+
+## Stap D2 (keuzes van Dennis, 2026-11-02): de vijandelijke basis, golven eruit
+Keuzekaart: https://claude.ai/artifact/WEMBbr3H3zrHtBYQnqxAdn (ingevuld 2026-11-02 20:13Z; opgeslagen in de kaart als `keuzes/generals-fase2-vijandbasis`). **Er is nog niets gebouwd.** Dennis wil de bestaande stad niet als vijandbasis gebruiken; de vijand krijgt een eigen basis.
+
+| Onderdeel | Keuze van Dennis (werk) |
+|---|---|
+| A Plek | **Plek 3: ver in het noorden, achter de stad (L).** Basis van 64 x 56 m rond (x -32, z -243), ± 215 m van jouw basis. De kaart moet daarvoor ongeveer 60 m naar het noorden groeien (nu loopt het terrein tot z = -200; nieuw terrein tot ± z = -262). Meeste kaartwerk en zwaarder voor de iPhone (NIET gemeten). De stad ligt dan tussen jullie in. |
+| B Soort basis | **Spiegelbasis (M):** zoals de jouwe in vijandkleuren: hoofdkwartier, kazerne, garage, depot, generator, met muur, poort en wachttorens. |
+| C Uiterlijk | **Bestaande gebouwen in vijandkleuren, plus een nieuw hoofdkwartier en nieuwe poort (M).** Kazerne, garage en depot hergebruiken met andere kleuren; alleen hoofdkwartier en poort zijn nieuw, op bunkerkwaliteit. *Opmerking van Dennis:* "De kleuren zijn veranderd, het is groen-geel geworden. Kijk naar mijn nieuwe vijandmodel *assault* en gebruik die kleuren subtiel." (Dus niet het eerder bedachte rood/zand, maar de groen-gele kleuren van dat model, subtiel toegepast. Het model "assault" is nog niet in de repo of in de Drive-zoekopdracht gevonden: vraag Dennis waar het staat voordat je kleuren kiest.) |
+| D Wie maakt de modellen | **Dennis maakt ze in Meshy, Claude/Codex verwerkt ze** (zoals garage en voorraadtruck). Per nieuw model eerst een Asset Design Specification ter goedkeuring (`CLAUDE.md`). |
+| E Verdediging (meerdere) | **Muur met poort en wachttorens met MG (M)**, **soldaten die op hun post blijven (garnizoen) (M)** en **zwaar geschut dat jou beschiet, een mortier (L, nieuw model en geluid: als laatste onderdeel).** |
+| F Aanval | **Slimme aanval: hij kiest de zwakste kant van jouw basis (L).** *Opmerking van Dennis:* "Onderzoek als we hier zijn hoe Command & Conquer Generals hiermee omgaat en hoe het daar werkt." Dus eerst onderzoek (geen assets of teksten kopiëren), dan pas bouwen. |
+| G Eenheden | **Soldaten plus tank en jeep uit zijn garage (L):** tank en jeep hergebruiken in vijandkleuren, laten rijden langs een route (dezelfde soepele bochten als de voorraadtruck, `scripts/voorraad_baan.gd`); vraagt vijand-AI voor voertuigen, schade en schieten. |
+| H Winnen | **Zijn hoofdkwartier slopen is winnen (S).** |
+| I Golven en stad | **Golven eruit; de routes blijven voor zijn aanvalsgroepen (M):** golfteller en golf-HUD verdwijnen; de 7 routes (`AanvalRoutes`: brug, wijk, kade, industrie, moeras, jungle, zuid) blijven, maar de groepen starten bij zijn basis en gebruiken de routes die bij de gekozen plek passen. |
+| J Tempo | **Rust 3 minuten, daarna elke 90 seconden een groep; een spel van ± 25 tot 30 minuten.** |
+| K Groei | **Echte vijand-AI met eigen voorraad en bouwen (L, "later"; dit is D3 uit het plan).** Daarmee verschuift D3 van fase 4 naar de vijandstap; bouw dit pas na de eerste speelbare versie. |
+| L Zien (meerdere) | **Een rood vlakje op de tactische kaart, niets extra op het scherm (S)** en **een knop in het teamwiel om je leger de vijandbasis aan te laten vallen (M)** (richt "Aanvallen" van het teamwiel op de basis). |
+| M Volgorde | **Eerst speelbaar met eenvoudige blokken (stap 5a), daarna de mooie modellen (5b).** |
+
+**Stand en open punten (voor Claude én Codex):**
+- Niets bouwen voordat Dennis "ga door" zegt; Draft PR, niet mergen of OTA zonder apart ja. Vraag bij de start van 5a wat 5a precies omvat als dat onduidelijk is.
+- Vraag Dennis waar zijn nieuwe vijandmodel *assault* staat (kleurreferentie).
+- Onderzoek eerst hoe Generals de aanvallen kiest (keuze F) voordat de AI wordt ontworpen.
+- Kaart 60 m groter naar het noorden: terrein (grondplaat 440 m), camera- en speelgrenzen, kaart/minimap, rivier en stadsroutes erbij trekken; iPhone-prestaties NIET gemeten.
+- Spelfeiten die hierbij horen: jouw basis 56 x 56 m op de oorsprong (`Data.COMPOUND` 28), rivier z ≈ -92 (`Data.river_z`), brug x = 0, stad x -62..72 en z ≈ -96..-158, `ETYPES` zijn nu alleen infanterie (mes, geweer, raket, zwaar), `Voorraad.SITES` heeft 8 stapelplekken.

@@ -6,8 +6,8 @@ metingen en afwijkingen: [docs/vq2/voorraad-4b-rapport.md](../../docs/vq2/voorra
 | Generator | Niveau's | Uitvoer |
 |---|---|---|
 | `maak_depot.py` | `hq`, `game`, `lod1` | `assets/voorraaddepot.glb`, `assets/voorraaddepot_lod1.glb`, `uit/Voorraaddepot.usdz` |
-| `maak_truck.py` | `hq`, `game`, `lod1` | `assets/voorraadtruck.glb`, `assets/voorraadtruck_lod1.glb`, `uit/Voorraadtruck.usdz` |
-| `maak_truck_wrak.py` | `hq`, `game` | `assets/voorraadtruck_wrak.glb`, `uit/Voorraadtruck_wrak.usdz` |
+| `maak_truck.py` | `hq`, `game`, `lod1` | **vervangen in v182** door het Meshy-model (zie hieronder); nu alleen de vergelijking `assets/vq2_baseline/voorraadtruck_v1.glb` |
+| `maak_truck_wrak.py` | `hq`, `game` | idem, vergelijking `assets/vq2_baseline/voorraadtruck_wrak_v1.glb` |
 | `maak_stapel.py` | `hq`, `game` | `assets/voorraadstapel.glb` (drie standen), `uit/Voorraadstapel.usdz` |
 
 ```
@@ -20,7 +20,10 @@ python3 bron/voorraad/maak_truck.py game   # bakt 2K-PBR (albedo/ORM/normal), sc
   GLB- en USDZ-export). Hergebruikt `bron/hoofdkwartier/` (camonet, bake) en `bron/verzamelvlag/`.
 * Niveau `hq` = hoogste detail met live procedurele materialen (alleen `uit/*_HQ.blend`); `game` = geoptimaliseerd voor Godot (één gebakken
   2K-atlas per model); `lod1` = ver weg (1K-atlas, geen kleine details).
-* Clips (echte glTF-animaties, NLA): truck `Laden` en `Lossen` (4,5 s), depot `Poort` (2 s) en `Kraan-lossen` (4,5 s). Wrak en stapel zijn
+* **Voorraadtruck en wrak sinds v182**: het model uit Dennis' Meshy-vrachtwagen, zie [../voorraad_meshy/README.md](../voorraad_meshy/README.md) en
+  [docs/vq2/voorraad-meshy-rapport.md](../../docs/vq2/voorraad-meshy-rapport.md). `assets/voorraadtruck*.glb` komen daar vandaan; `maak_truck.py` en `maak_truck_wrak.py`
+  leveren niet meer de spelbestanden. Het depot en de stapel blijven hier (het depot is in v182 donkerder geverfd en opnieuw gebakken: `vc.py`).
+* Clips (echte glTF-animaties, NLA): truck `Laden` en `Lossen` (6,0 s sinds v182, daarvoor 4,5 s), depot `Poort` (2 s) en `Kraan-lossen` (4,5 s). Wrak en stapel zijn
   statisch; de stapel heeft drie groepen (`Stapel_vol`, `Stapel_half`, `Stapel_leeg`) waarvan Godot er één toont.
 * `render.py` maakt Cycles-voorbeeldbeelden (`VR_FRAME`, `VR_CLIP`, `VR_SAMPLES`, `VR_RES`).
 * Lettertype Big Shoulders (OFL, `BigShoulders-OFL.txt`) voor de stencil. Alle texturen en geometrie zijn procedureel; geen externe assets.

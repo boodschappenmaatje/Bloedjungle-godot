@@ -19,7 +19,7 @@ const sample=(page,names)=>page.evaluate(ns=>{const o={};for(const n of ns){cons
 const diff=(a,b)=>Object.keys(a).filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k]));
 async function open(page,asset){await page.selectOption('#asset',asset);await page.waitForFunction(a=>window.__VQ2_TEST__.ready()&&window.__VQ2_TEST__.loaded().asset===a,asset);await page.waitForTimeout(500);}
 const PLAN={
- voorraadtruck:{clips:{Laden:['Kolom','Giek','Grijper','Lading'],Lossen:['Kolom','Giek','Grijper','Lading']},nodes:['Wiel_FL','Wiel_RR','Kist_vast']},
+ voorraadtruck:{clips:{Laden:['Kolom','Giek','GiekUit','Grijper','Klauw_LV','Lading'],Lossen:['Kolom','Giek','GiekUit','Grijper','Klauw_LV','Lading']},nodes:['Wiel_FL','Wiel_RR','Kist_vast','Kettingpunt','Telescoop']},
  voorraaddepot:{clips:{Poort:['Poort','Poort_balk'],'Kraan-lossen':['Brug','Loopkat','Haak','Kist_perron','Kist_opslag']},nodes:['Perron','Schuur','Lampen']},
  voorraadtruck_wrak:{clips:{},nodes:['Voorraadtruck_wrak']},
  voorraadstapel:{clips:{},nodes:['Stapel_vol','Stapel_half','Stapel_leeg','Afhaal']},

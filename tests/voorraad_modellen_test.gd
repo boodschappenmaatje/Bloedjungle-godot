@@ -76,47 +76,65 @@ func _initialize() -> void:
 	# ---------------- truck
 	var tr := _load("res://assets/voorraadtruck.glb")
 	if tr != null:
-		_has(tr, ["Wiel_FL", "Wiel_FR", "Wiel_ML", "Wiel_MR", "Wiel_RL", "Wiel_RR", "Lading", "Kist_vast", "Kolom", "Giek", "Grijper", "Klauw_RV", "Klauw_LA"], "truck")
+		_has(tr, ["Wiel_FL", "Wiel_FR", "Wiel_ML", "Wiel_MR", "Wiel_RL", "Wiel_RR", "Lading", "Kist_vast", "Kolom", "Giek", "GiekUit", "Kettingpunt", "Ketting", "Grijper", "Klauw_LV", "Klauw_RV", "Klauw_LA"], "truck")
 		var ap := tr.find_child("AnimationPlayer", true, false) as AnimationPlayer
 		_check("truck: clips Laden en Lossen", ap != null and ap.has_animation("Laden") and ap.has_animation("Lossen"))
 		if ap != null:
 			for c in ["Laden", "Lossen"]:
 				var a := ap.get_animation(c)
-				_check("truck: clip %s is 4,5 s en bevat veel kanalen (%d)" % [c, a.get_track_count()], absf(a.length - 4.5) < 0.1 and a.get_track_count() >= 10)
+				_check("truck: clip %s is 6 s en bevat veel kanalen (%d)" % [c, a.get_track_count()], absf(a.length - 6.0) < 0.1 and a.get_track_count() >= 10)
 			var kolom0 := _tr(tr, "Kolom").basis
 			ap.play("Laden")
-			ap.seek(1.4, true)
+			ap.seek(2.0, true)
 			var kolom1 := _tr(tr, "Kolom").basis
 			_check("truck: kraankolom zwenkt in Laden", kolom0.x.distance_to(kolom1.x) > 0.5)
 			var lading0 := (tr.find_child("Lading", true, false) as Node3D).scale.x
-			ap.seek(4.4, true)
+			ap.seek(5.9, true)
 			var lading1 := (tr.find_child("Lading", true, false) as Node3D).scale.x
 			_check("truck: de kist komt in de bak aan het eind van Laden (%.3f -> %.3f)" % [lading0, lading1], lading0 < 0.1 and lading1 > 0.9)
-			ap.seek(4.5, true)
+			ap.seek(6.0, true)
 			var kolom2 := _tr(tr, "Kolom").basis
 			_check("truck: Laden eindigt in de beginpose (kraan terug)", kolom0.x.distance_to(kolom2.x) < 0.05)
 			ap.play("Lossen")
 			ap.seek(0.0, true)
 			var l0 := (tr.find_child("Lading", true, false) as Node3D).scale.x
-			ap.seek(4.4, true)
+			ap.seek(5.9, true)
 			var l1 := (tr.find_child("Lading", true, false) as Node3D).scale.x
 			_check("truck: Lossen begint geladen en eindigt leeg (%.3f -> %.3f)" % [l0, l1], l0 > 0.9 and l1 < 0.1)
 		var n := _tris(tr)
 		print("truck LOD0: ", n, " driehoeken, materialen ", _mats(tr).keys())
-		_check("truck: LOD0 binnen budget (maximaal ca. 16.000, marge tot 17.000)", n > 3000 and n <= 17000)
-		_check("truck: één gebakken materiaal plus alfa en lampen (<= 8)", _mats(tr).size() <= 8)
+		_check("truck: LOD0 heeft minstens 40.000 driehoeken (afspraak) en blijft licht genoeg (<= 60.000)", n >= 40000 and n <= 60000)
+		_check("truck: één gebakken atlas plus staal en kist (<= 4 materialen)", _mats(tr).size() <= 4)
+		var ap_ := tr.find_child("AnimationPlayer", true, false) as AnimationPlayer
+		if ap_ != null:
+			ap_.play("Laden")
+			ap_.seek(0.0, true)
+			var g0 := (tr.find_child("GiekUit", true, false) as Node3D).position
+			ap_.seek(2.4, true)
+			var g1 := (tr.find_child("GiekUit", true, false) as Node3D).position
+			_check("truck: telescoopgiek schuift uit in Laden (%.2f m)" % g0.distance_to(g1), g0.distance_to(g1) > 1.5)
+			ap_.seek(0.0, true)
+			var k0 := (tr.find_child("Klauw_LV", true, false) as Node3D).transform.basis
+			ap_.seek(2.6, true)
+			var k1 := (tr.find_child("Klauw_LV", true, false) as Node3D).transform.basis
+			_check("truck: klauwen openen en sluiten in Laden", k0.x.distance_to(k1.x) + k0.y.distance_to(k1.y) + k0.z.distance_to(k1.z) > 0.15)
+			ap_.seek(0.0, true)
+			var gr0 := (tr.find_child("Grijper", true, false) as Node3D).position.y
+			ap_.seek(3.0, true)
+			var gr1 := (tr.find_child("Grijper", true, false) as Node3D).position.y
+			_check("truck: grijper zakt aan de ketting (%.2f m)" % (gr0 - gr1), gr0 - gr1 > 1.5)
 		tr.queue_free()
 	var lod := _load("res://assets/voorraadtruck_lod1.glb")
 	if lod != null:
 		var n2 := _tris(lod)
 		print("truck LOD1: ", n2, " driehoeken")
-		_check("truck: LOD1 binnen budget (maximaal ca. 2.500, marge tot 4.000)", n2 > 200 and n2 <= 4000)
+		_check("truck: LOD1 binnen budget (ca. 3.800, marge tot 5.000)", n2 > 200 and n2 <= 5000)
 		lod.queue_free()
 	var wr := _load("res://assets/voorraadtruck_wrak.glb")
 	if wr != null:
 		var n3 := _tris(wr)
 		print("truck wrak: ", n3, " driehoeken")
-		_check("wrak: aanwezig en niet te zwaar (<= 17.000)", n3 > 1000 and n3 <= 17000)
+		_check("wrak: aanwezig en niet te zwaar (<= 60.000)", n3 > 1000 and n3 <= 60000)
 		wr.queue_free()
 	# ---------------- depot
 	var dp := _load("res://assets/voorraaddepot.glb")

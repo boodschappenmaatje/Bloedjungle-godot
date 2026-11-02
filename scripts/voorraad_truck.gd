@@ -6,18 +6,21 @@ extends StaticBody3D
 ## op de laadplaat (clip `Lossen`, daarna tilt de portaalkraan van het depot hem weg). Wrakmodel apart. Wielen draaien mee met de snelheid.
 
 enum S { WACHT, HEEN, LADEN, TERUG, LOSSEN, WRAK }
-const SPEED := 6.0        # m/s
-const TURN := 2.4         # rad/s
+const SPEED := 6.0        # m/s (de baan in scripts/voorraad_baan.gd begrenst dit in bochten)
+const ACCEL := 2.6        # m/s²
+const BRAKE := 4.5        # m/s²
+const STEER_MAX := 0.62   # rad: grootste stuuruitslag van de voorwielen
+const STEER_RATE := 2.2   # rad/s: zo snel draaien de voorwielen
 const MODEL := "res://assets/voorraadtruck.glb"
 const MODEL_LOD := "res://assets/voorraadtruck_lod1.glb"
 const WRECK_MODEL := "res://assets/voorraadtruck_wrak.glb"
 const LOD_SWITCH := 70.0   # m: daarachter het eenvoudige model
-const LOAD_T := 4.5       # s laden (lengte van de clip `Laden`)
-const UNLOAD_T := 4.5     # s lossen (lengte van de clip `Lossen`)
+const LOAD_T := 6.0       # s laden (lengte van de clip `Laden`)
+const UNLOAD_T := 6.0     # s lossen (lengte van de clip `Lossen`)
 const LOAD_TAKE := 0.5    # op dit deel van het laden zit de kist in de klauwen: dan gaat de voorraad van de stapel
 const UNLOAD_DROP := 0.7  # op dit deel van het lossen staat de kist op de laadplaat: dan komt het geld binnen en pakt de portaalkraan hem
-const REACH_UNLOAD := 5.64 # m voor de truck waar de grijper de kist neerzet (clip `Lossen`)
-const WHEEL_R := 0.55
+const REACH_UNLOAD := 4.90 # m voor de truck waar de grijper de kist neerzet (clip `Lossen`; telescoopgiek 2,5 m uitgeschoven, zie bron/voorraad_meshy)
+const WHEEL_R := 0.49
 const HP_MAX := 400.0
 const WRECK_T := 90.0     # s dat het wrak blijft liggen
 const BULLET_TAKE := 0.5  # een kogel doet de helft van zijn schade aan het pantser
@@ -43,8 +46,18 @@ var _wheel_ang := 0.0
 var _dropped := false
 var _dust: CPUParticles3D
 var _snd: AudioStreamPlayer3D
-var _speed_now := 0.0
+var _speed_now := 0.0      # snelheid (m/s, zonder teken)
+var _vel_signed := 0.0     # met teken: negatief = achteruit
 var _last_state := -1
+var _legs: Array = []      # de baan (VoorraadBaan.Leg): keer, daarna de gladde route
+var _planned := false
+var _li := 0               # welk stuk
+var _u := 0.0              # afgelegde weg op dat stuk
+var _pause := 0.0          # s: stilstaan tussen twee streken van de keer (de voorwielen draaien om)
+var _steer := 0.0          # stand van de voorwielen (rad)
+var _yaw_err := 0.0        # verschil met de baan aan het begin; sluipt naar nul
+var _lean := Vector2.ZERO  # (kanteling, helling) van de bak, glad gemaakt
+var _last_vel := 0.0
 
 
 func setup(sup_: Voorraad, depot_: Dictionary, number_: int) -> void:
@@ -57,9 +70,9 @@ func setup(sup_: Voorraad, depot_: Dictionary, number_: int) -> void:
 	collision_mask = 0
 	var cs := CollisionShape3D.new()
 	var bs := BoxShape3D.new()
-	bs.size = Vector3(2.6, 2.4, 6.4)
+	bs.size = Vector3(2.2, 2.7, 6.6)
 	cs.shape = bs
-	cs.position = Vector3(0, 1.3, 0)
+	cs.position = Vector3(0, 1.35, 0)
 	add_child(cs)
 	_build_model()
 	_build_wreck()
@@ -82,8 +95,9 @@ func _build_model() -> void:
 	for n in ["Wiel_FL", "Wiel_FR", "Wiel_ML", "Wiel_MR", "Wiel_RL", "Wiel_RR"]:
 		var w := m.find_child(n, true, false) as Node3D
 		if w != null:
-			# de linkerwielen staan 180 graden gedraaid (as naar binnen): hun voorwaartse draairichting is omgekeerd
-			_wheels.append({"node": w, "base": w.transform.basis, "sign": -1.0 if n.ends_with("L") else 1.0})
+			# een wiel dat 180 graden gedraaid staat (as naar binnen) draait voorwaarts de andere kant op
+			var sg := 1.0 if (w.transform.basis * Vector3.RIGHT).dot(Vector3.RIGHT) > 0.0 else -1.0
+			_wheels.append({"node": w, "base": w.transform.basis, "sign": sg, "steer": n.begins_with("Wiel_F")})
 	_set_lading(false)
 
 
@@ -107,47 +121,74 @@ func _play(clip: String) -> void:
 		_anim.play(clip)
 
 
-## De wielen draaien met de snelheid mee.
+## De wielen draaien met de snelheid mee (achteruit andersom); de voorwielen staan in de stuurstand.
 func _spin_wheels(delta: float) -> void:
-	if _wheels.is_empty() or _speed_now < 0.05:
+	if _wheels.is_empty():
 		return
-	_wheel_ang = fmod(_wheel_ang + _speed_now * delta / WHEEL_R, TAU)
+	_wheel_ang = fmod(_wheel_ang + _vel_signed * delta / WHEEL_R, TAU)
 	for w in _wheels:
-		(w.node as Node3D).transform.basis = (w.base as Basis) * Basis(Vector3.RIGHT, _wheel_ang * float(w.sign))
+		var b: Basis = (w.base as Basis) * Basis(Vector3.RIGHT, _wheel_ang * float(w.sign))
+		if w.steer:
+			b = Basis(Vector3.UP, _steer) * b
+		(w.node as Node3D).transform.basis = b
 
 
 func _build_dust() -> void:
 	_dust = CPUParticles3D.new()
 	_dust.name = "Stof"
-	_dust.amount = 14
-	_dust.lifetime = 1.5
+	_dust.amount = 16
+	_dust.lifetime = 1.6
 	_dust.local_coords = false
 	_dust.emitting = false
-	_dust.direction = Vector3(0, 0.6, -1)
-	_dust.spread = 30.0
-	_dust.initial_velocity_min = 0.6
-	_dust.initial_velocity_max = 1.4
-	_dust.gravity = Vector3(0, 0.1, 0)
-	_dust.scale_amount_min = 0.7
-	_dust.scale_amount_max = 1.5
-	var sm := SphereMesh.new()
-	sm.radius = 0.45
-	sm.height = 0.9
-	sm.radial_segments = 6
-	sm.rings = 3
+	_dust.direction = Vector3(0, 0.5, -1)
+	_dust.spread = 28.0
+	_dust.initial_velocity_min = 0.5
+	_dust.initial_velocity_max = 1.2
+	_dust.gravity = Vector3(0, 0.15, 0)
+	_dust.scale_amount_min = 0.8
+	_dust.scale_amount_max = 1.3
+	var gs := Curve.new()   # de wolk zwelt op terwijl hij vervaagt
+	gs.add_point(Vector2(0.0, 0.45))
+	gs.add_point(Vector2(1.0, 1.5))
+	_dust.scale_amount_curve = gs
+	var qm := QuadMesh.new()
+	qm.size = Vector2(1.5, 1.5)
 	var m := StandardMaterial3D.new()
 	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	m.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
+	m.billboard_keep_scale = true
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.depth_draw_mode = BaseMaterial3D.DEPTH_DRAW_DISABLED
 	m.vertex_color_use_as_albedo = true
-	m.albedo_color = Color(0.62, 0.55, 0.42, 1.0)
-	sm.material = m
-	_dust.mesh = sm
+	m.albedo_color = Color(0.6, 0.52, 0.4, 1.0)
+	m.albedo_texture = _soft_puff()   # zachte ronde wolk in plaats van een veelhoek
+	qm.material = m
+	_dust.mesh = qm
 	var g := Gradient.new()
-	g.set_color(0, Color(1, 1, 1, 0.38))
+	g.set_color(0, Color(1, 1, 1, 0.32))
 	g.set_color(1, Color(1, 1, 1, 0.0))
 	_dust.color_ramp = g
 	_dust.position = Vector3(0, 0.4, -3.2)
 	add_child(_dust)
+
+
+static var _puff_tex: GradientTexture2D
+
+static func _soft_puff() -> Texture2D:
+	if _puff_tex == null:
+		var g := Gradient.new()
+		g.set_color(0, Color(1, 1, 1, 1))
+		g.add_point(0.45, Color(1, 1, 1, 0.55))
+		g.set_color(g.get_point_count() - 1, Color(1, 1, 1, 0))
+		_puff_tex = GradientTexture2D.new()
+		_puff_tex.gradient = g
+		_puff_tex.fill = GradientTexture2D.FILL_RADIAL
+		_puff_tex.fill_from = Vector2(0.5, 0.5)
+		_puff_tex.fill_to = Vector2(1.0, 0.5)
+		_puff_tex.width = 64
+		_puff_tex.height = 64
+	return _puff_tex
 
 
 func _build_sound() -> void:
@@ -189,9 +230,17 @@ func _physics_process(delta: float) -> void:
 			_t += delta
 			if _t > WRECK_T:
 				queue_free()
+	if state != S.HEEN and state != S.TERUG:
+		_vel_signed = 0.0
+		_steer = move_toward(_steer, 0.0, STEER_RATE * delta)
 	_spin_wheels(delta)
+	_lean_body(delta)
 	var moving := _speed_now > 0.5 and (state == S.HEEN or state == S.TERUG)
 	_dust.emitting = moving
+	if moving:   # het stof komt achter de rijrichting vandaan
+		var fwd := 1.0 if _vel_signed >= 0.0 else -1.0
+		_dust.position.z = -3.2 * fwd
+		_dust.direction = Vector3(0, 0.5, -fwd)
 	if moving and not _snd.playing:
 		_snd.play()
 	elif not moving and _snd.playing:
@@ -202,6 +251,7 @@ func _physics_process(delta: float) -> void:
 
 func _idle() -> void:
 	_speed_now = 0.0
+	_vel_signed = 0.0
 	if Game.state != "play" and Game.state != "prep":
 		return
 	if not Game.buildings.has(depot) or depot.down or Buildings.under_construction(depot):
@@ -217,31 +267,93 @@ func _idle() -> void:
 	if path.size() > 0:
 		path.pop_front()   # de eerste is het depot zelf
 	sup.claim(pick, 1)
+	_start_drive()
 	_set_state(S.HEEN)
 
 
-## Rijdt het pad af. Geeft true als het einde bereikt is.
-func _drive(delta: float) -> bool:
-	if path.is_empty():
-		_speed_now = 0.0
-		return true
-	var target: Vector2 = path[0]
+## Begint een rit: de baan wordt bij de eerste stap uit de wegpunten berekend (vanaf de plek en richting waar de truck dan staat).
+func _start_drive() -> void:
+	_planned = false
+	_legs = []
+	_li = 0
+	_u = 0.0
+	_pause = 0.0
+
+
+func _make_plan() -> void:
+	_planned = true
 	var here := Vector2(global_position.x, global_position.z)
-	var to := target - here
-	var arrive := 2.2 if path.size() > 1 else 0.6
-	if to.length() < arrive:
-		path.pop_front()
-		return path.is_empty()
-	var want := atan2(to.x, to.y)
-	var diff := absf(angle_difference(rotation.y, want))
-	rotation.y += clampf(angle_difference(rotation.y, want), -TURN * delta, TURN * delta)
-	var v := SPEED * clampf(1.15 - diff / 1.1, 0.12, 1.0)
-	if path.size() == 1:
-		v = minf(v, maxf(1.5, to.length() * 1.4))   # vlak voor de stop afremmen
-	_speed_now = v
-	var fwd := Vector3(sin(rotation.y), 0.0, cos(rotation.y))
-	global_position += fwd * v * delta
+	_legs = VoorraadBaan.plan(here, rotation.y, path, 1 if number % 2 == 0 else -1)
+	_li = 0
+	_u = 0.0
+	_yaw_err = 0.0
+	if not _legs.is_empty():
+		var l0: VoorraadBaan.Leg = _legs[0]
+		if l0.gear > 0:   # een klein verschil met de baan glijdt weg in plaats van te springen
+			_yaw_err = angle_difference(l0.head(0.0), rotation.y)
+
+
+## Rijdt de baan af: versnelt en remt, stuurt de voorwielen en geeft de bak een lichte kanteling. Geeft true als het einde bereikt is.
+func _drive(delta: float) -> bool:
+	if not _planned:
+		_make_plan()
+	if _li >= _legs.size():
+		_speed_now = 0.0
+		_vel_signed = 0.0
+		_steer = move_toward(_steer, 0.0, STEER_RATE * delta)
+		path.clear()
+		return true
+	var leg: VoorraadBaan.Leg = _legs[_li]
+	if _pause > 0.0:
+		# stilstaan tussen twee streken: de voorwielen draaien om naar de volgende stand
+		_pause -= delta
+		_speed_now = 0.0
+		_vel_signed = 0.0
+		var want_steer := clampf(atan(VoorraadBaan.WIELBASIS * leg.kap(0.0)), -STEER_MAX, STEER_MAX)
+		_steer = move_toward(_steer, want_steer, STEER_RATE * delta)
+		if _pause <= 0.0 and absf(_steer - want_steer) > 0.05:
+			_pause = 0.05
+		return false
+	var remain := leg.length - _u
+	var vt := maxf(leg.vmax(_u), minf(0.9, remain * 1.6 + 0.12))
+	_speed_now = move_toward(_speed_now, vt, (ACCEL if vt > _speed_now else BRAKE) * delta)
+	_u = minf(_u + _speed_now * delta, leg.length)
+	_vel_signed = _speed_now * float(leg.gear)
+	var q := leg.pos(_u)
+	global_position = Vector3(q.x, global_position.y, q.y)
+	_yaw_err = move_toward(_yaw_err, 0.0, 1.2 * delta)
+	rotation.y = wrapf(leg.head(_u) + _yaw_err, -PI, PI)
+	# de voorwielen sturen iets vóór de bocht, en draaien glad
+	var look := leg.kap(minf(_u + clampf(_speed_now * 0.3, 0.0, 2.0), leg.length))
+	_steer = move_toward(_steer, clampf(atan(VoorraadBaan.WIELBASIS * look), -STEER_MAX, STEER_MAX), STEER_RATE * delta)
+	if _u >= leg.length - 0.01:
+		_li += 1
+		_u = 0.0
+		_speed_now = 0.0
+		_vel_signed = 0.0
+		if _li < _legs.size():
+			_pause = 0.25
+		else:
+			path.clear()
+			return true
 	return false
+
+
+## De bak kantelt een beetje naar buiten in een bocht en duikt iets bij remmen (alleen kijkwerk: botsblok en klauwen blijven staan).
+func _lean_body(delta: float) -> void:
+	if _model == null:
+		return
+	var accel := (_vel_signed - _last_vel) / maxf(delta, 0.0001)
+	_last_vel = _vel_signed
+	var lat := _steer_curv() * _vel_signed * _vel_signed
+	var target := Vector2(clampf(lat * 0.011, -0.04, 0.04), clampf(-accel * 0.008, -0.03, 0.03))
+	_lean = _lean.lerp(target, 1.0 - exp(-6.0 * delta))
+	_model.rotation = Vector3(_lean.y, 0.0, _lean.x)
+
+
+## Kromming van de baan nu, uit de stand van de voorwielen (tan(stuurhoek) / wielbasis).
+func _steer_curv() -> float:
+	return tan(_steer) / VoorraadBaan.WIELBASIS
 
 
 func _load_step(delta: float) -> void:
@@ -272,6 +384,7 @@ func _go_home(amount: int) -> void:
 	if st != null and is_instance_valid(st):
 		st.pickup_taken(false)
 	path = _back.duplicate()
+	_start_drive()
 	_set_state(S.TERUG)
 
 
@@ -280,6 +393,7 @@ func _unload_step(delta: float) -> void:
 	if _t == 0.0:
 		_dropped = false
 		if cargo > 0:
+			_set_lading(false)   # de kist die de kraan uit de bak tilt is de lading
 			_play("Lossen")
 	_t += delta
 	_align_to_dock(delta)
@@ -333,8 +447,11 @@ func _destroy() -> void:
 		sup.claim(slot, -1)
 	cargo = 0
 	path.clear()
+	_legs = []
+	_vel_signed = 0.0
 	if _anim != null:
 		_anim.stop()
+	_model.rotation = Vector3.ZERO
 	_model.visible = false
 	_wreck.visible = true
 	_dust.emitting = false

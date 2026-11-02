@@ -49,7 +49,7 @@ B.KINDS["wood"] = dict(chip=(0.30, 0.22, 0.14), chip_metal=0.0, dirt=0.95, mud=0
 G = H.G
 T, RX, RY, RZ = H.T, H.RX, H.RY, H.RZ
 
-YELLOW = (0.62, 0.45, 0.04)
+YELLOW = (0.22, 0.135, 0.008)   # 4b-fix: was (0.62, 0.45, 0.04); met de bakwinst 2,4 (hoofdkwartier) liep geel tot felle neon (R en G afgekapt op 1)
 
 
 # ------------------------------------------------------------------ assenstelsel: Godot (x rechts, y omhoog, z voor) -> Blender
@@ -132,7 +132,7 @@ def make_stripe_texture():
     res = 512
     yy, xx = np.mgrid[0:res, 0:res]
     t = ((xx + yy) % (res // 2)) < (res // 4)
-    yellow = np.array([0.70, 0.50, 0.04])
+    yellow = np.array([0.52, 0.36, 0.03])   # was (0.70, 0.50, 0.04): te fel na de bakwinst
     black = np.array([0.045, 0.045, 0.04])
     rgb = np.where(t[..., None], yellow, black)
     Image.fromarray((np.clip(rgb, 0, 1) * 255 + 0.5).astype(np.uint8), "RGB").save(STRIPE)
@@ -248,7 +248,7 @@ def decal_at(bm, name, c, w, h, yaw=0.0, pitch=0.0, roll=0.0):
 # ------------------------------------------------------------------ materialen
 def materials():
     res = TEXRES
-    cn = F.tinted_set("concrete", (0.80, 0.78, 0.72), res)
+    cn = F.tinted_set("concrete", (0.60, 0.58, 0.53), res)   # was (0.80, 0.78, 0.72): het laadplatform was bijna wit in het spel
     ol = F.tinted_set("olive", (0.64, 0.70, 0.44), res)
     ol2 = F.tinted_set("olive", (0.46, 0.51, 0.31), res)
     st = F.tinted_set("steel", (0.58, 0.58, 0.54), res)

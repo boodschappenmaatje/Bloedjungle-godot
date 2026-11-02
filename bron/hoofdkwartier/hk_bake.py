@@ -292,11 +292,32 @@ def cull_hidden(objs, res=1024, thr=0.06):
     sc.cycles.device = "CPU"
     sc.cycles.samples = 24
     sc.cycles.use_denoising = False
-    bpy.ops.object.bake(type="AO", margin=1, margin_type="EXTEND", use_clear=True)
-    px = np.array(img.pixels[:], dtype=np.float32).reshape(res, res, 4)[..., 0]
+    # Onderdelen die Godot per niveau aan/uit zet (Niveau2_*, Niveau3_*) mogen geen schaduw werpen op wat op elk niveau zichtbaar is:
+    # anders verdwijnen vlakken die alleen door de dikke wal van niveau 3 bedekt worden (de kniemuur!) ook voor niveau 1 en 2.
+    # Daarom twee snoeibakes: de vaste onderdelen beoordelen we met de niveau-onderdelen onzichtbaar voor stralen, de niveau-onderdelen
+    # zelf met alles zichtbaar (hun eigen onderlinge bedekking mag wel).
+    flags = ("visible_diffuse", "visible_glossy", "visible_transmission", "visible_shadow", "visible_volume_scatter")
+    toggled = [o for o in objs if o.name.startswith("Niveau")]
+    saved = [(o, {f: getattr(o, f) for f in flags}) for o in toggled]
+
+    def ao_pixels(hide_levels):
+        for o, vals in saved:
+            for f, v in vals.items():
+                setattr(o, f, False if hide_levels else v)
+        bpy.ops.object.bake(type="AO", margin=1, margin_type="EXTEND", use_clear=True)
+        return np.array(img.pixels[:], dtype=np.float32).reshape(res, res, 4)[..., 0]
+
+    px_fixed = ao_pixels(True) if toggled else None
+    px_all = ao_pixels(False)
+    for o, vals in saved:
+        for f, v in vals.items():
+            setattr(o, f, v)
+    if px_fixed is None:
+        px_fixed = px_all
     removed = 0
     total = 0
     for o in objs:
+        px = px_all if o.name.startswith("Niveau") else px_fixed
         bm = bmesh.new()
         bm.from_mesh(o.data)
         uvl = bm.loops.layers.uv["Atlas"]
@@ -307,8 +328,24 @@ def cull_hidden(objs, res=1024, thr=0.06):
             us = [lp[uvl].uv for lp in f.loops]
             cx = sum(u[0] for u in us) / len(us)
             cy = sum(u[1] for u in us) / len(us)
+            # Meetpunten: midden, halverwege en vlak bij elke hoek, en de randmidden. Een groot vlak dat deels door panelen
+            # bedekt wordt (de kniemuur onder de ramen) mag niet verdwijnen omdat alleen het bedekte midden donker is.
+            pts = [(cx, cy)]
+            for p in us:
+                for t in (0.5, 0.9):
+                    pts.append((cx + (p[0] - cx) * t, cy + (p[1] - cy) * t))
+            for i in range(len(us)):
+                a, b = us[i], us[(i + 1) % len(us)]
+                pts.append((cx + ((a[0] + b[0]) / 2 - cx) * 0.9, cy + ((a[1] + b[1]) / 2 - cy) * 0.9))
+            if len(us) == 4 and f.calc_area() > 0.4:      # groot vierhoekig vlak: ook een raster over het hele vlak
+                for i in range(1, 6):
+                    for j in range(1, 6):
+                        s_, t_ = i / 6.0, j / 6.0
+                        pts.append((
+                            (1 - s_) * (1 - t_) * us[0][0] + s_ * (1 - t_) * us[1][0] + s_ * t_ * us[2][0] + (1 - s_) * t_ * us[3][0],
+                            (1 - s_) * (1 - t_) * us[0][1] + s_ * (1 - t_) * us[1][1] + s_ * t_ * us[2][1] + (1 - s_) * t_ * us[3][1]))
             vals = []
-            for (u, v, w) in [(cx, cy, 1.0)] + [(cx + (p[0] - cx) * 0.5, cy + (p[1] - cy) * 0.5, 0.5) for p in us]:
+            for (u, v) in pts:
                 ix = min(res - 1, max(0, int(u * res)))
                 iy = min(res - 1, max(0, int(v * res)))
                 vals.append(px[iy, ix])
@@ -401,6 +438,9 @@ def run(objs, res, out_dir, samples=32, tag="hk"):
     return paths
 
 
+ALBEDO_GAIN = 2.4
+
+
 def compose(paths, res, out_dir, tag="hk", jpeg=False):
     """Combineer de passes tot albedo (met lichte AO), ORM en normal; vul gaten tussen eilanden."""
     out_dir = Path(out_dir)
@@ -410,7 +450,11 @@ def compose(paths, res, out_dir, tag="hk", jpeg=False):
 
     alb, rgh, met, ao = load("albedo_raw"), load("rough"), load("metal"), load("ao")
     ao1 = ao[..., :1]
-    alb_f = np.clip(alb * (0.52 + 0.48 * ao1), 0, 1)
+    # AO zit ook in de ORM-textuur (glTF-occlusie); in de albedo daarom maar licht (30%). Lineaire winst 2,4: de brontexturen zijn
+    # donker (gemiddeld 60/255) en de spelcamera (ACES, contrast 1,2) maakt het nog donkerder dan de vliegvelden (87-96/255).
+    lin = np.where(alb <= 0.04045, alb / 12.92, ((alb + 0.055) / 1.055) ** 2.4) * (0.7 + 0.3 * ao1) * ALBEDO_GAIN
+    lin = np.clip(lin, 0.0, 1.0)
+    alb_f = np.where(lin <= 0.0031308, lin * 12.92, 1.055 * np.power(np.maximum(lin, 1e-9), 1 / 2.4) - 0.055)
     orm = np.concatenate([ao1, rgh[..., 1:2], met[..., 2:3]], axis=2)
 
     def save(arr, nm):

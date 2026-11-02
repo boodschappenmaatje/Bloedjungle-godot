@@ -804,7 +804,12 @@ func _base_cards() -> void:
 			Game.gates.upgrade())
 	var hq: int = Game.hq_level
 	var hq_cost: int = [0, 1500, 2500][clampi(hq, 1, 2)]
-	_plain_card("Hoofdkwartier upgraden", "Niveau %d van 3: meer sterkte en nieuwe onderdelen op het dak. Niveau 2 kost 1.500, niveau 3 kost 2.500 punten." % hq, "Niveau %d" % hq, hq, 3, "Max" if hq >= 3 else "Upgrade · %s" % UI.nl(hq_cost), hq < 3 and Game.points >= hq_cost, func():
+	var hq_text := {
+		1: "Niveau 2 (1.500 punten): radar met stippen en waarschuwing tot 85 m, bouwen en opleiden 25% sneller, +400 sterkte.",
+		2: "Niveau 3 (2.500 punten): automatisch dakgeweer (je ziet het in 10 s gebouwd worden), artilleriecommando met 5 granaten en 90 s afkoeling, +500 sterkte.",
+		3: "Volledig opgewaardeerd: radar, 25% sneller bouwen, dakgeweer en artillerie (knop boven de luchtsteun-knop).",
+	}
+	_plain_card("Hoofdkwartier upgraden", "Niveau %d van 3. %s" % [hq, hq_text[clampi(hq, 1, 3)]], "Niveau %d" % hq, hq, 3, "Max" if hq >= 3 else "Upgrade · %s" % UI.nl(hq_cost), hq < 3 and Game.points >= hq_cost, func():
 		if hq < 3 and Game.buy(hq_cost):
 			Game.hq_level += 1
 			Game.base_max += 400.0 if Game.hq_level == 2 else 500.0

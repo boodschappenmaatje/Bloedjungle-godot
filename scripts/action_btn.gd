@@ -5,7 +5,7 @@ extends Button
 
 const SIZE := Vector2(54, 54)
 const GAP := 62.0
-const ICON_ONLY := ["combined", "granaat", "herlaad", "sprint", "rol", "lucht", "lucht2", "houding"]
+const ICON_ONLY := ["combined", "granaat", "herlaad", "sprint", "rol", "lucht", "lucht2", "houding", "artillerie"]
 
 var kind := ""
 var caption := ""
@@ -44,6 +44,7 @@ static func make(k: String, cap: String) -> ActionBtn:
 		"houding": "Houding · tik: staan, hurken, liggen · vasthouden: meteen liggen of opstaan",
 		"lucht2": "Andere luchtsteun · tik om deze te kiezen",
 		"lucht": "Luchtsteun · tik om te gebruiken, napalm: vasthouden en slepen om de strook te richten",
+		"artillerie": "Artillerie van het hoofdkwartier · vasthouden en slepen om te richten, loslaten om 5 granaten te roepen · tikken: dichtstbijzijnde vijand · 90 s afkoeling",
 	}.get(k, cap)
 	b.add_to_group("hud_button")
 	b.custom_minimum_size = SIZE
@@ -191,6 +192,16 @@ func _draw() -> void:
 			if not disabled:
 				var pulse := 0.55 + 0.45 * sin(Time.get_ticks_msec() / 260.0)
 				draw_arc(size * 0.5, size.x * 0.5 - 1.5, 0, TAU, 32, Color(UI.BRASS, 0.35 + 0.65 * pulse), 2.6, true)
+		"artillerie":
+			# een vallende granaat boven drie inslagen
+			draw_colored_polygon(PackedVector2Array([c + Vector2(0, -15), c + Vector2(3.6, -9), c + Vector2(3.6, -1), c + Vector2(-3.6, -1), c + Vector2(-3.6, -9)]), col)
+			draw_rect(Rect2(c + Vector2(-3.6, -1), Vector2(7.2, 3.0)), Color(0.05, 0.06, 0.04, 0.9))
+			draw_colored_polygon(PackedVector2Array([c + Vector2(-3.6, 2), c + Vector2(3.6, 2), c + Vector2(5.5, 6), c + Vector2(-5.5, 6)]), col)
+			for x in [-11.0, 0.0, 11.0]:
+				draw_arc(c + Vector2(x, 12), 4.2, PI, TAU, 8, col, 2.2)
+			if not disabled:
+				var apulse := 0.55 + 0.45 * sin(Time.get_ticks_msec() / 300.0)
+				draw_arc(size * 0.5, size.x * 0.5 - 1.5, 0, TAU, 32, Color(UI.BRASS, 0.3 + 0.6 * apulse), 2.6, true)
 		"lucht2":
 			Streak.draw_icon(self, reward, c + Vector2(0, 1), 0.85, Color(col, 0.75))
 		"granaat":
@@ -211,7 +222,7 @@ func _draw() -> void:
 					draw_arc(c + Vector2(0, 3), 6.0, 2.4, 3.9, 6, Color(0.05, 0.06, 0.04, 0.8), 2.0)
 	if kind in ["sprint"] and open_state:
 		draw_arc(size * 0.5, size.x * 0.5 - 2.0, 0, TAU, 28, UI.BRASS, 2.4)  # staat aan
-	if kind == "rol" and bar >= 0.0:
+	if (kind == "rol" or kind == "artillerie") and bar >= 0.0:
 		var ring_center := Vector2(size.x * 0.5, size.y * 0.5)
 		var radius := size.x * 0.5 - 2.0
 		draw_arc(ring_center, radius, 0, TAU, 36, Color(UI.INK_DIM, 0.45), 2.2, true)

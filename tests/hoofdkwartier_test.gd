@@ -35,7 +35,7 @@ func _process(_d: float) -> bool:
 		var hq := bunker.get_node_or_null("Hoofdkwartier")
 		_check("hoofdkwartier is de visual", hq != null and hq.is_in_group("hq"))
 		_check("model en LOD1 geladen", hq.model != null and hq.model_lod != null)
-		for n in ["Romp", "Platen", "Glas", "Deur", "Radar", "Vlag", "Doek", "Lamp_Rood", "Camonet", "Niveau2", "Niveau3", "Schade1", "Schade2"]:
+		for n in ["Romp", "Platen", "Glas", "Deur", "Radar", "Vlag", "Doek", "Lamp_Rood", "Camonet", "Zandzakwal", "Niveau2", "Niveau3", "Schade1", "Schade2"]:
 			_check("onderdeel " + n, hq.model.find_child(n, true, false) != null)
 		var ap: AnimationPlayer = hq.model.find_child("AnimationPlayer", true, false)
 		_check("clips Open en Dicht", ap != null and ap.has_animation("Open") and ap.has_animation("Dicht"))
@@ -48,12 +48,19 @@ func _process(_d: float) -> bool:
 		var n2 := hq.model.find_child("Niveau2", true, false) as Node3D
 		var n3 := hq.model.find_child("Niveau3", true, false) as Node3D
 		_check("niveau 1: geen extra onderdelen", not n2.visible and not n3.visible)
+		var wal := hq.model.find_child("Zandzakwal", true, false) as Node3D
+		_check("zandzakwal sluit de dakrand al op niveau 1", wal != null and wal.is_visible_in_tree() and wal.get_parent() == n3.get_parent())
+		_check("vlag: doekmateriaal gevonden (spel en LOD1)", hq._flags.size() == 2)
+		var flag_mat: StandardMaterial3D = hq._flags[0]["mat"]
+		_check("niveau 1: vlag met een ster (doek uit de glb)", flag_mat.albedo_texture == hq._flags[0]["tex1"])
 		g.hq_level = 2
 		hq._process(0.0)
 		_check("niveau 2 toont onderdelen", n2.visible and not n3.visible)
+		_check("niveau 2: vlag met twee sterren", flag_mat.albedo_texture != null and flag_mat.albedo_texture.resource_path.contains("_vlag_s2_"))
 		g.hq_level = 3
 		hq._process(0.0)
 		_check("niveau 3 toont alles", n2.visible and n3.visible)
+		_check("niveau 3: vlag met drie sterren (ook in LOD1)", flag_mat.albedo_texture.resource_path.contains("_vlag_s3_") and (hq._flags[1]["mat"] as StandardMaterial3D).albedo_texture.resource_path.contains("lod1_vlag_s3_"))
 		# schade
 		var s1 := hq.model.find_child("Schade1", true, false) as Node3D
 		var s2 := hq.model.find_child("Schade2", true, false) as Node3D

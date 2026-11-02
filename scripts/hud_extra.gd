@@ -281,6 +281,8 @@ func _draw_radar() -> void:
 	_radar.draw_polyline(river, Color(0.2, 0.55, 0.65, 0.65), 1.5, true)
 	# De bunker staat op het echte wereldnulpunt; overige markers volgen de huidige bouwdata.
 	var base := _radar_point(Vector3.ZERO, map)
+	if Game.hq_level >= 2:
+		_draw_hq_radar(map, base)
 	_radar.draw_rect(Rect2(base - Vector2(3.5, 3.5), Vector2(7, 7)), Color(1.0, 0.74, 0.28), true)
 	for tower in get_tree().get_nodes_in_group("tower"):
 		if is_instance_valid(tower) and tower is Node3D:
@@ -328,8 +330,22 @@ func _draw_radar() -> void:
 	_draw_radar_attacks(map)
 
 
+## Hoofdkwartier niveau 2: de radarring (bereik) met een zwaaiende lijn, zoals de draaiende schotel op het dak.
+func _draw_hq_radar(map: Rect2, base: Vector2) -> void:
+	var ring := PackedVector2Array()
+	for i in 41:
+		var a := TAU * float(i) / 40.0
+		ring.append(_radar_point(Vector3(cos(a), 0.0, sin(a)) * HqPerks.RADAR_RANGE, map))
+	_radar.draw_polyline(ring, Color(0.45, 0.92, 0.55, 0.32), 1.0, true)
+	var sweep := fmod(Time.get_ticks_msec() / 8000.0, 1.0) * TAU   # zelfde 8 s als de Radar-loop van het model
+	var tip := _radar_point(Vector3(cos(sweep), 0.0, sin(sweep)) * HqPerks.RADAR_RANGE, map)
+	_radar.draw_line(base, tip, Color(0.45, 0.92, 0.55, 0.5), 1.2, true)
+
+
 ## Wie ziet dit punt: de speler, de basis, een toren, een soldaat of een eigen gebouw.
 func _in_friendly_sight(pos: Vector3) -> bool:
+	if Game.hq_level >= 2 and Vector2(pos.x, pos.z).length() <= HqPerks.RADAR_RANGE:
+		return true   # hoofdkwartier niveau 2: de radar ziet alles binnen 85 m
 	var player: Node3D = Game.player
 	if player != null and is_instance_valid(player) and Vector2(pos.x - player.global_position.x, pos.z - player.global_position.z).length() <= RADAR_SIGHT:
 		return true

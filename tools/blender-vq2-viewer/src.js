@@ -4,8 +4,8 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 
 const $=id=>document.getElementById(id), stage=$('stage'), canvas=$('canvas');
-const names={hoofdkwartier:'Hoofdkwartier · radar, pantserdeur, 3 niveaus, schade',verzamelvlag:'Verzamelvlag · wapperend doek, zandzakken en lamp',airfield_hq:'Airfield HQ 2.2 · vergelijking met 2.1',m1911:'M1911 Meshy',kazerne:'Kazerne',wachttoren:'Wachttoren',legerjeep:'Legerjeep',jeep:'Speelbare jeep',auto:'Personenauto',bus:'Stadsbus',straaljager:'Straaljager F-16 (napalm)',soldaat:'Soldaat (mannetjes)',wapens:'Wapens (bewegende delen)',jungle:'Jungle (palmen en rotsen)',props:'Props (zandzakken en kisten)',wachtpost:'Poortwachtpost (slagboom en wachthuis)',generator:'Generator (heel en wrak)',munitiekist:'Munitiekist (Meshy-test)',tank:'Tiger-tank (Meshy, speelbaar)'};
-const NEW_ONLY=['hoofdkwartier','verzamelvlag','jeep','auto','bus','wapens','jungle','props','wachtpost','generator'];
+const names={hoofdkwartier:'Hoofdkwartier · radar, pantserdeur, 3 niveaus, schade',hoofdkwartier_omgeving:'Voorplein · omgeving van het hoofdkwartier (platen, lichtmasten, afzetblokken, vaten, kisten)',verzamelvlag:'Verzamelvlag · wapperend doek, zandzakken en lamp',airfield_hq:'Airfield HQ 2.2 · vergelijking met 2.1',m1911:'M1911 Meshy',kazerne:'Kazerne',wachttoren:'Wachttoren',legerjeep:'Legerjeep',jeep:'Speelbare jeep',auto:'Personenauto',bus:'Stadsbus',straaljager:'Straaljager F-16 (napalm)',soldaat:'Soldaat (mannetjes)',wapens:'Wapens (bewegende delen)',jungle:'Jungle (palmen en rotsen)',props:'Props (zandzakken en kisten)',wachtpost:'Poortwachtpost (slagboom en wachthuis)',generator:'Generator (heel en wrak)',munitiekist:'Munitiekist (Meshy-test)',tank:'Tiger-tank (Meshy, speelbaar)'};
+const NEW_ONLY=['hoofdkwartier','hoofdkwartier_omgeving','verzamelvlag','jeep','auto','bus','wapens','jungle','props','wachtpost','generator'];
 // wapens: alle wapens staan in één glb op dezelfde plek (oorsprong = rechterhand); de keuzelijst laat er één zien. Clips heten <wapen>_schot / <wapen>_leeg.
 const GUN_NODES=['M1911','Thompson','Garand','Trench','MG42','Bazooka','Huls','Raket'];
 function applyGun(){
@@ -46,7 +46,20 @@ function applyWachtpost(){
 function applyHk(){
  if($('asset').value!=='hoofdkwartier'||!slots.v2)return;const niv=Number($('hk-niv').value),sch=Number($('hk-schade').value);
  slots.v2.root.traverse(o=>{if(o.name==='Niveau2')o.visible=niv>=2;if(o.name==='Niveau3')o.visible=niv>=3;if(o.name==='Schade1')o.visible=sch>=1;if(o.name==='Schade2')o.visible=sch>=2;});
+ hkFlag(niv);
  stats();dirty=true;
+}
+// vlag: een ster per niveau (Godot wisselt dezelfde albedo-texturen); niveau 1 is het doek uit de glb.
+const HK_FLAG_TEX={};
+function hkFlag(niv){
+ slots.v2.root.traverse(o=>{
+  if(!o.isMesh||o.name!=='Doek')return;const m=o.material;if(!m)return;
+  if(!m.userData.stars1)m.userData.stars1=m.map;
+  if(niv<2){if(m.map!==m.userData.stars1){m.map=m.userData.stars1;m.needsUpdate=true;dirty=true;}return;}
+  const url=`../../assets/hoofdkwartier_vlag_s${Math.min(niv,3)}_albedo_1024.jpg`;
+  if(!HK_FLAG_TEX[url]){const t=new THREE.TextureLoader().load(url,()=>{dirty=true;});t.colorSpace=THREE.SRGBColorSpace;t.flipY=false;t.wrapS=m.userData.stars1.wrapS;t.wrapT=m.userData.stars1.wrapT;t.anisotropy=m.userData.stars1.anisotropy;HK_FLAG_TEX[url]=t;}
+  m.map=HK_FLAG_TEX[url];m.needsUpdate=true;
+ });
 }
 // generator: heel model (clip Draaien: de ventilator) en het gebrande wrak staan in één glb; de keuzelijst toont beide of één van de twee.
 const GEN_NODES=['Generator','Wrak'];
@@ -343,7 +356,7 @@ function stats(){
  if(name==='jungle'&&slots.v2){let tri=0,meshes=0;const mats=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh||!o.visible||!isUnder(o,$('plant').value))return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material))mats.add(m.uuid);});$('stats').textContent=`${$('plant').value}: ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} mesh · ${mats.size} materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.`;return;}
  if((name==='wapens'||name==='m1911')&&slots.v2){let tri=0,meshes=0;const mats=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh)return;let p=o,vis=true;while(p){if(!p.visible)vis=false;p=p.parent;}if(!vis)return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material))mats.add(m.uuid);});$('stats').textContent=`${name==='m1911'?'M1911 Meshy':$('gun').value}: ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · Meshy-PBR, drie 1K-textures. Geen iPhone-FPS gemeten.`;return;}
  if(name==='soldaat'){const count=slot=>{let tri=0;const mats=new Set(),imgs=new Set();slot.root.traverse(o=>{if(!o.isMesh)return;let p=o,vis=true;while(p){if(!p.visible)vis=false;p=p.parent;}if(!vis)return;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original)){mats.add(m.uuid);for(const v of Object.values(m))if(v?.isTexture&&v.image)imgs.add(v.image.width+'×'+v.image.height);}});return `${Math.round(tri).toLocaleString('nl')} driehoeken · ${mats.size} materialen · texturen ${[...imgs].join(', ')||'geen'}`;};$('stats').textContent=(slots.v1?`V1 (pop zonder uitrusting): ${count(slots.v1)}. `:'')+(slots.v2?`VQ2 (deze look): ${count(slots.v2)}. `:'')+'Geen iPhone-FPS gemeten.';return;}
- if(name==='hoofdkwartier'&&slots.v2){let tri=0,meshes=0;const mats=new Set(),texs=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh||!shown(o))return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const k of ['map','normalMap','roughnessMap','metalnessMap','emissiveMap'])if(m[k])texs.add(m[k].uuid);}});$('stats').textContent=`Hoofdkwartier (spelversie, zichtbare onderdelen): ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · ${texs.size} texturen · echte clips Radar-loop, Open, Dicht, Wapperen-loop. Twee unieke 2K-texturensets (albedo, normaal, ORM). HQ-bron 262.526 driehoeken, LOD1 3,9k. Geen iPhone-FPS gemeten.`;return;}
+ if(name==='hoofdkwartier'&&slots.v2){let tri=0,meshes=0;const mats=new Set(),texs=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh||!shown(o))return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const k of ['map','normalMap','roughnessMap','metalnessMap','emissiveMap'])if(m[k])texs.add(m[k].uuid);}});$('stats').textContent=`Hoofdkwartier (spelversie, zichtbare onderdelen): ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · ${texs.size} texturen · echte clips Radar-loop, Open, Dicht, Wapperen-loop. Twee unieke 2K-texturensets (albedo, normaal, ORM). HQ-bron 273.210 driehoeken, LOD1 3,4k. Geen iPhone-FPS gemeten.`;return;}
  if(name==='verzamelvlag'&&slots.v2){let tri=0,meshes=0;const mats=new Set(),texs=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh)return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const k of ['map','normalMap','roughnessMap','metalnessMap','emissiveMap'])if(m[k])texs.add(m[k].uuid);}});$('stats').textContent=`Verzamelvlag (spelversie): ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · ${texs.size} texturen · echte clip Wapperen-loop. HQ-bron 16,7k driehoeken, LOD1 1,4k. Geen iPhone-FPS gemeten.`;return;}
  if(!report)return;
  const entry=report.assets[name==='jeep'?'playable_jeep':name];

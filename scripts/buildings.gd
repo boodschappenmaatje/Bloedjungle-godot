@@ -38,6 +38,7 @@ const LEVELS := [null,
 const TRAIN_COST := 250
 const RIJ_MAX := 5  # soldaten tegelijk in de bouwrij van een kazerne (Generals-plan stap 2)
 const DOOR := 2.5  # afstand van het midden tot het punt voor de deur
+const HQ_SPEEDUP := 0.75  # hoofdkwartier niveau 2: alle bouw- en opleidingstijden 25% korter (Generals-plan stap 3)
 const GS := 0.66      # schaal van het garagemodel (breedte en diepte); in de hoogte GSH
 const GSH := 0.92
 const DOOR_U := -0.7 * GS  # de garagedeur zit niet in het midden maar iets naar links
@@ -54,6 +55,16 @@ func _ready() -> void:
 	add_child(radio)
 	add_to_group("buildings")
 	add_child(GarageMenu.new())
+
+
+## Tijdsfactor van het hoofdkwartier: 1.0 op niveau 1, 0,75 vanaf niveau 2 (bouwen en soldaten opleiden).
+static func time_factor() -> float:
+	return HQ_SPEEDUP if Game.hq_level >= 2 else 1.0
+
+
+## Seconden per rekruut in deze kazerne, met de bonus van het hoofdkwartier.
+static func train_time(b: Dictionary) -> float:
+	return float(LEVELS[b.lv].time) * time_factor()
 
 
 func count(kind: String) -> int:
@@ -362,7 +373,7 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false) -> Variant
 
 ## Bouwplaats: steigers rond het gebouw en het gebouw zelf groeit omhoog (alleen het zichtbare deel, de botsvorm blijft).
 func _site_start(b: Dictionary) -> void:
-	b.build_total = BUILD_TIME[b.kind]
+	b.build_total = BUILD_TIME[b.kind] * time_factor()
 	b.build_t = b.build_total
 	var node: Node3D = b.node
 	var sz: Vector3 = DEFS[b.kind].size
@@ -645,7 +656,7 @@ func recruit(b: Dictionary) -> void:
 	if b.down or under_construction(b) or room(b) <= 0 or b.queue >= RIJ_MAX or not Game.pay_points(TRAIN_COST):
 		return
 	if b.queue == 0:
-		b.train_t = LEVELS[b.lv].time
+		b.train_t = train_time(b)
 	b.queue += 1
 	Game.changed.emit()
 
@@ -746,7 +757,7 @@ func _physics_process(delta: float) -> void:
 		bar.set_value(b.hp / b.max_hp, (hurt or Game.build_mode) and not b.down)
 		bar.global_position = b.at + Vector3(0, DEFS[b.kind].size.y + 1.0, 0)
 		if b.kind == "kazerne" and b.rij != null:
-			var prog: float = 1.0 - clampf(float(b.train_t) / float(LEVELS[b.lv].time), 0.0, 1.0) if b.queue > 0 else 0.0
+			var prog: float = 1.0 - clampf(float(b.train_t) / train_time(b), 0.0, 1.0) if b.queue > 0 else 0.0
 			b.rij.set_value(b.queue, prog)
 			b.rij.global_position = b.at + Vector3(0, DEFS[b.kind].size.y + 1.55, 0)
 		if b.kind == "garage" and b.rij != null:
@@ -771,7 +782,7 @@ func _physics_process(delta: float) -> void:
 			if b.train_t <= 0.0:
 				b.queue -= 1
 				_spawn(b)
-				b.train_t = LEVELS[b.lv].time
+				b.train_t = train_time(b)
 
 
 # ---------------------------------------------------------------- garage

@@ -221,6 +221,54 @@ static func _profiel(leg: Leg, vcap: float) -> void:
 		leg.v[i] = minf(leg.v[i], sqrt(leg.v[i + 1] * leg.v[i + 1] + 2.0 * REM * ds))
 
 
+## Schuift een gladde baan zijdelings naar de rechterrijstrook (de truck rijdt rechts, een tegenligger passeert links). Aan het begin en het einde van
+## de baan (een laad- of losplek) loopt de strook geleidelijk terug naar het midden van de weg, zodat de truck daar precies op zijn plek komt, en in een
+## smal stuk (`smal`: lijst Rect2, bv. de brug en de stad) rijdt hij over het midden. De baan blijft glad: de zijdelingse verschuiving gaat met een
+## vloeiende overgang (nul helling aan de uiteinden, dus ook de kijkrichting bij de stop blijft precies kloppen).
+static func rijstrook(leg: Leg, lane: float, taper: float, smal: Array = [], smal_taper := 6.0) -> Leg:
+	var n := leg.p.size()
+	if n < 3 or lane <= 0.0:
+		return leg
+	var pts := PackedVector2Array()
+	pts.resize(n)
+	for i in n:
+		var w := _glad(minf(leg.s[i], leg.length - leg.s[i]) / taper)
+		for r in smal:
+			w = minf(w, _glad(_afstand_rect(leg.p[i], r) / smal_taper))
+		var hd: float = leg.h[i]
+		pts[i] = leg.p[i] + Vector2(-cos(hd), sin(hd)) * lane * w   # (-cos ψ, sin ψ) = rechts van de rijrichting
+	var out := Leg.new()
+	out.gear = leg.gear
+	var cur: float = leg.h[0]
+	for i in n:
+		var hd2: float = leg.h[i]
+		if i > 0 and i < n - 1:
+			var d: Vector2 = pts[i + 1] - pts[i - 1]
+			hd2 = atan2(d.x, d.y)
+		hd2 = cur + angle_difference(cur, hd2)   # doorlopende hoek, geen sprong bij ±π
+		cur = hd2
+		out.add(pts[i], hd2, 0.0)
+	for i in n:   # kromming dψ/ds uit de nieuwe kijkrichtingen
+		var a := maxi(i - 1, 0)
+		var b := mini(i + 1, n - 1)
+		var ds: float = out.s[b] - out.s[a]
+		out.k[i] = (out.h[b] - out.h[a]) / ds if ds > 0.0001 else 0.0
+	_profiel(out, V_MAX)
+	return out
+
+
+static func _glad(t: float) -> float:
+	t = clampf(t, 0.0, 1.0)
+	return t * t * (3.0 - 2.0 * t)
+
+
+## Afstand van een punt tot een rechthoek (0 erin).
+static func _afstand_rect(p: Vector2, r: Rect2) -> float:
+	var dx := maxf(maxf(r.position.x - p.x, p.x - r.end.x), 0.0)
+	var dy := maxf(maxf(r.position.y - p.y, p.y - r.end.y), 0.0)
+	return sqrt(dx * dx + dy * dy)
+
+
 ## Eén streek van de keer: een cirkelboog met vaste stuurstand, in één rijrichting.
 static func _streek(p0: Vector2, psi0: float, gear: int, kappa: float, length: float, vcap: float) -> Leg:
 	var leg := Leg.new()

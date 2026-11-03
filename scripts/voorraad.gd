@@ -7,6 +7,8 @@ extends Node3D
 ##  - Truck: 600 punten per extra truck, hoogstens 3 per depot. Rijdt zelf, of naar de stapel die je in het depotpaneel kiest.
 ##  - Wegen: langs elke route zijn bomen, struiken en rotsen weggehaald (Foliage.clear_for_building), want voertuigen kunnen er niet doorheen.
 ## 4a: eenvoudige blokken en een eenvoudige kraan; de echte modellen komen in 4b.
+## Verkeer (scripts/voorraad_verkeer.gd): trucks rijden niet door elkaar. Bij elke stapel laadt één truck tegelijk en bij elk depot lost er één tegelijk: een
+## truck die later komt wacht QUEUE_D meter ervoor (claim_resource / release_resource), buiten de poort. Een nieuwe truck verschijnt pas als de laadplek van het depot vrij is.
 
 const STACK := 2500            # punten voorraad op een nieuwe stapel
 const SLOTS := 4               # stapels tegelijk op de kaart
@@ -20,6 +22,7 @@ const DOCK_OFFSET := 3.65      # m voor de voorkant van het depot staat de truck
 const PRE_DOCK := 9.0          # m voor het depot ligt een punt op de as, zodat de truck recht op het depot af komt
 const FIRE_RANGE := 13.0       # vijanden schieten op trucks binnen dit bereik
 const FIRE_TAKE := 0.5         # en doen zoveel van hun normale schade (er is geen echt richten op een truck)
+const QUEUE_MAX := 1           # zoveel trucks tegelijk op weg naar (of aan het laden bij) één stapel: er staat dus nooit een rij op de weg; een volgende kiest een andere stapel of wacht in het depot
 const START_SPOTS := [         # waar het eerste depot komt (het eerste dat vrij is), met de voorkant naar de dichtstbijzijnde poort
 	[Vector3(13, 0, -17), -PI / 2.0],
 	[Vector3(-13, 0, -17), PI / 2.0],
@@ -32,7 +35,7 @@ const START_SPOTS := [         # waar het eerste depot komt (het eerste dat vrij
 const SITES := [
 	{"id": "bos", "name": "Bosrand", "pos": Vector2(24, -60), "via": "pad-58"},
 	{"id": "zuid", "name": "Zuidveld", "pos": Vector2(-72, 88), "via": "poort_z_uit"},
-	{"id": "stad", "name": "Stad", "pos": Vector2(51, -126), "via": "stad6"},
+	{"id": "stad", "name": "Stad", "pos": Vector2(51, -126), "via": "stad6", "smal": true},   # smal: de brug en de stadsstraat, één truck tegelijk
 	{"id": "oost", "name": "Oostveld", "pos": Vector2(128, 22), "via": "poort_z_uit"},
 	{"id": "west", "name": "Westveld", "pos": Vector2(-110, -4), "via": "west_m"},
 	{"id": "noordoost", "name": "Noordoost", "pos": Vector2(150, -50), "via": "poort_n_uit"},
@@ -50,6 +53,8 @@ var _pos := {}                 # knooppuntnaam -> Vector2 (x, z)
 var _used := {}                # plek-id -> true: ligt er, of is leeg gegaan
 var _claims := {}              # slot -> aantal trucks onderweg
 var _roads := {}               # plek-id -> Node3D (eigenaar van de vrijgemaakte weg)
+var _owners := {}              # sleutel ("stapel:<plek>", "dock:<depot>") -> de truck die de laad-/losplek bezet houdt
+var _pending: Array = []       # depots waar een gekochte truck wacht tot de laadplek vrij is
 var _engine: AudioStreamWAV
 var _tick := 0.0
 
@@ -127,6 +132,8 @@ func start_game() -> void:
 	trips = 0
 	_used.clear()
 	_claims.clear()
+	_owners.clear()
+	_pending.clear()
 	for i in SLOTS:
 		if i < SITES.size():
 			_spawn_stapel(i, SITES[i])
@@ -145,6 +152,8 @@ func reset() -> void:
 		t.queue_free()
 	_used.clear()
 	_claims.clear()
+	_owners.clear()
+	_pending.clear()
 
 
 func _spawn_stapel(slot: int, site: Dictionary) -> void:
@@ -285,10 +294,20 @@ func trucks_of(b: Dictionary) -> Array:
 	return out
 
 
+## Hoeveel trucks heeft dit depot (de gekochte die nog op een vrije laadplek wachten tellen mee; wrakken niet).
 func alive_trucks_of(b: Dictionary) -> int:
-	var n := 0
+	var n := pending_of(b)
 	for t in trucks_of(b):
 		if t.state != VoorraadTruck.S.WRAK:
+			n += 1
+	return n
+
+
+## Gekochte trucks die nog niet verschenen zijn omdat de laadplek van het depot bezet is.
+func pending_of(b: Dictionary) -> int:
+	var n := 0
+	for d in _pending:
+		if d == b:
 			n += 1
 	return n
 
@@ -300,7 +319,9 @@ func can_buy_truck(b: Dictionary) -> bool:
 func buy_truck(b: Dictionary) -> bool:
 	if not can_buy_truck(b) or not Game.buy(TRUCK_COST):
 		return false
-	_spawn_truck(b)
+	_pending.append(b)
+	Game.changed.emit()
+	_service_pending()   # staat de laadplek vrij, dan staat de truck er meteen
 	return true
 
 
@@ -310,6 +331,82 @@ func _spawn_truck(b: Dictionary) -> VoorraadTruck:
 	t.setup(self, b, trucks_of(b).size())
 	Game.changed.emit()
 	return t
+
+
+## Een gekochte truck verschijnt in het depot zodra de laadplek vrij is (niemand staat of rijdt er vlakbij en niemand wacht er op de plek).
+func _service_pending() -> void:
+	for i in range(_pending.size() - 1, -1, -1):
+		var b: Dictionary = _pending[i]
+		if not Game.buildings.has(b):
+			_pending.remove_at(i)
+			continue
+		if Buildings.under_construction(b) or not dock_free(b):
+			continue
+		_pending.remove_at(i)
+		_spawn_truck(b)
+
+
+## Is de laadplek van dit depot vrij: niet in gebruik en geen truck binnen 9 m?
+func dock_free(b: Dictionary) -> bool:
+	if not resource_free("dock:" + depot_key(b)) or not resource_free(gate_key(b)):
+		return false
+	var at := dock_point(b)
+	for t in get_tree().get_nodes_in_group("voorraadtruck"):
+		var truck := t as VoorraadTruck
+		if truck != null and is_instance_valid(truck) and truck.state != VoorraadTruck.S.WRAK and Vector2(truck.global_position.x, truck.global_position.z).distance_to(at) < 9.0:
+			return false
+	return true
+
+
+# ---------------------------------------------------------------- verkeer: laad- en losplekken
+
+## Sleutel van de poort die dit depot gebruikt: het stuk tussen de depots en de poort (het kruispunt waar de trucks van de depots elkaar tegenkomen)
+## is voor één truck tegelijk.
+func gate_key(b: Dictionary) -> String:
+	var dock := dock_point(b)
+	return "poort:n" if dock.distance_to(_pos["poort_n_in"]) <= dock.distance_to(_pos["poort_z_in"]) else "poort:z"
+
+
+## Sleutel van het depot (zijn plek): per depot kan één truck tegelijk lossen.
+func depot_key(b: Dictionary) -> String:
+	return "%d_%d" % [roundi(float(b.at.x) * 10.0), roundi(float(b.at.z) * 10.0)]
+
+
+## Is de weg naar deze plek te smal om te passeren (de brug en de stad): één truck tegelijk, ook op de weg erheen?
+func is_smal(site_id: String) -> bool:
+	for s in SITES:
+		if s.id == site_id:
+			return bool(s.get("smal", false))
+	return false
+
+
+func _owner_of(key: String) -> Variant:
+	var o: Variant = _owners.get(key)
+	if o != null and is_instance_valid(o) and not (o as Node).is_queued_for_deletion() and (o as VoorraadTruck).state != VoorraadTruck.S.WRAK:
+		return o
+	return null
+
+
+func resource_free(key: String) -> bool:
+	return _owner_of(key) == null
+
+
+## Pakt een laad- of losplek voor een truck: lukt als hij vrij is (of al van deze truck is).
+func claim_resource(key: String, t: VoorraadTruck) -> bool:
+	var o: Variant = _owner_of(key)
+	if o != null and o != t:
+		return false
+	_owners[key] = t
+	return true
+
+
+func release_resource(key: String, t: VoorraadTruck) -> void:
+	if _owners.get(key) == t:
+		_owners.erase(key)
+
+
+func resource_owner(key: String) -> Variant:
+	return _owner_of(key)
 
 
 func _cleanup_trucks() -> void:
@@ -330,7 +427,11 @@ func pick_slot(truck: VoorraadTruck) -> int:
 	for i in SLOTS:
 		if stapels[i] == null or stapels[i].left <= 0:
 			continue
+		if int(_claims.get(i, 0)) >= QUEUE_MAX:
+			continue   # er laadt er al een en er wacht er een: een derde zou op de weg moeten blijven staan
 		var score := route_length(d, i) + 40.0 * float(_claims.get(i, 0))
+		if _owner_of("stapel:" + String(stapels[i].site.id)) != null:
+			score += 60.0   # er wordt nu geladen: liever een stapel waar je meteen terecht kunt
 		if score < bs:
 			bs = score
 			best = i
@@ -345,11 +446,29 @@ func claim(slot: int, delta: int) -> void:
 func route(d: Dictionary, slot: int) -> Array:
 	var site: Dictionary = stapels[slot].site
 	var dock := dock_point(d)
-	var gate := "poort_n_in" if dock.distance_to(_pos["poort_n_in"]) <= dock.distance_to(_pos["poort_z_in"]) else "poort_z_in"
+	var gate := "poort_n_in" if gate_key(d) == "poort:n" else "poort_z_in"
 	var out: Array = [dock, dock_lead(d, gate)]
 	for p in _polyline(gate, site):
 		if out[out.size() - 1].distance_to(p) > 0.3:
 			out.append(p)
+	return _merge_close(out)
+
+
+## Twee wegpunten die vlak bij elkaar liggen (bv. het eind van de poortas en het begin van het bospad, 1,5 m) worden één punt, in het midden. Zo is de
+## baan heen en terug precies dezelfde lijn: VoorraadBaan._clean laat anders heen en terug een ander punt vallen, en de twee rijstroken liggen dan scheef
+## over elkaar. De eerste twee en de laatste twee punten blijven (de aanloop naar het depot en de stapel).
+func _merge_close(pts: Array) -> Array:
+	var out: Array = []
+	var i := 0
+	while i < pts.size():
+		var p: Vector2 = pts[i]
+		var protected := i < 2 or i >= pts.size() - 2
+		if not protected and i + 1 < pts.size() - 2 and p.distance_to(pts[i + 1]) < VoorraadBaan.KORT:
+			out.append((p + (pts[i + 1] as Vector2)) * 0.5)
+			i += 2
+			continue
+		out.append(p)
+		i += 1
 	return out
 
 
@@ -439,6 +558,8 @@ func set_dest(b: Dictionary, slot: int) -> void:
 # ---------------------------------------------------------------- vijanden schieten op trucks
 
 func _physics_process(delta: float) -> void:
+	if not _pending.is_empty():
+		_service_pending()
 	_tick -= delta
 	if _tick > 0.0:
 		return

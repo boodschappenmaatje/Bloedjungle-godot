@@ -233,7 +233,10 @@ func _depot_panel(b: Dictionary, row: HFlowContainer) -> void:
 	for t in trucks:
 		n += 1
 		_box.add_child(_info("Truck %d: %s" % [n, (t as VoorraadTruck).describe()]))
-	if trucks.is_empty():
+	for _i in sup.pending_of(b):
+		n += 1
+		_box.add_child(_info("Truck %d: wacht tot de laadplek vrij is" % n))
+	if trucks.is_empty() and n == 0:
 		_box.add_child(_info("Nog geen trucks."))
 	var buy := Button.new()
 	buy.add_to_group("hud_button")

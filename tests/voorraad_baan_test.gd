@@ -106,6 +106,27 @@ func _pure() -> void:
 	_check("kinkjes korter dan 3 m vallen weg: geen bocht krapper dan 4 m", kk.size() == 1 and _stats(kk[0]).k <= 1.0 / 4.0 + 0.001)
 	# 7. niets te rijden
 	_check("zonder wegpunten geen baan", VoorraadBaan.plan(Vector2(0, 0), 0.0, []).is_empty())
+	_rijstrook()
+
+
+## De rijstrook: rechts van het midden van de weg, aan de uiteinden (laad-/losplek) precies op het midden, en glad.
+func _rijstrook() -> void:
+	var heen: VoorraadBaan.Leg = VoorraadBaan.plan(Vector2(0, 0), 0.0, [Vector2(0, 80)])[0]
+	var terug: VoorraadBaan.Leg = VoorraadBaan.plan(Vector2(0, 80), PI, [Vector2(0, 0)])[0]
+	var lh := VoorraadBaan.rijstrook(heen, 1.8, 10.0)
+	var lt := VoorraadBaan.rijstrook(terug, 1.8, 10.0)
+	_check("rijstrook: begint en eindigt precies op de plek (%.3f / %.3f m)" % [lh.p[0].distance_to(Vector2(0, 0)), lh.end_pos().distance_to(Vector2(0, 80))], lh.p[0].distance_to(Vector2(0, 0)) < 0.01 and lh.end_pos().distance_to(Vector2(0, 80)) < 0.01)
+	_check("rijstrook: de kijkrichting bij de plek blijft zoals hij was", absf(angle_difference(lh.h[0], 0.0)) < 0.01 and absf(angle_difference(lh.end_head(), 0.0)) < 0.01)
+	var mid_h: Vector2 = lh.pos(40.0)
+	var mid_t: Vector2 = lt.pos(40.0)
+	_check("rijstrook: in het midden %.1f m naast de weg (rechts van de rijrichting)" % absf(mid_h.x), absf(absf(mid_h.x) - 1.8) < 0.05)
+	_check("rijstrook: heen en terug zitten aan weerskanten (%.1f m uit elkaar)" % absf(mid_h.x - mid_t.x), absf(mid_h.x - mid_t.x) > 3.4)
+	var sh := _stats(lh)
+	_check("rijstrook: glad (stap %.2f m, richting %.3f rad, kromming 1/%.1f m)" % [sh.jump, sh.h, 1.0 / maxf(sh.k, 0.0001)], sh.jump <= 2.1 and sh.h < 0.2 and sh.k <= 1.0 / 8.0)
+	_check("rijstrook: bij de plek loopt hij geleidelijk naar het midden (5 m: %.2f m opzij)" % absf(lh.pos(5.0).x), absf(lh.pos(5.0).x) < 1.0 and absf(lh.pos(5.0).x) > 0.1)
+	var ls := VoorraadBaan.rijstrook(heen, 1.8, 10.0, [Rect2(-10, 30, 20, 20)], 6.0)
+	_check("rijstrook: in een smal stuk over het midden (%.2f m opzij)" % absf(ls.pos(40.0).x), absf(ls.pos(40.0).x) < 0.01)
+	_check("rijstrook: en weer op de strook buiten het smalle stuk (%.2f m opzij)" % absf(ls.pos(70.0).x), absf(absf(ls.pos(70.0).x) - 1.8) < 0.3)
 
 
 func _max_h_jump_total(leg) -> float:
@@ -165,7 +186,7 @@ func _routes(g) -> void:
 			_check("stapel %d heen: eindigt op het stoppunt (%.2f m ernaast)" % [s.slot + 1, l.end_pos().distance_to(stop)], l.end_pos().distance_to(stop) < 0.1)
 			_check("stapel %d heen: grijper kijkt naar de stapel (verschil %.3f rad)" % [s.slot + 1, absf(angle_difference(l.end_head(), atan2(site_dir.x, site_dir.y)))], absf(angle_difference(l.end_head(), atan2(site_dir.x, site_dir.y))) < 0.05)
 			_check("stapel %d heen: blijft op de weg (afwijking %.1f m van de wegas, weg is 6 m breed)" % [s.slot + 1, dev], dev <= 3.0)
-			_check("stapel %d heen: gladde baan (stap %.2f m, richting %.2f rad, kromming 1/%.1f m)" % [s.slot + 1, st.jump, st.h, 1.0 / maxf(st.k, 0.0001)], st.jump <= 2.05 and st.h <= 0.12 and st.k <= 1.0 / 2.0)
+			_check("stapel %d heen: gladde baan (stap %.2f m, richting %.2f rad, kromming 1/%.1f m)" % [s.slot + 1, st.jump, st.h, 1.0 / maxf(st.k, 0.0001)], st.jump <= 2.05 and st.h <= 0.18 and st.k <= 1.0 / 2.0)   # 0,18 rad per 2 m: Voorraad.route voegt wegpunten vlak bij elkaar samen (heen en terug dezelfde lijn)
 		# terug: de truck staat bij de stapel, kijkt naar de stapel
 		var back: Array = r.duplicate()
 		back.reverse()

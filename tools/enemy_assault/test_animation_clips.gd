@@ -69,6 +69,9 @@ func _run() -> void:
 	var adapter: Node3D = model.get("_mesh_weapon_adapter")
 	var right_ik: SkeletonIK3D = model.get("_mesh_right_ik")
 	var left_ik: SkeletonIK3D = model.get("_mesh_left_ik")
+	for clip in ["Combat_Stance", "Run_and_Shoot", "Walk_Left_with_Gun", "Walk_Backward_with_Gun", "Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Right_inplace", "Rifle_Charge_inplace"]:
+		var loop_animation: Animation = anim.get_animation(clip)
+		_check(loop_animation != null and loop_animation.loop_mode == Animation.LOOP_LINEAR, "Assault gameplay clip does not loop: " + clip)
 	for clip in ["Combat_Stance", "Walk_Backward_with_Gun", "Walk_Left_with_Gun", "Run_and_Shoot", "Rifle_Charge_inplace", "Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Left", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun"]:
 		var worst: Dictionary = await _measure_held_clip(model, anim, skeleton, adapter, right_ik, left_ik, clip)
 		var held := float(worst.right) < 0.05 and float(worst.left) < 0.05

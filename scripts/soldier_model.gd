@@ -38,6 +38,7 @@ const MESHY_STOW_OFFSET := Transform3D(Basis(Vector3.BACK, deg_to_rad(-32.0)) * 
 ## klimmen, zitten, mes) hangt het wapen op de rug.
 const MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten", "hurken_stil", "hurken_lopen", "hurken_achteruit", "liggen_stil", "kruipen"]
 const ASSAULT_MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten", "Combat_Stance", "Rifle_Charge_inplace", "Run_and_Shoot", "Walk_Left_with_Gun", "Walk_Backward_with_Gun", "Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Left", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun", "hurken_stil", "hurken_lopen", "hurken_achteruit", "liggen_stil", "kruipen"]
+const ASSAULT_MESHY_LOOPS := ["Combat_Stance", "Run_and_Shoot", "Walk_Left_with_Gun", "Walk_Backward_with_Gun", "Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Left", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun", "Rifle_Charge_inplace"]
 const MESHY_GARAND_PROFILE_PAD := "res://resources/weapon_profiles/garand_meshy.tres"   # verwijst naar zware bestanden: pas laden als het nodig is
 const MESHY_M1911_PROFILE_PAD := "res://resources/weapon_profiles/m1911_meshy.tres"
 const MESHY_WEAPON_ADAPTER_SCRIPT := preload("res://scripts/weapon_model_adapter.gd")
@@ -320,6 +321,10 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 	_alias_meshy_clip(lib, "sprinten", "RunFast")
 	for clip in ["lopen", "rennen", "sprinten"]:
 		lib.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
+	if assault_rig_test:
+		for clip in ASSAULT_MESHY_LOOPS:
+			if lib.has_animation(clip):
+				lib.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
 	if not lib.has_animation("Idle"):
 		_add_meshy_idle(lib, skel)
 	if not lib.has_animation("stil"):

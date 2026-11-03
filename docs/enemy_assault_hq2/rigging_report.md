@@ -37,10 +37,12 @@ Full-loop hand-IK checks passed for `Combat_Stance`, `Cautious_Crouch_Walk_Forwa
 - Standing and stationary firing: `Combat_Stance`.
 - Walking toward its target: `Cautious_Crouch_Walk_Forward`.
 - Running: `Run_and_Shoot`.
+- Sprinting uses `Run_and_Shoot` at 1.35 playback speed once the AI speed is above 5 m/s.
+- Directional strafing selects `Walk_Left_with_Gun` or `Cautious_Crouch_Walk_Right_inplace`; backward travel selects the authored `Walk_Backward_with_Gun` clip.
 - Reload: existing generated hand-to-magazine action, paired with the Garand reload timer.
 - Hit and death: existing retargeted hit/death clips; the gameplay test exercised `dood2` to completion.
 
-`Rifle_Aim_Turn_Right`, `Combat_Idle_Turn_Left`, `Walk_Forward_While_Shooting`, and `Walk_Backward_While_Shooting` are present and inspectable, but their authored left-hand positions do not fit the detached Meshy rifle throughout the clip. They are not selected for Assault gameplay. The stationary combat stance is the tested aim-ready pose. The existing AI does not request backward or side-step animation from its `_animate()` path; `Walk_Backward_with_Gun` and `Walk_Left_with_Gun` remain available for inspection.
+`Rifle_Aim_Turn_Right`, `Combat_Idle_Turn_Left`, `Walk_Forward_While_Shooting`, and `Walk_Backward_While_Shooting` are present and inspectable, but their authored left-hand positions do not fit the detached Meshy rifle throughout the clip. They are not selected for Assault gameplay. The stationary combat stance is the tested aim-ready pose.
 
 ## Tests run locally
 

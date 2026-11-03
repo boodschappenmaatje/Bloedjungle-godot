@@ -1066,6 +1066,9 @@ func _play_meshy_clip(clip: String, blend: float, speed: float) -> void:
 	elif assault_rig_test and clip == "rennen":
 		clip = "Run_and_Shoot"
 		speed = absf(speed)
+	elif assault_rig_test and clip == "sprinten":
+		clip = "Run_and_Shoot"
+		speed = absf(speed) * 1.35
 	if speed < 0.0 and clip == "lopen" and anim.has_animation("achteruit"):
 		clip = "achteruit"   # de lus achterstevoren afspelen is niet meer nodig
 		speed = -speed

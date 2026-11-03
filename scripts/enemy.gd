@@ -502,8 +502,18 @@ func _animate(spd: float, moving: bool) -> void:
 		return
 	if model.current == "steken" and model.anim.is_playing():
 		return
+	if type == "assault" and moving:
+		var local_motion: Vector3 = global_transform.basis.inverse() * velocity
+		if spd <= 3.5 and absf(local_motion.x) > absf(local_motion.z) * 1.25:
+			model.play("Walk_Left_with_Gun" if local_motion.x < 0.0 else "Cautious_Crouch_Walk_Right_inplace", 0.2, spd / 2.4)
+			return
+		if local_motion.z < -absf(local_motion.x) * 1.25:
+			model.play("achteruit", 0.2, spd / 2.4)
+			return
 	if spd < 0.3:
 		model.play("schieten" if not moving and not t.get("melee", false) else "stil")
+	elif type == "assault" and spd > 5.0:
+		model.play("sprinten", 0.2, spd / 5.5)
 	elif spd > 3.5:
 		model.play("rennen", 0.2, spd / 6.0)
 	else:

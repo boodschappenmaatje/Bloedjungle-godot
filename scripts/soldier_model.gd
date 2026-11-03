@@ -37,6 +37,7 @@ const MESHY_STOW_OFFSET := Transform3D(Basis(Vector3.BACK, deg_to_rad(-32.0)) * 
 ## Alleen in deze clips houdt de Meshy-speler het geweer vast (IK aan, wapen in de handen); in de andere (rollen, vallen,
 ## klimmen, zitten, mes) hangt het wapen op de rug.
 const MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten", "hurken_stil", "hurken_lopen", "hurken_achteruit", "liggen_stil", "kruipen"]
+const ASSAULT_MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten", "Combat_Stance", "Rifle_Charge_inplace", "Run_and_Shoot", "Walk_Left_with_Gun", "Walk_Backward_with_Gun", "Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Left", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun", "hurken_stil", "hurken_lopen", "hurken_achteruit", "liggen_stil", "kruipen"]
 const MESHY_GARAND_PROFILE_PAD := "res://resources/weapon_profiles/garand_meshy.tres"   # verwijst naar zware bestanden: pas laden als het nodig is
 const MESHY_M1911_PROFILE_PAD := "res://resources/weapon_profiles/m1911_meshy.tres"
 const MESHY_WEAPON_ADAPTER_SCRIPT := preload("res://scripts/weapon_model_adapter.gd")
@@ -91,6 +92,7 @@ var stance := 0            # 0 staan, 1 hurken, 2 liggen (alleen de Meshy-speler
 var _stance_off := Vector3.ZERO
 var _mesh_right_target: Node3D
 var _mesh_weapon_adapter: Variant
+var _mesh_weapon_rest_transform := Transform3D.IDENTITY
 var _mesh_action_player: AnimationPlayer
 var _mesh_animation_tree: AnimationTree
 var _mesh_animation_playback: AnimationNodeStateMachinePlayback
@@ -312,7 +314,7 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 		_alias_meshy_clip(lib, alias, MESHY_ALIASES[alias])
 	for pose_name in MESHY_POSE_CLIPS:
 		_add_meshy_pose_clip(lib, pose_name, MESHY_POSE_CLIPS[pose_name][0], MESHY_POSE_CLIPS[pose_name][1])
-	_alias_meshy_clip(lib, "stil", "Idle")
+	_alias_meshy_clip(lib, "stil", "Combat_Stance" if assault_rig_test else "Idle")
 	_alias_meshy_clip(lib, "lopen", "Walking")
 	_alias_meshy_clip(lib, "rennen", "Running")
 	_alias_meshy_clip(lib, "sprinten", "RunFast")
@@ -321,11 +323,13 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 	if not lib.has_animation("Idle"):
 		_add_meshy_idle(lib, skel)
 	if not lib.has_animation("stil"):
-		_alias_meshy_clip(lib, "stil", "Idle")
-	# Enemy AI calls "schieten" while stationary. The reviewed Meshy source has no
-	# compatible fire clip for these weapon anchors, so hold its authored ready
-	# pose and let the detached weapon adapter provide the shot recoil.
-	_alias_meshy_clip(lib, "schieten", "Idle")
+		_alias_meshy_clip(lib, "stil", "Combat_Stance" if assault_rig_test else "Idle")
+	# The original retargeted library contains a real combat stance clip. Keep
+	# the separate Meshy rifle anchored through both hands and use the existing
+	# detached-weapon recoil for each actual shot.
+	_alias_meshy_clip(lib, "schieten", "Combat_Stance" if assault_rig_test else "Idle")
+	if lib.has_animation("schieten"):
+		lib.get_animation("schieten").loop_mode = Animation.LOOP_LINEAR
 	_build_meshy_animation_tree(lib)
 	for mi: MeshInstance3D in _model.find_children("*", "MeshInstance3D", true, false):
 		if mi.name == "Icosphere":
@@ -364,8 +368,11 @@ func _setup_assault_lods() -> void:
 func _build_meshy_animation_tree(lib: AnimationLibrary) -> void:
 	var machine := AnimationNodeStateMachine.new()
 	_mesh_clip_map.clear()
+	var stand_clips: Array[String] = ["stil", "lopen", "rennen", "sprinten", "Rifle_Aim_Turn_Right", "Rifle_Charge_inplace", "Run_and_Shoot", "Stand_Up2", "Hit_in_Back_While_Running", "dying_backwards"]
+	if assault_rig_test:
+		stand_clips = ["stil", "lopen", "rennen", "sprinten", "Combat_Stance", "Rifle_Aim_Turn_Right", "Rifle_Charge_inplace", "Run_and_Shoot", "Walk_Forward_While_Shooting", "Walk_Backward_While_Shooting", "Stand_Up2", "Hit_in_Back_While_Running", "dying_backwards"]
 	var posture_clips := {
-		"STAND": ["stil", "lopen", "rennen", "sprinten", "Rifle_Aim_Turn_Right", "Rifle_Charge_inplace", "Run_and_Shoot", "Stand_Up2", "Hit_in_Back_While_Running", "dying_backwards"],
+		"STAND": stand_clips,
 		"CROUCH": ["Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun"],
 		"PRONE": ["Prone_Reload"],
 	}
@@ -419,14 +426,33 @@ func _build_meshy_animation_tree(lib: AnimationLibrary) -> void:
 ## Explicit clip review hook used by the isolated animation-library test/preview.
 ## It selects only clips in the supplied library and never invents stance content.
 func play_meshy_library_clip(clip_name: String, speed := 1.0) -> bool:
-	if not meshy_player or _mesh_animation_tree == null or not _mesh_clip_map.has(clip_name):
+	if not meshy_player or anim == null:
 		return false
-	var selection: Dictionary = _mesh_clip_map[clip_name]
-	_mesh_animation_tree.active = true
-	_mesh_animation_tree.set("parameters/%s/blend_position" % selection.posture, selection.position)
-	_mesh_animation_playback.travel(selection.posture)
-	anim.speed_scale = speed
+	if not assault_rig_test:
+		if _mesh_animation_tree == null or not _mesh_clip_map.has(clip_name):
+			return false
+		var selection: Dictionary = _mesh_clip_map[clip_name]
+		_mesh_animation_tree.active = true
+		_mesh_animation_tree.set("parameters/%s/blend_position" % selection.posture, selection.position)
+		_mesh_animation_playback.travel(selection.posture)
+		anim.speed_scale = speed
+		current = clip_name
+		return true
+	if not anim.has_animation(clip_name):
+		return false
+	if _mesh_action_player != null and _mesh_action_player.is_playing():
+		_mesh_action_player.stop()
+		if _mesh_weapon_adapter != null:
+			_mesh_weapon_adapter.left_hand_grip.position = _mesh_weapon_adapter.profile.left_hand_grip
+	# Play clips directly so the post-animation SkeletonIK3D pass can keep both
+	# hands on the separate rifle. All imported source clips remain reviewable;
+	# this hook does not change the aliases or transitions used by gameplay.
+	if _mesh_animation_tree != null:
+		_mesh_animation_tree.active = false
+	_set_meshy_armed(_meshy_clip_holds_weapon(clip_name))
 	current = clip_name
+	anim.play(clip_name, 0.08)
+	anim.speed_scale = speed
 	return true
 
 
@@ -456,6 +482,7 @@ func _attach_gun_meshy(skel: Skeleton3D, gun_kind: String) -> void:
 	_weapon_mount = _mesh_weapon_adapter
 	_gun_anim = _mesh_weapon_adapter.animation_player
 	_weapon_kind = gun_kind
+	_mesh_weapon_rest_transform = _mesh_weapon_adapter.transform
 	if assault_rig_test:
 		_mesh_right_target = _mesh_weapon_adapter.right_hand_grip
 	elif _mesh_right_target == null:
@@ -1028,6 +1055,17 @@ func play(clip: String, blend := 0.18, speed := 1.0) -> void:
 func _play_meshy_clip(clip: String, blend: float, speed: float) -> void:
 	if anim == null:
 		return
+	# The stock Walking/Running clips are unarmed walks and pull both arms away
+	# from the Assault's detached Meshy rifle. The supplied tactical forward-walk
+	# and run-and-shoot cycles were checked over their full loops with both hand
+	# IK anchors enabled. Backward movement uses its authored gun-ready cycle.
+	# This affects only the new Assault character.
+	if assault_rig_test and clip == "lopen":
+		clip = "Cautious_Crouch_Walk_Forward"
+		speed = absf(speed)
+	elif assault_rig_test and clip == "rennen":
+		clip = "Run_and_Shoot"
+		speed = absf(speed)
 	if speed < 0.0 and clip == "lopen" and anim.has_animation("achteruit"):
 		clip = "achteruit"   # de lus achterstevoren afspelen is niet meer nodig
 		speed = -speed
@@ -1054,7 +1092,7 @@ func _play_meshy_clip(clip: String, blend: float, speed: float) -> void:
 		return
 	if _mesh_animation_tree != null:
 		_mesh_animation_tree.active = false
-	_set_meshy_armed(clip in MESHY_HOLD)
+	_set_meshy_armed(_meshy_clip_holds_weapon(clip))
 	current = clip
 	anim.play(clip, blend)
 	anim.speed_scale = speed
@@ -1066,11 +1104,17 @@ func _set_meshy_armed(armed: bool) -> void:
 		return
 	_mesh_armed = armed
 	if armed:
+		if assault_rig_test and _mesh_weapon_adapter != null:
+			_mesh_weapon_adapter.transform = _mesh_weapon_rest_transform
 		_mesh_right_ik.start()
 		_mesh_left_ik.start()
 	else:
 		_mesh_right_ik.stop()
 		_mesh_left_ik.stop()
+
+
+func _meshy_clip_holds_weapon(clip: String) -> bool:
+	return clip in (ASSAULT_MESHY_HOLD if assault_rig_test else MESHY_HOLD)
 
 
 func set_stance(value: int) -> void:

@@ -148,6 +148,29 @@ for name,position in weapon_anchors.items():
     marker.empty_display_type='SPHERE'
     marker.empty_display_size=0.025
     anchor_objects.append(marker)
+# The source soldier holds this Meshy rifle in a low-ready, cross-body orientation.
+# Keep the authored right-hand grip fixed, but rotate and scale the detached prop
+# so the muzzle points forward along the Mixamo character's -Y facing axis. This
+# preserves the chosen Meshy silhouette while making the grip, sight and muzzle
+# agree with the game's forward-facing rifle fire.
+right_grip_local=Vector(weapon_anchors['Assault_RightHandGrip'])
+muzzle_local=Vector(weapon_anchors['Assault_Muzzle'])
+weapon_axis=muzzle_local-right_grip_local
+if weapon_axis.length < 1e-4: raise RuntimeError('Meshy rifle muzzle and right-hand grip overlap')
+weapon_forward=Vector((0.0,-1.0,0.0))
+weapon_rotation=weapon_axis.normalized().rotation_difference(weapon_forward)
+weapon_scale=1.4
+# Refresh parenting before reading world coordinates; Blender otherwise returns
+# the just-created Empty's stale identity matrix and drops the ground offset.
+bpy.context.view_layer.update()
+right_grip_world=weapon_root.matrix_world @ right_grip_local
+parent_world=weapon_root.parent.matrix_world.copy() if weapon_root.parent else None
+right_grip_parent=parent_world.inverted() @ right_grip_world if parent_world else right_grip_world
+weapon_root.rotation_mode='QUATERNION'
+weapon_root.rotation_quaternion=weapon_rotation
+weapon_root.scale=(weapon_scale,weapon_scale,weapon_scale)
+weapon_root.location=right_grip_parent-(weapon_rotation@(right_grip_local*weapon_scale))
+bpy.context.view_layer.update()
 remaining_parts=[p for p in enemy_parts if p not in weapon_parts and p.name in bpy.data.objects]
 bpy.ops.object.select_all(action='DESELECT')
 for part in remaining_parts: part.select_set(True)
@@ -169,6 +192,6 @@ bpy.context.view_layer.objects.active=arm
 os.makedirs(os.path.dirname(OUT),exist_ok=True)
 bpy.ops.export_scene.gltf(filepath=OUT,export_format='GLB',use_selection=True,export_apply=False,export_animations=False,export_skins=True,export_materials='EXPORT',export_image_format='AUTO')
 # Blender-side validation and machine-readable report.
-report={'source':SRC_ENEMY,'player_rig_source':SRC_PLAYER,'output':OUT,'bones':len(arm.data.bones),'bone_names':[b.name for b in arm.data.bones],'mesh_vertices':len(enemy.data.vertices),'mesh_triangles':sum(len(p.vertices)-2 for p in enemy.data.polygons),'weapon_vertices':len(weapon_mesh.data.vertices),'weapon_triangles':sum(len(p.vertices)-2 for p in weapon_mesh.data.polygons),'weapon_anchors':weapon_anchors,'vertex_groups':len(enemy.vertex_groups),'weight_vertices':sum(1 for v in enemy.data.vertices if v.groups),'textures':[{'name':im.name,'size':list(im.size)} for im in bpy.data.images if im.source=='FILE'],'enemy_bounds':[[float(x) for x in pair] for pair in bounds],'proxy_scales':[float(x) for x in scales],'source_islands':len(enemy_parts),'smooth_weight_vertices':smooth_vertices,'weapon_islands_extracted':weapon_hand_islands}
+report={'source':SRC_ENEMY,'player_rig_source':SRC_PLAYER,'output':OUT,'bones':len(arm.data.bones),'bone_names':[b.name for b in arm.data.bones],'mesh_vertices':len(enemy.data.vertices),'mesh_triangles':sum(len(p.vertices)-2 for p in enemy.data.polygons),'weapon_vertices':len(weapon_mesh.data.vertices),'weapon_triangles':sum(len(p.vertices)-2 for p in weapon_mesh.data.polygons),'weapon_anchors':weapon_anchors,'weapon_forward_local':[float(x) for x in weapon_forward],'weapon_scale':weapon_scale,'weapon_right_grip_world_before':[float(x) for x in right_grip_world],'weapon_rotation_quaternion':[float(x) for x in weapon_rotation],'vertex_groups':len(enemy.vertex_groups),'weight_vertices':sum(1 for v in enemy.data.vertices if v.groups),'textures':[{'name':im.name,'size':list(im.size)} for im in bpy.data.images if im.source=='FILE'],'enemy_bounds':[[float(x) for x in pair] for pair in bounds],'proxy_scales':[float(x) for x in scales],'source_islands':len(enemy_parts),'smooth_weight_vertices':smooth_vertices,'weapon_islands_extracted':weapon_hand_islands}
 with open(os.path.splitext(OUT)[0]+'.json','w') as f: json.dump(report,f,indent=2)
 print('ASSAULT_RIG_REPORT='+json.dumps(report))

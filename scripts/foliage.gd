@@ -772,7 +772,7 @@ static func _strip(rng: RandomNumberGenerator, kind: String, count: int, out: Ar
 		var x := rng.randf_range(-Data.WORLD_X + 2.0, Data.WORLD_X - 2.0)
 		var north := rng.randf() < 0.3
 		var zr := Data.river_z(x)
-		var z := rng.randf_range(-Data.WORLD_Z_N + 3.0, zr - Data.RIVER_HALF - 1.2) if north else rng.randf_range(zr + Data.RIVER_HALF + 1.2, -Data.COMPOUND - 2.0)
+		var z := rng.randf_range(-Data.FOLIAGE_Z_N + 3.0, zr - Data.RIVER_HALF - 1.2) if north else rng.randf_range(zr + Data.RIVER_HALF + 1.2, -Data.COMPOUND - 2.0)
 		var p := Vector3(x, 0, z)
 		if _in_river(p):
 			continue

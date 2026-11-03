@@ -4,6 +4,7 @@ extends Node3D
 ## @tool: je ziet het ook in de editor. Maten uit 05-world.js van de web-versie.
 
 const SIZE := 440.0
+const Z_MAX := 220.0   # zuidrand van de grondplaat; de noordrand is Data.GROUND_Z_MIN (de plaat is sinds D2 in het noorden 80 m langer)
 
 
 var built := false
@@ -22,6 +23,7 @@ func build_now() -> void:
 	BaseProps.build(self)
 	River.build(self)
 	Stad.build(self)
+	VijandBasis.build(self)
 	Foliage.plant(self)
 	built = true
 
@@ -41,6 +43,7 @@ func build_stepped(progress: Callable) -> void:
 	await tick.call(0.2, "Rivier en brug...")
 	River.build(self)
 	Stad.build(self)
+	VijandBasis.build(self)
 	var names := {"palm": "Palmen planten...", "bush": "Struiken planten...", "fern": "Varens planten...", "grass": "Gras laten groeien...", "rock": "Rotsen neerleggen..."}
 	var order := ["palm", "bush", "fern", "grass", "rock"]
 	var step := func(kind: String) -> void:
@@ -53,15 +56,18 @@ func _ground() -> void:
 	var body := StaticBody3D.new()
 	body.collision_layer = Kit.LAYER_GROUND
 	var col := CollisionShape3D.new()
+	var depth := Z_MAX - Data.GROUND_Z_MIN
+	var mid_z := (Z_MAX + Data.GROUND_Z_MIN) * 0.5
 	var shape := BoxShape3D.new()
-	shape.size = Vector3(SIZE, 1, SIZE)
+	shape.size = Vector3(SIZE, 1, depth)
 	col.shape = shape
-	col.position.y = -0.5
+	col.position = Vector3(0, -0.5, mid_z)
 	body.add_child(col)
 	var mesh := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(SIZE, SIZE)
+	plane.size = Vector2(SIZE, depth)
 	mesh.mesh = plane
+	mesh.position.z = mid_z
 	var mat := ShaderMaterial.new()
 	mat.shader = preload("res://shaders/ground.gdshader")
 	mat.set_shader_parameter("noise_a", Kit.noise_tex(0.02, 3))

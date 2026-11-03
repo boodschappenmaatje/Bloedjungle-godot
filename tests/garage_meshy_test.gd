@@ -76,11 +76,11 @@ func _process(_d: float) -> bool:
 		_check("poort dicht = poortkast aan", not gar.door_shape.disabled)
 	if frames == 10:
 		var at: Vector3 = gar.at
-		_check("muur links houdt tegen", _hit(at + Vector3(-3.45, 1.0, 0)))
-		_check("zandzakken links voor houden tegen", _hit(at + Vector3(-3.3, 0.4, 4.85)))
-		_check("kabelhaspel rechts voor houdt tegen", _hit(at + Vector3(2.85, 0.5, 4.8)))
-		_check("dichte poort houdt tegen", _hit(at + Vector3(-0.04, 1.0, 4.1)))
-		_check("voorplein is vrij", not _hit(at + Vector3(-0.04, 0.5, 5.8)))
+		_check("muur links houdt tegen", _hit(at + Vector3(-3.04, 1.0, -0.5)))
+		_check("zandzakken links voor houden tegen", _hit(at + Vector3(-2.9, 0.4, 2.56)))
+		_check("kabelhaspel rechts voor houdt tegen", _hit(at + Vector3(2.51, 0.5, 2.51)))
+		_check("dichte poort houdt tegen", _hit(at + Vector3(-0.04, 1.0, 1.81)))
+		_check("voorplein is vrij", not _hit(at + Vector3(-0.04, 0.5, 3.5)))
 		g.builds.buy_vehicle(gar, "jeep")
 	if frames > 10 and gar != null:
 		if gar.door_shape.disabled:

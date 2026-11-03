@@ -1,0 +1,57 @@
+name: Voorraadverkeer regressie
+
+on:
+  pull_request:
+    paths:
+      - "scripts/voorraad.gd"
+      - "scripts/voorraad_truck.gd"
+      - "scripts/voorraad_baan.gd"
+      - "scripts/voorraad_verkeer.gd"
+      - "tests/voorraad_baan_test.gd"
+      - "tests/voorraad_test.gd"
+      - "tests/voorraad_verkeer_test.gd"
+      - ".github/workflows/voorraad-verkeer.yml"
+  workflow_dispatch:
+
+# Bij nieuwe fixes slechts de nieuwste kandidaat testen.
+concurrency:
+  group: voorraad-verkeer-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  verkeer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Download Godot 4.7.2
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --connect-timeout 30 \
+            "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
+            -o godot.zip
+          unzip -q godot.zip -d .godot-runner
+          chmod +x .godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --version
+      - name: Import project
+        run: timeout 900 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --import
+      - name: Baan- en voorraadtests
+        run: |
+          set -e
+          for script in tests/voorraad_baan_test.gd tests/voorraad_test.gd; do
+            timeout 360 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script "$script" --fixed-fps 60
+          done
+      - name: Verkeerstest (drie trucks, stad, gekochte truck)
+        shell: bash
+        run: |
+          set +e
+          timeout 600 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voorraad_verkeer_test.gd --fixed-fps 60 > "$RUNNER_TEMP/verkeer.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|OK |klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/verkeer.log" | tail -n 60 || true
+          tail -n 20 "$RUNNER_TEMP/verkeer.log"
+          exit "$RC"

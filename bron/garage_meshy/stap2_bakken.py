@@ -95,7 +95,8 @@ deurR = blok("DeurR", mid + 0.01, PX1, PY_VOOR, PY_VOOR + DIK, PZ0 - 0.02, PZ1)
 # planken in de deuren voor een beter silhouet in de normal map zijn niet nodig: de bake neemt ze mee
 
 # 3. werkplaats binnen: vloer en een donkere binnenbak, alleen zichtbaar door de open poort
-binnen = blok("Binnen", PX0 - 0.9, PX1 + 0.6, PY_VOOR + 0.35, PY_VOOR + 7.0, 0.02, PZ1 + 0.15, binnen=True)
+XS = M.get("x_schaal", 1.0)
+binnen = blok("Binnen", PX0 - 0.9 * XS, PX1 + 0.6 * XS, PY_VOOR + 0.35, min(PY_VOOR + 7.0, M["bbox_max"][1] - 0.4), 0.02, PZ1 + 0.15, binnen=True)
 mat_b = bpy.data.materials.new("Garage_binnen"); mat_b.use_nodes = True
 pr = mat_b.node_tree.nodes["Principled BSDF"]
 pr.inputs["Base Color"].default_value = (0.016, 0.015, 0.013, 1); pr.inputs["Roughness"].default_value = 0.9

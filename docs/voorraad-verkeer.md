@@ -1,4 +1,4 @@
-# Voorraadtrucks: verkeer (v183)
+# Voorraadtrucks: verkeer (v186)
 
 Dennis meldde (v182, native iPhone): de voorraadtrucks rijden door elkaar heen. Gevraagd: als er een laadt of lost moet de ander wachten tot hij klaar is of tot
 er ruimte is, trucks mogen niet door elkaar heen, en ze mogen niet in de poort in de weg gaan staan. De regels staan in `scripts/voorraad_verkeer.gd`
@@ -37,6 +37,21 @@ Beelden waarin twee trucks elkaar overlappen, per scenario (de oude situatie, v1
 
 Het laatste scenario (6 trucks, twee depots naast elkaar, allemaal tegelijk onderweg) is het drukst dat het spel toelaat; daar kruisen twee trucks één keer
 4 seconden lang in de bocht van het bospad. Dat is nog niet weg.
+
+## Verhouding tot v185 (PR #206, FIFO)
+
+Terwijl deze regeling klaar werd, kwam op main een andere oplossing (PR #206, door Codex): een centrale FIFO-rij waarbij maar één truck tegelijk een
+volledige rit rijdt, met parkeerhavens bij het depot. Die maakt overlap onmogelijk, maar extra trucks leveren dan bijna niets extra op. Beide zijn in
+dezelfde headless simulatie (60 fps, botsvak 6,6 × 2,2 m, wegwerpscript, niet in de repo) gemeten:
+
+| Scenario | v185 (FIFO) | Deze regeling (v186) |
+|---|---|---|
+| 3 trucks bij één depot, 200 s | 3 ritten, 420 punten, overlap 0 | 5 ritten, 780 punten, overlap 0 |
+| 6 trucks, twee depots, 300 s | 4 ritten, 560 punten, overlap 0 | 9 ritten, 1480 punten, overlap 4 s (één keer) |
+
+Met deze regeling rijden trucks tegelijk en wachten ze op elkaar (zoals Dennis vroeg: "tot de ander klaar is of tot er ruimte is"). In v186 vervangt
+dit de FIFO-regeling van v185 (`traffic_request`, parkeerhavens, `S.PARK`, de tests `voorraad_verkeer_unit_test` en `voorraad_verkeer_fastsim_test`
+en de v185-workflow); de workflow `voorraad-verkeer.yml` draait nu de baan-, voorraad- en verkeerstest.
 
 ## Tests
 

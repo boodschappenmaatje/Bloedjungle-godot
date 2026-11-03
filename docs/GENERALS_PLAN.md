@@ -123,6 +123,6 @@ Keuzekaart: https://claude.ai/artifact/WEMBbr3H3zrHtBYQnqxAdn (ingevuld 2026-11-
 
 **Stand en open punten (voor Claude én Codex):**
 - Niets bouwen voordat Dennis "ga door" zegt; Draft PR, niet mergen of OTA zonder apart ja. Vraag bij de start van 5a wat 5a precies omvat als dat onduidelijk is.
-- Onderzoek eerst hoe Generals de aanvallen kiest (keuze F) voordat de AI wordt ontworpen.
+- Onderzoek hoe Generals de aanvallen kiest (keuze F): **gedaan op 2026-11-03**, zie [docs/GENERALS_AANVAL_ONDERZOEK.md](GENERALS_AANVAL_ONDERZOEK.md). Kort: Generals gebruikt genummerde golven langs vaste routes (Center, Flank, Backdoor) met doelprioriteit per objectsoort, geen echte "zwakste kant"; ons voorstel is een eenvoudige score per route plus leren van succes en falen. Wacht op Dennis' keuze voordat 5a begint (Dennis koos op 2026-11-03: eerst alleen onderzoek).
 - Kaart 60 m groter naar het noorden: terrein (grondplaat 440 m), camera- en speelgrenzen, kaart/minimap, rivier en stadsroutes erbij trekken; iPhone-prestaties NIET gemeten.
 - Spelfeiten die hierbij horen: jouw basis 56 x 56 m op de oorsprong (`Data.COMPOUND` 28), rivier z ≈ -92 (`Data.river_z`), brug x = 0, stad x -62..72 en z ≈ -96..-158, `ETYPES` zijn nu alleen infanterie (mes, geweer, raket, zwaar), `Voorraad.SITES` heeft 8 stapelplekken.

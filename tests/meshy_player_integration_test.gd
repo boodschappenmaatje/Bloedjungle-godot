@@ -267,8 +267,11 @@ func _run() -> void:
 	var slide := pistol_adapter.weapon.find_child("M1911_Slede", true, false) as Node3D
 	var slide_at_rest := slide.position.x
 	model.shoot_recoil("m1911")
-	await get_tree().create_timer(0.05).timeout
-	_check(slide.position.x > slide_at_rest + 0.01, "M1911 shot clip did not cycle the slide")
+	var slide_peak := slide_at_rest
+	for _frame in 12:
+		await get_tree().process_frame
+		slide_peak = maxf(slide_peak, slide.position.x)
+	_check(slide_peak > slide_at_rest + 0.01, "M1911 shot clip did not cycle the slide")
 	model.play_weapon_action("leeg")
 	await get_tree().create_timer(0.35).timeout
 	_check(slide.position.x > slide_at_rest + 0.02, "M1911 empty clip did not hold the slide open")

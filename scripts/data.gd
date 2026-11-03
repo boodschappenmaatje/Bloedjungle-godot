@@ -90,7 +90,14 @@ const RIVER_Z0 := -92.0
 const FOREST_Z0 := -30.0   # het bos begint bij de noordmuur
 const WORLD_X := 190.0     # kaartrand west/oost, zuid, en noord (voorbij de rivier)
 const WORLD_Z_S := 180.0    # +100 m zuidelijke speelruimte; de bestaande 440 m grondplaat loopt al tot z=220
-const WORLD_Z_N := 200.0
+const WORLD_Z_N := 285.0   # Generals-plan D2: de kaart groeit ruim 80 m naar het noorden voor de vijandelijke basis (was 200)
+const FOLIAGE_Z_N := 200.0  # tot hier plant foliage.gd de jungle-strook (ongewijzigd, zodat de bestaande vegetatie niet verschuift)
+
+# Vijandelijke basis (Generals-plan stap D2): ver in het noorden achter de stad, 64 x 56 m, poort in de zuidmuur naar jouw basis toe.
+const VIJAND_POS := Vector3(-32.0, 0.0, -243.0)
+const VIJAND_HALF := Vector2(32.0, 28.0)   # halve breedte (x) en halve diepte (z) van de muur
+const VIJAND_GATE := 3.4                   # halve breedte van de poortopening
+const GROUND_Z_MIN := -300.0               # noordrand van de grondplaat (level.gd); de zuidrand blijft z = 220
 
 
 static func river_z(x: float) -> float:

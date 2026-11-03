@@ -1,0 +1,49 @@
+name: Vijandbasis regressie
+
+on:
+  pull_request:
+    paths:
+      - "scripts/vijand_basis.gd"
+      - "scripts/level.gd"
+      - "scripts/data.gd"
+      - "scripts/foliage.gd"
+      - "tests/vijand_basis_test.gd"
+      - ".github/workflows/vijand-basis.yml"
+  workflow_dispatch:
+
+# Bij nieuwe commits slechts de nieuwste kandidaat testen.
+concurrency:
+  group: vijand-basis-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  vijandbasis:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Download Godot 4.7.2
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 --connect-timeout 30 \
+            "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
+            -o godot.zip
+          unzip -q godot.zip -d .godot-runner
+          chmod +x .godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --version
+      - name: Import project
+        run: timeout 900 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --import
+      - name: Vijandbasis- en kaarttest
+        shell: bash
+        run: |
+          set +e
+          timeout 360 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/vijand_basis_test.gd --fixed-fps 60 > "$RUNNER_TEMP/vijand.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/vijand.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/vijand.log"
+          exit "$RC"

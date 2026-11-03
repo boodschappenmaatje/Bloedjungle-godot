@@ -7,6 +7,11 @@ const MODEL_PATH := "res://assets/airfield_hq_v22/runtime/Bloedjungle_Airfield_H
 const SHOWCASE_PATH := "res://scenes/airfield_hq_22_showcase.tscn"
 
 func _ready() -> void:
+	# Een mislukte assert stopt _run zonder get_tree().quit(): zonder deze wachter blijft het proces eindeloos hangen
+	# (in CI kostte dat de hele iOS-build een time-out van 45 minuten).
+	get_tree().create_timer(180.0).timeout.connect(func() -> void:
+		print("FOUT: time-out, een assert hierboven heeft de test afgebroken")
+		get_tree().quit(1))
 	call_deferred("_run")
 
 func _run() -> void:
@@ -159,14 +164,17 @@ func _run() -> void:
 	var compact_driver := compact_core as AirfieldHQ23CompactShowcase
 	assert(compact_driver != null, "The compact showcase must use its own door controller")
 	var closed_collision_x := (compact_core.get_node("GameplayCollisions/LeftDoorCollision") as Node3D).position.x
+	var closed_door_x := left_compact_door.position.x
 	compact_driver.open_door(&"left")
 	await get_tree().create_timer(0.35).timeout
 	assert(absf((compact_core.get_node("GameplayCollisions/LeftDoorCollision") as Node3D).position.x - closed_collision_x) > 0.05, "Left-door collision must follow its compact opening animation")
+	# Sinds #181 (v161-reeks) schuiven de deuren van alle LODs met een tween en staan de glTF-clips uit (geen clip-conflict meer).
+	assert(absf(left_compact_door.position.x - closed_door_x) > 0.05, "The compact left door mesh must slide with the door tween")
 	var left_animation_found := false
 	for player in animation_players(compact_lod0):
 		if player.has_animation("Open_Left_Door"):
 			left_animation_found = true
-			assert(player.is_playing(), "The compact left-door GLB action must play in Godot")
+			assert(not player.is_playing(), "The glTF door clips must stay stopped: the compact showcase drives both doors with one tween")
 	assert(left_animation_found, "The compact LOD0 GLB must retain Open_Left_Door")
 	var old_tower := compact_lod0.find_child("Control Tower 22", true, false) as MeshInstance3D
 	assert(old_tower == null, "The 2.2 tower meshes must stay in the protected 2.2 asset and be absent from the compact 2.3 hangar GLB")

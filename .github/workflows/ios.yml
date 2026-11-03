@@ -72,6 +72,8 @@ jobs:
           test -d .godot/imported
           echo "Initial asset import finished. Strict validation follows on a fresh Godot process."
       - name: Import and validate project
+        # Een testscript dat na een mislukte assert niet afsluit, hield dit proces eindeloos vast (hele job 45 min, geen IPA).
+        timeout-minutes: 15
         shell: bash
         run: |
           set -euo pipefail

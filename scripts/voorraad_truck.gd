@@ -4,8 +4,10 @@ extends StaticBody3D
 ## zijn kraan en grijper, rijdt terug en levert af. Hij kan kapot: dan blijft een wrak liggen en de lading is weg.
 ## 4b: het echte model (bron/voorraad/maak_truck.py): kraan en grijper pakken een kist van de stapel (clip `Laden`) en zetten hem bij het depot
 ## op de laadplaat (clip `Lossen`, daarna tilt de portaalkraan van het depot hem weg). Wrakmodel apart. Wielen draaien mee met de snelheid.
+## Verkeer: de truck rijdt op de rechterrijstrook, wacht op een vrije laad- of losplek (scripts/voorraad_verkeer.gd), houdt afstand tot andere trucks en blijft
+## nooit in de poort staan.
 
-enum S { WACHT, HEEN, LADEN, TERUG, LOSSEN, WRAK, PARK }
+enum S { WACHT, HEEN, LADEN, TERUG, LOSSEN, WRAK }
 const SPEED := 6.0        # m/s (de baan in scripts/voorraad_baan.gd begrenst dit in bochten)
 const ACCEL := 2.6        # m/s²
 const BRAKE := 4.5        # m/s²
@@ -24,7 +26,7 @@ const WHEEL_R := 0.49
 const HP_MAX := 400.0
 const WRECK_T := 90.0     # s dat het wrak blijft liggen
 const BULLET_TAKE := 0.5  # een kogel doet de helft van zijn schade aan het pantser
-const NAMES := {S.WACHT: "wacht in het depot", S.HEEN: "onderweg naar de stapel", S.LADEN: "laadt", S.TERUG: "onderweg naar het depot", S.LOSSEN: "lost", S.WRAK: "wrak", S.PARK: "parkeert"}
+const NAMES := {S.WACHT: "wacht in het depot", S.HEEN: "onderweg naar de stapel", S.LADEN: "laadt", S.TERUG: "onderweg naar het depot", S.LOSSEN: "lost", S.WRAK: "wrak"}
 
 var sup: Voorraad
 var depot: Dictionary = {}
@@ -58,14 +60,19 @@ var _steer := 0.0          # stand van de voorwielen (rad)
 var _yaw_err := 0.0        # verschil met de baan aan het begin; sluipt naar nul
 var _lean := Vector2.ZERO  # (kanteling, helling) van de bak, glad gemaakt
 var _last_vel := 0.0
-var _park_reverse := false
-var _park_target := Vector2.ZERO
+var stop_pos := Vector2.ZERO   # het stoppunt bij de stapel (einde van de heenweg)
+var _route_pts: Array = []     # de heenweg (Vector2, van het depot naar het stoppunt), voor als de truck onderweg terug moet
+var _vk := VoorraadVerkeer.new()   # verkeersregels: rijstrook, wachtplek, afstand houden, voorrang
 
 
 func setup(sup_: Voorraad, depot_: Dictionary, number_: int) -> void:
 	sup = sup_
 	depot = depot_
 	number = number_
+	_vk.setup(self)
+	# de laadplek van het depot is van deze truck tot hij er 11 m vandaan is (een gekochte truck verschijnt pas als hij vrij is)
+	_vk.take_key("dock:" + sup.depot_key(depot), S.HEEN, sup.dock_point(depot), false)
+	_vk.take_key(sup.gate_key(depot), S.HEEN, sup.dock_point(depot), false, true)   # en het kruispunt tussen de depots, tot hij de poort uit is
 	name = "Voorraadtruck%d" % number
 	add_to_group("voorraadtruck")
 	collision_layer = Bullet.MASK_VEHICLE
@@ -80,7 +87,7 @@ func setup(sup_: Voorraad, depot_: Dictionary, number_: int) -> void:
 	_build_wreck()
 	_build_dust()
 	_build_sound()
-	var at: Vector2 = sup.parking_point(depot, number)
+	var at: Vector2 = sup.dock_point(depot)
 	position = Vector3(at.x, 0.0, at.y)
 	rotation.y = float(depot.yaw)
 	_set_state(S.WACHT)
@@ -219,7 +226,9 @@ func _physics_process(delta: float) -> void:
 		S.WACHT:
 			_idle()
 		S.HEEN:
-			if _drive(delta):
+			if _vk.waiting and _vk.start_ok and not sup.has_stock(slot, site_id):
+				_abort_trip()   # de stapel waar hij op wachtte is intussen leeg: terug naar het depot
+			elif _drive(delta):
 				_set_state(S.LADEN)
 		S.LADEN:
 			_load_step(delta)
@@ -228,18 +237,17 @@ func _physics_process(delta: float) -> void:
 				_set_state(S.LOSSEN)
 		S.LOSSEN:
 			_unload_step(delta)
-		S.PARK:
-			_park_step(delta)
 		S.WRAK:
 			_t += delta
 			if _t > WRECK_T:
 				queue_free()
-	if state != S.HEEN and state != S.TERUG and state != S.PARK:
+	if state != S.HEEN and state != S.TERUG:
 		_vel_signed = 0.0
 		_steer = move_toward(_steer, 0.0, STEER_RATE * delta)
+	_vk.release_check()
 	_spin_wheels(delta)
 	_lean_body(delta)
-	var moving := _speed_now > 0.5 and (state == S.HEEN or state == S.TERUG or state == S.PARK)
+	var moving := _speed_now > 0.5 and (state == S.HEEN or state == S.TERUG)
 	_dust.emitting = moving
 	if moving:   # het stof komt achter de rijrichting vandaan
 		var fwd := 1.0 if _vel_signed >= 0.0 else -1.0
@@ -261,16 +269,18 @@ func _idle() -> void:
 	if not Game.buildings.has(depot) or depot.down or Buildings.under_construction(depot):
 		return
 	var pick := sup.pick_slot(self)
-	if pick < 0 or not sup.traffic_request(self):
-		return
+	if pick < 0:
+		return   # hij wacht in het depot tot er een stapel vrij is (en houdt de plek bezet: een truck naast zijn depot kan er niet langs)
 	slot = pick
 	site_id = sup.stapels[pick].site.id
-	var road: Array = sup.route(depot, pick)
-	_back = road.duplicate()
+	path = sup.route(depot, pick)
+	_route_pts = path.duplicate()
+	if not path.is_empty():
+		stop_pos = path[path.size() - 1]
+	_back = path.duplicate()
 	_back.reverse()
-	path = [sup.parking_staging(depot, number), sup.road_staging(depot)]
-	for i in range(1, road.size()):
-		path.append(road[i])
+	if path.size() > 0:
+		path.pop_front()   # de eerste is het depot zelf
 	sup.claim(pick, 1)
 	_start_drive()
 	_set_state(S.HEEN)
@@ -289,6 +299,10 @@ func _make_plan() -> void:
 	_planned = true
 	var here := Vector2(global_position.x, global_position.z)
 	_legs = VoorraadBaan.plan(here, rotation.y, path, 1 if number % 2 == 0 else -1)
+	if not _legs.is_empty():   # de gewone baan (na de keer) over de rechterrijstrook, en bepaal waar hij op de laad-/losplek moet wachten
+		var last := _legs.size() - 1
+		_legs[last] = VoorraadBaan.rijstrook(_legs[last], VoorraadVerkeer.LANE, VoorraadVerkeer.TAPER, VoorraadVerkeer.SMAL, VoorraadVerkeer.SMAL_TAPER)
+		_vk.begin(_legs[last])
 	_li = 0
 	_u = 0.0
 	_yaw_err = 0.0
@@ -321,6 +335,10 @@ func _drive(delta: float) -> bool:
 		return false
 	var remain := leg.length - _u
 	var vt := maxf(leg.vmax(_u), minf(0.9, remain * 1.6 + 0.12))
+	var is_main := _li == _legs.size() - 1
+	vt = minf(vt, _vk.cap(delta, leg, _u, _speed_now, is_main))   # afstand houden, voorrang en wachten op een vrije plek
+	if is_main and _vk.back_left > 0.0:
+		return _back_off(delta, leg)
 	_speed_now = move_toward(_speed_now, vt, (ACCEL if vt > _speed_now else BRAKE) * delta)
 	_u = minf(_u + _speed_now * delta, leg.length)
 	_vel_signed = _speed_now * float(leg.gear)
@@ -342,6 +360,43 @@ func _drive(delta: float) -> bool:
 			path.clear()
 			return true
 	return false
+
+
+## Noodgeval (twee trucks blokkeren elkaar): een stukje achteruit over de eigen baan, zodat de ander erlangs kan.
+func _back_off(delta: float, leg: VoorraadBaan.Leg) -> bool:
+	_speed_now = move_toward(_speed_now, VoorraadVerkeer.BACK_V, ACCEL * delta)
+	var step := minf(_speed_now * delta, _vk.back_left)
+	_u = maxf(_u - step, 0.0)
+	_vk.back_left -= step
+	if _u <= 0.01:
+		_vk.back_left = 0.0
+	_vel_signed = -_speed_now
+	var q := leg.pos(_u)
+	global_position = Vector3(q.x, global_position.y, q.y)
+	rotation.y = wrapf(leg.head(_u) + _yaw_err, -PI, PI)
+	_steer = move_toward(_steer, clampf(atan(VoorraadBaan.WIELBASIS * leg.kap(_u)), -STEER_MAX, STEER_MAX), STEER_RATE * delta)
+	return false
+
+
+## De stapel waar hij op wachtte is intussen leeg of weg: terug naar het depot, vanaf waar hij nu staat (over de punten van de heenweg die achter hem liggen).
+func _abort_trip() -> void:
+	_vk.release_all()
+	sup.claim(slot, -1)
+	cargo = 0
+	var here := Vector2(global_position.x, global_position.z)
+	var best_i := 0
+	var best_d := INF
+	for i in range(_route_pts.size() - 1):
+		var c := Geometry2D.get_closest_point_to_segment(here, _route_pts[i], _route_pts[i + 1])
+		var d := here.distance_to(c)
+		if d < best_d:
+			best_d = d
+			best_i = i
+	path = []
+	for i in range(best_i, -1, -1):
+		path.append(_route_pts[i])
+	_start_drive()
+	_set_state(S.TERUG)
 
 
 ## De bak kantelt een beetje naar buiten in een bocht en duikt iets bij remmen (alleen kijkwerk: botsblok en klauwen blijven staan).
@@ -404,7 +459,7 @@ func _unload_step(delta: float) -> void:
 	_align_to_dock(delta)
 	if cargo <= 0:
 		if _t > 0.6:
-			_start_park()
+			_set_state(S.WACHT)
 		return
 	var f := _t / UNLOAD_T
 	if f >= UNLOAD_DROP and not _dropped:
@@ -415,32 +470,6 @@ func _unload_step(delta: float) -> void:
 		if dm != null:
 			dm.play_unload()
 	if f >= 1.0:
-		_start_park()
-
-
-## Na het lossen rijdt de truck eerst achteruit uit de dock, dan naar zijn haven.
-func _start_park() -> void:
-	_park_reverse = true
-	_park_target = sup.road_staging(depot)
-	path = [sup.parking_staging(depot, number), sup.parking_point(depot, number)]
-	_start_drive()
-	_set_state(S.PARK)
-
-
-func _park_step(delta: float) -> void:
-	if _park_reverse:
-		var here := Vector2(global_position.x, global_position.z)
-		var next := here.move_toward(_park_target, 2.0 * delta)
-		global_position = Vector3(next.x, global_position.y, next.y)
-		_speed_now = 2.0
-		_vel_signed = -2.0
-		if next.distance_to(_park_target) < 0.05:
-			_park_reverse = false
-			_speed_now = 0.0
-			_vel_signed = 0.0
-		return
-	if _drive(delta):
-		sup.traffic_release(self)
 		_set_state(S.WACHT)
 
 
@@ -454,7 +483,7 @@ func _align_to_dock(delta: float) -> void:
 
 ## Alleen een rijdende truck laat een poort opengaan; een truck die wacht of laadt houdt hem niet open.
 func wants_gate() -> bool:
-	return state == S.HEEN or state == S.TERUG or state == S.PARK
+	return (state == S.HEEN or state == S.TERUG) and not _vk.waiting
 
 
 # ---------------------------------------------------------------- schade
@@ -474,12 +503,12 @@ func take(dmg: float) -> void:
 func _destroy() -> void:
 	if state == S.WRAK:
 		return
-	sup.traffic_release(self)
 	if slot >= 0 and (state == S.HEEN or state == S.LADEN):
 		sup.claim(slot, -1)
 	cargo = 0
 	path.clear()
 	_legs = []
+	_vk.release_all()
 	_vel_signed = 0.0
 	if _anim != null:
 		_anim.stop()
@@ -497,6 +526,10 @@ func _destroy() -> void:
 	sup.truck_lost(self)
 
 
+func _exit_tree() -> void:
+	_vk.release_all()
+
+
 ## Een ontploffing vlakbij raakt de trucks (Game.note_blast).
 static func catch_blast(at: Vector3, radius: float) -> void:
 	for t in (Engine.get_main_loop() as SceneTree).get_nodes_in_group("voorraadtruck"):
@@ -509,6 +542,8 @@ static func catch_blast(at: Vector3, radius: float) -> void:
 
 
 func describe() -> String:
+	if _vk.waiting and (state == S.HEEN or state == S.TERUG):
+		return "wacht op een vrije laadplek" if state == S.HEEN else "wacht op een vrije losplek"
 	var s: String = NAMES[state]
 	if state == S.HEEN or state == S.LADEN:
 		s += " (stapel %d)" % (slot + 1)

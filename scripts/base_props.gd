@@ -1,5 +1,5 @@
 class_name BaseProps
-## De basis: betonnen muur met palen, de bunker met zandzakken en antenne, vier wachttorens,
+## De basis: Meshy-veldmuur, de bunker met zandzakken en antenne, vier wachttorens,
 ## (hutten en kratten zijn weg). Muren, bunker en torens houden kogels en mensen tegen.
 ## Maten van muur, poorten en bunker komen uit data.gd (zoals in de web-versie).
 
@@ -7,6 +7,11 @@ const C := Data.COMPOUND
 const G := Data.GATE_GAP
 const BUNKER_GAME_ASSET_PAD := "res://assets/tests/bunker/bloedjungle_bunker_hq.glb"  # zwaar OTA-bestand: pas laden als het nodig is (zie tests/ota_vroeg_test.gd)
 const BUNKER_COLLISION_SIZE := Vector3(4.6, 2.0, 4.6)
+const BASE_WALL_ASSET := "res://assets/base_wall_hq2.glb"
+const WALL_MODULE_LENGTH := 3.5
+const WALL_LOD_NAMES := ["Wall_LOD0", "Wall_LOD1", "Wall_LOD2"]
+const WALL_LOD_BEGIN := [0.0, 28.0, 58.0]
+const WALL_LOD_END := [28.0, 58.0, 0.0]
 
 
 static func build(root: Node3D) -> void:
@@ -21,30 +26,185 @@ static func build(root: Node3D) -> void:
 	_crates(root, Vector3(-C + 6.5, 0, -C + 5.5))  # voorraadhoek bij de noordwesthoek
 
 
-## Borstwering met een palenrij en een rand erop; open bij de twee poorten.
+## Build shared local transforms once; keep the placement math testable without GPU readback.
+static func _wall_module_transforms(a: Vector3, b: Vector3, yaw: float) -> Array[Transform3D]:
+	var direction := (b - a).normalized()
+	var span_center := (a + b) * 0.5
+	var count := roundi(a.distance_to(b) / WALL_MODULE_LENGTH)
+	var transforms: Array[Transform3D] = []
+	for i in count:
+		var at := a + direction * (WALL_MODULE_LENGTH * (float(i) + 0.5))
+		transforms.append(Transform3D(Basis(Vector3.UP, yaw), at - span_center))
+	return transforms
+
+
+## Gesloten Meshy-modules met afzonderlijke, doorlopende eenvoudige botsvormen.
 static func _wall(root: Node3D) -> void:
-	var half := (C - G) / 2.0
-	var h := Data.WALL_H
-	var t := Data.WALL_T
-	var segs := [
-		[Vector3(-(G + half), 0, -C), Vector2(C - G, t), true], [Vector3(G + half, 0, -C), Vector2(C - G, t), true],
-		[Vector3(-(G + half), 0, C), Vector2(C - G, t), true], [Vector3(G + half, 0, C), Vector2(C - G, t), true],
-		[Vector3(-C, 0, 0), Vector2(t, C * 2.0 + t), false], [Vector3(C, 0, 0), Vector2(t, C * 2.0 + t), false],
+	var packed := load(BASE_WALL_ASSET) as PackedScene
+	if packed == null:
+		push_error("BaseProps: optimized Meshy wall asset is missing: " + BASE_WALL_ASSET)
+		return
+	var template := packed.instantiate()
+	var lod_meshes: Dictionary = {}
+	for node in template.find_children("*", "MeshInstance3D", true, false):
+		var mesh_node := node as MeshInstance3D
+		if WALL_LOD_NAMES.has(mesh_node.name):
+			lod_meshes[mesh_node.name] = mesh_node.mesh
+	template.free()
+	for name in WALL_LOD_NAMES:
+		if not lod_meshes.has(name):
+			push_error("BaseProps: expected LOD node missing from Meshy wall asset: " + name)
+			return
+
+	var spans := [
+		{"name": "north_west", "a": Vector3(-C, 0, -C), "b": Vector3(-G - 0.1, 0, -C), "yaw": PI, "along_x": true},
+		{"name": "north_east", "a": Vector3(G + 0.1, 0, -C), "b": Vector3(C, 0, -C), "yaw": PI, "along_x": true},
+		{"name": "south_west", "a": Vector3(-C, 0, C), "b": Vector3(-G - 0.1, 0, C), "yaw": 0.0, "along_x": true},
+		{"name": "south_east", "a": Vector3(G + 0.1, 0, C), "b": Vector3(C, 0, C), "yaw": 0.0, "along_x": true},
+		{"name": "west", "a": Vector3(-C, 0, -C), "b": Vector3(-C, 0, C), "yaw": -PI * 0.5, "along_x": false},
+		{"name": "east", "a": Vector3(C, 0, -C), "b": Vector3(C, 0, C), "yaw": PI * 0.5, "along_x": false},
 	]
-	for s in segs:
-		var p: Vector3 = s[0]
-		var sz: Vector2 = s[1]
-		Kit.box(root, p, Vector3(sz.x, h, sz.y), Kit.concrete(), 0.0, Kit.LAYER_WALL)
-		Kit.box(root, p + Vector3.UP * h, Vector3(sz.x + 0.1, 0.14, sz.y + 0.14), Kit.concrete_dark())
-		Kit.box(root, p + Vector3.UP * 0.0, Vector3(sz.x + 0.06, 0.28, sz.y + 0.2), Kit.concrete_dark())
-		# palen elke 3,5 m
-		var along_x: bool = s[2]
-		var len := sz.x if along_x else sz.y
-		var n := int(len / 3.5)
-		for i in range(n + 1):
-			var off := -len / 2.0 + i * (len / maxf(n, 1))
-			var pp := p + (Vector3(off, 0, 0) if along_x else Vector3(0, 0, off))
-			Kit.box(root, pp, Vector3(0.55 if along_x else t + 0.25, h + 0.3, t + 0.25 if along_x else 0.55), Kit.concrete_dark())
+	var collision := StaticBody3D.new()
+	collision.name = "BaseHighWallCollision"
+	collision.collision_layer = Kit.LAYER_WALL | Kit.LAYER_FORTIFICATION
+	collision.collision_mask = 0
+	collision.add_to_group("base_high_wall")
+	collision.set_meta("wall_height", Data.BASE_WALL_H)
+	root.add_child(collision)
+	for span: Dictionary in spans:
+		var a: Vector3 = span.a
+		var b: Vector3 = span.b
+		var length := a.distance_to(b)
+		var span_center := (a + b) * 0.5
+		var yaw: float = span.yaw
+		var instance_transforms := _wall_module_transforms(a, b, yaw)
+		var count := instance_transforms.size()
+		var is_x: bool = span.along_x
+		var shape := BoxShape3D.new()
+		shape.size = Vector3(length, Data.BASE_WALL_H, Data.WALL_T) if is_x else Vector3(Data.WALL_T, Data.BASE_WALL_H, length)
+		var collider := CollisionShape3D.new()
+		collider.name = "WallSpan_" + str(span.name)
+		collider.shape = shape
+		collider.position = (a + b) * 0.5 + Vector3.UP * (Data.BASE_WALL_H * 0.5)
+		collision.add_child(collider)
+		for lod_index in WALL_LOD_NAMES.size():
+			var multi := MultiMesh.new()
+			multi.transform_format = MultiMesh.TRANSFORM_3D
+			multi.mesh = lod_meshes[WALL_LOD_NAMES[lod_index]]
+			multi.instance_count = count
+			for i in count:
+				multi.set_instance_transform(i, instance_transforms[i])
+			var visual := MultiMeshInstance3D.new()
+			visual.name = "Wall_%s_%s" % [span.name, WALL_LOD_NAMES[lod_index]]
+			visual.add_to_group("base_wall_visual")
+			visual.set_meta("wall_span", str(span.name))
+			visual.set_meta("wall_start", a)
+			visual.set_meta("wall_end", b)
+			visual.set_meta("wall_yaw", yaw)
+			visual.multimesh = multi
+			visual.position = span_center
+			visual.visibility_range_begin = WALL_LOD_BEGIN[lod_index]
+			visual.visibility_range_end = WALL_LOD_END[lod_index]
+			visual.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+			visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+			root.add_child(visual)
+	_wall_berm(root, spans)
+
+
+## Shared, low-profile earth shoulders ground the mesh while staying outside the portals.
+static func _wall_berm(root: Node3D, spans: Array) -> void:
+	var mesh := _wall_berm_mesh()
+	var earth := Kit.surface("base_wall_earth_berm", Color(0.09, 0.085, 0.055), Color(0.19, 0.17, 0.11), 0.98, 0.0, 0.04, 0.55)
+	mesh.surface_set_material(0, earth)
+	var multi := MultiMesh.new()
+	multi.transform_format = MultiMesh.TRANSFORM_3D
+	multi.mesh = mesh
+	multi.instance_count = spans.size()
+	for i in spans.size():
+		var span: Dictionary = spans[i]
+		var a: Vector3 = span.a
+		var b: Vector3 = span.b
+		var center := (a + b) * 0.5
+		var outside := Vector3.ZERO
+		if str(span.name).begins_with("north"):
+			outside.z = -0.42
+		elif str(span.name).begins_with("south"):
+			outside.z = 0.42
+		elif str(span.name) == "west":
+			outside.x = -0.42
+		else:
+			outside.x = 0.42
+		var direction := (b - a).normalized()
+		var extend_start := 0.41 if absf(a.x) == C or absf(a.z) == C else 0.0
+		var extend_end := 0.41 if absf(b.x) == C or absf(b.z) == C else 0.0
+		var length := a.distance_to(b) + extend_start + extend_end
+		center += direction * ((extend_end - extend_start) * 0.5)
+		var basis := Basis(Vector3.UP, float(span.yaw)).scaled(Vector3(length, 1.0, 1.0))
+		multi.set_instance_transform(i, Transform3D(basis, center + outside))
+	var visual := MultiMeshInstance3D.new()
+	visual.name = "BaseWallEarthBerm"
+	visual.multimesh = multi
+	visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(visual)
+
+	var corner_mesh := _wall_berm_corner_mesh()
+	corner_mesh.surface_set_material(0, earth)
+	var corners := MultiMesh.new()
+	corners.transform_format = MultiMesh.TRANSFORM_3D
+	corners.mesh = corner_mesh
+	corners.instance_count = 4
+	var index := 0
+	for sx in [-1.0, 1.0]:
+		for sz in [-1.0, 1.0]:
+			corners.set_instance_transform(index, Transform3D(Basis.IDENTITY, Vector3(sx * (C + 0.42), 0.0, sz * (C + 0.42))))
+			index += 1
+	var corner_visual := MultiMeshInstance3D.new()
+	corner_visual.name = "BaseWallEarthBermCorners"
+	corner_visual.multimesh = corners
+	corner_visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	root.add_child(corner_visual)
+
+
+static func _wall_berm_mesh() -> ArrayMesh:
+	var half_length := 0.5
+	var half_base := 0.41
+	var half_top := 0.23
+	var height := 0.22
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_wall_berm_quad(st, Vector3(-half_length, 0, -half_base), Vector3(half_length, 0, -half_base), Vector3(half_length, 0, half_base), Vector3(-half_length, 0, half_base))
+	_wall_berm_quad(st, Vector3(-half_length, height, -half_top), Vector3(-half_length, height, half_top), Vector3(half_length, height, half_top), Vector3(half_length, height, -half_top))
+	_wall_berm_quad(st, Vector3(-half_length, 0, half_base), Vector3(half_length, 0, half_base), Vector3(half_length, height, half_top), Vector3(-half_length, height, half_top))
+	_wall_berm_quad(st, Vector3(half_length, 0, -half_base), Vector3(-half_length, 0, -half_base), Vector3(-half_length, height, -half_top), Vector3(half_length, height, -half_top))
+	_wall_berm_quad(st, Vector3(half_length, 0, half_base), Vector3(half_length, 0, -half_base), Vector3(half_length, height, -half_top), Vector3(half_length, height, half_top))
+	_wall_berm_quad(st, Vector3(-half_length, 0, -half_base), Vector3(-half_length, 0, half_base), Vector3(-half_length, height, half_top), Vector3(-half_length, height, -half_top))
+	st.generate_normals()
+	return st.commit() as ArrayMesh
+
+
+static func _wall_berm_corner_mesh() -> ArrayMesh:
+	var base := 0.41
+	var top := 0.23
+	var height := 0.22
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	_wall_berm_quad(st, Vector3(-base, 0, -base), Vector3(base, 0, -base), Vector3(base, 0, base), Vector3(-base, 0, base))
+	_wall_berm_quad(st, Vector3(-top, height, -top), Vector3(-top, height, top), Vector3(top, height, top), Vector3(top, height, -top))
+	_wall_berm_quad(st, Vector3(-base, 0, base), Vector3(base, 0, base), Vector3(top, height, top), Vector3(-top, height, top))
+	_wall_berm_quad(st, Vector3(base, 0, -base), Vector3(-base, 0, -base), Vector3(-top, height, -top), Vector3(top, height, -top))
+	_wall_berm_quad(st, Vector3(base, 0, base), Vector3(base, 0, -base), Vector3(top, height, -top), Vector3(top, height, top))
+	_wall_berm_quad(st, Vector3(-base, 0, -base), Vector3(-base, 0, base), Vector3(-top, height, top), Vector3(-top, height, -top))
+	st.generate_normals()
+	return st.commit() as ArrayMesh
+
+
+static func _wall_berm_quad(st: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3) -> void:
+	st.add_vertex(a)
+	st.add_vertex(b)
+	st.add_vertex(c)
+	st.add_vertex(a)
+	st.add_vertex(c)
+	st.add_vertex(d)
 
 
 ## Poortposten; de stalen schuifpoorten en de zwaailichten erop staan in gates.gd.
@@ -52,13 +212,13 @@ static func _gates(root: Node3D) -> void:
 	for sz in [-1.0, 1.0]:
 		for sx in [-1.0, 1.0]:
 			var p := Vector3(sx * (G + 0.3), 0, sz * C)
-			Kit.box(root, p, Vector3(0.7, 2.1, 0.7), Kit.concrete_dark(), 0.0, Kit.LAYER_WALL)
-			Kit.box(root, p + Vector3.UP * 2.1, Vector3(0.9, 0.16, 0.9), Kit.concrete())
+			Kit.box(root, p, Vector3(0.7, Data.BASE_WALL_H, 0.7), Kit.concrete_dark(), 0.0, Kit.LAYER_WALL)
+			Kit.box(root, p + Vector3.UP * Data.BASE_WALL_H, Vector3(0.9, 0.16, 0.9), Kit.concrete())
 		# stalen bovenbalk met geel-zwarte rand
-		Kit.box(root, Vector3(0, 2.0, sz * C), Vector3(G * 2.0 + 1.0, 0.18, 0.4), Kit.olive())
+		Kit.box(root, Vector3(0, Data.BASE_WALL_H, sz * C), Vector3(G * 2.0 + 1.0, 0.18, 0.4), Kit.olive())
 		for i in 10:
 			var x := -G + 0.25 + i * (G * 2.0 / 9.0)
-			Kit.box(root, Vector3(x, 1.84, sz * C), Vector3(0.22, 0.16, 0.44), Kit.flat(Color("c9a227") if i % 2 == 0 else Color("1a1a18")))
+			Kit.box(root, Vector3(x, Data.BASE_WALL_H - 0.16, sz * C), Vector3(0.22, 0.16, 0.44), Kit.flat(Color("c9a227") if i % 2 == 0 else Color("1a1a18")))
 
 
 static func _bunker(root: Node3D) -> void:

@@ -56,6 +56,7 @@ const START_POINTS := 2000
 const COMPOUND := 28.0   # halve breedte van de betonmuur rond de basis
 const GATE_GAP := 3.4    # halve breedte van de twee poortopeningen (noord en zuid)
 const WALL_H := 1.55
+const BASE_WALL_H := 3.0
 const WALL_T := 0.4
 const BUNKER_HALF := 2.3
 const WORLD_R := 80.0    # in deze proef een kleinere kaart dan de 108 m van de web-versie

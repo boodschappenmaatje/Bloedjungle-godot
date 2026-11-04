@@ -1,0 +1,96 @@
+{
+  "source": "source_assets/base_wall_hq2/Bloedjungle_Base_Wall_HQ2_Meshy_Original_b6cfee.glb",
+  "source_sha256": "19df1f487dc1b98f4890354340b9e4dc93aad2baa21ec900ea1fe4f46d4e9d0e",
+  "source_bytes": 15535848,
+  "source_dimensions_blender_m": [
+    1.9035750031471252,
+    0.3177409917116165,
+    1.0176510214805603
+  ],
+  "runtime_dimensions_blender_m": [
+    3.5,
+    0.4,
+    3.0
+  ],
+  "core_dimensions_blender_m": [
+    3.5,
+    0.4,
+    1.8
+  ],
+  "axis_scale": [
+    1.8386457030658376,
+    1.2588869879371505,
+    1.7687792396466282
+  ],
+  "uv_layers": 1,
+  "source_mesh_triangles": 226646,
+  "lods": [
+    {
+      "name": "Wall_LOD0",
+      "triangles": 8380,
+      "vertices": 7825,
+      "uv_layers": 1,
+      "bounds_m": [
+        [
+          -1.75,
+          1.75
+        ],
+        [
+          -0.20000000298023224,
+          0.20000000298023224
+        ],
+        [
+          0.0,
+          3.0
+        ]
+      ]
+    },
+    {
+      "name": "Wall_LOD1",
+      "triangles": 2960,
+      "vertices": 3421,
+      "uv_layers": 1,
+      "bounds_m": [
+        [
+          -1.75,
+          1.75
+        ],
+        [
+          -0.20000000298023224,
+          0.20000000298023224
+        ],
+        [
+          0.0,
+          3.0
+        ]
+      ]
+    },
+    {
+      "name": "Wall_LOD2",
+      "triangles": 758,
+      "vertices": 1778,
+      "uv_layers": 1,
+      "bounds_m": [
+        [
+          -1.75,
+          1.75
+        ],
+        [
+          -0.20000000298023224,
+          0.20000000298023224
+        ],
+        [
+          0.0,
+          3.0
+        ]
+      ]
+    }
+  ],
+  "source_material_count": 1,
+  "runtime_material_count": 2,
+  "texture_max_size": 2048,
+  "reused_source_tangent_normal": true,
+  "runtime_bytes": 10635096,
+  "runtime_sha256": "18eca7972f512f885482cb22b7aa50e142a55ce0300a677f475e37b7e5540a26",
+  "build_seconds": 13.83
+}

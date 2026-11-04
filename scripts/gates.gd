@@ -12,6 +12,7 @@ const REACH := 4.4
 const ALLY_REACH := 4.6
 const TRUCK_REACH := 11.0   # voorraadtrucks (voorraad.gd) openen de poort ruim van tevoren: hij schuift in 2,5 s open
 const SLIDE_T := 2.5
+const EXISTING_GATE_PANEL_H := 1.22
 const TAKE := {"bullet": 0.25, "melee": 0.5, "explosive": 1.0}
 
 var list: Array = []  # per poort: name, root, anim, body, shape, open, hold, user_open, hp, max_hp, broken, moving
@@ -46,25 +47,36 @@ func _ready() -> void:
 		ap.seek(0.0, true)
 		g.anim = ap
 		g.panel = model.find_child("Paneel", true, false)
+		# The approved slider is 1.5 m tall. Add an animated upper leaf so the
+		# closed portal seals the new 3 m wall while retaining the same movement.
+		var upper_leaf := MeshInstance3D.new()
+		upper_leaf.name = "FortificationUpperGateLeaf"
+		var leaf_mesh := BoxMesh.new()
+		leaf_mesh.size = Vector3(G * 2.0, Data.BASE_WALL_H - EXISTING_GATE_PANEL_H, 0.12)
+		upper_leaf.mesh = leaf_mesh
+		upper_leaf.position = Vector3(0.0, (Data.BASE_WALL_H + EXISTING_GATE_PANEL_H) * 0.5, -0.63)
+		upper_leaf.material_override = Kit.photo("buildings/metal", 1.4, Color("737454"))
+		upper_leaf.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		(g.panel as Node3D).add_child(upper_leaf)
 		var body := GateBody.new()
 		body.index = list.size()
-		body.collision_layer = Kit.LAYER_WALL
+		body.collision_layer = Kit.LAYER_WALL | Kit.LAYER_FORTIFICATION
 		body.collision_mask = 0
 		var cs := CollisionShape3D.new()
 		var bs := BoxShape3D.new()
-		bs.size = Vector3(G * 2.0, 1.5, 0.3)
+		bs.size = Vector3(G * 2.0, Data.BASE_WALL_H, 0.3)
 		cs.shape = bs
-		cs.position = Vector3(0, 0.75, 0)
+		cs.position = Vector3(0, Data.BASE_WALL_H * 0.5, 0)
 		body.add_child(cs)
 		root.add_child(body)
 		g.root = root
 		g.body = body
 		g.shape = cs
 		g.wreck = _wreck(root)
-		g.beacons = [_beacon(Vector3(-(G + 0.3), 2.26, sz * C)), _beacon(Vector3(G + 0.3, 2.26, sz * C))]
+		g.beacons = [_beacon(Vector3(-(G + 0.3), Data.BASE_WALL_H + 0.16, sz * C)), _beacon(Vector3(G + 0.3, Data.BASE_WALL_H + 0.16, sz * C))]
 		g.bar = HpBar.new()
 		add_child(g.bar)
-		g.bar.position = Vector3(0, 3.4, sz * C)
+		g.bar.position = Vector3(0, Data.BASE_WALL_H + 0.9, sz * C)
 		list.append(g)
 	_apply_all()
 

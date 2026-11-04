@@ -682,6 +682,8 @@ func crash() -> void:
 	if is_in_group("voertuigen"):
 		remove_from_group("voertuigen")
 	Game.note_blast(at, BLAST_RADIUS)
+	# A crash is a ground explosion and obeys fortification splash occlusion;
+	# normal aircraft overflight and overhead attacks keep their existing rules.
 	Barrel.area_damage(at, BLAST_RADIUS, BLAST_HURT)
 	Barrel.catch_blast(at, BLAST_RADIUS)
 	Game.alert(at, 70.0, 10.0)

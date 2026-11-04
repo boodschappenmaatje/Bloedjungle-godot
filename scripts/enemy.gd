@@ -237,8 +237,9 @@ func _physics_process(delta: float) -> void:
 				Sfx.play("knife", 1.0, global_position)
 				Game.mark_attack(global_position)
 				if at_player:
-					player.hit(t.dmg, Vector3(sin(look), 0, cos(look)), false)
-				else:
+					if not BaseWallRules.blocks_blast(global_position, player.global_position):
+						player.hit(t.dmg, Vector3(sin(look), 0, cos(look)), false)
+				elif not BaseWallRules.blocks_blast(global_position, Vector3.ZERO):
 					Game.damage_base(t.dmg)
 	elif not flanking and dist < range_ * hold and (rb != null or _clear_shot(aim_at, not at_player)):
 		want_move = false
@@ -369,6 +370,7 @@ func _rocket_target() -> Variant:
 ## Geen muur tussen hem en het gebouw (raketten gaan niet over de muur).
 func _rocket_clear(b: Dictionary) -> bool:
 	var q := PhysicsRayQueryParameters3D.create(global_position + Vector3(0, 1.3, 0), Vector3(b.at.x, 1.3, b.at.z), Bullet.MASK_WALL)
+	q.hit_from_inside = true
 	var r := get_world_3d().direct_space_state.intersect_ray(q)
 	return r.is_empty() or r.collider == b.node
 
@@ -453,8 +455,11 @@ func _shoot_rocket(a: float, aim: Variant = null) -> void:
 ## Vrij schootsveld: geen muur (of bunker, als hij op de speler mikt) ertussen.
 func _clear_shot(target: Vector3, at_bunker: bool) -> bool:
 	var from := global_position + Vector3.UP * 1.33
+	if BaseWallRules.blocks_ground_fire(from, target):
+		return false
 	var mask := Bullet.MASK_WALL | (0 if at_bunker else Bullet.MASK_BUNKER)
 	var q := PhysicsRayQueryParameters3D.create(from, target, mask)
+	q.hit_from_inside = true
 	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 

@@ -9,6 +9,7 @@ const MASK_ENEMY := 8
 const MASK_BUNKER := 16
 const MASK_NATURE := 128   # stammen en rotsen: stoppen ook kogels die over een muur vliegen
 const MASK_VEHICLE := 1024   # auto's en bussen: ook laag 2 (muur), maar kogels die over een borstwering gaan raken ze toch
+const MASK_FORTIFICATION := Kit.LAYER_FORTIFICATION # hoge muren blokkeren ook wapens die over lage dekking schieten
 const HIT_TOP := 2.4         # tot deze hoogte raakt een kogel een auto of bus (de kogel vliegt op 1,6-1,7 m, het autodak is 1,5 m)
 
 static var _mesh: BoxMesh
@@ -36,6 +37,7 @@ var from_player := true
 var pierce := 0
 var explosive := 0.0
 var rocket := false  # vijandelijke raket: ontploft op de plek waar hij gemikt was
+var ground_direct_fire := false  # ground-level direct fire cannot arc over the high base wall
 var visual_weapon := ""
 var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
 var src := "speler"  # wie schoot: "speler" of "soldaat" (alleen kills van de speler tellen voor de killstreak)
@@ -75,11 +77,12 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.dmg = damage
 	b.life = lifetime
 	b.from_player = by_player
+	b.ground_direct_fire = from.y < Data.BASE_WALL_H
 	b.pierce = pierce_
 	b.explosive = explosive_
 	b.sink = sink_
 	b.dir.y = rise_  # schiet omhoog naar iemand op een toren
-	b.mask = (MASK_ENEMY if by_player else MASK_PLAYER) | MASK_BUNKER | MASK_VEHICLE | MASK_NATURE | (0 if over_wall else MASK_WALL)
+	b.mask = (MASK_ENEMY if by_player else MASK_PLAYER) | MASK_BUNKER | MASK_VEHICLE | MASK_NATURE | MASK_FORTIFICATION | (0 if over_wall else MASK_WALL)
 	parent.add_child(b)
 	b.global_position = from
 	b.rotation.y = angle
@@ -103,8 +106,9 @@ static func fire_rocket(parent: Node, from: Vector3, angle: float, damage: float
 	b.life = lifetime
 	b.from_player = false
 	b.rocket = true
+	b.ground_direct_fire = from.y < Data.BASE_WALL_H
 	b.explosive = 3.2
-	b.mask = MASK_PLAYER | MASK_BUNKER | MASK_WALL | MASK_VEHICLE | MASK_NATURE
+	b.mask = MASK_PLAYER | MASK_BUNKER | MASK_WALL | MASK_FORTIFICATION | MASK_VEHICLE | MASK_NATURE
 	parent.add_child(b)
 	b.global_position = from
 	b.rotation.y = angle
@@ -277,7 +281,22 @@ func _physics_process(delta: float) -> void:
 			queue_free()
 			return
 	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + step, mask)
+	# Preserve legacy behavior for low cover and the bunker. A projectile spawned
+	# inside either can still leave it; the dedicated fortification ray below
+	# catches muzzle clipping into the new high perimeter wall.
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	if ground_direct_fire and Vector2(step.x, step.z).length_squared() > 0.0001:
+		var flat_from := Vector3(global_position.x, 1.5, global_position.z)
+		var flat_to := Vector3(global_position.x + step.x, 1.5, global_position.z + step.z)
+		var wall_query := PhysicsRayQueryParameters3D.create(flat_from, flat_to, MASK_FORTIFICATION)
+		wall_query.hit_from_inside = true
+		var wall_hit := get_world_3d().direct_space_state.intersect_ray(wall_query)
+		if not wall_hit.is_empty():
+			var flat_length := Vector2(step.x, step.z).length()
+			var wall_fraction := Vector2(global_position.x - wall_hit.position.x, global_position.z - wall_hit.position.z).length() / flat_length
+			var projectile_fraction := global_position.distance_to(hit.position) / maxf(step.length(), 0.001) if not hit.is_empty() else INF
+			if wall_fraction <= projectile_fraction + 0.0001:
+				hit = wall_hit
 	if (mask & MASK_VEHICLE) != 0:
 		# auto's en bussen apart: de botsdoos is lager dan de kogelbaan, en een snelle kogel kan er in één stap overheen springen
 		var v := vehicle_on_path(global_position, global_position + step)
@@ -299,7 +318,7 @@ func _physics_process(delta: float) -> void:
 			var target_script: Script = (c as Node).get_script() as Script if c is Node else null
 			var target_script_path := target_script.resource_path if target_script != null else ""
 			var target_handles_impact := target_script_path in ["res://scripts/enemy.gd", "res://scripts/player.gd"] or c is Barrel or c is Pomp or c is Brandkraan
-			if not target_handles_impact:
+			if not target_handles_impact and hit.normal.length_squared() > 0.001:
 				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
 			Game.hit_src = src
 			c.hit(dmg, dir, from_player)
@@ -310,7 +329,8 @@ func _physics_process(delta: float) -> void:
 				global_position = hit.position + dir * 0.5
 				return
 		else:
-			Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
+			if hit.normal.length_squared() > 0.001:
+				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
 		queue_free()
 		return
 	global_position += step
@@ -372,7 +392,7 @@ func _explode(at: Vector3) -> void:
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e):
 			var d: float = e.global_position.distance_to(at)
-			if d < explosive:
+			if d < explosive and not BaseWallRules.blocks_blast(at, e.global_position):
 				e.hit(dmg * (1.0 - d / explosive * 0.7), (e.global_position - at).normalized(), true)
 
 
@@ -395,10 +415,10 @@ func _boom_enemy(at: Vector3) -> void:
 	var p = Game.player
 	if p != null and not p.dead:
 		var pd: float = Vector2(p.global_position.x - at.x, p.global_position.z - at.z).length()
-		if pd < r:
+		if pd < r and not BaseWallRules.blocks_blast(at, p.global_position):
 			p.hit(dmg * 0.6 * (0.5 if p.elev > 1.0 else 1.0) * (1.0 - pd / r), (p.global_position - at).normalized(), false, true)
 	var bx := maxf(absf(at.x) - Data.BUNKER_HALF, 0.0)
 	var bz := maxf(absf(at.z) - Data.BUNKER_HALF, 0.0)
 	var bd := Vector2(bx, bz).length()
-	if bd < r:
+	if bd < r and not BaseWallRules.blocks_blast(at, Vector3.ZERO):
 		Game.damage_base(dmg * 0.5 * (1.0 - bd / r))

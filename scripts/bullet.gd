@@ -366,6 +366,7 @@ func _explode(at: Vector3) -> void:
 	Game.note_blast(at, explosive)
 	Fx.explosion(get_parent(), at, 1.4)
 	Barrel.catch_blast(at, explosive)
+	VijandHk.blast(at, explosive, dmg)   # de bazooka tegen het vijandelijke hoofdkwartier
 	if Game.builds:
 		Game.builds.blast(at, explosive, dmg, true)  # eigen raketten doen een beetje schade aan je eigen bouwwerk
 	for e in Game.enemies.duplicate():

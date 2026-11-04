@@ -49,6 +49,32 @@ static func pick(n: int) -> Array:
 	return out
 
 
+## Routes voor aanvalsgroep n (stap 5a-2): de vijandbasis ligt ver in het noorden, dus alleen de stadsroutes. De eerste groepen
+## staan vast, zodat je de routes een voor een leert kennen; daarna twee, vanaf groep 8 drie routes tegelijk.
+const FIRST_GROUP := [["brug"], ["wijk"], ["kade"], ["industrie"], ["brug", "wijk"]]
+
+
+static func pick_group(n: int) -> Array:
+	if n >= 1 and n <= FIRST_GROUP.size():
+		return FIRST_GROUP[n - 1].duplicate()
+	var city := CITY.duplicate()
+	city.shuffle()
+	return city.slice(0, 2 if n < 8 else 3)
+
+
+## Aftelklok "02:41": op de plaat boven in beeld en bij de vijandenteller.
+static func klok(t: float) -> String:
+	var s := maxi(0, ceili(t))
+	return "%02d:%02d" % [floori(s / 60.0), posmod(s, 60)]
+
+
+## De tocht van een aanvalsgroep: uit de poort van de vijandbasis, dan naar het begin van de stadsroute en over de route zelf.
+static func path_from_base(id: String) -> Array:
+	var out := [VijandBasis.gate_outside() + Vector3(randf_range(-1.5, 1.5), 0.0, randf_range(0.0, 3.0))]
+	out.append_array(path_for(id))
+	return out
+
+
 ## De punten voor een vijand op deze route, met een eigen zijwaartse verschuiving.
 static func path_for(id: String) -> Array:
 	var r: Dictionary = LIST[id]

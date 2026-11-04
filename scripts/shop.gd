@@ -293,7 +293,7 @@ func _render() -> void:
 	for tb: Button in _tab_btns:
 		tb.custom_minimum_size.y = 30.0 if _compact else 36.0
 	var w := _sheet_width()
-	_head_eyebrow.text = ("Golf %d overleefd · bonus +%d" % [Game.wave - 1, Game.bonus] if Game.bonus > 0 and Game.wave > 1 else "Voor de eerste golf").to_upper()
+	_head_eyebrow.text = ("Groep %d afgeslagen" % Game.wave if Game.wave > 0 else "Voor de eerste groep").to_upper()
 	_head_points.text = UI.nl(Game.points)
 	_foot_stats.text = "Score %s · %d doden" % [UI.nl(Game.score), Game.kills]
 	for i in _tab_btns.size():

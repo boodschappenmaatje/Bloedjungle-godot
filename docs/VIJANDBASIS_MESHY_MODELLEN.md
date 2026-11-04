@@ -6,7 +6,7 @@ Opgesteld 2026-11-03 voor Dennis, Claude en Codex. Dit is de voorbereiding van d
 
 | # | Model | Nodig? | Maat (m, ongeveer) | Opmerking |
 |---|---|---|---|---|
-| 1 | **Vijandelijk hoofdkwartier** | Ja, 5b | grondvlak 9 x 9, 5 tot 6 hoog, plat dak | Het doel dat je moet slopen om te winnen. Ingang aan de zuidkant (+Z, naar jouw basis). Bunkerkwaliteit zoals jouw HK. Schadefases (rook, vuur, donkerder) doet de code; een tweede model "vernield" (puinhoop 9 x 9 x 2) is mooi maar mag later. |
+| 1 | **Vijandelijk hoofdkwartier** | **GELEVERD en verwerkt (4 nov 2026, v188)**: Dennis' "Enemy hk", zie `bron/vijand_hk/README.md` | grondvlak 9 x 9, 5 tot 6 hoog, plat dak | Het doel dat je moet slopen om te winnen. Ingang aan de zuidkant (+Z, naar jouw basis). Bunkerkwaliteit zoals jouw HK. Schadefases (rook, vuur, donkerder) doet de code; een tweede model "vernield" (puinhoop 9 x 9 x 2) is mooi maar mag later. |
 | 2 | **Vijandelijke poort** | Ja, 5b | totaal ca. 9 breed, opening 6,8 breed en minstens 4,4 hoog, 1,5 diep | Staat in de zuidmuur. Open poort zonder deuren (geen bewegende delen). Doorgang moet echt leeg zijn (tanks en jeeps moeten erdoor). |
 | 3 | **MG-wachttoren** | Ja, 5b (vier keer gebruikt) | voet 2,6 x 2,6, 6 hoog | Platform met geweernest, opening aan één kant (voorkant naar +Z); ik draai hem per hoek. Poten mogen massief zijn. |
 | 4 | **Mortierstelling** | Later (laatste onderdeel van keuze E) | 3 x 3, 1,5 hoog | Liefst twee losse delen: sokkel en buis (de buis moet kunnen richten). Eén stuk kan ook, dan fake ik het richten. |

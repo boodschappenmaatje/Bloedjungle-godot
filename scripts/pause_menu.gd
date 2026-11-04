@@ -11,7 +11,6 @@ const ROWS := [
 	["markeringen", "Markeringen soldaten", [["on", "Aan"], ["tact", "Alleen Tactisch"], ["off", "Uit"]]],
 	["quality", "Grafiek", [["low", "Laag"], ["high", "Hoog"], ["ultra", "Ultra"]]],
 	["time", "Tijd", [["day", "Dag"], ["dusk", "Avond"], ["night", "Nacht"]]],
-	["prep", "Bouwtijd tussen golven", [["60", "1 min"], ["120", "2 min"], ["300", "5 min"], ["600", "10 min"]]],
 	["weather", "Weer", [["clear", "Helder"], ["rain", "Regen"], ["mist", "Mist"]]],
 	["wind", "Bomen bewegen", [["off", "Uit"], ["on", "Aan"]]],
 	["treeshadow", "Boomschaduw", [["fake", "Vast"], ["real", "Echt"], ["off", "Uit"]]],
@@ -65,6 +64,8 @@ var _over_scores: VBoxContainer
 var _saved_id := -1
 var _saved := false
 var over_delay := 1.4  # korte pauze voor het scherm verschijnt, zodat je de dood nog ziet
+var over_delay_win := 3.4  # na het slopen van het vijandelijke hoofdkwartier: tijd voor de instorting
+var _over_title: Label
 
 
 func _ready() -> void:
@@ -290,7 +291,7 @@ func _score_table(into: VBoxContainer, highlight := -1) -> void:
 	g.add_theme_constant_override("v_separation", 5)
 	g.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	into.add_child(g)
-	var heads := ["#", "NAAM", "GOLF", "SCORE"]
+	var heads := ["#", "NAAM", "GROEP", "SCORE"]
 	for i in 4:
 		var l := UI.label(heads[i], UI.body(700, 2), 11, UI.INK_DIM)
 		l.size_flags_horizontal = Control.SIZE_EXPAND_FILL if i == 1 else Control.SIZE_FILL
@@ -327,7 +328,7 @@ func _open_stad_editor() -> void:
 		await get_tree().current_scene.begin()
 	else:
 		if Game.state != "prep":
-			Game.banner.emit("STADSEDITOR", "Alleen tussen de golven", 2.0)
+			Game.banner.emit("STADSEDITOR", "Alleen als er geen groep onderweg is", 2.0)
 			return
 		set_paused(false)
 	ed.enter()
@@ -347,7 +348,7 @@ func _build_pause() -> void:
 	v.add_child(_button("Stoppen", "secondary", func():
 		get_tree().paused = false
 		_show("")
-		Game.end_game("Missie afgebroken in golf %d" % Game.wave)))
+		Game.end_game("Missie afgebroken na groep %d" % Game.wave)))
 	_refresh_sound()
 
 
@@ -541,7 +542,7 @@ func _render_gear() -> void:
 	for c in _gear_body.get_children():
 		c.queue_free()
 	var st := Progress.stats
-	_gear_stats.text = "Beste golf %d · %d vijanden gedood · %d missies gespeeld" % [st.bestWave, st.kills, st.games]
+	_gear_stats.text = "Beste groep %d · %d vijanden gedood · %d missies gespeeld" % [st.bestWave, st.kills, st.games]
 	for slot in Progress.GEAR:
 		var box := VBoxContainer.new()
 		box.add_theme_constant_override("separation", 6)
@@ -700,10 +701,11 @@ func _build_over() -> void:
 	var v := _scrolling(_centered("over", 560))
 	_over_reason = _eyebrow("Je bent gesneuveld")
 	v.add_child(_over_reason)
-	v.add_child(UI.label("MISSIE MISLUKT", UI.display(1), 34, UI.INK))
+	_over_title = UI.label("MISSIE MISLUKT", UI.display(1), 34, UI.INK)
+	v.add_child(_over_title)
 	var stats := HBoxContainer.new()
 	stats.add_theme_constant_override("separation", 22)
-	for k in [["score", "Score"], ["wave", "Golf"], ["kills", "Doden"]]:
+	for k in [["score", "Score"], ["wave", "Groepen"], ["kills", "Doden"]]:
 		var col := VBoxContainer.new()
 		col.add_theme_constant_override("separation", 0)
 		var big := UI.label("0", UI.display(0), 30, UI.INK)
@@ -748,7 +750,9 @@ func _on_over(reason: String) -> void:
 	_saved = false
 	var fresh := Progress.check_unlocks()
 	Progress.save()
-	await get_tree().create_timer(over_delay).timeout
+	# gewonnen: eerst de instorting van het vijandelijke hoofdkwartier laten zien
+	await get_tree().create_timer(over_delay_win if Game.won else over_delay).timeout
+	_over_title.text = "MISSIE GESLAAGD" if Game.won else "MISSIE MISLUKT"
 	_over_reason.text = reason.to_upper()
 	_over_stats.score.text = UI.nl(Game.score)
 	_over_stats.wave.text = str(Game.wave)

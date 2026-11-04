@@ -21,8 +21,9 @@ static func _warm_up() -> void:
 			ResourceLoader.load_threaded_request(pad)
 
 
-var state := "menu"  # "prep" (pauze tussen golven), "play" (golf bezig), "over"
-var wave := 0
+var state := "menu"  # "prep" (geen aanvalsgroep onderweg), "play" (een groep loopt of vecht), "over" (verloren of gewonnen)
+var wave := 0  # aantal aanvalsgroepen dat de vijand tot nu toe heeft gestuurd (vanaf stap 5a-2 geen golven meer, de naam bleef)
+var won := false  # het vijandelijke hoofdkwartier is gesloopt: de missie is geslaagd (state "over")
 var points := 0
 var score := 0
 var kills := 0
@@ -32,7 +33,8 @@ var base_max := Data.BASE_HP
 var hq_level := 1   # niveau van het hoofdkwartier (1..3)
 var artillery_cd := 0.0   # s tot het artilleriecommando (HK niveau 3) weer klaar is; loopt in HqPerks
 var prep_t := 0.0
-var routes: Array = []  # vaste aanvalsroutes van de komende of lopende golf (AanvalRoutes)
+var routes: Array = []  # vaste aanvalsroutes van de groep die nu uitrukt, of anders van de komende groep (AanvalRoutes): de rode pijlen
+var next_routes: Array = []  # routes van de komende groep: staan er al tijdens het aftellen op de golfplaat
 var bonus := 0  # bonus van de laatste overleefde golf, getoond in de wapenkamer
 
 # Wat je bezit: per wapen de upgradeniveaus en de kogels in het magazijn, en de uitrusting-upgrades.
@@ -154,6 +156,9 @@ func reset() -> void:
 			team_commands.cancel_input()
 	state = "prep"
 	wave = 0
+	won = false
+	routes = []
+	next_routes = []
 	rocket_seen = false
 	points = Data.START_POINTS
 	score = 0
@@ -311,6 +316,14 @@ func damage_base(dmg: float) -> void:
 	changed.emit()
 	if base_hp <= 0.0:
 		end_game("Het hoofdkwartier is gevallen in golf %d" % wave)
+
+
+## Het vijandelijke hoofdkwartier is gesloopt: gewonnen. Daarna werkt alles zoals na een verloren missie (state "over").
+func win(reason: String) -> void:
+	if state == "over":
+		return
+	won = true
+	end_game(reason)
 
 
 func end_game(reason: String) -> void:

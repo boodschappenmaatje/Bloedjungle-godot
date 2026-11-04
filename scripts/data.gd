@@ -122,12 +122,22 @@ static func river_off(x: float, z: float) -> float:
 const ENEMY_BULLET_SPEED := 34.0
 const ENEMY_BULLET_LIFE := 1.1
 const PREP_TIME := 20.0
+const GROEP_RUST := 180.0   # s rust voordat de eerste aanvalsgroep uit de vijandbasis komt (Generals-plan stap D2, keuze I)
+const GROEP_TUSSEN := 90.0  # s tussen twee aanvalsgroepen daarna: er komt er steeds een, ook als de vorige nog loopt
 
 ## Samenstelling van golf n, zoals buildWave() in 13-waves.js .
 static func build_wave(n: int) -> Array:
+	return _mix(n, 5 + int(n * 3.2))
+
+
+## Samenstelling van aanvalsgroep n (stap 5a-2): zelfde mix als een golf, maar kleiner omdat er elke 90 s een komt.
+static func build_group(n: int) -> Array:
+	return _mix(n, 4 + int(n * 2.4))
+
+
+static func _mix(n: int, total: int) -> Array:
 	var q := []
 	var rockets := 0
-	var total := 5 + int(n * 3.2)
 	var rifle_share := 0.0 if n < 2 else (0.34 if n < 4 else 0.48)
 	for i in total:
 		var r := randf()

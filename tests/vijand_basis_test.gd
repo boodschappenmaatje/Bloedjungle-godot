@@ -1,5 +1,5 @@
 extends SceneTree
-## Vijandelijke basis van blokken (Generals-plan D2, stap 5a-1, scripts/vijand_basis.gd) en de grotere kaart (Data.WORLD_Z_N, level.gd).
+## Vijandelijke basis (Generals-plan D2, stap 5a-1 en het model van Dennis uit 5a-2, scripts/vijand_basis.gd) en de grotere kaart (Data.WORLD_Z_N, level.gd).
 ## Controleert: de basis ligt op de grondplaat en binnen de speelgrens, de muur en het hoofdkwartier zijn massief, de poort is open,
 ## de gebouwen overlappen elkaar niet, de middenstraat is vrij, en de bestaande wereld (jouw basis, foliage-grens) is niet verschoven.
 ## godot --headless --path . --script tests/vijand_basis_test.gd --fixed-fps 60
@@ -7,11 +7,16 @@ extends SceneTree
 var main: Node
 var frames := 0
 var fails := 0
-var D = load("res://scripts/data.gd")
-var VB = load("res://scripts/vijand_basis.gd")
+var D
+var VB
+var HK
 
 
 func _initialize() -> void:
+	# pas hier laden: deze scripts verwijzen naar de autoload Game, die bij het maken van dit script nog niet bestaat
+	D = load("res://scripts/data.gd")
+	VB = load("res://scripts/vijand_basis.gd")
+	HK = load("res://scripts/vijand_hk.gd")
 	root.size = Vector2i(932, 430)
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
@@ -118,7 +123,8 @@ func _physics() -> void:
 	var hk: Vector3 = VB.hk_pos()
 	_check("middenstraat vrij tot voor het hoofdkwartier", _ray(Vector3(p.x, 0.8, p.z + h.y + 5), Vector3(p.x, 0.8, hk.z + 6.0), wall_mask).is_empty())
 	var hit := _ray(Vector3(p.x, 0.8, p.z + h.y + 5), Vector3(p.x, 0.8, hk.z - 6.0), wall_mask)
-	_check("hoofdkwartier is massief (voorkant ca. 4,5 m voor het midden)", not hit.is_empty() and absf((hit.position as Vector3).z - (hk.z + 4.5)) < 0.3)
+	var voorkant: float = hk.z + HK.KERN_MIDDEN.z + HK.KERN.z * 0.5
+	_check("hoofdkwartier is massief (voorkant op %.2f m voor het midden)" % (voorkant - hk.z), not hit.is_empty() and absf((hit.position as Vector3).z - voorkant) < 0.3)
 	# gebouwen en torens zijn massief
 	for naam in ["Kazerne", "Garage", "Depot", "Generator"]:
 		var n := main.get_node("Level/VijandBasis").find_child(naam, true, false) as Node3D
@@ -144,7 +150,7 @@ func _layout() -> void:
 				continue
 			var cs := body.get_child(0) as CollisionShape3D
 			var sz := (cs.shape as BoxShape3D).size
-			var c3 := (n as Node3D).global_position
+			var c3 := (n as Node3D).global_position + Vector3(cs.position.x, 0.0, cs.position.z)
 			boxes.append({"n": n.name, "r": Rect2(c3.x - sz.x * 0.5, c3.z - sz.z * 0.5, sz.x, sz.z)})
 	_check("5 botsblokken gevonden (HK, kazerne, garage, depot, generator)", boxes.size() == 5)
 	var overlap := ""

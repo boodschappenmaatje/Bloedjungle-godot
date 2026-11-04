@@ -534,7 +534,8 @@ func _process(delta: float) -> void:
 		_fps.text = "%d FPS · %d%%%s · %s" % [Engine.get_frames_per_second(), roundi(get_viewport().scaling_3d_scale * 100.0), (" · T%d" % Atmosphere.tier) if Atmosphere.tier > 0 else "", HUD_SCRIPT.VERSION]
 	var main := get_parent().get_parent()
 	var left: int = Game.enemies.size() + (main.queue.size() if "queue" in main else 0)
-	_enemies.text = "–" if Game.state != "play" else str(left)
+	# tijdens een groep: aantal vijanden en het aftellen naar de volgende groep (de plaat boven in beeld is dan weg)
+	_enemies.text = "–" if Game.state != "play" else "%d · %s" % [left, AanvalRoutes.klok(Game.prep_t)]
 	_points.text = "%s pt" % UI.nl(Game.points)
 	_score.text = "★ %s" % UI.nl(Game.score)
 	_base_bar.value = Game.base_hp / Game.base_max

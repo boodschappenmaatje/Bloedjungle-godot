@@ -3,7 +3,8 @@ class_name VijandBasis
 ## groen-gele vijandkleuren. Dit is de speelbare versie met eenvoudige BLOKKEN; de mooie Meshy-modellen komen in stap 5b.
 ## Ligging: middelpunt Data.VIJAND_POS, muur van 64 x 56 m, poort in de zuidmuur (naar jouw basis toe), vier hoektorens,
 ## en binnen: hoofdkwartier, kazerne, garage, depot en generator. Alles is massief (LAYER_WALL): je loopt er niet doorheen.
-## Nog niet in deze stap: schade, winnen door het hoofdkwartier te slopen, garnizoen en schietende torens (5a-2 en 5a-3).
+## Stap 5a-2: het hoofdkwartier is Dennis' eigen model (VijandHk) en slopen = winnen; aanvalsgroepen komen uit de poort (main.gd).
+## Nog niet: garnizoen en schietende torens (5a-3).
 
 const P := Data.VIJAND_POS
 const HALF := Data.VIJAND_HALF
@@ -50,6 +51,11 @@ static func hk_pos() -> Vector3:
 ## Een punt net buiten de poort, aan de kant van jouw basis: hier begint een aanvalsgroep haar tocht.
 static func gate_outside() -> Vector3:
 	return P + Vector3(0.0, 0.0, HALF.y + 3.0)
+
+
+## Beginplek van een soldaat van een aanvalsgroep (stap 5a-2): op het binnenplein vlak achter de poort, in de vrije baan naar de opening.
+static func spawn_point() -> Vector3:
+	return P + Vector3(randf_range(-1.8, 1.8), 0.0, HALF.y - randf_range(5.0, 12.0))
 
 
 ## Ligt dit punt (x, z) binnen de buitenmuur, met een marge in meters?
@@ -118,23 +124,14 @@ static func _toren(h: Node3D, pos: Vector3) -> void:
 			Kit.box(t, Vector3(sx * 1.2, 4.6, sz * 1.2), Vector3(0.1, 1.0, 0.1), _mat(KLEUR_DONKER))
 
 
-## Hoofdkwartier van blokken: een laag bunkerblok met een platform erop, een mast met vlag en een gele schaduwstreep op het dak.
+## Hoofdkwartier: Dennis' eigen model "Enemy hk" (VijandHk, vanaf stap 5a-2) op dezelfde plek en met dezelfde breedte (9 m) als het blok
+## waarmee 5a-1 begon. Het heeft levenspunten en laat je winnen als je het sloopt.
 static func _hoofdkwartier(h: Node3D) -> void:
-	var hk := Node3D.new()
+	var hk := VijandHk.new()
 	hk.name = "Hoofdkwartier"
 	hk.position = Vector3(0.0, 0.0, -13.0)
 	hk.add_to_group("vijand_hk")
 	h.add_child(hk)
-	Kit.box(hk, Vector3.ZERO, Vector3(9.0, 3.4, 9.0), _mat(KLEUR_BLOK), 0.0, Kit.LAYER_WALL)
-	Kit.box(hk, Vector3(0, 3.4, 0), Vector3(9.4, 0.3, 9.4), _mat(KLEUR_DAK))
-	Kit.box(hk, Vector3(0, 3.7, -0.5), Vector3(5.0, 1.6, 5.0), _mat(KLEUR_MUUR))
-	Kit.box(hk, Vector3(0, 5.3, -0.5), Vector3(5.3, 0.2, 5.3), _mat(KLEUR_DAK))
-	# gele kruismarkering op het dak: goed te zien vanuit de tactische camera
-	Kit.box(hk, Vector3(0, 3.7, 3.0), Vector3(1.0, 0.05, 2.4), _mat(KLEUR_ACCENT))
-	Kit.box(hk, Vector3(0, 5.5, -0.5), Vector3(3.2, 0.05, 0.7), _mat(KLEUR_ACCENT))
-	Kit.box(hk, Vector3(0, 5.5, -0.5), Vector3(0.7, 0.05, 3.2), _mat(KLEUR_ACCENT))
-	Kit.cylinder(hk, Vector3(3.2, 3.7, 3.2), 0.06, 4.2, _mat(KLEUR_DONKER), 6)
-	Kit.box(hk, Vector3(3.2, 7.1, 3.2), Vector3(0.05, 0.9, 1.4), _mat(KLEUR_ACCENT))
 
 
 ## Eenvoudig gebouw als massief blok met een dakrand en een gele streep op het dak.

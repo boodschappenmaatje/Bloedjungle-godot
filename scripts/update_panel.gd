@@ -381,7 +381,7 @@ func _sla_token_op() -> void:
 ## meer en kom je niet meer in het updatemenu): alleen load() na een controle en get(). tools/ota_brug_simulatie.sh bewaakt dit in de workflow.
 static func _extra_regels() -> String:
 	var uit := ""
-	for bron in [["res://scripts/ota_keten.gd", "status"], ["res://scripts/soldier_model.gd", "player_status"]]:
+	for bron in [["res://scripts/ota_keten.gd", "status"], ["res://scripts/soldier_model.gd", "player_status"], ["res://scripts/soldier_model.gd", "enemy_status"]]:
 		if not ResourceLoader.exists(bron[0]):
 			continue
 		var s: Variant = load(bron[0])

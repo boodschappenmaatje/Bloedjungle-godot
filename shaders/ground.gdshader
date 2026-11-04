@@ -5,12 +5,12 @@ render_mode specular_disabled;
 
 uniform sampler2D noise_a : repeat_enable, filter_linear_mipmap;
 uniform sampler2D noise_b : repeat_enable, filter_linear_mipmap;
-uniform sampler2D grass_tex : source_color, repeat_enable, filter_linear_mipmap;
-uniform sampler2D jungle_tex : source_color, repeat_enable, filter_linear_mipmap;
-uniform sampler2D dirt_tex : source_color, repeat_enable, filter_linear_mipmap;
-uniform sampler2D mud_tex : source_color, repeat_enable, filter_linear_mipmap;
-uniform sampler2D dirt_height : repeat_enable, filter_linear_mipmap;
-uniform sampler2D dirt_normal : hint_normal, repeat_enable, filter_linear_mipmap;
+uniform sampler2D grass_tex : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
+uniform sampler2D jungle_tex : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
+uniform sampler2D dirt_tex : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
+uniform sampler2D mud_tex : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
+uniform sampler2D dirt_height : repeat_enable, filter_linear_mipmap_anisotropic;
+uniform sampler2D dirt_normal : hint_normal, repeat_enable, filter_linear_mipmap_anisotropic;
 uniform float compound = 14.0;
 uniform float gate_gap = 2.4;
 uniform vec4 pits[8];  // loopgraven: x, z, cos, sin
@@ -60,10 +60,10 @@ void fragment() {
 	grass = grass * (0.65 + 0.7 * g3.g) * (0.75 + 0.5 * n3);
 	grass *= vec3(0.4, 0.48, 0.32);  // donkerder en minder fel, past bij de jungle
 
-	// diepte in de aarde: de kijkhoek verschuift het beeld per hoogte, zodat kiezels boven de modder uitsteken
-	vec3 vw = normalize((INV_VIEW_MATRIX * vec4(VIEW, 0.0)).xyz);
+	// Houd de grondtexturen vast aan de wereld. View-dependent parallax op dit grote vlak
+	// verschoof de hoogfrequente albedo en normal map bij iedere camerabeweging en gaf shimmer.
 	float hgt = texture(dirt_height, p * 0.11).r;
-	vec2 pp = p + vw.xz / max(vw.y, 0.25) * (hgt - 0.5) * 0.16;
+	vec2 pp = p;
 	vec3 d1 = texture(dirt_tex, pp * 0.11).rgb;
 	vec3 d2 = texture(mud_tex, pp * 0.09 + 0.5).rgb;
 	vec3 dirt = mix(d1, d2, 0.5 * smoothstep(0.3, 0.7, n2));
@@ -108,6 +108,11 @@ void fragment() {
 	dirt *= 1.0 - 0.25 * smoothstep(0.5, 0.2, n2) * dm;
 	ALBEDO = mix(grass, dirt, dm);  // texturen zijn al lineair ingelezen (source_color)
 	ROUGHNESS = 1.0;
-	NORMAL_MAP = texture(dirt_normal, pp * 0.11).rgb;
-	NORMAL_MAP_DEPTH = dm * 1.1;
+	vec2 dirt_uv = pp * 0.11;
+	NORMAL_MAP = texture(dirt_normal, dirt_uv).rgb;
+	// Vervaag bumpdetail zodra een pixel meerdere detailtexels beslaat; dit voorkomt
+	// temporele aliasing op de schuine top-down camera zonder de dichtbijtextuur vlak te maken.
+	float normal_footprint = max(length(dFdx(dirt_uv)), length(dFdy(dirt_uv)));
+	float normal_detail = 1.0 - smoothstep(0.002, 0.012, normal_footprint);
+	NORMAL_MAP_DEPTH = dm * mix(0.3, 0.8, normal_detail);
 }

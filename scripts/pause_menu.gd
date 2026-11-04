@@ -5,6 +5,7 @@ extends CanvasLayer
 
 const ROWS := [
 	["soldaat", "Mannetjes (na nieuw spel)", [["vq2", "Realistisch"], ["meshy", "Meshy-speler (nieuw)"], ["v1", "Oud model"]]],
+	["enemy_models", "Vijandmodellen", [["all", "Alle types"], ["meshy", "Alleen Meshy"]]],
 	["m1911_fire_mode", "M1911 schieten", [["assist", "Rustig (0,5 s)"], ["manual", "Handmatig"]]],
 	["vliegtuig_hoogte", "Vliegtuig: hoogte (rechterstick)", [["normaal", "Normaal (omlaag = stijgen)"], ["omgekeerd", "Omgekeerd (omhoog = stijgen)"]]],
 	["ragdoll", "Doodsval vijanden", [["on", "Ragdoll"], ["off", "Animatie"]]],
@@ -398,6 +399,10 @@ func _build_settings() -> void:
 			var val: String = o[0]
 			var b := _button(o[1], "seg", func():
 				GameSettings.set_value(key, val)
+				if key == "enemy_models" and Game.state in ["prep", "play"]:
+					var scene := get_tree().current_scene
+					if scene != null and scene.has_method("apply_enemy_model_filter"):
+						scene.call("apply_enemy_model_filter")
 				_apply()
 				_refresh())
 			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -407,6 +412,7 @@ func _build_settings() -> void:
 		row.add_child(frame)
 		v.add_child(row)
 	_build_camera_pitch_controls(v)
+	v.add_child(_wrap("Vijandmodellen: Alle types = normale mix. Alleen Meshy = uitsluitend nieuwe Assault-soldaten met M1 Garand; oude types worden niet gespawnd en verdwijnen bij omschakelen. De groepgrootte blijft gelijk.", 12, UI.INK_DIM, 440.0))
 	v.add_child(_wrap("Colt M1911: rechterstick licht bewegen = richten; buitenste ring = een schot. Rustig: vasthouden vuurt maximaal iedere 0,5 seconde een apart schot. Handmatig: opnieuw naar de schietring bewegen voor ieder schot.", 12, UI.INK_DIM, 440.0))
 	_note = _wrap("", 14, UI.INK_DIM, 440.0)
 	v.add_child(_note)

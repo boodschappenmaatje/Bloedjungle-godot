@@ -100,6 +100,8 @@ var _mesh_animation_playback: AnimationNodeStateMachinePlayback
 var _mesh_clip_map: Dictionary = {}
 ## Laatste spelermodel-keuze, zichtbaar in het Updates-scherm (diagnose onzichtbare speler).
 static var player_status := "speler nog niet aangemaakt"
+## Separate from the player: the update panel can prove a Meshy enemy was actually instantiated.
+static var enemy_status := "Assault nog niet gespawnd"
 
 
 ## Laadt een scène uit de (OTA-)bestanden; null als het bestand er (nog) niet is, zodat de aanroeper een terugval kan kiezen.
@@ -121,16 +123,27 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 	_uniform = uniform
 	var model_scene: PackedScene
 	if meshy_player:
-		player_status = "Meshy gekozen, GLB bestaat niet in de app"
+		if assault_rig_test:
+			enemy_status = "Meshy-Assault GLB gevonden, laden nog niet bevestigd"
+		else:
+			player_status = "Meshy gekozen, GLB bestaat niet in de app"
 		var mesh_path := SCENE_ASSAULT_MODEL_PATH if assault_rig_test else SCENE_MESHY_PLAYER_PATH
 		if ResourceLoader.exists(mesh_path):
-			player_status = "Meshy GLB gevonden, laden mislukt"
+			if not assault_rig_test:
+				player_status = "Meshy GLB gevonden, laden mislukt"
 			model_scene = ResourceLoader.load(mesh_path) as PackedScene
 		if model_scene == null:
-			# Zwaar OTA-stuk met het Meshy-model nog niet binnen (of import mislukt): val terug op het
-			# gewone spelermodel, zodat de speler nooit onzichtbaar is.
-			push_warning("Meshy player GLB niet beschikbaar, terugval op het gewone spelermodel")
+			# Heavy OTA asset unavailable: old models remain usable only in
+			# the normal mode. The Meshy-only spawn gate prevents this fallback.
+			push_warning("Meshy model GLB niet beschikbaar, terugval op het gewone model")
+			if assault_rig_test:
+				enemy_status = "Meshy-Assault GLB laden mislukt"
+				assault_rig_test = false
+			else:
+				player_status = "Meshy-speler GLB laden mislukt"
 			meshy_player = false
+		elif assault_rig_test:
+			enemy_status = "Meshy-Assault geladen"
 		else:
 			player_status = "Meshy-speler geladen"
 	elif look_.begins_with("speler:"):

@@ -144,6 +144,7 @@ func _ontploffingen(g) -> void:
 	hk_node.damage(HK.HP * 0.35, "explosive")
 	_check("onder 30%: vuur (nieuw effect) en melding 'in brand'", hk_node._fx != null and hk_node._fx != rook and "HET HK STAAT IN BRAND" in meldingen)
 	_check("hp-balk blijft in beeld na schade", hk_node._bar_t > 0.0)
+	_check("hp-balk is smal (hoogstens 5 m) en zweeft net boven het dak (4,6 tot 7 m)", HK.BAR_BREED <= 5.0 and HK.BAR_Y > 4.6 and HK.BAR_Y <= 7.0 and hk_node._bar.position.y == HK.BAR_Y)
 	_check("nog niet gewonnen", not g.won and g.state == "prep")
 	hk_node.hp = HK.HP * 0.25
 	hk_node._set_bar()

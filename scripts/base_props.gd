@@ -12,6 +12,7 @@ const WALL_MODULE_LENGTH := 3.5
 const WALL_LOD_NAMES := ["Wall_LOD0", "Wall_LOD1", "Wall_LOD2"]
 const WALL_LOD_BEGIN := [0.0, 28.0, 58.0]
 const WALL_LOD_END := [28.0, 58.0, 0.0]
+const WALL_LOD_HYSTERESIS := 1.5  # meters: voorkomt LOD-pingpong bij bewegende iOS-camera
 
 
 static func build(root: Node3D) -> void:
@@ -51,6 +52,16 @@ static func _wall(root: Node3D) -> void:
 		if WALL_LOD_NAMES.has(mesh_node.name):
 			lod_meshes[mesh_node.name] = mesh_node.mesh
 	template.free()
+	# De 2K-normalmaps van de Meshy-muur schitteren op 70%-mobile renderresolutie.
+	# Hergebruik dezelfde twee PBR-materialen voor alle LODs; alleen filter/sterkte aanpassen.
+	var adjusted_materials: Array[StandardMaterial3D] = []
+	for wall_mesh: Mesh in lod_meshes.values():
+		for surface in wall_mesh.get_surface_count():
+			var pbr := wall_mesh.surface_get_material(surface) as StandardMaterial3D
+			if pbr != null and not adjusted_materials.has(pbr):
+				adjusted_materials.append(pbr)
+				pbr.texture_filter = BaseMaterial3D.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS_ANISOTROPIC
+				pbr.normal_scale = minf(pbr.normal_scale, 0.5)
 	for name in WALL_LOD_NAMES:
 		if not lod_meshes.has(name):
 			push_error("BaseProps: expected LOD node missing from Meshy wall asset: " + name)
@@ -105,10 +116,32 @@ static func _wall(root: Node3D) -> void:
 			visual.position = span_center
 			visual.visibility_range_begin = WALL_LOD_BEGIN[lod_index]
 			visual.visibility_range_end = WALL_LOD_END[lod_index]
+			visual.visibility_range_begin_margin = WALL_LOD_HYSTERESIS if WALL_LOD_BEGIN[lod_index] > 0.0 else 0.0
+			visual.visibility_range_end_margin = WALL_LOD_HYSTERESIS if WALL_LOD_END[lod_index] > 0.0 else 0.0
 			visual.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
-			visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+			# Eén vaste goedkope schaduwvorm voorkomt dat bij LOD-wissels schaduwen flikkeren.
+			visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			root.add_child(visual)
+	_wall_shadow_proxies(root, spans)
 	_wall_berm(root, spans)
+
+
+## Stabiele schaduw van de muur, ongeacht welke detailversie de camera ziet.
+## SHADOWS_ONLY: niet zichtbaar als extra muur en geen extra botsing/occlusie.
+static func _wall_shadow_proxies(root: Node3D, spans: Array) -> void:
+	for span: Dictionary in spans:
+		var a: Vector3 = span.a
+		var b: Vector3 = span.b
+		var length := a.distance_to(b)
+		var shadow_mesh := BoxMesh.new()
+		shadow_mesh.size = Vector3(length, Data.BASE_WALL_H, Data.WALL_T) if span.along_x else Vector3(Data.WALL_T, Data.BASE_WALL_H, length)
+		var shadow := MeshInstance3D.new()
+		shadow.name = "BaseWallShadow_" + str(span.name)
+		shadow.mesh = shadow_mesh
+		shadow.position = (a + b) * 0.5 + Vector3.UP * (Data.BASE_WALL_H * 0.5)
+		shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		shadow.add_to_group("base_wall_shadow")
+		root.add_child(shadow)
 
 
 ## Shared, low-profile earth shoulders ground the mesh while staying outside the portals.

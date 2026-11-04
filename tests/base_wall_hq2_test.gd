@@ -126,6 +126,8 @@ func _run() -> void:
 			var lod := 0 if child.name.ends_with("Wall_LOD0") else (1 if child.name.ends_with("Wall_LOD1") else 2)
 			lod_counts[lod] += child.multimesh.instance_count
 			_check(is_equal_approx(child.visibility_range_begin, [0.0, 28.0, 58.0][lod]) and is_equal_approx(child.visibility_range_end, [28.0, 58.0, 0.0][lod]), "" + child.name + " has a deterministic distance band")
+			_check(is_equal_approx(child.visibility_range_begin_margin, 1.5 if lod > 0 else 0.0) and is_equal_approx(child.visibility_range_end_margin, 1.5 if lod < 2 else 0.0), "wall LOD transitions have mobile-safe hysteresis")
+			_check(child.visibility_range_fade_mode == GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED and child.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "wall LODs do not create flickering independent shadow maps")
 			if lod == 0:
 				var span: String = str(child.get_meta("wall_span", ""))
 				var along_x := span.begins_with("north") or span.begins_with("south")
@@ -149,7 +151,11 @@ func _run() -> void:
 	_check(berm != null and berm.multimesh.instance_count == 6, "one shared six-instance earth berm follows the wall spans and leaves both portals open")
 	var berm_corners := stage.get_node_or_null("BaseWallEarthBermCorners") as MultiMeshInstance3D
 	_check(berm_corners != null and berm_corners.multimesh.instance_count == 4, "four shared berm corner caps close the outer foot at each 90 degree join")
-	_check(stage.find_children("*", "MeshInstance3D", true, false).is_empty(), "no old concrete wall meshes remain")
+	var stable_shadows := stage.find_children("BaseWallShadow_*", "MeshInstance3D", true, false)
+	_check(stable_shadows.size() == 6, "six constant SHADOWS_ONLY wall proxies replace LOD-specific shadows")
+	for shadow_node in stable_shadows:
+		_check((shadow_node as MeshInstance3D).cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY, "shadow proxy cannot render as a second visible wall")
+	_check(stage.find_children("*", "MeshInstance3D", true, false).size() == stable_shadows.size(), "no legacy concrete wall meshes remain")
 
 	await physics_frame
 	var rays := [
@@ -203,7 +209,14 @@ func _run() -> void:
 	camera.call("_avoid_obstacles", Vector3(10, 1.2, -26), Vector3(10, 8, -40), actor)
 	camera.call("_apply_wall_occlusion", 1.0)
 	var camera_side := stage.get_node("Wall_north_east_Wall_LOD0") as GeometryInstance3D
-	_check(camera_side.transparency > 0.5, "camera obstruction fades only the visible perimeter span")
+	var current_renderer := RenderingServer.get_current_rendering_method()
+	if current_renderer == "mobile" or current_renderer == "gl_compatibility":
+		_check(not camera_side.visible and is_zero_approx(camera_side.transparency), "mobile renderer hides occluded span without unsupported transparency")
+	else:
+		_check(camera_side.transparency > 0.5, "Forward+ camera obstruction fades only the visible perimeter span")
+	_check(camera.call("_mobile_wall_hidden", "probe", true, 0.016), "mobile wall hides when actually occluded")
+	_check(camera.call("_mobile_wall_hidden", "probe", false, 0.2), "mobile wall holds visibility state through a brief raycast miss")
+	_check(not camera.call("_mobile_wall_hidden", "probe", false, 1.0), "mobile wall becomes visible after release delay")
 	_check(wall_body.collision_layer == wall_mask, "camera fade leaves the physical and combat wall collision intact")
 
 	var over_wall = bullet_script.call("fire", stage, Vector3(10, 1.3, -30), 0.0, 80.0, 1.0, 1.0, true, true)

@@ -28,10 +28,18 @@ var command := "follow"
 var command_target := Vector3.ZERO
 var command_enemy: Node3D
 var command_hold_position := Vector3.ZERO
+var _march: Array = []   # order "basis": de punten van de mars naar de vijandbasis (AanvalRoutes.march_path)
+var _march_i := 0        # het punt waar hij nu naartoe loopt
+var _far := false        # ver van de speler: onzichtbaar en zonder botsingen onderweg (zie _is_far)
+var _far_acc := 0.0
+var _far_n := 0
 
 func set_command(order: String, target: Vector3, enemy: Node3D = null) -> void:
 	if helper or guard or truck != null: return
 	if order == "hold": command_hold_position = global_position
+	if order == "basis":
+		_march = AanvalRoutes.march_path()
+		_march_i = AanvalRoutes.march_start(global_position)
 	command = order
 	command_target = target
 	command_enemy = enemy if is_instance_valid(enemy) else null
@@ -80,12 +88,18 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		model.set_shoot_pose(false, "thompson", 0.5)
 		return
+	if _is_far():
+		_far_step(delta)
+		return
+	_set_far(false)
 	fire_t -= delta
 	if command_enemy != null and (not is_instance_valid(command_enemy) or command_enemy.get("dead") == true):
 		command_enemy = null
 		if Game.squad_order == "attack" and (not is_instance_valid(Game.squad_target_enemy) or Game.squad_target_enemy.get("dead") == true):
 			Game.squad_target_enemy = null
 	var target: Node3D = command_enemy if is_instance_valid(command_enemy) else _nearest_enemy()
+	if target == null:
+		target = _hk_target()
 	var goal := _goal()
 	var to_goal := Vector2(goal.x - global_position.x, goal.z - global_position.z)
 	var want := Vector3.ZERO
@@ -142,6 +156,77 @@ func _physics_process(delta: float) -> void:
 		model.play("stil")
 
 
+## Ver van de speler (en weg van de bunker) ziet niemand hem: dan loopt hij onzichtbaar en zonder botsingen langs de route, en rekent
+## maar elke vierde natuurkundige stap (zoals Enemy._is_far). Alleen op weg naar de vijandbasis of terug naar jou; een soldaat die een
+## plek verdedigt of een vijand aanvalt blijft gewoon echt, anders schiet hij niet meer. Dichterbij dan 55 m is hij weer echt (met botsingen).
+func _is_far() -> bool:
+	if helper or guard or truck != null or (command != "basis" and command != "follow"):
+		return false
+	var p = Game.player
+	if p == null or not is_instance_valid(p) or p.dead:
+		return false
+	var d2 := Vector2(p.global_position.x - global_position.x, p.global_position.z - global_position.z).length_squared()
+	var from_base := maxf(absf(global_position.x), absf(global_position.z))
+	var lim := 55.0 if _far else 62.0   # kleine marge tegen heen en weer schakelen
+	return d2 > lim * lim and from_base > 48.0
+
+
+func _set_far(on: bool) -> void:
+	if _far == on:
+		return
+	_far = on
+	model.visible = not on
+	model.process_mode = Node.PROCESS_MODE_DISABLED if on else Node.PROCESS_MODE_INHERIT
+	if not on:
+		velocity = Vector3.ZERO
+		_stuck_t = 0.0
+		_detour_t = 0.0
+
+
+## Elke vierde natuurkundige stap: een stap richting het volgende punt, zonder botsingen of animatie.
+func _far_step(delta: float) -> void:
+	_set_far(true)
+	_far_acc += delta
+	_far_n += 1
+	if _far_n % 4 != 0:
+		return
+	var goal := _goal()
+	var to_goal := Vector2(goal.x - global_position.x, goal.z - global_position.z)
+	if to_goal.length() > (0.6 if command == "basis" or Game.troop_mode == "hold" else 2.2):
+		var wp := Route.waypoint(global_position, goal)
+		var d := Vector2(wp.x - global_position.x, wp.z - global_position.z)
+		if d.length() > 0.05:
+			var v := d.normalized() * minf(d.length(), SPEED * _far_acc)
+			global_position += Vector3(v.x, 0.0, v.y)
+			face = atan2(d.x, d.y)
+			rotation.y = face
+	position.y = 0.0
+	_far_acc = 0.0
+
+
+## Het vijandelijke hoofdkwartier als doelwit: alleen als hij er dichtbij genoeg voor staat (de rest van de tijd is het geen vijand).
+func _hk_target() -> Node3D:
+	var hk := VijandHk.inst
+	if hk == null or not is_instance_valid(hk) or hk.down:
+		return null
+	if VijandBasis.hk_distance(global_position) > RANGE:
+		return null
+	return hk
+
+
+## Het volgende punt van de mars naar de vijandbasis; aan het eind zijn plek voor het HK.
+func _march_goal() -> Vector3:
+	if _march.is_empty():
+		_march = AanvalRoutes.march_path()
+		_march_i = AanvalRoutes.march_start(global_position)
+	while _march_i < _march.size():
+		var p: Vector3 = _march[_march_i]
+		if Vector2(p.x - global_position.x, p.z - global_position.z).length() > 3.0:
+			return p
+		_march_i += 1
+	return VijandBasis.attack_spot(idx)
+
+
 func _goal() -> Vector3:
 	if recall != null:
 		return recall
@@ -152,6 +237,8 @@ func _goal() -> Vector3:
 			var q: Vector2 = POSTS[(idx * 4 + 1) % POSTS.size()] * (Data.COMPOUND / 14.0)
 			return Vector3(q.x, 0, q.y)
 		return Patrouille.line(idx)[_leg % 2]
+	if command == "basis" and not helper:
+		return _march_goal()
 	if not helper and command in ["hold", "defend", "move", "attack"]:
 		var enemy_valid := is_instance_valid(command_enemy)
 		var enemy_position := command_enemy.global_position if enemy_valid else Vector3.ZERO

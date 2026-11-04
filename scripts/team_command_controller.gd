@@ -38,7 +38,8 @@ func advance(delta: float) -> bool:
 func move(pointer: int, position: Vector2, center: Vector2) -> bool:
 	if pointer != pointer_id or not wheel_open:
 		return false
-	selected_sector = sector(center, position)
+	# net als bij het loslaten: binnen 24 punten van waar je vinger begon is nog geen keuze (het wiel hangt boven je duim)
+	selected_sector = -1 if position.distance_to(origin) < 24.0 else sector(center, position)
 	return true
 
 
@@ -72,6 +73,16 @@ func complete_target(pointer: int, target_kind: String) -> String:
 	if pointer != target_pointer:
 		return ""
 	if target_kind not in ["ground", "enemy"]:
+		return ""
+	target_pointer = -2
+	var order := pending_order
+	pending_order = ""
+	return order
+
+
+## Het doel komt niet uit een aanraking van de wereld maar van de grote kaart: er is geen vinger-index om te vergelijken.
+func complete_pending(target_kind: String) -> String:
+	if pending_order == "" or target_kind not in ["ground", "enemy"]:
 		return ""
 	target_pointer = -2
 	var order := pending_order

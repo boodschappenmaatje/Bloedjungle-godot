@@ -58,6 +58,9 @@ func _anchor(aim: bool) -> Vector2:
 
 
 func _input(event: InputEvent) -> void:
+	if get_tree().get_first_node_in_group("kaart_open") != null:
+		_mouse_down = false
+		return   # de grote kaart is open en neemt alle aanrakingen
 	var team := get_tree().get_first_node_in_group("team_commands")
 	if team != null and team.handle_pointer_event(event):
 		return
@@ -110,6 +113,10 @@ func _input(event: InputEvent) -> void:
 
 
 func _on_button(p: Vector2) -> bool:
+	# de radar opent de grote kaart: een tik of klik erop is geen stick en geen schot
+	var hud := get_tree().get_first_node_in_group("hud_extra")
+	if hud != null and hud.radar_hit(p):
+		return true
 	for b: Control in get_tree().get_nodes_in_group("hud_button"):
 		if not b.is_visible_in_tree():
 			continue
@@ -135,6 +142,17 @@ func blocks_team_target_joystick(p: Vector2) -> bool:
 
 
 func _process(_delta: float) -> void:
+	if get_tree().get_first_node_in_group("kaart_open") != null:
+		# grote kaart open: lopen en schieten staan stil, een commandokeuze blijft wachten
+		_sticks.clear()
+		_mouse_down = false
+		Game.move = Vector2.ZERO
+		Game.aim = NAN
+		Game.fire = false
+		m1911_touch_firing = false
+		_m1911_fire_latched = false
+		queue_redraw()
+		return
 	var touch_hud_visible := UI.is_touch_platform() and not Game.build_mode and (Game.state == "play" or Game.state == "prep")
 	if touch_hud_visible != _last_touch_hud_visible:
 		_last_touch_hud_visible = touch_hud_visible

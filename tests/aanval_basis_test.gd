@@ -122,24 +122,29 @@ func _process(_d: float) -> bool:
 		var hud := _hud()
 		if hud != null and tc != null:
 			var rect: Rect2 = hud._radar.get_global_rect()
-			var patch: Rect2 = hud._base_patch(hud._radar_map())
-			var mid: Vector2 = rect.position + patch.get_center()
 			_check("radar is zichtbaar tijdens het spel", hud._radar.visible)
-			_check("tik op het rode vlak telt als vijandbasis", hud.base_hit(mid))
-			_check("tik net naast het vlak telt ook (duimruimte)", hud.base_hit(mid + Vector2(patch.size.x * 0.5 + 6.0, 0)))
-			_check("tik ver ervandaan telt niet", not hud.base_hit(rect.position + Vector2(rect.size.x * 0.5, rect.size.y - 8.0)))
-			# een andere keuze dan Aanvallen: het vlakje doet niets
+			_check("tik op de radar telt als radar", hud.radar_hit(rect.get_center()))
+			_check("tik ver van de radar telt niet", not hud.radar_hit(rect.position - Vector2(200, 0)))
+			# een andere keuze dan Aanvallen: de radartik opent de grote kaart, maar dat stuurt niemand naar de basis
+			# (de kaart zelf, met tikken op het rode vlak, staat in grote_kaart_test: dit venster is hier te klein voor)
 			tc.controller.pending_order = "move"
 			tc.controller.target_pointer = -1
-			tc._try_select_world(mid)
-			_check("Verplaatsen op het vlakje stuurt niet naar de basis", g.squad_order != "basis")
+			tc._try_select_world(rect.get_center())
+			_check("Verplaatsen: een tik op de radar opent de grote kaart", hud.map_is_open())
+			_check("de kaart wacht dan op een doel en het bevel blijft staan", hud._map._target and tc.controller.pending_order == "move")
+			hud._map.close_map()
 			tc.cancel_input()
 			tc.reset_squad()
-			# Aanvallen: wacht op een doel en de tik op het vlakje stuurt de soldaten
+			_check("Verplaatsen stuurt niet naar de basis", g.squad_order != "basis")
+			# Aanvallen: wacht op een doel, de tik op de radar opent de kaart en de keuze van het rode vlak geeft het bevel "basis"
 			tc.controller.pending_order = "attack"
 			_check("Aanvallen wacht op een doel", hud._attack_pending())
 			tc.controller.target_pointer = -1
-			tc._try_select_world(mid)
+			tc._try_select_world(rect.get_center())
+			_check("Aanvallen: een tik op de radar opent de grote kaart", hud.map_is_open() and tc.controller.pending_order == "attack")
+			hud._map.close_map()
+			_check("het bevel wacht na het sluiten van de kaart op een doel", tc.controller.pending_order == "attack")
+			_check("de keuze van de vijandbasis geeft het bevel", tc.pick_from_map(vb.gate_outside(), true))
 			_check("bevel is basis", g.squad_order == "basis")
 			_check("soldaten blijven op hun plek in 'hold' modus", g.troop_mode == "hold")
 			_check("wacht niet meer op een doel", tc.controller.pending_order == "")

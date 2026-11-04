@@ -350,3 +350,8 @@ func _apply_wall_occlusion(delta: float) -> void:
 			visual.visible = true
 			var wanted := BASE_WALL_CAMERA_TRANSPARENCY if blocked else 0.0
 			visual.transparency = lerpf(visual.transparency, wanted, blend)
+	# Apply visual-only diagnostics AFTER the normal camera occlusion pass.
+	# Default settings leave every wall collider, shot ray and camera behavior intact.
+	var wall_diag_mode := GameSettings.get_value("wall_diag")
+	var wall_lod_mode := GameSettings.get_value("wall_lod")
+	WallDiagnostics.apply(get_tree(), wall_lod_mode if wall_lod_mode != "auto" else wall_diag_mode)

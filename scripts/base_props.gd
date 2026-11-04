@@ -193,6 +193,7 @@ static func _wall_berm(root: Node3D, spans: Array) -> void:
 		multi.set_instance_transform(i, Transform3D(basis, center + outside))
 	var visual := MultiMeshInstance3D.new()
 	visual.name = "BaseWallEarthBerm"
+	visual.add_to_group("base_wall_berm")
 	visual.multimesh = multi
 	visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(visual)
@@ -210,6 +211,7 @@ static func _wall_berm(root: Node3D, spans: Array) -> void:
 			index += 1
 	var corner_visual := MultiMeshInstance3D.new()
 	corner_visual.name = "BaseWallEarthBermCorners"
+	corner_visual.add_to_group("base_wall_berm")
 	corner_visual.multimesh = corners
 	corner_visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(corner_visual)

@@ -67,14 +67,7 @@ static func _wall(root: Node3D) -> void:
 			push_error("BaseProps: expected LOD node missing from Meshy wall asset: " + name)
 			return
 
-	var spans := [
-		{"name": "north_west", "a": Vector3(-C, 0, -C), "b": Vector3(-G - 0.1, 0, -C), "yaw": PI, "along_x": true},
-		{"name": "north_east", "a": Vector3(G + 0.1, 0, -C), "b": Vector3(C, 0, -C), "yaw": PI, "along_x": true},
-		{"name": "south_west", "a": Vector3(-C, 0, C), "b": Vector3(-G - 0.1, 0, C), "yaw": 0.0, "along_x": true},
-		{"name": "south_east", "a": Vector3(G + 0.1, 0, C), "b": Vector3(C, 0, C), "yaw": 0.0, "along_x": true},
-		{"name": "west", "a": Vector3(-C, 0, -C), "b": Vector3(-C, 0, C), "yaw": -PI * 0.5, "along_x": false},
-		{"name": "east", "a": Vector3(C, 0, -C), "b": Vector3(C, 0, C), "yaw": PI * 0.5, "along_x": false},
-	]
+	var spans := wall_spans()
 	var collision := StaticBody3D.new()
 	collision.name = "BaseHighWallCollision"
 	collision.collision_layer = Kit.LAYER_WALL | Kit.LAYER_FORTIFICATION
@@ -171,26 +164,7 @@ static func _wall_berm(root: Node3D, spans: Array) -> void:
 	multi.mesh = mesh
 	multi.instance_count = spans.size()
 	for i in spans.size():
-		var span: Dictionary = spans[i]
-		var a: Vector3 = span.a
-		var b: Vector3 = span.b
-		var center := (a + b) * 0.5
-		var outside := Vector3.ZERO
-		if str(span.name).begins_with("north"):
-			outside.z = -0.42
-		elif str(span.name).begins_with("south"):
-			outside.z = 0.42
-		elif str(span.name) == "west":
-			outside.x = -0.42
-		else:
-			outside.x = 0.42
-		var direction := (b - a).normalized()
-		var extend_start := 0.41 if absf(a.x) == C or absf(a.z) == C else 0.0
-		var extend_end := 0.41 if absf(b.x) == C or absf(b.z) == C else 0.0
-		var length := a.distance_to(b) + extend_start + extend_end
-		center += direction * ((extend_end - extend_start) * 0.5)
-		var basis := Basis(Vector3.UP, float(span.yaw)).scaled(Vector3(length, 1.0, 1.0))
-		multi.set_instance_transform(i, Transform3D(basis, center + outside))
+		multi.set_instance_transform(i, wall_berm_transform(spans[i]))
 	var visual := MultiMeshInstance3D.new()
 	visual.name = "BaseWallEarthBerm"
 	visual.multimesh = multi
@@ -213,6 +187,42 @@ static func _wall_berm(root: Node3D, spans: Array) -> void:
 	corner_visual.multimesh = corners
 	corner_visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(corner_visual)
+
+
+## De zes muurstukken rond de basis (twee poortopeningen noord en zuid).
+static func wall_spans() -> Array:
+	return [
+		{"name": "north_west", "a": Vector3(-C, 0, -C), "b": Vector3(-G - 0.1, 0, -C), "yaw": PI, "along_x": true},
+		{"name": "north_east", "a": Vector3(G + 0.1, 0, -C), "b": Vector3(C, 0, -C), "yaw": PI, "along_x": true},
+		{"name": "south_west", "a": Vector3(-C, 0, C), "b": Vector3(-G - 0.1, 0, C), "yaw": 0.0, "along_x": true},
+		{"name": "south_east", "a": Vector3(G + 0.1, 0, C), "b": Vector3(C, 0, C), "yaw": 0.0, "along_x": true},
+		{"name": "west", "a": Vector3(-C, 0, -C), "b": Vector3(-C, 0, C), "yaw": -PI * 0.5, "along_x": false},
+		{"name": "east", "a": Vector3(C, 0, -C), "b": Vector3(C, 0, C), "yaw": PI * 0.5, "along_x": false},
+	]
+
+## Plaatsing van één aarden bermstrook langs zijn muurstuk (lengte lokaal geschaald, daarna gedraaid).
+static func wall_berm_transform(span: Dictionary) -> Transform3D:
+	var a: Vector3 = span.a
+	var b: Vector3 = span.b
+	var center := (a + b) * 0.5
+	var outside := Vector3.ZERO
+	if str(span.name).begins_with("north"):
+		outside.z = -0.42
+	elif str(span.name).begins_with("south"):
+		outside.z = 0.42
+	elif str(span.name) == "west":
+		outside.x = -0.42
+	else:
+		outside.x = 0.42
+	var direction := (b - a).normalized()
+	var extend_start := 0.41 if absf(a.x) == C or absf(a.z) == C else 0.0
+	var extend_end := 0.41 if absf(b.x) == C or absf(b.z) == C else 0.0
+	var length := a.distance_to(b) + extend_start + extend_end
+	center += direction * ((extend_end - extend_start) * 0.5)
+	# Eerst lokaal op lengte schalen, dan draaien. Basis.scaled() schaalt in wereldassen: dan werd de
+	# west- en oostberm een 114 m lange strook langs X op z = 0 (de flikkerende streep dwars door de basis).
+	var basis := Basis(Vector3.UP, float(span.yaw)) * Basis.from_scale(Vector3(length, 1.0, 1.0))
+	return Transform3D(basis, center + outside)
 
 
 static func _wall_berm_mesh() -> ArrayMesh:

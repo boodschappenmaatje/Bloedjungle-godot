@@ -99,6 +99,9 @@ func _warm_up() -> void:
 		n += 1
 	var i := 0
 	for kind in Data.ETYPES:
+		# Do not prime legacy enemies while the Meshy-only mode is selected.
+		if GameSettings.get_value("enemy_models") == "meshy" and kind != "assault":
+			continue
 		var e := ENEMY.instantiate()
 		e.setup(kind, 1)
 		e.position = base + Vector3(-3.0 + i * 2.0, 0, -9.0)
@@ -230,7 +233,15 @@ func _process(delta: float) -> void:
 func _spawn(item: Variant) -> void:
 	PerfMonitor.note("vijand gespawnd")
 	var entry: Dictionary = item if item is Dictionary else {"kind": String(item), "n": maxi(1, Game.wave), "routes": Game.routes if not Game.routes.is_empty() else AanvalRoutes.pick_group(1)}
-	var kind: String = entry.kind
+	# Resolve again at spawn time: the setting may change while a group
+	# is already queued. Never leave old, invisible attackers in the world.
+	var kind: String = "assault" if GameSettings.get_value("enemy_models") == "meshy" else str(entry.kind)
+	if kind == "assault" and GameSettings.get_value("enemy_models") == "meshy":
+		var assault_path := SoldierModel.SCENE_ASSAULT_MODEL_PATH
+		if not ResourceLoader.exists(assault_path) or ResourceLoader.load(assault_path) == null:
+			push_error("Alleen Meshy: Assault-model ontbreekt; vijand niet gespawnd")
+			Game.banner.emit("MESHY-MODEL ONTBREEKT", "Controleer de OTA-update en herstart het spel", 3.0)
+			return
 	var e := ENEMY.instantiate()
 	e.setup(kind, int(entry.n))
 	if kind == "rocket" and not Game.rocket_seen:
@@ -241,6 +252,25 @@ func _spawn(item: Variant) -> void:
 	e.path = AanvalRoutes.path_from_base(routes.pick_random())
 	e.position = VijandBasis.spawn_point()
 	add_child(e)
+
+
+## Applied by the Settings toggle, including while the mission is paused.
+## Existing legacy enemies leave the combat list and are freed, never merely
+## hidden while continuing to collide, shoot or damage the player.
+func apply_enemy_model_filter() -> void:
+	if GameSettings.get_value("enemy_models") != "meshy":
+		return
+	for item in queue:
+		if item is Dictionary:
+			item["kind"] = "assault"
+	for enemy in Game.enemies.duplicate():
+		if not is_instance_valid(enemy) or str(enemy.get("type")) == "assault":
+			continue
+		Game.enemies.erase(enemy)
+		enemy.visible = false
+		enemy.set_process(false)
+		enemy.set_physics_process(false)
+		enemy.queue_free()
 
 
 ## Alle vijanden van de groepen zijn uitgeschakeld: weer "prep" (wapenkamer en stadseditor) tot de volgende groep uitrukt. Bouwen kan ook tijdens een groep.

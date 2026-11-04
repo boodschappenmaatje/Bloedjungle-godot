@@ -6,13 +6,13 @@ const PROFILE_SCRIPT := preload("res://scripts/weapon_model_profile.gd")
 
 var profile: Resource
 var weapon: Node3D
-var right_hand_grip: Marker3D
-var left_hand_grip: Marker3D
-var muzzle: Marker3D
-var casing_eject: Marker3D
-var magazine: Marker3D
-var sight: Marker3D
-var ejection: Marker3D
+var right_hand_grip: Node3D
+var left_hand_grip: Node3D
+var muzzle: Node3D
+var casing_eject: Node3D
+var magazine: Node3D
+var sight: Node3D
+var ejection: Node3D
 var animation_player: AnimationPlayer
 
 
@@ -45,6 +45,38 @@ func configure(visual_name: String, profile_: Resource = null) -> bool:
 	magazine = _marker("Magazine", profile.magazine_local)
 	sight = _marker("Sight", profile.sight_local)
 	ejection = _marker("Ejection", profile.ejection_local)
+	return true
+
+
+## Reuses the weapon mesh and authored grip/effect anchors embedded in the
+## Assault GLB. The detached rigid prop keeps its world transform and shared
+## source material when moved under this gameplay adapter.
+func configure_existing_meshy(existing: Node3D, profile_: Resource = null) -> bool:
+	if existing == null:
+		return false
+	profile = profile_ if profile_ != null else PROFILE_SCRIPT.new()
+	var existing_global := existing.global_transform
+	global_transform = existing_global
+	existing.reparent(self, true)
+	weapon = existing
+	right_hand_grip = weapon.find_child("Assault_RightHandGrip", true, false) as Node3D
+	left_hand_grip = weapon.find_child("Assault_LeftHandGrip", true, false) as Node3D
+	muzzle = weapon.find_child("Assault_Muzzle", true, false) as Node3D
+	casing_eject = weapon.find_child("Assault_CasingEject", true, false) as Node3D
+	magazine = weapon.find_child("Assault_Magazine", true, false) as Node3D
+	sight = weapon.find_child("Assault_Sight", true, false) as Node3D
+	ejection = casing_eject
+	if right_hand_grip == null or left_hand_grip == null or muzzle == null or casing_eject == null or magazine == null or sight == null:
+		push_error("Meshy Assault weapon is missing one or more authored markers")
+		return false
+	profile.mount_position = position
+	profile.mount_rotation = rotation
+	profile.model_scale = scale
+	profile.left_hand_grip = left_hand_grip.position
+	profile.muzzle_local = muzzle.position
+	profile.casing_local = casing_eject.position
+	profile.magazine_local = magazine.position
+	profile.sight_local = sight.position
 	return true
 
 

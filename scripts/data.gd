@@ -41,6 +41,8 @@ static func upg_cost(id: String, lvl: int) -> int:
 const ETYPES := {
 	"knife": {"hp": 45.0, "speed": 4.9, "r": 0.42, "scale": 1.0, "melee": true, "dmg": 10.0, "rate": 0.85, "pts": 50, "color": Color("4c5056")},
 	"rifle": {"hp": 65.0, "speed": 3.2, "r": 0.44, "scale": 1.0, "range": 12.0, "dmg": 7.0, "rate": 1.6, "spread": 0.08, "pts": 60, "color": Color("8c7b52")},
+	# Canonical standard rifle enemy. `rifle` remains accepted as a compatibility alias for existing tests/tools.
+	"assault": {"hp": 65.0, "speed": 3.2, "r": 0.44, "scale": 1.0, "range": 12.0, "dmg": 7.0, "rate": 1.6, "spread": 0.08, "pts": 60, "color": Color("8c7b52"), "gun": "garand"},
 	"rocket": {"hp": 85.0, "speed": 2.7, "r": 0.46, "scale": 1.0, "range": 19.0, "dmg": 55.0, "rate": 4.2, "spread": 0.035, "pts": 160, "color": Color("5a4a3a"), "rocket": true, "gun": "rocket"},
 	"heavy": {"hp": 280.0, "speed": 2.2, "r": 0.58, "scale": 1.28, "range": 11.0, "dmg": 6.0, "rate": 0.11, "burst": 9, "pause": 1.9, "spread": 0.13, "pts": 180, "color": Color("3e4a2b")},
 }
@@ -143,11 +145,14 @@ static func _mix(n: int, total: int) -> Array:
 		var r := randf()
 		var t := "knife"
 		if r < rifle_share:
-			t = "rifle"
+			t = "assault"
 		if n >= 4 and r < 0.1 + n * 0.012:
 			t = "heavy"
 		if n >= 3 and r > 0.94 - n * 0.007 and rockets < 1 + n / 3.0:
 			t = "rocket"
 			rockets += 1
 		q.append(t)
+	# Introduce the canonical Assault in the first live wave, replacing one basic knife spawn.
+	if n >= 1 and not q.has("assault") and not q.is_empty():
+		q[0] = "assault"
 	return q

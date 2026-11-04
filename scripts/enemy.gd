@@ -14,6 +14,8 @@ var max_hp := 45.0
 var face := 0.0
 var fire_t := 1.0
 var burst_n := 0
+var _assault_ammo := 0
+var _assault_reload_t := 0.0
 var speed_mul := 1.0
 var slow_t := 0.0  # prikkeldraad: zolang dit loopt is hij 60% trager
 var wire_dmg := 0.0
@@ -57,10 +59,12 @@ func setup(kind: String, wave: int) -> void:
 	max_hp = t.hp * (1.0 + (maxi(1, wave) - 1) * 0.11)
 	hp = max_hp
 	fire_t = randf_range(0.8, 1.8)
+	_assault_ammo = int(Data.WEAPONS.get("garand", {}).get("mag", 8)) if kind == "assault" else 0
+	_assault_reload_t = 0.0
 	speed_mul = randf_range(0.9, 1.12)
 	strafe = 1.0 if randf() < 0.5 else -1.0
 	slot = Game.next_slot()
-	if kind == "rifle" and slot % 3 == 1:
+	if kind in ["rifle", "assault"] and slot % 3 == 1:
 		role = "flank"
 	if not t.get("melee", false):
 		gate_z = Route.OUT if slot % 2 == 0 else -Route.OUT
@@ -132,6 +136,16 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector3.ZERO
 		if stun_t <= 0.0:
 			model.play("stil", 0.15)
+		return
+	if type == "assault" and _assault_reload_t > 0.0:
+		_assault_reload_t = maxf(0.0, _assault_reload_t - delta)
+		velocity = Vector3.ZERO
+		if _assault_reload_t <= 0.0:
+			_assault_ammo = int(Data.WEAPONS.get("garand", {}).get("mag", 8))
+			model.play("stil", 0.12)
+		else:
+			if model.current != "herladen":
+				model.play("herladen", 0.08)
 		return
 	var player = Game.player
 	if _is_far(player):
@@ -240,14 +254,17 @@ func _physics_process(delta: float) -> void:
 		if fire_t <= 0.0 and t.get("rocket", false):
 			_shoot_rocket(look, Game.gates.pos_of(gate))  # een raket tegen de poort
 		elif fire_t <= 0.0:
-			fire_t = t.rate if melee else maxf(t.rate, 0.45)
-			if melee:
-				model.play("steken", 0.08, 1.7)
-				Sfx.play("knife", 1.0, global_position)
-			else:
-				Sfx.play("ping", 0.8, global_position)
-			Game.mark_attack(global_position)
-			Game.gates.damage(Game.gates.list.find(gate), t.dmg, "melee" if melee else "bullet")
+			if type != "assault" or _consume_assault_round():
+				fire_t = t.rate if melee else maxf(t.rate, 0.45)
+				if melee:
+					model.play("steken", 0.08, 1.7)
+					Sfx.play("knife", 1.0, global_position)
+				else:
+					Sfx.play("ping", 0.8, global_position)
+				Game.mark_attack(global_position)
+				Game.gates.damage(Game.gates.list.find(gate), t.dmg, "melee" if melee else "bullet")
+				if type == "assault" and _assault_ammo <= 0:
+					_start_assault_reload()
 
 	var vel := Vector3.ZERO
 	if want_move:
@@ -360,6 +377,8 @@ func _shoot(a: float) -> void:
 	if t.get("rocket", false):
 		_shoot_rocket(a)
 		return
+	if not _consume_assault_round():
+		return
 	var burst: int = t.get("burst", 0)
 	if burst > 0:
 		burst_n += 1
@@ -388,6 +407,28 @@ func _shoot(a: float) -> void:
 		var axes := model.casing_axes()
 		Fx.casing(get_parent(), model.casing_position(), axes[0], axes[1])
 	Sfx.play("ak" if type == "heavy" else "enemy", 1.0, global_position)
+	if type == "assault" and _assault_ammo <= 0:
+		_start_assault_reload()
+
+
+func _consume_assault_round() -> bool:
+	if type != "assault":
+		return true
+	if _assault_reload_t > 0.0:
+		return false
+	if _assault_ammo <= 0:
+		_start_assault_reload()
+		return false
+	_assault_ammo -= 1
+	return true
+
+
+func _start_assault_reload() -> void:
+	if type != "assault" or _assault_reload_t > 0.0:
+		return
+	var garand: Dictionary = Data.WEAPONS.get("garand", {})
+	_assault_reload_t = float(garand.get("reload", 1.9))
+	model.play("herladen", 0.08)
 
 
 ## Een trage raket die afgaat waar hij gemikt was (of tegen het eerste dat in de weg staat).
@@ -455,10 +496,24 @@ static func _flat(v: Vector3) -> Vector2:
 
 
 func _animate(spd: float, moving: bool) -> void:
+	if type == "assault" and _assault_reload_t > 0.0:
+		if model.current != "herladen":
+			model.play("herladen", 0.08)
+		return
 	if model.current == "steken" and model.anim.is_playing():
 		return
+	if type == "assault" and moving:
+		var local_motion: Vector3 = global_transform.basis.inverse() * velocity
+		if spd <= 3.5 and absf(local_motion.x) > absf(local_motion.z) * 1.25:
+			model.play("Walk_Left_with_Gun" if local_motion.x < 0.0 else "Cautious_Crouch_Walk_Right_inplace", 0.2, spd / 2.4)
+			return
+		if local_motion.z < -absf(local_motion.x) * 1.25:
+			model.play("achteruit", 0.2, spd / 2.4)
+			return
 	if spd < 0.3:
 		model.play("schieten" if not moving and not t.get("melee", false) else "stil")
+	elif type == "assault" and spd > 5.0:
+		model.play("sprinten", 0.2, spd / 5.5)
 	elif spd > 3.5:
 		model.play("rennen", 0.2, spd / 6.0)
 	else:

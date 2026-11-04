@@ -225,7 +225,9 @@ func _draw() -> void:
 func _wheel_center() -> Vector2:
 	var safe := UI.safe_margins(size)
 	var r := WheelArt.OUTER + 6.0
-	return Vector2(clampf(controller.origin.x, safe.x + r, size.x - safe.z - r), clampf(controller.origin.y, safe.y + r, size.y - safe.w - r))
+	# Het wiel hangt boven je duim in plaats van eromheen: bij de linkerrand lag je duim anders op VERDEDIGEN en je hand over VERPLAATSEN.
+	var c: Vector2 = controller.origin + Vector2(0.0, -(WheelArt.OUTER + 8.0))
+	return Vector2(clampf(c.x, safe.x + r, size.x - safe.z - r), clampf(c.y, safe.y + r, size.y - safe.w - r))
 
 
 func _issue(command: String, target: Vector3, enemy: Node3D) -> void:
@@ -246,6 +248,19 @@ func _issue(command: String, target: Vector3, enemy: Node3D) -> void:
 	Game.changed.emit()
 
 
+## De grote kaart koos een doel (wereldpunt, of de vijandbasis zelf bij Aanvallen). True als het bevel is uitgegeven.
+func pick_from_map(world_pos: Vector3, on_base: bool) -> bool:
+	var order: String = controller.complete_pending("ground")
+	if order == "":
+		return false
+	if on_base and order == "attack":
+		_issue("basis", VijandBasis.gate_outside(), null)
+	else:
+		_issue(order, world_pos, null)
+	queue_redraw()
+	return true
+
+
 ## Aanvallen op de vijandbasis (stap 5a-3a): de soldaten marcheren via de stad naar zijn poort en beschieten het hoofdkwartier.
 func _attack_base() -> void:
 	_target_release_pointer = controller.target_pointer
@@ -258,12 +273,12 @@ func _attack_base() -> void:
 func _try_select_world(screen: Vector2) -> void:
 	if controller.pending_order == "":
 		return
-	# een tik op het rode vlak van de vijandbasis op de radar: het leger gaat naar zijn basis (de radar telt voor de HUD-controle hieronder niet)
-	if controller.pending_order == "attack":
-		var hud := get_tree().get_first_node_in_group("hud_extra")
-		if hud != null and hud.base_hit(screen):
-			_attack_base()
-			return
+	# een tik op de radar opent de grote kaart: daar kies je het doel, zonder dat je duim erover ligt
+	var hud := get_tree().get_first_node_in_group("hud_extra")
+	if hud != null and hud.radar_hit(screen):
+		if hud.open_map(true):
+			controller.finish_target(controller.target_pointer)   # de rest van deze aanraking is voor de kaart
+		return
 	var sticks := get_tree().get_first_node_in_group("touch_sticks")
 	if sticks != null and not Controller.can_accept_target(sticks.blocks_team_target_hud(screen), sticks.blocks_team_target_joystick(screen)):
 		return

@@ -16,8 +16,9 @@ const TAKE := {"bullet": 0.1, "melee": 0.05, "explosive": 1.0}
 const KERN := Vector3(7.4, 4.7, 7.3)
 const KERN_MIDDEN := Vector3(0.0, 0.0, -0.5)
 const PUIN_HOOGTE := 1.5   # m: het botsblok van de puinhoop
-const BAR_BREED := 7.0
-const BAR_Y := 9.4
+const BAR_BREED := 4.0   # m: smal genoeg om naast de rest van de HUD te passen (v188 had 7 m en dekte een kwart van het scherm)
+const BAR_Y := 6.0       # m: net boven het dak (4,6 m), de mast steekt erbovenuit
+const BAR_DIK := 0.3     # m: dikte van de vulling; de achtergrond is 0,2 m dikker
 const BLAST_R := 9.0
 
 var hp := HP
@@ -107,7 +108,7 @@ func _make_bar() -> void:
 	var bg := MeshInstance3D.new()
 	bg.mesh = q
 	bg.material_override = _mat_bg
-	bg.scale = Vector3(BAR_BREED + 0.3, 0.75, 1)
+	bg.scale = Vector3(BAR_BREED + 0.2, BAR_DIK + 0.2, 1)
 	bg.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_bar.add_child(bg)
 	_bar_fill = MeshInstance3D.new()
@@ -132,7 +133,7 @@ static func _bar_mat(col: Color, prio: int) -> StandardMaterial3D:
 
 func _set_bar() -> void:
 	var f := clampf(hp / HP, 0.0, 1.0)
-	_bar_fill.scale = Vector3(maxf(0.02, BAR_BREED * f), 0.45, 1)
+	_bar_fill.scale = Vector3(maxf(0.02, BAR_BREED * f), BAR_DIK, 1)
 	_bar_fill.position.x = -BAR_BREED * 0.5 + BAR_BREED * f * 0.5
 
 

@@ -213,8 +213,8 @@ def main():
         raise RuntimeError(f"Invalid source bounds: {initial_size}")
 
     # Apply exact authored dimensions around the center of the source bounds.
-    # The source aspect differs from its Meshy prompt; a baked tangent normal
-    # keeps its dense wood, fasteners and weathering details readable.
+    # The source aspect differs from its Meshy prompt; its tangent normal map
+    # keeps the surface wear, raised supports and US markings readable.
     centers = [(b[0] + b[1]) * 0.5 for b in initial_bounds]
     scales = [CORE_SIZE[i] / initial_size[i] for i in range(3)]
     for vertex in high.data.vertices:

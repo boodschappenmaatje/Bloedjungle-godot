@@ -178,7 +178,11 @@ func _nearest_enemy() -> Node3D:
 		d.y = 0.0
 		var l := d.length()
 		if l < bd:
-			var q := PhysicsRayQueryParameters3D.create(from, e.global_position + Vector3.UP * 1.3, Bullet.MASK_WALL | Bullet.MASK_BUNKER)
+			var target := e.global_position + Vector3.UP * 1.3
+			if BaseWallRules.blocks_ground_fire(from, target):
+				continue
+			var q := PhysicsRayQueryParameters3D.create(from, target, Bullet.MASK_WALL | Bullet.MASK_BUNKER)
+			q.hit_from_inside = true
 			if get_world_3d().direct_space_state.intersect_ray(q).is_empty():
 				bd = l
 				best = e

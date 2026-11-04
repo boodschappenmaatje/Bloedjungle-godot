@@ -85,6 +85,7 @@ static func predict(world: World3D, from: Vector3, target: Vector3) -> Dictionar
 		vel.y -= GRAVITY * dt
 		var nxt := pos + vel * dt
 		var q := PhysicsRayQueryParameters3D.create(pos, nxt, Bullet.MASK_WALL | Bullet.MASK_BUNKER | Bullet.MASK_NATURE)
+		q.hit_from_inside = true
 		var hit := space.intersect_ray(q)
 		var v := Bullet.vehicle_on_path(pos, nxt)
 		if not v.is_empty():
@@ -130,6 +131,7 @@ func _physics_process(delta: float) -> void:
 	var step := vel * delta
 	# muren en de bunker houden hem tegen
 	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + step, Bullet.MASK_WALL | Bullet.MASK_BUNKER | Bullet.MASK_NATURE)
+	q.hit_from_inside = true
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	# auto's en bussen: net als bij kogels telt de carrosserie tot Bullet.HIT_TOP, dan stuitert hij ertegen en valt ernaast
 	var v := Bullet.vehicle_on_path(global_position, global_position + step)
@@ -137,8 +139,8 @@ func _physics_process(delta: float) -> void:
 		global_position = global_position.lerp(v.pos, 0.9) - Vector3(step.x, 0.0, step.z).normalized() * 0.15
 		vel = Vector3(-vel.x * 0.3, minf(vel.y, 0.0) * 0.35, -vel.z * 0.3)
 	elif hit:
-		global_position = hit.position + hit.normal * 0.15
-		var n: Vector3 = hit.normal
+		var n: Vector3 = hit.normal if hit.normal.length_squared() > 0.001 else -step.normalized()
+		global_position = hit.position + n * 0.15
 		vel = vel.bounce(n) * 0.35
 	else:
 		global_position += step
@@ -196,7 +198,7 @@ func _explode() -> void:
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e):
 			var d: float = e.global_position.distance_to(at)
-			if d < r:
+			if d < r and not BaseWallRules.blocks_blast(at, e.global_position):
 				e.hit(DAMAGE * (1.0 - d / r * 0.7), (e.global_position - at).normalized(), true)
 	if Game.builds:
 		Game.builds.blast(at, r, DAMAGE, true)
@@ -212,5 +214,5 @@ func _explode() -> void:
 	var p = Game.player
 	if p != null and not p.dead:
 		var pd: float = Vector2(p.global_position.x - at.x, p.global_position.z - at.z).length()
-		if pd < r:
+		if pd < r and not BaseWallRules.blocks_blast(at, p.global_position):
 			p.hit(DAMAGE * 0.25 * (1.0 - pd / r), (p.global_position - at).normalized(), false)

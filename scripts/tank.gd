@@ -212,8 +212,14 @@ func _shoot(at: Vector3) -> void:
 		for e in Game.enemies.duplicate():
 			var flat: Vector3 = e.global_position - boom if is_instance_valid(e) else Vector3.ZERO
 			flat.y = 0.0
-			if is_instance_valid(e) and flat.length() < SHELL_RADIUS and SHELL_DAMAGE > 0.0:
-				e.hit(SHELL_DAMAGE, (e.global_position - boom).normalized(), true))
+			if is_instance_valid(e) and flat.length() < SHELL_RADIUS and SHELL_DAMAGE > 0.0 and shell_can_damage(boom, e.global_position):
+				e.hit(SHELL_DAMAGE, (e.global_position - boom).normalized(), true)
+	)
+
+
+## Tank shells are ground blasts; the high base wall blocks their character splash.
+static func shell_can_damage(origin: Vector3, target: Vector3) -> bool:
+	return not BaseWallRules.blocks_blast(origin, target)
 
 
 ## Door jou bestuurd: de linker stick geeft de richting (de tank draait op de plek en rijdt dan door,
@@ -294,6 +300,7 @@ func _aim_point() -> Vector3:
 			best = dist
 	var from := _loop.global_position + Vector3(0, 0.3, 0)
 	var q := PhysicsRayQueryParameters3D.create(from, from + fwd * best, Kit.LAYER_WALL | Kit.LAYER_BUNKER | 8)
+	q.hit_from_inside = true
 	q.exclude = [get_rid()]
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	# auto's en bussen zijn lager dan de loop: zoek ze op ooghoogte, zodat de granaat óp de auto valt en niet erachter

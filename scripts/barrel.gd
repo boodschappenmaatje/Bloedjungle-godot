@@ -83,7 +83,7 @@ static func _make_spots() -> void:
 ## Een ontploffing elders (raket, granaat, ander vat): vaten binnen de straal gaan mee.
 static func catch_blast(at: Vector3, radius: float) -> void:
 	for b in Game.barrels.duplicate():
-		if is_instance_valid(b) and b.global_position.distance_to(at) < radius + 0.5:
+		if is_instance_valid(b) and b.global_position.distance_to(at) < radius + 0.5 and not BaseWallRules.blocks_blast(at, b.global_position):
 			b.ignite(randf_range(0.12, 0.45), true)  # na elkaar, niet allemaal tegelijk
 	Pomp.catch_blast(at, radius)  # benzinepompen en olievaten bij het benzinestation
 
@@ -239,7 +239,7 @@ static func area_damage(at: Vector3, radius: float, dmg: float) -> void:
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e):
 			var d: float = e.global_position.distance_to(at)
-			if d < radius:
+			if d < radius and not BaseWallRules.blocks_blast(at, e.global_position):
 				e.hit(dmg * (1.0 - d / radius * 0.7), (e.global_position - at).normalized(), true)
 	if Game.builds:
 		Game.builds.blast(at, radius, dmg, true)
@@ -256,10 +256,10 @@ static func area_damage(at: Vector3, radius: float, dmg: float) -> void:
 	var p = Game.player
 	if p != null and not p.dead:
 		var pd: float = Vector2(p.global_position.x - at.x, p.global_position.z - at.z).length()
-		if pd < radius:
+		if pd < radius and not BaseWallRules.blocks_blast(at, p.global_position):
 			p.hit(dmg * 0.25 * (1.0 - pd / radius), (p.global_position - at).normalized(), false)
 	var bx := maxf(absf(at.x) - Data.BUNKER_HALF, 0.0)
 	var bz := maxf(absf(at.z) - Data.BUNKER_HALF, 0.0)
 	var bd := Vector2(bx, bz).length()
-	if bd < radius:
+	if bd < radius and not BaseWallRules.blocks_blast(at, Vector3.ZERO):
 		Game.damage_base(dmg * 0.3 * (1.0 - bd / radius))

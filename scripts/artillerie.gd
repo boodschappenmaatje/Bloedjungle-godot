@@ -124,6 +124,7 @@ func _impact(at: Vector3) -> void:
 
 
 ## Schade aan alle vijanden rond een inslag. Static zodat de test het direct kan aanroepen.
+## Dit is bewust een overhead-artillerie-exceptie: muren blokkeren deze inslag niet.
 static func damage_at(at: Vector3) -> int:
 	VijandHk.blast(at, BLAST, DAMAGE)   # ook het vijandelijke hoofdkwartier (stap 5a-2)
 	var hits := 0

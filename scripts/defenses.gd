@@ -442,7 +442,7 @@ func _detonate(at: Vector3) -> void:
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e) and not e.dead:
 			var d: float = e.global_position.distance_to(at)
-			if d < 4.6:
+			if d < 4.6 and not BaseWallRules.blocks_blast(at, e.global_position):
 				e.hit(240.0 * (1.0 - d / 4.6 * 0.7), (e.global_position - at).normalized(), true)
 
 

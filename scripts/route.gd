@@ -10,11 +10,13 @@ const IN := Data.COMPOUND - 2.5
 
 
 static func waypoint(from: Vector3, goal: Vector3) -> Vector3:
-	var cross: Variant = _river(from, goal)
-	if cross != null:
-		return cross
 	var me_in := _inside(from)
 	var goal_in := _inside(goal)
+	# Wie nog binnen de muur staat en naar buiten moet, gaat eerst door de poort, ook als het doel over de rivier ligt:
+	# anders loopt hij rechtstreeks naar de brug en schuurt hij langs de muur tot hij de poortopening vindt.
+	var cross: Variant = null if (me_in and not goal_in) else _river(from, goal)
+	if cross != null:
+		return cross
 	if _in_gate(from):
 		# in de poortopening: doorlopen naar de kant waar het doel is
 		return Vector3(0, 0, signf(from.z) * (IN - 0.5 if goal_in else OUT + 0.5))

@@ -17,10 +17,15 @@ on:
       - "scripts/ally.gd"
       - "scripts/beleg.gd"
       - "scripts/team_commands.gd"
+      - "scripts/team_command_controller.gd"
+      - "scripts/touch_sticks.gd"
+      - "scripts/grote_kaart.gd"
+      - "scripts/route.gd"
       - "assets/vijand_hk.glb"
       - "tests/vijand_basis_test.gd"
       - "tests/vijand_hk_test.gd"
       - "tests/aanval_basis_test.gd"
+      - "tests/grote_kaart_test.gd"
       - ".github/workflows/vijand-basis.yml"
   workflow_dispatch:
 
@@ -81,4 +86,15 @@ jobs:
           echo "Godot exit code: $RC"
           grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/aanval_basis.log" | tail -n 40 || true
           tail -n 15 "$RUNNER_TEMP/aanval_basis.log"
+          exit "$RC"
+      - name: Grote kaart en commandowiel boven je duim
+        shell: bash
+        run: |
+          set +e
+          timeout 300 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/grote_kaart_test.gd --fixed-fps 60 > "$RUNNER_TEMP/grote_kaart.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/grote_kaart.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/grote_kaart.log"
           exit "$RC"

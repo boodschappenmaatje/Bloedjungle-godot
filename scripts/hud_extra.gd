@@ -298,6 +298,9 @@ func _draw_vijand_basis(map: Rect2) -> void:
 		_radar.draw_rect(Rect2(dot - Vector2(2.0, 2.0), Vector2(4.0, 4.0)), Color(1.0, 0.92, 0.55), true)
 	if targeting:
 		_radar.draw_rect(patch.grow(3.0 + 2.0 * pulse), Color(1.0, 0.88, 0.5, 0.9), false, 1.5)
+	if Beleg.actief():
+		# je leger beschiet het HK zonder jou (Beleg): oranje rand rond het vlakje
+		_radar.draw_rect(patch.grow(2.0), Color(1.0, 0.62, 0.15, 0.55 + 0.4 * pulse), false, 1.6)
 
 
 func _draw_radar() -> void:

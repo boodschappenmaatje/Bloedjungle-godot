@@ -15,6 +15,7 @@ on:
       - "scripts/hud.gd"
       - "scripts/hud_extra.gd"
       - "scripts/ally.gd"
+      - "scripts/beleg.gd"
       - "scripts/team_commands.gd"
       - "assets/vijand_hk.glb"
       - "tests/vijand_basis_test.gd"

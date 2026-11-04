@@ -2,7 +2,8 @@ extends SceneTree
 ## Test van Aanvallen op de vijandbasis (Generals-plan, stap 5a-3a): rood vlakje op de radar, de tik op het vlakje in het teamwiel,
 ## de mars van je soldaten over de brug en door de stad naar zijn poort, en het beschieten van het hoofdkwartier zodra jij erbij komt.
 ## godot --headless --path . -s tests/aanval_basis_test.gd --fixed-fps 60
-## Duurt ruim 5000 beeldjes: de soldaat uit de bunker loopt het hele eind (ver van jou onzichtbaar, op de route).
+## Stap 5a-3a, keuze B: zonder jou rekent Beleg het beleg uit (HK-schade, terugschietende basis, meldingen); met jou erbij vechten ze echt.
+## Duurt ruim 6000 beeldjes: de soldaat uit de bunker loopt het hele eind (ver van jou onzichtbaar, op de route).
 
 const STAP_BUNKER_KLAAR := 5300   # beeldje waarop de soldaat uit de bunker aan het eind moet zijn (330 m op 4,6 m/s = 72 s = 4300 beeldjes)
 
@@ -12,13 +13,16 @@ var fails := 0
 var allies: Array = []
 var world: Node
 var hk_hp0 := 0.0
-var min_hp := INF
+var hk_hp1 := 0.0
+var hk_hp2 := 0.0
+var banners: Array = []
 var seen_far := false
 # Scripts die `Game` gebruiken laden we pas in _initialize(): bij het compileren van dit testbestand bestaat de autoload nog niet.
 var vb: GDScript
 var ar: GDScript
 var dt: GDScript
 var ally_s: GDScript
+var bl: GDScript
 var P: Vector3
 var HALF: Vector2
 var GATE: float
@@ -30,6 +34,7 @@ func _initialize() -> void:
 	ar = load("res://scripts/aanval_routes.gd")
 	dt = load("res://scripts/data.gd")
 	ally_s = load("res://scripts/ally.gd")
+	bl = load("res://scripts/beleg.gd")
 	P = dt.get_script_constant_map()["VIJAND_POS"]
 	HALF = dt.get_script_constant_map()["VIJAND_HALF"]
 	GATE = dt.get_script_constant_map()["VIJAND_GATE"]
@@ -80,6 +85,8 @@ func _process(_d: float) -> bool:
 		main.begin()
 	if frames == 8:
 		g.prep_t = 99999.0   # geen aanvalsgroep tijdens de test
+		bl.vuur_factor = 0.0   # tijdens de mars schiet de basis niet terug; dat zetten we later aan
+		g.banner.connect(func(big: String, _small: String, _time: float): banners.append(big))
 		# 1. de hulpfuncties
 		var path: Array = ar.march_path()
 		_check("mars begint bij de noordkant van de brug", (path[0] as Vector3).is_equal_approx(Vector3(0, 0, -104)))
@@ -161,35 +168,65 @@ func _process(_d: float) -> bool:
 		_check("soldaat uit de bunker staat op zijn plek (%.1f m ervan)" % (a0.global_position.distance_to(vb.attack_spot(0)) if a0 else -1.0), a0 != null and a0.global_position.distance_to(vb.attack_spot(0)) < 1.0)
 		_check("onderweg waren ze onzichtbaar (ver van jou)", seen_far)
 		var all_far := true
+		var all_beleg := true
 		for a in allies:
 			if not a._far:
 				all_far = false
+			if not a.beleg_bezig():
+				all_beleg = false
 		_check("ze wachten onzichtbaar zolang jij er niet bent", all_far)
-		_check("het HK is nog heel (A: zonder jou geen gevecht)", _hk().hp == hk_hp0)
-		# 4. jij komt dichtbij: ze verschijnen en schieten echt
+		_check("ze tellen mee in het beleg (B)", all_beleg and bl.aantal == 3 and bl.actief())
+		hk_hp1 = _hk().hp
+		_check("het HK is beschadigd zonder jou (%.0f van %.0f over)" % [hk_hp1, hk_hp0], hk_hp1 < hk_hp0 - 1.0)
+		_check("aankomst van het leger is gemeld", banners.has("LEGER BIJ DE VIJANDBASIS"))
+		_check("nog niemand gesneuveld zolang de basis niet terugschiet", g.allies.size() == 3 and bl.verloren == 0)
+		# 4. de basis schiet terug: ze sneuvelen één voor één
+		bl.vuur_factor = 5.0
+	if frames == STAP_BUNKER_KLAAR + 400:
+		_check("een soldaat is gesneuveld (%d over, %d verloren)" % [g.allies.size(), bl.verloren], bl.verloren >= 1 and g.allies.size() <= 2 and g.allies.size() >= 1)
+		_check("het sneuvelen is gemeld", banners.has("SOLDAAT GESNEUVELD"))
+		_check("het HK werd verder beschadigd", _hk().hp < hk_hp1)
+		bl.vuur_factor = 0.0
+		allies = allies.filter(func(a): return is_instance_valid(a) and not a.is_queued_for_deletion())
+		hk_hp2 = _hk().hp
+		# 5. jij komt dichtbij: de rest verschijnt en schiet echt
 		p.global_position = P + Vector3(0, 0, 14)
-	if frames == STAP_BUNKER_KLAAR + 5:
+	if frames == STAP_BUNKER_KLAAR + 405:
 		var all_near := true
+		var visible_all := true
 		for a in allies:
 			if a._far:
 				all_near = false
-		_check("als jij dichtbij komt zijn ze echt en zichtbaar", all_near)
-		var visible_all := true
-		for a in allies:
 			if not a.model.visible:
 				visible_all = false
+		_check("als jij dichtbij komt zijn ze echt", all_near)
 		_check("hun model is weer zichtbaar", visible_all)
-	if frames == STAP_BUNKER_KLAAR + 240:
+	if frames == STAP_BUNKER_KLAAR + 650:
 		var hp: float = _hk().hp
-		_check("de soldaten beschieten het HK (%.0f van %.0f over)" % [hp, hk_hp0], hp < hk_hp0 - 5.0)
-		# 5. Volgen roept ze terug
+		_check("de soldaten beschieten het HK echt (%.0f van %.0f over)" % [hp, hk_hp2], hp < hk_hp2 - 3.0)
+		# 6. Volgen roept ze terug, daarna weer naar de basis en jij gaat weg: het beleg gaat verder
 		_tc()._issue("follow", Vector3.ZERO, null)
 		var back := true
 		for a in allies:
 			if a.command != "follow":
 				back = false
 		_check("Volgen haalt het bevel weg", back and g.squad_order == "follow" and g.troop_mode == "follow")
-	if frames == STAP_BUNKER_KLAAR + 300:
+		_tc()._issue("basis", vb.gate_outside(), null)
+		p.global_position = Vector3(0, 0, 4)
+	if frames == STAP_BUNKER_KLAAR + 900:
+		var n := 0
+		for a in allies:
+			if a.beleg_bezig():
+				n += 1
+		_check("als jij weggaat beleggen ze opnieuw (%d van %d)" % [n, allies.size()], n == allies.size() and bl.actief())
+		# 7. de basis is te sterk: het hele leger sneuvelt
+		bl.vuur_factor = 100.0
+	if frames == STAP_BUNKER_KLAAR + 1100:
+		_check("het hele leger is gesneuveld (%d over)" % g.allies.size(), g.allies.size() == 0 and bl.verloren == 3)
+		_check("dat is gemeld", banners.has("LEGER VERSLAGEN"))
+		_check("het beleg is voorbij", not bl.actief() or bl.aantal == 0)
+		bl.vuur_factor = 1.0
+	if frames == STAP_BUNKER_KLAAR + 1110:
 		print("klaar, fouten: ", fails)
 		quit(1 if fails > 0 else 0)
 	return false

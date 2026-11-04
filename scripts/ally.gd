@@ -33,10 +33,12 @@ var _march_i := 0        # het punt waar hij nu naartoe loopt
 var _far := false        # ver van de speler: onzichtbaar en zonder botsingen onderweg (zie _is_far)
 var _far_acc := 0.0
 var _far_n := 0
+var _beleg := false      # ver van de speler en op zijn plek voor het HK: telt mee in het beleg (Beleg)
 
 func set_command(order: String, target: Vector3, enemy: Node3D = null) -> void:
 	if helper or guard or truck != null: return
 	if order == "hold": command_hold_position = global_position
+	_beleg = false
 	if order == "basis":
 		_march = AanvalRoutes.march_path()
 		_march_i = AanvalRoutes.march_start(global_position)
@@ -178,6 +180,7 @@ func _set_far(on: bool) -> void:
 	model.visible = not on
 	model.process_mode = Node.PROCESS_MODE_DISABLED if on else Node.PROCESS_MODE_INHERIT
 	if not on:
+		_beleg = false
 		velocity = Vector3.ZERO
 		_stuck_t = 0.0
 		_detour_t = 0.0
@@ -192,6 +195,7 @@ func _far_step(delta: float) -> void:
 		return
 	var goal := _goal()
 	var to_goal := Vector2(goal.x - global_position.x, goal.z - global_position.z)
+	_beleg = false
 	if to_goal.length() > (0.6 if command == "basis" or Game.troop_mode == "hold" else 2.2):
 		var wp := Route.waypoint(global_position, goal)
 		var d := Vector2(wp.x - global_position.x, wp.z - global_position.z)
@@ -200,8 +204,17 @@ func _far_step(delta: float) -> void:
 			global_position += Vector3(v.x, 0.0, v.y)
 			face = atan2(d.x, d.y)
 			rotation.y = face
+	elif command == "basis":
+		_beleg = true   # op zijn plek voor het HK en niemand kijkt: het beleg rekent voor hem (Beleg.step)
 	position.y = 0.0
 	_far_acc = 0.0
+	if _beleg:
+		Beleg.step(get_tree())
+
+
+## Telt deze soldaat mee in het beleg van de vijandbasis (ver van jou, op zijn plek voor het HK)?
+func beleg_bezig() -> bool:
+	return _far and _beleg and command == "basis"
 
 
 ## Het vijandelijke hoofdkwartier als doelwit: alleen als hij er dichtbij genoeg voor staat (de rest van de tijd is het geen vijand).

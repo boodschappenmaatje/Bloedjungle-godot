@@ -29,3 +29,6 @@ Reproduce with `tests/surface_temporal_capture.gd`; set BJ_OUT to the destinatio
 - Local import and both headless regressions pass in Godot 4.7.2. GitHub iOS and OTA preview must pass before release.
 
 Native iPhone/iPad visual acceptance and GPU/memory cost of 4x MSAA: **NOT TESTED**. No physical phone is connected. Software-renderer timings are not hardware performance measurements.
+
+Additional GPU pixel regression: `tests/base_wall_lod_render_test.gd` builds only the west span, renders it unshaded white, opens a fresh wall at camera distances 26/28/29/30/56/58/59/60/29/58 m, and checks the centre 20x20 pixels contain wall geometry. This checks actual coverage on both thresholds rather than relying on `visible` (which ignores renderer range culling). Candidate passes all ten positions (136–389 white pixels). `BJ_LEGACY_LOD=1` restores independent windows for the negative control. Optional BJ_LOD_OUT retains frames. The test refuses a headless/dummy-renderer PASS.
+Negative control result: legacy independent windows fail **6/10** starting positions (28,29,58,59,29,58 m produce zero wall pixels); linked candidate passes **10/10**. Both use the same imported mesh, camera trajectory and pixel ROI, isolating range logic from texture changes.

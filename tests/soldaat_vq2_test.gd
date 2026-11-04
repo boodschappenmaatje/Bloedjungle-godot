@@ -82,6 +82,43 @@ func _run() -> void:
 	for look in models:
 		var m: SoldierModel = models[look]
 		_check(m.v2, "%s: VQ2-model niet gebruikt" % look)
+		# Assault HQ2 is intentionally a separate 28-bone Meshy rig, not the
+		# legacy DEF VQ2 model. Validate its actual asset/weapon contract here;
+		# do not require legacy VQ2 mesh names, per-part tinting or _hand.
+		if look == "vijand:assault":
+			_check(m.assault_rig_test and m.meshy_player, "Assault HQ2 gebruikt niet de Meshy-runtimebody")
+			_check(m._model != null, "Assault HQ2-runtimebody ontbreekt")
+			if m._model == null or not m.assault_rig_test:
+				continue
+			var assault_skel := m._mesh_skeleton as Skeleton3D
+			_check(assault_skel != null, "Assault HQ2-skelet ontbreekt")
+			if assault_skel != null:
+				_check(assault_skel.get_bone_count() == 28, "Assault HQ2 heeft niet de verwachte 28 botten")
+				_check(assault_skel.find_bone("mixamorig_RightHand") >= 0 and assault_skel.find_bone("mixamorig_LeftHand") >= 0,
+					"Assault HQ2 heeft geen bruikbare Mixamo-handbotten")
+			var body_lods := 0
+			var weapon_lods := 0
+			for mesh: MeshInstance3D in m._model.find_children("*", "MeshInstance3D", true, false):
+				if str(mesh.name).begins_with("Assault_Body_LOD"):
+					body_lods += 1
+				elif str(mesh.name).begins_with("Assault_Meshy_Weapon_Mesh_LOD"):
+					weapon_lods += 1
+			_check(body_lods == 3 and weapon_lods == 3, "Assault HQ2 mist body- of geweer-LOD (body %d, geweer %d)" % [body_lods, weapon_lods])
+			_check(m.anim != null, "Assault HQ2 AnimationPlayer ontbreekt")
+			if m.anim != null:
+				for clip in ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten", "geraakt", "dood1", "dood2"]:
+					_check(m.anim.has_animation(clip), "Assault HQ2 mist clip %s" % clip)
+			var adapter := m._mesh_weapon_adapter as Node3D
+			_check(adapter != null, "Assault HQ2-wapenadapter ontbreekt")
+			if adapter != null:
+				var gun := adapter.get("weapon") as Node3D
+				var muzzle := adapter.get("muzzle") as Node3D
+				_check(gun != null and gun.name == "Assault_Meshy_Weapon" and gun.get_parent() == adapter,
+					"Assault HQ2 heeft geen los origineel Meshy-geweer")
+				_check(muzzle != null, "Assault HQ2 loopmond-anker ontbreekt")
+			_check(m._mesh_action_player != null and m._mesh_action_player.has_animation("herladen"),
+				"Assault HQ2 mist herladen in zijn aparte wapenanimatiespeler")
+			continue
 		var want: Array = SoldierModel.LOOKS[look].duplicate()
 		want.sort()
 		var got := _visible_parts(m)
@@ -108,8 +145,10 @@ func _run() -> void:
 		_check(tinted >= 1 or look == "speler:jungle", "%s: geen getint kledingmateriaal" % look)
 		if look != "vijand:knife":
 			_check(m._gun != null, "%s: geen wapen in de hand" % look)
-			var hand := m._hand.global_position
-			_check(m.muzzle_position().distance_to(hand) < 1.6, "%s: loopmonding ver van de hand" % look)
+			_check(m._hand != null, "%s: wapenhandanker ontbreekt" % look)
+			if m._hand != null:
+				var hand := m._hand.global_position
+				_check(m.muzzle_position().distance_to(hand) < 1.6, "%s: loopmonding ver van de hand" % look)
 
 	# echte beweging: lopen verandert de dijbeenpose, stil blijft rustig
 	var walker: SoldierModel = models["eigen"]

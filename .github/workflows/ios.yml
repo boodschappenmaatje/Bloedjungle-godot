@@ -105,6 +105,11 @@ jobs:
           "$GODOT_BIN" --headless --path . -s tests/ota_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/ota_test.log"
           "$GODOT_BIN" --headless --audio-driver Dummy --path . -s tools/enemy_assault/validate_rig.gd 2>&1 | tee "$RUNNER_TEMP/assault_rig_test.log"
           "$GODOT_BIN" --headless --audio-driver Dummy --path . -s tools/enemy_assault/test_animation_clips.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/assault_animation_test.log"
+          "$GODOT_BIN" --headless --audio-driver Dummy --path . res://tests/enemy_meshy_only_test.tscn --fixed-fps 60 --quit-after 1800 2>&1 | tee "$RUNNER_TEMP/enemy_meshy_only_test.log"
+          if ! grep -Fq 'ENEMY MESHY MODE TEST PASS' "$RUNNER_TEMP/enemy_meshy_only_test.log"; then
+            echo "::error::Enemy Meshy-only runtime/settings regression did not reach PASS" >&2
+            exit 1
+          fi
           "$GODOT_BIN" --headless --audio-driver Dummy --path . -s tests/assault_type_test.gd 2>&1 | tee "$RUNNER_TEMP/assault_type_test.log"
           "$GODOT_BIN" --headless --audio-driver Dummy --path . res://tests/assault_weapon_test.tscn --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/assault_weapon_test.log"
           "$GODOT_BIN" --headless --audio-driver Dummy --path . res://tests/meshy_player_integration_test.tscn --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/meshy_player_integration_test.log"
@@ -134,6 +139,7 @@ jobs:
             ${{ runner.temp }}/assault_rig_test.log
             ${{ runner.temp }}/assault_animation_test.log
             ${{ runner.temp }}/assault_type_test.log
+            ${{ runner.temp }}/enemy_meshy_only_test.log
             ${{ runner.temp }}/assault_weapon_test.log
             ${{ runner.temp }}/meshy_player_integration_test.log
             ${{ runner.temp }}/jungle_commando_glb.json

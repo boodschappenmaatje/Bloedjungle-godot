@@ -11,7 +11,7 @@ const BASE_WALL_ASSET := "res://assets/base_wall_hq2.glb"
 const WALL_MODULE_LENGTH := 3.5
 const WALL_LOD_NAMES := ["Wall_LOD0", "Wall_LOD1", "Wall_LOD2"]
 const WALL_LOD_BEGIN := [0.0, 28.0, 58.0]
-const WALL_LOD_END := [28.0, 58.0, 0.0]
+const WALL_LOD_END := [0.0, 0.0, 0.0]
 const WALL_LOD_HYSTERESIS := 1.5  # meters: voorkomt LOD-pingpong bij bewegende iOS-camera
 
 
@@ -89,6 +89,15 @@ static func _wall(root: Node3D) -> void:
 		var span_center := (a + b) * 0.5
 		var yaw: float = span.yaw
 		var instance_transforms := _wall_module_transforms(a, b, yaw)
+		# Visibility ranges use the AABB centre, not the node origin. All LODs must
+		# sample the same distance, with bounds enclosing every authored detail level.
+		var shared_bounds := AABB()
+		var first_bound := true
+		for wall_mesh: Mesh in lod_meshes.values():
+			for transform: Transform3D in instance_transforms:
+				var bounds := transform * wall_mesh.get_aabb()
+				shared_bounds = bounds if first_bound else shared_bounds.merge(bounds)
+				first_bound = false
 		var count := instance_transforms.size()
 		var is_x: bool = span.along_x
 		var shape := BoxShape3D.new()
@@ -98,10 +107,12 @@ static func _wall(root: Node3D) -> void:
 		collider.shape = shape
 		collider.position = (a + b) * 0.5 + Vector3.UP * (Data.BASE_WALL_H * 0.5)
 		collision.add_child(collider)
+		var span_lods: Array[MultiMeshInstance3D] = []
 		for lod_index in WALL_LOD_NAMES.size():
 			var multi := MultiMesh.new()
 			multi.transform_format = MultiMesh.TRANSFORM_3D
 			multi.mesh = lod_meshes[WALL_LOD_NAMES[lod_index]]
+			multi.custom_aabb = shared_bounds
 			multi.instance_count = count
 			for i in count:
 				multi.set_instance_transform(i, instance_transforms[i])
@@ -117,11 +128,17 @@ static func _wall(root: Node3D) -> void:
 			visual.visibility_range_begin = WALL_LOD_BEGIN[lod_index]
 			visual.visibility_range_end = WALL_LOD_END[lod_index]
 			visual.visibility_range_begin_margin = WALL_LOD_HYSTERESIS if WALL_LOD_BEGIN[lod_index] > 0.0 else 0.0
-			visual.visibility_range_end_margin = WALL_LOD_HYSTERESIS if WALL_LOD_END[lod_index] > 0.0 else 0.0
+			# One shared hysteresis decision per transition: the finer mesh renders
+			# precisely when its coarser visibility parent is hidden by its begin range.
+			# Independent begin/end margins can leave both meshes hidden on first view.
 			visual.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
 			# Eén vaste goedkope schaduwvorm voorkomt dat bij LOD-wissels schaduwen flikkeren.
 			visual.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 			root.add_child(visual)
+			span_lods.append(visual)
+		# Resolve paths after all three siblings exist, including during editor builds.
+		for lod_index in span_lods.size() - 1:
+			span_lods[lod_index].visibility_parent = span_lods[lod_index].get_path_to(span_lods[lod_index + 1])
 	_wall_shadow_proxies(root, spans)
 	_wall_berm(root, spans)
 

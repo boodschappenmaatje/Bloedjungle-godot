@@ -238,6 +238,9 @@ func _apply_quality(q: String) -> void:
 	_env.glow_enabled = c.glow
 	_env.ssao_enabled = c.ssao
 	var vp := get_viewport()
+	# FXAA alone misses thin Meshy edges at the reduced mobile render resolution.
+	# MSAA covers geometry samples; the terrain shader separately filters texture detail.
+	vp.msaa_3d = Viewport.MSAA_DISABLED if q == "low" else Viewport.MSAA_4X
 	vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR  # FSR kan alleen in de zwaarste renderer
 	vp.scaling_3d_scale = c.scale
 	var cam := vp.get_camera_3d()

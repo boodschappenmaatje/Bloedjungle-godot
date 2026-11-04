@@ -120,13 +120,29 @@ func _run() -> void:
 	var lod_counts := [0, 0, 0]
 	var visual_nodes := 0
 	var checked_visual_spans: Dictionary = {}
+	var lod_bounds: Dictionary = {}
 	for child in stage.get_children():
 		if child is MultiMeshInstance3D and child.name.begins_with("Wall_"):
 			visual_nodes += 1
 			var lod := 0 if child.name.ends_with("Wall_LOD0") else (1 if child.name.ends_with("Wall_LOD1") else 2)
 			lod_counts[lod] += child.multimesh.instance_count
-			_check(is_equal_approx(child.visibility_range_begin, [0.0, 28.0, 58.0][lod]) and is_equal_approx(child.visibility_range_end, [28.0, 58.0, 0.0][lod]), "" + child.name + " has a deterministic distance band")
-			_check(is_equal_approx(child.visibility_range_begin_margin, 1.5 if lod > 0 else 0.0) and is_equal_approx(child.visibility_range_end_margin, 1.5 if lod < 2 else 0.0), "wall LOD transitions have mobile-safe hysteresis")
+			var bounds: AABB = child.multimesh.custom_aabb
+			var bounds_span := str(child.get_meta("wall_span", ""))
+			_check(bounds.has_volume(), "wall LOD supplies explicit nonempty visibility bounds")
+			if lod_bounds.has(bounds_span):
+				_check(bounds == lod_bounds[bounds_span], "all LODs of %s have the same range centre and culling bounds" % bounds_span)
+			else:
+				lod_bounds[bounds_span] = bounds
+			# The headless dummy RenderingServer does not retain MultiMesh transforms.
+			var expected_transforms: Array = props.call("_wall_module_transforms", child.get_meta("wall_start"), child.get_meta("wall_end"), child.get_meta("wall_yaw"))
+			for transform: Transform3D in expected_transforms:
+				var actual: AABB = transform * child.multimesh.mesh.get_aabb()
+				_check(bounds.grow(0.001).encloses(actual), "shared bounds contain every module without culling its edges")
+			_check(is_equal_approx(child.visibility_range_begin, [0.0, 28.0, 58.0][lod]) and is_zero_approx(child.visibility_range_end), "" + child.name + " uses a begin range with a visibility parent")
+			_check(is_equal_approx(child.visibility_range_begin_margin, 1.5 if lod > 0 else 0.0) and is_zero_approx(child.visibility_range_end_margin), "wall LOD transitions have one shared hysteresis decision")
+			if lod < 2:
+				var parent_lod := child.get_node_or_null(child.visibility_parent) as MultiMeshInstance3D
+				_check(parent_lod != null and parent_lod.get_meta("wall_span") == child.get_meta("wall_span") and parent_lod.name.ends_with("Wall_LOD%d" % (lod + 1)), "LOD fallback references the next coarser mesh of the same span")
 			_check(child.visibility_range_fade_mode == GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED and child.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "wall LODs do not create flickering independent shadow maps")
 			if lod == 0:
 				var span: String = str(child.get_meta("wall_span", ""))

@@ -134,7 +134,13 @@ static func build_wave(n: int) -> Array:
 
 ## Samenstelling van aanvalsgroep n (stap 5a-2): zelfde mix als een golf, maar kleiner omdat er elke 90 s een komt.
 static func build_group(n: int) -> Array:
-	return _mix(n, 4 + int(n * 2.4))
+	var kinds := _mix(n, 4 + int(n * 2.4))
+	if GameSettings.get_value("enemy_models") == "meshy":
+		# Keep the original group size/timing; use only the Meshy Assault
+		# archetype, since other enemy types have no validated Meshy rig.
+		for i in kinds.size():
+			kinds[i] = "assault"
+	return kinds
 
 
 static func _mix(n: int, total: int) -> Array:

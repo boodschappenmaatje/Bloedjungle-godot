@@ -1,9 +1,9 @@
-extends SceneTree
+extends Node
 ## Regression contract for the existing bunker gameplay body and the HQ mesh asset.
-## Run: godot --headless --path . -s tests/bunker_hq_replacement_test.gd --fixed-fps 60
+## Run: godot --headless --path . res://tests/bunker_hq_replacement_test.tscn --fixed-fps 60
 var failures := 0
 
-func _initialize() -> void:
+func _ready() -> void:
 	call_deferred("_run")
 
 func _check(ok: bool, description: String) -> void:
@@ -15,17 +15,17 @@ func _run() -> void:
 	var scene := load("res://scenes/main.tscn") as PackedScene
 	_check(scene != null, "main scene ontbreekt")
 	if scene == null:
-		quit(1)
+		get_tree().quit(1)
 		return
 	var main := scene.instantiate()
-	root.add_child(main)
-	await process_frame
+	get_tree().root.add_child(main)
+	await get_tree().process_frame
 	var sticks := main.get_node_or_null("Hud/Sticks")
 	if sticks != null:
 		sticks.set_process(false)
 	main.call("begin")
 	for _i in range(8):
-		await process_frame
+		await get_tree().process_frame
 
 	var bunker := main.find_child("Bunker", true, false) as StaticBody3D
 	_check(bunker != null, "gameplay-body Bunker ontbreekt")
@@ -48,7 +48,7 @@ func _run() -> void:
 		# Damage contract: incoming enemy damage is reduced to 80%; friendly shots do nothing.
 		# A SceneTree script resolves autoloads via the scene root, not the
 		# GDScript global identifier used by scripts attached to game nodes.
-		var game := root.get_node_or_null("Game")
+		var game := get_tree().root.get_node_or_null("Game")
 		_check(game != null, "Game-autoload ontbreekt")
 		if game != null:
 			var saved_state: String = str(game.get("state"))
@@ -72,7 +72,7 @@ func _run() -> void:
 		_check(imported != null, "gebakken bunker-GLB importeert niet als scene")
 		if imported != null:
 			var visual := imported.instantiate()
-			root.add_child(visual)
+			get_tree().root.add_child(visual)
 			var mesh_count := 0
 			var surface_count := 0
 			var textured_surfaces := 0
@@ -93,4 +93,4 @@ func _run() -> void:
 		print("BUNKER HQ REPLACEMENT TEST PASS")
 	else:
 		print("BUNKER HQ REPLACEMENT TEST FAIL: ", failures)
-	quit(0 if failures == 0 else 1)
+	get_tree().quit(0 if failures == 0 else 1)

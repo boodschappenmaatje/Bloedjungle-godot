@@ -65,6 +65,8 @@ func _run() -> void:
 	var export_text := FileAccess.get_file_as_string("res://export_presets.cfg")
 	_check(export_text.contains("source_assets/base_wall_hq2/*"), "verified Meshy source stays out of runtime exports and OTA PCKs")
 	_check(export_text.contains("assets/base_wall_hq2_*"), "Godot-extracted GLB sidecars stay out while the embedded-texture wall GLB ships")
+	var importer_text := FileAccess.get_file_as_string("res://assets/base_wall_hq2.glb.import")
+	_check(importer_text.contains("gltf/embedded_image_handling=2"), "wall PBR textures stay Basis-compressed and embedded without loose texture files")
 	var wall_mask: int = int(kit.get("LAYER_WALL")) | int(kit.get("LAYER_FORTIFICATION"))
 	var packed := load(WALL_SCENE) as PackedScene
 	_check(packed != null, "optimized GLB imports as a PackedScene")

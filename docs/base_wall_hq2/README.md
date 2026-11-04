@@ -6,7 +6,7 @@ The source is the original Meshy GLB from the Google Drive transfer in `docs/bas
 
 Inspection measured the source mesh at approximately 1.904 × 0.318 × 1.018 m, with 226,646 triangles, one material, and embedded PBR images. The actual supplied mesh is a weathered concrete-and-post barrier with US Army markings; it does not have the all-wood appearance described in the transfer prompt. The optimized wall keeps the source's proportions and markings, trims its central mesh to a 1.8 m high core, and adds three rows of shared jute sandbags to meet the 3 m target without stretching the source vertically to three times its measured height. The thickness correction is 1.26×; length and core-height corrections are close (1.84× and 1.77×).
 
-The runtime resource is `assets/base_wall_hq2.glb`: exact bounds 3.5 × 0.4 × 3.0 m, 10,635,096 bytes, SHA-256 `18eca7972f512f885482cb22b7aa50e142a55ce0300a677f475e37b7e5540a26`, two shared PBR materials, 2K-or-smaller maps, and three LODs:
+The runtime resource is `assets/base_wall_hq2.glb`: exact bounds 3.5 × 0.4 × 3.0 m, 10,635,096 bytes, SHA-256 `18eca7972f512f885482cb22b7aa50e142a55ce0300a677f475e37b7e5540a26`, two shared PBR materials, 2K-or-smaller maps, and three LODs. Godot imports the embedded images as Basis Universal textures into its scene resource, keeping the runtime asset self-contained without loose texture files:
 
 | LOD | Triangles per segment | Distance band |
 | --- | ---: | ---: |

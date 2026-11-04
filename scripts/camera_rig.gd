@@ -304,7 +304,11 @@ func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vect
 				_wall_occluded_spans.append(("north" if at.z < 0.0 else "south") + ("_east" if at.x >= 0.0 else "_west"))
 			else:
 				_wall_occluded_spans.append("east" if at.x >= 0.0 else "west")
-			break
+			# The perimeter wall is intentionally hidden on Mobile when it blocks the view.
+			# Do not move the camera onto the wall collision surface: that causes sudden
+			# zoom/clipping and can expose dark wall bands while the player moves.
+			# Continue the ray beyond the wall so real obstacles still stop the camera.
+			skip.append(hit.rid)
 		elif c is HouseBody and not (c.seg.heel.is_visible_in_tree() or c.seg.kapot.is_visible_in_tree()):
 			skip.append(hit.rid)
 		elif c is Node and c.has_meta("nocam"):

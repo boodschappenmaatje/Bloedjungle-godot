@@ -222,7 +222,10 @@ func _run() -> void:
 	var camera := Camera3D.new()
 	camera.set_script(camera_script)
 	stage.add_child(camera)
-	camera.call("_avoid_obstacles", Vector3(10, 1.2, -26), Vector3(10, 8, -40), actor)
+	var desired_camera := Vector3(10, 8, -40)
+	var camera_after_wall: Vector3 = camera.call("_avoid_obstacles", Vector3(10, 1.2, -26), desired_camera, actor)
+	_check(camera_after_wall.distance_to(desired_camera) < 0.001, "camera stays at intended distance beyond an occluding base wall")
+	_check(camera.get("_wall_occluded_spans").has("north_east"), "camera identifies the correct wall span without clipping against it")
 	camera.call("_apply_wall_occlusion", 1.0)
 	var camera_side := stage.get_node("Wall_north_east_Wall_LOD0") as GeometryInstance3D
 	var current_renderer := RenderingServer.get_current_rendering_method()

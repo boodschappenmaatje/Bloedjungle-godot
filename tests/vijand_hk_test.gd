@@ -185,7 +185,7 @@ func _volgende(g) -> void:
 
 
 func _klaar_en_winnen(g) -> void:
-	# alle vijanden weg en de wachtrij leeg: terug naar prep (bouwen en wapenkamer), aftellen loopt door
+	# alle vijanden weg en de wachtrij leeg: terug naar prep (wapenkamer en stadseditor), aftellen loopt door
 	main.queue.clear()
 	for e in g.enemies.duplicate():
 		if is_instance_valid(e):

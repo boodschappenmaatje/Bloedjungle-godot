@@ -251,8 +251,8 @@ func _make_info() -> void:
 func _enter() -> void:
 	if Game.build_mode or Game.player == null:
 		return
-	# tijdens een golf mag het alleen als je gesneuveld bent en wacht om terug te komen
-	if Game.state != "prep" and not (Game.state == "play" and Game.player.dead):
+	# bouwen kan altijd, ook terwijl een aanvalsgroep onderweg is (Dennis, 4 nov: "je moet altijd kunnen bouwen")
+	if Game.state != "prep" and Game.state != "play":
 		return
 	if Game.player.elev > 0.5:
 		Game.banner.emit("KOM EERST VAN DE TOREN", "", 1.4)
@@ -325,7 +325,7 @@ func _process(delta: float) -> void:
 	else:
 		# boven de linkerjoystick (zone 152 hoog, onderin): daar staat verder niets, en hij blijft vrij van de wapenbalk
 		_btn.position = Vector2(safe.x + 8.0, size.y - safe.w - 152.0 - 8.0 - _btn.size.y)
-	if Game.build_mode and Game.state != "prep":
+	if Game.build_mode and Game.state != "prep" and Game.state != "play":
 		_exit()
 	if _msg_t > 0.0:
 		_msg_t -= delta

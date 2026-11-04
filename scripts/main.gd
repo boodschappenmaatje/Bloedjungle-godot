@@ -1,7 +1,7 @@
 extends Node3D
 ## Hoofdscène: laadt de wereld en laat de vijand aanvalsgroepen sturen (stap 5a-2: geen golven meer). Na GROEP_RUST seconden rust komt de
 ## eerste groep uit de poort van de vijandbasis, daarna elke GROEP_TUSSEN seconden een nieuwe, ook als de vorige nog loopt. Is er geen groep
-## meer onderweg, dan is het weer "prep" (bouwen, wapenkamer); het aftellen loopt gewoon door.
+## meer onderweg, dan is het weer "prep" (wapenkamer en stadseditor); het aftellen loopt gewoon door. Bouwen kan altijd, ook in "play".
 ## Winnen: het vijandelijke hoofdkwartier slopen (VijandHk); verliezen: jouw hoofdkwartier (Game.damage_base).
 
 const ENEMY := preload("res://scenes/enemy.tscn")
@@ -243,7 +243,7 @@ func _spawn(item: Variant) -> void:
 	add_child(e)
 
 
-## Alle vijanden van de groepen zijn uitgeschakeld: weer "prep" (bouwen en wapenkamer) tot de volgende groep uitrukt.
+## Alle vijanden van de groepen zijn uitgeschakeld: weer "prep" (wapenkamer en stadseditor) tot de volgende groep uitrukt. Bouwen kan ook tijdens een groep.
 func _wave_cleared() -> void:
 	Game.state = "prep"
 	clear_t = -1.0

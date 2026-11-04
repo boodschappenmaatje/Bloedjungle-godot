@@ -57,11 +57,15 @@ func _process(_d: float) -> bool:
 		p.shield_t = 0.0
 		p.hit(30.0, Vector3.FORWARD, false)
 		_check("daarna weer kwetsbaar", p.hp < hp0)
-		# gevaarlijk pad: in de bouwmodus nooit openen als je leeft tijdens een golf
+		# bouwen kan altijd, ook tijdens een aanvalsgroep (Dennis, 4 nov), maar niet als het spel voorbij is
 		var bm2: Node = _bm()
 		if bm2:
 			bm2._enter()
-			_check("bouwscherm dicht tijdens golf als je leeft", not g.build_mode)
+			_check("bouwscherm mag open tijdens een groep als je leeft", g.build_mode)
+			g.state = "over"
+			bm2._process(0.1)
+			_check("bouwscherm dicht als het spel voorbij is", not g.build_mode)
+			g.state = "play"
 		print("klaar, fouten: ", fails)
 		quit(1 if fails > 0 else 0)
 	return false

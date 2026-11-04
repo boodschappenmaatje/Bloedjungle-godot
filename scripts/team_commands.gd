@@ -165,6 +165,8 @@ func _finish_pointer(id: int, pos: Vector2) -> void:
 		"issue":
 			_issue(result.order, Vector3.ZERO, null)
 		"target":
+			if result.order == "attack":
+				Game.banner.emit("AANVALLEN", "Tik op een vijand, op de grond of op het rode vlak van de vijandbasis op de radar", 3.2)
 			queue_redraw()
 		"cancel":
 			pass
@@ -230,16 +232,38 @@ func _issue(command: String, target: Vector3, enemy: Node3D) -> void:
 	Game.squad_order = command
 	Game.squad_target = target
 	Game.squad_target_enemy = enemy if is_instance_valid(enemy) else null
-	Game.troop_mode = "hold" if command in ["defend", "move", "attack", "hold"] else "follow"
+	Game.troop_mode = "hold" if command in ["defend", "move", "attack", "hold", "basis"] else "follow"
+	var sent := 0
 	for a in Game.allies:
 		if is_instance_valid(a) and Controller.can_command(a.helper, a.guard, a.truck != null):
 			a.set_command(command, target, enemy)
+			sent += 1
+	if command == "basis":
+		if sent > 0:
+			Game.banner.emit("LEGER NAAR DE VIJANDBASIS", "%d soldaten marcheren naar zijn poort. VOLGEN roept ze terug." % sent, 3.0)
+		else:
+			Game.banner.emit("GEEN SOLDATEN", "Bouw een kazerne en train soldaten om de vijandbasis aan te vallen.", 3.0)
 	Game.changed.emit()
+
+
+## Aanvallen op de vijandbasis (stap 5a-3a): de soldaten marcheren via de stad naar zijn poort en beschieten het hoofdkwartier.
+func _attack_base() -> void:
+	_target_release_pointer = controller.target_pointer
+	if controller.complete_target(controller.target_pointer, "ground") == "":
+		return
+	_issue("basis", VijandBasis.gate_outside(), null)
+	queue_redraw()
 
 
 func _try_select_world(screen: Vector2) -> void:
 	if controller.pending_order == "":
 		return
+	# een tik op het rode vlak van de vijandbasis op de radar: het leger gaat naar zijn basis (de radar telt voor de HUD-controle hieronder niet)
+	if controller.pending_order == "attack":
+		var hud := get_tree().get_first_node_in_group("hud_extra")
+		if hud != null and hud.base_hit(screen):
+			_attack_base()
+			return
 	var sticks := get_tree().get_first_node_in_group("touch_sticks")
 	if sticks != null and not Controller.can_accept_target(sticks.blocks_team_target_hud(screen), sticks.blocks_team_target_joystick(screen)):
 		return
@@ -255,12 +279,20 @@ func _try_select_world(screen: Vector2) -> void:
 		return
 	var collider: Object = hit.collider
 	var enemy: Node3D
+	var hit_at: Vector3 = hit.position
+	var on_base: bool = controller.pending_order == "attack" and VijandBasis.contains(hit_at, 6.0)   # ook de grond in en rond de vijandbasis (tactische camera)
 	var check := collider as Node
 	while check != null:
 		if check is Node3D and check.is_in_group("enemies"):
 			enemy = check
 			break
+		if check.is_in_group("vijand_basis"):
+			on_base = controller.pending_order == "attack"   # muur, toren, gebouw of het HK zelf
+			break
 		check = check.get_parent()
+	if on_base and not is_instance_valid(enemy):
+		_attack_base()
+		return
 	_target_release_pointer = controller.target_pointer
 	var order: String = controller.complete_target(controller.target_pointer, "enemy" if is_instance_valid(enemy) else "ground")
 	if order == "":

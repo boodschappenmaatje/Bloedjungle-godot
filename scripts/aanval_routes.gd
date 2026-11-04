@@ -75,6 +75,41 @@ static func path_from_base(id: String) -> Array:
 	return out
 
 
+## De mars van jouw leger naar de vijandbasis (stap 5a-3a): precies de woonwijk-route van de aanvalsgroepen, maar dan andersom
+## (brug, Hoofdstraat, westelijke straat en dan de uitgang aan de westkant), daarna rechtdoor naar de poort en erdoorheen.
+## Die route lopen vijanden al elke groep, dus hij is vrij van muren en huizen. De rivier steekt Route.waypoint zelf over.
+static func march_path() -> Array:
+	var out: Array = (LIST["wijk"].pts as Array).duplicate()
+	out.reverse()
+	out.append(VijandBasis.gate_outside())
+	out.append(VijandBasis.gate_inside())
+	return out
+
+
+## Waar de mars voor een soldaat op dit punt begint: het eerstvolgende punt van het stuk route waar hij het dichtst bij staat.
+## Wie al in de stad staat, hoeft dus niet eerst terug naar de brug, en snijdt geen hoeken af (een steegje blijft een steegje).
+## Wie al in de vijandbasis staat (path.size()) heeft geen punten meer over en gaat meteen naar zijn plek voor het HK.
+static func march_start(from: Vector3) -> int:
+	var path := march_path()
+	if VijandBasis.contains(from):
+		return path.size()   # al binnen de muur: rechtstreeks naar zijn plek, niet eerst terug naar de poort
+	var best := 0
+	var best_d := INF
+	for i in path.size() - 1:
+		var a: Vector3 = path[i]
+		var b: Vector3 = path[i + 1]
+		var ab := Vector2(b.x - a.x, b.z - a.z)
+		var t := 0.0
+		if ab.length_squared() > 0.001:
+			t = clampf(Vector2(from.x - a.x, from.z - a.z).dot(ab) / ab.length_squared(), 0.0, 1.0)
+		var closest := Vector2(a.x, a.z) + ab * t
+		var d := Vector2(from.x - closest.x, from.z - closest.y).length()
+		if d < best_d - 0.001:
+			best_d = d
+			best = i if t < 0.001 else i + 1
+	return best
+
+
 ## De punten voor een vijand op deze route, met een eigen zijwaartse verschuiving.
 static func path_for(id: String) -> Array:
 	var r: Dictionary = LIST[id]

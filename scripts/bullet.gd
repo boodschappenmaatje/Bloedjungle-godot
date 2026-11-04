@@ -281,9 +281,11 @@ func _physics_process(delta: float) -> void:
 			queue_free()
 			return
 	var q := PhysicsRayQueryParameters3D.create(global_position, global_position + step, mask)
-	q.hit_from_inside = true
+	# Preserve legacy behavior for low cover and the bunker. A projectile spawned
+	# inside either can still leave it; the dedicated fortification ray below
+	# catches muzzle clipping into the new high perimeter wall.
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
-	if ground_direct_fire and maxf(global_position.y, global_position.y + step.y) >= Data.BASE_WALL_H and Vector2(step.x, step.z).length_squared() > 0.0001:
+	if ground_direct_fire and Vector2(step.x, step.z).length_squared() > 0.0001:
 		var flat_from := Vector3(global_position.x, 1.5, global_position.z)
 		var flat_to := Vector3(global_position.x + step.x, 1.5, global_position.z + step.z)
 		var wall_query := PhysicsRayQueryParameters3D.create(flat_from, flat_to, MASK_FORTIFICATION)

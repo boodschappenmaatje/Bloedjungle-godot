@@ -26,6 +26,10 @@ void vertex() {
 
 void fragment() {
 	vec2 p = wpos.xz;
+	// Pixelafdruk in wereldmeters: fijne bodemruis mag niet wisselen bij camerabeweging.
+	// Afhankelijk van de native iOS-renderresolutie loopt microdetail automatisch terug.
+	float pixel_span = max(length(dFdx(p)), length(dFdy(p)));
+	float micro_detail = 1.0 - smoothstep(0.012, 0.075, pixel_span);
 	// de rivier is uit de grond gesneden (scripts/river.gd legt de bedding eronder; zelfde formule als Data.river_z)
 	float river_off = abs(p.y - (-92.0 + 5.0 * sin(p.x * 0.06) + 2.0 * sin(p.x * 0.15 + 1.0)));
 	if (river_off < 2.6) {
@@ -49,8 +53,8 @@ void fragment() {
 	}
 	float n1 = texture(noise_a, p * 0.025).r;
 	float n2 = texture(noise_b, p * 0.09).r;
-	float n3 = texture(noise_b, p * 0.55).r;
-	float n4 = texture(noise_a, p * 1.7).r;
+	float n3 = mix(0.5, texture(noise_b, p * 0.55).r, micro_detail);
+	float n4 = mix(0.5, texture(noise_a, p * 1.7).r, micro_detail);
 
 	// foto-texturen, op twee maten door elkaar zodat je de herhaling niet ziet
 	vec3 g1 = texture(grass_tex, p * 0.30).rgb;
@@ -62,7 +66,7 @@ void fragment() {
 
 	// Houd de grondtexturen vast aan de wereld. View-dependent parallax op dit grote vlak
 	// verschoof de hoogfrequente albedo en normal map bij iedere camerabeweging en gaf shimmer.
-	float hgt = texture(dirt_height, p * 0.11).r;
+	float hgt = mix(0.5, texture(dirt_height, p * 0.11).r, micro_detail);
 	vec2 pp = p;
 	vec3 d1 = texture(dirt_tex, pp * 0.11).rgb;
 	vec3 d2 = texture(mud_tex, pp * 0.09 + 0.5).rgb;
@@ -99,7 +103,9 @@ void fragment() {
 	vec2 cell = floor(p * 3.2);
 	float fr = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
 	vec2 fc = fract(p * 3.2) - vec2(0.5 + 0.3 * (fr - 0.5), 0.5 + 0.3 * (fract(fr * 7.0) - 0.5));
+	// Subpixelbloemen kunnen anders vonken bij langzaam scrollen op een 72%-3D-render.
 	float bloom = step(0.965, fr) * (1.0 - smoothstep(0.03, 0.07, length(fc))) * (1.0 - dm) * step(0.45, lush + dry);
+	bloom *= 1.0 - smoothstep(0.012, 0.035, pixel_span);
 	vec3 petal = mix(vec3(0.85, 0.8, 0.25), mix(vec3(0.85, 0.85, 0.8), vec3(0.8, 0.25, 0.2), step(0.5, fract(fr * 13.0))), step(0.33, fract(fr * 5.0)));
 	grass = mix(grass, petal, bloom * 0.9);
 	// mos op de overgang van gras naar aarde, natte donkere modder in de lage stukken
@@ -112,7 +118,8 @@ void fragment() {
 	NORMAL_MAP = texture(dirt_normal, dirt_uv).rgb;
 	// Vervaag bumpdetail zodra een pixel meerdere detailtexels beslaat; dit voorkomt
 	// temporele aliasing op de schuine top-down camera zonder de dichtbijtextuur vlak te maken.
-	float normal_footprint = max(length(dFdx(dirt_uv)), length(dFdy(dirt_uv)));
-	float normal_detail = 1.0 - smoothstep(0.002, 0.012, normal_footprint);
-	NORMAL_MAP_DEPTH = dm * mix(0.3, 0.8, normal_detail);
+	float normal_footprint = pixel_span * 0.11;
+	float normal_detail = 1.0 - smoothstep(0.001, 0.007, normal_footprint);
+	// Geen resterende bump op afstand: dat geeft mobiele shading-shimmer.
+	NORMAL_MAP_DEPTH = dm * 0.55 * normal_detail;
 }

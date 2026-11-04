@@ -167,11 +167,16 @@ func _run() -> void:
 	_check(berm != null and berm.multimesh.instance_count == 6, "one shared six-instance earth berm follows the wall spans and leaves both portals open")
 	var berm_corners := stage.get_node_or_null("BaseWallEarthBermCorners") as MultiMeshInstance3D
 	_check(berm_corners != null and berm_corners.multimesh.instance_count == 4, "four shared berm corner caps close the outer foot at each 90 degree join")
-	var stable_shadows := stage.find_children("BaseWallShadow_*", "MeshInstance3D", true, false)
-	_check(stable_shadows.size() == 6, "six constant SHADOWS_ONLY wall proxies replace LOD-specific shadows")
+	var stable_shadows := stage.find_children("BaseWallShadow_*", "MultiMeshInstance3D", true, false)
+	_check(stable_shadows.size() == 6, "six SHADOWS_ONLY per-module wall shadow batches")
+	var shadow_module_count := 0
 	for shadow_node in stable_shadows:
-		_check((shadow_node as MeshInstance3D).cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY, "shadow proxy cannot render as a second visible wall")
-	_check(stage.find_children("*", "MeshInstance3D", true, false).size() == stable_shadows.size(), "no legacy concrete wall meshes remain")
+		var shadow := shadow_node as MultiMeshInstance3D
+		shadow_module_count += shadow.multimesh.instance_count
+		_check(shadow.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY, "shadow batch cannot render as visible wall geometry")
+		_check(shadow.has_meta("wall_original_transforms") and shadow.multimesh.custom_aabb.has_volume(), "shadow modules preserve immutable transforms and valid bounds")
+	_check(shadow_module_count == 60, "six shadow batches follow all 60 wall segments without new draw calls")
+	_check(stage.find_children("*", "MeshInstance3D", true, false).is_empty(), "no unbatched legacy wall meshes remain")
 
 	await physics_frame
 	var rays := [
@@ -230,7 +235,33 @@ func _run() -> void:
 	var camera_side := stage.get_node("Wall_north_east_Wall_LOD0") as GeometryInstance3D
 	var current_renderer := RenderingServer.get_current_rendering_method()
 	if current_renderer == "mobile" or current_renderer == "gl_compatibility":
-		_check(not camera_side.visible and is_zero_approx(camera_side.transparency), "mobile renderer hides occluded span without unsupported transparency")
+		var cutout: PackedByteArray = camera_side.get_meta("wall_hidden_mask", PackedByteArray())
+		var cut_count := 0
+		for bit in cutout:
+			cut_count += int(bit)
+		_check(camera_side.visible and is_zero_approx(camera_side.transparency), "mobile keeps the surrounding wall rendered without unsupported alpha fade")
+		_check(cut_count >= 1 and cut_count < camera_side.multimesh.instance_count, "mobile cuts out only nearby wall modules instead of a full wall side")
+		var wall_lod1 := stage.get_node("Wall_north_east_Wall_LOD1") as MultiMeshInstance3D
+		var shadow_batch := stage.get_node("BaseWallShadow_north_east") as MultiMeshInstance3D
+		_check(wall_lod1.get_meta("wall_hidden_mask") == cutout, "all wall LODs share the same camera cutout mask")
+		_check(shadow_batch.get_meta("wall_hidden_mask") == cutout, "shadow proxy cutout matches visible wall pixel cutout")
+		# Regression for the user's new video: the wall can fill the lower
+		# viewport even when the single center ray does not strike it.
+		var previous_hits: Dictionary = camera.get("_wall_hit_points")
+		camera.set("_wall_hit_points", {})
+		camera.set("_wall_desired_camera", Vector3(-27, 15, -27))
+		var near_north := stage.get_node("Wall_north_west_Wall_LOD0") as MultiMeshInstance3D
+		var near_west := stage.get_node("Wall_west_Wall_LOD0") as MultiMeshInstance3D
+		var north_mask: PackedByteArray = camera.call("_mobile_wall_mask", near_north, "north_west", 0.016)
+		var west_mask: PackedByteArray = camera.call("_mobile_wall_mask", near_west, "west", 0.016)
+		var north_hidden := 0
+		var west_hidden := 0
+		for bit in north_mask:
+			north_hidden += int(bit)
+		for bit in west_mask:
+			west_hidden += int(bit)
+		_check(north_hidden > 0 and west_hidden > 0, "mobile corner occlusion covers both adjacent walls without a central ray hit")
+		camera.set("_wall_hit_points", previous_hits)
 	else:
 		_check(camera_side.transparency > 0.5, "Forward+ camera obstruction fades only the visible perimeter span")
 	_check(camera.call("_mobile_wall_hidden", "probe", true, 0.016), "mobile wall hides when actually occluded")

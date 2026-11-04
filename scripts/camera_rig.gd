@@ -27,6 +27,11 @@ var _look := Vector3.ZERO  # zacht gevolgd kijkpunt, zodat de camera nooit in é
 var _group_hold := 0.0
 var _group_scan := 0.0
 var _wall_occluded_spans: Array[String] = []
+var _wall_hit_points: Dictionary = {}
+var _wall_desired_camera := Vector3.ZERO
+const BASE_WALL_PLAYER_CUTOUT := 6.5
+const BASE_WALL_CAMERA_CUTOUT := 5.5
+const BASE_WALL_RAY_CUTOUT := 8.0
 var _mobile_wall_hold: Dictionary = {}  # scherm-rust: niet direct weer tonen bij één gemiste raycast
 const GROUP_HOLD_SECONDS := 2.0
 const BASE_WALL_CAMERA_TRANSPARENCY := 0.58
@@ -279,6 +284,8 @@ func _nearby_enemies(p: Node3D) -> Array:
 
 func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vector3:
 	_wall_occluded_spans.clear()
+	_wall_hit_points.clear()
+	_wall_desired_camera = desired
 	# Alleen statische bouwstukken en de bunker blokkeren de camera; het grote grondvlak
 	# ligt onder de zichtlijn en wordt niet iedere frame onnodig meegenomen.
 	var query := PhysicsRayQueryParameters3D.create(origin, desired, Kit.LAYER_WALL | Kit.LAYER_BUNKER)
@@ -304,6 +311,8 @@ func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vect
 				_wall_occluded_spans.append(("north" if at.z < 0.0 else "south") + ("_east" if at.x >= 0.0 else "_west"))
 			else:
 				_wall_occluded_spans.append("east" if at.x >= 0.0 else "west")
+			for wall_span in _wall_occluded_spans:
+				_wall_hit_points[wall_span] = at
 			# The perimeter wall is intentionally hidden on Mobile when it blocks the view.
 			# Do not move the camera onto the wall collision surface: that causes sudden
 			# zoom/clipping and can expose dark wall bands while the player moves.
@@ -332,21 +341,88 @@ func _mobile_wall_hidden(span: String, blocked: bool, delta: float) -> bool:
 	return hold > 0.0
 
 
+## Hide only the nearby 3.5 m wall modules instead of popping an entire
+## 28-56 m wall side in/out. The raycast detects obstruction through the center,
+## while the proximity checks also catch foreground wall pixels near the camera
+## and the player even when the center ray does not hit. On Mobile we relocate
+## selected render-only instances far below the scene; no collision moves.
+func _mobile_wall_mask(visual: MultiMeshInstance3D, span: String, delta: float) -> PackedByteArray:
+	var originals: Array = visual.get_meta("wall_original_transforms", [])
+	var mask := PackedByteArray()
+	mask.resize(originals.size())
+	if Game.build_mode:
+		return mask
+	var player_pos := Vector2(100000.0, 100000.0)
+	if is_instance_valid(Game.player):
+		player_pos = Vector2(Game.player.global_position.x, Game.player.global_position.z)
+	var camera_pos := Vector2(_wall_desired_camera.x, _wall_desired_camera.z)
+	var ray_hit := Vector2(100000.0, 100000.0)
+	if _wall_hit_points.has(span):
+		var hit: Vector3 = _wall_hit_points[span]
+		ray_hit = Vector2(hit.x, hit.z)
+	for i in originals.size():
+		var xf: Transform3D = originals[i]
+		var center: Vector3 = visual.position + xf.origin
+		var world_2d := Vector2(center.x, center.z)
+		var obstructs := (
+			world_2d.distance_to(player_pos) <= BASE_WALL_PLAYER_CUTOUT
+			or world_2d.distance_to(camera_pos) <= BASE_WALL_CAMERA_CUTOUT
+			or (_wall_hit_points.has(span) and world_2d.distance_to(ray_hit) <= BASE_WALL_RAY_CUTOUT)
+		)
+		# Hold visibility cutouts through tiny positional and raycast fluctuations.
+		mask[i] = 1 if _mobile_wall_hidden("%s:%d" % [span, i], obstructs, delta) else 0
+	return mask
+
+
+## MultiMesh cannot hide an arbitrary middle instance via visible_instance_count.
+## Update the transform only when its state changes. This keeps the original
+## three wall LOD batches and the corresponding per-span shadow batch intact.
+func _apply_wall_module_mask(visual: MultiMeshInstance3D, requested: PackedByteArray) -> void:
+	var originals: Array = visual.get_meta("wall_original_transforms", [])
+	if originals.is_empty():
+		return
+	var previous: PackedByteArray = visual.get_meta("wall_hidden_mask", PackedByteArray())
+	var mask := requested
+	if mask.size() != originals.size():
+		mask = PackedByteArray()
+		mask.resize(originals.size())
+	if previous == mask:
+		return
+	for i in originals.size():
+		if i < previous.size() and previous[i] == mask[i]:
+			continue
+		var xf: Transform3D = originals[i]
+		if mask[i] == 1:
+			xf.origin.y -= 1000.0
+		visual.multimesh.set_instance_transform(i, xf)
+	visual.set_meta("wall_hidden_mask", mask)
+
+
 func _apply_wall_occlusion(delta: float) -> void:
 	var renderer := RenderingServer.get_current_rendering_method()
 	var mobile := renderer == "mobile" or renderer == "gl_compatibility"
 	var blend := 1.0 - exp(-8.0 * delta)
-	var hidden_spans: Dictionary = {}
+	var masks: Dictionary = {}
+	if Game.build_mode:
+		_mobile_wall_hold.clear()
 	for node in get_tree().get_nodes_in_group("base_wall_visual"):
-		var visual := node as GeometryInstance3D
+		var visual := node as MultiMeshInstance3D
 		var span := str(visual.get_meta("wall_span", ""))
-		var blocked := _wall_occluded_spans.has(span)
 		if mobile:
-			if not hidden_spans.has(span):
-				hidden_spans[span] = _mobile_wall_hidden(span, blocked, delta)
-			visual.visible = not bool(hidden_spans[span])
+			if not masks.has(span):
+				masks[span] = _mobile_wall_mask(visual, span, delta)
+			_apply_wall_module_mask(visual, masks[span])
+			visual.visible = true
 			visual.transparency = 0.0
 		else:
+			_apply_wall_module_mask(visual, PackedByteArray())
 			visual.visible = true
-			var wanted := BASE_WALL_CAMERA_TRANSPARENCY if blocked else 0.0
+			var wanted := BASE_WALL_CAMERA_TRANSPARENCY if _wall_occluded_spans.has(span) else 0.0
 			visual.transparency = lerpf(visual.transparency, wanted, blend)
+	# The old full-span SHADOWS_ONLY proxies kept painting a black strip on the
+	# ground after the wall had vanished. Keep each shadow module in exact sync
+	# with the hidden visible modules. The rest still casts stable shadows.
+	for node in get_tree().get_nodes_in_group("base_wall_shadow"):
+		var shadow := node as MultiMeshInstance3D
+		var span := str(shadow.get_meta("wall_span", ""))
+		_apply_wall_module_mask(shadow, masks.get(span, PackedByteArray()))

@@ -245,6 +245,23 @@ func _run() -> void:
 		var shadow_batch := stage.get_node("BaseWallShadow_north_east") as MultiMeshInstance3D
 		_check(wall_lod1.get_meta("wall_hidden_mask") == cutout, "all wall LODs share the same camera cutout mask")
 		_check(shadow_batch.get_meta("wall_hidden_mask") == cutout, "shadow proxy cutout matches visible wall pixel cutout")
+		# Regression for the user's new video: the wall can fill the lower
+		# viewport even when the single center ray does not strike it.
+		var previous_hits: Dictionary = camera.get("_wall_hit_points")
+		camera.set("_wall_hit_points", {})
+		camera.set("_wall_desired_camera", Vector3(-27, 15, -27))
+		var near_north := stage.get_node("Wall_north_west_Wall_LOD0") as MultiMeshInstance3D
+		var near_west := stage.get_node("Wall_west_Wall_LOD0") as MultiMeshInstance3D
+		var north_mask: PackedByteArray = camera.call("_mobile_wall_mask", near_north, "north_west", 0.016)
+		var west_mask: PackedByteArray = camera.call("_mobile_wall_mask", near_west, "west", 0.016)
+		var north_hidden := 0
+		var west_hidden := 0
+		for bit in north_mask:
+			north_hidden += int(bit)
+		for bit in west_mask:
+			west_hidden += int(bit)
+		_check(north_hidden > 0 and west_hidden > 0, "mobile corner occlusion covers both adjacent walls without a central ray hit")
+		camera.set("_wall_hit_points", previous_hits)
 	else:
 		_check(camera_side.transparency > 0.5, "Forward+ camera obstruction fades only the visible perimeter span")
 	_check(camera.call("_mobile_wall_hidden", "probe", true, 0.016), "mobile wall hides when actually occluded")

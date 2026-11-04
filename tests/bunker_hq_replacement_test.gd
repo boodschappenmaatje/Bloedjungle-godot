@@ -23,7 +23,7 @@ func _run() -> void:
 	var sticks := main.get_node_or_null("Hud/Sticks")
 	if sticks != null:
 		sticks.set_process(false)
-	main.begin()
+	main.call("begin")
 	for _i in range(8):
 		await process_frame
 
@@ -46,18 +46,24 @@ func _run() -> void:
 			_check(hq.get_script() == load("res://scripts/hoofdkwartier.gd"),
 				"Hoofdkwartier gebruikt niet het bestaande visual-script")
 		# Damage contract: incoming enemy damage is reduced to 80%; friendly shots do nothing.
-		var saved_state: String = str(Game.state)
-		var saved_hp: float = Game.base_hp
-		Game.state = "play"
-		Game.base_hp = Game.base_max
-		bunker.hit(100.0, Vector3.ZERO, false)
-		_check(is_equal_approx(Game.base_hp, Game.base_max - 80.0),
-			"vijandelijke schade wordt niet als 80% op basis toegepast")
-		bunker.hit(100.0, Vector3.ZERO, true)
-		_check(is_equal_approx(Game.base_hp, Game.base_max - 80.0),
-			"eigen schoten beschadigen de bunker")
-		Game.base_hp = saved_hp
-		Game.state = saved_state
+		# A SceneTree script resolves autoloads via the scene root, not the
+		# GDScript global identifier used by scripts attached to game nodes.
+		var game := root.get_node_or_null("Game")
+		_check(game != null, "Game-autoload ontbreekt")
+		if game != null:
+			var saved_state: String = str(game.get("state"))
+			var saved_hp: float = float(game.get("base_hp"))
+			var base_max: float = float(game.get("base_max"))
+			game.set("state", "play")
+			game.set("base_hp", base_max)
+			bunker.call("hit", 100.0, Vector3.ZERO, false)
+			_check(is_equal_approx(float(game.get("base_hp")), base_max - 80.0),
+				"vijandelijke schade wordt niet als 80% op basis toegepast")
+			bunker.call("hit", 100.0, Vector3.ZERO, true)
+			_check(is_equal_approx(float(game.get("base_hp")), base_max - 80.0),
+				"eigen schoten beschadigen de bunker")
+			game.set("base_hp", saved_hp)
+			game.set("state", saved_state)
 
 	var asset_path: String = BaseProps.BUNKER_GAME_ASSET_PAD
 	_check(ResourceLoader.exists(asset_path), "gebakken bunker-GLB ontbreekt")

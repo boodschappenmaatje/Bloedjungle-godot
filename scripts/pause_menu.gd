@@ -18,6 +18,8 @@ const ROWS := [
 	["buildshadow", "Gebouwschaduw", [["low", "Laag"], ["medium", "Midden"], ["high", "Hoog"]]],
 	["hz", "Beeldsnelheid", [["30", "30 fps"], ["60", "60 fps"], ["90", "90 fps"], ["120", "120 fps"]]],
 	["fps", "FPS-teller", [["off", "Uit"], ["on", "Aan"]]],
+	["wall_diag", "Test: muuronderdelen", [["normal", "Normaal"], ["no_wall", "Muur uit"], ["no_berm", "Berm uit"], ["no_shadow", "Schaduw uit"]]],
+	["wall_lod", "Test: muurdetail", [["auto", "Auto"], ["lod0", "LOD0"], ["lod1", "LOD1"], ["lod2", "LOD2"]]],
 	["t_sun", "Test: zon-schaduw", [["on", "Aan"], ["off", "Uit"]]],
 	["t_jungle", "Test: jungle (bomen, gras)", [["on", "Aan"], ["off", "Uit"]]],
 	["t_stad", "Test: stad zien", [["on", "Aan"], ["off", "Uit"]]],
@@ -399,6 +401,11 @@ func _build_settings() -> void:
 			var val: String = o[0]
 			var b := _button(o[1], "seg", func():
 				GameSettings.set_value(key, val)
+				# Slechts één testvariabele tegelijk, nooit LOD plus verborgen muur.
+				if key == "wall_diag" and val != "normal":
+					GameSettings.set_value("wall_lod", "auto")
+				elif key == "wall_lod" and val != "auto":
+					GameSettings.set_value("wall_diag", "normal")
 				if key == "enemy_models" and Game.state in ["prep", "play"]:
 					var scene := get_tree().current_scene
 					if scene != null and scene.has_method("apply_enemy_model_filter"):

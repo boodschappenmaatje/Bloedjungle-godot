@@ -13,9 +13,14 @@ on:
       - "scripts/game.gd"
       - "scripts/aanval_routes.gd"
       - "scripts/hud.gd"
+      - "scripts/hud_extra.gd"
+      - "scripts/ally.gd"
+      - "scripts/beleg.gd"
+      - "scripts/team_commands.gd"
       - "assets/vijand_hk.glb"
       - "tests/vijand_basis_test.gd"
       - "tests/vijand_hk_test.gd"
+      - "tests/aanval_basis_test.gd"
       - ".github/workflows/vijand-basis.yml"
   workflow_dispatch:
 
@@ -65,4 +70,15 @@ jobs:
           echo "Godot exit code: $RC"
           grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/vijand_hk.log" | tail -n 40 || true
           tail -n 15 "$RUNNER_TEMP/vijand_hk.log"
+          exit "$RC"
+      - name: Aanvallen op de vijandbasis (radar, teamwiel, mars)
+        shell: bash
+        run: |
+          set +e
+          timeout 600 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/aanval_basis_test.gd --fixed-fps 60 > "$RUNNER_TEMP/aanval_basis.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/aanval_basis.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/aanval_basis.log"
           exit "$RC"

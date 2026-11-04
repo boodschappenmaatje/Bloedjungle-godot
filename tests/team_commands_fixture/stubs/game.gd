@@ -1,5 +1,6 @@
 extends Node
 signal changed
+signal banner(big: String, small: String, time: float)
 
 var state := "prep"
 var build_mode := false

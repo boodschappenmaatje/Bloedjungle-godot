@@ -4,7 +4,8 @@ class_name VijandBasis
 ## Ligging: middelpunt Data.VIJAND_POS, muur van 64 x 56 m, poort in de zuidmuur (naar jouw basis toe), vier hoektorens,
 ## en binnen: hoofdkwartier, kazerne, garage, depot en generator. Alles is massief (LAYER_WALL): je loopt er niet doorheen.
 ## Stap 5a-2: het hoofdkwartier is Dennis' eigen model (VijandHk) en slopen = winnen; aanvalsgroepen komen uit de poort (main.gd).
-## Nog niet: garnizoen en schietende torens (5a-3).
+## Stap 5a-3a: jouw leger kan hierheen marcheren en het HK beschieten (Ally, AanvalRoutes.march_path); rode vlak op de radar (HudExtra).
+## Nog niet: garnizoen en schietende torens (5a-3b).
 
 const P := Data.VIJAND_POS
 const HALF := Data.VIJAND_HALF
@@ -51,6 +52,25 @@ static func hk_pos() -> Vector3:
 ## Een punt net buiten de poort, aan de kant van jouw basis: hier begint een aanvalsgroep haar tocht.
 static func gate_outside() -> Vector3:
 	return P + Vector3(0.0, 0.0, HALF.y + 3.0)
+
+
+## Een punt vlak binnen de poort: hier lopen soldaten van jouw leger de basis in (stap 5a-3a), vóór ze naar hun plek voor het HK gaan.
+static func gate_inside() -> Vector3:
+	return P + Vector3(0.0, 0.0, HALF.y - 4.0)
+
+
+## Plek van soldaat i tijdens het beschieten van het HK (stap 5a-3a): een waaier op het binnenplein, een meter of tien voor de deur van
+## het HK. Dat is binnen het bereik van Ally.RANGE en vrij van de gebouwen langs de zijmuren. Meer dan 7 soldaten staan in rijen erachter.
+static func attack_spot(i: int) -> Vector3:
+	var col := posmod(i, 7)
+	var row := posmod(i / 7, 4)
+	return P + Vector3((col - 3) * 1.8, 0.0, row * 1.6)
+
+
+## Afstand in meters (plat) van dit punt tot het dichtstbijzijnde stuk van het HK-blok; 0 als het erin staat.
+static func hk_distance(p: Vector3) -> float:
+	var c := hk_pos() + VijandHk.KERN_MIDDEN
+	return Vector2(maxf(absf(p.x - c.x) - VijandHk.KERN.x * 0.5, 0.0), maxf(absf(p.z - c.z) - VijandHk.KERN.z * 0.5, 0.0)).length()
 
 
 ## Beginplek van een soldaat van een aanvalsgroep (stap 5a-2): op het binnenplein vlak achter de poort, in de vrije baan naar de opening.

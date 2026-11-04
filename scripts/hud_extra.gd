@@ -48,6 +48,7 @@ class MenuGlyph:
 
 
 func _ready() -> void:
+	add_to_group("hud_extra")   # TeamCommands vraagt hier of een tik op het rode vlakje van de vijandbasis valt (base_hit)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_hurt = ColorRect.new()
@@ -251,6 +252,57 @@ func _radar_point(world_pos: Vector3, area: Rect2) -> Vector2:
 	return area.position + Vector2(fx * area.size.x, fz * area.size.y)
 
 
+## Het kaartvlak binnen de radar (in radar-coördinaten): onder de kop, binnen de rand.
+func _radar_map() -> Rect2:
+	var head := 22.0 if _radar.size.x >= 110.0 else 16.0
+	return Rect2(5.0, head, _radar.size.x - 10.0, _radar.size.y - head - 5.0)
+
+
+## Het rode vlakje van de vijandbasis op de radar (in radar-coördinaten), minstens 10 x 8 punten zodat het op een klein scherm te zien is.
+func _base_patch(map: Rect2) -> Rect2:
+	var a := _radar_point(VijandBasis.P - Vector3(VijandBasis.HALF.x, 0.0, VijandBasis.HALF.y), map)
+	var b := _radar_point(VijandBasis.P + Vector3(VijandBasis.HALF.x, 0.0, VijandBasis.HALF.y), map)
+	var r := Rect2(a, b - a).abs()
+	var grow := Vector2(maxf(0.0, 10.0 - r.size.x), maxf(0.0, 8.0 - r.size.y)) * 0.5
+	return r.grow_individual(grow.x, grow.y, grow.x, grow.y)
+
+
+## Is deze tik (schermpunt) op het rode vlakje van de vijandbasis op de radar? Ruim genomen: een duim is dikker dan het vlakje.
+## Het pauzeknopje in de hoek van de radar blijft een pauzeknopje.
+func base_hit(screen: Vector2) -> bool:
+	if _radar == null or not _radar.visible:
+		return false
+	var patch := _base_patch(_radar_map())
+	var local := screen - _radar.get_global_rect().position
+	if _menu_button != null and _menu_button.get_global_rect().has_point(screen) and not patch.has_point(local):
+		return false
+	return patch.grow(10.0).has_point(local)
+
+
+## Staat het teamwiel te wachten op een doel voor Aanvallen?
+func _attack_pending() -> bool:
+	var tc := get_tree().get_first_node_in_group("team_commands")
+	return tc != null and tc.controller.pending_order == "attack"
+
+
+## Stap 5a-3a: de vijandbasis als rood vlakje met een stip op het HK. Tijdens een Aanvallen-keuze knippert het en staat er een lijst om: tik erop.
+func _draw_vijand_basis(map: Rect2) -> void:
+	var patch := _base_patch(map)
+	var targeting := _attack_pending()
+	var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() / 200.0)
+	_radar.draw_rect(patch, Color(0.9, 0.16, 0.1, 0.5 + (0.35 * pulse if targeting else 0.1)), true)
+	_radar.draw_rect(patch, Color(1.0, 0.42, 0.28, 0.95), false, 1.2)
+	var hk := VijandHk.inst
+	if hk == null or not hk.down:
+		var dot := _radar_point(VijandBasis.hk_pos(), map)
+		_radar.draw_rect(Rect2(dot - Vector2(2.0, 2.0), Vector2(4.0, 4.0)), Color(1.0, 0.92, 0.55), true)
+	if targeting:
+		_radar.draw_rect(patch.grow(3.0 + 2.0 * pulse), Color(1.0, 0.88, 0.5, 0.9), false, 1.5)
+	if Beleg.actief():
+		# je leger beschiet het HK zonder jou (Beleg): oranje rand rond het vlakje
+		_radar.draw_rect(patch.grow(2.0), Color(1.0, 0.62, 0.15, 0.55 + 0.4 * pulse), false, 1.6)
+
+
 func _draw_radar() -> void:
 	if _radar == null or not _radar.visible:
 		return
@@ -263,7 +315,7 @@ func _draw_radar() -> void:
 		var north_x := _radar.size.x * 0.5
 		_radar.draw_string(UI.body(700, 0), Vector2(north_x - 4.0, 13.0), "N", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK)
 		_radar.draw_colored_polygon(PackedVector2Array([Vector2(north_x, 15.0), Vector2(north_x - 3.5, 21.0), Vector2(north_x + 3.5, 21.0)]), UI.BRASS)
-	var map := Rect2(5.0, head, _radar.size.x - 10.0, _radar.size.y - head - 5.0)
+	var map := _radar_map()
 	# kruislijnen als schaalreferentie, geen extra scene of viewport
 	var mid_x: float = map.position.x + map.size.x * 0.5
 	var mid_y: float = map.position.y + map.size.y * 0.5
@@ -279,6 +331,7 @@ func _draw_radar() -> void:
 		var xw: float = lerpf(-Data.WORLD_X, Data.WORLD_X, float(i) / 32.0)
 		river.append(_radar_point(Vector3(xw, 0.0, Data.river_z(xw)), map))
 	_radar.draw_polyline(river, Color(0.2, 0.55, 0.65, 0.65), 1.5, true)
+	_draw_vijand_basis(map)
 	# De bunker staat op het echte wereldnulpunt; overige markers volgen de huidige bouwdata.
 	var base := _radar_point(Vector3.ZERO, map)
 	if Game.hq_level >= 2:
@@ -526,7 +579,7 @@ func _process(delta: float) -> void:
 		_update_camera_controls()
 		_radar_refresh -= delta
 		if _radar_refresh <= 0.0:
-			_radar_refresh = 0.12
+			_radar_refresh = 0.05 if _attack_pending() else 0.12   # tijdens een Aanvallen-keuze knippert het rode vlakje vloeiend
 			_radar.queue_redraw()
 	# alleen de instelling telt; vroeger ook StadEditor.debug_enabled (F3), en die kun je op de iPhone niet aanzetten
 	_fps.visible = GameSettings.get_value("fps") == "on" and not Game.editing

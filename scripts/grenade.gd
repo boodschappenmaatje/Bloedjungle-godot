@@ -202,6 +202,7 @@ func _explode() -> void:
 		Game.builds.blast(at, r, DAMAGE, true)
 	Wachtpost.blast(at, r, DAMAGE)
 	Generator.blast(at, r, DAMAGE)
+	VijandHk.blast(at, r, DAMAGE)   # het vijandelijke hoofdkwartier slopen = winnen
 	if Game.gates:
 		for i in Game.gates.list.size():
 			var gt: Dictionary = Game.gates.list[i]

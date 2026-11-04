@@ -123,12 +123,14 @@ func _run() -> void:
 					continue  # deze menuactie zit bewust in de rand van de radar
 				if rr.intersects((b as Control).get_global_rect()):
 					_check(false, "%s: radar overlapt %s" % [s, _label(b)])
-	# De golfplaat en voorbereidingsknoppen volgen prep → play → tijdelijke melding → prep.
+	# De groepenplaat en voorbereidingsknoppen volgen prep → play → tijdelijke melding → prep (stap 5a-2: aanvalsgroepen i.p.v. golven).
 	var hud: Node = main.get_node("Hud")
 	var banner: Control = hud.get_node("BannerPlate")
 	var start_wave: Button = main.get_node("Hud/StartWave")
-	_check(start_wave.visible, "startknop ontbreekt tijdens golfvoorbereiding")
-	_check(banner.visible, "golfbanner ontbreekt tijdens golfvoorbereiding")
+	_check(start_wave.visible, "startknop ontbreekt tijdens de rust voor de eerste groep")
+	_check(banner.visible, "groepenplaat ontbreekt tijdens de rust voor de eerste groep")
+	_check(hud.get_node("BannerPlate/Banner/Big").text == "EERSTE GROEP", "plaat zegt niet EERSTE GROEP voor de eerste groep")
+	_check(hud.get_node("BannerPlate/Banner/Small").text.begins_with("03:0") or hud.get_node("BannerPlate/Banner/Small").text.begins_with("02:5"), "aftellen staat niet op ca. 3 minuten: " + hud.get_node("BannerPlate/Banner/Small").text)
 	var shop_button: Button
 	for candidate in get_nodes_in_group("hud_button"):
 		if candidate is Button and candidate.text == "WAPENKAMER":
@@ -136,17 +138,17 @@ func _run() -> void:
 	_check(shop_button != null and shop_button.visible, "wapenkamerknop ontbreekt tijdens golfvoorbereiding")
 	main.call("start_wave")
 	await process_frame
-	_check(game.state == "play" and not start_wave.visible, "golfstart sluit het voorbereidingspaneel niet")
-	_check(banner.visible and hud.get_node("BannerPlate/Banner/Big").text == "GOLF 1 BEGONNEN", "golfstartmelding ontbreekt")
+	_check(game.state == "play" and not start_wave.visible, "groepstart sluit het voorbereidingspaneel niet")
+	_check(banner.visible and hud.get_node("BannerPlate/Banner/Big").text == "GROEP 1 ONDERWEG", "groepstartmelding ontbreekt")
 	_check(shop_button != null and not shop_button.visible, "wapenkamerknop blijft zichtbaar tijdens gevecht")
 	hud.call("_process", 1.6)
-	_check(not banner.visible, "golfbanner blijft zichtbaar tijdens gevecht na de startmelding")
-	_check(not hud.get_node("BannerPlate/Banner/Big").is_visible_in_tree(), "verborgen golfbannerlabel blijft zichtbaar")
+	_check(not banner.visible, "plaat blijft zichtbaar tijdens gevecht na de startmelding")
+	_check(not hud.get_node("BannerPlate/Banner/Big").is_visible_in_tree(), "verborgen plaatlabel blijft zichtbaar")
 	main.call("_wave_cleared")
 	hud.call("_process", 0.1)
-	_check(banner.visible and hud.get_node("BannerPlate/Banner/Big").text == "GOLF 1 OVERLEEFD", "overwinningsmelding ontbreekt")
+	_check(banner.visible and hud.get_node("BannerPlate/Banner/Big").text == "GROEP 1 AFGESLAGEN", "melding 'groep afgeslagen' ontbreekt")
 	hud.call("_process", 3.1)
-	_check(banner.visible and hud.get_node("BannerPlate/Banner/Big").text == "GOLF 2", "golfbanner keert niet terug bij de volgende voorbereiding")
+	_check(banner.visible and hud.get_node("BannerPlate/Banner/Big").text == "VOLGENDE GROEP", "plaat keert niet terug bij de volgende rust")
 	_check(start_wave.visible and shop_button.visible, "voorbereidingsknoppen keren niet terug na de overwinningsmelding")
 	GameSettings.set_value("fps", "off")
 	main.queue_free()

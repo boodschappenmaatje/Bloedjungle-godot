@@ -48,7 +48,7 @@ func _process(delta: float) -> void:
 		_last_context = context
 		if Game.state in ["menu", "shop", "over"] or Game.build_mode or get_tree().paused:
 			cancel_input()
-	button.visible = (Game.state == "prep" or (Game.state == "play" and _available() > 0)) and not Game.build_mode
+	button.visible = (Game.state == "prep" or Game.state == "play") and not Game.build_mode
 	button.badge = str(_available())
 	mouse_filter = Control.MOUSE_FILTER_STOP if controller.is_modal() else Control.MOUSE_FILTER_IGNORE
 	if controller.advance(delta):
@@ -155,7 +155,8 @@ func _finish_pointer(id: int, pos: Vector2) -> void:
 	var result: Dictionary = controller.release(id, pos, _wheel_center())
 	match result.get("kind", ""):
 		"toggle":
-			if Game.state == "prep":
+			if Game.state == "prep" or Game.state == "play":
+				# tikken opent het bouwscherm, ook tijdens een aanvalsgroep (volgen/blijven: T-toets of het wiel)
 				var build := get_tree().get_first_node_in_group("build_mode")
 				if build != null:
 					build.call("_enter")

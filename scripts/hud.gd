@@ -3,7 +3,7 @@ extends CanvasLayer
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
 const VLIEGTUIG := preload("res://scripts/vliegtuig.gd")
-const VERSION := "v187"
+const VERSION := "v188"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -133,13 +133,13 @@ func _process(delta: float) -> void:
 		small.text = ("TERUG OVER %d S" % ceili(Game.player.respawn_t))
 	var temporary_banner := _banner_t > 0.0 or waiting
 	if not temporary_banner:
-		big.text = "GOLF %d" % maxi(Game.wave, 1) if Game.state == "prep" or Game.state == "play" else ""
+		# geen golven meer (stap 5a-2): zolang er geen groep onderweg is staat hier het aftellen naar de volgende groep
+		big.text = ("EERSTE GROEP" if Game.wave == 0 else "VOLGENDE GROEP") if Game.state == "prep" else ""
 		if Game.state == "prep":
-			var seconds := ceili(Game.prep_t)
-			small.text = "%02d:%02d" % [floori(seconds / 60.0), posmod(seconds, 60)]
-			if not Game.routes.is_empty():
+			small.text = AanvalRoutes.klok(Game.prep_t)
+			if not Game.next_routes.is_empty():
 				var names := []
-				for id in Game.routes:
+				for id in Game.next_routes:
 					names.append(String(AanvalRoutes.LIST[id].naam))
 				small.text += "  ·  VIA " + " + ".join(names)
 		else:

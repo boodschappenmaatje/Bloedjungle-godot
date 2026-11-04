@@ -1,10 +1,12 @@
 extends Node3D
-## Hoofdscène: pauze tussen golven, golven laten aanvallen en de bonus na een overleefde golf.
-## Zoals 13-waves.js, 24-shop.js (waveCleared) en de hoofdlus in 26-main.js.
+## Hoofdscène: laadt de wereld en laat de vijand aanvalsgroepen sturen (stap 5a-2: geen golven meer). Na GROEP_RUST seconden rust komt de
+## eerste groep uit de poort van de vijandbasis, daarna elke GROEP_TUSSEN seconden een nieuwe, ook als de vorige nog loopt. Is er geen groep
+## meer onderweg, dan is het weer "prep" (wapenkamer en stadseditor); het aftellen loopt gewoon door. Bouwen kan altijd, ook in "play".
+## Winnen: het vijandelijke hoofdkwartier slopen (VijandHk); verliezen: jouw hoofdkwartier (Game.damage_base).
 
 const ENEMY := preload("res://scenes/enemy.tscn")
 
-var queue: Array = []
+var queue: Array = []   # wachtende vijanden van alle groepen: {"kind", "n" (groepnummer), "routes"}
 var spawn_t := 0.0
 var clear_t := -1.0
 
@@ -162,39 +164,60 @@ static func _pipeline_compiles() -> int:
 
 
 func _start_prep() -> void:
-	Barrel.populate(self)  # opgeblazen vaten komen elke golf terug
-	Game.wave += 1
-	Game.routes = AanvalRoutes.pick(Game.wave)  # de pijlen tonen al tijdens de pauze waar ze vandaan komen
+	Barrel.populate(self)  # opgeblazen vaten komen terug
+	queue.clear()
+	Game.wave = 0
+	Game.next_routes = AanvalRoutes.pick_group(1)
+	Game.routes = Game.next_routes.duplicate()  # de pijlen tonen al tijdens de rust waar de eerste groep vandaan komt
 	Game.state = "prep"
-	Game.prep_t = GameSettings.prep_time()
+	Game.prep_t = Data.GROEP_RUST
+	clear_t = -1.0
 	Game.changed.emit()
 
 
+## De volgende aanvalsgroep komt nu uit de poort van de vijandbasis ("Start nu", of het aftellen is op).
 func start_wave() -> void:
 	if Game.state != "prep":
 		return
-	PerfMonitor.note("golf %d begint" % Game.wave)
+	_launch_group()
+
+
+func _launch_group() -> void:
+	Game.wave += 1
+	PerfMonitor.note("groep %d begint" % Game.wave)
 	Game.state = "play"
 	Game.defs.refill()
-	queue = Data.build_wave(Game.wave)
-	spawn_t = 0.5
+	var routes: Array = Game.next_routes.duplicate()
+	if routes.is_empty():
+		routes = AanvalRoutes.pick_group(Game.wave)
+	for kind in Data.build_group(Game.wave):
+		queue.append({"kind": kind, "n": Game.wave, "routes": routes})
+	if queue.size() == Data.build_group(Game.wave).size():
+		spawn_t = 0.5   # de enige wachtende groep: de eerste vijand komt snel
 	clear_t = -1.0
-	Game.banner.emit("GOLF %d BEGONNEN" % Game.wave, "Ze komen " + AanvalRoutes.describe(Game.routes), 1.5)
+	Game.routes = routes
+	Game.next_routes = AanvalRoutes.pick_group(Game.wave + 1)
+	Game.prep_t = Data.GROEP_TUSSEN
+	Game.banner.emit("GROEP %d ONDERWEG" % Game.wave, "Ze komen " + AanvalRoutes.describe(routes), 1.5)
 	Game.changed.emit()
 
 
 func _process(delta: float) -> void:
-	if Game.state == "prep" and not Game.build_mode:
-		Game.prep_t -= delta
-		if Game.prep_t <= 0.0:
-			start_wave()
-	elif Game.state == "play":
+	if Game.state == "prep" or Game.state == "play":
+		# het aftellen naar de volgende groep loopt altijd door, behalve zolang het bouwscherm open is
+		if not (Game.state == "prep" and Game.build_mode):
+			Game.prep_t -= delta
+			if Game.prep_t <= 0.0:
+				_launch_group()
+	if Game.state == "play":
 		if queue.size():
 			spawn_t -= delta
 			var max_alive := 22 + mini(18, Game.wave * 2)
 			if spawn_t <= 0.0 and Game.enemies.size() < max_alive:
 				_spawn(queue.pop_front())
 				spawn_t = maxf(0.25, 1.2 - Game.wave * 0.06) * randf_range(0.6, 1.3)
+				if queue.is_empty():
+					Game.routes = Game.next_routes.duplicate()   # alles is uitgerukt: de pijlen wijzen al naar de volgende groep
 		elif Game.enemies.is_empty():
 			if clear_t < 0.0:
 				clear_t = 1.6
@@ -203,30 +226,31 @@ func _process(delta: float) -> void:
 				_wave_cleared()
 
 
-func _spawn(kind: String) -> void:
+## Eén vijand uit de wachtrij laten uitrukken. Een kale soort ("rocket") mag ook (tests): dan gelden de routes van nu.
+func _spawn(item: Variant) -> void:
 	PerfMonitor.note("vijand gespawnd")
+	var entry: Dictionary = item if item is Dictionary else {"kind": String(item), "n": maxi(1, Game.wave), "routes": Game.routes if not Game.routes.is_empty() else AanvalRoutes.pick_group(1)}
+	var kind: String = entry.kind
 	var e := ENEMY.instantiate()
-	e.setup(kind, Game.wave)
+	e.setup(kind, int(entry.n))
 	if kind == "rocket" and not Game.rocket_seen:
 		Game.rocket_seen = true
 		Game.banner.emit("RAKETWERPERS", "Ze schieten je gebouwen kapot", 2.5)
-	if Game.routes.is_empty():
-		var a := randf() * TAU
-		e.position = Vector3(cos(a), 0, sin(a)) * Data.SPAWN_R
-	else:
-		# elke vijand loopt een van de vaste routes van deze golf
-		e.path = AanvalRoutes.path_for(Game.routes.pick_random())
-		e.position = AanvalRoutes.spawn_at(e.path)
+	# elke vijand komt uit de poort van de vijandbasis en loopt een van de vaste stadsroutes van zijn groep
+	var routes: Array = entry.routes
+	e.path = AanvalRoutes.path_from_base(routes.pick_random())
+	e.position = VijandBasis.spawn_point()
 	add_child(e)
 
 
+## Alle vijanden van de groepen zijn uitgeschakeld: weer "prep" (wapenkamer en stadseditor) tot de volgende groep uitrukt. Bouwen kan ook tijdens een groep.
 func _wave_cleared() -> void:
-	var bonus := 150 + Game.wave * 60 + roundi(Game.base_hp / Game.base_max * 200.0)
-	Game.add_points(bonus)
-	Game.bonus = bonus
-	var w := Game.wave
+	Game.state = "prep"
+	clear_t = -1.0
+	Game.routes = Game.next_routes.duplicate()
+	Barrel.populate(self)  # opgeblazen vaten komen terug
 	Game.streak_reset()
-	Progress.stats.bestWave = maxi(Progress.stats.bestWave, w)
+	Progress.stats.bestWave = maxi(Progress.stats.bestWave, Game.wave)
 	Progress.save()
-	_start_prep()
-	Game.banner.emit("GOLF %d OVERLEEFD" % w, "Bonus +%d" % bonus, 3.0)
+	Game.banner.emit("GROEP %d AFGESLAGEN" % Game.wave, "Volgende groep over %d s" % ceili(maxf(Game.prep_t, 0.0)), 3.0)
+	Game.changed.emit()

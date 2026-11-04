@@ -23,6 +23,7 @@ func _process(_d: float) -> bool:
 		main.queue.clear()
 		main._spawn("rocket")
 		var e = game.enemies[0]
+		e.path = []   # niet de route uit de vijandbasis lopen: hij staat al bij jouw basis en gaat meteen op de kazerne af
 		e.global_position = Vector3(-10, 0, -44)
 		e.slow_t = 0.0
 		print("raketman gespawnd, type ", e.type, " hp ", e.hp)

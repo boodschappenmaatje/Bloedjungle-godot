@@ -125,6 +125,7 @@ func _impact(at: Vector3) -> void:
 
 ## Schade aan alle vijanden rond een inslag. Static zodat de test het direct kan aanroepen.
 static func damage_at(at: Vector3) -> int:
+	VijandHk.blast(at, BLAST, DAMAGE)   # ook het vijandelijke hoofdkwartier (stap 5a-2)
 	var hits := 0
 	for e in Game.enemies.duplicate():
 		if not is_instance_valid(e) or e.get("dead") == true:

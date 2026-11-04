@@ -124,6 +124,10 @@ static func _wall(root: Node3D) -> void:
 			visual.set_meta("wall_end", b)
 			visual.set_meta("wall_yaw", yaw)
 			visual.multimesh = multi
+			# Retain original module transforms for a camera-only cutout. GPU instancing
+			# stays batched; gameplay collision remains in BaseHighWallCollision.
+			visual.set_meta("wall_original_transforms", instance_transforms)
+			visual.set_meta("wall_hidden_mask", PackedByteArray())
 			visual.position = span_center
 			visual.visibility_range_begin = WALL_LOD_BEGIN[lod_index]
 			visual.visibility_range_end = WALL_LOD_END[lod_index]
@@ -146,17 +150,39 @@ static func _wall(root: Node3D) -> void:
 ## Stabiele schaduw van de muur, ongeacht welke detailversie de camera ziet.
 ## SHADOWS_ONLY: niet zichtbaar als extra muur en geen extra botsing/occlusie.
 static func _wall_shadow_proxies(root: Node3D, spans: Array) -> void:
+	# Previously one full-length shadow box per wall side remained visible even
+	# when its visual wall was hidden on iOS. Use the same 3.5 m module positions
+	# as the real mesh so camera cutouts can also clear the matching shadows.
+	# Still six batched shadow draw calls, independent of the visible wall LODs.
+	var shadow_mesh := BoxMesh.new()
+	shadow_mesh.size = Vector3(WALL_MODULE_LENGTH, Data.BASE_WALL_H, Data.WALL_T)
 	for span: Dictionary in spans:
 		var a: Vector3 = span.a
 		var b: Vector3 = span.b
-		var length := a.distance_to(b)
-		var shadow_mesh := BoxMesh.new()
-		shadow_mesh.size = Vector3(length, Data.BASE_WALL_H, Data.WALL_T) if span.along_x else Vector3(Data.WALL_T, Data.BASE_WALL_H, length)
-		var shadow := MeshInstance3D.new()
+		var center := (a + b) * 0.5
+		var origins := _wall_module_transforms(a, b, float(span.yaw))
+		var raised: Array[Transform3D] = []
+		var multi := MultiMesh.new()
+		multi.transform_format = MultiMesh.TRANSFORM_3D
+		multi.mesh = shadow_mesh
+		multi.instance_count = origins.size()
+		var shared_bounds := AABB()
+		for i in origins.size():
+			var xf: Transform3D = origins[i]
+			xf.origin.y += Data.BASE_WALL_H * 0.5
+			raised.append(xf)
+			multi.set_instance_transform(i, xf)
+			var one_bounds := xf * shadow_mesh.get_aabb()
+			shared_bounds = one_bounds if i == 0 else shared_bounds.merge(one_bounds)
+		multi.custom_aabb = shared_bounds
+		var shadow := MultiMeshInstance3D.new()
 		shadow.name = "BaseWallShadow_" + str(span.name)
-		shadow.mesh = shadow_mesh
-		shadow.position = (a + b) * 0.5 + Vector3.UP * (Data.BASE_WALL_H * 0.5)
+		shadow.multimesh = multi
+		shadow.position = center
 		shadow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+		shadow.set_meta("wall_span", str(span.name))
+		shadow.set_meta("wall_original_transforms", raised)
+		shadow.set_meta("wall_hidden_mask", PackedByteArray())
 		shadow.add_to_group("base_wall_shadow")
 		root.add_child(shadow)
 

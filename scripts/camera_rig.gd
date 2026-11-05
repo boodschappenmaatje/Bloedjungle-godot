@@ -27,10 +27,7 @@ var _look := Vector3.ZERO  # zacht gevolgd kijkpunt, zodat de camera nooit in é
 var _group_hold := 0.0
 var _group_scan := 0.0
 var _wall_occluded_spans: Array[String] = []
-var _mobile_wall_hold: Dictionary = {}  # scherm-rust: niet direct weer tonen bij één gemiste raycast
 const GROUP_HOLD_SECONDS := 2.0
-const BASE_WALL_CAMERA_TRANSPARENCY := 0.58
-const BASE_WALL_MOBILE_HOLD := 0.45
 
 
 func toggle_view() -> void:
@@ -318,38 +315,15 @@ func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vect
 	return hit.position + hit.normal * 0.35
 
 
-## Op Mobile ondersteunt Godot GeometryInstance3D.transparency niet.
-## Laat uitsluitend de muurzijde tussen speler en camera weg, met een korte terugkeer-
-## vertraging om aan/uit-knipperen door raycast-grensgevallen te voorkomen.
-## De botsmuur en de nieuwe SHADOWS_ONLY-proxy blijven altijd behouden.
-func _mobile_wall_hidden(span: String, blocked: bool, delta: float) -> bool:
-	var hold := float(_mobile_wall_hold.get(span, 0.0))
-	hold = BASE_WALL_MOBILE_HOLD if blocked else maxf(0.0, hold - delta)
-	if hold > 0.0:
-		_mobile_wall_hold[span] = hold
-	else:
-		_mobile_wall_hold.erase(span)
-	return hold > 0.0
-
-
-func _apply_wall_occlusion(delta: float) -> void:
-	var renderer := RenderingServer.get_current_rendering_method()
-	var mobile := renderer == "mobile" or renderer == "gl_compatibility"
-	var blend := 1.0 - exp(-8.0 * delta)
-	var hidden_spans: Dictionary = {}
+## Een verdedigingsmuur is geen wegwerpdecor: de speler moet de muur zien als hij
+## er tegenaan loopt. Alleen een expliciete diagnosekeuze mag het beeld verbergen.
+## Ook op Mobile: geen spans wegschakelen, geen transparantie/fade, geen popping.
+## _avoid_obstacles blijft de camera verder van muurcolliders af houden.
+func _apply_wall_occlusion(_delta: float) -> void:
 	for node in get_tree().get_nodes_in_group("base_wall_visual"):
 		var visual := node as GeometryInstance3D
-		var span := str(visual.get_meta("wall_span", ""))
-		var blocked := _wall_occluded_spans.has(span)
-		if mobile:
-			if not hidden_spans.has(span):
-				hidden_spans[span] = _mobile_wall_hidden(span, blocked, delta)
-			visual.visible = not bool(hidden_spans[span])
-			visual.transparency = 0.0
-		else:
-			visual.visible = true
-			var wanted := BASE_WALL_CAMERA_TRANSPARENCY if blocked else 0.0
-			visual.transparency = lerpf(visual.transparency, wanted, blend)
+		visual.visible = true
+		visual.transparency = 0.0
 	# Apply visual-only diagnostics AFTER the normal camera occlusion pass.
 	# Default settings leave every wall collider, shot ray and camera behavior intact.
 	var wall_diag_mode := GameSettings.get_value("wall_diag")

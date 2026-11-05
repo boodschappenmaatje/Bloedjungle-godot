@@ -8,6 +8,63 @@ var assignment: Node3D
 var climb_t := 0.0
 var approach_done := false
 
+# Confirmed M2-gunner hits get a short, unobtrusive world-space indication.
+# No extra effects when a shot hits the moving steel shield or concrete.
+var _hit_bar_t := 0.0
+var _hit_cross_t := 0.0
+var _hit_ping_cd := 0.0
+var _hit_label: Label3D
+
+
+func _ready() -> void:
+	super._ready()
+	_hit_label = Label3D.new()
+	_hit_label.name = "M2HitConfirm"
+	_hit_label.position = Vector3(0.0, 2.95, 0.0)
+	_hit_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_hit_label.font_size = 38
+	_hit_label.pixel_size = 0.008
+	_hit_label.outline_size = 8
+	_hit_label.outline_modulate = Color(0.04, 0.05, 0.04, 0.95)
+	_hit_label.modulate = Color(0.97, 0.93, 0.79)
+	_hit_label.no_depth_test = false
+	_hit_label.visible = false
+	add_child(_hit_label)
+
+
+func _process(delta: float) -> void:
+	super._process(delta)
+	_hit_bar_t = maxf(0.0, _hit_bar_t - delta)
+	_hit_cross_t = maxf(0.0, _hit_cross_t - delta)
+	_hit_ping_cd = maxf(0.0, _hit_ping_cd - delta)
+	if _hit_label != null:
+		_hit_label.visible = _hit_cross_t > 0.0
+		_hit_label.modulate = Color(1.0, 0.90, 0.66) if dead else Color(0.94, 0.97, 0.88)
+	# The normal range marker respects user HUD settings. A recent confirmed
+	# gunner hit temporarily reveals and enlarges it even in minimal HUD mode.
+	if _range_marker != null and post == "schutter":
+		var show_hit_bar := not dead and _hit_bar_t > 0.0
+		if show_hit_bar:
+			_range_marker.visible = true
+			_health_fill.scale.x = clampf(hp / maxf(max_hp, 1.0), 0.0, 1.0)
+		_range_marker.scale = Vector3(1.45, 1.45, 1.0) if show_hit_bar else Vector3.ONE
+
+
+func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
+	var confirmed_gunner_hit := from_player and not dead and dmg > 0.0 and post == "schutter" and Game.hit_src == "speler"
+	super.hit(dmg, dir, from_player)
+	if not confirmed_gunner_hit:
+		return
+	_hit_bar_t = 1.5
+	_hit_cross_t = 1.6 if dead else 0.24
+	if _hit_label != null:
+		_hit_label.text = "MG UIT" if dead else "×"
+	# The existing blood + pain reaction stays on the real body; this soft
+	# short ping confirms a hit, never a hit on steel/concrete.
+	if _hit_ping_cd <= 0.0:
+		Sfx.play("ping" if dead else "click", 0.48 if dead else 0.24)
+		_hit_ping_cd = 0.18
+
 
 func _physics_process(delta: float) -> void:
 	if dead or Game.state not in ["play", "prep"]:

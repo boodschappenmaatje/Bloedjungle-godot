@@ -11,6 +11,6 @@ Godot: `scripts/vijand_m2_toren.gd` instantiëert één gedeelde GLB op vier pos
 - Gescheiden M2-mesh en werkelijke yaw/pitch/recoil van het originele wapen; zichtbare munitieband, hulzen en dedicated MG-audio ontbreken.
 - Gemeten voetafdruk, bron-vergelijkingsrender, iPhone-LOD en native FPS ontbreken.
 - USDZ-export niet beschikbaar in de hier geïnstalleerde Blender 4.3.2 (`bpy.ops.wm.usd_export` ontbreekt).
-- De lange `tests/aanval_basis_test.gd` heeft vier mislukte assertions door veranderde live gevechtsverliezen; afstemming van de offscreen-omschakeling is nog nodig.
+- `tests/aanval_basis_test.gd` slaagt nadat de routetest de speler tijdens het nabije MG-gevecht in leven houdt; de live/offscreen-omschakeling is daarmee functioneel gecontroleerd, maar langere gevechten en mobiele prestaties blijven open.
 
 Geen externe audio toegevoegd: er is dus geen onbewezen gamelicentie of attributie.

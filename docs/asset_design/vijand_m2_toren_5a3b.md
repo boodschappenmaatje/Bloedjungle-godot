@@ -139,4 +139,4 @@ Photorealistic WWII American fortified guard tower for a jungle military base. E
 
 ## 10. Productiestatus 5 november 2026
 
-Een eerste Godot-implementatie en 60k GLB staan op deze Draft PR. Dit is **nog geen afgeronde 5a-3b**. Zie `bron/m2hb_toren/README.md` voor productie, echte beperkingen en open kwaliteitsgates. `tests/vijand_basis_test.gd` en `tests/vijand_m2_toren_test.gd` slagen; de lange aanvalstest heeft vier mislukte assertions bij de live/offscreen-omschakeling. Native iPhone niet getest.
+Een eerste Godot-implementatie en 60k GLB staan op deze Draft PR. Dit is **nog geen afgeronde 5a-3b**. Zie `bron/m2hb_toren/README.md` voor productie, echte beperkingen en open kwaliteitsgates. `tests/vijand_basis_test.gd` en `tests/vijand_m2_toren_test.gd` slagen; de lange aanvalstest slaagt na aanpassing van de testfixture voor de nu schietende MG’s. Native iPhone niet getest.

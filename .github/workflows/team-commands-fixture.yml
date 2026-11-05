@@ -1,0 +1,46 @@
+name: Team commands fixture
+
+on:
+  pull_request:
+    paths:
+      - "tests/team_commands_fixture/**"
+      - "tests/run_team_commands_tests.sh"
+      - "scripts/combat_buttons.gd"
+      - "scripts/team_commands.gd"
+      - "scripts/team_command_controller.gd"
+      - "scripts/touch_sticks.gd"
+      - ".github/workflows/team-commands-fixture.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  fixture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Install Godot 4.7.2 (headless)
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=4.7.2
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 600 \
+            "https://github.com/godotengine/godot/releases/download/${VERSION}-stable/Godot_v${VERSION}-stable_linux.x86_64.zip" \
+            -o godot.zip || \
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 600 \
+            "https://github.com/godotengine/godot-builds/releases/download/${VERSION}-stable/Godot_v${VERSION}-stable_linux.x86_64.zip" \
+            -o godot.zip
+          unzip -tq godot.zip
+          unzip -q godot.zip -d .godot-runner
+          chmod +x .godot-runner/Godot_v${VERSION}-stable_linux.x86_64
+          .godot-runner/Godot_v${VERSION}-stable_linux.x86_64 --version
+      - name: Team commands and HUD wheel regression suite
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT="$PWD/.godot-runner/Godot_v4.7.2-stable_linux.x86_64" \
+            timeout 240 sh tests/run_team_commands_tests.sh

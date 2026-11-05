@@ -41,6 +41,10 @@ static func build(root: Node3D) -> Node3D:
 	_gebouw(holder, "Garage", Vector3(19.0, 0, -4.0), Vector3(9.0, 4.2, 8.0))
 	_gebouw(holder, "Depot", Vector3(-19.0, 0, 12.0), Vector3(8.0, 3.6, 8.0))
 	_generator(holder, Vector3(19.0, 0, 12.0))
+	# Editor scene imports instantiate Level with non-tool soldier scripts as
+	# placeholders. Runtime creates the twelve defenders after scripts load.
+	if not Engine.is_editor_hint():
+		_verdedigers(holder)
 	return holder
 
 
@@ -127,21 +131,40 @@ static func _poort(h: Node3D) -> void:
 
 ## Wachttoren van blokken: vier poten als één massief blok, een platform, een dak en een geweernest (de MG komt in stap 5a-3).
 static func _toren(h: Node3D, pos: Vector3) -> void:
-	var t := Node3D.new()
+	var t := VijandM2Toren.new()
 	t.name = "Toren"
 	t.position = pos
-	t.add_to_group("vijand_toren")
+	t.rotation.y = PI if pos.z < 0.0 else 0.0
 	h.add_child(t)
-	Kit.collider(t, Vector3(0, 2.5, 0), Vector3(1.9, 5.0, 1.9), Kit.LAYER_WALL)
-	for sx in [-1.0, 1.0]:
-		for sz in [-1.0, 1.0]:
-			Kit.box(t, Vector3(sx * 0.8, 0, sz * 0.8), Vector3(0.22, 4.4, 0.22), _mat(KLEUR_DONKER))
-	Kit.box(t, Vector3(0, 4.4, 0), Vector3(2.3, 0.2, 2.3), _mat(KLEUR_BLOK))
-	Kit.box(t, Vector3(0, 4.6, 0.95), Vector3(2.3, 0.8, 0.12), _mat(KLEUR_MUUR))   # borstwering naar de basis
-	Kit.box(t, Vector3(0, 5.6, 0), Vector3(2.7, 0.14, 2.7), _mat(KLEUR_DAK))
-	for sx in [-1.0, 1.0]:
-		for sz in [-1.0, 1.0]:
-			Kit.box(t, Vector3(sx * 1.2, 4.6, sz * 1.2), Vector3(0.1, 1.0, 0.1), _mat(KLEUR_DONKER))
+
+
+static func _verdedigers(h: Node3D) -> void:
+	var towers := h.get_children().filter(func(n): return n is VijandM2Toren)
+	for i in towers.size():
+		var t: VijandM2Toren = towers[i]
+		var s = _verdediger(h, "schutter", t.get_node("ShooterMount").global_position - h.global_position, 90.0)
+		s.tower = t
+		t.shooter = s
+	for x in [-2.5, -0.9, 0.9, 2.5]:
+		_verdediger(h, "poort", Vector3(x, 0, HALF.y - 5.0), 85.0)
+	for x in [-5.5, 5.5]:
+		_verdediger(h, "hk", Vector3(x, 0, -9.0), 110.0)
+	for x in [-7.0, 7.0]:
+		_verdediger(h, "reserve", Vector3(x, 0, 8.0), 90.0)
+
+
+static func _verdediger(h: Node3D, role_: String, pos: Vector3, health: float):
+	var soldier = load("res://scenes/vijand_verdediger.tscn").instantiate()
+	soldier.setup("assault", 1)
+	soldier.post = role_
+	soldier.max_hp = health
+	soldier.hp = health
+	soldier.home = h.position + pos
+	soldier.position = pos
+	soldier.name = "Verdediger_%s" % role_
+	soldier.add_to_group("vijand_verdediger")
+	h.add_child(soldier)
+	return soldier
 
 
 ## Hoofdkwartier: Dennis' eigen model "Enemy hk" (VijandHk, vanaf stap 5a-2) op dezelfde plek en met dezelfde breedte (9 m) als het blok

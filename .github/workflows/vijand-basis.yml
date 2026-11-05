@@ -22,6 +22,11 @@ on:
       - "scripts/grote_kaart.gd"
       - "scripts/route.gd"
       - "assets/vijand_hk.glb"
+      - "assets/vijand_m2_toren.glb"
+      - "scripts/vijand_m2_toren.gd"
+      - "scenes/vijand_verdediger.tscn"
+      - "tests/vijand_m2_toren_test.gd"
+      - "tests/vijand_m2_articulatie_test.gd"
       - "tests/vijand_basis_test.gd"
       - "tests/vijand_hk_test.gd"
       - "tests/aanval_basis_test.gd"
@@ -65,6 +70,13 @@ jobs:
           grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/vijand.log" | tail -n 40 || true
           tail -n 15 "$RUNNER_TEMP/vijand.log"
           exit "$RC"
+      - name: M2HB visuele pivots en bemanning
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 120 "$GODOT" --headless --path . --script tests/vijand_m2_articulatie_test.gd
+          timeout 120 "$GODOT" --headless --path . --script tests/vijand_m2_toren_test.gd --fixed-fps 60
       - name: Vijand-hoofdkwartier- en groepentest
         shell: bash
         run: |

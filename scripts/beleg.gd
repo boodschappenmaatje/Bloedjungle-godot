@@ -64,7 +64,10 @@ static func step(tree: SceneTree) -> void:
 		hk.damage(raw * dt, "bullet")
 		if hk.down:
 			return   # gesloopt: het spel is gewonnen
-	var torens := tree.get_nodes_in_group("vijand_toren").size()
+	var torens := 0
+	for tower in tree.get_nodes_in_group("vijand_toren"):
+		if tower is VijandM2Toren and tower.operational():
+			torens += 1
 	var schade := float(torens) * TORENVUUR * vuur_factor * dt
 	if schade <= 0.0:
 		return

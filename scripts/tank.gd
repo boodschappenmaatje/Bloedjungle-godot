@@ -208,6 +208,7 @@ func _shoot(at: Vector3) -> void:
 		Game.note_blast(boom, SHELL_RADIUS)
 		Barrel.catch_blast(boom, 2.0)
 		VijandHk.blast(boom, SHELL_RADIUS, SHELL_DAMAGE * 3.0)  # tegen een gebouw driemaal zo hard als tegen een soldaat
+		VijandM2Toren.blast(boom, SHELL_RADIUS, SHELL_DAMAGE * 3.0)
 		Woonhuis.blast_all(boom, 1.8, 140.0)  # kleiner dan de straal tegen vijanden: alleen de muur waar hij op mikt
 		for e in Game.enemies.duplicate():
 			var flat: Vector3 = e.global_position - boom if is_instance_valid(e) else Vector3.ZERO

@@ -1,0 +1,57 @@
+name: M2HB articulated production validation (Draft only)
+
+on:
+  pull_request:
+    paths:
+      - 'assets/vijand_m2_toren.glb'
+      - 'scripts/vijand_m2_toren.gd'
+      - 'tests/vijand_m2_articulatie_test.gd'
+      - '.github/workflows/m2hb-articulation-preview.yml'
+  push:
+    branches: [feature/vijandbasis-5a-3b-browning-m2]
+    paths:
+      - 'assets/vijand_m2_toren.glb'
+      - 'tests/vijand_m2_articulatie_test.gd'
+      - '.github/workflows/m2hb-articulation-preview.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  verify-production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Verify geometry, UVs and pivots in the production GLB
+        run: |
+          python -m pip install --disable-pip-version-check numpy trimesh pillow scipy
+          python - <<'PY'
+          import trimesh
+          p='assets/vijand_m2_toren.glb'
+          scene=trimesh.load(p,force='scene',process=False)
+          assert sum(len(g.faces) for g in scene.geometry.values()) == 60000
+          assert {'TowerStatic','MG_Yaw','MG_Pitch','MG_Recoil','Muzzle'} <= set(scene.graph.nodes)
+          assert all(g.visual.uv is not None and len(g.visual.uv) for g in scene.geometry.values())
+          print('M2_PRODUCTION_GEOMETRY_PASS')
+          PY
+      - name: Install Godot 4.7.2
+        run: |
+          curl -fL --retry 3 https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip -o /tmp/godot.zip
+          unzip -q /tmp/godot.zip -d /tmp/godot
+          chmod +x /tmp/godot/Godot_v4.7.2-stable_linux.x86_64
+      - name: Import and test visual pivots and gameplay
+        run: |
+          GODOT=/tmp/godot/Godot_v4.7.2-stable_linux.x86_64
+          "$GODOT" --headless --path . --import
+          "$GODOT" --headless --path . --script tests/vijand_m2_articulatie_test.gd
+          "$GODOT" --headless --path . --script tests/vijand_m2_toren_test.gd --fixed-fps 60
+      - name: Preserve comparison renders for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: m2hb-production-review
+          path: docs/vq2/renders/m2hb_20261105_*.png
+          retention-days: 14

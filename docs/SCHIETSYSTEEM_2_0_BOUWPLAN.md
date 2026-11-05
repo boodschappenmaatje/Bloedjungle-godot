@@ -1,6 +1,6 @@
 # Bloedjungle — Schietsysteem 2.0: tactisch richten en trefferfeedback (optie B)
 
-**Keuze:** optie B, 5 november 2026. **Status:** goedgekeurde functionele richting; dit document is een bouwplan, **geen geïmplementeerde feature**. Werk in deze featurebranch/Draft PR; niet mergen en geen OTA publiceren zonder afzonderlijk akkoord.
+**Keuze:** optie B, 5 november 2026. **Status:** de eerste *jeep-MG pilot* is in Draft PR #230 in code gebouwd; regressie/IPA en native iPhone-acceptatie nog te verifiëren. Dezelfde UI uitbreiden naar handwapens is een volgende subfase. Alleen mergen na groen CI; de gebruiker heeft toestemming gegeven op 5 november. Geen OTA rechtstreeks vanaf deze Draft PR.
 
 ## 1. Probleem en doel
 
@@ -106,7 +106,7 @@ Native iPhone-acceptatie (deze gebruikersopname is de baseline):
 - [x] Optie B gekozen door gebruiker.
 - [x] Huidige Jeep-, Bullet-, Enemy-, HUD- en schuttercode op `main` gelezen.
 - [x] Bouwplan in afzonderlijke branch/Draft PR opgeslagen.
-- [ ] Nieuw productiescript en regressietests geïmplementeerd.
+- [x] Jeep-MG pilotcode, wereld-HUD en automatische regressietest toegevoegd; on-foot/handwapens volgen later.
 - [ ] Godot headless, iOS CI en OTA-preview groen op **implementatiecommit**.
 - [ ] Native iPhone-beeld en FPS door gebruiker gevalideerd.
 - [ ] Expliciete toestemming voor merge + OTA, **niet inbegrepen in dit verzoek**.

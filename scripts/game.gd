@@ -2,6 +2,8 @@ extends Node
 ## Spelstatus (autoload "Game"): golf, punten, bunker en de besturing die de sticks doorgeven.
 
 signal changed
+## Real damage confirmation for player-driven shots; not emitted by aim previews.
+signal combat_hit_confirmed(world_pos: Vector3, amount: float, source: String)
 signal banner(big: String, small: String, time: float)
 signal power_changed
 signal over(reason: String)

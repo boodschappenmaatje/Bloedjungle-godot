@@ -136,3 +136,7 @@ Photorealistic WWII American fortified guard tower for a jungle military base. E
 5. **GitHub / authenticiteit.** De originele ZIP is **>100 MB**, de geëxtraheerde OBJ **>250 MB**: niet als gewoon GitHub-bronbestand pushen. Gebruik de gecontroleerde Drive-link als bron en plaats alleen de later gevalideerde, geoptimaliseerde game-GLB op een passende opslagroute (Git LFS/release/bestaande assetpijplijn, volgens repo-afspraken). Download of gebruik geen alternatief model.
 6. **Acceptatie.** Vergelijk renders van bron en geoptimaliseerde GLB vanuit dezelfde gamecamera; textuur en silhouet moeten voor Dennis identiek ogen. Gameplay-integratie, echte iPhone-test en performance zijn **nog NIET GETEST**.
 
+
+## 10. Productiestatus 5 november 2026
+
+Een eerste Godot-implementatie en 60k GLB staan op deze Draft PR. Dit is **nog geen afgeronde 5a-3b**. Zie `bron/m2hb_toren/README.md` voor productie, echte beperkingen en open kwaliteitsgates. `tests/vijand_basis_test.gd` en `tests/vijand_m2_toren_test.gd` slagen; de lange aanvalstest heeft vier mislukte assertions bij de live/offscreen-omschakeling. Native iPhone niet getest.

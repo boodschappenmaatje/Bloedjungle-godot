@@ -127,6 +127,7 @@ func _impact(at: Vector3) -> void:
 ## Dit is bewust een overhead-artillerie-exceptie: muren blokkeren deze inslag niet.
 static func damage_at(at: Vector3) -> int:
 	VijandHk.blast(at, BLAST, DAMAGE)   # ook het vijandelijke hoofdkwartier (stap 5a-2)
+	VijandM2Toren.blast(at, BLAST, DAMAGE)
 	var hits := 0
 	for e in Game.enemies.duplicate():
 		if not is_instance_valid(e) or e.get("dead") == true:

@@ -285,6 +285,29 @@ func _physics_process(delta: float) -> void:
 	# inside either can still leave it; the dedicated fortification ray below
 	# catches muzzle clipping into the new high perimeter wall.
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	# Allies have no physics collision layer. M2 rounds test their swept path explicitly,
+	# and only hit when closer than the first wall/building collision.
+	if src == "m2" and step.length_squared() > 0.0001:
+		var nearest: Ally = null
+		var nearest_distance := INF
+		for soldier in Game.allies:
+			if not is_instance_valid(soldier) or soldier.beleg_bezig():
+				continue
+			var center: Vector3 = soldier.global_position + Vector3.UP * 1.2
+			var fraction := clampf((center - global_position).dot(step) / step.length_squared(), 0.0, 1.0)
+			var point := global_position + step * fraction
+			var distance := global_position.distance_to(point)
+			if point.distance_to(center) < 0.55 and distance < nearest_distance:
+				nearest = soldier
+				nearest_distance = distance
+		if nearest != null and (hit.is_empty() or nearest_distance < global_position.distance_to(hit.position)):
+			nearest.hp -= dmg
+			if nearest.hp <= 0.0:
+				Game.allies.erase(nearest)
+				nearest.queue_free()
+				Game.changed.emit()
+			queue_free()
+			return
 	if ground_direct_fire and Vector2(step.x, step.z).length_squared() > 0.0001:
 		var flat_from := Vector3(global_position.x, 1.5, global_position.z)
 		var flat_to := Vector3(global_position.x + step.x, 1.5, global_position.z + step.z)
@@ -387,6 +410,7 @@ func _explode(at: Vector3) -> void:
 	Fx.explosion(get_parent(), at, 1.4)
 	Barrel.catch_blast(at, explosive)
 	VijandHk.blast(at, explosive, dmg)   # de bazooka tegen het vijandelijke hoofdkwartier
+	VijandM2Toren.blast(at, explosive, dmg)
 	if Game.builds:
 		Game.builds.blast(at, explosive, dmg, true)  # eigen raketten doen een beetje schade aan je eigen bouwwerk
 	for e in Game.enemies.duplicate():

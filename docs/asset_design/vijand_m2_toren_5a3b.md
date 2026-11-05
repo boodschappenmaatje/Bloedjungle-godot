@@ -1,6 +1,6 @@
 # Asset Design Specification — Browning M2HB MG-wachttoren (D2 / 5a-3b)
 
-**Datum:** 2026-11-05. **Status:** ontwerpkeuzes goedgekeurd; **modelproductie en Godot-implementatie nog niet voltooid**.  
+**Datum:** 2026-11-05. **Status:** ontwerpkeuzes én origineel Meshy-bronmodel door Dennis goedgekeurd; **Godot-import, mobiele optimalisatie, animaties en gameplay nog niet voltooid**.  
 **Repo:** `boodschappenmaatje/Bloedjungle-godot` · **Branch:** `feature/vijandbasis-5a-3b-browning-m2`.  
 **Kwaliteit:** [ASSET_QUALITY_STANDARD.md](../ASSET_QUALITY_STANDARD.md), [VIJANDBASIS_MESHY_MODELLEN.md](../VIJANDBASIS_MESHY_MODELLEN.md), [GENERALS_PLAN.md](../GENERALS_PLAN.md).
 
@@ -109,3 +109,30 @@ Photorealistic WWII American fortified guard tower for a jungle military base. E
 6. Draft PR tonen met werkende viewer, teststatus en echte modelbestanden. **Geen merge/OTA zonder afzonderlijk expliciet akkoord.**
 
 **Dit document is de gestarte ontwerpspecificatie — geen claim dat het complete speelsysteem al is gebouwd.**
+
+## 9. Door Dennis goedgekeurd bronmodel — 5 november 2026
+
+**Definitieve visuele bron:** [Meshy M2HB Guard Tower (Google Drive)](https://drive.google.com/file/d/1gl5CrJgdwT8JSqOcK_vR22GlBdmffV4v/view?usp=drivesdk). Dennis: **"Dit is de toren verander het uiterlijk niet zo is die goed."** De toren mag **niet** worden vervangen door een nieuw ontwerp of opnieuw door AI worden gegenereerd. Alle vormen, kleuren, textuurpatronen, het machinegeweer en het silhouet blijven volgens de bron.
+
+**Technische inspectie, uitgevoerd op de originele bytes uit Drive (geen wijziging aan model):**
+
+| Item | Gemeten/geverifieerd |
+|---|---|
+| Drive-bestand | `export_Meshy_AI_2026-11-05_cc5f29.obj`, **119.824.864 bytes** |
+| Werkelijke inhoud | ZIP, ondanks bestandsextensie `.obj`; bevat **één OBJ, één MTL en één PNG** |
+| Interne naam | `Meshy_AI_WWII_M2HB_Guard_Tower_1105083159_image-to-3d-texture` |
+| Polygonen | **2.486.536 driehoekige faces** (OBJ, 1.242.576 vertices, 1.365.161 UV-coördinaten, 1.240.240 normals) |
+| Textuur | **4096 × 4096 RGB** diffuse/albedo PNG gekoppeld via de MTL |
+| Bounding box OBJ-ruimte | x: **1,429339**, y: **1,903092**, z: **1,084466** eenheden |
+| Bij uniforme schaal naar 6 meter hoogte | Visuele buitenafmetingen ongeveer **4,51 × 3,42 × 6,00 m** inclusief alle uitstekende details; dit is **niet hetzelfde** als de afgesproken 2,6 × 2,6 m constructievoet |
+| Source SHA-256 | `d023680c07b59a7505cc1a46c062b2b1de0477781c3324c6beac10eed495a94e` |
+
+**Cruciale integratieregels:**
+
+1. **Origineel bewaren.** De originele ZIP/OBJ/MTL/PNG is de ongewijzigde *visuele referentie*. Maak een technisch geoptimaliseerde, zelfstandige gamekopie; behoud materiaaluitstraling, vormen en herkenbare details bij controle in dezelfde camera. Geen herontwerp, geen kleurwijziging en geen stille vervanging van onderdelen.
+2. **Schaalcheck vóór import.** De volledige bounding box omvat mogelijk uitstekende MG/ladder-details. Meet afzonderlijk de daadwerkelijke voetafdruk van de dragende constructie. Gebruik bij voorkeur **uniforme schaal** om vervorming te voorkomen. Als de toren niet binnen de bestaande hoekposities past, beoordeel eerst een technische verplaatsing/rotatie van de instance, **zonder het model visueel te veranderen** en zonder muur, poort en paden kapot te maken.
+3. **Mesh optimaliseren.** De bron heeft ongeveer 2,49 miljoen triangles: vier ruwe instances zijn te duur voor het beoogde native iPhone-budget. LOD/retopologie met behoud van silhouet en gebakken oorspronkelijke 4K-textuurdetails is nodig; de eerdere mobiele trianglebudgetten zijn streefwaarden. Dit is technische verwerking, **geen artistiek herontwerp**.
+4. **Animaties niet verzinnen.** De OBJ bevat één `o`-object en geen skeleton/animatieclips. De M2 kan pas werkelijk mikken/vuren zodra MG-onderdelen zonder zichtbaar uiterlijkverlies zijn afgesplitst en correcte pivots hebben. Voeg de bestaande gerigde schutter toe als afzonderlijk game-object. De ontbrekende dedicated normal-/roughness-/metallic-maps moeten gecontroleerd technisch worden afgeleid of worden aangevuld zonder het albedo uiterlijk te overschrijven.
+5. **GitHub / authenticiteit.** De originele ZIP is **>100 MB**, de geëxtraheerde OBJ **>250 MB**: niet als gewoon GitHub-bronbestand pushen. Gebruik de gecontroleerde Drive-link als bron en plaats alleen de later gevalideerde, geoptimaliseerde game-GLB op een passende opslagroute (Git LFS/release/bestaande assetpijplijn, volgens repo-afspraken). Download of gebruik geen alternatief model.
+6. **Acceptatie.** Vergelijk renders van bron en geoptimaliseerde GLB vanuit dezelfde gamecamera; textuur en silhouet moeten voor Dennis identiek ogen. Gameplay-integratie, echte iPhone-test en performance zijn **nog NIET GETEST**.
+

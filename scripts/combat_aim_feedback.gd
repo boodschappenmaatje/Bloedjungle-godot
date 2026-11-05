@@ -1,0 +1,50 @@
+class_name CombatAimFeedback
+extends RefCounted
+## Read-only prediction for the current jeep MG shot. This never applies damage,
+## changes the existing narrow gunner assist, or claims a confirmed hit.
+const MAX_FLAT_RANGE := 40.5  # jeep.gd: 90 m/s * 0.45 s
+
+static func target_kind(collider: Object) -> String:
+	if not (collider is Node3D):
+		return "blocked"
+	var node := collider as Node3D
+	if node.is_in_group("vijand_verdediger") or Game.enemies.has(node):
+		if not bool(node.get("dead")):
+			return "enemy"
+	return "blocked"
+
+
+static func predict(space: PhysicsDirectSpaceState3D, origin: Vector3, angle: float, rise: float) -> Dictionary:
+	# Same masks as Bullet.fire(): the raised jeep MG ignores low wall-cover only
+	# for flat shots. Fortifications and the rotating M2 shield always block.
+	var mask := Bullet.MASK_ENEMY | Bullet.MASK_BUNKER | Bullet.MASK_VEHICLE | Bullet.MASK_NATURE | Bullet.MASK_FORTIFICATION
+	if not is_zero_approx(rise):
+		mask |= Bullet.MASK_WALL
+	var ray_dir := Vector3(sin(angle), rise, cos(angle))
+	var end := origin + ray_dir * MAX_FLAT_RANGE
+	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(origin, end, mask))
+	var point: Vector3 = hit.position if not hit.is_empty() else end
+	var collider: Object = hit.get("collider") if not hit.is_empty() else null
+
+	# Bullet.gd has a separate low-height fortification sweep for ground shots,
+	# so the preview must never advertise a vulnerable target behind that wall.
+	if origin.y < Data.BASE_WALL_H:
+		var flat_origin := Vector3(origin.x, 1.5, origin.z)
+		var flat_end := Vector3(end.x, 1.5, end.z)
+		var wall := space.intersect_ray(PhysicsRayQueryParameters3D.create(flat_origin, flat_end, Bullet.MASK_FORTIFICATION))
+		if not wall.is_empty():
+			var wall_dist := Vector2(wall.position.x - origin.x, wall.position.z - origin.z).length()
+			var hit_dist := Vector2(point.x - origin.x, point.z - origin.z).length()
+			if wall_dist <= hit_dist + 0.0001:
+				point = wall.position
+				collider = wall.collider
+
+	var kind := "clear" if collider == null else target_kind(collider)
+	var target: Node3D = collider as Node3D if kind == "enemy" else null
+	return {"state": kind, "point": point, "target": target, "origin": origin}
+
+
+## Never infer hit confirmation from the aim ray. A real hit handler calls
+## this only after it has observed positive HP loss on a real enemy.
+static func actual_damage(before: float, after: float) -> float:
+	return maxf(before - after, 0.0)

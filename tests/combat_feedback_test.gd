@@ -104,7 +104,7 @@ func _run() -> void:
 	_check("gunner becomes visible when wall is removed", preview.state == "enemy" and preview.target == shooter)
 
 	var hits: Array = []
-	Game.combat_hit_confirmed.connect(func(point: Vector3, amount: float, source: String) -> void:
+	root.get_node("Game").connect("combat_hit_confirmed", func(point: Vector3, amount: float, source: String) -> void:
 		if source == "jeep":
 			hits.append({"point": point, "amount": amount}))
 	var hp_before: float = shooter.hp

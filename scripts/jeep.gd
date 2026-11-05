@@ -35,6 +35,8 @@ var _t := 0.0
 var _cool := 0.0
 var _ram_cd := 0.0
 var _firing := false
+var _aim_preview_t := 0.0
+const AIM_PREVIEW_INTERVAL := 0.085  # ~12 ray previews/sec on native iPhone
 var _night := false
 var _head_mat: StandardMaterial3D
 var _tail_mat: StandardMaterial3D
@@ -174,6 +176,7 @@ func _physics_process(delta: float) -> void:
 		_aim_driven(delta, live)
 		_ram()
 	else:
+		_clear_aim_preview()
 		_aim_auto(delta)
 
 
@@ -267,6 +270,7 @@ func _aim_driven(delta: float, live: bool) -> void:
 	var d := wrapf(local - _gun.rotation.y, -PI, PI)
 	_gun.rotation.y += clampf(d, -GUN_TURN_DRIVEN * delta, GUN_TURN_DRIVEN * delta)
 	_cool -= delta
+	_update_aim_preview(delta, live)
 	var shoot: bool = live and Game.fire and absf(d) < 0.35
 	if shoot and _cool <= 0.0:
 		_cool = FIRE_RATE
@@ -279,6 +283,39 @@ func _aim_driven(delta: float, live: bool) -> void:
 		else:
 			_shoot(angle + randf_range(-0.05, 0.05))
 	_set_firing(shoot)
+
+
+## A non-authoritative preview of the SAME MG direction and existing narrow
+## gunner assist. Bullet._physics_process alone decides whether a hit occurred.
+func _update_aim_preview(delta: float, live: bool) -> void:
+	var hud := get_tree().get_first_node_in_group("combat_target_hud") as CombatTargetHud
+	if hud == null:
+		return
+	if not live or is_nan(Game.aim) or Game.build_mode:
+		hud.clear_prediction()
+		_aim_preview_t = 0.0
+		return
+	_aim_preview_t -= delta
+	if _aim_preview_t > 0.0:
+		return
+	_aim_preview_t = AIM_PREVIEW_INTERVAL
+	var from := _monding.global_position
+	var fwd := -_gun.global_transform.basis.z
+	var angle := atan2(fwd.x, fwd.z)
+	var rise := 0.0
+	var solution := _tower_gunner_solution(from, angle)
+	if not solution.is_empty():
+		angle = float(solution.angle)
+		rise = float(solution.rise)
+	var data := CombatAimFeedback.predict(get_world_3d().direct_space_state, from, angle, rise)
+	hud.set_prediction(data)
+
+
+func _clear_aim_preview() -> void:
+	var hud := get_tree().get_first_node_in_group("combat_target_hud") as CombatTargetHud
+	if hud != null:
+		hud.clear_prediction()
+	_aim_preview_t = 0.0
 
 
 ## Geparkeerd of zonder bestuurder schiet de schutter niet: schieten doe je zelf vanuit de jeep.
@@ -329,7 +366,8 @@ func _shoot(angle: float, rise := 0.0) -> void:
 	var from := _monding.global_position
 	# Elevated shots must respect low wall colliders too. Flat fire retains
 	# the legacy over-wall behavior of the raised jeep MG.
-	Bullet.fire(get_parent(), from, angle, 90.0, DAMAGE, 0.45, true, is_zero_approx(rise), 0, 0.0, 0.0, rise)
+	var shot := Bullet.fire(get_parent(), from, angle, 90.0, DAMAGE, 0.45, true, is_zero_approx(rise), 0, 0.0, 0.0, rise, "jeep_m2")
+	shot.feedback_source = "jeep"
 	Fx.muzzle(get_parent(), from)
 	Fx.casing(get_parent(), from)
 	Sfx.play("mg", 0.4, global_position)

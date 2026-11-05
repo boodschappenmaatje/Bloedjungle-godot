@@ -154,3 +154,11 @@ Na native iPhone-test is gekozen voor **trefferfeedback B**: bij echte schade aa
 **Vastgestelde respawnbug:** `jeep.gd` riep `_toggle()` bij overlijden aan, maar `_toggle()` retourneert voortijdig voor `p.dead`. `driven` bleef daardoor aan en overschreef de respawnpositie; camera bleef bij het voertuig. Correctie: sterfte dwingt uitstappen af, `player.respawn()` herstelt voertuig-/zichtbaarheids-/collisionstatus, en de camera springt na respawn direct naar de eigen basis. De jeep blijft achter.
 
 **Acceptatietests**: `tests/jeep_respawn_feedback_test.gd`, bestaande `tests/respawn_test.gd` en `tests/jeep_m2_schutter_test.gd` plus vijandbasis-/voertuigregressie, iOS-export en OTA-simulatie. Nieuwe featurebranch/Draft PR; geen merge naar main of OTA-publicatie zonder afzonderlijk akkoord. Fysieke iPhone-weergave en FPS blijven pas bewezen na de native test.
+
+## Schietsysteem 2.0 — Tactisch richten en trefferfeedback (optie B, 5 november 2026)
+
+**Gebruikerskeuze:** optie B, met een klein richtkruis op het voorspelde **wereldpunt**, subtiele doelmarkering en HP voor één geselecteerde vijand, zichtbare bestaande kogeltracers en een **bevestigde** trefferindicator. De eerste proef is de bestuurbare jeep-M2 tegen een vijandelijke torenschutter; dezelfde presentatielaag wordt daarna uitgebreid naar de individuele spelerwapens, zonder hun schietregels te wijzigen.
+
+**Technisch contract:** niet meer richthulp dan de huidige 0,065 rad (~3,7°), 39 m en 0,56 stijging bij de jeep; schieten blijft handmatig. Een rode hitmarker verschijnt uitsluitend bij echt vastgestelde schade, nooit op een metalen schild of een gemist schot. Doel-HUD mag bestaande markeringen, joystick, kaart of teamwiel niet blokkeren. De fix voor de zwarte bermstreep en zichtbare basismuur blijft intact.
+
+**Uitvoerbaar bouwplan en tests:** [Schietsysteem 2.0 — optie B](SCHIETSYSTEEM_2_0_BOUWPLAN.md). **Status:** jeep-MG verticale proef in Draft PR #230 geïmplementeerd (wereldrichtpunt, doelherkenning, contextuele HP, fysiek bevestigde treffers, duidelijkere tracers); Godot/iOS-regressies nog als releasepoort, handwapens volgen na de jeep-proef. Niet mergen of OTA-publiceren zonder expliciete toestemming (op 5 nov gegeven voor merge **na groene tests**).

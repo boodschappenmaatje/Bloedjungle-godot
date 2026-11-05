@@ -89,12 +89,14 @@ func _ready() -> void:
 	up.index = 3
 	up.position = center
 	sticks._input(up)
-	_check(Game.troop_mode == "hold", "short TEAM tap executes the shared hold order")
-	_check(first_soldier.command == "hold" and second_soldier.command == "hold", "short TEAM tap orders every controllable recruit")
+	_check(build_mode.entered == 2, "short TEAM tap opens build mode during combat")
+	_check(Game.troop_mode == "follow" and first_soldier.command == "follow" and second_soldier.command == "follow", "short TEAM tap does not issue a troop order")
 	_check(guard.calls == 0 and helper.calls == 0 and passenger.calls == 0, "guards, helpers, and vehicle passengers are excluded")
 	_check(not sticks._mouse_down and not Game.fire, "TEAM input does not activate mouse fire")
-	team.toggle_follow_hold() # same entry point used by the barracks menu
-	_check(first_soldier.command == "follow" and second_soldier.command == "follow", "barracks toggle shares the TEAM follow state")
+	team.toggle_follow_hold() # separate entry point also used by the barracks menu
+	_check(Game.troop_mode == "hold" and first_soldier.command == "hold" and second_soldier.command == "hold", "barracks toggle issues hold to controllable recruits")
+	team.toggle_follow_hold()
+	_check(Game.troop_mode == "follow" and first_soldier.command == "follow" and second_soldier.command == "follow", "barracks toggle restores follow")
 	passenger.truck.free()
 	Game.allies.clear()
 	var mouse_down := InputEventMouseButton.new()
@@ -123,13 +125,17 @@ func _ready() -> void:
 	cancel.position = center
 	sticks._input(cancel)
 	_check(team.controller.pending_order == "" and not team.is_modal(), "tapping TEAM cancels target mode")
-	print("TEAM_ADAPTER_TESTS: adapters initialize; %d input checks passed" % _checks)
-	get_tree().quit(0)
+	if _failures == 0:
+		print("TEAM_ADAPTER_TESTS: %d input checks passed" % _checks)
+	else:
+		push_error("TEAM_ADAPTER_TESTS: %d of %d checks failed" % [_failures, _checks])
+	get_tree().quit(0 if _failures == 0 else 1)
 
 
 var _checks := 0
+var _failures := 0
 func _check(condition: bool, description: String) -> void:
 	_checks += 1
 	if not condition:
+		_failures += 1
 		push_error("TEAM_ADAPTER_TESTS failed: " + description)
-		get_tree().quit(1)

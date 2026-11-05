@@ -145,3 +145,12 @@ Tijdens de eerste native iPhone-test van de vier Browning M2HB-torens schoten de
 - **Status is pas geslaagd als CI/Godot en later fysieke native iPhone-OTA-test dit bevestigen.** Geen automatische merge naar `main` en geen OTA-publicatie vanuit deze Draft PR.
 
 **Afzonderlijke vervolgstap ná de jeepreparatie:** tactische bewaking en korte patrouilles voor de vier poortbewakers, twee HK-bewakers en twee reserves binnen het kamp, als aanvulling op de reeds goedgekeurde dekking, flankeren en postbezetting. Geen extra vijanden of nieuw model zonder aparte keuze.
+
+
+### Vervolg 5a-3b — bevestigde schuttertreffers en jeep-respawn (05-11-2026)
+
+Na native iPhone-test is gekozen voor **trefferfeedback B**: bij echte schade aan een M2-schutter een korte wereldmarker, iets grotere zichtbare gezondheidsbalk en gedempte bevestigingsklik; bij overlijden tijdelijk **MG UIT**. Betonnen toren en stalen schild geven géén schutterhitmarker. Bestaande bloed, getroffen houding, sterfanimatie en torenovername blijven intact. De kleine effecten hebben geen nieuwe assets nodig.
+
+**Vastgestelde respawnbug:** `jeep.gd` riep `_toggle()` bij overlijden aan, maar `_toggle()` retourneert voortijdig voor `p.dead`. `driven` bleef daardoor aan en overschreef de respawnpositie; camera bleef bij het voertuig. Correctie: sterfte dwingt uitstappen af, `player.respawn()` herstelt voertuig-/zichtbaarheids-/collisionstatus, en de camera springt na respawn direct naar de eigen basis. De jeep blijft achter.
+
+**Acceptatietests**: `tests/jeep_respawn_feedback_test.gd`, bestaande `tests/respawn_test.gd` en `tests/jeep_m2_schutter_test.gd` plus vijandbasis-/voertuigregressie, iOS-export en OTA-simulatie. Nieuwe featurebranch/Draft PR; geen merge naar main of OTA-publicatie zonder afzonderlijk akkoord. Fysieke iPhone-weergave en FPS blijven pas bewezen na de native test.

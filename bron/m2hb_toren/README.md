@@ -60,3 +60,5 @@ De werkelijke visuele onderbouw heeft circa 3,87 × 3,34 m footprint. De collide
 De bestaande `vijand_m2_toren.gd` gebruikt de geïmporteerde pivots. `tests/vijand_m2_articulatie_test.gd` en `tests/vijand_m2_toren_test.gd` vormen de gerichte regressies. De eerdere experimentele secties hierboven beschrijven de geschiedenis vóór deze productie-integratie. Native iPhone-FPS en daadwerkelijke OTA-installatie blijven apart te testen.
 
 Ook `m2hb_20261105_pitch10.png` en `m2hb_20261105_recoil12.png` tonen met dezelfde camera een echte +10° elevatie en 12 cm terugslag van de oorspronkelijke receiver/loop. De Godot-articulatietest gebruikt dezelfde elevatieas en terugslagvector als de gameplaycode en controleert dat de monding zichtbaar meebeweegt.
+
+De macOS iOS-importcheck op PR #227 vond een tijdelijke scriptinstantie bij het achteraf wisselen van het script op `enemy.tscn`. De verdediger gebruikt daarom nu `scenes/vijand_verdediger.tscn` met het afgeleide Assault-script als vaste scene-resource. Het model, de rolverdeling en gameplaywaarden zijn dezelfde; de iOS-check wordt op de volgende commit opnieuw gedraaid.

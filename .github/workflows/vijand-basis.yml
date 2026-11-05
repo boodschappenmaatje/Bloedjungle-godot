@@ -24,6 +24,7 @@ on:
       - "assets/vijand_hk.glb"
       - "assets/vijand_m2_toren.glb"
       - "scripts/vijand_m2_toren.gd"
+      - "scenes/vijand_verdediger.tscn"
       - "tests/vijand_m2_toren_test.gd"
       - "tests/vijand_m2_articulatie_test.gd"
       - "tests/vijand_basis_test.gd"

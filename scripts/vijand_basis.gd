@@ -151,8 +151,7 @@ static func _verdedigers(h: Node3D) -> void:
 
 
 static func _verdediger(h: Node3D, role_: String, pos: Vector3, health: float):
-	var soldier = preload("res://scenes/enemy.tscn").instantiate()
-	soldier.set_script(preload("res://scripts/vijand_verdediger.gd"))
+	var soldier = load("res://scenes/vijand_verdediger.tscn").instantiate()
 	soldier.setup("assault", 1)
 	soldier.post = role_
 	soldier.max_hp = health

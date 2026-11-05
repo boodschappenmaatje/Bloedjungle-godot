@@ -42,7 +42,7 @@ func _run() -> void:
 	root.add_child(main)
 	await _frames(3)
 	main.begin()
-	await _frames(12)
+	await _frames(40)
 
 	# Isolated fixture outside the level's normal walls/buildings: retains the
 	# same approved tower GLB, enemy capsule, jeep muzzle, bullet physics.
@@ -53,6 +53,7 @@ func _run() -> void:
 	var shooter = load("res://scenes/vijand_verdediger.tscn").instantiate()
 	shooter.setup("assault", 1)
 	shooter.post = "schutter"
+	shooter.add_to_group("vijand_verdediger")
 	shooter.hp = 90.0
 	shooter.max_hp = 90.0
 	main.add_child(shooter)

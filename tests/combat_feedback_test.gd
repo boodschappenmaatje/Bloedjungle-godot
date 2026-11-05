@@ -70,7 +70,7 @@ func _run() -> void:
 	jeep.set_physics_process(false)
 	await _frames(3)
 
-	var shield := tower.yaw.get_node_or_null("MG_ShieldCollision")
+	var shield: Node3D = tower.yaw.get_node_or_null("MG_ShieldCollision")
 	_check("steel shield is not a vulnerable gunner", shield != null and CombatAimFeedback.target_kind(shield) == "blocked")
 	_check("live tower gunner is a valid enemy", CombatAimFeedback.target_kind(shooter) == "enemy")
 	var from: Vector3 = jeep._monding.global_position

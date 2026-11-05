@@ -18,7 +18,9 @@ func _ready() -> void:
 	add_to_group("combat_target_hud")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	Game.combat_hit_confirmed.connect(_on_confirmed)
+	var game := get_tree().root.get_node_or_null("Game")
+	if game != null and not game.is_connected("combat_hit_confirmed", _on_confirmed):
+		game.connect("combat_hit_confirmed", _on_confirmed)
 
 
 func set_prediction(data: Dictionary) -> void:
@@ -41,11 +43,12 @@ func _on_confirmed(point: Vector3, damage: float, source: String) -> void:
 
 
 func _active() -> bool:
-	if Game.state not in ["play", "prep"] or Game.build_mode or Game.editing:
+	var game := get_tree().root.get_node_or_null("Game")
+	if game == null or str(game.get("state")) not in ["play", "prep"] or bool(game.get("build_mode")) or bool(game.get("editing")):
 		return false
 	if get_tree().paused or get_tree().get_first_node_in_group("kaart_open") != null:
 		return false
-	var player = Game.player
+	var player = game.get("player")
 	return player != null and is_instance_valid(player) and player.driving and not player.dead
 
 

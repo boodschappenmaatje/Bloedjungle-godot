@@ -41,7 +41,10 @@ static func build(root: Node3D) -> Node3D:
 	_gebouw(holder, "Garage", Vector3(19.0, 0, -4.0), Vector3(9.0, 4.2, 8.0))
 	_gebouw(holder, "Depot", Vector3(-19.0, 0, 12.0), Vector3(8.0, 3.6, 8.0))
 	_generator(holder, Vector3(19.0, 0, 12.0))
-	_verdedigers(holder)
+	# Editor scene imports instantiate Level with non-tool soldier scripts as
+	# placeholders. Runtime creates the twelve defenders after scripts load.
+	if not Engine.is_editor_hint():
+		_verdedigers(holder)
 	return holder
 
 

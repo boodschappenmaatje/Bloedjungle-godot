@@ -24,8 +24,9 @@ func _physics_process(delta: float) -> void:
 			approach_done = false
 		else:
 			var ladder: Vector3 = assignment.get_node("LadderStart").global_position
-			var offset: Vector3 = assignment.global_position - VijandBasis.P
-			var via := VijandBasis.P + Vector3(signf(offset.x) * 8.0, 0, signf(offset.z) * 21.0)
+			var base_center: Vector3 = assignment.get_parent().global_position
+			var offset: Vector3 = assignment.global_position - base_center
+			var via := base_center + Vector3(signf(offset.x) * 8.0, 0, signf(offset.z) * 21.0)
 			if global_position.distance_to(via) < 0.8:
 				approach_done = true
 			var waypoint: Vector3 = ladder if approach_done else via

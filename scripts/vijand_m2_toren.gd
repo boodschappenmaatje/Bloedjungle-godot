@@ -31,14 +31,20 @@ func _ready() -> void:
 	intact = load(MODEL_PATH).instantiate()
 	intact.name = "TowerIntact"
 	add_child(intact)
+	# Keep the four historic tower roots. The approved mesh is wider than its old
+	# block placeholder, so move its contents inside the wall without rescaling it.
+	var inward_world := Vector3(-signf(position.x) * 0.75, 0.0, -signf(position.z) * 0.50)
+	var inward_local := global_basis.inverse() * inward_world
+	intact.position = inward_local
 	var body := StaticBody3D.new()
 	body.set_script(preload("res://scripts/vijand_m2_body.gd"))
 	body.collision_layer = Kit.LAYER_WALL | Kit.LAYER_BUNKER
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(1.9, 5.0, 1.9)
+	# The approved model's sandbagged lower footprint measures about 3.9 × 3.4 m.
+	box.size = Vector3(3.9, 5.0, 3.4)
 	shape.shape = box
-	body.position.y = 2.5
+	body.position = inward_local + Vector3.UP * 2.5
 	body.add_child(shape)
 	add_child(body)
 	# Prefer the real imported visual pivots once the approved model is split.
@@ -58,7 +64,7 @@ func _ready() -> void:
 	else:
 		yaw = Node3D.new()
 		yaw.name = "MG_Yaw"
-		yaw.position.y = 4.6
+		yaw.position = inward_local + Vector3.UP * 4.6
 		add_child(yaw)
 		pitch = Node3D.new()
 		pitch.name = "MG_Pitch"
@@ -73,12 +79,14 @@ func _ready() -> void:
 	if not _articulated:
 		_muzzle = Node3D.new()
 		_muzzle.name = "Muzzle"
-		_muzzle.position = Vector3(0, 4.8, 1.3)
+		_muzzle.position = inward_local + Vector3(0, 4.8, 1.3)
 		add_child(_muzzle)
 	get_node("ShooterMount").position = Vector3(0, 4.4, -0.4)
 	get_node("LadderStart").position = Vector3(0, 0, -2.3)
 	get_node("LadderLanding").position = Vector3(0, 2.2, -2.3)
 	get_node("LadderEnd").position = Vector3(0, 4.4, -1.5)
+	for name_ in ["ShooterMount", "LadderStart", "LadderLanding", "LadderEnd"]:
+		get_node(name_).position += inward_local
 
 
 # Returns true only if the GLB contains real nested moving M2 artwork.

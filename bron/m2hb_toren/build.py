@@ -27,6 +27,7 @@ for v in o.data.vertices:
     v.co = ((x - (lo[0] + hi[0]) / 2) * scale,
             -(z - (lo[2] + hi[2]) / 2) * scale,
             (y - lo[1]) * scale)
+o.rotation_euler = (0.0, 0.0, 0.0)  # OBJ import's +90° X is already accounted for above.
 o.name = 'TowerStatic'
 dec = o.modifiers.new('PreserveApprovedSilhouette', 'DECIMATE')
 dec.ratio = min(1.0, 60000 / max(1, len(o.data.polygons)))

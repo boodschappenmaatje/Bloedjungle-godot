@@ -140,3 +140,7 @@ Photorealistic WWII American fortified guard tower for a jungle military base. E
 ## 10. Productiestatus 5 november 2026
 
 Een eerste Godot-implementatie en 60k GLB staan op deze Draft PR. Dit is **nog geen afgeronde 5a-3b**. Zie `bron/m2hb_toren/README.md` voor productie, echte beperkingen en open kwaliteitsgates. `tests/vijand_basis_test.gd` en `tests/vijand_m2_toren_test.gd` slagen; de lange aanvalstest slaagt na aanpassing van de testfixture voor de nu schietende MG’s. Native iPhone niet getest.
+
+## 11. 60k-productie-GLB gearticuleerd
+
+De goedgekeurde 60k-gamekopie is nu in dezelfde GLB opgesplitst in `TowerStatic`, `MG_Yaw/MG_ShieldMount` en `MG_Yaw/MG_Pitch/MG_Recoil/MG_BarrelReceiver`, met `Muzzle` als bewegend anker. Restpose, brontexture en UV's zijn gecontroleerd met Blender-renders en Godot-import; details staan in `bron/m2hb_toren/README.md`. De vorige extra 90° importrotatie is in de nieuwe productiekopie gecorrigeerd. De vier bestaande torenroots blijven op de oude locaties. De inhoud staat iets naar binnen om de echte, bredere onderbouw binnen de muur te houden. Deze wijziging staat alleen in Draft PR #227; de native iPhone-app en FPS zijn nog niet getest en de gedeelde OTA is niet gepubliceerd.

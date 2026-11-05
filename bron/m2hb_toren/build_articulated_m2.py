@@ -50,7 +50,10 @@ def build(source, output, debug_mask, yaw_preview):
     scene_src = trimesh.load(source, force="scene", process=False)
     if len(scene_src.geometry) != 1 or "MG_Yaw" in scene_src.graph.nodes:
         raise ValueError("Expected the original single-mesh optimized tower")
-    mesh = trimesh.load(source, force="mesh", process=False)
+    # The Blender GLB carries a node transform. `force="mesh"` bakes that
+    # transform and turns the approved Y-up tower into Z-up coordinates.
+    # Split the original accessor geometry so the output glTF remains Y-up.
+    mesh = next(iter(scene_src.geometry.values())).copy()
     if not isinstance(mesh.visual, TextureVisuals) or mesh.visual.uv is None:
         raise ValueError("Missing original UVs")
     if not 5.7 <= np.ptp(mesh.bounds, axis=0)[1] <= 6.3:

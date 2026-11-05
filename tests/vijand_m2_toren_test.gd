@@ -22,6 +22,7 @@ func _process(_delta: float) -> bool:
   var towers := get_nodes_in_group('vijand_toren')
   var defenders := get_nodes_in_group('vijand_verdediger')
   check('vier torens', towers.size() == 4)
+  check('vier echte gearticuleerde M2-meshes', towers.all(func(tower): return tower.has_articulated_m2()))
   check('twaalf verdedigers', defenders.size() == 12)
   var counts := {'schutter':0,'poort':0,'hk':0,'reserve':0}
   for soldier in defenders: counts[soldier.post] += 1

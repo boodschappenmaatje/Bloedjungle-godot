@@ -85,7 +85,7 @@ func _run() -> void:
 	if shield is StaticBody3D:
 		var side_a: Vector3 = shield.to_global(Vector3(0.0, 0.0, 1.5))
 		var side_b: Vector3 = shield.to_global(Vector3(0.0, 0.0, -1.5))
-		var armor_query := PhysicsRayQueryParameters3D.create(side_a, side_b, 16  # Bullet.MASK_BUNKER)
+		var armor_query := PhysicsRayQueryParameters3D.create(side_a, side_b, 16)  # Bullet.MASK_BUNKER
 		var armor_hit := main.get_world_3d().direct_space_state.intersect_ray(armor_query)
 		_check("draaibaar stalen schild houdt kogels tegen", not armor_hit.is_empty() and armor_hit.collider == shield)
 	

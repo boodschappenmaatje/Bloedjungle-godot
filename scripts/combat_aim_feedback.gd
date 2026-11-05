@@ -14,10 +14,6 @@ const MASK_NATURE := 128
 const MASK_VEHICLE := 1024
 const MASK_FORTIFICATION := 1 << 12
 const BASE_WALL_H := 3.0
-# Mirrors Bullet's collision bits without importing the Bullet class at script-parse
-# time. Headless SceneTree tests initialize Game after dependent class scans.
-const MASK_ENEMY := 8
-const MASK_VEHICLE := 1024
 
 static func target_kind(collider: Object) -> String:
 	if not (collider is Node3D):
@@ -36,9 +32,9 @@ static func target_kind(collider: Object) -> String:
 static func predict(space: PhysicsDirectSpaceState3D, origin: Vector3, angle: float, rise: float) -> Dictionary:
 	# Same masks as Bullet.fire(): the raised jeep MG ignores low wall-cover only
 	# for flat shots. Fortifications and the rotating M2 shield always block.
-	var mask := MASK_ENEMY | Kit.LAYER_BUNKER | MASK_VEHICLE | Kit.LAYER_NATURE | Kit.LAYER_FORTIFICATION
+	var mask := MASK_ENEMY | MASK_BUNKER | MASK_VEHICLE | MASK_NATURE | MASK_FORTIFICATION
 	if not is_zero_approx(rise):
-		mask |= Kit.LAYER_WALL
+		mask |= MASK_WALL
 	var ray_dir := Vector3(sin(angle), rise, cos(angle))
 	var end := origin + ray_dir * MAX_FLAT_RANGE
 	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(origin, end, mask))
@@ -50,7 +46,7 @@ static func predict(space: PhysicsDirectSpaceState3D, origin: Vector3, angle: fl
 	if origin.y < BASE_WALL_H:
 		var flat_origin := Vector3(origin.x, 1.5, origin.z)
 		var flat_end := Vector3(end.x, 1.5, end.z)
-		var wall := space.intersect_ray(PhysicsRayQueryParameters3D.create(flat_origin, flat_end, Kit.LAYER_FORTIFICATION))
+		var wall := space.intersect_ray(PhysicsRayQueryParameters3D.create(flat_origin, flat_end, MASK_FORTIFICATION))
 		if not wall.is_empty():
 			var wall_dist := Vector2(wall.position.x - origin.x, wall.position.z - origin.z).length()
 			var hit_dist := Vector2(point.x - origin.x, point.z - origin.z).length()

@@ -119,19 +119,11 @@ func _build_button() -> void:
 
 func _toggle() -> void:
 	var p = Game.player
+	# Input must not let a dead player board or re-board the jeep.
 	if p == null or p.dead:
 		return
 	if driven:
-		driven = false
-		p.driving = false
-		p.visible = true
-		var side := global_transform.basis.x
-		p.global_position = global_position - side * 1.9
-		p.global_position.y = 0.0
-		p.collision_mask = p.get("_mask0")
-		_btn.kind = "enter"
-		_btn.set_caption("IN")
-		_btn.queue_redraw()
+		_disembark(p)
 	else:
 		driven = true
 		goals.clear()
@@ -144,13 +136,32 @@ func _toggle() -> void:
 		_btn.queue_redraw()
 
 
+## Death is not a manual button press. _toggle() refuses dead players, so
+## calling it from _physics_process left driven=true and pulled the player
+## back to the jeep every frame even after Player.respawn() moved them home.
+func _disembark(p: Node3D) -> void:
+	driven = false
+	p.driving = false
+	p.visible = true
+	var side := global_transform.basis.x
+	p.global_position = global_position - side * 1.9
+	p.global_position.y = 0.0
+	p.collision_mask = p.get("_mask0")
+	p.velocity = Vector3.ZERO
+	_set_firing(false)
+	if _btn != null:
+		_btn.kind = "enter"
+		_btn.set_caption("IN")
+		_btn.queue_redraw()
+
+
 func _physics_process(delta: float) -> void:
 	_t += delta
 	_ram_cd -= delta
 	var p = Game.player
 	var live: bool = Game.state == "play" or Game.state == "prep"
 	if p != null and p.dead and driven:
-		_toggle()
+		_disembark(p)
 	if _btn:
 		var near: bool = p != null and not p.dead and live and (driven or p.global_position.distance_to(global_position) < BOARD_DIST)
 		_btn.visible = near

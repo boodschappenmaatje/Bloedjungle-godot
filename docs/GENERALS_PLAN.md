@@ -145,3 +145,12 @@ Tijdens de eerste native iPhone-test van de vier Browning M2HB-torens schoten de
 - **Status is pas geslaagd als CI/Godot en later fysieke native iPhone-OTA-test dit bevestigen.** Geen automatische merge naar `main` en geen OTA-publicatie vanuit deze Draft PR.
 
 **Afzonderlijke vervolgstap ná de jeepreparatie:** tactische bewaking en korte patrouilles voor de vier poortbewakers, twee HK-bewakers en twee reserves binnen het kamp, als aanvulling op de reeds goedgekeurde dekking, flankeren en postbezetting. Geen extra vijanden of nieuw model zonder aparte keuze.
+
+
+## Schietsysteem 2.0 — Tactisch richten en trefferfeedback (optie B, 5 november 2026)
+
+**Gebruikerskeuze:** optie B, met een klein richtkruis op het voorspelde **wereldpunt**, subtiele doelmarkering en HP voor één geselecteerde vijand, zichtbare bestaande kogeltracers en een **bevestigde** trefferindicator. De eerste proef is de bestuurbare jeep-M2 tegen een vijandelijke torenschutter; dezelfde presentatielaag wordt daarna uitgebreid naar de individuele spelerwapens, zonder hun schietregels te wijzigen.
+
+**Technisch contract:** niet meer richthulp dan de huidige 0,065 rad (~3,7°), 39 m en 0,56 stijging bij de jeep; schieten blijft handmatig. Een rode hitmarker verschijnt uitsluitend bij echt vastgestelde schade, nooit op een metalen schild of een gemist schot. Doel-HUD mag bestaande markeringen, joystick, kaart of teamwiel niet blokkeren. De fix voor de zwarte bermstreep en zichtbare basismuur blijft intact.
+
+**Uitvoerbaar bouwplan en tests:** [Schietsysteem 2.0 — optie B](SCHIETSYSTEEM_2_0_BOUWPLAN.md). **Status:** alleen plan in een aparte Draft PR; nog geen gameplaycode, geen succesvolle testclaim, niet mergen naar main en geen OTA publiceren zonder apart akkoord.

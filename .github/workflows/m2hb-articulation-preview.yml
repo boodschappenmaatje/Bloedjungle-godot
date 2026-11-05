@@ -1,0 +1,53 @@
+name: M2HB articulated preview (Draft only)
+
+on:
+  push:
+    branches:
+      - feature/vijandbasis-5a-3b-browning-m2
+    paths:
+      - 'bron/m2hb_toren/build_articulated_m2.py'
+      - '.github/workflows/m2hb-articulation-preview.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: 'requirements.txt'
+      - name: Install preview-only geometry tooling
+        run: python -m pip install --disable-pip-version-check numpy trimesh pillow
+      - name: Produce split preview without modifying approved game model
+        run: |
+          mkdir -p m2hb-preview
+          python bron/m2hb_toren/build_articulated_m2.py \
+            --source assets/vijand_m2_toren.glb \
+            --output m2hb-preview/vijand_m2_toren_ARTICULATED_CANDIDATE.glb \
+            --debug-mask m2hb-preview/weapon_parts_COLOR_MASK.glb \
+            --yaw-preview m2hb-preview/weapon_yaw45_CHECK.glb
+      - name: Verify hierarchy and unchanged triangle count
+        run: |
+          python - <<'PY'
+          import trimesh
+          source = trimesh.load('assets/vijand_m2_toren.glb', force='scene', process=False)
+          result = trimesh.load('m2hb-preview/vijand_m2_toren_ARTICULATED_CANDIDATE.glb', force='scene', process=False)
+          before = sum(len(g.faces) for g in source.geometry.values())
+          after = sum(len(g.faces) for g in result.geometry.values())
+          assert before == after, (before, after)
+          assert {'MG_Yaw','MG_Pitch','MG_Recoil','Muzzle'} <= set(result.graph.nodes)
+          print(f'PASS {before} tris, candidate={after}, articulated nodes found')
+          PY
+      - name: Publish internal review artifact (not OTA or production game)
+        uses: actions/upload-artifact@v4
+        with:
+          name: m2hb-articulation-review
+          path: m2hb-preview/
+          retention-days: 14

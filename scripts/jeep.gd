@@ -139,7 +139,7 @@ func _toggle() -> void:
 ## Death is not a manual button press. _toggle() refuses dead players, so
 ## calling it from _physics_process left driven=true and pulled the player
 ## back to the jeep every frame even after Player.respawn() moved them home.
-func _disembark(p: Node3D) -> void:
+func _disembark(p) -> void:
 	driven = false
 	p.driving = false
 	p.visible = true

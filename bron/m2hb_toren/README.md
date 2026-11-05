@@ -14,3 +14,18 @@ Godot: `scripts/vijand_m2_toren.gd` instantiëert één gedeelde GLB op vier pos
 - `tests/aanval_basis_test.gd` slaagt nadat de routetest de speler tijdens het nabije MG-gevecht in leven houdt; de live/offscreen-omschakeling is daarmee functioneel gecontroleerd, maar langere gevechten en mobiele prestaties blijven open.
 
 Geen externe audio toegevoegd: er is dus geen onbewezen gamelicentie of attributie.
+
+## Experimentele M2-meshscheiding — 5 november (niet voor productie)
+
+Nieuw: `split_weapon_probe.py`. Uitgangspunt is **precies Dennis' goedgekeurde bron**, geen ander uiterlijk. Het script leest een bestaande geoptimaliseerde GLB, laat de bron ongemoeid, en exporteert een **diagnostische** `TowerStatic` + `MG_Yaw` met originele texture/UV. Het schrijft **niet** naar de gameplay-asset.
+
+Lokaal gecontroleerd op een andere 162.806-triangle LOD0-export van dezelfde goedgekeurde Meshy-bron:
+- Selectie: 12.694 MG-kandidaat-driehoeken en 150.112 statische driehoeken; de som blijft exact gelijk.
+- GLB herladen, UV/materialen behouden, omvattende bounds in rustpositie minder dan 2 mm afwijking.
+- Dezelfde statische camerahoek gaf gemiddelde RGB-afwijking ca. 0,48/255 per kanaal tegenover het oorspronkelijke LOD0-renderbeeld (rendervergelijking is **geen** bewijs van identieke weergave op alle kijkhoeken).
+- Een aparte 45° yaw-diagnose is gerenderd. **Bekend probleem:** delen van het zwarte schild en de onderste affuit zijn nog niet helemaal afgesplitst; die kunnen bij draaien achterblijven. Daarom is dit uitsluitend een voorbereidende proef, **niet geïntegreerd** in `assets/vijand_m2_toren.glb`.
+- **NIET GETEST** op de 60.000-triangle productie-GLB of in Godot; vereiste volgende stappen: selectie in Blender handmatig corrigeren met alle aan elkaar horende MG-delen, echte yaw/pitch/recoil-pivots, aparte richt-/muzzleankers, bronvergelijkingsrenders en regressietests. Pas daarna productie-GLB vervangen.
+
+Voorbeeld (alle output in `/tmp`): `python3 bron/m2hb_toren/split_weapon_probe.py --source assets/vijand_m2_toren.glb --output /tmp/m2-split-PREVIEW.glb --debug-mask /tmp/m2-mask-PREVIEW.glb --yaw-preview /tmp/m2-yaw45-PREVIEW.glb`.
+
+**Geen merge/OTA**, geen nieuwe bron- of productiemodellen aan deze wijziging toegevoegd.

@@ -42,6 +42,17 @@ func _run() -> void:
 	main.begin()
 	await _frames(40)
 
+	# Guard against diverging display-only mask constants; do not preload
+	# Bullet through the test script itself (the gameplay script owns hit events).
+	var canonical_masks: Dictionary = (load("res://scripts/bullet.gd") as Script).get_script_constant_map()
+	_check("aim preview uses real enemy collision mask", CombatAimFeedback.MASK_ENEMY == int(canonical_masks.get("MASK_ENEMY", -1)))
+	_check("aim preview uses real wall collision mask", CombatAimFeedback.MASK_WALL == int(canonical_masks.get("MASK_WALL", -1)))
+	_check("aim preview uses real bunker collision mask", CombatAimFeedback.MASK_BUNKER == int(canonical_masks.get("MASK_BUNKER", -1)))
+	_check("aim preview uses real nature collision mask", CombatAimFeedback.MASK_NATURE == int(canonical_masks.get("MASK_NATURE", -1)))
+	_check("aim preview uses real vehicle collision mask", CombatAimFeedback.MASK_VEHICLE == int(canonical_masks.get("MASK_VEHICLE", -1)))
+	_check("aim preview uses real fortification collision mask", CombatAimFeedback.MASK_FORTIFICATION == int(canonical_masks.get("MASK_FORTIFICATION", -1)))
+	var data_constants: Dictionary = (load("res://scripts/data.gd") as Script).get_script_constant_map()
+	_check("aim preview uses actual base-wall height", is_equal_approx(CombatAimFeedback.BASE_WALL_H, float(data_constants.get("BASE_WALL_H", -1))))
 	_check("damage preview is never a confirmed hit", is_zero_approx(CombatAimFeedback.actual_damage(90.0, 90.0)))
 	_check("actual HP decrease is positive", is_equal_approx(CombatAimFeedback.actual_damage(90.0, 81.0), 9.0))
 	_check("healing is not reported as gunshot damage", is_zero_approx(CombatAimFeedback.actual_damage(81.0, 90.0)))

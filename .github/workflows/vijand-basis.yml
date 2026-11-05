@@ -61,9 +61,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --location --retry 3 --connect-timeout 30 \
+          # GitHub's release asset CDN occasionally responds with 504 during CI.
+          # Both URLs are official Godot mirrors; retry each before aborting.
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 3 --connect-timeout 30 --max-time 600 \
+            "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
+            -o godot.zip || \
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 3 --connect-timeout 30 --max-time 600 \
             "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
             -o godot.zip
+          test -s godot.zip
+          unzip -tq godot.zip
           unzip -q godot.zip -d .godot-runner
           chmod +x .godot-runner/Godot_v4.7.2-stable_linux.x86_64
           .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --version

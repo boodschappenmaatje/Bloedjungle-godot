@@ -33,6 +33,16 @@ const GROUP_HOLD_SECONDS := 2.0
 func toggle_view() -> void:
 	combat_view = not combat_view
 
+
+## One-frame snap after a respawn/teleport, not a camera flyover across the
+## entire city. Existing follow and combat camera parameters stay unchanged.
+func snap_to_player() -> void:
+	_snap = true
+	_lead = Vector3.ZERO
+	_group_offset = Vector3.ZERO
+	_group_weight = 0.0
+	_group_hold = 0.0
+
 ## Kleine, korte camerakick voor zware wapens en nabije explosies.
 func combat_impulse(strength: float) -> void:
 	_combat_shake_strength = maxf(_combat_shake_strength, clampf(strength, 0.0, 0.055))

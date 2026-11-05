@@ -770,6 +770,11 @@ func respawn() -> void:
 	respawn_t = 0.0
 	hp = Game.max_hp()
 	in_tank = false
+	driving = false
+	airborne = false
+	visible = true
+	collision_mask = _mask0
+	velocity = Vector3.ZERO
 	tower = null
 	elev = 0.0
 	climb = -1.0
@@ -777,6 +782,11 @@ func respawn() -> void:
 	stance = 0
 	global_position = home
 	shield_t = RESPAWN_SHIELD
+	# Teleporting home must reset camera smoothing; otherwise the view can
+	# remain over the enemy camp while the soldier has already respawned.
+	var camera := get_parent().get_node_or_null("Camera")
+	if camera != null and camera.has_method("snap_to_player"):
+		camera.call("snap_to_player")
 	model.play("stil")
 	get_tree().call_group("hq", "open_door")
 	Game.banner.emit("JE BENT TERUG", "", 1.4)

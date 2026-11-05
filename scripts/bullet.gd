@@ -40,6 +40,7 @@ var rocket := false  # vijandelijke raket: ontploft op de plek waar hij gemikt w
 var ground_direct_fire := false  # ground-level direct fire cannot arc over the high base wall
 var visual_weapon := ""
 var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
+var feedback_source := ""  # optional confirmed-hit channel (e.g. player-driven jeep MG)
 var src := "speler"  # wie schoot: "speler" of "soldaat" (alleen kills van de speler tellen voor de killstreak)
 
 
@@ -62,6 +63,14 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.visual_weapon = visual_weapon
 	if visual_weapon == "bazooka":
 		b._add_rocket_visual()
+	elif visual_weapon == "jeep_m2":
+		# Reuse one pooled bright tracer mesh for every MG round (no extra
+		# projectile or hitbox). Its actual bullet physics stays unchanged.
+		if not _weapon_glows.has("jeep_m2:player"):
+			_weapon_glows["jeep_m2:player"] = _glow(Color(1.0, 0.94, 0.54, 0.98), Color(1.0, 0.50, 0.12, 0.0), 1.4, 0.055, 0.18, 0.035)
+		b.mesh = _weapon_glows["jeep_m2:player"]
+		b._trail_len = 1.4
+		b.scale.z = TRAIL_START
 	elif Data.WEAPON_VISUALS.has(visual_weapon):
 		b.mesh = _weapon_glow(visual_weapon, not by_player)
 		b._trail_len = float(Data.WEAPON_VISUALS[visual_weapon].trail_length)
@@ -343,9 +352,17 @@ func _physics_process(delta: float) -> void:
 			var target_handles_impact := target_script_path in ["res://scripts/enemy.gd", "res://scripts/player.gd"] or c is Barrel or c is Pomp or c is Brandkraan
 			if not target_handles_impact and hit.normal.length_squared() > 0.001:
 				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
+			# Only a real HP reduction may trigger the player's hit marker.
+			# The shield, tower core, missed rounds and friendly AI stay silent.
+			var can_confirm := from_player and feedback_source == "jeep" and c is Node3D and (Game.enemies.has(c) or (c as Node).is_in_group("vijand_verdediger"))
+			var hp_before := float(c.get("hp")) if can_confirm else 0.0
 			Game.hit_src = src
 			c.hit(dmg, dir, from_player)
 			Game.hit_src = "speler"
+			if can_confirm and is_instance_valid(c):
+				var dealt := CombatAimFeedback.actual_damage(hp_before, float(c.get("hp")))
+				if dealt > 0.0:
+					Game.combat_hit_confirmed.emit(hit.position, dealt, feedback_source)
 			if pierce > 0 and c.collision_layer == MASK_ENEMY:
 				pierce -= 1
 				dmg *= 0.85

@@ -5,6 +5,16 @@ extends SceneTree
 
 var failures := 0
 var main: Node3D
+var _watchdog := 0
+
+
+# Fail fast if a fixture error prevents _run() from calling quit().
+func _process(_delta: float) -> bool:
+	_watchdog += 1
+	if _watchdog > 900:
+		push_error("Jeep M2 test stuck; fixture did not finish")
+		quit(99)
+	return false
 
 
 func _initialize() -> void:
@@ -25,7 +35,7 @@ func _frames(count: int) -> void:
 func _blocking_box(center: Vector3) -> StaticBody3D:
 	var wall := StaticBody3D.new()
 	wall.name = "TemporaryLOSWall"
-	wall.collision_layer = Bullet.MASK_WALL
+	wall.collision_layer = 2  # Bullet.MASK_WALL; avoid class preloading before Game autoload
 	wall.collision_mask = 0
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
@@ -46,7 +56,8 @@ func _run() -> void:
 
 	# Isolated fixture outside the level's normal walls/buildings: retains the
 	# same approved tower GLB, enemy capsule, jeep muzzle, bullet physics.
-	var tower := VijandM2Toren.new()
+	# Load gameplay class after main/autoloads are initialized, as other tests do.
+	var tower = load("res://scripts/vijand_m2_toren.gd").new()
 	tower.name = "JeepTargetTower"
 	tower.position = Vector3(300.0, 0.0, -20.0)
 	main.add_child(tower)
@@ -74,7 +85,7 @@ func _run() -> void:
 	if shield is StaticBody3D:
 		var side_a: Vector3 = shield.to_global(Vector3(0.0, 0.0, 1.5))
 		var side_b: Vector3 = shield.to_global(Vector3(0.0, 0.0, -1.5))
-		var armor_query := PhysicsRayQueryParameters3D.create(side_a, side_b, Bullet.MASK_BUNKER)
+		var armor_query := PhysicsRayQueryParameters3D.create(side_a, side_b, 16  # Bullet.MASK_BUNKER)
 		var armor_hit := main.get_world_3d().direct_space_state.intersect_ray(armor_query)
 		_check("draaibaar stalen schild houdt kogels tegen", not armor_hit.is_empty() and armor_hit.collider == shield)
 	

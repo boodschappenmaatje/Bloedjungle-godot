@@ -243,15 +243,25 @@ func _run() -> void:
 	_check(camera.get("_wall_occluded_spans").has("north_east"), "camera identifies the correct wall span without clipping against it")
 	camera.call("_apply_wall_occlusion", 1.0)
 	var camera_side := stage.get_node("Wall_north_east_Wall_LOD0") as GeometryInstance3D
-	var current_renderer := RenderingServer.get_current_rendering_method()
-	if current_renderer == "mobile" or current_renderer == "gl_compatibility":
-		_check(not camera_side.visible and is_zero_approx(camera_side.transparency), "mobile renderer hides occluded span without unsupported transparency")
-	else:
-		_check(camera_side.transparency > 0.5, "Forward+ camera obstruction fades only the visible perimeter span")
-	_check(camera.call("_mobile_wall_hidden", "probe", true, 0.016), "mobile wall hides when actually occluded")
-	_check(camera.call("_mobile_wall_hidden", "probe", false, 0.2), "mobile wall holds visibility state through a brief raycast miss")
-	_check(not camera.call("_mobile_wall_hidden", "probe", false, 1.0), "mobile wall becomes visible after release delay")
-	_check(wall_body.collision_layer == wall_mask, "camera fade leaves the physical and combat wall collision intact")
+	# The wall must NEVER disappear when the player presses into it, regardless of renderer.
+	_check(camera_side.visible, "wall stays visible even when camera ray intersects its collider")
+	_check(is_zero_approx(camera_side.transparency), "wall stays fully opaque on Mobile and Forward+")
+	for wall_node in stage.get_children():
+		if wall_node is GeometryInstance3D and wall_node.is_in_group("base_wall_visual"):
+			_check(wall_node.visible and is_zero_approx(wall_node.transparency), "all six wall sides stay visible and opaque")
+	# Explicit diagnostic hide is still allowed, but ordinary gameplay must restore the walls.
+	var saved_diag := GameSettings.get_value("wall_diag")
+	var saved_lod := GameSettings.get_value("wall_lod")
+	GameSettings.set_value("wall_diag", "no_wall")
+	GameSettings.set_value("wall_lod", "auto")
+	camera.call("_apply_wall_occlusion", 1.0)
+	_check(not camera_side.visible, "user's explicit Muur uit diagnostic still hides the wall")
+	GameSettings.set_value("wall_diag", "normal")
+	camera.call("_apply_wall_occlusion", 1.0)
+	_check(camera_side.visible, "turning diagnostic back to Normaal immediately restores the wall")
+	GameSettings.set_value("wall_diag", saved_diag)
+	GameSettings.set_value("wall_lod", saved_lod)
+	_check(wall_body.collision_layer == wall_mask, "wall opacity fix leaves physical and combat collisions intact")
 
 	var over_wall = bullet_script.call("fire", stage, Vector3(10, 1.3, -30), 0.0, 80.0, 1.0, 1.0, true, true)
 	_check((over_wall.mask & int(kit.get("LAYER_FORTIFICATION"))) != 0, "over_wall bullets retain the high-wall mask")

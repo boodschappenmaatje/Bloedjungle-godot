@@ -65,6 +65,8 @@ func _ready() -> void:
 	_arrows.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_arrows.draw.connect(_draw_arrows)
 	add_child(_arrows)
+	var combat_hud := CombatTargetHud.new()
+	add_child(combat_hud)
 	_build_bars()
 	_build_top_right()
 	_build_ammo()

@@ -24,6 +24,8 @@ on:
       - "assets/vijand_hk.glb"
       - "assets/vijand_m2_toren.glb"
       - "scripts/vijand_m2_toren.gd"
+      - "scripts/jeep.gd"
+      - "tests/jeep_m2_schutter_test.gd"
       - "scenes/vijand_verdediger.tscn"
       - "tests/vijand_m2_toren_test.gd"
       - "tests/vijand_m2_articulatie_test.gd"
@@ -77,6 +79,18 @@ jobs:
           GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
           timeout 120 "$GODOT" --headless --path . --script tests/vijand_m2_articulatie_test.gd
           timeout 120 "$GODOT" --headless --path . --script tests/vijand_m2_toren_test.gd --fixed-fps 60
+      - name: Jeep MG versus torenschutter (echt kogelcontact en dekking)
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 180 "$GODOT" --headless --path . --script tests/jeep_m2_schutter_test.gd --fixed-fps 60
+      - name: Bestaande voertuigwapens blijven werken
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 240 "$GODOT" --headless --path . --script tests/auto_wapens_test.gd --fixed-fps 60
       - name: Vijand-hoofdkwartier- en groepentest
         shell: bash
         run: |

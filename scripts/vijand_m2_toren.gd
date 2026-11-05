@@ -61,6 +61,7 @@ func _ready() -> void:
 		pitch = visual_pitch as Node3D
 		recoil = visual_recoil as Node3D
 		_muzzle = visual_muzzle as Node3D
+		_add_mg_shield_collision()
 	else:
 		yaw = Node3D.new()
 		yaw.name = "MG_Yaw"
@@ -90,6 +91,29 @@ func _ready() -> void:
 
 
 # Returns true only if the GLB contains real nested moving M2 artwork.
+## The approved artwork has a real steel plate in MG_ShieldMount, but GLB
+## visual meshes alone are not physics colliders. Add a narrow, moving hitbox
+## over the steel plate ONLY; the soldier still has his own capsule collision.
+## Lower concrete/tower cover remains the existing indestructible-by-bullets core.
+func _add_mg_shield_collision() -> void:
+	var armor := StaticBody3D.new()
+	armor.name = "MG_ShieldCollision"
+	armor.collision_layer = Kit.LAYER_BUNKER
+	armor.collision_mask = 0
+	armor.set_meta("impact_material", "metal")
+	# Coordinates in the approved GLB's MG_Yaw pivot space (6 m high tower).
+	# A slim vertical plate faces along the -X/+Z local barrel direction.
+	armor.position = Vector3(-0.35, 0.18, 0.05)
+	armor.rotation.y = M2_BARREL_AZIMUTH
+	var shape := CollisionShape3D.new()
+	shape.name = "SteelPlate"
+	var plate := BoxShape3D.new()
+	plate.size = Vector3(1.10, 0.96, 0.12)
+	shape.shape = plate
+	armor.add_child(shape)
+	yaw.add_child(armor)
+
+
 func has_articulated_m2() -> bool:
 	return _articulated
 

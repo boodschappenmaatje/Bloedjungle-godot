@@ -138,7 +138,8 @@ func _physics_process(delta: float) -> void:
 	var flat_distance := maxf(Vector2(diff.x, diff.z).length(), 0.1)
 	if _articulated:
 		# Control the actual imported M2 art. The source weapon faces mostly -X.
-		var local_aim := yaw.get_parent().to_local(aim) - yaw.position
+		var yaw_parent := yaw.get_parent() as Node3D
+		var local_aim := yaw_parent.to_local(aim) - yaw.position
 		var desired_yaw := atan2(local_aim.x, local_aim.z) - M2_BARREL_AZIMUTH
 		yaw.rotation.y = lerp_angle(yaw.rotation.y, desired_yaw, minf(delta * 5.0, 1.0))
 		# The pitch hinge is perpendicular to the barrel, not fixed world X.

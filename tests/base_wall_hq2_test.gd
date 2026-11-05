@@ -165,6 +165,21 @@ func _run() -> void:
 	_check(checked_visual_spans.size() == 6, "all six sides have validated wall axes and contiguous module bounds")
 	var berm := stage.get_node_or_null("BaseWallEarthBerm") as MultiMeshInstance3D
 	_check(berm != null and berm.multimesh.instance_count == 6, "one shared six-instance earth berm follows the wall spans and leaves both portals open")
+	# Elke bermstrook moet langs zijn eigen muur liggen, niet 90 graden gedraaid dwars door de basis
+	# (dat gaf de flikkerende streep op z = 0). Headless bewaart geen MultiMesh-data, dus de plaatsing zelf testen.
+	var berm_box := AABB(Vector3(-0.5, 0.0, -0.41), Vector3(1.0, 0.22, 0.82))
+	var berm_inside := true
+	for span: Dictionary in props.wall_spans():
+		var box: AABB = props.wall_berm_transform(span) * berm_box
+		var c: float = data.COMPOUND
+		var along_x: bool = span.along_x
+		var thin := box.size.z < 1.2 if along_x else box.size.x < 1.2
+		var on_wall := absf(absf(box.get_center().z if along_x else box.get_center().x) - c) < 1.0
+		var within := box.position.x > -c - 1.0 and box.end.x < c + 1.0 and box.position.z > -c - 1.0 and box.end.z < c + 1.0
+		if not (thin and on_wall and within):
+			berm_inside = false
+			print("berm verkeerd: ", span.name, " ", box)
+	_check(berm_inside, "every earth berm strip lies along its own wall (no strip across the compound)")
 	var berm_corners := stage.get_node_or_null("BaseWallEarthBermCorners") as MultiMeshInstance3D
 	_check(berm_corners != null and berm_corners.multimesh.instance_count == 4, "four shared berm corner caps close the outer foot at each 90 degree join")
 	var stable_shadows := stage.find_children("BaseWallShadow_*", "MeshInstance3D", true, false)

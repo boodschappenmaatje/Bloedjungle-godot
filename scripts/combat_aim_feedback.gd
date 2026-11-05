@@ -3,6 +3,17 @@ extends RefCounted
 ## Read-only prediction for the current jeep MG shot. This never applies damage,
 ## changes the existing narrow gunner assist, or claims a confirmed hit.
 const MAX_FLAT_RANGE := 40.5  # jeep.gd: 90 m/s * 0.45 s
+# Keep this display-only layer independent of Bullet.gd: Bullet itself emits
+# confirmed-hit feedback through CombatAimFeedback.actual_damage(). A static
+# Bullet reference here creates a GDScript preload cycle in headless tests.
+# Contract test below verifies these values against Bullet's canonical masks.
+const MASK_WALL := 2
+const MASK_ENEMY := 8
+const MASK_BUNKER := 16
+const MASK_NATURE := 128
+const MASK_VEHICLE := 1024
+const MASK_FORTIFICATION := 1 << 12
+const BASE_WALL_H := 3.0
 # Mirrors Bullet's collision bits without importing the Bullet class at script-parse
 # time. Headless SceneTree tests initialize Game after dependent class scans.
 const MASK_ENEMY := 8
@@ -36,7 +47,7 @@ static func predict(space: PhysicsDirectSpaceState3D, origin: Vector3, angle: fl
 
 	# Bullet.gd has a separate low-height fortification sweep for ground shots,
 	# so the preview must never advertise a vulnerable target behind that wall.
-	if origin.y < Data.BASE_WALL_H:
+	if origin.y < BASE_WALL_H:
 		var flat_origin := Vector3(origin.x, 1.5, origin.z)
 		var flat_end := Vector3(end.x, 1.5, end.z)
 		var wall := space.intersect_ray(PhysicsRayQueryParameters3D.create(flat_origin, flat_end, Kit.LAYER_FORTIFICATION))

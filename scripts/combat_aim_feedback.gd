@@ -8,7 +8,11 @@ static func target_kind(collider: Object) -> String:
 	if not (collider is Node3D):
 		return "blocked"
 	var node := collider as Node3D
-	if node.is_in_group("vijand_verdediger") or Game.enemies.has(node):
+	# Avoid compiling the Game autoload symbol before the SceneTree test harness
+	# has initialised its autoloads; the production singleton is fetched read-only.
+	var game := (Engine.get_main_loop() as SceneTree).root.get_node_or_null("Game")
+	var in_enemies := game != null and (game.get("enemies") as Array).has(node)
+	if node.is_in_group("vijand_verdediger") or in_enemies:
 		if not bool(node.get("dead")):
 			return "enemy"
 	return "blocked"

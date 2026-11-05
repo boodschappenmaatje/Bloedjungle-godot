@@ -34,10 +34,10 @@ func _check() -> void:
  assert(barrel.global_transform != old_barrel)
  assert(muzzle.global_position.distance_to(old_muzzle) > 0.5)
  assert(static_mesh.global_transform == old_static)
- pitch.rotation = Vector3(0,0,0.17)
- assert(muzzle.global_position.distance_to(old_muzzle) > 0.5)
+ pitch.basis = Basis(Vector3(0.36,0.0,0.93).normalized(), -deg_to_rad(10.0))
+ assert(muzzle.global_position.y > old_muzzle.y + 0.2)
  var muzzle_pitch := muzzle.global_position
- recoil.position.x = 0.12
+ recoil.position = -Vector3(-0.93,0.0,0.36).normalized() * 0.12
  assert(muzzle.global_position.distance_to(muzzle_pitch) > 0.1)
  print('M2_ARTICULATIE_PASS triangles=',tris,' muzzle=',old_muzzle,' yaw_muzzle=',muzzle_pitch)
  quit()

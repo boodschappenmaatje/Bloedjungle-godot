@@ -58,3 +58,5 @@ Geverifieerd: exact 60.000 triangles (56.021 statisch, 2.113 yaw/schild, 1.866 p
 De werkelijke visuele onderbouw heeft circa 3,87 × 3,34 m footprint. De collider is daarop aangepast. De GLB en collider staan binnen de muur doordat de **inhoud** van de vier torenroots 0,75 m in x en 0,50 m in z naar de binnenplaats is gezet; de historische hoekroots blijven op hun plek. Er is geen niet-proportionele schaal gebruikt.
 
 De bestaande `vijand_m2_toren.gd` gebruikt de geïmporteerde pivots. `tests/vijand_m2_articulatie_test.gd` en `tests/vijand_m2_toren_test.gd` vormen de gerichte regressies. De eerdere experimentele secties hierboven beschrijven de geschiedenis vóór deze productie-integratie. Native iPhone-FPS en daadwerkelijke OTA-installatie blijven apart te testen.
+
+Ook `m2hb_20261105_pitch10.png` en `m2hb_20261105_recoil12.png` tonen met dezelfde camera een echte +10° elevatie en 12 cm terugslag van de oorspronkelijke receiver/loop. De Godot-articulatietest gebruikt dezelfde elevatieas en terugslagvector als de gameplaycode en controleert dat de monding zichtbaar meebeweegt.

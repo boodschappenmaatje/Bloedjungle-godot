@@ -29,3 +29,22 @@ Lokaal gecontroleerd op een andere 162.806-triangle LOD0-export van dezelfde goe
 Voorbeeld (alle output in `/tmp`): `python3 bron/m2hb_toren/split_weapon_probe.py --source assets/vijand_m2_toren.glb --output /tmp/m2-split-PREVIEW.glb --debug-mask /tmp/m2-mask-PREVIEW.glb --yaw-preview /tmp/m2-yaw45-PREVIEW.glb`.
 
 **Geen merge/OTA**, geen nieuwe bron- of productiemodellen aan deze wijziging toegevoegd.
+
+## Bewegende M2HB: tweede technische proef (5 november 2026)
+
+**Op de featurebranch toegevoegd:**
+
+- `build_articulated_m2.py` maakt uit de **bestaande goedgekeurde game-GLB** een **aparte kandidaat-GLB**; de productiebestanden en bron worden niet overschreven.
+- De kandidaat bevat `TowerStatic`, `MG_Yaw/MG_ShieldMount`, `MG_Yaw/MG_Pitch/MG_Recoil/MG_BarrelReceiver` en een `Muzzle`-anker. Het volledige schild en de affuit worden zoveel mogelijk aan de yaw-pivot gekoppeld, de loop en receiver aan de pitch/recoil-pivot.
+- `scripts/vijand_m2_toren.gd` zoekt de **echte geïmporteerde** yaw/pitch/recoil-geometrie op. Wanneer die ontbreekt, wordt het oude fallback-ankersysteem gebruikt en blijft het bestaande speelbare GLB werkzaam. De GLB in `assets/` is nog **niet** vervangen.
+- De geïsoleerde workflow `.github/workflows/m2hb-articulation-preview.yml` bouwt een **review-artifact** op de branch en vervangt de bron/gameasset **niet**. De workflowstatus is vanuit ChatGPT niet bevestigd; het artifact is nog geen bewezen Godot-import.
+
+**Lokale proefresultaten op een 162.806-triangle LOD0 van precies dezelfde Meshy-bron (dus niet de huidige productie-60k):**
+
+- `TowerStatic`: 149.156 triangles; yaw/schild/affuit: 7.315; pitch/loop/receiver: 6.335. **Som: 162.806, geen verloren of dubbele driehoeken.**
+- Opnieuw geïmporteerde GLB: exacte hiërarchie en **afwijking in rust-boundingbox minder dan 2 mm** (numeriek werkelijk <0,001 mm). Originele kleurentextuur en UV's worden hergebruikt.
+- Vergelijking dezelfde rendercamera: gemiddelde RGB-afwijking ca. **0,70/255 (frontaal)** en **0,44/255 (bovenaanzicht)**. Dit is een nuttige kwaliteitscheck maar **geen volledige bronmodel-pariteit op ieder gezichtspunt**.
+- Een yaw-voorbeeld van 45° en een pitch-voorbeeld van 10° zijn gegenereerd. Resterende bevestiging: de onderdelen draaien binnen de werkelijke Godot-camera zonder een zichtbaar vastzittend plaatdeel.
+- Lokaal zijn Python/VTK-controles gedaan; **Godot CI/native iPhone voor deze nieuwe animatieverbinding nog NOT RUN**. De eerdere drie groene Godot-tests gelden voor de bestaande niet-gearticuleerde 60k-gameversie, niet als bewijs van de nieuwe kandidaat.
+
+**Volgende harde poort vóór productie:** laat de GitHub-artifactbouw op de echte 60k slagen, render **origineel vs. kandidaat** vanuit dezelfde 4 richtingen, verifieer schild/onderbouw/voetafdruk, test `has_articulated_m2() == true` in Godot, test yaw/pitch/recoil en kogelstart vanaf de werkelijke `Muzzle` en voer de bestaande toren-/basis-regressies opnieuw uit. **Geen automatische merge of OTA.**

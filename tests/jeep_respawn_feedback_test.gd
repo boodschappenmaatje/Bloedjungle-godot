@@ -49,7 +49,7 @@ func _run() -> void:
 	await _frames(3)
 	jeep._toggle()
 	_check("jeep can be driven", jeep.driven and player.driving and not player.visible)
-	var parked := jeep.global_position
+	var parked: Vector3 = jeep.global_position
 	player.hit(99999.0, Vector3.FORWARD, false)
 	_check("player died inside jeep", player.dead and player.respawn_t > 0.0)
 	await _frames(3)

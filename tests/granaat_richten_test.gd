@@ -121,7 +121,7 @@ func _run() -> void:
 	game.changed.emit()
 	await _frames(2)
 	# Tap the ACTUAL picker: this must open a wheel, never throw.
-	var initial := game.grenades
+	var initial: int = game.grenades
 	var button_center: Vector2 = btn.get_global_rect().get_center()
 	_touch(true, button_center)
 	await _frames(1)

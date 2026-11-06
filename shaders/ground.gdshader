@@ -63,7 +63,7 @@ void fragment() {
 	vec4 ds = texture(dirt_normal, duv, detail_mip_bias);
 	vec4 ms = texture(mud_surface, muv, detail_mip_bias);
 	// muv=(z,-x): convert this normal into the common ground tangent frame.
-	ms.rg = vec2(1.0-ms.g,ms.r);
+	ms.rg = vec2(ms.g,1.0-ms.r);
 	vec4 mos = texture(moss_surface, moss_uv, detail_mip_bias);
 	float floor_mix = smoothstep(0.36, 0.72, n1 * 0.6 + n2 * 0.4) * 0.62;
 	vec3 grass = mix(g * vec3(0.57,0.64,0.45), j * vec3(0.44,0.5,0.34), floor_mix);

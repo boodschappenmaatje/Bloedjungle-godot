@@ -22,7 +22,14 @@ func run() -> void:
 	root.add_child(main)
 	await main.begin()
 	main.set_process(false)
+	for mesh: ArrayMesh in [fol.fern(),fol.bush()]:
+		check(mesh.surface_get_arrays(0)[Mesh.ARRAY_TANGENT].size()>0,"Foliage PBR needs an authored tangent frame")
 	var details := get_nodes_in_group("jungle_understory")
+	var under: GDScript = load("res://scripts/jungle_understory.gd")
+	check(under.has_method("litter_mesh"),"Litter needs a corrected ground normal frame")
+	if under.has_method("litter_mesh"):
+		var litter: ArrayMesh = under.litter_mesh()
+		check(litter.surface_get_arrays(0)[Mesh.ARRAY_NORMAL][0].is_equal_approx(Vector3(0,0,-1)),"Litter normal must face up after horizontal rotation")
 	check(not details.is_empty(), "Missing clustered understory in the real game level")
 	for n: MultiMeshInstance3D in details:
 		check(n.multimesh.custom_aabb.size.x > 0.0 and n.multimesh.custom_aabb.size.x <= 28.0,"Detail batch needs stable cell bounds after clearing")
@@ -64,6 +71,10 @@ func run() -> void:
 		var tex = mat.get_shader_parameter(key)
 		check(tex is Texture2D,"Missing terrain PBR binding: "+key)
 		if tex is Texture2D: check(tex.get_image().has_mipmaps(),"Missing terrain mips: "+key)
+	for family in ["leaf","fern","palm","grass"]:
+		for channel in ["color","normal"]:
+			var tex: Texture2D = load("res://assets/textures/foliage/%s_%s.png" % [family,channel])
+			check(tex.get_image().has_mipmaps(),"Foliage needs mipmaps: "+family+channel)
 	var atm := get_first_node_in_group("atmosphere")
 	for quality in ["low","high","ultra","high"]:
 		settings.values["quality"] = quality

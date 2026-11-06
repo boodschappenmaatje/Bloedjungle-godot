@@ -7,6 +7,22 @@ const CAPS := {"fern":6000,"bush":2500,"litter":6500,"stone":2200,"twig":1000}
 static func allowed(p: Vector3) -> bool:
 	return GrassField._allowed(p) and not (p.x > Data.COMPOUND and p.x < Data.COMPOUND+11.5 and absf(p.z)<23.0)
 
+static func litter_mesh() -> ArrayMesh:
+	# Same shipped card vertices/UVs, with a ground-facing frame after +90° X rotation.
+	var arrays := Foliage.grass().surface_get_arrays(0)
+	var normals := PackedVector3Array()
+	normals.resize(arrays[Mesh.ARRAY_VERTEX].size())
+	normals.fill(Vector3(0,0,-1))
+	arrays[Mesh.ARRAY_NORMAL] = normals
+	var corrected := ArrayMesh.new()
+	corrected.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,arrays)
+	var surface := SurfaceTool.new()
+	surface.create_from(corrected,0)
+	surface.generate_tangents()
+	var mesh := surface.commit()
+	mesh.surface_set_material(0,Foliage.material("leaf"))
+	return mesh
+
 static func spawn(parent: Node3D) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 20261106
@@ -76,8 +92,7 @@ static func spawn(parent: Node3D) -> void:
 	twig.radial_segments=8
 	twig.rings=1
 	# Reuse the existing three-card mesh for flat litter, rather than 22 complete leaves.
-	var litter := Foliage.grass()
-	litter.surface_set_material(0,Foliage.material("leaf"))
+	var litter := litter_mesh()
 	var meshes := {"fern":Foliage.fern(),"bush":Foliage.bush(),"litter":litter,"stone":Foliage.jungle_mesh("Rots2"),"twig":twig}
 	var stone := Kit.rock().duplicate() as StandardMaterial3D
 	stone.vertex_color_use_as_albedo=true
@@ -93,6 +108,6 @@ static func spawn(parent: Node3D) -> void:
 		n.add_to_group("foliage_grass")
 		n.set_meta("full",data.xf.size())
 		n.visibility_range_end=48.0 if data.kind in ["litter","stone","twig"] else 58.0
-		n.extra_cull_margin=0.5
+		n.extra_cull_margin=1.5  # leaf spread plus the existing 1.1 m actor push
 		for i in data.xf.size():
 			Foliage._register_vegetation({"kind":"grass","xf":data.xf[i],"slots":[{"multimesh":n.multimesh,"index":i}],"shapes":[]})

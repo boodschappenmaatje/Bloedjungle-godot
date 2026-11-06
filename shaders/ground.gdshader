@@ -55,7 +55,7 @@ void fragment() {
 	vec2 duv = p * 0.32;
 	vec2 muv = vec2(p.y, -p.x) * 0.28;
 	vec2 moss_uv = p * 0.34;
-vec2 gravel_uv = p * 0.34;
+vec2 gravel_uv = p * 0.55;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -84,7 +84,7 @@ vec2 gravel_uv = p * 0.34;
 	float side = abs(p.x-ptx);
 	float road_active = step(0.001,pt)*step(pt,0.999);
 	// Shoulder breakup uses broad noise, with fine edges prefiltered by the pixel footprint.
-	float trail = (1.0-smoothstep(1.05,2.2+n2*0.8,side+(n3-0.5)*0.55))*road_active;
+	float trail = (1.0-smoothstep(0.9,1.9+n2*0.65,side+(n3-0.5)*0.5))*road_active;
 	float bank = 1.0-smoothstep(2.9,5.0+n2*1.6,river_off);
 	float swamp = (1.0-smoothstep(-38.0,-22.0,p.x+n2*6.0))*(1.0-smoothstep(-70.0,-40.0,p.y))*smoothstep(-84.0,-70.0,p.y);
 	swamp *= 1.0-smoothstep(0.0,2.0,river_off-3.0);

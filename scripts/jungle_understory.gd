@@ -35,8 +35,8 @@ static func understory_variant_mesh(kind: String, variant: int) -> ArrayMesh:
 	var fern := kind == "fern"
 	var groundcover := kind == "groundcover"
 	var count := (8 + variant * 2) if fern else ((9 + variant * 2) if groundcover else (13 + variant * 3))
-	var palette_base: Array[Color] = [Color(0.62,0.72,0.38), Color(0.54,0.67,0.34), Color(0.68,0.74,0.4)]
-	var palette_tip: Array[Color] = [Color(0.91,0.96,0.6), Color(0.96,0.93,0.56), Color(0.84,0.93,0.59)]
+	var palette_base: Array[Color] = [Color(0.68,0.77,0.4), Color(0.59,0.71,0.36), Color(0.72,0.79,0.42)]
+	var palette_tip: Array[Color] = [Color(0.95,0.99,0.62), Color(0.98,0.96,0.58), Color(0.88,0.96,0.61)]
 	var base: Color = palette_base[variant]
 	var tip: Color = palette_tip[variant]
 	for k in count:
@@ -44,10 +44,10 @@ static func understory_variant_mesh(kind: String, variant: int) -> ArrayMesh:
 		var origin := Vector3(cos(yaw), rng.randf_range(0.0,0.16), sin(yaw)) * rng.randf_range(0.0,0.24)
 		# Ground rosettes are broad and low so they read as leafy understory at the game camera,
 		# while the taller fern silhouettes remain sparse and never replace the existing grass LODs.
-		var length_ := rng.randf_range(0.72,1.08) if groundcover else (rng.randf_range(0.82,1.22) if fern else rng.randf_range(0.72,1.22))
-		var width_ := rng.randf_range(0.24,0.36) if groundcover else (rng.randf_range(0.18,0.31) if fern else rng.randf_range(0.26,0.42))
-		var rise := rng.randf_range(0.16,0.32) if groundcover else (rng.randf_range(0.42,0.78) if fern else rng.randf_range(0.18,0.62))
-		var droop := rng.randf_range(0.02,0.12) if groundcover else (rng.randf_range(0.38,0.78) if fern else rng.randf_range(0.16,0.5))
+		var length_ := rng.randf_range(0.9,1.3) if groundcover else (rng.randf_range(0.82,1.22) if fern else rng.randf_range(0.72,1.22))
+		var width_ := rng.randf_range(0.34,0.48) if groundcover else (rng.randf_range(0.18,0.31) if fern else rng.randf_range(0.26,0.42))
+		var rise := rng.randf_range(0.2,0.38) if groundcover else (rng.randf_range(0.42,0.78) if fern else rng.randf_range(0.18,0.62))
+		var droop := rng.randf_range(0.03,0.14) if groundcover else (rng.randf_range(0.38,0.78) if fern else rng.randf_range(0.16,0.5))
 		# Low groundcover has no useful extra silhouette from three bends at game distance.
 		# Two segments keep its leaf shape while reserving the same triangle budget for more clumps.
 		Foliage._frond(st, origin, yaw, length_, width_, rise, droop, base, tip, 2 if groundcover else 3)
@@ -112,7 +112,7 @@ static func spawn(parent: Node3D) -> void:
 		var s := rng.randf_range(0.5,1.18)
 		var size_ := Vector3(s,s*rng.randf_range(0.65,1.1),s)
 		if kind=="bush": size_ *= 0.78
-		if kind=="groundcover": size_ *= 1.08
+		if kind=="groundcover": size_ *= 1.18
 		if kind=="litter": size_=Vector3(s*0.65,s*0.65,0.025)
 		if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.12,0.32)
 		if kind=="twig": size_=Vector3(0.035,rng.randf_range(0.35,0.85),0.035)

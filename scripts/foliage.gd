@@ -35,6 +35,10 @@ static func material(kind := "") -> ShaderMaterial:
 		elif kind != "":
 			m.set_shader_parameter("tex", LeafTex.get_tex(kind))
 			m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
+			if kind == "leaf":
+				# Subtle reflected canopy light keeps the low leaf layer readable from the game camera.
+				m.set_shader_parameter("tint", Vector3(1.14, 1.16, 0.94))
+				m.set_shader_parameter("backlight", 0.8)
 		if kind == "grass":
 			m.set_shader_parameter("sway", 0.08)
 			m.set_shader_parameter("cut", 0.35)

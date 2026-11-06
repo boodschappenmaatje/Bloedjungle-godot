@@ -179,8 +179,8 @@ func _add_point(groups: Dictionary, rng: RandomNumberGenerator, kind: String, po
 	# Short tufts are 24 cm tall. Their authored footprint was too small to read at the normal
 	# play camera, so grow the existing model into low, varied grass clumps without new instances,
 	# colliders or changes to the preserved firing-lane clearance.
-	var spread := 2.55 if kind == "short" else 1.0
-	var height_scale := 2.0 if kind == "short" else 1.0
+	var spread := 2.85 if kind == "short" else 1.0
+	var height_scale := 2.5 if kind == "short" else 1.0
 	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_*spread, scale_*height_scale, scale_*spread))
 	groups[key].xf.append(Transform3D(basis, pos))
 	if kind == "short":

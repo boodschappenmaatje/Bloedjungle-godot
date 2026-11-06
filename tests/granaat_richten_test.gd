@@ -53,7 +53,7 @@ func _stick_center() -> Vector2:
 func _throw(d: Vector2, steps := 4):
 	cb._select_wheel("equipment", 0)
 	var c: Vector2 = _stick_center()
-	var offset := d.limit_length(cb.AIM_FULL) * (TouchSticks.STICK_R / cb.AIM_FULL)
+	var offset: Vector2 = d.limit_length(float(cb.AIM_FULL)) * (TouchSticks.STICK_R / float(cb.AIM_FULL))
 	_touch(true, c)
 	await _frames(1)
 	for i in steps:
@@ -140,7 +140,7 @@ func _run() -> void:
 	cb.cancel_grenade_stick()
 	var weapon_bar: Control = get_first_node_in_group("weapon_strip")
 	var right_anchor: Vector2 = _stick_center()
-	_check(btn.get_global_rect().end.y < weapon_bar._prev.get_global_rect().position.y, "UITRUSTING-knop staat boven wapenbalk")
+	_check(btn.get_global_rect().end.y < (weapon_bar.get("_prev") as Control).get_global_rect().position.y, "UITRUSTING-knop staat boven wapenbalk")
 	_check(btn.get_global_rect().get_center().distance_to(right_anchor) > TouchSticks.ANCHOR_R + ActionBtn.SIZE.x * 0.5, "UITRUSTING-knop raakt rechterstick niet")
 
 	# 1. raakt de richtcirkel, 8 richtingen, 2-12 m
@@ -207,7 +207,7 @@ func _run() -> void:
 	p.grenade_cd = 0.0
 	await _frames(2)
 	cb._select_wheel("equipment", 0)
-	var drive := Vector2(_px_for(9.0), 0) * (TouchSticks.STICK_R / cb.AIM_FULL)
+	var drive: Vector2 = Vector2(_px_for(9.0), 0) * (TouchSticks.STICK_R / float(cb.AIM_FULL))
 	_touch(true, c)
 	await _frames(1)
 	_drag(c + drive)

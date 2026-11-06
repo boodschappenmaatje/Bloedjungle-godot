@@ -65,6 +65,11 @@ func clear_right_for_grenade() -> void:
 	queue_redraw()
 
 
+## The equipment wheel must not consume releases of an already-owned joystick finger.
+func owns_touch(pointer: int) -> bool:
+	return _sticks.has(pointer)
+
+
 func _anchor(aim: bool) -> Vector2:
 	var safe := UI.safe_margins(get_viewport_rect().size)
 	var compact := size.x < 880.0
@@ -90,7 +95,18 @@ func _input(event: InputEvent) -> void:
 		return
 	var combat := get_tree().get_first_node_in_group("combat_buttons")
 	if combat != null and combat.call("wheel_is_open"):
-		return  # wheel selection must never start a virtual joystick
+		# A wheel may not start a NEW joystick gesture, but the left walking
+		# finger (or an existing right finger) must still move and release.
+		# Otherwise the release is swallowed and movement stays latched.
+		if event is InputEventScreenTouch and not event.pressed and _sticks.has(event.index):
+			_sticks.erase(event.index)
+			queue_redraw()
+		elif event is InputEventScreenDrag and _sticks.has(event.index):
+			var held: Dictionary = _sticks[event.index]
+			var d: Vector2 = event.position - held.origin
+			held.d = d.limit_length(STICK_R) / STICK_R
+			queue_redraw()
+		return
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			if _on_button(event.position):
@@ -106,6 +122,10 @@ func _input(event: InputEvent) -> void:
 					return  # gameplay-touch buiten de twee thumb-zones blijft vrij
 				aim = right_d < left_d
 				origin = right_anchor if aim else left_anchor
+			# Once a grenade gesture owns the right stick, a second finger
+			# cannot replace its pointer or strand the pending throw.
+			if aim and combat != null and bool(combat.get("grenade_stick_armed")) and int(combat.get("aim_finger")) != -2:
+				return
 			# Een nieuwe aanraking in dezelfde vaste zone vervangt een gemiste release.
 			# De andere stick behoudt zijn eigen vinger-ID.
 			for held_id in _sticks.keys():

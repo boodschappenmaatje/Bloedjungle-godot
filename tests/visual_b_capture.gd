@@ -53,6 +53,7 @@ func run() -> void:
 		root.scaling_3d_scale = 0.6
 		print("CAPTURE ready ",key)
 		cam.set_process(false)
+		sync_foliage_focus(cam)
 		await RenderingServer.frame_post_draw
 		if not save_frame(key+".png"): return
 		var data := {"spot":key,"focus":str(SPOTS[key]),"camera":str(cam.global_transform),"fov":cam.fov,
@@ -66,6 +67,7 @@ func run() -> void:
 			# Fixed camera translate, no changing wind/pushers: small temporal sequence.
 			for i in 12:
 				cam.position.x += 0.025
+				sync_foliage_focus(cam)
 				await process_frame
 				await RenderingServer.frame_post_draw
 				if not save_frame("temporal_%02d.png" % i): return
@@ -82,6 +84,7 @@ func run() -> void:
 	game.state = "play"
 	for i in 12: await process_frame
 	cam.set_process(false)
+	sync_foliage_focus(cam)
 	await RenderingServer.frame_post_draw
 	if not save_frame("combat.png"): return
 	var battle := {"spot":"combat_80","enemies_start":game.enemies.size(),"camera":str(cam.global_transform)}
@@ -91,6 +94,21 @@ func run() -> void:
 	if not save_metrics(): return
 	print("VISUAL B CAPTURE PASS ",out)
 	quit()
+
+func sync_foliage_focus(cam: Camera3D) -> void:
+	# Main's process is paused for repeatable static timing, so refresh the same
+	# sightline and actor-push uniforms the live main loop normally updates.
+	var extras: Array = []
+	var nearest: Array[Node3D] = []
+	for enemy: Node3D in game.enemies:
+		if is_instance_valid(enemy): nearest.append(enemy)
+	nearest.sort_custom(func(a: Node3D,b: Node3D) -> bool:
+		return a.global_position.distance_squared_to(game.player.global_position) < b.global_position.distance_squared_to(game.player.global_position))
+	for i in mini(3,nearest.size()): extras.append(nearest[i].global_position)
+	# Resolve after the project autoloads are available; this harness starts as a SceneTree.
+	var foliage: GDScript = load("res://scripts/foliage.gd")
+	foliage.update_visibility_focus(game.player.global_position,cam.global_position,1.0,true,extras)
+	foliage.update_pushers(game.player,self,true)
 
 func save_metrics() -> bool:
 	var file := FileAccess.open(out.path_join("metrics.json"),FileAccess.WRITE)

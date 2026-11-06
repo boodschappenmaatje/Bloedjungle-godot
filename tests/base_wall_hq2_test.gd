@@ -167,7 +167,8 @@ func _run() -> void:
 	_check(berm != null and berm.multimesh.instance_count == 6, "one shared six-instance earth berm follows the wall spans and leaves both portals open")
 	# Elke bermstrook moet langs zijn eigen muur liggen, niet 90 graden gedraaid dwars door de basis
 	# (dat gaf de flikkerende streep op z = 0). Headless bewaart geen MultiMesh-data, dus de plaatsing zelf testen.
-	var berm_box := AABB(Vector3(-0.5, 0.0, -0.41), Vector3(1.0, 0.22, 0.82))
+	var berm_box := AABB(Vector3(-0.5, props.BERM_BOTTOM_Y, -props.BERM_BASE_HALF_WIDTH),
+		Vector3(1.0, props.BERM_TOP_Y - props.BERM_BOTTOM_Y, 2.0 * props.BERM_BASE_HALF_WIDTH))
 	var berm_inside := true
 	for span: Dictionary in props.wall_spans():
 		var box: AABB = props.wall_berm_transform(span) * berm_box
@@ -182,6 +183,45 @@ func _run() -> void:
 	_check(berm_inside, "every earth berm strip lies along its own wall (no strip across the compound)")
 	var berm_corners := stage.get_node_or_null("BaseWallEarthBermCorners") as MultiMeshInstance3D
 	_check(berm_corners != null and berm_corners.multimesh.instance_count == 4, "four shared berm corner caps close the outer foot at each 90 degree join")
+	# Exterior-wall flicker reproduction: the flat top faces of the six strips
+	# must TOUCH the four corner caps, never overlap them at the same depth.
+	var tops_clear := true
+	var gates_clear := true
+	var corner_join_contacts := 0
+	var top_half: float = props.BERM_TOP_HALF_WIDTH
+	var top_local := AABB(Vector3(-0.5, props.BERM_TOP_Y, -top_half), Vector3(1.0, 0.0, top_half * 2.0))
+	for span: Dictionary in props.wall_spans():
+		var strip_top: AABB = props.wall_berm_transform(span) * top_local
+		if bool(span.along_x):
+			if str(span.name).ends_with("west"):
+				gates_clear = gates_clear and strip_top.end.x <= -float(data.GATE_GAP) - 0.1 + 0.002
+			else:
+				gates_clear = gates_clear and strip_top.position.x >= float(data.GATE_GAP) + 0.1 - 0.002
+		for sx in [-1.0, 1.0]:
+			for sz in [-1.0, 1.0]:
+				var cx: float = sx * (float(data.COMPOUND) + float(props.BERM_CORNER_OFFSET))
+				var cz: float = sz * (float(data.COMPOUND) + float(props.BERM_CORNER_OFFSET))
+				var overlap_x := minf(strip_top.end.x, cx + top_half) - maxf(strip_top.position.x, cx - top_half)
+				var overlap_z := minf(strip_top.end.z, cz + top_half) - maxf(strip_top.position.z, cz - top_half)
+				if overlap_x > 0.002 and overlap_z > 0.002:
+					tops_clear = false
+					print("berm top overlap: ", span.name, " corner ", sx, ",", sz, " dx=", overlap_x, " dz=", overlap_z)
+				elif absf(overlap_x) < 0.003 and overlap_z > top_half * 0.5 or absf(overlap_z) < 0.003 and overlap_x > top_half * 0.5:
+					corner_join_contacts += 1
+	_check(tops_clear, "berm strips and four corner caps have no coplanar top-face overlap")
+	_check(corner_join_contacts >= 8, "all eight strip-to-corner top-edge joins remain connected")
+	_check(gates_clear, "berm strips stop at the two gates without extending into portals")
+	for m in [props._wall_berm_mesh(), props._wall_berm_corner_mesh()]:
+		var verts: PackedVector3Array = (m as ArrayMesh).surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+		var min_y := INF
+		var max_y := -INF
+		var any_ground_level := false
+		for v: Vector3 in verts:
+			min_y = minf(min_y, v.y)
+			max_y = maxf(max_y, v.y)
+			any_ground_level = any_ground_level or absf(v.y) < 0.0001
+		_check(min_y < -0.015 and not any_ground_level, "berm toe sits below y=0 terrain; no coplanar ground vertices")
+		_check(absf(max_y - float(props.BERM_TOP_Y)) < 0.0001, "berm keeps original visible 22cm top height")
 	var stable_shadows := stage.find_children("BaseWallShadow_*", "MeshInstance3D", true, false)
 	_check(stable_shadows.size() == 6, "six constant SHADOWS_ONLY wall proxies replace LOD-specific shadows")
 	for shadow_node in stable_shadows:

@@ -14,6 +14,9 @@ const LIFT_FROM := 0.35   # de arm begint omhoog te gaan als de poort zo ver ope
 const GUARD_SZ := -1.0    # in het huisje bij de noordpoort zit de wacht
 const HUT_HP := 450.0
 const BOOM_HP := 120.0
+const ARM_LENGTH := 7.2  # lengte uit bron/wachtpost/maak_wachtpost.py
+const ARM_CENTER_X := ARM_LENGTH * 0.5 - 0.55  # lokale X van GLB-knoop Boom
+const ARM_COLLISION_SIZE := Vector3(ARM_LENGTH, 0.28, 0.32)
 const HUT_COST := 300
 const BOOM_COST := 100
 const HUT_TAKE := {"bullet": 0.5, "melee": 0.5, "explosive": 1.0}
@@ -86,6 +89,12 @@ func _spawn() -> void:
 		p.len = ap.get_animation("Open").length
 		p.arm = barrier.find_child("Boom", true, false)
 		p.boom_body = _solid(barrier, Vector3(-G - 0.55, 0.65, 0), Vector3(0.6, 1.3, 0.5), p, "boom")   # de kast; kogels die hem raken beschadigen de slagboom
+		# De rood-witte arm had GEEN botsing; koppel de smalle body direct aan
+		# de geanimeerde Boom-pivot. Dan roteert de fysica 1-op-1 mee omhoog,
+		# zonder de hele rijbaan als onzichtbare muur af te sluiten.
+		p.arm_body = _solid(p.arm as Node3D, Vector3(ARM_CENTER_X, 0, 0), ARM_COLLISION_SIZE, p, "boom")
+		p.arm_body.name = "SlagboomArmCollision"
+		p.arm_shape = p.arm_body.get_child(0) as CollisionShape3D
 		p.wreck = _wreck(barrier)
 		var hut := _piece(scene, "Slagboom")
 		hut.position = hut_pos(sz)
@@ -196,6 +205,7 @@ func _break_boom(p: Dictionary) -> void:
 	p.boom_hp = 0.0
 	var at: Vector3 = (p.barrier as Node3D).to_global(Vector3(-G - 0.55, 0.8, 0))
 	(p.arm as Node3D).visible = false
+	(p.arm_shape as CollisionShape3D).disabled = true
 	(p.wreck as Node3D).visible = true
 	p.boom_fx = Fx.burning(self, at, false)
 	Fx.explosion(self, at, 0.6)
@@ -233,6 +243,7 @@ func repair_all() -> void:
 		p.boom_hp = BOOM_HP
 		p.boom_down = false
 		(p.arm as Node3D).visible = true
+		(p.arm_shape as CollisionShape3D).disabled = false
 		(p.wreck as Node3D).visible = false
 		for k in ["hut_fx", "boom_fx"]:
 			if p[k] != null and is_instance_valid(p[k]):

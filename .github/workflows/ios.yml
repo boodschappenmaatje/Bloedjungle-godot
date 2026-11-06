@@ -92,6 +92,8 @@ jobs:
           if grep -Eq 'SCRIPT ERROR:|ERROR:' "$RUNNER_TEMP/surface_filtering_test.log"; then exit 1; fi
           "$GODOT_BIN" --headless --path . -s tests/base_wall_hq2_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/base_wall_hq2_test.log"
           "$GODOT_BIN" --headless --path . -s tests/wall_diagnostics_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/wall_diagnostics_test.log"
+          "$GODOT_BIN" --headless --path . -s tests/slagboom_collision_test.gd --fixed-fps 60 --quit-after 1500 2>&1 | tee "$RUNNER_TEMP/slagboom_collision_test.log"
+          grep -Fq "SLAGBOOM COLLISION TEST PASS" "$RUNNER_TEMP/slagboom_collision_test.log"
           grep -Fq "WALL DIAGNOSTICS TEST PASS" "$RUNNER_TEMP/wall_diagnostics_test.log"
           if ! grep -Fq 'BASE WALL HQ2 TEST PASS' "$RUNNER_TEMP/base_wall_hq2_test.log"; then
             echo "::error::Base Wall HQ 2.0 regression did not reach PASS" >&2
@@ -156,6 +158,7 @@ jobs:
             ${{ runner.temp }}/surface_filtering_test.log
             ${{ runner.temp }}/base_wall_hq2_test.log
             ${{ runner.temp }}/wall_diagnostics_test.log
+            ${{ runner.temp }}/slagboom_collision_test.log
             ${{ runner.temp }}/bunker_hq_replacement_test.log
             ${{ runner.temp }}/soldaat_vq2_test.log
             ${{ runner.temp }}/m1911_ammo_reload_test.log

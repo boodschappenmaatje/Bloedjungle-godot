@@ -42,9 +42,26 @@ func _clear() -> void:
 	Game.fire = false
 	m1911_touch_firing = false
 	_m1911_fire_latched = false
+	var combat := get_tree().get_first_node_in_group("combat_buttons")
+	if combat != null:
+		combat.call("cancel_grenade_stick")  # focus/rotate cancels: no phantom throw
 	var team := get_tree().get_first_node_in_group("team_commands")
 	if team != null:
 		team.cancel_input()
+	queue_redraw()
+
+
+## Called when a fresh grenade mode is selected. Preserve the walking finger,
+## but require a NEW right-stick touch so the wheel's release cannot throw.
+func clear_right_for_grenade() -> void:
+	for held_id in _sticks.keys():
+		if _sticks[held_id].aim:
+			_sticks.erase(held_id)
+	_mouse_used = false
+	_mouse_down = false
+	_m1911_fire_latched = false
+	m1911_touch_firing = false
+	Game.fire = false
 	queue_redraw()
 
 
@@ -71,6 +88,9 @@ func _input(event: InputEvent) -> void:
 		_events += 1
 	if Game.build_mode:
 		return
+	var combat := get_tree().get_first_node_in_group("combat_buttons")
+	if combat != null and combat.call("wheel_is_open"):
+		return  # wheel selection must never start a virtual joystick
 	if event is InputEventScreenTouch:
 		if event.pressed:
 			if _on_button(event.position):
@@ -96,7 +116,11 @@ func _input(event: InputEvent) -> void:
 				d = d.normalized() * STICK_R
 			_sticks[event.index] = {"aim": aim, "origin": origin, "d": d / STICK_R}
 			_mouse_used = false
+			if aim and combat != null and bool(combat.get("grenade_stick_armed")):
+				combat.call("grenade_stick_begin", event.index)
 		else:
+			if _sticks.has(event.index) and _sticks[event.index].aim and combat != null:
+				combat.call("grenade_stick_release", event.index)
 			_sticks.erase(event.index)
 		queue_redraw()
 	elif event is InputEventScreenDrag and _sticks.has(event.index):
@@ -105,6 +129,8 @@ func _input(event: InputEvent) -> void:
 		if d.length() > STICK_R:
 			d = d.normalized() * STICK_R
 		s.d = d / STICK_R
+		if s.aim and combat != null and bool(combat.get("grenade_stick_armed")):
+			combat.call("grenade_stick_drag", event.index, s.d)
 		queue_redraw()
 	elif event is InputEventMouse and event.device != InputEvent.DEVICE_ID_EMULATION:
 		_mouse_used = true
@@ -205,6 +231,11 @@ func _process(_delta: float) -> void:
 			var p: Vector3 = Game.player.global_position
 			aim = atan2(hit.x - p.x, hit.z - p.z)
 		fire = _mouse_down
+	if combat != null and (bool(combat.get("grenade_stick_armed")) or combat.call("wheel_is_open")):
+		# Right stick aims the existing GrenadeAim arc, no weapon trigger.
+		fire = false
+		right_stick_firing = false
+		_m1911_fire_latched = false
 	if Streak.armed:
 		aim = NAN   # napalm staat klaar: de rechterstick richt de strook en schiet niet
 		fire = false
@@ -237,11 +268,15 @@ func _draw() -> void:
 
 
 func _draw_stick(origin: Vector2, direction: Vector2, aim: bool, alpha: float) -> void:
+	var combat := get_tree().get_first_node_in_group("combat_buttons")
+	var grenade_mode := aim and combat != null and bool(combat.get("grenade_stick_armed"))
 	var fire_threshold := M1911_FIRE_ENTER if Game.cur == "m1911" and UI.is_touch_platform() else AIM_FIRE
-	var firing := aim and direction.length() > fire_threshold
+	var firing := aim and not grenade_mode and direction.length() > fire_threshold
 	# De bedienbare zone blijft 76 punten; alleen de getekende ring neemt minder speelbeeld in.
 	draw_circle(origin, 64.0, Color(0.015, 0.03, 0.025, 0.12 * alpha))
-	draw_arc(origin, 64.0, 0, TAU, 48, Color(1, 0.3, 0.2, 0.72 * alpha) if firing else Color(UI.INK, 0.36 * alpha), 1.5)
+	draw_arc(origin, 64.0, 0, TAU, 48, Color(1, 0.3, 0.2, 0.72 * alpha) if firing else Color(UI.BRASS, 0.86 * alpha) if grenade_mode else Color(UI.INK, 0.36 * alpha), 1.5)
+	if grenade_mode:
+		draw_string(UI.body(700), origin + Vector2(-28, -72), "GOOI", HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(UI.BRASS, alpha))
 	if aim:
 		draw_arc(origin, STICK_R * AIM_FIRE, 0, TAU, 40, Color(UI.BRASS, 0.28 * alpha), 1.1)
 	var arrow_color := Color(UI.INK, 0.78 * alpha)

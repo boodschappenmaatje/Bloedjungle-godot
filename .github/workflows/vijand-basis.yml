@@ -31,6 +31,8 @@ on:
       - "tests/jeep_m2_schutter_test.gd"
       - "tests/combat_feedback_test.gd"
       - "tests/combat_infantry_feedback_test.gd"
+      - "tests/combat_bazooka_aim_test.gd"
+      - "scripts/bazooka_aim_feedback.gd"
       - "scripts/player.gd"
       - "scripts/combat_target_hud.gd"
       - "scripts/combat_aim_feedback.gd"
@@ -104,6 +106,7 @@ jobs:
           timeout 180 "$GODOT" --headless --path . --script tests/jeep_m2_schutter_test.gd --fixed-fps 60
           timeout 180 "$GODOT" --headless --path . --script tests/combat_feedback_test.gd --fixed-fps 60
           timeout 180 "$GODOT" --headless --path . --script tests/combat_infantry_feedback_test.gd --fixed-fps 60
+          timeout 180 "$GODOT" --headless --path . --script tests/combat_bazooka_aim_test.gd --fixed-fps 60
       - name: Jeep sterfte respawn en torenschutter trefeffecten
         shell: bash
         run: |

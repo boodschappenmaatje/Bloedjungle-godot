@@ -55,7 +55,7 @@ void fragment() {
 	vec2 duv = p * 0.32;
 	vec2 muv = vec2(p.y, -p.x) * 0.28;
 	vec2 moss_uv = p * 0.34;
-	vec2 gravel_uv = p * 0.20;
+vec2 gravel_uv = p * 0.34;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -71,7 +71,9 @@ void fragment() {
 	vec4 mos = texture(moss_surface, moss_uv, detail_mip_bias);
 	vec4 grs = texture(gravel_surface, gravel_uv, detail_mip_bias);
 	float floor_mix = smoothstep(0.27, 0.72, n1 * 0.6 + n2 * 0.4) * 0.9;
-	vec3 grass = mix(g * vec3(0.76,0.82,0.62), j * vec3(0.62,0.74,0.52), floor_mix);
+	// Keep the living floor green in the midground; the source grass atlas is deliberately
+	// low-contrast, so the former dark tint made its small blades average to a brown wash.
+	vec3 grass = mix(g * vec3(0.9,1.02,0.68), j * vec3(0.72,0.86,0.56), floor_mix);
 	grass *= mix(vec3(1.03,0.99,0.88),vec3(0.86,1.0,0.9),smoothstep(0.3,0.7,n1));
 	grass *= 0.76 + 0.48*n3;
 	float inside = 1.0 - smoothstep(compound-0.5,compound+3.0,max(abs(p.x),abs(p.y)));
@@ -82,12 +84,14 @@ void fragment() {
 	float side = abs(p.x-ptx);
 	float road_active = step(0.001,pt)*step(pt,0.999);
 	// Shoulder breakup uses broad noise, with fine edges prefiltered by the pixel footprint.
-	float trail = (1.0-smoothstep(1.35,2.8+n2*1.2,side+(n3-0.5)*0.65))*road_active;
+	float trail = (1.0-smoothstep(1.05,2.2+n2*0.8,side+(n3-0.5)*0.55))*road_active;
 	float bank = 1.0-smoothstep(2.9,5.0+n2*1.6,river_off);
 	float swamp = (1.0-smoothstep(-38.0,-22.0,p.x+n2*6.0))*(1.0-smoothstep(-70.0,-40.0,p.y))*smoothstep(-84.0,-70.0,p.y);
 	swamp *= 1.0-smoothstep(0.0,2.0,river_off-3.0);
-	float patches = smoothstep(0.42,0.68,n1+0.2*n2);
-	float dm = clamp(max(max(inside,path),max(patches*0.68,max(bank,max(swamp*0.9,trail)))),0.0,1.0);
+	// Dirt stays in broken, occasional patches. The earlier wide mask left broad bare
+	// fields that visually swallowed the short grass and understory.
+	float patches = smoothstep(0.56,0.82,n1*0.68+n2*0.32);
+	float dm = clamp(max(max(inside,path),max(patches*0.48,max(bank,max(swamp*0.9,trail)))),0.0,1.0);
 	dm = smoothstep(0.12,0.88,dm+(n3-0.5)*0.17);
 	float rut = (1.0-smoothstep(0.12,0.38,abs(side-0.78+(n2-0.5)*0.12)))*road_active*trail;
 	float wet = max(bank*0.65,max(swamp,rut*smoothstep(0.46,0.66,n2)));

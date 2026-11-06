@@ -1,40 +1,41 @@
-# Visual Upgrade B — iPhone acceptance run
+# iPhone-testplan — Visual Upgrade B 1.0
 
-The PR produces an **unsigned** iOS IPA. GitHub Actions validates the iOS export; it does not install or run the game on an iPhone. The tester must sign the IPA with their own Apple developer account (for example through AltStore/AltServer or Xcode). Do not install this build over a production copy unless that is intentional.
+De gebruiker voert de uiteindelijke toesteltest uit. Er is door het ontwikkelteam geen fysieke iPhone-test uitgevoerd. De CI-export controleert dat Godot de iOS-build kan maken; hij bewijst geen installatie, Metal-rendering, prestaties, thermiek of speelbaarheid op een iPhone.
 
-## Build to install
+## Testbuild
 
-Use the `bloedjungle-ios-unsigned-<commit>` artifact from the latest successful **iOS unsigned IPA** run on PR #237. Download the artifact ZIP, extract `Bloedjungle.ipa`, and sign/install it on the test iPhone. Check the commit SHA shown on the Actions run against the PR head before installing.
+- PR: [#237 — Visual Upgrade B 1.0](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/237) (Draft)
+- Commit: `997f386c869f2e12dbc4eacab925fe3ba1a5cfb3`
+- iOS-export: [GitHub Actions-run 42304197774](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42304197774), geslaagd.
+- Artifact: `bloedjungle-ios-unsigned-6e92a7fdab7ec94f8fd81d0a43a2baf94fa3eacc` (1.151.750.040 bytes, ongeveer 1,15 GB).
 
-The separate `visual-upgrade-b-godot-<commit>` artifact contains genuine Godot screenshots, the renderer/backend diagnostics and Linux software timing data. It is comparison evidence; it is not a device build or an iPhone performance result.
+Download het artifact in de Actions-run en pak de ZIP uit. Laat de IPA met je eigen Apple-account ondertekenen en installeer hem via AltStore/AltServer of je gebruikelijke iOS-signingproces. Controleer vóór installatie de commit hierboven. Dit is een unsigned testbuild, geen OTA-release.
 
-## Keep the comparison controlled
+De aparte [Godot-capturerun](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42304197795) levert echte beelden uit de gamecamera en softwaremetingen; die zijn geen iPhone-prestatiemeting. Gebruik voor de vergelijking dezelfde bestaande grafische instellingen, camera en scène. Pas de renderresolutie niet aan om de visuele kwaliteit te beoordelen.
 
-- Record iPhone model, iOS version, battery/thermal state, game quality setting, render scale, and whether Low Power Mode is on.
-- Use the normal gameplay camera and existing HUD/controls. Start on a clear day with the same quality setting used for the existing screenshot.
-- Test at the usual render scale first. The 100% render-scale capture is a detail diagnostic, not the acceptance preset.
-- Let the scene run for 30 seconds before recording each segment so shader and asset warm-up do not dominate the result.
+## Uitvoeren
 
-## Run and record
+Noteer eerst iPhone-model, iOS-versie, kwaliteit, render scale, Low Power Mode, accupercentage en of het toestel al warm is. Laat de game na het starten 30 seconden opwarmen.
 
-1. **Still scene:** stand beside the jungle trail for 60 seconds. Record a 20-second screen capture and the FPS overlay at the start/end. Look for stable foliage, readable soil/gravel, plant contact at the ground, and clear sightlines.
-2. **Movement and shimmer:** walk and jog along the trail and through its shoulder vegetation for 60 seconds. Look for foliage/ground shimmer, visible LOD transitions, plants popping, and any blockage of soldiers or firing lanes.
-3. **Large fight:** repeat the heaviest normal encounter available for at least 2 minutes, including weapon fire and movement. Record the lowest sustained FPS you observe, pauses, heat, and whether the camera/HUD stay responsive.
-4. **Buildings and river:** check the road/building edges and river bank while moving past them. Confirm that building placement, collisions, controls and combat remain unchanged.
+1. **Stilstaande scène — 60 seconden.** Start bij het bospad en maak een schermopname. Controleer de gras- en grondstructuur, pad, plantcontact en zicht op soldaten en schietlijnen.
+2. **Beweging en shimmer — 60 seconden.** Loop en ren over het pad en langs de oever. Noteer flikkering, LOD-sprongen, pop-in en planten die zichtlijnen blokkeren.
+3. **Groot gevecht — minimaal 2 minuten.** Beweeg, vuur en test de zwaarste normale encounter. Noteer haperingen, laagste aanhoudende FPS en of besturing, HUD en camera responsief blijven.
+4. **Rivier, kamp en gebouwen.** Beweeg langs de rivieroevers, muren en torens; controleer terreincontact, zichtbaarheid en collisions.
+5. **Warmte.** Herhaal na minimaal 10 minuten spelen en noteer eventuele iOS-waarschuwing, warmte en zichtbare throttling.
 
-The in-game FPS label is instantaneous; it cannot establish a 1% low. For frame-time and 1% low acceptance, record a Metal System Trace with Xcode Instruments on the connected iPhone. If Instruments is unavailable, report that result as **not measured** rather than estimating it from the overlay.
+De HUD-FPS is een momentopname, geen betrouwbare 1%-low. Voor frametijden en 1%-lows is een Metal System Trace in Xcode Instruments nodig. Als die meting niet wordt uitgevoerd, noteer dan letterlijk **niet gemeten**. De CI-metingen komen van Mesa llvmpipe-software en mogen niet als iPhone-FPS worden geïnterpreteerd.
 
-## Acceptance notes
+## Resultaten invullen
 
-Attach the screen recording and fill in:
+- iPhone-model / iOS:
+- Build-commit:
+- Kwaliteit / render scale / Low Power Mode:
+- Stilstaande FPS-bandbreedte na opwarming:
+- Groot gevecht: laagste aanhoudende FPS / haperingen:
+- Frametime en 1%-low (Instruments of **niet gemeten**):
+- Shimmer, pop-in of LOD-sprongen:
+- Temperatuur / thermische throttling na 10 minuten:
+- Zichtlijnen, gameplay, besturing, HUD of collisionproblemen:
+- Schermopname of aanvullende notities:
 
-- iPhone model / iOS:
-- Quality / render scale:
-- Still-scene FPS range:
-- Movement shimmer or LOD issues:
-- Large-fight lowest sustained FPS / hitches:
-- 1% low and frame-time result (Instruments, or `not measured`):
-- Device temperature/thermal throttling:
-- Gameplay, collision, HUD or sightline regressions:
-
-The upgrade remains visually and mobile-pending until this device run is reviewed. No iPhone test is claimed by the Linux/Vulkan or Linux/OpenGL software captures.
+Mobiele en visuele acceptatie blijven open tot deze toesteltest is beoordeeld. Installatie van de unsigned IPA is de volgende teststap; de export op zichzelf is geen toestelbewijs.

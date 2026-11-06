@@ -11,7 +11,7 @@ var _rain: GPUParticles3D
 
 # per tijdstip: zonrichting, zonkleur, zonkracht, omgevingslicht, hemel (boven/horizon/grond), mist, belichting
 const TIMES := {
-	"day": {"rot": Vector3(-27, -38, 0), "col": "ffe3b4", "e": 1.9, "amb": 0.3, "top": "526c76", "hor": "b7b49e", "gnd": "7d8d73", "fog": "8b967f", "exp": 0.95},
+	"day": {"rot": Vector3(-27, -38, 0), "col": "ffe3b4", "e": 1.9, "amb": 0.34, "top": "526c76", "hor": "b7b49e", "gnd": "7d8d73", "fog": "8b967f", "exp": 0.95},
 	"dusk": {"rot": Vector3(-9, -38, 0), "col": "ff8f50", "e": 1.6, "amb": 0.3, "top": "3a3f5c", "hor": "d98a55", "gnd": "8a6a50", "fog": "a87a5c", "exp": 1.0},
 	"night": {"rot": Vector3(-52, -38, 0), "col": "8fa8ff", "e": 0.9, "amb": 0.34, "top": "10182e", "hor": "2c3b5a", "gnd": "141c2a", "fog": "27324a", "exp": 0.95},
 }
@@ -112,7 +112,7 @@ func apply_settings() -> void:
 	_env.fog_light_color = Color(t["fog"]).lerp(Color("9aa59a"), 0.0 if weather == "clear" else 0.35)
 	_env.fog_density = {"clear": 0.0035, "rain": 0.014, "mist": 0.018}[weather]
 	_env.tonemap_exposure = t["exp"]
-	_env.adjustment_saturation = 1.02 if weather == "clear" else 0.85
+	_env.adjustment_saturation = 1.06 if weather == "clear" else 0.85
 	_apply_quality(quality)
 	_apply_trees()
 	Woonhuis.apply_shadow_setting()

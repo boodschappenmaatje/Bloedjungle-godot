@@ -101,6 +101,18 @@ Native iPhone-acceptatie (deze gebruikersopname is de baseline):
 - Geen nieuwe lock-on, hit-scan-overschakeling, onzichtbare auto-hit, extra schade of kogels door muren.
 - Bestaande vijand-HK/toren/bunker-damage, doelen, botsingen, animaties, andere HUD-modules, database/save en OTA-keten niet veranderen.
 
+## 5B. Vervolg — soldaat te voet (6 november 2026)
+
+**Beslissing:** na de geslaagde native iPhone-test van de jeep-MG volgen de vijf rechtuit schietende soldatenwapens: M1911, Thompson, M1 Garand, M1897 shotgun en MG42. Bazooka (explosie/traject) en granaten zijn een afzonderlijke stap, **niet stilzwijgend inbegrepen**.
+
+**Implementatie:** dezelfde `CombatTargetHud` ondersteunt bron `infantry` naast `jeep`. De getoonde richtlijn begint bij `SoldierModel.muzzle_position()`, volgt de huidige feitelijke `player.face`, gebruikt de centrale baan en de bestaande wapenstatistieken `speed * life`. Een apart `predict_infantry` kopieert het huidige Bullet-botsmasker inclusief de bestaande `over_wall`-uitzondering. Slechts één read-only previewray per circa 85 ms bij actief richten, niet voor andere soldaten of vijanden. De geparkeerde jeep mag het infanterierichtkruis niet wissen.
+
+Alleen `Player._shoot()` geeft gewone fysieke kogels `feedback_source = "infantry"`; `Bullet` bevestigt uitsluitend een werkelijk verminderde vijand-HP. Richtpreview geeft nooit schade. De huidige M1911 kamer/magazijn, touch-stick-ondersteuning, herlaadknoppen, recoil, spread, vuurtempo en basisschade zijn onaangeroerd.
+
+**Acceptatie:** `tests/combat_infantry_feedback_test.gd` (echte Colt-kogel, HP-event, muren, bron-eigendom HUD), `tests/combat_feedback_test.gd` (jeep-regressie), `tests/m1911_ammo_reload_test.gd`, iOS-export en OTA-preview. Native iPhone-FPS en visuele kwaliteit blijven pas bewezen na een echte test.
+
+**Status:** code in afzonderlijke Draft PR; `main` onveranderd totdat de gebruiker per stap merge toestaat.
+
 ## 8. Status / releasepoort
 
 - [x] Optie B gekozen door gebruiker.

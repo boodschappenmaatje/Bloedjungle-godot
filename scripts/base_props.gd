@@ -263,7 +263,7 @@ static func _wall_berm_mesh() -> ArrayMesh:
 static func _wall_berm_corner_mesh() -> ArrayMesh:
 	var base := BERM_BASE_HALF_WIDTH
 	var top := BERM_TOP_HALF_WIDTH
-	var height := 0.22
+	var height := BERM_TOP_Y
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
 	_wall_berm_quad(st, Vector3(-base, BERM_BOTTOM_Y, -base), Vector3(base, BERM_BOTTOM_Y, -base), Vector3(base, BERM_BOTTOM_Y, base), Vector3(-base, BERM_BOTTOM_Y, base))

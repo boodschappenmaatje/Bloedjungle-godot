@@ -1,0 +1,71 @@
+{
+  "method": "Lossless channel packing of existing licensed project PBR maps; no resampling",
+  "license_reference": "docs/ASSET_SOURCES.md",
+  "maps": [
+    {
+      "family": "grass",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": "RGB OpenGL tangent normal, A roughness (linear)",
+      "sources": {
+        "assets/textures/terrain/grass/normal_gl.jpg": "e12fa2ce2cb12fb2e6c499402190ac2a65add0591956c256813eeca4a56e29af",
+        "assets/textures/terrain/grass/roughness.jpg": "c4d957a21a29f9a68ee567f02d2d65fbe32443105484a0befcb5e3398eb2d3cc"
+      },
+      "output_sha256": "75a56d5524c16f6be2e89e008b6536b150bbcebfad255f4910fd1f7c13220e50"
+    },
+    {
+      "family": "jungle_ground",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": "RGB OpenGL tangent normal, A roughness (linear)",
+      "sources": {
+        "assets/textures/terrain/jungle_ground/normal_gl.jpg": "bea9ebb2dedba14923910dd60b8d3b4112d7c96a287d5cc9e14bd76e86a0a939",
+        "assets/textures/terrain/jungle_ground/roughness.jpg": "3d47037a780fda55072e3ba66b3033c50624c590b97809a030c96d4873dd5ef4"
+      },
+      "output_sha256": "b565c18413931d1a53ac4f7e428a44da8058f7a0af6e522e0dc5b7e4bda5c56d"
+    },
+    {
+      "family": "dry_earth",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": "RGB OpenGL tangent normal, A roughness (linear)",
+      "sources": {
+        "assets/textures/terrain/dry_earth/normal_gl.jpg": "edecdbc3e683ecdc004ee13498672a393f858a324437091c2904e717f732db22",
+        "assets/textures/terrain/dry_earth/roughness.jpg": "459f1df7b962f821bada450d57a02a6a4e6fdcb59fb189f497d11b533a21717f"
+      },
+      "output_sha256": "784acdc77ec56e029b81c9f90d0c06015ea175c8756de0f1884653022652640a"
+    },
+    {
+      "family": "mud",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": "RGB OpenGL tangent normal, A roughness (linear)",
+      "sources": {
+        "assets/textures/terrain/mud/normal_gl.jpg": "bb1eac9857f492573cc0ae0e8db8dc936f7ec7f983894ed8463a0dd24b53f1e7",
+        "assets/textures/terrain/mud/roughness.jpg": "47da9520860163315d66fec8dfd8ef16342c26ee50e10a87f6767a8efc352065"
+      },
+      "output_sha256": "148a970d83a2c328aa594271b7e5c1e79893fecde12a886aeedb478026228b04"
+    },
+    {
+      "family": "moss",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": "RGB OpenGL tangent normal, A roughness (linear)",
+      "sources": {
+        "assets/textures/terrain/moss/normal_gl.jpg": "a1ad92e1c3b5b27440e74f5b4c2bc2f828e28200d5dc6483df73bc1d4660acf3",
+        "assets/textures/terrain/moss/roughness.jpg": "a8949f4e5b4589f85ea6c2e1cf861c552da4c259bcf623b73fe47d772d1e2b19"
+      },
+      "output_sha256": "b14bab494b582ba3e2d7a5950dfcc0858888124bd154f5ba3a2f71bf1c5133fd"
+    }
+  ]
+}

@@ -143,6 +143,9 @@ static func _shadow_mat(kind: String) -> ShaderMaterial:
 		m.set_shader_parameter("height", c[0])
 		m.set_shader_parameter("width", c[1])
 		m.set_shader_parameter("strength", c[2])
+		if kind == "palm":
+			m.set_shader_parameter("canopy_detail", true)
+			m.set_shader_parameter("canopy_tex", LeafTex.get_tex("palm"))
 		_shadow_mats[kind] = m
 	return _shadow_mats[kind]
 
@@ -525,6 +528,7 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 							_reg[key] = []
 						_reg[key].append(entry)
 					_register_vegetation(entry)
+	JungleUnderstory.spawn(parent)
 	reapply_building_clearings()
 
 

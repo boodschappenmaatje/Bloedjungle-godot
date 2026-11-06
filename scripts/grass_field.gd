@@ -98,6 +98,21 @@ func _populate(existing: Array) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 27102026
 	var groups := {}
+	# Spend the existing tuft budget on visible short-grass shoulders first.
+	# A separate RNG preserves the original foliage/collider generation sequence.
+	var shoulder_rng := RandomNumberGenerator.new()
+	shoulder_rng.seed = 20261107
+	for i in 1800:
+		var z := shoulder_rng.randf_range(-86.0, -33.0)
+		var side := -1.0 if shoulder_rng.randf() < 0.5 else 1.0
+		var p := Vector3(Data.path_x(z) + side * shoulder_rng.randf_range(3.5, 9.0), 0.0, z)
+		if _allowed(p):
+			_add_point(groups, shoulder_rng, "short", p)
+	# Understory carpet, still within the existing short-grass population cap.
+	for i in 2400:
+		var p := Vector3(shoulder_rng.randf_range(-65.0,65.0),0,shoulder_rng.randf_range(-85.0,-34.0))
+		if _allowed(p) and shoulder_rng.randf() < 0.4 + 0.6 * Foliage._grove(p.x,p.z):
+			_add_point(groups, shoulder_rng, "short", p)
 	for transform: Transform3D in existing:
 		for _j in 3:
 			var p := transform.origin + Vector3(rng.randf_range(-0.5, 0.5), 0, rng.randf_range(-0.5, 0.5))
@@ -159,7 +174,8 @@ func _add_point(groups: Dictionary, rng: RandomNumberGenerator, kind: String, po
 	if not groups.has(key):
 		groups[key] = {"kind": kind, "cell": cell, "variant": variant, "xf": [], "colors": []}
 	var scale_ := rng.randf_range(0.9, 1.08)
-	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_, scale_, scale_))
+	var spread := 1.75 if kind == "short" else 1.0
+	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_*spread, scale_, scale_*spread))
 	groups[key].xf.append(Transform3D(basis, pos))
 	var shade := rng.randf_range(0.88, 1.0)
 	groups[key].colors.append(Color(shade, shade, shade))

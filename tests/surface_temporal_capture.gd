@@ -22,7 +22,7 @@ func run():
 	var kit=load("res://scripts/kit.gd")
 	mat.set_shader_parameter("noise_a",kit.noise_tex(0.02,3))
 	mat.set_shader_parameter("noise_b",kit.noise_tex(0.045,8))
-	var textures={"grass_tex":"grass/base_color.jpg","jungle_tex":"jungle_ground/base_color.jpg","dirt_tex":"dry_earth/base_color.jpg","mud_tex":"gravel_rock/base_color.jpg","dirt_height":"dry_earth/roughness.jpg","dirt_normal":"dry_earth/normal_gl.jpg"}
+	var textures={"grass_tex":"grass/base_color.jpg","jungle_tex":"jungle_ground/base_color.jpg","dirt_tex":"dry_earth/base_color.jpg","mud_tex":"mud/base_color.jpg","dirt_normal":"surfaces/dry_earth.png","grass_surface":"surfaces/grass.png","jungle_surface":"surfaces/jungle_ground.png","mud_surface":"surfaces/mud.png","moss_surface":"surfaces/moss.png","moss_tex":"moss/base_color.jpg"}
 	for key in textures:
 		print("LOAD ",key)
 		mat.set_shader_parameter(key,load("res://assets/textures/terrain/"+textures[key]))

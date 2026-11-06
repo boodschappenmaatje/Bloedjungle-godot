@@ -29,6 +29,7 @@ uniform bool fade_sightline = false;
 // z = straal waarbinnen het blad opzij gaat, w = kracht (0 = niet gebruikt). Zet door Foliage.update_pushers.
 uniform vec4 pushers[8];
 varying vec3 vcol;
+varying float root_contact;
 varying vec3 world_leaf;
 
 // 0 = blad staat niet in de weg, 1 = midden op de zichtlijn
@@ -76,13 +77,16 @@ void vertex() {
 		vec2 rustle = vec2(sin(TIME * 11.0 + ph * 3.0 + base_pos.y * 4.0), cos(TIME * 9.0 + ph * 2.0)) * 0.13 * shake;
 		VERTEX += transpose(MODEL_NORMAL_MATRIX) * vec3(push.x + rustle.x, -min(len * 0.7, base_pos.y * 0.85), push.y + rustle.y);
 	}
+	// Authored root-to-tip weight also grounds each frond without SSAO.
+	root_contact = mix(0.64, 1.0, smoothstep(0.0, 0.38, COLOR.a));
 	vcol = COLOR.rgb;
 	world_leaf = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }
 
 void fragment() {
 	vec2 uv = tile ? UV : clamp(UV, 0.0, 1.0);
-	vec3 base = pow(vcol, vec3(2.2));  // vertexkleuren zijn sRGB gekozen, de shader rekent lineair
+	// glTF/mesh vertex colors are linear; only the legacy bark palette needs conversion.
+	vec3 base = tile ? pow(vcol, vec3(2.2)) : vcol;
 	vec4 t = use_tex ? texture(tex, uv) : vec4(1.0);
 	if (t.a < cut) discard;
 	if (fade_sightline) {
@@ -100,8 +104,10 @@ void fragment() {
 		NORMAL_MAP = texture(nrm, uv).rgb;
 		NORMAL_MAP_DEPTH = nrm_depth;
 	}
-	ALBEDO = base * t.rgb * tint;
-	ROUGHNESS = 0.58;
-	SPECULAR = 0.3;
+	ALBEDO = base * t.rgb * tint * root_contact;
+	AO = root_contact;
+	AO_LIGHT_AFFECT = 0.15;
+	ROUGHNESS = tile ? 0.94 : 0.76;
+	SPECULAR = tile ? 0.12 : 0.28;
 	BACKLIGHT = ALBEDO * backlight;
 }

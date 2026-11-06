@@ -10,6 +10,12 @@ name: OTA update patch
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish verified OTA assets to the updates release"
+        type: boolean
+        required: true
+        default: false
   pull_request:
     paths:
       - "scripts/**"
@@ -208,14 +214,14 @@ jobs:
               f.write("\n".join([brug["naam"], licht["naam"]] + [p["naam"] for p in keten]) + "\n")
           PY
       - name: Preview the OTA files (PR only; never published)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && !inputs.publish)
         uses: actions/upload-artifact@v4
         with:
           name: ota-preview-${{ github.sha }}
           path: out/
           retention-days: 7
       - name: Publish to the "updates" release
-        if: github.event_name != 'pull_request' && !contains(github.event.head_commit.message, '[skip-ota-publish]')
+        if: (github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip-ota-publish]')) || (github.event_name == 'workflow_dispatch' && inputs.publish)
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

@@ -48,10 +48,10 @@ func _run() -> void:
 	await _frames(3)
 	main.begin()
 	await _frames(40)
-	var game := root.get_node("Game")
+	var game: Variant = root.get_node("Game")
 	var hud := get_first_node_in_group("combat_target_hud") as CombatTargetHud
 	_check(hud != null and hud.mouse_filter == Control.MOUSE_FILTER_IGNORE, "on-foot HUD exists without intercepting iPhone touches")
-	var player: CharacterBody3D = game.player
+	var player: Variant = game.player
 	_check(player != null, "existing playable soldier is available")
 	if player == null or hud == null:
 		quit(1)
@@ -67,7 +67,7 @@ func _run() -> void:
 	player.m1911_chambered = true
 	player.m1911_mag_rounds = 7
 	player._sync_m1911_ammo()
-	var enemy := (load("res://scenes/vijand_verdediger.tscn") as PackedScene).instantiate()
+	var enemy: Variant = load("res://scenes/vijand_verdediger.tscn").instantiate()
 	enemy.setup("assault", 1)
 	enemy.post = "poort"
 	main.add_child(enemy)

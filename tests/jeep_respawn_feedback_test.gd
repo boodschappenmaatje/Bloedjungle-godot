@@ -81,8 +81,23 @@ func _run() -> void:
 			_check("hit lowers actual gunner HP", gunner.hp == hp_before - 9.0)
 			_check("visible short gunner hit marker", gunner.get_node("M2HitConfirm").visible and gunner.get_node("M2HitConfirm").text == "×")
 			_check("gunner HP bar enlarged for confirmed hits", gunner._range_marker.visible and gunner._range_marker.scale.x > 1.3)
-			await _frames(18)
-			_check("hit marker fades rather than cluttering HUD", not gunner.get_node("M2HitConfirm").visible)
+			# The marker lives for 0.24 seconds of _process(delta) time. In a
+			# headless run, process_frame count is not a reliable wall-clock timer;
+			# 18 frames may elapse before the game has simulated 0.24 seconds.
+			var marker: Label3D = gunner.get_node("M2HitConfirm")
+			var marker_lifetime: float = gunner._hit_cross_t
+			_check("confirmed hit marker uses a short lifetime", marker_lifetime > 0.0 and marker_lifetime <= 0.25)
+			var marker_faded := false
+			# Wait for the *actual* timer to expire, but keep a strict watchdog so
+			# a stuck, repeated or non-updating marker still fails the regression.
+			for _frame in 120:
+				await process_frame
+				if not marker.visible:
+					marker_faded = true
+					break
+			if not marker_faded:
+				print("Hit marker remained visible after 120 frames; timer=", gunner._hit_cross_t)
+			_check("hit marker fades rather than cluttering HUD", marker_faded and gunner._hit_cross_t <= 0.0)
 			gunner.hit(9999.0, Vector3.UP, true)
 			await _frames(2)
 			_check("kill has an MG-out marker", gunner.dead and gunner.get_node("M2HitConfirm").visible and gunner.get_node("M2HitConfirm").text == "MG UIT")

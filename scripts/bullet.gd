@@ -353,8 +353,8 @@ func _physics_process(delta: float) -> void:
 			if not target_handles_impact and hit.normal.length_squared() > 0.001:
 				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
 			# Only a real HP reduction may trigger the player's hit marker.
-			# The shield, tower core, missed rounds and friendly AI stay silent.
-			var can_confirm := from_player and feedback_source == "jeep" and c is Node3D and (Game.enemies.has(c) or (c as Node).is_in_group("vijand_verdediger"))
+			# Shields, cover, misses, friendly AI and non-player explosions stay silent.
+			var can_confirm := from_player and feedback_source in ["jeep", "infantry"] and c is Node3D and (Game.enemies.has(c) or (c as Node).is_in_group("vijand_verdediger"))
 			var hp_before := float(c.get("hp")) if can_confirm else 0.0
 			Game.hit_src = src
 			c.hit(dmg, dir, from_player)

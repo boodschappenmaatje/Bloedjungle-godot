@@ -106,10 +106,10 @@ func _run() -> void:
 	high_wall.queue_free()
 
 	# Aim calculations must never fire a projectile or report actual damage.
-	var confirmed := 0
-	game.combat_hit_confirmed.connect(func(_at: Vector3, _dmg: float, _source: String) -> void: confirmed += 1)
+	var confirmed: Array = []
+	game.combat_hit_confirmed.connect(func(_at: Vector3, _dmg: float, _source: String) -> void: confirmed.append(true))
 	await _frames(3)
 	preview_script.call("predict", space, from, angle, range_m, false, radius)
-	_check(confirmed == 0, "a visual prediction never confirms a hit")
+	_check(confirmed.is_empty(), "a visual prediction never confirms a hit")
 	print("COMBAT BAZOOKA AIM TEST " + ("PASS" if failures == 0 else "%d FAILURES" % failures))
 	quit(0 if failures == 0 else 1)

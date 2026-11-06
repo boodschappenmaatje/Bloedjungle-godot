@@ -169,6 +169,9 @@ func blocks_team_target_joystick(p: Vector2) -> bool:
 
 func _process(_delta: float) -> void:
 	if get_tree().get_first_node_in_group("kaart_open") != null:
+		var combat := get_tree().get_first_node_in_group("combat_buttons")
+		if combat != null and bool(combat.get("grenade_stick_armed")):
+			combat.call("cancel_grenade_stick")
 		# grote kaart open: lopen en schieten staan stil, een commandokeuze blijft wachten
 		_sticks.clear()
 		_mouse_down = false

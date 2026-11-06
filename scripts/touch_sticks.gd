@@ -198,6 +198,7 @@ func _process(_delta: float) -> void:
 		_m1911_fire_latched = false
 		queue_redraw()
 		return
+	var combat := get_tree().get_first_node_in_group("combat_buttons")
 	var mv := Vector2(
 		float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT)),
 		float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP)))

@@ -120,6 +120,9 @@ jobs:
           grep -Fq "COMBAT INFANTRY FEEDBACK TEST PASS" "$RUNNER_TEMP/combat_infantry_feedback_test.log"
           "$GODOT_BIN" --headless --path . -s tests/combat_bazooka_aim_test.gd --fixed-fps 60 --quit-after 1000 2>&1 | tee "$RUNNER_TEMP/combat_bazooka_aim_test.log"
           grep -Fq "COMBAT BAZOOKA AIM TEST PASS" "$RUNNER_TEMP/combat_bazooka_aim_test.log"
+          "$GODOT_BIN" --headless --path . -s tests/granaat_richten_test.gd --fixed-fps 60 --quit-after 15000 2>&1 | tee "$RUNNER_TEMP/granaat_richten_test.log"
+          grep -Fq "TEST OK" "$RUNNER_TEMP/granaat_richten_test.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|TEST MISLUKT' "$RUNNER_TEMP/granaat_richten_test.log"; then exit 1; fi
           "$GODOT_BIN" --headless --fixed-fps 60 --path . res://tests/airfield_hq_22_import_test_scene.tscn 2>&1 | tee "$RUNNER_TEMP/airfield_hq_22_import_test.log"
           "$GODOT_BIN" --headless --fixed-fps 60 --path . res://tests/airfield_hq_23_contract_test_scene.tscn 2>&1 | tee "$RUNNER_TEMP/airfield_hq_23_contract_test.log"
           "$GODOT_BIN" --headless --path . -s tests/ota_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/ota_test.log"
@@ -159,6 +162,7 @@ jobs:
             ${{ runner.temp }}/combat_feedback_test.log
             ${{ runner.temp }}/combat_infantry_feedback_test.log
             ${{ runner.temp }}/combat_bazooka_aim_test.log
+            ${{ runner.temp }}/granaat_richten_test.log
             ${{ runner.temp }}/airfield_hq_22_import_test.log
             ${{ runner.temp }}/airfield_hq_23_contract_test.log
             ${{ runner.temp }}/ota_test.log

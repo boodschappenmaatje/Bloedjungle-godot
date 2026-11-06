@@ -113,6 +113,17 @@ Alleen `Player._shoot()` geeft gewone fysieke kogels `feedback_source = "infantr
 
 **Status:** code in afzonderlijke Draft PR; `main` onveranderd totdat de gebruiker per stap merge toestaat.
 
+## Fase 3A — Bazooka-richtpreview (6 november 2026)
+
+**Status: kandidaat in afzonderlijke Draft PR; nog niet gemerged of native getest.**
+
+- Gebruik de centrale schietrichting vanaf `SoldierModel.muzzle_position()`, `Game.wstat("bazooka").speed * life` als **nominale** afstand en dezelfde botslagen als `Bullet.fire()`. De werkelijk afgevuurde raket behoudt willekeurige spreiding, snelheids- en levensduurvariatie.
+- `scripts/bazooka_aim_feedback.gd` zoekt het eerste fysieke obstakel, controleert daarnaast de hoge perimeter via de bestaande 1,5 m-fortificatiesweep en gebruikt ook `Bullet.vehicle_on_path` voor auto's/bussen. Dit is alleen een **visuele voorspelling**.
+- `CombatTargetHud` projecteert bij een voorspelde botsing een gedempte, onderbroken cirkel met de **bestaande** explosiestraal van 4,8 m op inslaghoogte. Bij vrije baan alleen een neutraal punt op maximaal nominaal bereik: de bestaande bazooka-raket ontploft **niet** automatisch bij het aflopen van zijn levensduur.
+- Bescherm het bestaande vuur-, schade- en munitiecontract: 240 basisschade, 32 m/s, 1,0 s vuurritme, 4,8 m radius; `Player._shoot`, `Bullet._explode`, `Game.combat_hit_confirmed`, `Grenade` en `GrenadeAim` niet wijzigen.
+- De ring is geen garantie dat de raket exact daar landt of schade veroorzaakt. Geen hitmarker bij alleen richtpreview; fysieke treffers en daadwerkelijke explosies komen later in fase **3B**.
+- Tests: `tests/combat_bazooka_aim_test.gd` voor lege baan zonder valse explosie, gewone muur, over-wall uitzondering, hoge fortificatie, bestaande radius/waarden, HUD-eigendom, geen hit-signaal; plus de bestaande infanterie- en jeepregressies, iOS-export en OTA-preview. Native iPhone-opname en FPS nog afzonderlijk te meten.
+
 ## 8. Status / releasepoort
 
 - [x] Optie B gekozen door gebruiker.

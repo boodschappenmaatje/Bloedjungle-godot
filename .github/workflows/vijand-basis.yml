@@ -30,6 +30,8 @@ on:
       - "scripts/vijand_verdediger.gd"
       - "tests/jeep_m2_schutter_test.gd"
       - "tests/combat_feedback_test.gd"
+      - "tests/combat_infantry_feedback_test.gd"
+      - "scripts/player.gd"
       - "scripts/combat_target_hud.gd"
       - "scripts/combat_aim_feedback.gd"
       - "scripts/bullet.gd"
@@ -101,6 +103,7 @@ jobs:
           GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
           timeout 180 "$GODOT" --headless --path . --script tests/jeep_m2_schutter_test.gd --fixed-fps 60
           timeout 180 "$GODOT" --headless --path . --script tests/combat_feedback_test.gd --fixed-fps 60
+          timeout 180 "$GODOT" --headless --path . --script tests/combat_infantry_feedback_test.gd --fixed-fps 60
       - name: Jeep sterfte respawn en torenschutter trefeffecten
         shell: bash
         run: |

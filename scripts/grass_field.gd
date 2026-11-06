@@ -175,15 +175,19 @@ func _add_point(groups: Dictionary, rng: RandomNumberGenerator, kind: String, po
 	var key := "%s_%d_%d_%d" % [kind, variant, cell.x, cell.y]
 	if not groups.has(key):
 		groups[key] = {"kind": kind, "cell": cell, "variant": variant, "xf": [], "colors": []}
-	var scale_ := rng.randf_range(0.9, 1.08)
-	var spread := 1.95 if kind == "short" else 1.0
-	# The authored short tufts are only 24 cm tall, so their silhouette vanished at the game camera.
-	# Stretch them vertically while retaining their footprint and the existing firing-lane clearance.
-	var height_scale := 1.75 if kind == "short" else 1.0
+	var scale_ := rng.randf_range(0.78, 1.24) if kind == "short" else rng.randf_range(0.9, 1.08)
+	# Short tufts are 24 cm tall. Their authored footprint was too small to read at the normal
+	# play camera, so grow the existing model into low, varied grass clumps without new instances,
+	# colliders or changes to the preserved firing-lane clearance.
+	var spread := 2.55 if kind == "short" else 1.0
+	var height_scale := 2.0 if kind == "short" else 1.0
 	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_*spread, scale_*height_scale, scale_*spread))
 	groups[key].xf.append(Transform3D(basis, pos))
-	var shade := rng.randf_range(0.88, 1.0)
-	groups[key].colors.append(Color(shade, shade, shade))
+	if kind == "short":
+		groups[key].colors.append(Color(rng.randf_range(0.82, 1.02), rng.randf_range(0.94, 1.12), rng.randf_range(0.72, 0.93)))
+	else:
+		var shade := rng.randf_range(0.88, 1.0)
+		groups[key].colors.append(Color(shade, shade, shade))
 
 
 func _process(delta: float) -> void:

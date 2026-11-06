@@ -48,14 +48,14 @@ void fragment() {
 	float n1 = texture(noise_a, p * 0.025).r;
 	float n2 = texture(noise_b, p * 0.09).r;
 	float n3 = texture(noise_b, p * 0.48).r;
-	// 1.8–3 m material footprints: gravel no longer spans the entire road width.
-	vec2 guv = p * 0.64;
-	vec2 juv = p * 0.43 + 0.37;
-	vec2 duv = p * 0.56;
-	vec2 muv = vec2(p.y, -p.x) * 0.38;
-	vec2 moss_uv = p * 0.65;
-	// Keep individual stones legible on the worn track; mipmaps/aniso handle distant shimmer.
-	vec2 gravel_uv = p * 0.64;
+	// Match the source materials to their real-world scale: coarse blades, earth clods and
+	// 5–15 cm trail stones survive gameplay-distance minification instead of averaging flat.
+	vec2 guv = p * 0.28;
+	vec2 juv = p * 0.30 + 0.37;
+	vec2 duv = p * 0.32;
+	vec2 muv = vec2(p.y, -p.x) * 0.28;
+	vec2 moss_uv = p * 0.34;
+	vec2 gravel_uv = p * 0.28;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -71,8 +71,8 @@ void fragment() {
 	vec4 mos = texture(moss_surface, moss_uv, detail_mip_bias);
 	vec4 grs = texture(gravel_surface, gravel_uv, detail_mip_bias);
 	float floor_mix = smoothstep(0.27, 0.72, n1 * 0.6 + n2 * 0.4) * 0.9;
-	vec3 grass = mix(g * vec3(0.57,0.64,0.45), j * vec3(0.44,0.5,0.34), floor_mix);
-	grass *= mix(vec3(1.04,0.98,0.82),vec3(0.82,1.0,0.85),smoothstep(0.3,0.7,n1));
+	vec3 grass = mix(g * vec3(0.76,0.82,0.62), j * vec3(0.62,0.74,0.52), floor_mix);
+	grass *= mix(vec3(1.03,0.99,0.88),vec3(0.86,1.0,0.9),smoothstep(0.3,0.7,n1));
 	grass *= 0.76 + 0.48*n3;
 	float inside = 1.0 - smoothstep(compound-0.5,compound+3.0,max(abs(p.x),abs(p.y)));
 	float path = (1.0-smoothstep(gate_gap*0.9,gate_gap*1.9+n2*1.6,abs(p.x)))
@@ -94,14 +94,14 @@ void fragment() {
 	wet = clamp(wet+trail*smoothstep(0.67,0.8,n2)*0.65,0.0,1.0);
 	// Gravel follows the established path and its worn shoulders, with broken edges from the existing macro noise.
 	float gravel_mix = clamp(max(path*0.86,trail*0.88)*mix(0.55,1.0,smoothstep(0.18,0.76,n2)),0.0,0.9);
-	vec3 dirt = d*vec3(0.64,0.57,0.46)*(0.9+0.2*n3);
-	dirt = mix(dirt,gravel*vec3(0.78,0.67,0.55),gravel_mix*0.84);
-	dirt *= 1.0-rut*0.16;
-	dirt = mix(dirt,m*vec3(0.44,0.4,0.32),wet*0.55);
+	vec3 dirt = d*vec3(0.76,0.65,0.52)*(0.9+0.2*n3);
+	dirt = mix(dirt,gravel*vec3(0.86,0.75,0.61),gravel_mix*0.9);
+	dirt *= 1.0-rut*0.22;
+	dirt = mix(dirt,m*vec3(0.54,0.47,0.37),wet*0.55);
 	float edge = 4.0*dm*(1.0-dm);
 	float moss_mix = clamp(edge*0.3+bank*(1.0-wet)*0.2+smoothstep(0.58,0.76,n2)*(1.0-dm)*0.23,0.0,0.45);
 	vec3 base = mix(grass,dirt,dm);
-	ALBEDO = mix(base,moss*vec3(0.37,0.48,0.25),moss_mix);
+	ALBEDO = mix(base,moss*vec3(0.5,0.64,0.35),moss_mix);
 	vec4 earth_surface = mix(ds,grs,gravel_mix*0.78);
 	vec4 surf = mix(mix(gs,js,floor_mix),mix(earth_surface,ms,wet*0.55),dm);
 	surf = mix(surf,mos,moss_mix);

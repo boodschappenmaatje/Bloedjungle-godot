@@ -116,6 +116,8 @@ jobs:
           "$GODOT_BIN" --headless --path . -s tests/m1911_ammo_reload_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/m1911_ammo_reload_test.log"
           "$GODOT_BIN" --headless --path . -s tests/combat_feedback_test.gd --fixed-fps 60 --quit-after 1000 2>&1 | tee "$RUNNER_TEMP/combat_feedback_test.log"
           grep -Fq "COMBAT FEEDBACK TEST PASS" "$RUNNER_TEMP/combat_feedback_test.log"
+          "$GODOT_BIN" --headless --path . -s tests/combat_infantry_feedback_test.gd --fixed-fps 60 --quit-after 1000 2>&1 | tee "$RUNNER_TEMP/combat_infantry_feedback_test.log"
+          grep -Fq "COMBAT INFANTRY FEEDBACK TEST PASS" "$RUNNER_TEMP/combat_infantry_feedback_test.log"
           "$GODOT_BIN" --headless --fixed-fps 60 --path . res://tests/airfield_hq_22_import_test_scene.tscn 2>&1 | tee "$RUNNER_TEMP/airfield_hq_22_import_test.log"
           "$GODOT_BIN" --headless --fixed-fps 60 --path . res://tests/airfield_hq_23_contract_test_scene.tscn 2>&1 | tee "$RUNNER_TEMP/airfield_hq_23_contract_test.log"
           "$GODOT_BIN" --headless --path . -s tests/ota_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/ota_test.log"
@@ -153,6 +155,7 @@ jobs:
             ${{ runner.temp }}/soldaat_vq2_test.log
             ${{ runner.temp }}/m1911_ammo_reload_test.log
             ${{ runner.temp }}/combat_feedback_test.log
+            ${{ runner.temp }}/combat_infantry_feedback_test.log
             ${{ runner.temp }}/airfield_hq_22_import_test.log
             ${{ runner.temp }}/airfield_hq_23_contract_test.log
             ${{ runner.temp }}/ota_test.log

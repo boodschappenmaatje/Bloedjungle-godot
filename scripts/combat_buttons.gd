@@ -679,7 +679,7 @@ func grenade_stick_release(pointer: int) -> void:
 	if not grenade_stick_armed or pointer != aim_finger:
 		return
 	var p = Game.player
-	var should_throw := aim_drag.length() > AIM_DEAD and _aim_out and not wheel_is_open() \
+	var should_throw: bool = aim_drag.length() > AIM_DEAD and _aim_out and not wheel_is_open() \
 		and p != null and is_instance_valid(p) and p.can_throw_grenade()
 	var target := aim_target() if should_throw else Vector3.ZERO
 	cancel_grenade_stick()  # disarm BEFORE throwing to prevent double release
@@ -788,7 +788,7 @@ func _layout() -> void:
 	# Use the rendered bar anchor so portrait/landscape and safe areas agree.
 	var weapon_strip := get_tree().get_first_node_in_group("weapon_strip")
 	var weapon_bar_start := Vector2(maxf(safe.x + 152.0, size.x * 0.5 - 110.0),
-		size.y - (252.0 if size.x < size.y else ActionBtn.WEAPON_BAR_FROM_BOTTOM) - maxf(0.0, safe.w - 12.0))
+		size.y - (252.0 if size.x < size.y else 82.0) - maxf(0.0, safe.w - 12.0))
 	if weapon_strip != null:
 		var bar_prev := weapon_strip.get("_prev") as Control
 		if bar_prev != null:

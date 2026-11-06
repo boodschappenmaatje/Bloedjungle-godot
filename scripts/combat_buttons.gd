@@ -437,12 +437,10 @@ func _sticky_pick(kind: String, sector: int) -> void:
 		return
 	if kind == "equipment":
 		var item: String = ["grenade", "c4", "smoke", "mine"][sector]
-		if item == Game.equipment_sel and item == "grenade" and p.can_throw_grenade():
-			aim_drag = Vector2.ZERO
-			p.throw_grenade_at(aim_target())
-		elif item == Game.equipment_sel and item == "mine":
+		if item == Game.equipment_sel and item == "mine":
 			_use_equipment()
 		else:
+			# Selecting GRANAAT *never* throws; it arms the next right-stick release.
 			_select_wheel(kind, sector)
 		return
 	var reward: String = ["truck", "airstrike", "reinforcement", "napalm"][sector]
@@ -467,8 +465,8 @@ func _exit_aim(pointer: int, pos: Vector2) -> bool:
 	queue_redraw()
 	if napalm:
 		_begin_air(pointer, pos)
-	else:
-		_begin_aim(pointer, pos)
+	# Grenade requires a NEW touch on the right stick, never inheriting
+	# the finger used to drag out of the equipment wheel.
 	get_viewport().set_input_as_handled()
 	return true
 
@@ -489,6 +487,10 @@ func _select_wheel(kind: String, sector: int) -> void:
 			Game.equipment_sel = item
 			Game.changed.emit()
 			Sfx.play("click")
+			if item == "grenade" and UI.is_touch_platform():
+				arm_grenade_stick()
+			else:
+				cancel_grenade_stick()
 		return
 	var choices := ["truck", "airstrike", "reinforcement", "napalm"]
 	var reward: String = choices[sector]
@@ -630,6 +632,67 @@ func _update_air() -> void:
 	_air_vis.show_strip(a.target, a.dir)
 
 
+## A selected grenade becomes a one-shot touch-mode, not a HUD button drag.
+## A throw can ONLY be committed by release of the exact right-stick finger
+## that acquired the gesture; returning to center cancels without inventory use.
+func wheel_is_open() -> bool:
+	return _wheel_kind != ""
+
+
+func arm_grenade_stick() -> void:
+	var p = Game.player
+	if not UI.is_touch_platform() or p == null or not is_instance_valid(p) or not p.can_throw_grenade():
+		return
+	cancel_grenade_stick()
+	grenade_stick_armed = true
+	Game.fire = false
+	var sticks := get_tree().get_first_node_in_group("touch_sticks")
+	if sticks != null:
+		sticks.clear_right_for_grenade()
+	queue_redraw()
+
+
+func grenade_stick_begin(pointer: int) -> void:
+	if not grenade_stick_armed or aim_finger != -2 or wheel_is_open():
+		return
+	var p = Game.player
+	if p == null or not is_instance_valid(p) or not p.can_throw_grenade():
+		cancel_grenade_stick()
+		return
+	aim_finger = pointer
+	aim_drag = Vector2.ZERO
+	_aim_out = false
+	# Do not display the default 7m tap target until the player actually aims.
+
+
+func grenade_stick_drag(pointer: int, stick_direction: Vector2) -> void:
+	if not grenade_stick_armed or pointer != aim_finger:
+		return
+	# Reuse the exact existing 2..12m trajectory/target calculation.
+	aim_drag = stick_direction.limit_length(1.0) * AIM_FULL
+	if aim_drag.length() > AIM_DEAD:
+		_aim_out = true
+	_update_aim()
+
+
+func grenade_stick_release(pointer: int) -> void:
+	if not grenade_stick_armed or pointer != aim_finger:
+		return
+	var p = Game.player
+	var should_throw := aim_drag.length() > AIM_DEAD and _aim_out and not wheel_is_open() \
+		and p != null and is_instance_valid(p) and p.can_throw_grenade()
+	var target := aim_target() if should_throw else Vector3.ZERO
+	cancel_grenade_stick()  # disarm BEFORE throwing to prevent double release
+	if should_throw:
+		p.throw_grenade_at(target)
+
+
+func cancel_grenade_stick() -> void:
+	grenade_stick_armed = false
+	cancel_aim()
+	queue_redraw()
+
+
 func _begin_aim(finger: int, at: Vector2) -> void:
 	var p = Game.player
 	if _grenade.disabled or p == null or not is_instance_valid(p) or not p.can_throw_grenade():
@@ -688,9 +751,9 @@ func _update_aim() -> void:
 	if aim_finger == -2 or p == null or not is_instance_valid(p) or not p.can_throw_grenade():
 		cancel_aim()
 		return
-	if _aim_out and aim_drag.length() <= AIM_DEAD:
+	if (grenade_stick_armed or _aim_out) and aim_drag.length() <= AIM_DEAD:
 		if _aim_vis != null:
-			_aim_vis.visible = false  # terug op de knop: loslaten breekt af
+			_aim_vis.visible = false  # terug in stickmidden annuleert de worp
 		return
 	if _aim_vis == null or not is_instance_valid(_aim_vis):
 		_aim_vis = GrenadeAim.new()
@@ -721,7 +784,17 @@ func _layout() -> void:
 	var y0 := y1 - g
 	_sprint.position = Vector2(x0, y1)
 	_roll.position = Vector2(x1, y1)
-	_grenade.position = Vector2(x0, y0)
+	# Separate equipment picker sits just ABOVE/LEFT of the actual weapon bar.
+	# Use the rendered bar anchor so portrait/landscape and safe areas agree.
+	var weapon_strip := get_tree().get_first_node_in_group("weapon_strip")
+	var weapon_bar_start := Vector2(maxf(safe.x + 152.0, size.x * 0.5 - 110.0),
+		size.y - (252.0 if size.x < size.y else ActionBtn.WEAPON_BAR_FROM_BOTTOM) - maxf(0.0, safe.w - 12.0))
+	if weapon_strip != null:
+		var bar_prev := weapon_strip.get("_prev") as Control
+		if bar_prev != null:
+			weapon_bar_start = bar_prev.position
+	_grenade.position = Vector2(maxf(safe.x + 4.0, weapon_bar_start.x - ActionBtn.SIZE.x - 12.0),
+		weapon_bar_start.y - ActionBtn.SIZE.y - 9.0)
 	_reload.position = Vector2(x1, y0)
 	_air2.position = Vector2(x1, y0 - g)   # rechts van de luchtsteun-knop
 	_stance.position = Vector2(x1, y0 - 2.0 * g)   # vrij van plaatsingsvakken en de rechter joystick
@@ -756,6 +829,7 @@ func _process(_delta: float) -> void:
 	var driving: bool = p != null and is_instance_valid(p) and p.driving
 	visible = show and not driving  # in een voertuig: alleen de voertuigknoppen (UIT e.d.), geen granaat/herlaad/sprint/rol
 	if not show or p == null or not is_instance_valid(p) or driving:
+		cancel_grenade_stick()
 		if aim_finger != -2:
 			cancel_aim()
 		if air_finger != -2:
@@ -819,9 +893,9 @@ func _process(_delta: float) -> void:
 	_sprint.disabled = p.driving
 	_sprint.queue_redraw()
 	_grenade.equipment_kind = Game.equipment_sel
-	_grenade.set_caption("GRANAAT" if Game.equipment_sel == "grenade" else "MIJN" if Game.equipment_sel == "mine" else "UITRUSTING")
+	_grenade.set_caption("UITRUSTING")
 	_grenade.badge = "×%d" % equipment_count
-	_grenade.disabled = equipment_count <= 0 or p.driving
+	_grenade.disabled = (Game.grenades <= 0 and int(Game.inv.get("mine", 0)) <= 0) or p.driving
 	_grenade.queue_redraw()
 	_roll.disabled = p.dodge_cd > 0.0 or p.stamina < p.DODGE_COST or p.driving
 	_roll.bar = (1.0 - p.dodge_cd / p.DODGE_CD) if p.dodge_cd > 0.0 else -1.0

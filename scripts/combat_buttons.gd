@@ -144,6 +144,12 @@ func _input(event: InputEvent) -> void:
 	if get_tree().paused:
 		_cancel_gesture()
 		return
+	# Keep joystick fingers owned by TouchSticks even while a selector is open.
+	# Otherwise _sticky_input() consumes their release before walking can stop.
+	if _wheel_kind != "" and (event is InputEventScreenTouch or event is InputEventScreenDrag):
+		var sticks := get_tree().get_first_node_in_group("touch_sticks")
+		if sticks != null and sticks.call("owns_touch", event.index):
+			return
 	if _wheel_kind != "" and ((event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE) or (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_RIGHT)):
 		_wheel_kind = ""
 		_held_pointer = -2
@@ -852,7 +858,7 @@ func _process(_delta: float) -> void:
 			_wheel_sticky = false
 			_wheel_sector = -1
 			if _held_action == "equipment":
-				cancel_aim()
+				cancel_grenade_stick()  # opening a held wheel also cancels a pending throw
 			else:
 				cancel_air()
 			queue_redraw()

@@ -34,7 +34,9 @@ func run() -> void:
 	for n: MultiMeshInstance3D in get_nodes_in_group("grass_3d"):
 		if n.get_meta("kind") == "short" and int(n.get_meta("lod")) == 0:
 			grass_tufts += int(n.get_meta("full"))
-	check(grass_tufts > 5000 and grass_tufts <= GrassField.LIMIT["short"],"Fine grass must stay within its bounded LOD budget")
+	var grass_script: GDScript = load("res://scripts/grass_field.gd")
+	var short_grass_limit: int = grass_script.get_script_constant_map()["LIMIT"]["short"]
+	check(grass_tufts > 5000 and grass_tufts <= short_grass_limit,"Fine grass must stay within its bounded LOD budget")
 	check(understory_counts.groundcover > 1400 and understory_counts.groundcover <= 4200,"Leafy groundcover must be prominent and bounded")
 	check(understory_counts.fern <= 3200 and understory_counts.bush > 1500,"Keep tall fern silhouettes sparse and fill with low/mid-height plants")
 	check(under.has_method("litter_mesh"),"Litter needs a corrected ground normal frame")

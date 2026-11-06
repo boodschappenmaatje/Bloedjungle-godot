@@ -71,7 +71,7 @@ Reproductie: voer na import `tests/terrain_a1_capture.gd` met `TERRAIN_A1_OUT=<m
 - Godot 4.7.2 volledige headless-import: exit 0. De editor meldde bij afsluiten een ObjectDB-lek; geen shadercompilefout. De gamecapture laadde en compileerde de grondshader zonder `SHADER ERROR`; de afsluitmelding `11 resources still in use` is de bekende Godot 4.7.2 headless-renderershutdownmelding die ook de bestaande iOS-workflow afhandelt.
 - `surface_filtering_test.gd`: PASS, 0 failures.
 - `rivier_test.gd`: exit 0; bestaande rivierfasen liepen. Alleen de bekende renderer-resource-afsluitmelding.
-- `jeep_m2_schutter_test.gd`: PASS, 0 regressiefouten. `jeep_respawn_feedback_test.gd`: FAIL, 1 bestaande HUD-timingassertie (`hit marker fades rather than cluttering HUD`); de overige respawn- en jeepchecks slaagden. Deze taak heeft geen HUD- of jeepcode gewijzigd.
+- `jeep_m2_schutter_test.gd`: PASS, 0 regressiefouten. `jeep_respawn_feedback_test.gd`: FAIL, 1 HUD-timingassertie (`hit marker fades rather than cluttering HUD`); de overige respawn- en jeepchecks slaagden. Deze taak heeft geen HUD- of jeepcode gewijzigd.
 - `kwaliteit_test.gd` en `kwaliteit_regel_test.gd`: interne resultaten PASS, 0 fouten; elk met de bekende renderer-resource-afsluitmelding.
 - Bestaande `tests/run_team_commands_tests.sh`: exit 0; 68 controllerchecks, 16 HUD-wheelchecks, 2 barracks-recruitchecks en 24 adapterinputchecks geslaagd.
 - iOS export: `--export-pack iOS` genereerde een unsigned PCK van 1,2 GB. Dit is geen ondertekende IPA. OTA-preview is niet uitgevoerd: er is geen bestaande IPA-base/PCK of `build`-export in de checkout om als basis te simuleren. Er is niets gepubliceerd.

@@ -829,7 +829,7 @@ func _process(_delta: float) -> void:
 	var p = Game.player
 	var driving: bool = p != null and is_instance_valid(p) and p.driving
 	visible = show and not driving  # in een voertuig: alleen de voertuigknoppen (UIT e.d.), geen granaat/herlaad/sprint/rol
-	if not show or p == null or not is_instance_valid(p) or driving:
+	if not show or p == null or not is_instance_valid(p) or driving or p.dead:
 		cancel_grenade_stick()
 		if aim_finger != -2:
 			cancel_aim()
@@ -843,6 +843,8 @@ func _process(_delta: float) -> void:
 		_held_time = 0.0
 		queue_redraw()
 		return
+	if grenade_stick_armed and not p.can_throw_grenade():
+		cancel_grenade_stick()  # no phantom grenade mode after ammo/death/airborne
 	if _held_pointer != -2 and _wheel_kind == "":
 		_held_time += _delta
 		if _held_time >= WHEEL_HOLD:

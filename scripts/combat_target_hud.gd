@@ -81,6 +81,8 @@ func _draw() -> void:
 			var state: String = str(_prediction.get("state", "clear"))
 			var col: Color = ENEMY if state == "enemy" else (BLOCKED if state == "blocked" else NEUTRAL)
 			_draw_cross(point, col, state == "enemy", state == "blocked")
+			if bool(_prediction.get("can_explode", false)):
+				_draw_bazooka_blast_ring(camera, _prediction.point, float(_prediction.get("blast_radius", 0.0)))
 		var target := _prediction.get("target") as Node3D
 		if is_instance_valid(target) and not bool(target.get("dead")):
 			_draw_target(camera, target)
@@ -105,6 +107,26 @@ func _draw_cross(p: Vector2, col: Color, selected: bool, blocked: bool) -> void:
 	if selected:
 		draw_arc(p, 21.0, -PI * 0.30, PI * 0.30, 12, Color(col, 0.65), 1.4, true)
 		draw_arc(p, 21.0, PI * 0.70, PI * 1.30, 12, Color(col, 0.65), 1.4, true)
+
+
+## Lightweight projection of the physical blast radius at the predicted IMPACT
+## height. A small broken ring signals approximate area, not promised damage.
+## This is never drawn on a range/timeout prediction.
+func _draw_bazooka_blast_ring(camera: Camera3D, impact: Vector3, radius: float) -> void:
+	if radius <= 0.0:
+		return
+	var col := Color(1.0, 0.73, 0.23, 0.67)
+	for i in 32:
+		if i % 4 == 3:  # dashed, unobtrusive and cheaper on mobile
+			continue
+		var start_angle := TAU * float(i) / 32.0
+		var end_angle := TAU * float(i + 1) / 32.0
+		var a := impact + Vector3(cos(start_angle), 0.0, sin(start_angle)) * radius
+		var b := impact + Vector3(cos(end_angle), 0.0, sin(end_angle)) * radius
+		var a_screen: Variant = _screen_point(camera, a)
+		var b_screen: Variant = _screen_point(camera, b)
+		if a_screen != null and b_screen != null:
+			draw_line(a_screen, b_screen, col, 1.8, true)
 
 
 func _draw_target(camera: Camera3D, target: Node3D) -> void:

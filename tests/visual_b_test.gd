@@ -38,7 +38,7 @@ func run() -> void:
 	var short_grass_limit: int = grass_script.get_script_constant_map()["LIMIT"]["short"]
 	print("VISUAL B DENSITY short_grass=%d understory=%s" % [grass_tufts, JSON.stringify(understory_counts)])
 	check(grass_tufts > 8500 and grass_tufts <= short_grass_limit,"Fine grass must stay within its bounded LOD budget")
-	check(understory_counts.groundcover > 2400 and understory_counts.groundcover <= 5200,"Leafy groundcover must be prominent and bounded")
+	check(understory_counts.groundcover > 6000 and understory_counts.groundcover <= 8000,"Low broadleaf cover must be prominent and bounded")
 	check(understory_counts.fern <= 3800 and understory_counts.bush > 2500,"Keep tall fern silhouettes sparse and fill with low/mid-height plants")
 	check(under.has_method("litter_mesh"),"Litter needs a corrected ground normal frame")
 	if under.has_method("litter_mesh"):
@@ -46,6 +46,7 @@ func run() -> void:
 		check(litter.surface_get_arrays(0)[Mesh.ARRAY_NORMAL][0].is_equal_approx(Vector3(0,0,-1)),"Litter normal must face up after horizontal rotation")
 		var groundcover: ArrayMesh = under.groundcover_mesh()
 		check(groundcover.get_surface_count() == 1,"Groundcover must stay on one cutout surface for batching")
+		check(groundcover.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size() <= 320,"Low groundcover must spend its geometry budget on coverage, not near-invisible bends")
 	check(not details.is_empty(), "Missing clustered understory in the real game level")
 	check(details.any(func(n: MultiMeshInstance3D) -> bool: return n.name.begins_with("Understory_groundcover_")),"Missing fine-scale groundcover in the real game level")
 	for n: MultiMeshInstance3D in details:

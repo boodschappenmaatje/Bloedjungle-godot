@@ -2,7 +2,7 @@ class_name JungleUnderstory
 ## Render-only depth pass. Reuses shipped meshes/materials and the building-clearance index.
 ## A separate RNG leaves every existing tree, rock, collider and route unchanged.
 const CELL := 24.0
-const CAPS := {"fern":3800,"bush":4500,"groundcover":5200,"litter":5400,"stone":1900,"twig":700}
+const CAPS := {"fern":3800,"bush":4500,"groundcover":8000,"litter":5400,"stone":1900,"twig":700}
 
 static func allowed(p: Vector3) -> bool:
 	return GrassField._allowed(p) and not (p.x > Data.COMPOUND and p.x < Data.COMPOUND+11.5 and absf(p.z)<23.0)
@@ -48,7 +48,9 @@ static func understory_variant_mesh(kind: String, variant: int) -> ArrayMesh:
 		var width_ := rng.randf_range(0.18,0.3) if groundcover else (rng.randf_range(0.18,0.31) if fern else rng.randf_range(0.26,0.42))
 		var rise := rng.randf_range(0.12,0.28) if groundcover else (rng.randf_range(0.42,0.78) if fern else rng.randf_range(0.18,0.62))
 		var droop := rng.randf_range(0.03,0.14) if groundcover else (rng.randf_range(0.38,0.78) if fern else rng.randf_range(0.16,0.5))
-		Foliage._frond(st, origin, yaw, length_, width_, rise, droop, base, tip, 3)
+		# Low groundcover has no useful extra silhouette from three bends at game distance.
+		# Two segments keep its leaf shape while reserving the same triangle budget for more clumps.
+		Foliage._frond(st, origin, yaw, length_, width_, rise, droop, base, tip, 2 if groundcover else 3)
 	st.generate_tangents()
 	var mesh := st.commit()
 	mesh.surface_set_material(0, Foliage.material("fern" if fern else "leaf"))
@@ -100,7 +102,7 @@ static func spawn(parent: Node3D) -> void:
 		var roll := rng.randf()
 		# The former scatter spent too much of the shared visual budget on tall fern fans.
 		# Broadleaf shrubs/rosettes and scattered litter now fill open soil without adding draw passes.
-		var kind := "fern" if roll<0.18 else ("bush" if roll<0.41 else ("groundcover" if roll<0.66 else ("litter" if roll<0.85 else ("stone" if roll<0.98 else "twig"))))
+		var kind := "fern" if roll<0.16 else ("bush" if roll<0.34 else ("groundcover" if roll<0.68 else ("litter" if roll<0.86 else ("stone" if roll<0.985 else "twig"))))
 		if counts[kind]>=CAPS[kind]: continue
 		var variant := rng.randi_range(0,2) if kind in ["fern","bush","groundcover"] else 0
 		var cell := Vector2i(floori(p.x/CELL),floori(p.z/CELL))

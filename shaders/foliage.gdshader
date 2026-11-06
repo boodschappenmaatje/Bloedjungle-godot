@@ -13,8 +13,8 @@ uniform float sway = 0.14;
 uniform float wind = 0.0;  // 0 = bomen staan stil, 1 = ze bewegen (instelling "Bomen bewegen")
 uniform float speed = 1.5;
 uniform float cut = 0.45;
-uniform float backlight = 0.5;
-uniform vec3 tint = vec3(0.9, 0.93, 0.8);
+uniform float backlight = 0.6;
+uniform vec3 tint = vec3(0.98, 1.0, 0.9);
 
 // Zichtlijn: bladeren tussen camera en speler (en de drie dichtstbijzijnde vijanden, w = 1 als actief)
 // worden gedither-uitgedund. fade_amount loopt zacht 0..1 (in- en uitfaden in de tijd).

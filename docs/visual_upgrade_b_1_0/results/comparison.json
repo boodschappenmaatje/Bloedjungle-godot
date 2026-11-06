@@ -13,7 +13,7 @@
         "msaa": true,
         "quality": true
       },
-      "camera_position_max_delta_m": 7.000000000090267e-05,
+      "camera_position_max_delta_m": 0.003930000000003986,
       "camera_basis_max_component_delta": 0.0,
       "camera_pose_within_1cm_tolerance": true,
       "before": {
@@ -24,11 +24,11 @@
         "primitives_mean": 836804.3
       },
       "after": {
-        "mean_ms": 1377.01238333333,
-        "p99_ms": 2005.496,
-        "one_percent_low_fps": 0.498629765404668,
-        "draw_calls_mean": 381.883333333333,
-        "primitives_mean": 1408228.3
+        "mean_ms": 1613.5164,
+        "p99_ms": 2144.562,
+        "one_percent_low_fps": 0.466295681822209,
+        "draw_calls_mean": 504.05,
+        "primitives_mean": 1797869.21666667
       }
     },
     {
@@ -40,7 +40,7 @@
         "msaa": true,
         "quality": true
       },
-      "camera_position_max_delta_m": 0.0015800000000041337,
+      "camera_position_max_delta_m": 0.00015999999999394277,
       "camera_basis_max_component_delta": 0.0,
       "camera_pose_within_1cm_tolerance": true,
       "before": {
@@ -51,11 +51,11 @@
         "primitives_mean": 255652.733333333
       },
       "after": {
-        "mean_ms": 1052.5359,
-        "p99_ms": 1330.083,
-        "one_percent_low_fps": 0.751832780360323,
-        "draw_calls_mean": 321.466666666667,
-        "primitives_mean": 866969.6
+        "mean_ms": 960.93985,
+        "p99_ms": 1231.048,
+        "one_percent_low_fps": 0.812316010423639,
+        "draw_calls_mean": 364.383333333333,
+        "primitives_mean": 1092207.83333333
       }
     },
     {
@@ -67,7 +67,7 @@
         "msaa": true,
         "quality": true
       },
-      "camera_position_max_delta_m": 0.005040000000001044,
+      "camera_position_max_delta_m": 0.005250000000000199,
       "camera_basis_max_component_delta": 1.0000000000287557e-06,
       "camera_pose_within_1cm_tolerance": true,
       "before": {
@@ -78,18 +78,18 @@
         "primitives_mean": 670925.0
       },
       "after": {
-        "mean_ms": 2670.15256666667,
-        "p99_ms": 3340.065,
-        "one_percent_low_fps": 0.299395371048168,
-        "draw_calls_mean": 349.0,
-        "primitives_mean": 1093347.0
+        "mean_ms": 2717.14853333333,
+        "p99_ms": 3375.803,
+        "one_percent_low_fps": 0.296225816494624,
+        "draw_calls_mean": 390.083333333333,
+        "primitives_mean": 1293442.4
       }
     },
     {
       "spot": "combat_80",
       "capture_settings_match": {},
-      "camera_position_max_delta_m": 0.0005400000000008731,
-      "camera_basis_max_component_delta": 0.0,
+      "camera_position_max_delta_m": 0.0004500000000007276,
+      "camera_basis_max_component_delta": 1.0000000000287557e-06,
       "camera_pose_within_1cm_tolerance": true,
       "before": {
         "mean_ms": 2504.70158,
@@ -99,11 +99,11 @@
         "primitives_mean": 1904919.06
       },
       "after": {
-        "mean_ms": 2688.70515,
-        "p99_ms": 4969.051,
-        "one_percent_low_fps": 0.201245670450957,
-        "draw_calls_mean": 1315.3,
-        "primitives_mean": 2522910.91
+        "mean_ms": 2735.22952,
+        "p99_ms": 4372.17,
+        "one_percent_low_fps": 0.228719377334367,
+        "draw_calls_mean": 1369.02,
+        "primitives_mean": 2930846.18
       }
     }
   ]

@@ -141,7 +141,7 @@ func _populate(existing: Array) -> void:
 			inst.set_meta("kind", data.kind)
 			inst.set_meta("lod", lod)
 			inst.set_meta("full", data.xf.size())
-			inst.multimesh.visible_instance_count = roundi(data.xf.size() * {"low": 0.2, "high": 0.45, "ultra": 1.0}[GameSettings.get_value("quality")])
+			inst.multimesh.visible_instance_count = roundi(data.xf.size() * {"low": 0.2, "high": 0.6, "ultra": 1.0}[GameSettings.get_value("quality")])
 			inst.extra_cull_margin = 0.4
 			inst.visible = lod == 0
 			nodes.append(inst)

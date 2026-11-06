@@ -30,7 +30,10 @@ func run() -> void:
 	if under.has_method("litter_mesh"):
 		var litter: ArrayMesh = under.litter_mesh()
 		check(litter.surface_get_arrays(0)[Mesh.ARRAY_NORMAL][0].is_equal_approx(Vector3(0,0,-1)),"Litter normal must face up after horizontal rotation")
+		var groundcover: ArrayMesh = under.groundcover_mesh()
+		check(groundcover.get_surface_count() == 1,"Groundcover must stay on one cutout surface for batching")
 	check(not details.is_empty(), "Missing clustered understory in the real game level")
+	check(details.any(func(n: MultiMeshInstance3D) -> bool: return n.name.begins_with("Understory_groundcover_")),"Missing fine-scale groundcover in the real game level")
 	for n: MultiMeshInstance3D in details:
 		check(n.multimesh.custom_aabb.size.x > 0.0 and n.multimesh.custom_aabb.size.x <= 28.0,"Detail batch needs stable cell bounds after clearing")
 		check(n.multimesh.instance_count <= 360, "Unbounded detail batch")

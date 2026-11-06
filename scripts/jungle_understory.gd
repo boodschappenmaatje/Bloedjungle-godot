@@ -2,7 +2,7 @@ class_name JungleUnderstory
 ## Render-only depth pass. Reuses shipped meshes/materials and the building-clearance index.
 ## A separate RNG leaves every existing tree, rock, collider and route unchanged.
 const CELL := 24.0
-const CAPS := {"fern":6000,"bush":2500,"litter":6500,"stone":2200,"twig":1000}
+const CAPS := {"fern":6000,"bush":2500,"groundcover":1800,"litter":5000,"stone":2200,"twig":1000}
 
 static func allowed(p: Vector3) -> bool:
 	return GrassField._allowed(p) and not (p.x > Data.COMPOUND and p.x < Data.COMPOUND+11.5 and absf(p.z)<23.0)
@@ -21,6 +21,35 @@ static func litter_mesh() -> ArrayMesh:
 	surface.generate_tangents()
 	var mesh := surface.commit()
 	mesh.surface_set_material(0,Foliage.material("leaf"))
+	return mesh
+
+static func groundcover_mesh() -> ArrayMesh:
+	return understory_variant_mesh("groundcover", 0)
+
+static func understory_variant_mesh(kind: String, variant: int) -> ArrayMesh:
+	# A few inexpensive silhouettes break the single-mesh repetition in the shipped scatter.
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 7301 + variant * 97 + (101 if kind == "fern" else (202 if kind == "bush" else 303))
+	var fern := kind == "fern"
+	var groundcover := kind == "groundcover"
+	var count := (8 + variant * 2) if fern else ((5 + variant * 2) if groundcover else (13 + variant * 3))
+	var palette_base: Array[Color] = [Color(0.59,0.74,0.45), Color(0.63,0.74,0.43), Color(0.57,0.7,0.44)]
+	var palette_tip: Array[Color] = [Color(0.94,0.98,0.68), Color(1.0,0.96,0.64), Color(0.86,0.96,0.65)]
+	var base: Color = palette_base[variant]
+	var tip: Color = palette_tip[variant]
+	for k in count:
+		var yaw := TAU * k / count + rng.randf_range(-0.24, 0.24)
+		var origin := Vector3(cos(yaw), rng.randf_range(0.0,0.16), sin(yaw)) * rng.randf_range(0.0,0.24)
+		var length_ := rng.randf_range(0.32,0.53) if groundcover else (rng.randf_range(0.85,1.38) if fern else rng.randf_range(0.75,1.28))
+		var width_ := rng.randf_range(0.065,0.10) if groundcover else (rng.randf_range(0.20,0.34) if fern else rng.randf_range(0.28,0.46))
+		var rise := rng.randf_range(0.08,0.2) if groundcover else (rng.randf_range(0.48,0.9) if fern else rng.randf_range(0.2,0.72))
+		var droop := rng.randf_range(0.01,0.07) if groundcover else (rng.randf_range(0.42,0.9) if fern else rng.randf_range(0.18,0.55))
+		Foliage._frond(st, origin, yaw, length_, width_, rise, droop, base, tip, 3)
+	st.generate_tangents()
+	var mesh := st.commit()
+	mesh.surface_set_material(0, Foliage.material("fern" if fern else "leaf"))
 	return mesh
 
 static func spawn(parent: Node3D) -> void:
@@ -63,19 +92,21 @@ static func spawn(parent: Node3D) -> void:
 		candidates[i] = candidates[j]
 		candidates[j] = swap
 	var groups := {}
-	var counts := {"fern":0,"bush":0,"litter":0,"stone":0,"twig":0}
+	var counts := {"fern":0,"bush":0,"groundcover":0,"litter":0,"stone":0,"twig":0}
 	for p in candidates:
 		if not allowed(p): continue
 		var roll := rng.randf()
-		var kind := "fern" if roll<0.32 else ("bush" if roll<0.45 else ("litter" if roll<0.78 else ("stone" if roll<0.93 else "twig")))
+		var kind := "fern" if roll<0.30 else ("bush" if roll<0.43 else ("groundcover" if roll<0.50 else ("litter" if roll<0.76 else ("stone" if roll<0.92 else "twig"))))
 		if counts[kind]>=CAPS[kind]: continue
+		var variant := rng.randi_range(0,2) if kind in ["fern","bush","groundcover"] else 0
 		var cell := Vector2i(floori(p.x/CELL),floori(p.z/CELL))
-		var key := "%s_%d_%d" % [kind,cell.x,cell.y]
+		var key := "%s_%d_%d_%d" % [kind,variant,cell.x,cell.y]
 		if not groups.has(key): groups[key] = {"kind":kind,"cell":cell,"xf":[],"col":[]}
 		if groups[key].xf.size()>=360: continue
 		var s := rng.randf_range(0.5,1.18)
 		var size_ := Vector3(s,s*rng.randf_range(0.65,1.1),s)
 		if kind=="bush": size_ *= 0.78
+		if kind=="groundcover": size_ *= 0.82
 		if kind=="litter": size_=Vector3(s*0.65,s*0.65,0.025)
 		if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.08,0.27)
 		if kind=="twig": size_=Vector3(0.035,rng.randf_range(0.35,0.85),0.035)
@@ -93,13 +124,17 @@ static func spawn(parent: Node3D) -> void:
 	twig.rings=1
 	# Reuse the existing three-card mesh for flat litter, rather than 22 complete leaves.
 	var litter := litter_mesh()
-	var meshes := {"fern":Foliage.fern(),"bush":Foliage.bush(),"litter":litter,"stone":Foliage.jungle_mesh("Rots2"),"twig":twig}
+	var meshes := {"fern":[understory_variant_mesh("fern",0),understory_variant_mesh("fern",1),understory_variant_mesh("fern",2)],
+		"bush":[understory_variant_mesh("bush",0),understory_variant_mesh("bush",1),understory_variant_mesh("bush",2)],
+		"groundcover":[understory_variant_mesh("groundcover",0),understory_variant_mesh("groundcover",1),understory_variant_mesh("groundcover",2)],
+		"litter":litter,"stone":Foliage.jungle_mesh("Rots2"),"twig":twig}
 	var stone := Kit.rock().duplicate() as StandardMaterial3D
 	stone.vertex_color_use_as_albedo=true
 	for key in groups:
 		var data: Dictionary = groups[key]
 		var mat: Material = stone if data.kind=="stone" else (Kit.photo("nature/tree_bark",1.5,Color(0.48,0.4,0.3)) if data.kind=="twig" else null)
-		var n := Kit.scatter(parent,meshes[data.kind],mat,data.xf,data.col,false)
+		var mesh: Mesh = meshes[data.kind][int(key.split("_")[1])] if data.kind in ["fern","bush","groundcover"] else meshes[data.kind]
+		var n := Kit.scatter(parent,mesh,mat,data.xf,data.col,false)
 		# Cleared slots move below the world; never let that alter the cell culling center.
 		n.multimesh.custom_aabb = AABB(Vector3(data.cell.x*CELL-2.0,-0.5,data.cell.y*CELL-2.0),Vector3(CELL+4.0,4.0,CELL+4.0))
 		n.name="Understory_"+key

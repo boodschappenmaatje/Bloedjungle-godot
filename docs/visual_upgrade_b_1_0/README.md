@@ -18,10 +18,10 @@ Het door de gebruiker gecorrigeerde [goedgekeurde beeld B](reference/approved-b.
 
 - `ground.gdshader` mengt gras, bosgrond, aarde, modder en mos met echte normal/roughnessrespons op wereldvaste schaal. Organische padschouders, longitudinale slijtage en onderbroken vochtplekken vervangen het uniforme grindbeeld. Geen parallax, terreinverplaatsing of collisionwijziging. De drie bestaande discard-contracten (rivier/loopgraven/helipad) blijven behouden.
 - `pack_terrain_surfaces.py` pakt bestaande normal RGB en roughness A verliesloos in één bronafbeelding per materiaal. Geen download, vergroting of nieuwe fotobron. Het manifest bevat bron- en outputhashes; de oorspronkelijke licenties staan in `docs/ASSET_SOURCES.md`. Import bewaart alpha, gebruikt VRAM-compressie en mipmaps; geen normalmap-optimalisatie die de roughnessalpha weggooit.
-- `JungleUnderstory` hergebruikt bestaande varen-, struik-, rots- en stamgeometrie voor onregelmatige kolonies bij natuurankers, padschouders, oevers en buitenfunderingen. Plat gedraaide bestaande driekaart-geometrie met het bladmateriaal vormt strooisel; verkleinde rotsen zijn visuele steentjes. Geen nieuwe GLB/Blender-modelversie: bestaande bronbestanden en viewers blijven leidend.
+- `JungleUnderstory` hergebruikt bestaande varen-, struik-, rots- en stamgeometrie voor onregelmatige kolonies bij natuurankers, padschouders, oevers en buitenfunderingen. Drie goedkope frondsilhouetten en kleine rozetten zijn uit de bestaande bladmaterialen opgebouwd; plat gedraaide grasbladen vormen strooisel. Geen nieuwe fotobron of geïmporteerde GLB.
 - Detail is in 24 m cellen gebatcht, maximaal 360 instances per batch, globale soortlimieten, 48/58 m afstandsculling en geen schaduwdraws. Alle extra details volgen bestaande jungle-/dichtheids-/kwaliteitstrappen en de bouwclearance-index. Een afzonderlijke RNG houdt de bestaande natuurcolliders op hun originele posities.
-- `GrassField` besteedt een deel van het bestaande short-grassbudget eerst aan padschouders. Geen hogere tuftlimiet, nieuwe grasmesh of transparante graslaag.
-- Wortelcontact in bestaande foliage-/grasshaders; iets neutraler daglicht en minder uniforme gele nabijmist via bestaande zon/sky. Tijd, weer en kwaliteitskeuzes blijven werken. Geen C-lichtbundels.
+- `GrassField` besteedt een deel van het bestaande short-grassbudget eerst aan padschouders. High toont nu 60% van de bestaande grass-/detailinstances (voorheen 45%); de absolute meshlimieten en LOD's blijven gelijk.
+- Wortelcontact in bestaande foliage-/grasshaders; een warmere, lagere dagzon met minder omgevingsinvulling geeft langere schaduwen en meer materiaalcontrast. Tijd, weer en kwaliteitskeuzes blijven werken. Geen dure volumetrische mist of C-lichtbundels.
 
 ## Bewijsprotocol
 
@@ -50,7 +50,7 @@ Echte native iPhone-/Windows-metingen, thermiek, 60 seconden bewegingsshimmer en
 - GitHub OTA-patchcontrole en PR-preview: geslaagd; de release-publicatiestap is overgeslagen.
 - `grass_3d_test`: faalt alleen op de bestaande verwachting voor palm-/rotsposities. Dezelfde test faalt op de onaangepaste startcommit `b808fe1`, dus deze check legt een bestaande discrepantie vast.
 - De brede `run_tests.sh`-verzameling is afgebroken bij `airfield_hq_22_import_test`: die test vereist de wrapper-scène `airfield_hq_22_import_test_scene.tscn`, terwijl de algemene runner hem rechtstreeks met `-s` start en `Game` daardoor ontbreekt. Dit is een runner-/testaanroepfout, geen regressie-uitspraak over de asset.
-- Godot 4.7.2 `--export-pack iOS` geslaagd; de gemaakte resourcepack is circa 1,2 GB. Dit controleert de iOS-resource-export, niet een IPA-build, Apple Metal-rendering, ondertekening of uitvoering op een iPhone.
+- Godot 4.7.2 `--export-pack iOS` maakte een resourcepack van circa 1,2 GB. Tijdens het opnieuw importeren meldde Godot twaalf `Basis must be normalized`-fouten bij de ongewijzigde `assets/brandkraan.glb`; de pack-export liep daarna wel door. Dit controleert alleen de resourcepack, niet een IPA-build, Apple Metal-rendering, ondertekening of uitvoering op een iPhone.
 
 ## Reviewcorrecties
 
@@ -64,10 +64,10 @@ De bestaande vaste palmschaduw gebruikt nu dezelfde palm-alfa om de egale ovaal 
 
 | Plek | Echt voor/na, zelfde camera | Gem. ms voor → na | P99 ms voor → na | 1% low FPS voor → na | Draws voor → na | Primitives voor → na |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |
-| bospad | [Vergelijking](captures/compare/bospad.jpg) | 818.6 → 1377.0 | 1186.6 → 2005.5 | 0.84 → 0.50 | 331 → 382 | 836804 → 1408228 |
-| rivier | [Vergelijking](captures/compare/rivier.jpg) | 406.6 → 1052.5 | 544.9 → 1330.1 | 1.84 → 0.75 | 280 → 321 | 255653 → 866970 |
-| kamp | [Vergelijking](captures/compare/kamp.jpg) | 2465.1 → 2670.2 | 3075.1 → 3340.1 | 0.33 → 0.30 | 310 → 349 | 670925 → 1093347 |
-| combat_80 | [Vergelijking](captures/compare/combat.jpg) | 2504.7 → 2688.7 | 25552.8 → 4969.1 | 0.04 → 0.20 | 1277 → 1315 | 1904919 → 2522911 |
+| bospad | [Vergelijking](captures/compare/bospad.jpg) | 818.6 → 1613.5 | 1186.6 → 2144.6 | 0.84 → 0.47 | 331 → 504 | 836804 → 1797869 |
+| rivier | [Vergelijking](captures/compare/rivier.jpg) | 406.6 → 960.9 | 544.9 → 1231.0 | 1.84 → 0.81 | 280 → 364 | 255653 → 1092208 |
+| kamp | [Vergelijking](captures/compare/kamp.jpg) | 2465.1 → 2717.1 | 3075.1 → 3375.8 | 0.33 → 0.30 | 310 → 390 | 670925 → 1293442 |
+| combat_80 | [Vergelijking](captures/compare/combat.jpg) | 2504.7 → 2735.2 | 25552.8 → 4372.2 | 0.04 → 0.23 | 1277 → 1369 | 1904919 → 2930846 |
 
 **WARNING:** deze softwaremetingen bewijzen extra renderkosten, geen behoud van native iPhone-FPS. De lange frametijden, korte vensters (60 frames per stille plek, 100 in gevecht) en shader-/hoststalls maken de 1% lows ongeschikt als toestelacceptatie. Alle individuele gesorteerde frametijden, 1% lows en capturemetadata staan onverkort in [before-metrics.json](results/before-metrics.json), [after-metrics.json](results/after-metrics.json) en [comparison.json](results/comparison.json). De eerste baselineplek overlapt deels de importopwarming; gebruik die tijd niet als geïsoleerde GPU-regressiemeting. Camera-/pusher-CPU staat tijdens meten stil; dit is een vaste-camera-renderdiagnose, geen volledige gameplaybenchmark.
 

@@ -5,6 +5,7 @@ const SPOTS := {"bospad": Vector3(7,0,-57), "rivier": Vector3(14,0,-80), "kamp":
 var game: Node
 var main: Node3D
 var out: String
+var render_scale := 0.6
 var reports: Array = []
 func _initialize() -> void:
 	call_deferred("run")
@@ -14,6 +15,8 @@ func run() -> void:
 	var governor: GDScript = load("res://scripts/perf_governor.gd")
 	var progress: GDScript = load("res://scripts/progress.gd")
 	out = OS.get_environment("BJ_B_OUT")
+	var scale_override := OS.get_environment("BJ_RENDER_SCALE")
+	if not scale_override.is_empty(): render_scale = clampf(float(scale_override), 0.6, 1.0)
 	if out.is_empty():
 		quit(2)
 		return
@@ -27,6 +30,8 @@ func run() -> void:
 	settings.values["sound"] = "off"
 	settings.values["hz"] = "120"
 	settings.values["fps"] = "on"
+	var quality_override := OS.get_environment("BJ_CAPTURE_QUALITY")
+	if quality_override in ["low","high","ultra"]: settings.values["quality"] = quality_override
 	governor.paused = true
 	progress.autostart = false
 	main = load("res://scenes/main.tscn").instantiate()
@@ -41,22 +46,29 @@ func run() -> void:
 	game.fire = false
 	for menu in get_nodes_in_group("menus"): menu._show("")
 	var cam: Camera3D = main.get_node("Camera")
-	root.scaling_3d_scale = 0.6
+	root.scaling_3d_scale = render_scale
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	Engine.max_fps = 0
-	for key in SPOTS:
-		game.player.global_position = SPOTS[key]
+	var spots := SPOTS
+	var spot_override := OS.get_environment("BJ_CAPTURE_SPOT")
+	if SPOTS.has(spot_override): spots = {spot_override:SPOTS[spot_override]}
+	for key in spots:
+		game.player.global_position = spots[key]
 		game.player.face = 0.0
 		cam.snap_to_player()
 		print("CAPTURE settle ",key)
 		for i in 8: await process_frame
-		root.scaling_3d_scale = 0.6
+		root.scaling_3d_scale = render_scale
 		print("CAPTURE ready ",key)
 		cam.set_process(false)
 		sync_foliage_focus(cam)
 		await RenderingServer.frame_post_draw
 		if not save_frame(key+".png"): return
-		var data := {"spot":key,"focus":str(SPOTS[key]),"camera":str(cam.global_transform),"fov":cam.fov,
+		if OS.get_environment("BJ_CAPTURE_ONLY") == "1":
+			print("VISUAL B CAPTURE PASS ",out)
+			quit()
+			return
+		var data := {"spot":key,"focus":str(spots[key]),"camera":str(cam.global_transform),"fov":cam.fov,
 			"scale":root.scaling_3d_scale,"msaa":root.msaa_3d,"quality":settings.values.duplicate(),
 			"renderer":RenderingServer.get_current_rendering_method(),"adapter":RenderingServer.get_video_adapter_name(),"engine":Engine.get_version_info().string}
 		print("CAPTURE saved ",key)

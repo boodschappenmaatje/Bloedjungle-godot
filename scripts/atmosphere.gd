@@ -11,7 +11,7 @@ var _rain: GPUParticles3D
 
 # per tijdstip: zonrichting, zonkleur, zonkracht, omgevingslicht, hemel (boven/horizon/grond), mist, belichting
 const TIMES := {
-	"day": {"rot": Vector3(-33, -38, 0), "col": "ffeacb", "e": 1.7, "amb": 0.38, "top": "587584", "hor": "adb9b3", "gnd": "82947d", "fog": "849c98", "exp": 0.95},
+	"day": {"rot": Vector3(-27, -38, 0), "col": "ffe3b4", "e": 1.9, "amb": 0.3, "top": "526c76", "hor": "b7b49e", "gnd": "7d8d73", "fog": "8b967f", "exp": 0.95},
 	"dusk": {"rot": Vector3(-9, -38, 0), "col": "ff8f50", "e": 1.6, "amb": 0.3, "top": "3a3f5c", "hor": "d98a55", "gnd": "8a6a50", "fog": "a87a5c", "exp": 1.0},
 	"night": {"rot": Vector3(-52, -38, 0), "col": "8fa8ff", "e": 0.9, "amb": 0.34, "top": "10182e", "hor": "2c3b5a", "gnd": "141c2a", "fog": "27324a", "exp": 0.95},
 }
@@ -224,7 +224,7 @@ func _process(_d: float) -> void:
 # geen onscherpe verte, minder gras en iets minder pixels. Ultra is het volledige beeld.
 const QUALITY := {
 	"low": {"shadow": false, "dist": 40.0, "atlas": 1024, "glow": false, "dof": false, "scale": 0.6, "grass": 0.2, "fern": 0.5, "bush_shadow": false, "ssao": false},
-	"high": {"shadow": true, "dist": 40.0, "atlas": 1024, "glow": false, "dof": false, "scale": 0.8, "grass": 0.45, "fern": 0.7, "bush_shadow": false, "ssao": false},
+	"high": {"shadow": true, "dist": 40.0, "atlas": 1024, "glow": false, "dof": false, "scale": 0.8, "grass": 0.6, "fern": 0.7, "bush_shadow": false, "ssao": false},
 	"ultra": {"shadow": true, "dist": 55.0, "atlas": 4096, "glow": true, "dof": true, "scale": 1.0, "grass": 1.0, "fern": 1.0, "bush_shadow": true, "ssao": true},
 }
 

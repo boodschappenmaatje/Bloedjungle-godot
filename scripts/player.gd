@@ -225,7 +225,7 @@ func _update_infantry_preview(delta: float, w: Dictionary) -> void:
 	var hud := get_tree().get_first_node_in_group("combat_target_hud") as CombatTargetHud
 	if hud == null:
 		return
-	if not _can_act() or Game.editing or is_nan(Game.aim) or weapon == "bazooka":
+	if not _can_act() or Game.editing or is_nan(Game.aim):
 		_clear_infantry_preview()
 		return
 	_infantry_preview_t -= delta
@@ -236,7 +236,13 @@ func _update_infantry_preview(delta: float, w: Dictionary) -> void:
 	var facing := Vector3(sin(face), 0.0, cos(face))
 	var over := _hugging_wall(facing)
 	var distance := float(w.speed) * float(w.life)
-	var result := CombatAimFeedback.predict_infantry(get_world_3d().direct_space_state, muzzle, face, distance, over)
+	var result: Dictionary
+	if weapon == "bazooka":
+		# Do not draw a guaranteed blast at maximum lifetime: player rockets
+		# do not explode on timeout. This preview never alters Bullet.fire().
+		result = BazookaAimFeedback.predict(get_world_3d().direct_space_state, muzzle, face, distance, over, float(w.get("explosive", 0.0)))
+	else:
+		result = CombatAimFeedback.predict_infantry(get_world_3d().direct_space_state, muzzle, face, distance, over)
 	hud.set_prediction(result, "infantry")
 
 

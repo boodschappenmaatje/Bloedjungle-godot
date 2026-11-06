@@ -19,6 +19,8 @@ on:
       - "scripts/team_commands.gd"
       - "scripts/team_command_controller.gd"
       - "scripts/touch_sticks.gd"
+      - "scripts/combat_buttons.gd"
+      - "tests/granaat_richten_test.gd"
       - "scripts/grote_kaart.gd"
       - "scripts/route.gd"
       - "assets/vijand_hk.glb"
@@ -107,6 +109,14 @@ jobs:
           timeout 180 "$GODOT" --headless --path . --script tests/combat_feedback_test.gd --fixed-fps 60
           timeout 180 "$GODOT" --headless --path . --script tests/combat_infantry_feedback_test.gd --fixed-fps 60
           timeout 180 "$GODOT" --headless --path . --script tests/combat_bazooka_aim_test.gd --fixed-fps 60
+      - name: Granaat via rechterstick — echte iPhone touch events
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 360 "$GODOT" --headless --path . --script tests/granaat_richten_test.gd --fixed-fps 60 --quit-after 15000 2>&1 | tee "$RUNNER_TEMP/granaat_richten_test.log"
+          grep -Fq "TEST OK" "$RUNNER_TEMP/granaat_richten_test.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|TEST MISLUKT' "$RUNNER_TEMP/granaat_richten_test.log"; then exit 1; fi
       - name: Jeep sterfte respawn en torenschutter trefeffecten
         shell: bash
         run: |

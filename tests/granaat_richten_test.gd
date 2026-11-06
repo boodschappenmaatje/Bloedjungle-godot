@@ -50,10 +50,23 @@ func _stick_center() -> Vector2:
 	return main.get_node("Hud/Sticks")._anchor(true)
 
 
+## Read live script constants only AFTER the game's autoloads are initialized.
+## Referencing class_name TouchSticks/WheelArt/ActionBtn in a SceneTree test
+## eagerly compiles dependent UI classes before Game/Sfx and breaks imports.
+func _stick_value(key: String) -> float:
+	var script: Script = main.get_node("Hud/Sticks").get_script()
+	return float(script.get_script_constant_map().get(key))
+
+
+func _wheel_value(key: String) -> float:
+	var script: Script = load("res://scripts/wheel_art.gd")
+	return float(script.get_script_constant_map().get(key))
+
+
 func _throw(d: Vector2, steps := 4):
 	cb._select_wheel("equipment", 0)
 	var c: Vector2 = _stick_center()
-	var offset: Vector2 = d.limit_length(float(cb.AIM_FULL)) * (TouchSticks.STICK_R / float(cb.AIM_FULL))
+	var offset: Vector2 = d.limit_length(float(cb.AIM_FULL)) * (_stick_value("STICK_R") / float(cb.AIM_FULL))
 	_touch(true, c)
 	await _frames(1)
 	for i in steps:
@@ -130,7 +143,7 @@ func _run() -> void:
 	_check(cb.wheel_is_open(), "aparte UITRUSTING-knop opent het wiel")
 	_check(game.grenades == initial, "uitrustingswiel openen gooit niets")
 	var wc: Vector2 = cb._wheel_center()
-	var north := wc + Vector2(0, -(WheelArt.INNER + WheelArt.OUTER) * 0.5)
+	var north := wc + Vector2(0, -(_wheel_value("INNER") + _wheel_value("OUTER")) * 0.5)
 	_touch(true, north)
 	await _frames(1)
 	_touch(false, north)
@@ -141,7 +154,7 @@ func _run() -> void:
 	var weapon_bar: Control = get_first_node_in_group("weapon_strip")
 	var right_anchor: Vector2 = _stick_center()
 	_check(btn.get_global_rect().end.y < (weapon_bar.get("_prev") as Control).get_global_rect().position.y, "UITRUSTING-knop staat boven wapenbalk")
-	_check(btn.get_global_rect().get_center().distance_to(right_anchor) > TouchSticks.ANCHOR_R + ActionBtn.SIZE.x * 0.5, "UITRUSTING-knop raakt rechterstick niet")
+	_check(btn.get_global_rect().get_center().distance_to(right_anchor) > _stick_value("ANCHOR_R") + btn.size.x * 0.5, "UITRUSTING-knop raakt rechterstick niet")
 
 	# 1. raakt de richtcirkel, 8 richtingen, 2-12 m
 	var worst_land := 0.0
@@ -207,7 +220,7 @@ func _run() -> void:
 	p.grenade_cd = 0.0
 	await _frames(2)
 	cb._select_wheel("equipment", 0)
-	var drive: Vector2 = Vector2(_px_for(9.0), 0) * (TouchSticks.STICK_R / float(cb.AIM_FULL))
+	var drive: Vector2 = Vector2(_px_for(9.0), 0) * (_stick_value("STICK_R") / float(cb.AIM_FULL))
 	_touch(true, c)
 	await _frames(1)
 	_drag(c + drive)

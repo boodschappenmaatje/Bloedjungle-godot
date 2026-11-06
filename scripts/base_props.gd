@@ -13,6 +13,15 @@ const WALL_LOD_NAMES := ["Wall_LOD0", "Wall_LOD1", "Wall_LOD2"]
 const WALL_LOD_BEGIN := [0.0, 28.0, 58.0]
 const WALL_LOD_END := [0.0, 0.0, 0.0]
 const WALL_LOD_HYSTERESIS := 1.5  # meters: voorkomt LOD-pingpong bij bewegende iOS-camera
+# Keep the earth shoulder's lower edge buried beneath the flat terrain plane.
+# At corners the cap and the long berms must only meet at the TOP boundary:
+# overlapping 22cm-high coplanar top faces caused outside-wall shimmer.
+const BERM_BOTTOM_Y := -0.03
+const BERM_TOP_Y := 0.22
+const BERM_BASE_HALF_WIDTH := 0.41
+const BERM_TOP_HALF_WIDTH := 0.23
+const BERM_CORNER_OFFSET := 0.42
+const BERM_CORNER_TOP_JOIN := BERM_CORNER_OFFSET - BERM_TOP_HALF_WIDTH
 
 
 static func build(root: Node3D) -> void:
@@ -181,7 +190,7 @@ static func _wall_berm(root: Node3D, spans: Array) -> void:
 	var index := 0
 	for sx in [-1.0, 1.0]:
 		for sz in [-1.0, 1.0]:
-			corners.set_instance_transform(index, Transform3D(Basis.IDENTITY, Vector3(sx * (C + 0.42), 0.0, sz * (C + 0.42))))
+			corners.set_instance_transform(index, Transform3D(Basis.IDENTITY, Vector3(sx * (C + BERM_CORNER_OFFSET), 0.0, sz * (C + BERM_CORNER_OFFSET))))
 			index += 1
 	var corner_visual := MultiMeshInstance3D.new()
 	corner_visual.name = "BaseWallEarthBermCorners"
@@ -217,8 +226,11 @@ static func wall_berm_transform(span: Dictionary) -> Transform3D:
 	else:
 		outside.x = 0.42
 	var direction := (b - a).normalized()
-	var extend_start := 0.41 if absf(a.x) == C or absf(a.z) == C else 0.0
-	var extend_end := 0.41 if absf(b.x) == C or absf(b.z) == C else 0.0
+	# Extend ONLY at real perimeter corners, never into the north/south gates.
+	# End each flat TOP face exactly where the corner cap's TOP begins.
+	# The previous 0.41m extension overlapped the cap on the same y=0.22 plane.
+	var extend_start := BERM_CORNER_TOP_JOIN if _is_wall_corner(a) else 0.0
+	var extend_end := BERM_CORNER_TOP_JOIN if _is_wall_corner(b) else 0.0
 	var length := a.distance_to(b) + extend_start + extend_end
 	center += direction * ((extend_end - extend_start) * 0.5)
 	# Eerst lokaal op lengte schalen, dan draaien. Basis.scaled() schaalt in wereldassen: dan werd de
@@ -227,35 +239,39 @@ static func wall_berm_transform(span: Dictionary) -> Transform3D:
 	return Transform3D(basis, center + outside)
 
 
+static func _is_wall_corner(point: Vector3) -> bool:
+	return is_equal_approx(absf(point.x), C) and is_equal_approx(absf(point.z), C)
+
+
 static func _wall_berm_mesh() -> ArrayMesh:
 	var half_length := 0.5
-	var half_base := 0.41
-	var half_top := 0.23
-	var height := 0.22
+	var half_base := BERM_BASE_HALF_WIDTH
+	var half_top := BERM_TOP_HALF_WIDTH
+	var height := BERM_TOP_Y
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	_wall_berm_quad(st, Vector3(-half_length, 0, -half_base), Vector3(half_length, 0, -half_base), Vector3(half_length, 0, half_base), Vector3(-half_length, 0, half_base))
+	_wall_berm_quad(st, Vector3(-half_length, BERM_BOTTOM_Y, -half_base), Vector3(half_length, BERM_BOTTOM_Y, -half_base), Vector3(half_length, BERM_BOTTOM_Y, half_base), Vector3(-half_length, BERM_BOTTOM_Y, half_base))
 	_wall_berm_quad(st, Vector3(-half_length, height, -half_top), Vector3(-half_length, height, half_top), Vector3(half_length, height, half_top), Vector3(half_length, height, -half_top))
-	_wall_berm_quad(st, Vector3(-half_length, 0, half_base), Vector3(half_length, 0, half_base), Vector3(half_length, height, half_top), Vector3(-half_length, height, half_top))
-	_wall_berm_quad(st, Vector3(half_length, 0, -half_base), Vector3(-half_length, 0, -half_base), Vector3(-half_length, height, -half_top), Vector3(half_length, height, -half_top))
-	_wall_berm_quad(st, Vector3(half_length, 0, half_base), Vector3(half_length, 0, -half_base), Vector3(half_length, height, -half_top), Vector3(half_length, height, half_top))
-	_wall_berm_quad(st, Vector3(-half_length, 0, -half_base), Vector3(-half_length, 0, half_base), Vector3(-half_length, height, half_top), Vector3(-half_length, height, -half_top))
+	_wall_berm_quad(st, Vector3(-half_length, BERM_BOTTOM_Y, half_base), Vector3(half_length, BERM_BOTTOM_Y, half_base), Vector3(half_length, height, half_top), Vector3(-half_length, height, half_top))
+	_wall_berm_quad(st, Vector3(half_length, BERM_BOTTOM_Y, -half_base), Vector3(-half_length, BERM_BOTTOM_Y, -half_base), Vector3(-half_length, height, -half_top), Vector3(half_length, height, -half_top))
+	_wall_berm_quad(st, Vector3(half_length, BERM_BOTTOM_Y, half_base), Vector3(half_length, BERM_BOTTOM_Y, -half_base), Vector3(half_length, height, -half_top), Vector3(half_length, height, half_top))
+	_wall_berm_quad(st, Vector3(-half_length, BERM_BOTTOM_Y, -half_base), Vector3(-half_length, BERM_BOTTOM_Y, half_base), Vector3(-half_length, height, half_top), Vector3(-half_length, height, -half_top))
 	st.generate_normals()
 	return st.commit() as ArrayMesh
 
 
 static func _wall_berm_corner_mesh() -> ArrayMesh:
-	var base := 0.41
-	var top := 0.23
-	var height := 0.22
+	var base := BERM_BASE_HALF_WIDTH
+	var top := BERM_TOP_HALF_WIDTH
+	var height := BERM_TOP_Y
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	_wall_berm_quad(st, Vector3(-base, 0, -base), Vector3(base, 0, -base), Vector3(base, 0, base), Vector3(-base, 0, base))
+	_wall_berm_quad(st, Vector3(-base, BERM_BOTTOM_Y, -base), Vector3(base, BERM_BOTTOM_Y, -base), Vector3(base, BERM_BOTTOM_Y, base), Vector3(-base, BERM_BOTTOM_Y, base))
 	_wall_berm_quad(st, Vector3(-top, height, -top), Vector3(-top, height, top), Vector3(top, height, top), Vector3(top, height, -top))
-	_wall_berm_quad(st, Vector3(-base, 0, base), Vector3(base, 0, base), Vector3(top, height, top), Vector3(-top, height, top))
-	_wall_berm_quad(st, Vector3(base, 0, -base), Vector3(-base, 0, -base), Vector3(-top, height, -top), Vector3(top, height, -top))
-	_wall_berm_quad(st, Vector3(base, 0, base), Vector3(base, 0, -base), Vector3(top, height, -top), Vector3(top, height, top))
-	_wall_berm_quad(st, Vector3(-base, 0, -base), Vector3(-base, 0, base), Vector3(-top, height, top), Vector3(-top, height, -top))
+	_wall_berm_quad(st, Vector3(-base, BERM_BOTTOM_Y, base), Vector3(base, BERM_BOTTOM_Y, base), Vector3(top, height, top), Vector3(-top, height, top))
+	_wall_berm_quad(st, Vector3(base, BERM_BOTTOM_Y, -base), Vector3(-base, BERM_BOTTOM_Y, -base), Vector3(-top, height, -top), Vector3(top, height, -top))
+	_wall_berm_quad(st, Vector3(base, BERM_BOTTOM_Y, base), Vector3(base, BERM_BOTTOM_Y, -base), Vector3(top, height, -top), Vector3(top, height, top))
+	_wall_berm_quad(st, Vector3(-base, BERM_BOTTOM_Y, -base), Vector3(-base, BERM_BOTTOM_Y, base), Vector3(-top, height, top), Vector3(-top, height, -top))
 	st.generate_normals()
 	return st.commit() as ArrayMesh
 

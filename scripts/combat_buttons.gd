@@ -15,7 +15,7 @@ var _air: ActionBtn          # luchtsteun (killstreak): staat naast GEBRUIK en v
 var _arty: ActionBtn         # artilleriecommando (hoofdkwartier niveau 3): boven de luchtsteun-knop, 90 s afkoeling
 var _state := ""
 
-## Granaat richten: knop vasthouden en slepen zet de landingscirkel neer (2-12 m), loslaten gooit.
+## Uitrusting kiezen en granaat werpen zijn op iPhone gescheiden: rechterstick richt, loslaten gooit.
 ## Terug naar de knop slepen breekt de worp af; alleen tikken gooit 7 m recht vooruit.
 const AIM_DEAD := 16.0    # px: binnen deze afstand van het beginpunt telt het als tikken
 const AIM_FULL := 120.0   # px: zo ver slepen = maximaal bereik
@@ -24,6 +24,7 @@ var aim_drag := Vector2.ZERO
 var _aim_start := Vector2.ZERO
 var _aim_out := false     # de duim is al buiten de knop geweest: terugkomen = afbreken
 var _aim_vis: GrenadeAim
+var grenade_stick_armed := false  # pending one deliberate right-stick throw
 
 ## Luchtsteun gebruiken: tikken voert een beloning meteen uit; bij napalm zet vasthouden en slepen de strook neer (8-30 m).
 var air_finger := -2
@@ -55,6 +56,7 @@ const WHEEL_EXIT := 150.0   # px van het midden: verder slepen sluit het wiel en
 
 
 func _ready() -> void:
+	add_to_group("combat_buttons")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -67,7 +69,7 @@ func _ready() -> void:
 		else:
 			_player_call("toggle_sprint"))
 	_sprint.tooltip_text = "Tik: sprint · ingedrukt houden: ontwijkrol"
-	_grenade = _make("granaat", "GEBRUIK", func(): pass) # release chooses tap-use or a long-press wheel
+	_grenade = _make("granaat", "UITRUSTING", func(): pass) # only equipment wheel, never release-to-throw
 	_roll = _make("rol", "ROL", func(): _player_call("request_dodge"))
 	_roll.visible = not UI.is_touch_platform()
 	_stance = _make("houding", "HOUDING", func(): _stance_down_ms = Time.get_ticks_msec())
@@ -95,6 +97,7 @@ func _cancel_gesture() -> void:
 	_held_time = 0.0
 	_wheel_kind = ""
 	_wheel_sector = -1
+	cancel_grenade_stick()
 	cancel_aim()
 	cancel_air()
 	cancel_arty()
@@ -153,25 +156,21 @@ func _input(event: InputEvent) -> void:
 	_track_wheel_press(event)
 	_air_input(event)
 	_arty_input(event)
+	# Mobile grenade selection is NOT a dragging gesture on this button.
+	# Desktop mouse keeps the existing hold/drag behavior.
+	if UI.is_touch_platform():
+		return
 	if Game.equipment_sel != "grenade" or not is_visible_in_tree():
 		if aim_finger != -2:
 			cancel_aim()
 		return
-	if event is InputEventScreenTouch:
-		if event.pressed and aim_finger == -2 and _grenade.get_global_rect().has_point(event.position):
-			_begin_aim(event.index, event.position)
-		elif not event.pressed and event.index == aim_finger:
-			release_aim()
-	elif event is InputEventScreenDrag and event.index == aim_finger:
-		drag_aim(event.position - _aim_start)
-	elif event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION and event.button_index == MOUSE_BUTTON_LEFT:
+	if event is InputEventMouseButton and event.device != InputEvent.DEVICE_ID_EMULATION and event.button_index == MOUSE_BUTTON_LEFT:
 		if event.pressed and aim_finger == -2 and _grenade.get_global_rect().has_point(event.position):
 			_begin_aim(-1, event.position)
 		elif not event.pressed and aim_finger == -1:
 			release_aim()
 	elif event is InputEventMouseMotion and event.device != InputEvent.DEVICE_ID_EMULATION and aim_finger == -1:
 		drag_aim(event.position - _aim_start)
-
 
 func _air_input(event: InputEvent) -> void:
 	if not is_visible_in_tree() or not _air.visible:
@@ -320,11 +319,13 @@ func _wheel_input(event: InputEvent) -> bool:
 			pos = event.position
 			released = not event.pressed
 		if pointer == _held_pointer and released:
-			var tap_equipment := _held_action == "equipment" and _held_time < WHEEL_HOLD and Game.equipment_sel == "mine"
+			var open_equipment := _held_action == "equipment" and _held_time < WHEEL_HOLD
 			_held_pointer = -2
 			_held_action = ""
-			if tap_equipment:
-				_use_equipment()
+			if open_equipment:
+				_open_sticky("equipment", _grenade)
+				get_viewport().set_input_as_handled()
+				return true
 		return false
 	if _wheel_sticky:
 		return _sticky_input(event)
@@ -384,6 +385,7 @@ func _multiple_choices(kind: String) -> bool:
 
 
 func _open_sticky(kind: String, button: ActionBtn) -> void:
+	cancel_grenade_stick()  # re-opening equipment picker cancels pending throw
 	_wheel_kind = kind
 	_wheel_sticky = true
 	_wheel_sector = -1

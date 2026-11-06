@@ -1,5 +1,5 @@
 shader_type spatial;
-render_mode specular_disabled;
+// Beperkte specularrespons wordt per fragment gemaskeerd tot de aardelaag.
 // Jungle-bodem: twee soorten gras, modder-plekken, vaste aarde in de basis en een pad
 // vanaf elke poort. Alles uit ruis, dus de grond herhaalt zich niet.
 
@@ -69,7 +69,8 @@ void fragment() {
 
 	// Houd de grondtexturen vast aan de wereld. View-dependent parallax op dit grote vlak
 	// verschoof de hoogfrequente albedo en normal map bij iedere camerabeweging en gaf shimmer.
-	float hgt = mix(0.5, texture(dirt_height, p * 0.095, detail_mip_bias).r, micro_detail);
+	float roughness_sample = texture(dirt_height, p * 0.095, detail_mip_bias).r;
+	float hgt = mix(0.5, roughness_sample, micro_detail);
 	vec2 pp = p;
 	vec3 d1 = texture(dirt_tex, pp * 0.095, detail_mip_bias).rgb;
 	vec3 d2 = texture(mud_tex, pp * 0.08 + 0.5, detail_mip_bias).rgb;
@@ -116,7 +117,11 @@ void fragment() {
 	dirt = mix(dirt, vec3(0.14, 0.2, 0.08) * (0.8 + 0.5 * n3), edge * 0.5);
 	dirt *= 1.0 - 0.25 * smoothstep(0.5, 0.2, n2) * dm;
 	ALBEDO = mix(grass, dirt, dm);  // texturen zijn al lineair ingelezen (source_color)
-	ROUGHNESS = 1.0;
+	// De droge-aarde roughnesskaart varieert subtiel binnen een matte band.
+	// Gras blijft volledig mat; op afstand vervaagt materiaalruis met albedo-detail.
+	float dirt_roughness = mix(0.98, 0.82, roughness_sample);
+	ROUGHNESS = mix(1.0, dirt_roughness, dm * micro_detail);
+	SPECULAR = dm * 0.16;
 	vec2 dirt_uv = pp * 0.095;
 	NORMAL_MAP = texture(dirt_normal, dirt_uv, detail_mip_bias).rgb;
 	// Vervaag bumpdetail zodra een pixel meerdere detailtexels beslaat; dit voorkomt

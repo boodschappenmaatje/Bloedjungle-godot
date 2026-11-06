@@ -27,20 +27,50 @@ Het door de gebruiker gecorrigeerde [goedgekeurde beeld B](reference/approved-b.
 
 `tests/visual_b_capture.gd` laadt de echte `scenes/main.tscn`, gebruikt de ongewijzigde `Camera`-node met bestaande camerascript en vaste wereldposities, seed `20261106`, High/day/clear, fake tree shadows, wind uit. HUD en sticks zijn zichtbaar. Resolutieschaal 60% wordt alleen voor de gecontroleerde vergelijking ingesteld; geen productinstelling gewijzigd. PerfGovernor staat uitsluitend in het testproces stil zodat hij de A/B-schaal niet verandert.
 
-De oorspronkelijke screenshot bevat geen savepositie, exacte camera-/kwaliteitsinstellingen of wereldcoördinaten. Daarom wordt **geen identieke reconstructie van die screenshot geclaimd**. De echte nieuwe voor/na-paren gebruiken wel dezelfde locaties, cameratransforms, tijd, seed en instellingen. De referentie is apart gelabeld en nooit als geïmplementeerde render gepresenteerd.
+De oorspronkelijke screenshot bevat geen savepositie, exacte camera-/kwaliteitsinstellingen of wereldcoördinaten. Daarom wordt **geen identieke reconstructie van die screenshot geclaimd**. De echte nieuwe voor/na-paren gebruiken wel dezelfde locaties, kwaliteit en tijd; de vastgezette camera-pose wijkt per paar hoogstens 1 cm af. De referentie is apart gelabeld en nooit als geïmplementeerde render gepresenteerd.
 
 De testomgeving is Linux met **Godot 4.7.2 Mobile/Vulkan, Mesa llvmpipe (software)**, een 1280×720 virtueel scherm en twee gedeelde CPU-cores. Absolute FPS zijn geen iPhone- of Windows-hardwaremeting. De gevechtsproef gebruikt 80 echte vijanden met bestaande AI en wapens; de bestaande wereldverdedigers blijven aanwezig. Shaderopwarming en gesorteerde individuele frametijden worden apart van structurele draw-/primitivecounts beoordeeld.
 
-## Nog zichtbaar onder referentie B
+## Nog zichtbaar onder de kwaliteitslat
 
-B is **nog niet gehaald**: de bestaande palm-/varenatlassen hebben procedureel 512px brondetail, de ondergrond blijft geometrisch vlak en de vaste schaduwen zijn benaderingen. B heeft fijnere fotorealistische bladstructuur, dichtere gelaagde vegetatie, zichtbaar opgehoogde wortel-/oeverranden en rijker lokaal contactlicht. Deze PR verandert geen bestaande natuurcolliders of levelhoogte om die indruk te forceren. De vochtplekken zijn materiaalvariatie, geen geometrische plassen met gereflecteerde boomkruinen. Geen claim van volledige visuele voltooiing.
+Beeld B is de richting, geen checklist van letterlijk na te maken stenen of planten. De huidige echte render haalt de bredere maatstaf **nog niet**: grote rustige grasvlakken blijven zichtbaar, varens en struiken herhalen dezelfde grove vormen, de grond houdt op deze scèneafstand een zachte indruk en planten hebben weinig zichtbaar contact met bodem en oevers. Daardoor oogt de omgeving nog niet als een rijk, premium en geloofwaardig gevechtsgebied. De upgrade maakt het pad en de materiaalovergangen beter leesbaar en voegt geclusterde ondergroei toe, maar het verschil met de oude screenshot is minder groot dan de referentierichting vraagt.
+
+De atlas van bestaande bladeren levert geen fijne bronvormen voor kleine tropische bodemplanten; de vaste schaduwen zijn benaderingen en de grond blijft geometrisch vlak. Deze wijziging verandert geen bestaande natuurcolliders of levelhoogte. De vochtplekken zijn materiaalvariatie, geen geometrische plassen met gereflecteerde boomkruinen. Nieuwe, kwalitatieve plantmodellen en toestelprofilering zijn nodig voordat dit als visueel of mobiel voltooid kan gelden.
 
 ## Acceptatie
 
 Echte native iPhone-/Windows-metingen, thermiek, 60 seconden bewegingsshimmer en representatieve lange grote gevechten blijven nodig. Geen fysieke iPhone-test, iOS Quick Look of iMac-productiepipeline uitgevoerd. Geen overeenkomst met referentie B claimen op basis van uitsluitend technisch groene tests.
+
+## Regressietests en iOS-export
+
+- `visual_b_test.gd`: geslaagd, 0 failures; controleert de echte gamelevel, PBR/mips, objectlimieten, clearings, paden/oeverdetails, kwaliteits- en jungleknoppen en ontbreken van nieuwe colliders.
+- `visual_b_capture.gd`: geslaagd met echte camerabeelden en 80 bestaande AI-vijandscènes; na afloop meldt Godot shutdown-leakwaarschuwingen voor de niet-afgebroken testwereld, zonder script- of shaderfouten tijdens de capture.
+- Bestaande tests `jungle_test`, `rivier_test`, `schaduw_test`, `kwaliteit_test`, `surface_filtering_test`, `camera_test` en `team_commands`: geslaagd.
+- GitHub-checks voor vijandbasis/voertuigen/wapens/touchregressie en de unsigned iOS-IPA-export: geslaagd. Dit bewijst compilatie en gesimuleerde touch-events, geen uitvoering op een iPhone.
+- GitHub OTA-patchcontrole en PR-preview: geslaagd; de release-publicatiestap is overgeslagen.
+- `grass_3d_test`: faalt alleen op de bestaande verwachting voor palm-/rotsposities. Dezelfde test faalt op de onaangepaste startcommit `b808fe1`, dus deze check legt een bestaande discrepantie vast.
+- De brede `run_tests.sh`-verzameling is afgebroken bij `airfield_hq_22_import_test`: die test vereist de wrapper-scène `airfield_hq_22_import_test_scene.tscn`, terwijl de algemene runner hem rechtstreeks met `-s` start en `Game` daardoor ontbreekt. Dit is een runner-/testaanroepfout, geen regressie-uitspraak over de asset.
+- Godot 4.7.2 `--export-pack iOS` geslaagd; de gemaakte resourcepack is circa 1,2 GB. Dit controleert de iOS-resource-export, niet een IPA-build, Apple Metal-rendering, ondertekening of uitvoering op een iPhone.
 
 ## Reviewcorrecties
 
 Een afzonderlijke GPT-6 Astra-review controleerde de code zonder tests te claimen. Hersteld: vaste AABB's per detailcel (clearance verplaatst oude slots onder de wereld), correcte lokale assen voor takjes, gemeenschappelijke tangentbasis voor gedraaide modder-normalmaps, deterministisch gemengde habitatkandidaten vóór dichtheidslimieten, bijgewerkte bestaande surface-capture en gecontroleerde bestandswrites. De gerichte integratietest faalde vóór de bounds-/schaduwcorrectie en slaagde erna met 0 failures.
 
 De bestaande vaste palmschaduw gebruikt nu dezelfde palm-alfa om de egale ovaal te onderbreken. Dit is uitdrukkelijk een **benaderde vaste schaduw**, geen nieuwe geometrisch correcte realtime-schaduw. De bestaande schaduwmodus blijft ongewijzigd; echte boomschaduw blijft een bestaande gebruikerskeuze.
+
+## Echte renders en softwaremetingen
+
+[Gebruikersbeeld / doel B / echt resultaat](captures/compare/three-way.jpg)
+
+| Plek | Echt voor/na, zelfde camera | Gem. ms voor → na | P99 ms voor → na | 1% low FPS voor → na | Draws voor → na | Primitives voor → na |
+| --- | --- | ---: | ---: | ---: | ---: | ---: |
+| bospad | [Vergelijking](captures/compare/bospad.jpg) | 818.6 → 1377.0 | 1186.6 → 2005.5 | 0.84 → 0.50 | 331 → 382 | 836804 → 1408228 |
+| rivier | [Vergelijking](captures/compare/rivier.jpg) | 406.6 → 1052.5 | 544.9 → 1330.1 | 1.84 → 0.75 | 280 → 321 | 255653 → 866970 |
+| kamp | [Vergelijking](captures/compare/kamp.jpg) | 2465.1 → 2670.2 | 3075.1 → 3340.1 | 0.33 → 0.30 | 310 → 349 | 670925 → 1093347 |
+| combat_80 | [Vergelijking](captures/compare/combat.jpg) | 2504.7 → 2688.7 | 25552.8 → 4969.1 | 0.04 → 0.20 | 1277 → 1315 | 1904919 → 2522911 |
+
+**WARNING:** deze softwaremetingen bewijzen extra renderkosten, geen behoud van native iPhone-FPS. De lange frametijden, korte vensters (60 frames per stille plek, 100 in gevecht) en shader-/hoststalls maken de 1% lows ongeschikt als toestelacceptatie. Alle individuele gesorteerde frametijden, 1% lows en capturemetadata staan onverkort in [before-metrics.json](results/before-metrics.json), [after-metrics.json](results/after-metrics.json) en [comparison.json](results/comparison.json). De eerste baselineplek overlapt deels de importopwarming; gebruik die tijd niet als geïsoleerde GPU-regressiemeting. Camera-/pusher-CPU staat tijdens meten stil; dit is een vaste-camera-renderdiagnose, geen volledige gameplaybenchmark.
+
+De oude gevechtsteller vroeg een niet-bestaande nodegroep op en registreerde daardoor 0. De test spawnede daadwerkelijk 80 vijanden (ook zichtbaar in de HUD/renders); de huidige capturecode leest de echte `Game.enemies`-lijst. Het oude ongeldige tellerveld is in de ruwe nulmeting behouden en expliciet gelabeld.
+
+De 12-frame langzame camera-translatie is lokaal gerenderd voor/na. Er is geen gekalibreerde temporele shimmer-score en geen 60-secondencontrole op native hardware uitgevoerd. Shimmer en 1% lows blijven open acceptatiepunten.

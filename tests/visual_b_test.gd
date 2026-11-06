@@ -70,7 +70,7 @@ func run() -> void:
 		check(fol.count_clearable_in_regions(regions,sample,0.0)==0,"New vegetation survives building clearing")
 	check(fol._shadow_mat("palm").get_shader_parameter("canopy_tex") is Texture2D,"Fixed palm shadows need the existing leaf silhouette")
 	var mat: ShaderMaterial = get_first_node_in_group("ground").get_meta("mat")
-	for key in ["grass_surface","jungle_surface","mud_surface","moss_surface","moss_tex"]:
+	for key in ["grass_surface","jungle_surface","mud_surface","moss_surface","moss_tex","gravel_tex","gravel_surface"]:
 		var tex = mat.get_shader_parameter(key)
 		check(tex is Texture2D,"Missing terrain PBR binding: "+key)
 		if tex is Texture2D: check(tex.get_image().has_mipmaps(),"Missing terrain mips: "+key)

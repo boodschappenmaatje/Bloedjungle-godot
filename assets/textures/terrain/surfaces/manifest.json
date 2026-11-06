@@ -66,6 +66,19 @@
         "assets/textures/terrain/moss/roughness.jpg": "a8949f4e5b4589f85ea6c2e1cf861c552da4c259bcf623b73fe47d772d1e2b19"
       },
       "output_sha256": "b14bab494b582ba3e2d7a5950dfcc0858888124bd154f5ba3a2f71bf1c5133fd"
+    },
+    {
+      "family": "gravel_rock",
+      "size": [
+        1024,
+        1024
+      ],
+      "channels": "RGB OpenGL tangent normal, A roughness (linear)",
+      "sources": {
+        "assets/textures/terrain/gravel_rock/normal_gl.jpg": "ce59c5d5dd414ec92c4b008bd9e38cb77c1c712d674ae6c6a3af1f484c7a25d5",
+        "assets/textures/terrain/gravel_rock/roughness.jpg": "d5826e981409813a83a483e684154427882a809a9bdc87087bbbb1d594e000a9"
+      },
+      "output_sha256": "462f1c1846770afc170e05743dd1c8dc3eef5f92fca8135e67b1de8458b6dc03"
     }
   ]
 }

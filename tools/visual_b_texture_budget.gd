@@ -2,7 +2,7 @@ extends SceneTree
 func _initialize() -> void:
 	var report := {}
 	var total := 0
-	for family in ["grass","jungle_ground","dry_earth","mud","moss"]:
+	for family in ["grass","jungle_ground","dry_earth","mud","moss","gravel_rock"]:
 		var tex: Texture2D = load("res://assets/textures/terrain/surfaces/"+family+".png")
 		var im := tex.get_image()
 		var size_ := im.get_data().size()

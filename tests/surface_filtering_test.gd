@@ -17,7 +17,7 @@ func _run() -> void:
 		atmosphere.call("_apply_quality", quality)
 		var expected := Viewport.MSAA_DISABLED if quality == "low" else Viewport.MSAA_4X
 		_check(root.msaa_3d == expected, "Quality change must apply geometry antialiasing to the active viewport: " + quality)
-	for path in ["dry_earth/base_color.jpg", "dry_earth/normal_gl.jpg", "grass/base_color.jpg", "jungle_ground/base_color.jpg", "gravel_rock/base_color.jpg"]:
+	for path in ["dry_earth/base_color.jpg", "dry_earth/normal_gl.jpg", "grass/base_color.jpg", "jungle_ground/base_color.jpg", "gravel_rock/base_color.jpg", "gravel_rock/normal_gl.jpg", "gravel_rock/roughness.jpg", "surfaces/gravel_rock.png"]:
 		var texture := load("res://assets/textures/terrain/" + path) as Texture2D
 		_check(texture != null and texture.get_image().has_mipmaps(), "Terrain texture needs mipmaps: " + path)
 	atmosphere.free()

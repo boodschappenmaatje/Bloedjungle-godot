@@ -8,7 +8,7 @@ DEST=ROOT/'assets/textures/terrain/surfaces'
 def main():
  DEST.mkdir(exist_ok=True)
  records=[]
- for family in ['grass','jungle_ground','dry_earth','mud','moss']:
+ for family in ['grass','jungle_ground','dry_earth','mud','moss','gravel_rock']:
   folder=ROOT/'assets/textures/terrain'/family
   normal=Image.open(folder/'normal_gl.jpg').convert('RGB')
   rough=Image.open(folder/'roughness.jpg').convert('L')

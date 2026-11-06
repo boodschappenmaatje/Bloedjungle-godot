@@ -9,11 +9,13 @@ uniform sampler2D jungle_tex : source_color, repeat_enable, filter_linear_mipmap
 uniform sampler2D dirt_tex : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D mud_tex : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D moss_tex : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
+uniform sampler2D gravel_tex : source_color, repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D dirt_normal : repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D grass_surface : repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D jungle_surface : repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D mud_surface : repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D moss_surface : repeat_enable, filter_linear_mipmap_anisotropic;
+uniform sampler2D gravel_surface : repeat_enable, filter_linear_mipmap_anisotropic;
 uniform float detail_mip_bias : hint_range(0.0, 2.0) = 0.5;
 uniform float compound = 14.0;
 uniform float gate_gap = 2.4;
@@ -46,18 +48,20 @@ void fragment() {
 	float n1 = texture(noise_a, p * 0.025).r;
 	float n2 = texture(noise_b, p * 0.09).r;
 	float n3 = texture(noise_b, p * 0.48).r;
-	float broad = texture(noise_a, p * 0.011 + 0.31).r;
 	// 1.8–3 m material footprints: gravel no longer spans the entire road width.
 	vec2 guv = p * 0.48;
 	vec2 juv = p * 0.32 + 0.37;
 	vec2 duv = p * 0.48;
 	vec2 muv = vec2(p.y, -p.x) * 0.38;
 	vec2 moss_uv = p * 0.65;
+	// Coarse stone scale reads as gravel at gameplay distance and avoids noisy subpixel sparkle.
+	vec2 gravel_uv = p * 0.16;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
 	vec3 m = texture(mud_tex, muv, detail_mip_bias).rgb;
 	vec3 moss = texture(moss_tex, moss_uv, detail_mip_bias).rgb;
+	vec3 gravel = texture(gravel_tex, gravel_uv, detail_mip_bias).rgb;
 	vec4 gs = texture(grass_surface, guv, detail_mip_bias);
 	vec4 js = texture(jungle_surface, juv, detail_mip_bias);
 	vec4 ds = texture(dirt_normal, duv, detail_mip_bias);
@@ -65,9 +69,10 @@ void fragment() {
 	// muv=(z,-x): convert this normal into the common ground tangent frame.
 	ms.rg = vec2(ms.g,1.0-ms.r);
 	vec4 mos = texture(moss_surface, moss_uv, detail_mip_bias);
+	vec4 grs = texture(gravel_surface, gravel_uv, detail_mip_bias);
 	float floor_mix = smoothstep(0.36, 0.72, n1 * 0.6 + n2 * 0.4) * 0.62;
 	vec3 grass = mix(g * vec3(0.57,0.64,0.45), j * vec3(0.44,0.5,0.34), floor_mix);
-	grass *= mix(vec3(1.04,0.98,0.82),vec3(0.82,1.0,0.85),smoothstep(0.3,0.7,broad));
+	grass *= mix(vec3(1.04,0.98,0.82),vec3(0.82,1.0,0.85),smoothstep(0.3,0.7,n1));
 	grass *= 0.84 + 0.32*n3;
 	float inside = 1.0 - smoothstep(compound-0.5,compound+3.0,max(abs(p.x),abs(p.y)));
 	float path = (1.0-smoothstep(gate_gap*0.9,gate_gap*1.9+n2*1.6,abs(p.x)))
@@ -85,17 +90,20 @@ void fragment() {
 	float dm = clamp(max(max(inside,path),max(patches*0.56,max(bank,max(swamp*0.9,trail)))),0.0,1.0);
 	dm = smoothstep(0.12,0.88,dm+(n3-0.5)*0.17);
 	float rut = (1.0-smoothstep(0.12,0.38,abs(side-0.78+(n2-0.5)*0.12)))*road_active*trail;
-	float damp_noise = texture(noise_b,vec2(p.x*0.35,p.y*0.07)+0.62).r;
-	float wet = max(bank*0.65,max(swamp,rut*smoothstep(0.46,0.66,damp_noise)));
-	wet = clamp(wet+trail*smoothstep(0.67,0.8,damp_noise)*0.65,0.0,1.0);
+	float wet = max(bank*0.65,max(swamp,rut*smoothstep(0.46,0.66,n2)));
+	wet = clamp(wet+trail*smoothstep(0.67,0.8,n2)*0.65,0.0,1.0);
+	// Gravel follows the established path and its worn shoulders, with broken edges from the existing macro noise.
+	float gravel_mix = clamp(max(path*0.72,trail*0.68)*mix(0.55,1.0,smoothstep(0.18,0.76,n2)),0.0,0.72);
 	vec3 dirt = d*vec3(0.64,0.57,0.46)*(0.9+0.2*n3);
+	dirt = mix(dirt,gravel*vec3(0.70,0.60,0.49),gravel_mix*0.58);
 	dirt *= 1.0-rut*0.16;
 	dirt = mix(dirt,m*vec3(0.44,0.4,0.32),wet*0.55);
 	float edge = 4.0*dm*(1.0-dm);
 	float moss_mix = clamp(edge*0.3+bank*(1.0-wet)*0.2+smoothstep(0.58,0.76,n2)*(1.0-dm)*0.23,0.0,0.45);
 	vec3 base = mix(grass,dirt,dm);
 	ALBEDO = mix(base,moss*vec3(0.37,0.48,0.25),moss_mix);
-	vec4 surf = mix(mix(gs,js,floor_mix),mix(ds,ms,wet*0.55),dm);
+	vec4 earth_surface = mix(ds,grs,gravel_mix*0.65);
+	vec4 surf = mix(mix(gs,js,floor_mix),mix(earth_surface,ms,wet*0.55),dm);
 	surf = mix(surf,mos,moss_mix);
 	ROUGHNESS = clamp(mix(0.94,mix(0.79,0.97,surf.a),dm)-wet*0.24,0.52,1.0);
 	// Restrained dielectric response; broaden specular at subpixel normal scales.

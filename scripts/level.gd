@@ -77,6 +77,8 @@ func _ground() -> void:
 	mat.set_shader_parameter("dirt_tex", load("res://assets/textures/terrain/dry_earth/base_color.jpg"))
 	mat.set_shader_parameter("mud_tex", load("res://assets/textures/terrain/mud/base_color.jpg"))
 	mat.set_shader_parameter("dirt_normal", load("res://assets/textures/terrain/surfaces/dry_earth.png"))
+	mat.set_shader_parameter("gravel_tex", load("res://assets/textures/terrain/gravel_rock/base_color.jpg"))
+	mat.set_shader_parameter("gravel_surface", load("res://assets/textures/terrain/surfaces/gravel_rock.png"))
 	mat.set_shader_parameter("grass_surface", load("res://assets/textures/terrain/surfaces/grass.png"))
 	mat.set_shader_parameter("jungle_surface", load("res://assets/textures/terrain/surfaces/jungle_ground.png"))
 	mat.set_shader_parameter("mud_surface", load("res://assets/textures/terrain/surfaces/mud.png"))

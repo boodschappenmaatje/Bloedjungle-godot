@@ -16,8 +16,8 @@ Het door de gebruiker gecorrigeerde [goedgekeurde beeld B](reference/approved-b.
 
 ## Implementatie
 
-- `ground.gdshader` mengt gras, bosgrond, aarde, modder en mos met echte normal/roughnessrespons op wereldvaste schaal. Organische padschouders, longitudinale slijtage en onderbroken vochtplekken vervangen het uniforme grindbeeld. Geen parallax, terreinverplaatsing of collisionwijziging. De drie bestaande discard-contracten (rivier/loopgraven/helipad) blijven behouden.
-- `pack_terrain_surfaces.py` pakt bestaande normal RGB en roughness A verliesloos in één bronafbeelding per materiaal. Geen download, vergroting of nieuwe fotobron. Het manifest bevat bron- en outputhashes; de oorspronkelijke licenties staan in `docs/ASSET_SOURCES.md`. Import bewaart alpha, gebruikt VRAM-compressie en mipmaps; geen normalmap-optimalisatie die de roughnessalpha weggooit.
+- `ground.gdshader` mengt gras, bosgrond, aarde, modder, mos en bestaande grindsteen met echte normal/roughnessrespons op wereldvaste schaal. De bestaande `gravel_rock`-PBR-set is toegevoegd aan het ingesleten pad en de onderbroken schouders; organische overgangen en natte sporen blijven zichtbaar. Geen parallax, terreinverplaatsing of collisionwijziging. De drie bestaande discard-contracten (rivier/loopgraven/helipad) blijven behouden.
+- `pack_terrain_surfaces.py` pakt bestaande normal RGB en roughness A verliesloos in één bronafbeelding per materiaal, nu ook voor `gravel_rock`. Geen download, vergroting of nieuwe fotobron. Het manifest bevat bron- en outputhashes; de oorspronkelijke licenties staan in `docs/ASSET_SOURCES.md`. Import bewaart alpha, gebruikt VRAM-compressie en mipmaps; geen normalmap-optimalisatie die de roughnessalpha weggooit. Het zes-kaartenpakket is 8.39 MB met mipmaps in de lokale Godot-import; gravel voegt 1.40 MB toe. De shader houdt 15 texture lookups per grondpixel aan; er zijn twee extra samplerbindingen voor het grind-PBR-paar.
 - `JungleUnderstory` hergebruikt bestaande varen-, struik-, rots- en stamgeometrie voor onregelmatige kolonies bij natuurankers, padschouders, oevers en buitenfunderingen. Drie goedkope frondsilhouetten en kleine rozetten zijn uit de bestaande bladmaterialen opgebouwd; plat gedraaide grasbladen vormen strooisel. Geen nieuwe fotobron of geïmporteerde GLB.
 - Detail is in 24 m cellen gebatcht, maximaal 360 instances per batch, globale soortlimieten, 48/58 m afstandsculling en geen schaduwdraws. Alle extra details volgen bestaande jungle-/dichtheids-/kwaliteitstrappen en de bouwclearance-index. Een afzonderlijke RNG houdt de bestaande natuurcolliders op hun originele posities.
 - `GrassField` besteedt een deel van het bestaande short-grassbudget eerst aan padschouders. High toont nu 60% van de bestaande grass-/detailinstances (voorheen 45%); de absolute meshlimieten en LOD's blijven gelijk.
@@ -35,7 +35,7 @@ De testomgeving is Linux met **Godot 4.7.2 Mobile/Vulkan, Mesa llvmpipe (softwar
 
 Beeld B is de richting, geen checklist van letterlijk na te maken stenen of planten. De huidige echte render haalt de bredere maatstaf **nog niet**: grote rustige grasvlakken blijven zichtbaar, varens en struiken herhalen dezelfde grove vormen, de grond houdt op deze scèneafstand een zachte indruk en planten hebben weinig zichtbaar contact met bodem en oevers. Daardoor oogt de omgeving nog niet als een rijk, premium en geloofwaardig gevechtsgebied. De upgrade maakt het pad en de materiaalovergangen beter leesbaar en voegt geclusterde ondergroei toe, maar het verschil met de oude screenshot is minder groot dan de referentierichting vraagt.
 
-De atlas van bestaande bladeren levert geen fijne bronvormen voor kleine tropische bodemplanten; de vaste schaduwen zijn benaderingen en de grond blijft geometrisch vlak. Deze wijziging verandert geen bestaande natuurcolliders of levelhoogte. De vochtplekken zijn materiaalvariatie, geen geometrische plassen met gereflecteerde boomkruinen. Nieuwe, kwalitatieve plantmodellen en toestelprofilering zijn nodig voordat dit als visueel of mobiel voltooid kan gelden.
+De atlas van bestaande bladeren levert geen fijne bronvormen voor kleine tropische bodemplanten; de vaste schaduwen zijn benaderingen en de grond blijft geometrisch vlak. De actuele Godot-captures en frametijdtabel worden op de PR-runner opnieuw vastgelegd; totdat die render is beoordeeld, is de gravel-PBR-weergave niet visueel afgetekend. Deze wijziging verandert geen bestaande natuurcolliders of levelhoogte. De vochtplekken zijn materiaalvariatie, geen geometrische plassen met gereflecteerde boomkruinen. Nieuwe, kwalitatieve plantmodellen en toestelprofilering zijn nodig voordat dit als visueel of mobiel voltooid kan gelden.
 
 ## Acceptatie
 
@@ -43,8 +43,8 @@ Echte native iPhone-/Windows-metingen, thermiek, 60 seconden bewegingsshimmer en
 
 ## Regressietests en iOS-export
 
-- `visual_b_test.gd`: geslaagd, 0 failures; controleert de echte gamelevel, PBR/mips, objectlimieten, clearings, paden/oeverdetails, kwaliteits- en jungleknoppen en ontbreken van nieuwe colliders.
-- `visual_b_capture.gd`: geslaagd met echte camerabeelden en 80 bestaande AI-vijandscènes; na afloop meldt Godot shutdown-leakwaarschuwingen voor de niet-afgebroken testwereld, zonder script- of shaderfouten tijdens de capture.
+- `visual_b_test.gd`: PASS, 0 failures na toevoeging van gravel; controleert de echte gamelevel, PBR/mips, objectlimieten, clearings, paden/oeverdetails, kwaliteits- en jungleknoppen en ontbreken van nieuwe colliders.
+- `visual_b_capture.gd`: de vorige iteratie slaagde met echte camerabeelden en 80 bestaande AI-vijandscènes. De toegevoegde PR-workflow draait deze capture opnieuw voor de graveliteratie, inclusief de render op 100% schaal. De lokale shell heeft geen grafische displayserver; daarom is daar geen nieuwe GPU-capture uitgevoerd.
 - Bestaande tests `jungle_test`, `rivier_test`, `schaduw_test`, `kwaliteit_test`, `surface_filtering_test`, `camera_test` en `team_commands`: geslaagd.
 - GitHub-checks voor vijandbasis/voertuigen/wapens/touchregressie en de unsigned iOS-IPA-export: geslaagd. Dit bewijst compilatie en gesimuleerde touch-events, geen uitvoering op een iPhone.
 - GitHub OTA-patchcontrole en PR-preview: geslaagd; de release-publicatiestap is overgeslagen.
@@ -60,7 +60,9 @@ De bestaande vaste palmschaduw gebruikt nu dezelfde palm-alfa om de egale ovaal 
 
 ## Echte renders en softwaremetingen
 
-[Gebruikersbeeld / doel B / echt resultaat](captures/compare/three-way.jpg)
+[Gebruikersbeeld / doel B / vorige echte Godot-render](captures/compare/three-way.jpg)
+
+De bovenstaande vergelijking en tabel zijn van de vorige iteratie, vóór de gravel-PBR-binding. De PR-workflow bewaart de bijgewerkte Godot-render, 60%-benchmarkmetingen en aanvullende bospadcapture op 100% schaal als Actions-artifact. De huidige afbeelding wordt pas als nieuwe voor/na-evidence gebruikt nadat die capture echt is voltooid.
 
 | Plek | Echt voor/na, zelfde camera | Gem. ms voor → na | P99 ms voor → na | 1% low FPS voor → na | Draws voor → na | Primitives voor → na |
 | --- | --- | ---: | ---: | ---: | ---: | ---: |

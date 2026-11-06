@@ -30,19 +30,27 @@ func _frames(n: int) -> void:
 		await physics_frame
 
 
-func _touch(pressed: bool, at: Vector2) -> void:
+func _touch_pointer(pointer: int, pressed: bool, at: Vector2) -> void:
 	var e := InputEventScreenTouch.new()
-	e.index = 0
+	e.index = pointer
 	e.position = root.get_final_transform() * at   # schermpunt: de HUD is geschaald (content_scale_factor)
 	e.pressed = pressed
 	root.push_input(e)
 
 
-func _drag(at: Vector2) -> void:
+func _drag_pointer(pointer: int, at: Vector2) -> void:
 	var e := InputEventScreenDrag.new()
-	e.index = 0
-	e.position = root.get_final_transform() * at   # schermpunt: de HUD is geschaald (content_scale_factor)
+	e.index = pointer
+	e.position = root.get_final_transform() * at
 	root.push_input(e)
+
+
+func _touch(pressed: bool, at: Vector2) -> void:
+	_touch_pointer(0, pressed, at)
+
+
+func _drag(at: Vector2) -> void:
+	_drag_pointer(0, at)
 
 
 ## `d` gebruikt het bestaande AIM_FULL-bereik; de stick zelf is 56px.
@@ -155,6 +163,36 @@ func _run() -> void:
 	var right_anchor: Vector2 = _stick_center()
 	_check(btn.get_global_rect().end.y < (weapon_bar.get("_prev") as Control).get_global_rect().position.y, "UITRUSTING-knop staat boven wapenbalk")
 	_check(btn.get_global_rect().get_center().distance_to(right_anchor) > _stick_value("ANCHOR_R") + btn.size.x * 0.5, "UITRUSTING-knop raakt rechterstick niet")
+
+	# An already-held walking finger must keep working AND be released while
+	# the equipment wheel is open. In the previous code the wheel consumed
+	# this release, leaving the character walking with no finger on screen.
+	var sticks = main.get_node("Hud/Sticks")
+	var left_center: Vector2 = sticks._anchor(false)
+	_touch_pointer(3, true, left_center)
+	await _frames(1)
+	_drag_pointer(3, left_center + Vector2(35, -12))
+	await _frames(1)
+	_check(sticks.owns_touch(3), "linkervinger wordt door loopstick geregistreerd")
+	_touch(true, button_center)
+	await _frames(1)
+	_touch(false, button_center)
+	await _frames(1)
+	_check(cb.wheel_is_open(), "uitrustingswiel opent terwijl lopen vastgehouden wordt")
+	_drag_pointer(3, left_center + Vector2(30, -20))
+	await _frames(1)
+	sticks._process(1.0 / 60.0)
+	_check(sticks.owns_touch(3) and game.move.length() > 0.1, "lopen blijft bestuurbaar met geopend wiel")
+	_touch_pointer(3, false, left_center + Vector2(30, -20))
+	await _frames(1)
+	sticks._process(1.0 / 60.0)
+	_check(not sticks.owns_touch(3) and game.move.length() < 0.01, "loslaten tijdens open wiel stopt lopen zonder ghost-stick")
+	var dismiss: Vector2 = cb._wheel_center() + Vector2(_wheel_value("OUTER") + 32.0, 0)
+	_touch(true, dismiss)
+	await _frames(1)
+	_touch(false, dismiss)
+	await _frames(1)
+	_check(not cb.wheel_is_open() and game.grenades == initial, "wiel sluiten zonder ongewenste uitrustingskeuze")
 
 	# 1. raakt de richtcirkel, 8 richtingen, 2-12 m
 	var worst_land := 0.0
@@ -274,6 +312,15 @@ func _run() -> void:
 	root.push_input(wrong)
 	await _frames(1)
 	_check(cb.grenade_stick_armed and game.grenades == before_multi, "loslaten andere vinger gooit niets")
+	# A SECOND fresh finger in the same right-stick zone must not evict the
+	# original owner or leave the armed grenade gesture permanently stuck.
+	var second_right: Vector2 = _stick_center() + Vector2(-8, 8)
+	_touch_pointer(2, true, second_right)
+	await _frames(1)
+	_check(sticks.owns_touch(0) and not sticks.owns_touch(2) and cb.aim_finger == 0, "tweede rechtervinger verdringt originele werpvinger niet")
+	_touch_pointer(2, false, second_right)
+	await _frames(1)
+	_check(cb.grenade_stick_armed and game.grenades == before_multi, "tweede rechtervinger kan geen worp vrijgeven")
 	_touch(false, _stick_center() + Vector2(25, 0))
 	await _frames(2)
 	_check(game.grenades == before_multi - 1, "juiste rechterstickvinger gooit exact eenmaal")

@@ -292,7 +292,7 @@ func _update_aim_preview(delta: float, live: bool) -> void:
 	if hud == null:
 		return
 	if not live or is_nan(Game.aim) or Game.build_mode:
-		hud.clear_prediction()
+		hud.clear_prediction("jeep")
 		_aim_preview_t = 0.0
 		return
 	_aim_preview_t -= delta
@@ -314,7 +314,7 @@ func _update_aim_preview(delta: float, live: bool) -> void:
 func _clear_aim_preview() -> void:
 	var hud := get_tree().get_first_node_in_group("combat_target_hud") as CombatTargetHud
 	if hud != null:
-		hud.clear_prediction()
+		hud.clear_prediction("jeep")
 	_aim_preview_t = 0.0
 
 

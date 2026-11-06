@@ -63,3 +63,35 @@ static func predict(space: PhysicsDirectSpaceState3D, origin: Vector3, angle: fl
 ## this only after it has observed positive HP loss on a real enemy.
 static func actual_damage(before: float, after: float) -> float:
 	return maxf(before - after, 0.0)
+
+
+## The infantry bullets fly horizontally from SoldierModel.muzzle_position().
+## This is presentation ONLY. Damage, spread, speed and lifetimes are unchanged.
+## Unlike the jeep MG, ordinary infantry shots can be stopped by low walls.
+static func predict_infantry(space: PhysicsDirectSpaceState3D, origin: Vector3, angle: float, max_distance: float, over_wall: bool) -> Dictionary:
+	var distance := maxf(max_distance, 0.01)
+	var ray_dir := Vector3(sin(angle), 0.0, cos(angle))
+	var end := origin + ray_dir * distance
+	var mask := MASK_ENEMY | MASK_BUNKER | MASK_VEHICLE | MASK_NATURE | MASK_FORTIFICATION
+	if not over_wall:
+		mask |= MASK_WALL
+	var hit := space.intersect_ray(PhysicsRayQueryParameters3D.create(origin, end, mask))
+	var point: Vector3 = hit.position if not hit.is_empty() else end
+	var collider: Object = hit.get("collider") if not hit.is_empty() else null
+	# Bullet.gd performs this second wall sweep at y=1.5 for projectiles that
+	# originate below the high perimeter wall; mirror it for honest previews.
+	if origin.y < BASE_WALL_H:
+		var flat_origin := Vector3(origin.x, 1.5, origin.z)
+		var flat_end := Vector3(end.x, 1.5, end.z)
+		var wall_query := PhysicsRayQueryParameters3D.create(flat_origin, flat_end, MASK_FORTIFICATION)
+		wall_query.hit_from_inside = true
+		var wall := space.intersect_ray(wall_query)
+		if not wall.is_empty():
+			var wall_dist := Vector2(wall.position.x - origin.x, wall.position.z - origin.z).length()
+			var hit_dist := Vector2(point.x - origin.x, point.z - origin.z).length()
+			if wall_dist <= hit_dist + 0.0001:
+				point = wall.position
+				collider = wall.collider
+	var kind := "clear" if collider == null else target_kind(collider)
+	var target: Node3D = collider as Node3D if kind == "enemy" else null
+	return {"state": kind, "point": point, "target": target, "origin": origin}

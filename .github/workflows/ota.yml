@@ -215,7 +215,7 @@ jobs:
           path: out/
           retention-days: 7
       - name: Publish to the "updates" release
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && !contains(github.event.head_commit.message, '[skip-ota-publish]')
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

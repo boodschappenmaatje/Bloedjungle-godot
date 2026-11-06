@@ -70,6 +70,7 @@ func _ready() -> void:
 			_player_call("toggle_sprint"))
 	_sprint.tooltip_text = "Tik: sprint · ingedrukt houden: ontwijkrol"
 	_grenade = _make("granaat", "UITRUSTING", func(): pass) # only equipment wheel, never release-to-throw
+	_grenade.tooltip_text = "Uitrusting kiezen · GRANAAT daarna richten met de rechterstick"
 	_roll = _make("rol", "ROL", func(): _player_call("request_dodge"))
 	_roll.visible = not UI.is_touch_platform()
 	_stance = _make("houding", "HOUDING", func(): _stance_down_ms = Time.get_ticks_msec())
@@ -451,7 +452,7 @@ func _sticky_pick(kind: String, sector: int) -> void:
 		_select_wheel(kind, sector)
 
 
-## Ver buiten het wiel slepen op napalm of granaat: kiezen, het wiel sluit en dezelfde vinger richt meteen verder.
+## Buiten het wiel slepen kiest het item. Alleen NAPALM gebruikt dezelfde vinger; GRANAAT vereist een NIEUWE rechterstick-aanraking.
 func _exit_aim(pointer: int, pos: Vector2) -> bool:
 	var napalm := _wheel_kind == "support" and _wheel_sector == 3 and Game.streak_bank.has("napalm")
 	var grenade := _wheel_kind == "equipment" and _wheel_sector == 0 and Game.grenades > 0
@@ -538,7 +539,7 @@ func _draw_wheel() -> void:
 	var aimable := (_wheel_kind == "support" and _wheel_sector == 3) or (_wheel_kind == "equipment" and _wheel_sector == 0)
 	if _wheel_sticky or (aimable and items[_wheel_sector].get("active", false)):
 		var f: Font = UI.body(700)
-		var t := "Sleep verder om te richten" if not _wheel_sticky else "Tik op de gekozen optie om te gebruiken"
+		var t := ("Kies GRANAAT · daarna rechterstick" if _wheel_sticky else "GRANAAT kiezen, daarna stick") if _wheel_kind == "equipment" else ("Sleep verder om te richten" if not _wheel_sticky else "Tik op de optie om te gebruiken")
 		var tw := f.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
 		ci.draw_string(f, Vector2(clampf(center.x - tw * 0.5, 8.0, size.x - tw - 8.0), center.y - r - 8.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UI.BRASS)
 

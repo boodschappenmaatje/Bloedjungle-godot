@@ -14,7 +14,7 @@ uniform float wind = 0.0;  // 0 = bomen staan stil, 1 = ze bewegen (instelling "
 uniform float speed = 1.5;
 uniform float cut = 0.45;
 uniform float backlight = 0.5;
-uniform vec3 tint = vec3(0.82, 0.86, 0.74);
+uniform vec3 tint = vec3(0.9, 0.93, 0.8);
 
 // Zichtlijn: bladeren tussen camera en speler (en de drie dichtstbijzijnde vijanden, w = 1 als actief)
 // worden gedither-uitgedund. fade_amount loopt zacht 0..1 (in- en uitfaden in de tijd).
@@ -78,7 +78,7 @@ void vertex() {
 		VERTEX += transpose(MODEL_NORMAL_MATRIX) * vec3(push.x + rustle.x, -min(len * 0.7, base_pos.y * 0.85), push.y + rustle.y);
 	}
 	// Authored root-to-tip weight also grounds each frond without SSAO.
-	root_contact = mix(0.64, 1.0, smoothstep(0.0, 0.38, COLOR.a));
+	root_contact = mix(0.72, 1.0, smoothstep(0.0, 0.38, COLOR.a));
 	vcol = COLOR.rgb;
 	world_leaf = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }

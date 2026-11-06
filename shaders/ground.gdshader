@@ -49,13 +49,13 @@ void fragment() {
 	float n2 = texture(noise_b, p * 0.09).r;
 	float n3 = texture(noise_b, p * 0.48).r;
 	// 1.8–3 m material footprints: gravel no longer spans the entire road width.
-	vec2 guv = p * 0.48;
-	vec2 juv = p * 0.32 + 0.37;
-	vec2 duv = p * 0.48;
+	vec2 guv = p * 0.64;
+	vec2 juv = p * 0.43 + 0.37;
+	vec2 duv = p * 0.56;
 	vec2 muv = vec2(p.y, -p.x) * 0.38;
 	vec2 moss_uv = p * 0.65;
 	// Keep individual stones legible on the worn track; mipmaps/aniso handle distant shimmer.
-	vec2 gravel_uv = p * 0.42;
+	vec2 gravel_uv = p * 0.64;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -70,7 +70,7 @@ void fragment() {
 	ms.rg = vec2(ms.g,1.0-ms.r);
 	vec4 mos = texture(moss_surface, moss_uv, detail_mip_bias);
 	vec4 grs = texture(gravel_surface, gravel_uv, detail_mip_bias);
-	float floor_mix = smoothstep(0.30, 0.76, n1 * 0.6 + n2 * 0.4) * 0.82;
+	float floor_mix = smoothstep(0.27, 0.72, n1 * 0.6 + n2 * 0.4) * 0.9;
 	vec3 grass = mix(g * vec3(0.57,0.64,0.45), j * vec3(0.44,0.5,0.34), floor_mix);
 	grass *= mix(vec3(1.04,0.98,0.82),vec3(0.82,1.0,0.85),smoothstep(0.3,0.7,n1));
 	grass *= 0.76 + 0.48*n3;
@@ -86,16 +86,16 @@ void fragment() {
 	float bank = 1.0-smoothstep(2.9,5.0+n2*1.6,river_off);
 	float swamp = (1.0-smoothstep(-38.0,-22.0,p.x+n2*6.0))*(1.0-smoothstep(-70.0,-40.0,p.y))*smoothstep(-84.0,-70.0,p.y);
 	swamp *= 1.0-smoothstep(0.0,2.0,river_off-3.0);
-	float patches = smoothstep(0.68,0.92,n1+0.12*n2);
+	float patches = smoothstep(0.62,0.88,n1+0.12*n2);
 	float dm = clamp(max(max(inside,path),max(patches*0.56,max(bank,max(swamp*0.9,trail)))),0.0,1.0);
 	dm = smoothstep(0.12,0.88,dm+(n3-0.5)*0.17);
 	float rut = (1.0-smoothstep(0.12,0.38,abs(side-0.78+(n2-0.5)*0.12)))*road_active*trail;
 	float wet = max(bank*0.65,max(swamp,rut*smoothstep(0.46,0.66,n2)));
 	wet = clamp(wet+trail*smoothstep(0.67,0.8,n2)*0.65,0.0,1.0);
 	// Gravel follows the established path and its worn shoulders, with broken edges from the existing macro noise.
-	float gravel_mix = clamp(max(path*0.76,trail*0.72)*mix(0.55,1.0,smoothstep(0.18,0.76,n2)),0.0,0.82);
+	float gravel_mix = clamp(max(path*0.86,trail*0.88)*mix(0.55,1.0,smoothstep(0.18,0.76,n2)),0.0,0.9);
 	vec3 dirt = d*vec3(0.64,0.57,0.46)*(0.9+0.2*n3);
-	dirt = mix(dirt,gravel*vec3(0.70,0.60,0.49),gravel_mix*0.76);
+	dirt = mix(dirt,gravel*vec3(0.78,0.67,0.55),gravel_mix*0.84);
 	dirt *= 1.0-rut*0.16;
 	dirt = mix(dirt,m*vec3(0.44,0.4,0.32),wet*0.55);
 	float edge = 4.0*dm*(1.0-dm);
@@ -110,7 +110,7 @@ void fragment() {
 	ROUGHNESS = mix(max(ROUGHNESS,0.86),ROUGHNESS,micro_detail);
 	SPECULAR = mix(0.12,0.25,dm);
 	NORMAL_MAP = surf.rgb;
-	NORMAL_MAP_DEPTH = mix(0.42,0.62,dm)*micro_detail;
+	NORMAL_MAP_DEPTH = mix(0.52,0.76,dm)*micro_detail;
 	AO = 1.0-0.12*(1.0-dm)*n3;
 	AO_LIGHT_AFFECT = 0.12;
 }

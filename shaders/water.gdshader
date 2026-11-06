@@ -4,8 +4,8 @@ render_mode blend_mix, depth_draw_opaque, cull_disabled;
 // de stroomrichting (x), sneller in het midden dan bij de oevers, met schuim langs de rand.
 
 uniform sampler2D noise : repeat_enable, filter_linear_mipmap;
-uniform vec3 deep : source_color = vec3(0.10, 0.30, 0.28);
-uniform vec3 shallow : source_color = vec3(0.26, 0.52, 0.44);
+uniform vec3 deep : source_color = vec3(0.18, 0.39, 0.37);
+uniform vec3 shallow : source_color = vec3(0.34, 0.59, 0.51);
 uniform vec3 foam : source_color = vec3(0.85, 0.92, 0.88);
 uniform float speed = 1.6;
 
@@ -48,7 +48,7 @@ void fragment() {
 	float fres = pow(1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0), 3.0);
 	col = mix(col, vec3(0.45, 0.78, 0.82), fres * 0.4);
 	ALBEDO = col;
-	EMISSION = vec3(1.0, 0.95, 0.8) * glint * 0.8 + foam * clamp(edgefoam, 0.0, 1.0) * 0.05;
+	EMISSION = col * 0.06 + vec3(1.0, 0.95, 0.8) * glint * 0.8 + foam * clamp(edgefoam, 0.0, 1.0) * 0.05;
 	ROUGHNESS = 0.08 + 0.25 * flake;
 	SPECULAR = 0.85;
 	METALLIC = 0.0;

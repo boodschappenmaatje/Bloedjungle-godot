@@ -35,7 +35,7 @@ void vertex() {
 	push *= tip * player_bend;
 	// Convert a world-space push into the local basis (rotation/scale may vary per tuft).
 	VERTEX += transpose(MODEL_NORMAL_MATRIX) * vec3(push.x, 0.0, push.y);
-	root_contact = mix(0.62, 1.0, smoothstep(0.0, 0.5, COLOR.a));
+	root_contact = mix(0.72, 1.0, smoothstep(0.0, 0.5, COLOR.a));
 	blade_color = COLOR.rgb;
 }
 

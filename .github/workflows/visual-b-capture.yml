@@ -38,6 +38,18 @@ jobs:
           chmod +x "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64"
           "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" --version | grep -F "4.7.2.stable"
           echo "GODOT_BIN=$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" >> "$GITHUB_ENV"
+      - name: Install Mesa software Vulkan for the Mobile renderer
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends libvulkan1 mesa-vulkan-drivers vulkan-tools
+          if [[ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]]; then
+            echo "VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json" >> "$GITHUB_ENV"
+          fi
+          if ! vulkaninfo --summary > "$RUNNER_TEMP/vulkan-summary.log" 2>&1; then
+            echo "Mesa Vulkan is unavailable on this runner; the capture log will record Godot's real fallback renderer."
+          fi
       - name: Import project and retain diagnostics
         shell: bash
         run: |
@@ -64,6 +76,8 @@ jobs:
             "$GODOT_BIN" --path . -s tests/visual_b_capture.gd --resolution 1280x720 \
             2>&1 | tee "$RUNNER_TEMP/visual-b-capture-60.log"
           grep -Fq "VISUAL B CAPTURE PASS" "$RUNNER_TEMP/visual-b-capture-60.log"
+          grep -Fq "CAPTURE RENDERER " "$RUNNER_TEMP/visual-b-capture-60.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:' "$RUNNER_TEMP/visual-b-capture-60.log"; then exit 1; fi
           xvfb-run -a -s "-screen 0 1280x720x24" env \
             GODOT_SILENCE_ROOT_WARNING=1 BJ_INSTANT=1 BJ_TOUCH=1 BJ_RENDER_SCALE=1.0 \
             BJ_CAPTURE_QUALITY=high BJ_CAPTURE_SPOT=bospad BJ_CAPTURE_ONLY=1 \
@@ -71,6 +85,8 @@ jobs:
             "$GODOT_BIN" --path . -s tests/visual_b_capture.gd --resolution 1280x720 \
             2>&1 | tee "$RUNNER_TEMP/visual-b-capture-100.log"
           grep -Fq "VISUAL B CAPTURE PASS" "$RUNNER_TEMP/visual-b-capture-100.log"
+          grep -Fq "CAPTURE RENDERER " "$RUNNER_TEMP/visual-b-capture-100.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:' "$RUNNER_TEMP/visual-b-capture-100.log"; then exit 1; fi
       - name: Upload Godot captures and measurements
         if: always()
         uses: actions/upload-artifact@v4
@@ -83,5 +99,6 @@ jobs:
             ${{ runner.temp }}/visual-b-test.log
             ${{ runner.temp }}/visual-b-capture-60.log
             ${{ runner.temp }}/visual-b-capture-100.log
+            ${{ runner.temp }}/vulkan-summary.log
           if-no-files-found: warn
           retention-days: 14

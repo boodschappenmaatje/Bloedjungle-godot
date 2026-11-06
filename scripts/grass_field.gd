@@ -5,7 +5,7 @@ extends Node3D
 const KINDS := ["short", "medium", "tall"]
 const ZONE_DATA := preload("res://resources/grass_zones.tres")
 const CELL := 24.0
-const LIMIT := {"short": 6200, "medium": 2200, "tall": 1600}
+const LIMIT := {"short": 8200, "medium": 2200, "tall": 1600}
 const END := {"short": 52.0, "medium": 62.0, "tall": 72.0}
 static var _meshes := {}
 static var _material: ShaderMaterial
@@ -102,16 +102,18 @@ func _populate(existing: Array) -> void:
 	# A separate RNG preserves the original foliage/collider generation sequence.
 	var shoulder_rng := RandomNumberGenerator.new()
 	shoulder_rng.seed = 20261107
-	for i in 1800:
+	for i in 2100:
 		var z := shoulder_rng.randf_range(-86.0, -33.0)
 		var side := -1.0 if shoulder_rng.randf() < 0.5 else 1.0
 		var p := Vector3(Data.path_x(z) + side * shoulder_rng.randf_range(3.5, 9.0), 0.0, z)
 		if _allowed(p):
 			_add_point(groups, shoulder_rng, "short", p)
-	# Understory carpet, still within the existing short-grass population cap.
-	for i in 2400:
+	# The playable ground used to inherit mostly sparse tree-ring tufts. Add a finer,
+	# bounded low layer over the jungle floor; the established open firing lane stays clear.
+	for i in 4800:
 		var p := Vector3(shoulder_rng.randf_range(-65.0,65.0),0,shoulder_rng.randf_range(-85.0,-34.0))
-		if _allowed(p) and shoulder_rng.randf() < 0.4 + 0.6 * Foliage._grove(p.x,p.z):
+		var road_clear := p.z < -30.0 and p.z > -100.0 and absf(p.x - Data.path_x(p.z)) < 2.25
+		if _allowed(p) and not road_clear and shoulder_rng.randf() < 0.48 + 0.52 * Foliage._grove(p.x,p.z):
 			_add_point(groups, shoulder_rng, "short", p)
 	for transform: Transform3D in existing:
 		for _j in 3:
@@ -174,7 +176,7 @@ func _add_point(groups: Dictionary, rng: RandomNumberGenerator, kind: String, po
 	if not groups.has(key):
 		groups[key] = {"kind": kind, "cell": cell, "variant": variant, "xf": [], "colors": []}
 	var scale_ := rng.randf_range(0.9, 1.08)
-	var spread := 1.75 if kind == "short" else 1.0
+	var spread := 1.95 if kind == "short" else 1.0
 	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_*spread, scale_, scale_*spread))
 	groups[key].xf.append(Transform3D(basis, pos))
 	var shade := rng.randf_range(0.88, 1.0)

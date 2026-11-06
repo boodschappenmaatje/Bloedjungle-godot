@@ -46,6 +46,7 @@ func run() -> void:
 	game.fire = false
 	for menu in get_nodes_in_group("menus"): menu._show("")
 	var cam: Camera3D = main.get_node("Camera")
+	print("CAPTURE RENDERER ", RenderingServer.get_current_rendering_method(), " | ", RenderingServer.get_video_adapter_name())
 	root.scaling_3d_scale = render_scale
 	DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
 	Engine.max_fps = 0

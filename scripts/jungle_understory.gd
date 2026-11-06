@@ -2,7 +2,7 @@ class_name JungleUnderstory
 ## Render-only depth pass. Reuses shipped meshes/materials and the building-clearance index.
 ## A separate RNG leaves every existing tree, rock, collider and route unchanged.
 const CELL := 24.0
-const CAPS := {"fern":6000,"bush":2500,"groundcover":1800,"litter":5000,"stone":2200,"twig":1000}
+const CAPS := {"fern":3200,"bush":3600,"groundcover":4200,"litter":5000,"stone":1800,"twig":800}
 
 static func allowed(p: Vector3) -> bool:
 	return GrassField._allowed(p) and not (p.x > Data.COMPOUND and p.x < Data.COMPOUND+11.5 and absf(p.z)<23.0)
@@ -34,18 +34,20 @@ static func understory_variant_mesh(kind: String, variant: int) -> ArrayMesh:
 	rng.seed = 7301 + variant * 97 + (101 if kind == "fern" else (202 if kind == "bush" else 303))
 	var fern := kind == "fern"
 	var groundcover := kind == "groundcover"
-	var count := (8 + variant * 2) if fern else ((5 + variant * 2) if groundcover else (13 + variant * 3))
-	var palette_base: Array[Color] = [Color(0.59,0.74,0.45), Color(0.63,0.74,0.43), Color(0.57,0.7,0.44)]
-	var palette_tip: Array[Color] = [Color(0.94,0.98,0.68), Color(1.0,0.96,0.64), Color(0.86,0.96,0.65)]
+	var count := (8 + variant * 2) if fern else ((7 + variant * 2) if groundcover else (13 + variant * 3))
+	var palette_base: Array[Color] = [Color(0.54,0.66,0.37), Color(0.47,0.6,0.32), Color(0.61,0.68,0.39)]
+	var palette_tip: Array[Color] = [Color(0.82,0.88,0.56), Color(0.88,0.86,0.52), Color(0.76,0.86,0.55)]
 	var base: Color = palette_base[variant]
 	var tip: Color = palette_tip[variant]
 	for k in count:
 		var yaw := TAU * k / count + rng.randf_range(-0.24, 0.24)
 		var origin := Vector3(cos(yaw), rng.randf_range(0.0,0.16), sin(yaw)) * rng.randf_range(0.0,0.24)
-		var length_ := rng.randf_range(0.32,0.53) if groundcover else (rng.randf_range(0.85,1.38) if fern else rng.randf_range(0.75,1.28))
-		var width_ := rng.randf_range(0.065,0.10) if groundcover else (rng.randf_range(0.20,0.34) if fern else rng.randf_range(0.28,0.46))
-		var rise := rng.randf_range(0.08,0.2) if groundcover else (rng.randf_range(0.48,0.9) if fern else rng.randf_range(0.2,0.72))
-		var droop := rng.randf_range(0.01,0.07) if groundcover else (rng.randf_range(0.42,0.9) if fern else rng.randf_range(0.18,0.55))
+		# Ground rosettes are broad and low so they read as leafy understory at the game camera,
+		# while the taller fern silhouettes remain sparse and never replace the existing grass LODs.
+		var length_ := rng.randf_range(0.48,0.78) if groundcover else (rng.randf_range(0.82,1.22) if fern else rng.randf_range(0.72,1.22))
+		var width_ := rng.randf_range(0.14,0.23) if groundcover else (rng.randf_range(0.18,0.31) if fern else rng.randf_range(0.26,0.42))
+		var rise := rng.randf_range(0.07,0.18) if groundcover else (rng.randf_range(0.42,0.78) if fern else rng.randf_range(0.18,0.62))
+		var droop := rng.randf_range(0.015,0.08) if groundcover else (rng.randf_range(0.38,0.78) if fern else rng.randf_range(0.16,0.5))
 		Foliage._frond(st, origin, yaw, length_, width_, rise, droop, base, tip, 3)
 	st.generate_tangents()
 	var mesh := st.commit()
@@ -96,7 +98,9 @@ static func spawn(parent: Node3D) -> void:
 	for p in candidates:
 		if not allowed(p): continue
 		var roll := rng.randf()
-		var kind := "fern" if roll<0.30 else ("bush" if roll<0.43 else ("groundcover" if roll<0.50 else ("litter" if roll<0.76 else ("stone" if roll<0.92 else "twig"))))
+		# The former scatter spent too much of the shared visual budget on tall fern fans.
+		# Broadleaf shrubs/rosettes and scattered litter now fill open soil without adding draw passes.
+		var kind := "fern" if roll<0.16 else ("bush" if roll<0.36 else ("groundcover" if roll<0.54 else ("litter" if roll<0.82 else ("stone" if roll<0.96 else "twig"))))
 		if counts[kind]>=CAPS[kind]: continue
 		var variant := rng.randi_range(0,2) if kind in ["fern","bush","groundcover"] else 0
 		var cell := Vector2i(floori(p.x/CELL),floori(p.z/CELL))
@@ -106,9 +110,9 @@ static func spawn(parent: Node3D) -> void:
 		var s := rng.randf_range(0.5,1.18)
 		var size_ := Vector3(s,s*rng.randf_range(0.65,1.1),s)
 		if kind=="bush": size_ *= 0.78
-		if kind=="groundcover": size_ *= 0.82
+		if kind=="groundcover": size_ *= 0.94
 		if kind=="litter": size_=Vector3(s*0.65,s*0.65,0.025)
-		if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.08,0.27)
+		if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.12,0.32)
 		if kind=="twig": size_=Vector3(0.035,rng.randf_range(0.35,0.85),0.035)
 		var basis := Basis(Vector3.UP,rng.randf()*TAU)
 		if kind in ["twig","litter"]: basis *= Basis(Vector3.RIGHT,PI*0.5)

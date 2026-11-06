@@ -39,14 +39,14 @@ De atlas van bestaande bladeren beperkt de vormvariatie van kleine tropische bod
 
 ## Acceptatie
 
-Echte native iPhone-/Windows-metingen, thermiek, 60 seconden bewegingsshimmer en representatieve lange grote gevechten blijven nodig. Geen fysieke iPhone-test, iOS Quick Look of iMac-productiepipeline uitgevoerd. Geen overeenkomst met referentie B claimen op basis van uitsluitend technisch groene tests.
+Echte native iPhone-/Windows-metingen, thermiek, 60 seconden bewegingsshimmer en representatieve lange grote gevechten blijven nodig. Geen fysieke iPhone-test, iOS Quick Look of iMac-productiepipeline uitgevoerd. De [iPhone-testlijst](IPHONE_TEST_PLAN.md) legt de laatste toestelcontrole vast.
 
 ## Regressietests en iOS-export
 
 - `visual_b_test.gd`: PASS, 0 failures na toevoeging van gravel; controleert de echte gamelevel, PBR/mips, objectlimieten, clearings, paden/oeverdetails, kwaliteits- en jungleknoppen en ontbreken van nieuwe colliders.
 - `visual_b_capture.gd`: de vorige iteratie slaagde met echte camerabeelden en 80 bestaande AI-vijandscènes. De toegevoegde PR-workflow draait deze capture opnieuw voor de graveliteratie, inclusief de render op 100% schaal. De lokale shell heeft geen grafische displayserver; daarom is daar geen nieuwe GPU-capture uitgevoerd.
 - Bestaande tests `jungle_test`, `rivier_test`, `schaduw_test`, `kwaliteit_test`, `surface_filtering_test`, `camera_test` en `team_commands`: geslaagd.
-- GitHub-checks voor vijandbasis/voertuigen/wapens/touchregressie en de unsigned iOS-IPA-export: geslaagd. Dit bewijst compilatie en gesimuleerde touch-events, geen uitvoering op een iPhone.
+- GitHub-checks voor vijandbasis/voertuigen/wapens/touchregressie en de unsigned iOS-IPA-export: geslaagd. De [iOS-run voor commit `95d46b5`](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42283258620) heeft een unsigned IPA-artifact van 1,15 GB opgeleverd; die is klaar om door de gebruiker te ondertekenen en op iPhone te testen. Dit bewijst compilatie en gesimuleerde touch-events, geen uitvoering op een iPhone.
 - GitHub OTA-patchcontrole en PR-preview: geslaagd; de release-publicatiestap is overgeslagen.
 - `grass_3d_test`: faalt alleen op de bestaande verwachting voor palm-/rotsposities. Dezelfde test faalt op de onaangepaste startcommit `b808fe1`, dus deze check legt een bestaande discrepantie vast.
 - De brede `run_tests.sh`-verzameling is afgebroken bij `airfield_hq_22_import_test`: die test vereist de wrapper-scène `airfield_hq_22_import_test_scene.tscn`, terwijl de algemene runner hem rechtstreeks met `-s` start en `Game` daardoor ontbreekt. Dit is een runner-/testaanroepfout, geen regressie-uitspraak over de asset.

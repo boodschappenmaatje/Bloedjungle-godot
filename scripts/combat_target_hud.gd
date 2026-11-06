@@ -23,19 +23,22 @@ func _ready() -> void:
 		game.connect("combat_hit_confirmed", _on_confirmed)
 
 
-func set_prediction(data: Dictionary) -> void:
-	_prediction = data
+func set_prediction(data: Dictionary, source: String = "jeep") -> void:
+	_prediction = data.duplicate()
+	_prediction["source"] = source
 	queue_redraw()
 
 
-func clear_prediction() -> void:
-	if not _prediction.is_empty():
+func clear_prediction(source: String = "") -> void:
+	# A parked jeep updates every frame; it must not wipe the soldier's
+	# current on-foot reticle after the player gets out.
+	if not _prediction.is_empty() and (source.is_empty() or _prediction.get("source") == source):
 		_prediction = {}
 		queue_redraw()
 
 
 func _on_confirmed(point: Vector3, damage: float, source: String) -> void:
-	if source != "jeep" or damage <= 0.0:
+	if source not in ["jeep", "infantry"] or damage <= 0.0:
 		return
 	_hit_point = point
 	_hit_time = HIT_DURATION
@@ -49,7 +52,7 @@ func _active() -> bool:
 	if get_tree().paused or get_tree().get_first_node_in_group("kaart_open") != null:
 		return false
 	var player = game.get("player")
-	return player != null and is_instance_valid(player) and player.driving and not player.dead
+	return player != null and is_instance_valid(player) and not player.dead and not player.airborne and not player.in_tank
 
 
 func _process(delta: float) -> void:

@@ -7,6 +7,7 @@ name: OTA update patch
 #    en laadt ze bij elke start (scripts/ota_keten.gd).
 #  - BRUG: een piepkleine patch met alleen het nieuwe updatescherm, voor apps met de oude updater in de IPA (die geeft downloads maar 30 s).
 # De splitsing staat in tools/ota_presets.py (twee extra exportpresets); zie ota/README.md.
+# OTA publication trigger: approved Base Wall HQ2 berm fix (PR #236, merged as 461a31fa).
 
 on:
   workflow_dispatch:

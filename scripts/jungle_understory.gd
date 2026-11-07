@@ -194,9 +194,10 @@ static func spawn(parent: Node3D) -> void:
 		var p := Vector3(rng.randf_range(-Data.COMPOUND,Data.COMPOUND),0.012,Data.COMPOUND+rng.randf_range(2.0,4.2))
 		p = Basis(Vector3.UP,side*PI*0.5)*p
 		candidates.append(p)
-	# Readable understory colonies along both shoulders: one dominant species per
-	# colony gives the real camera recognizable plant groups instead of a thin,
-	# uniformly mixed scatter. The road and firing corridor stay clear.
+	# Readable understory colonies across the visible forest floor: one dominant
+	# species per colony gives the camera recognizable groups without building a
+	# continuous wall along the road. Keep the existing per-species budget and
+	# preserve open road, player, and building approaches.
 	var colony_positions: Array[Vector3] = []
 	var colony_kinds := PackedStringArray()
 	# Reassign part of the existing stone budget to the immediate trail edge.
@@ -212,20 +213,24 @@ static func spawn(parent: Node3D) -> void:
 		colony_positions.append(p)
 		colony_kinds.append("pebble")
 		path_pebble_count += 1
-	for cluster in 68:
-		var z := rng.randf_range(-86.0,-34.0)
-		var side := -1.0 if rng.randf()<0.5 else 1.0
-		var center := Vector3(Data.path_x(z)+side*rng.randf_range(4.0,8.5),0.012,z)
+	var plant_colony_centers: Array[Vector2] = []
+	var attempts := 0
+	while plant_colony_centers.size() < 68 and attempts < 900:
+		attempts += 1
+		var center := Vector2(rng.randf_range(-22.0,32.0),rng.randf_range(-82.0,-38.0))
+		if absf(center.x-Data.path_x(center.y)) < 5.0 or Vector2(center.x-7.0,center.y+57.0).length() < 7.0: continue
+		if plant_colony_centers.any(func(other: Vector2) -> bool: return other.distance_to(center) < 5.2): continue
+		plant_colony_centers.append(center)
 		var choice := rng.randf()
 		var primary := "rosette" if choice<0.44 else ("arch_fern" if choice<0.80 else "red_bloom")
 		# Spread the same instances over looser, asymmetric colonies so nearby
 		# silhouettes read as plants with individual spacing rather than one fan.
-		var radius := rng.randf_range(2.5,3.9)
+		var radius := rng.randf_range(2.2,3.6)
 		var axis := rng.randf_range(0.0,TAU)
 		var aspect := rng.randf_range(0.48,0.88)
 		for i in rng.randi_range(14,21):
 			var offset := _colony_offset(rng,radius,aspect,axis)
-			var p := center+Vector3(offset.x,0,offset.y)
+			var p := Vector3(center.x+offset.x,0.012,center.y+offset.y)
 			if absf(p.x-Data.path_x(p.z))<3.2 or not allowed(p): continue
 			colony_positions.append(p)
 			colony_kinds.append(_colony_species(primary,rng))

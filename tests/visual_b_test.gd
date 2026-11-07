@@ -204,6 +204,8 @@ func run() -> void:
 	check(Foliage.material("depth_red_bloom").shader.get_code().contains("surface.g"),"PBR foliage shader must consume packed AO without another texture sampler")
 	check(Foliage.material("depth_rosette").get_shader_parameter("roughness_floor") <= 0.35,
 		"Scanned anthurium leaves must retain their measured soft gloss instead of a global matte clamp")
+	check(Foliage.material("depth_rosette").get_shader_parameter("foliage_saturation") <= 0.85,
+		"Scanned foliage should keep a restrained olive palette instead of bright lime green")
 	check(Foliage.material("depth_arch_fern").get_shader_parameter("roughness_floor") >= 0.58,
 		"Scanned fern leaves must keep their naturally matte response")
 	check(Foliage.material("depth_rosette").get_shader_parameter("nrm_depth") >= 0.78,

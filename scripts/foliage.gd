@@ -65,9 +65,9 @@ static func material(kind := "") -> ShaderMaterial:
 					m.set_shader_parameter("leaf_specular", specular)
 					m.set_shader_parameter("nrm_depth", normal_depth)
 					m.set_shader_parameter("cut", 0.42)
-					var grade := Vector3(3.1,2.3,1.8) if kind == "depth_litter" else (Vector3(1.10,1.01,0.87) if kind in ["depth_rosette", "depth_arch_fern"] else Vector3(1.08,1.00,0.86))
+					var grade := Vector3(3.1,2.3,1.8) if kind == "depth_litter" else (Vector3(1.18,1.09,0.93) if kind in ["depth_rosette", "depth_arch_fern"] else Vector3(1.14,1.06,0.91))
 					m.set_shader_parameter("foliage_grade", grade)
-					m.set_shader_parameter("foliage_saturation", 0.68 if kind == "depth_litter" else 0.87)
+					m.set_shader_parameter("foliage_saturation", 0.68 if kind == "depth_litter" else 0.82)
 					m.set_shader_parameter("tint", Vector3.ONE if kind == "depth_litter" else Vector3(1.02,1.03,0.95))
 					m.set_shader_parameter("backlight", 0.08 if kind in ["depth_microcover", "depth_litter"] else 0.12)
 			else:

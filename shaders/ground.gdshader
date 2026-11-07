@@ -55,13 +55,15 @@ void fragment() {
 	// Keep photographed grass blades, leaf litter and trail aggregate large enough
 	// to resolve from the tactical camera. Derivative-gated micro breakup and
 	// mipmapping fade this larger grain before it can shimmer in the distance.
-	vec2 guv = p * 0.075;
-	vec2 juv = p * 0.085 + 0.37;
-	vec2 duv = p * 0.09;
-	vec2 muv = vec2(p.y, -p.x) * 0.10;
-	vec2 moss_uv = p * 0.10;
-	// Larger aggregate grains make the worn track read as gravel, not a dark strip.
-	vec2 gravel_uv = p * 0.10;
+	// Tighter world tiling keeps the grass and floor litter from averaging into a
+	// broad painted wash at the tactical camera. Mipmapping still filters distant detail.
+	vec2 guv = p * 0.105;
+	vec2 juv = p * 0.115 + 0.37;
+	vec2 duv = p * 0.12;
+	vec2 muv = vec2(p.y, -p.x) * 0.13;
+	vec2 moss_uv = p * 0.13;
+	// Smaller stone scale gives the trail aggregate a more natural, walkable size.
+	vec2 gravel_uv = p * 0.15;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -79,9 +81,9 @@ void fragment() {
 	float floor_mix = smoothstep(0.27, 0.72, n1 * 0.6 + n2 * 0.4) * 0.9;
 	// Shift the broad floor away from the former yellow wash while keeping the
 	// source atlas's fine blades legible after mobile mip filtering.
-	vec3 grass = mix(g * vec3(0.58,0.66,0.58), j * vec3(0.56,0.64,0.56), floor_mix);
-	// Lift earthy red/blue detail slightly while keeping green restrained.
-	grass *= mix(vec3(0.94,0.93,0.86),vec3(0.89,0.91,0.83),smoothstep(0.3,0.7,n1));
+	vec3 grass = mix(g * vec3(0.61,0.63,0.56), j * vec3(0.59,0.62,0.54), floor_mix);
+	// Warm the shaded floor toward soil and olive, avoiding the bright green cast.
+	grass *= mix(vec3(0.97,0.94,0.86),vec3(0.92,0.91,0.82),smoothstep(0.3,0.7,n1));
 	// Existing metre-scale noise now carries a little more canopy-dapple contrast;
 	// the already derivative-gated micro breakup stays unchanged for shimmer control.
 	grass *= (0.78 + 0.44*n3) * mix(1.0,0.86+0.28*n_micro,micro_gate*0.72);

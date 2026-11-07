@@ -1,0 +1,90 @@
+{
+	"asset": "M47_Muurbreker_1.0_animated.glb",
+	"checks": [
+		"PASS existing animated M-47 GLB instantiated",
+		"PASS M-47 imported AnimationPlayer is present",
+		"PASS existing clip Idle imported",
+		"PASS Idle advances in Godot",
+		"PASS existing clip Equip imported",
+		"PASS Equip advances in Godot",
+		"PASS existing clip Aim imported",
+		"PASS Aim advances in Godot",
+		"PASS existing clip Fire imported",
+		"PASS Fire advances in Godot",
+		"PASS existing clip Reload imported",
+		"PASS Reload advances in Godot",
+		"PASS M47_LOD0 exists in imported M-47 GLB",
+		"PASS M47_LOD1 exists in imported M-47 GLB",
+		"PASS M47_LOD2 exists in imported M-47 GLB",
+		"PASS one M-47 LOD is rendered at a time in the VFX preview",
+		"PASS original M-47 PBR albedo, normal, roughness and metallic imported on LOD0",
+		"PASS existing animated mechanical core bone is available",
+		"PASS mechanical core visibly accelerates using the existing Idle animation",
+		"PASS preview sequence advances existing Equip animation",
+		"PASS preview sequence advances existing Aim animation",
+		"PASS accelerating core reaches commanded 3.6× clip rate before fire",
+		"PASS preview sequence advances existing Fire animation",
+		"PASS projectile ray collides with the test wall before impact",
+		"PASS wall collider is disabled and removed from its collision layer after destruction",
+		"PASS test wall sign is cleared with the destroyed wall visuals",
+		"PASS post-destruction projectile ray now passes through the opening",
+		"PASS eight low-poly debris pieces retain their own updated collisions",
+		"PASS preview sequence advances existing Reload animation",
+		"PASS one-shot particle budget remains at or below 64 particles",
+		"PASS temporary debris collision budget remains at or below eight bodies",
+		"PASS static projectile/trail/shockwave geometry stays under 3,000 triangles"
+	],
+	"clips": [
+		"Idle",
+		"Equip",
+		"Aim",
+		"Fire",
+		"Reload"
+	],
+	"collision": {
+		"debris_bodies_with_collision": 8,
+		"old_wall_shape_disabled": true,
+		"wall_collision_layer_removed_on_break": true
+	},
+	"engine": {
+		"build": "official",
+		"hash": "ed1daf0bf001b61586d9930840f2f1394092c079",
+		"hex": 263938,
+		"major": 4,
+		"minor": 7,
+		"patch": 2,
+		"status": "stable",
+		"string": "4.7.2-stable (official)",
+		"timestamp": 0
+	},
+	"failures": 0,
+	"lod0_triangles": 50000,
+	"memory": {
+		"static_bytes_after_sequence": 84596287,
+		"static_bytes_before_sequence": 66029018,
+		"static_peak_bytes": 104749789
+	},
+	"performance": {
+		"capture_enabled": false,
+		"capture_fps": 30,
+		"capture_frames": 0,
+		"capture_resolution": "1280x720",
+		"engine_process_peak_ms": 253.039,
+		"render_draw_calls_peak": 133,
+		"render_primitives_peak": 238342,
+		"runtime_measurement": "Xvfb + Mesa llvmpipe software render; NOT an iPhone GPU/FPS measurement",
+		"sampled_fps_max": 9.0,
+		"sampled_fps_min": 2.0
+	},
+	"result": "PASS",
+	"vfx": {
+		"dynamic_shadowed_effect_lights": 0,
+		"effect_triangles_including_particle_billboards": 2924,
+		"full_screen_post_effects": 0,
+		"one_shot_particle_budget": 64,
+		"particle_emitters": 3,
+		"shockwave_sides": 6,
+		"spiral_smoke_segments": 75,
+		"temporary_rigid_body_budget": 8
+	}
+}

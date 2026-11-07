@@ -67,6 +67,8 @@ func run() -> void:
 				var depth_arrays := depth_variant_mesh.surface_get_arrays(0)
 				check(depth_arrays[Mesh.ARRAY_TANGENT].size() > 0,"PBR leaf surfaces need imported tangents: "+label)
 				check(depth_arrays[Mesh.ARRAY_COLOR].size() > 0,"Plant sway needs authored root-to-tip vertex weights: "+label)
+				check(Foliage.material("depth_"+kind).shader.resource_path.ends_with("foliage_depth_pbr.gdshader"),"Scanned plants need the dedicated mobile PBR shader: "+label)
+				check(Foliage.material("depth_"+kind).shader.code.contains("diffuse_burley"),"Scanned plants must use standard Burley response: "+label)
 	check(not details.is_empty(), "Missing clustered understory in the real game level")
 	check(details.any(func(n: MultiMeshInstance3D) -> bool: return n.name.begins_with("Understory_groundcover_")),"Missing fine-scale groundcover in the real game level")
 	for n: MultiMeshInstance3D in details:
@@ -162,7 +164,7 @@ func run() -> void:
 			for x in range(0,shrub_image.get_width(),32):
 				if shrub_image.get_pixel(x,y).g < 0.85: sampled_ao += 1
 	check(sampled_ao > 50,"Poly Haven ARM ambient occlusion is packed alongside roughness for red-bloom leaves")
-	check(Foliage.material("depth_red_bloom").shader.get_code().contains("plant_surface.g"),"Foliage shader must consume packed AO without another texture sampler")
+	check(Foliage.material("depth_red_bloom").shader.get_code().contains("surface.g"),"PBR foliage shader must consume packed AO without another texture sampler")
 	var atm := get_tree().get_first_node_in_group("atmosphere")
 	for quality in ["low","high","ultra","high"]:
 		settings.values["quality"] = quality

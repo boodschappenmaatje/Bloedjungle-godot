@@ -24,8 +24,10 @@ const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.38], "bush": [1.1, 1.8, 0.32], "rock
 static func material(kind := "") -> ShaderMaterial:
 	if not _mats.has(kind):
 		var m := ShaderMaterial.new()
-		m.shader = preload("res://shaders/foliage.gdshader")
-		m.set_shader_parameter("use_tex", kind != "")
+		var depth_pbr := kind == "depth_leaf" or kind.begins_with("depth_")
+		m.shader = preload("res://shaders/foliage_depth_pbr.gdshader") if depth_pbr else preload("res://shaders/foliage.gdshader")
+		if not depth_pbr:
+			m.set_shader_parameter("use_tex", kind != "")
 		# Existing source maps are strongly lime-tinted. A restrained olive grade
 		# keeps their detail while reducing the synthetic bright-green read.
 		m.set_shader_parameter("foliage_grade", Vector3(1.04,0.93,0.86) if kind not in ["", "bark", "depth_leaf"] else Vector3.ONE)
@@ -43,7 +45,7 @@ static func material(kind := "") -> ShaderMaterial:
 				m.set_shader_parameter("use_rough_tex", true)
 				m.set_shader_parameter("cut", 0.43)
 				m.set_shader_parameter("tint", Vector3(1.07, 1.03, 0.92))
-				m.set_shader_parameter("backlight", 0.27)
+				m.set_shader_parameter("backlight", 0.08)
 			elif kind.begins_with("depth_"):
 				var depth_textures := {"depth_rosette":"rosette", "depth_arch_fern":"arch_fern", "depth_red_bloom":"shrub"}
 				var texture_kind: String = depth_textures.get(kind, "")
@@ -53,14 +55,13 @@ static func material(kind := "") -> ShaderMaterial:
 					m.set_shader_parameter("nrm", load(texture_root + "normal_gl.png"))
 					m.set_shader_parameter("rough_tex", load(texture_root + "roughness.png"))
 					m.set_shader_parameter("use_rough_tex", true)
-					# Soften the source normal response at the elevated combat camera.
-					m.set_shader_parameter("nrm_depth", 0.48)
+					# Preserve the scanned leaf relief under the standard mobile PBR response.
+					m.set_shader_parameter("nrm_depth", 0.62)
 					m.set_shader_parameter("cut", 0.42)
-					m.set_shader_parameter("foliage_grade", Vector3(1.12,1.07,0.96))
-					m.set_shader_parameter("foliage_saturation", 0.80)
-					m.set_shader_parameter("foliage_gamma", 0.78)
-					m.set_shader_parameter("tint", Vector3(0.99, 1.0, 0.95))
-					m.set_shader_parameter("backlight", 0.31)
+					m.set_shader_parameter("foliage_grade", Vector3(1.06,1.02,0.94))
+					m.set_shader_parameter("foliage_saturation", 0.84)
+					m.set_shader_parameter("tint", Vector3(1.02,1.03,0.95))
+					m.set_shader_parameter("backlight", 0.08)
 			else:
 				m.set_shader_parameter("tex", LeafTex.get_tex(kind))
 				m.set_shader_parameter("nrm", LeafTex.get_normal(kind))

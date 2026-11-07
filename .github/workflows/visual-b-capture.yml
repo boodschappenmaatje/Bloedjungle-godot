@@ -15,6 +15,7 @@ on:
       - "scripts/jungle_understory.gd"
       - "scripts/level.gd"
       - "shaders/foliage.gdshader"
+      - "shaders/foliage_depth_pbr.gdshader"
       - "shaders/grass_3d.gdshader"
       - "shaders/ground.gdshader"
       - "shaders/water.gdshader"

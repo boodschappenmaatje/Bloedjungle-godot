@@ -406,7 +406,10 @@ static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNu
 	var key := "%s_%d_%d_%d" % [kind,variant,cell.x,cell.y]
 	if not groups.has(key): groups[key] = {"kind":kind,"variant":variant,"cell":cell,"xf":[],"col":[]}
 	if groups[key].xf.size()>=(900 if kind=="litter" else (480 if kind=="groundcover" else 360)): return
-	var s := rng.randf_range(0.40,0.86)
+	# The photographed Poly Haven plants are authored at 0.53–0.64 m tall.
+	# Keep their leaves below actor height, but avoid the previous quarter-scale
+	# silhouettes that disappeared into the open grass at the combat camera.
+	var s := rng.randf_range(0.82,1.18) if kind in ["rosette","arch_fern","red_bloom"] else rng.randf_range(0.40,0.86)
 	var size_ := Vector3(s*rng.randf_range(0.78,1.12),s*rng.randf_range(0.62,1.02),s*rng.randf_range(0.82,1.18))
 	if kind=="bush": size_ *= 0.72
 	if kind=="groundcover":

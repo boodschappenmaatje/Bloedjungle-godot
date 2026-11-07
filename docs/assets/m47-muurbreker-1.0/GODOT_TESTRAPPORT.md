@@ -4,9 +4,9 @@ Getest met **Godot 4.7.2.stable.official.ed1daf0bf**. De assettest, root-project
 
 ## Oorzaak en herstel van de rootimport
 
-De lokale Godot-editorinstelling `filesystem/import/blender/blender_path` was leeg. Daardoor kon Godot Blender-bronbestanden niet via een ingesteld Blender-pad verwerken. In de gebruikersinstellingen is het pad gezet op `/usr/bin/blender` (Blender 4.3.2). Dit is alleen een lokale editorinstelling; geen projectinstelling.
+De vorige macOS CI-run [42391046748](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42391046748) liet zien dat Godot de M-47-review-GLB en `M47_Muurbreker_Blender_1.0.blend` onder `docs/` als projectassets scande. De headless-runner had geen Blender-pad en meldde `Blender path is invalid or not set`; daarna ontbraken geïmporteerde texturen en GLB-scenes, waarna onder meer `surface_filtering_test.gd` faalde met vijf ontbrekende `.ctex`-mipmaps. De root-importcache was dus onvolledig doordat reviewbestanden buiten de runtime-assets werden meegeïmporteerd.
 
-De M-47-map in `docs/assets/m47-muurbreker-1.0/` bevat review- en bronbestanden, geen runtime-assets. Zonder uitsluiting probeerde de rootimport onder andere de review-BLEND te verwerken en zocht die naar niet meegeleverde losse afbeeldingen. Het bestand `.gdignore` markeert die map nu als documentatie. De originele M-47-bronnen zijn niet gewijzigd.
+De M-47-map in `docs/assets/m47-muurbreker-1.0/` bevat review- en bronbestanden, geen runtime-assets. `.gdignore` markeert die map nu als documentatie, zodat de headless-runner de BLEND niet hoeft te openen. Voor lokale Blender-import is het lege `filesystem/import/blender/blender_path` ingesteld op `/usr/bin/blender` (Blender 4.3.2); dit is alleen een gebruikersinstelling. De originele M-47-bronnen zijn niet gewijzigd.
 
 Daarna is een volledige import uitgevoerd:
 
@@ -14,7 +14,9 @@ Daarna is een volledige import uitgevoerd:
 Godot_v4.7.2-stable_linux.x86_64 --headless --editor --path . --import
 ```
 
-De lokale cachebouw eindigde met exitcode **0** en leverde 107 geïmporteerde scenes. Bij `assets/brandkraan.glb` logt Godot daarbij 12 bestaande `Basis ... must be normalized ... Quaternion`-regels. Diezelfde regels komen voor bij import van de ongewijzigde `brandkraan.glb` op `main`; ze staan los van M-47. Een koud, geïsoleerd main-cache-experiment op lokaal Linux gaf ook VQ2-textuurmeldingen; die scratch-run bleef lokaal noisy en geldt niet als CI-baseline. De repository-workflow voert eerst een cache-primeerpass en daarna een validatiepass uit; de officiële main-run slaagde voor beide. De officiële [main-run 42247986984](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42247986984) slaagde voor beide importstappen en de iOS-export. Na de cache-primeerpass eindigde de tweede featurebranch-import met exitcode **0**, 107 scenes en **0** `ERROR`/`SCRIPT ERROR`-regels. Met `.gdignore` verschijnen geen M-47-reviewbestanden in de rootimport. De vergelijking staat in [`logs/godot_4.7.2_import_comparison.log`](logs/godot_4.7.2_import_comparison.log); de schone featurebranch-herimport staat in [`logs/godot_4.7.2_root_import.log`](logs/godot_4.7.2_root_import.log).
+De lokale cachebouw eindigde met exitcode **0** en leverde 107 geïmporteerde scenes. Bij `assets/brandkraan.glb` logt Godot daarbij 12 bestaande `Basis ... must be normalized ... Quaternion`-regels. Diezelfde regels komen voor bij import van de ongewijzigde `brandkraan.glb` op `main`; ze staan los van M-47. De vorige CI-run meldde daarnaast cache-afhankelijke VQ2-textuurfouten. De repository-workflow primeert de cache vóór de validatiepass. Na `.gdignore` eindigde de tweede featurebranch-import met exitcode **0**, 107 scenes en **0** `ERROR`/`SCRIPT ERROR`-regels.
+
+De nieuwe [macOS CI-run 42395675534](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42395675534) op PR #238 slaagde voor `Prime Godot asset import cache`, `Import and validate project`, `Export iOS project` en artifact-upload. Daarmee is de ontbrekende Blender-path blokkade uit [run 42391046748](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42391046748) verholpen. De CI- en artifactcontroles staan samengevat in [`logs/github_actions_42395675534.log`](logs/github_actions_42395675534.log). De importvergelijking staat in [`logs/godot_4.7.2_import_comparison.log`](logs/godot_4.7.2_import_comparison.log); de lokale schone featurebranch-herimport staat in [`logs/godot_4.7.2_root_import.log`](logs/godot_4.7.2_root_import.log).
 
 ## M-47 assetcontrole — PASS
 
@@ -40,7 +42,7 @@ De volledige featurebranch-logs en de uitkomsten van de drie tests vanuit de det
 
 ## iOS export
 
-De officiële Godot 4.7.2 iOS-exporttemplate is geïnstalleerd op `~/.local/share/godot/export_templates/4.7.2.stable/ios.zip`. De lokale Godot-exportstap genereert het Xcode-project. Deze Linux-omgeving heeft geen `xcodebuild`, waardoor hier geen IPA kan worden gebouwd. De bestaande [iOS unsigned IPA workflow](../../../.github/workflows/ios.yml) voert op `macos-26` de Godot-import, regressies, unsigned Xcode-build en IPA-validatie uit. De workflow wordt na push van deze PR-update gecontroleerd; de CI-run en het IPA-artifact worden daarna hier toegevoegd.
+De officiële Godot 4.7.2 iOS-exporttemplate is geïnstalleerd op `~/.local/share/godot/export_templates/4.7.2.stable/ios.zip`. De lokale Linux-export maakte het Xcode-project maar kon geen IPA bouwen omdat `xcodebuild` daar ontbreekt. De bestaande workflow bouwde en valideerde op `macos-26` de unsigned IPA: CI meldt `** BUILD SUCCEEDED **`, controleert de IPA-zip zonder fouten en vindt `Payload/Bloedjungle-ios.app/Info.plist`. Het artifact `bloedjungle-ios-unsigned-57822ee1ad3a410b7e461414d7262712c23da17e` is geüpload (1.144.244.995 bytes); `godot-diagnostics-57822ee1ad3a410b7e461414d7262712c23da17e` bevat de CI-logs. Beide artifacts staan bij [run 42395675534](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42395675534). Er is geen installatie op een fysiek iPhone uitgevoerd.
 
 ## Reproduceerbare commando's
 

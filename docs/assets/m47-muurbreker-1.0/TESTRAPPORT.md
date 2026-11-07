@@ -1,6 +1,6 @@
 # M-47 Muurbreker Blender 1.0 — testrapport
 
-**Resultaat:** Blender-productie, GLB-validatie en de 32 geïsoleerde Godot 4.7.2-assetcontroles zijn geslaagd. De drie bestaande bazooka-, wapenclips- en HQ2-muurregressies slagen na volledige root-projectimport. De lokale iOS-export maakt het Xcode-project; de unsigned IPA wordt door de macOS-workflow gebouwd.
+**Resultaat:** Blender-productie, GLB-validatie en de 32 geïsoleerde Godot 4.7.2-assetcontroles zijn geslaagd. De bazooka-, wapenclips- en HQ2-muurregressies slagen. De bestaande macOS-workflow bouwde en valideerde een unsigned iOS-IPA in [CI-run 42395675534](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42395675534); het IPA- en Godot-diagnosticsartifact zijn daar beschikbaar.
 
 ## Invoer en onveranderlijk origineel
 
@@ -37,7 +37,7 @@ De laadkamer en kern zijn aparte testgeometrie; de originele mesh is niet opgesp
 - Herhaalbare scripts vanaf de repositorybron uitgevoerd: `build_lods_and_renders.py`, daarna `rig_animations_and_export.py`.
 - Geëxporteerde GLB opnieuw geïmporteerd in Blender; `validation.json` bevestigt vijf werkelijk bewegende acties, de genoemde driehoektellingen, één PBR-materiaal op de LOD's en ingebedde textuurkaarten.
 - Screenshots: `screenshots/pbr-original.png`, `screenshots/pbr-lod0.png`, plus `idle.png`, `equip.png`, `aim.png`, `fire.png`, `reload.png`.
-- Godot 4.7.2 is niet beschikbaar in deze omgeving (alleen 4.6.3). Godot-import, materiaal-/schaalcontrole en projectregressies zijn daarom **NIET GETEST**.
+- Godot 4.7.2 `ed1daf0bf`: geïsoleerde M-47-import/PBR/LOD/animatie/montagecontrole **32 PASS**; de drie gevraagde root-projectregressies en de macOS iOS-workflow slagen. Details en logs staan in [GODOT_TESTRAPPORT.md](GODOT_TESTRAPPORT.md) en [`logs/`](logs/).
 
 ## Artefacten
 

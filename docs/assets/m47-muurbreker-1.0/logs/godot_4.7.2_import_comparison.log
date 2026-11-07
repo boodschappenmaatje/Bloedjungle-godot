@@ -1,10 +1,10 @@
 Godot 4.7.2.stable.official.ed1daf0bf import comparison
 
-Feature branch local iOS project export/full import: exit 0, Xcode project generated; 12 `Basis ... must be normalized ... Quaternion` ERROR lines from existing `assets/brandkraan.glb`.
+Prior PR CI run 42391046748 scanned M47_Muurbreker_1.0_animated.glb and M47_Muurbreker_Blender_1.0.blend under docs/. It logged `Blender path is invalid or not set, check your Editor Settings. Cannot configure blender path in headless mode.` The same run then lacked imported texture .ctex files and GLB scenes; surface_filtering_test.gd failed five mipmap checks. The new docs/assets/m47-muurbreker-1.0/.gdignore excludes those review files from the root project scan.
+
+Feature branch local iOS project export/full import: exit 0, Xcode project generated; 12 `Basis ... must be normalized ... Quaternion` ERROR lines from existing assets/brandkraan.glb.
 Feature branch after cache priming: second full import exit 0; 107 imported scenes; zero ERROR and SCRIPT ERROR lines.
 
-Local detached cold-cache main worktree at b808fe1: first full import exit 0; 104 imported scenes; 296 engine ERROR lines, including 12 matching zero-basis brandkraan lines and cache-dependent VQ2 texture load messages. Its local follow-up import remained noisy (497 ERROR lines), so this scratch worktree was not used as pass evidence. `assets/brandkraan.glb` is byte-identical between branch and main.
+The source assets/brandkraan.glb is byte-identical to main; matching zero-basis messages appear in the main worktree as well. A detached cold-cache main worktree on local Linux emitted cache-dependent VQ2 texture messages; it was not treated as CI pass evidence. The independent main CI run 42247986984 succeeded.
 
-Independent CI baseline: GitHub Actions iOS run 42247986984 on main completed successfully. Its `Prime Godot asset import cache`, `Import and validate project`, and `Export iOS project` steps all passed. The repository workflow performs a cache-prime import followed by validation in a fresh process.
-
-Regression test files and the bazooka, weapon, and wall gameplay assets/scripts are unchanged from main. Both main and feature branch test outputs are available alongside this report; main test output was captured from the detached main checkout with the same imported GLB cache.
+The current PR workflow run 42395675534 succeeded: its cache-prime step, full project validation, regression tests, unsigned iOS export, IPA checks, and artifact upload all passed. See github_actions_42395675534.log for the exact workflow summary.

@@ -1,0 +1,23 @@
+GitHub Actions iOS unsigned IPA — PR #238
+Run: https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42395675534
+Head commit: 65cab126f2b717e00a795d68b0f6edfd8bdc738a
+Result: success (macOS 26, Godot 4.7.2)
+
+Passed steps:
+- Prime Godot asset import cache
+- Import and validate project
+- Retain Godot diagnostics
+- Export iOS project
+- Upload unsigned iOS artifact
+
+Export evidence from the workflow log:
+- Xcode reports ** BUILD SUCCEEDED **.
+- IPA integrity check: No errors detected in compressed data of build/Bloedjungle.ipa.
+- IPA contains Payload/Bloedjungle-ios.app/Info.plist.
+- Artifact uploader reports build/Bloedjungle.ipa, successful.
+
+Uploaded artifacts:
+- bloedjungle-ios-unsigned-57822ee1ad3a410b7e461414d7262712c23da17e — 1,144,244,995 bytes.
+- godot-diagnostics-57822ee1ad3a410b7e461414d7262712c23da17e — 48,360 bytes.
+
+The iOS build used CODE_SIGNING_ALLOWED=NO. No merge, device installation, or OTA publishing was performed.

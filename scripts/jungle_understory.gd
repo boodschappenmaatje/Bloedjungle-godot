@@ -196,6 +196,21 @@ static func spawn(parent: Node3D) -> void:
 			if absf(p.x-Data.path_x(p.z))<2.8 or not allowed(p): continue
 			colony_positions.append(p)
 			colony_kinds.append("groundcover")
+	# The camera-facing field east of the winding trail was still reading as bare
+	# ground in the real game render. Reallocate a small part of the existing
+	# groundcover cap into broad, low plant colonies here. The road is at least
+	# 11 m away; allowed() still enforces the base, water, and building clearances.
+	for cluster in 70:
+		var z := fill_rng.randf_range(-75.0,-43.0)
+		var center := Vector3(Data.path_x(z)+fill_rng.randf_range(14.5,25.0),0.012,z)
+		var radius := fill_rng.randf_range(1.8,2.8)
+		for i in fill_rng.randi_range(15,23):
+			var angle := fill_rng.randf()*TAU
+			var r := sqrt(fill_rng.randf())*radius
+			var p := center+Vector3(cos(angle)*r,0,sin(angle)*r)
+			if absf(p.x-Data.path_x(p.z))<8.0 or not allowed(p): continue
+			colony_positions.append(p)
+			colony_kinds.append("groundcover")
 	# Reserve a small litter budget for the camera-facing floor before the broad fill.
 	for cluster in 75:
 		var center := Vector3(fill_rng.randf_range(-32.0,36.0),0.012,fill_rng.randf_range(-78.0,-39.0))
@@ -205,6 +220,19 @@ static func spawn(parent: Node3D) -> void:
 			var r := sqrt(fill_rng.randf())*radius
 			var p := center+Vector3(cos(angle)*r,0,sin(angle)*r)
 			if absf(p.x-Data.path_x(p.z))<3.0 or not allowed(p): continue
+			colony_positions.append(p)
+			colony_kinds.append("litter")
+	# Fine leaf litter follows the same eastern trail-side floor, breaking the
+	# green surface into small warm leaf clusters while leaving the route open.
+	for cluster in 55:
+		var z := fill_rng.randf_range(-74.0,-44.0)
+		var center := Vector3(Data.path_x(z)+fill_rng.randf_range(9.0,16.0),0.012,z)
+		var radius := fill_rng.randf_range(1.0,1.8)
+		for i in fill_rng.randi_range(9,16):
+			var angle := fill_rng.randf()*TAU
+			var r := sqrt(fill_rng.randf())*radius
+			var p := center+Vector3(cos(angle)*r,0,sin(angle)*r)
+			if absf(p.x-Data.path_x(p.z))<4.5 or not allowed(p): continue
 			colony_positions.append(p)
 			colony_kinds.append("litter")
 	for cluster in 1200:
@@ -289,16 +317,24 @@ static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNu
 	var s := rng.randf_range(0.5,1.18)
 	var size_ := Vector3(s,s*rng.randf_range(0.65,1.1),s)
 	if kind=="bush": size_ *= 0.78
-	if kind=="groundcover": size_ *= rng.randf_range(0.82,1.05)
+	if kind=="groundcover":
+		# Broader, flatter mats make the low understory read at the top-down game
+		# camera without reaching the soldier silhouette or creating a new LOD.
+		var footprint := rng.randf_range(1.12,1.38)
+		size_ = Vector3(s*footprint,s*rng.randf_range(0.72,0.90),s*footprint)
 	if kind=="rosette": size_ *= rng.randf_range(1.1,1.5)
 	if kind=="arch_fern": size_ *= rng.randf_range(0.98,1.38)
 	if kind=="red_bloom": size_ *= rng.randf_range(1.02,1.3)
-	if kind=="litter": size_=Vector3(s*0.72,s*0.72,0.025)
+	if kind=="litter": size_=Vector3(s*0.94,s*0.94,0.025)
 	if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.14,0.36)
 	if kind=="twig": size_=Vector3(0.035,rng.randf_range(0.35,0.85),0.035)
 	var basis := Basis(Vector3.UP,rng.randf()*TAU)
 	if kind in ["twig","litter"]: basis *= Basis(Vector3.RIGHT,PI*0.5)
 	groups[key].xf.append(Transform3D(basis * Basis.from_scale(size_),p))
 	var shade := rng.randf_range(0.78,1.12)
-	groups[key].col.append(Color(shade,shade,shade) if kind!="litter" else Color(shade*0.7,shade*0.56,shade*0.32))
+	if kind=="litter":
+		var leaf_tones: Array[Color] = [Color(0.90,0.69,0.40),Color(0.72,0.51,0.29),Color(0.82,0.76,0.48)]
+		groups[key].col.append(leaf_tones[rng.randi_range(0,leaf_tones.size()-1)]*shade)
+	else:
+		groups[key].col.append(Color(shade,shade,shade))
 	counts[kind]+=1

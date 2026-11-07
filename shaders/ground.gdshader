@@ -59,7 +59,10 @@ void fragment() {
 	vec2 duv = p * 0.64;
 	vec2 muv = vec2(p.y, -p.x) * 0.40;
 	vec2 moss_uv = p * 0.48;
-	vec2 gravel_uv = p * 1.58;
+	// Gravel's authored pebbles are centimetre scale. The old 1.58 frequency
+	// reduced them to subpixel grit from the real play camera; this 2.4 m tile
+	// lets the existing PBR stones read as embedded trail aggregate.
+	vec2 gravel_uv = p * 0.42;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;

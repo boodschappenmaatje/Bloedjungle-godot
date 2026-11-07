@@ -6,9 +6,9 @@ render_mode depth_draw_opaque, cull_disabled;
 // de stroomrichting (x), sneller in het midden dan bij de oevers, met schuim langs de rand.
 
 uniform sampler2D noise : repeat_enable, filter_linear_mipmap;
-uniform vec3 deep : source_color = vec3(0.34, 0.58, 0.64);
-uniform vec3 shallow : source_color = vec3(0.55, 0.77, 0.75);
-uniform vec3 foam : source_color = vec3(0.85, 0.92, 0.88);
+uniform vec3 deep : source_color = vec3(0.16, 0.34, 0.34);
+uniform vec3 shallow : source_color = vec3(0.38, 0.59, 0.51);
+uniform vec3 foam : source_color = vec3(0.71, 0.78, 0.67);
 uniform float speed = 1.6;
 
 varying vec3 wpos;
@@ -38,9 +38,13 @@ void fragment() {
 	// Diepte: een iets donkerder stroomgoot, ondiepe turkooizen randen.
 	float depth = smoothstep(2.7, 0.28, d);
 	float current_glint = smoothstep(0.34, 0.66, streak);
-	vec3 col = mix(shallow, deep, depth * 0.58);
-	col = mix(col, shallow * vec3(1.03, 1.08, 1.06), current_glint * 0.32);
-	col += vec3(0.035, 0.065, 0.065) * current_glint;
+	vec3 col = mix(shallow, deep, depth * 0.78);
+	// Distinct, uneven current bands stay visible in the mobile camera without
+	// planar reflections or transparent overdraw.
+	float water_tone = clamp(0.79 + 0.30 * streak + 0.12 * (s2 - s1), 0.70, 1.08);
+	col *= water_tone;
+	col = mix(col, shallow * vec3(1.03, 1.05, 0.98), current_glint * 0.30);
+	col += vec3(0.07, 0.075, 0.045) * current_glint;
 	col = mix(col, foam, clamp(flake * 0.55 + edgefoam * 0.8, 0.0, 1.0));
 	// rimpels die in twee richtingen schuiven: geven glinsteringen in het zonlicht en een bewegend oppervlak
 	float r1 = texture(noise, p * 0.55 + vec2(-TIME * v * 0.09, TIME * 0.03)).r;
@@ -53,7 +57,7 @@ void fragment() {
 	float wave_a = sin(p.x * 0.72 + p.y * 0.31 - TIME * v * 0.86 + (s1 - 0.5) * 1.7);
 	float wave_b = sin(p.x * 1.42 - p.y * 0.48 - TIME * v * 1.24 + (s2 - 0.5) * 1.4);
 	float crest = smoothstep(0.42, 0.92, 0.5 + 0.34 * wave_a + 0.16 * wave_b);
-	col = mix(col, vec3(0.54,0.78,0.78), crest * (1.0 - edge * 0.32) * 0.20);
+	col = mix(col, vec3(0.50,0.70,0.60), crest * (1.0 - edge * 0.32) * 0.26);
 	vec2 g = vec2(r1 - 0.5, r2 - 0.5) * 1.12 + vec2(s1 - 0.5, s2 - 0.5) * 0.58;
 	NORMAL = normalize(NORMAL + (VIEW_MATRIX * vec4(g.x, 0.0, g.y, 0.0)).xyz);
 	// spiegeling van de lucht onder een scheve kijkhoek
@@ -62,8 +66,8 @@ void fragment() {
 	ALBEDO = col;
 	// Mobile Forward Mobile has no reliable planar reflection; a restrained
 	// self-lit floor keeps deep channels readable without adding transparency.
-	EMISSION = col * 0.18;
-	ROUGHNESS = 0.14 + 0.18 * flake;
+	EMISSION = col * 0.055;
+	ROUGHNESS = 0.10 + 0.20 * flake;
 	SPECULAR = 0.72;
 	METALLIC = 0.0;
 }

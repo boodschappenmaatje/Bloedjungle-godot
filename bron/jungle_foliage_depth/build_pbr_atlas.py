@@ -37,6 +37,23 @@ leaf, leaf_normal = source_set("leaf", (512, 512))
 fern, fern_normal = source_set("fern", (512, 256))
 palm, palm_normal = source_set("palm", (512, 256))
 
+def jungle_grade(image: Image.Image) -> Image.Image:
+    """Subdue the source's lime cast while retaining its authored vein detail."""
+    rgba = np.asarray(image, dtype=np.float32) / 255.0
+    rgb = rgba[:, :, :3]
+    luminance = np.sum(rgb * np.array([0.2126, 0.7152, 0.0722], dtype=np.float32), axis=2, keepdims=True)
+    rgb = luminance + (rgb - luminance) * 0.72
+    # Lift shadowed leaves and shift toward warm olive, keeping the detail
+    # visible without pushing the game's green channel into bright lime.
+    rgb = np.power(np.clip(rgb, 0.0, 1.0), 0.78)
+    rgb *= np.array([1.10, 1.02, 0.92], dtype=np.float32)
+    rgba[:, :, :3] = np.clip(rgb, 0.0, 1.0)
+    return Image.fromarray(np.uint8(np.round(rgba * 255)), "RGBA")
+
+leaf = jungle_grade(leaf)
+fern = jungle_grade(fern)
+palm = jungle_grade(palm)
+
 rgb = np.asarray(leaf, dtype=np.float32) / 255.0
 # The flower side retains the leaf's fine surface grain while adding restrained
 # oxide-red and warm bronze pigment. Its alpha silhouette is unchanged.
@@ -72,10 +89,10 @@ def roughness(color: Image.Image, center: float, edge_weight: float) -> Image.Im
 
 
 rough = Image.new("L", (1024, 1024), 255)
-rough.paste(roughness(leaf, 0.34, 0.19), (0, 0))
-rough.paste(roughness(leaf, 0.43, 0.13), (512, 0))
-rough.paste(roughness(fern, 0.46, 0.16), (0, 640))
-rough.paste(roughness(palm, 0.39, 0.17), (512, 640))
+rough.paste(roughness(leaf, 0.42, 0.15), (0, 0))
+rough.paste(roughness(leaf, 0.46, 0.13), (512, 0))
+rough.paste(roughness(fern, 0.50, 0.13), (0, 640))
+rough.paste(roughness(palm, 0.46, 0.14), (512, 640))
 rough_path = OUT / "jungle_leaf_flower_roughness.png"
 rough.save(rough_path, optimize=True)
 
@@ -92,7 +109,7 @@ manifest = {
         "assets/textures/foliage/palm_normal.png": sha(SRC / "palm_normal.png"),
     },
     "maps": {
-        "jungle_leaf_flower_base_color.png": "sRGB RGBA; 2x2 atlas from native 512px source maps: leaf, derived red/bronze flower, fine fern and pinnate palm; 512x256 fern/palm maps centered in their 512px cells; original alpha silhouettes retained",
+        "jungle_leaf_flower_base_color.png": "sRGB RGBA; 2x2 atlas from native 512px source maps: softly graded olive leaf, derived muted red/bronze flower, fern and pinnate palm; 512x256 fern/palm maps centered in their 512px cells; original alpha silhouettes retained",
         "jungle_leaf_flower_normal_gl.png": "OpenGL tangent normal; approved leaf, fern and palm normal maps; leaf normal reused by flower variant",
         "jungle_leaf_flower_roughness.png": "Linear grayscale; authored per region from source luminance and edge detail; glossy leaf/palm and satin fern/flowers",
     },

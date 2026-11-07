@@ -5,7 +5,9 @@ extends Node3D
 const KINDS := ["short", "medium", "tall"]
 const ZONE_DATA := preload("res://resources/grass_zones.tres")
 const CELL := 24.0
-const LIMIT := {"short": 24000, "medium": 2200, "tall": 1600}
+# Freeze short grass at the last measured instance count; visual work only
+# changes its shape, material and spatial grouping from here.
+const LIMIT := {"short": 23739, "medium": 2200, "tall": 1600}
 const END := {"short": 52.0, "medium": 62.0, "tall": 72.0}
 static var _meshes := {}
 static var _material: ShaderMaterial
@@ -110,11 +112,21 @@ func _populate(existing: Array) -> void:
 			_add_point(groups, shoulder_rng, "short", p)
 	# The playable ground used to inherit mostly sparse tree-ring tufts. Add a finer,
 	# bounded low layer over the jungle floor; the established open firing lane stays clear.
-	for i in 19000:
-		var p := Vector3(shoulder_rng.randf_range(-65.0,65.0),0,shoulder_rng.randf_range(-85.0,-34.0))
-		var road_clear := p.z < -30.0 and p.z > -100.0 and absf(p.x - Data.path_x(p.z)) < 2.25
-		if _allowed(p) and not road_clear and shoulder_rng.randf() < 0.56 + 0.44 * Foliage._grove(p.x,p.z):
-			_add_point(groups, shoulder_rng, "short", p)
+	# Keep the same 19,000 placement attempts, but arrange them in irregular,
+	# overlapping colonies instead of an even lawn-like random scatter.
+	for colony in 250:
+		var center := Vector2(shoulder_rng.randf_range(-65.0,65.0),shoulder_rng.randf_range(-85.0,-34.0))
+		var radius := shoulder_rng.randf_range(1.5,3.4)
+		var aspect := shoulder_rng.randf_range(0.38,0.82)
+		var axis := shoulder_rng.randf_range(0.0,TAU)
+		for i in 76:
+			var angle := shoulder_rng.randf() * TAU
+			var radial := sqrt(shoulder_rng.randf()) * radius
+			var offset := Vector2(cos(angle) * radial * aspect, sin(angle) * radial).rotated(axis)
+			var p := Vector3(center.x + offset.x,0,center.y + offset.y)
+			var road_clear := p.z < -30.0 and p.z > -100.0 and absf(p.x - Data.path_x(p.z)) < 2.25
+			if _allowed(p) and not road_clear and shoulder_rng.randf() < 0.56 + 0.44 * Foliage._grove(p.x,p.z):
+				_add_point(groups, shoulder_rng, "short", p)
 	for transform: Transform3D in existing:
 		for _j in 3:
 			var p := transform.origin + Vector3(rng.randf_range(-0.5, 0.5), 0, rng.randf_range(-0.5, 0.5))
@@ -184,7 +196,10 @@ func _add_point(groups: Dictionary, rng: RandomNumberGenerator, kind: String, po
 	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_*spread, scale_*height_scale, scale_*spread))
 	groups[key].xf.append(Transform3D(basis, pos))
 	if kind == "short":
-		groups[key].colors.append(Color(rng.randf_range(0.82, 1.02), rng.randf_range(0.94, 1.12), rng.randf_range(0.72, 0.93)))
+		if rng.randf() < 0.14:
+				groups[key].colors.append(Color(rng.randf_range(0.76,0.88),rng.randf_range(0.68,0.81),rng.randf_range(0.54,0.68)))
+		else:
+				groups[key].colors.append(Color(rng.randf_range(0.76,0.90),rng.randf_range(0.73,0.88),rng.randf_range(0.61,0.78)))
 	else:
 		var shade := rng.randf_range(0.88, 1.0)
 		groups[key].colors.append(Color(shade, shade, shade))

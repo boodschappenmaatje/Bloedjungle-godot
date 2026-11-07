@@ -43,7 +43,7 @@ void fragment() {
 	if (!FRONT_FACING) NORMAL = -NORMAL;
 	vec3 base = texture(albedo_tex, UV).rgb * blade_color;
 	vec3 orm = texture(orm_tex, UV).rgb;
-	ALBEDO = base * vec3(1.06, 1.14, 0.84) * root_contact;
+	ALBEDO = base * vec3(0.89, 0.94, 0.78) * root_contact;
 	ROUGHNESS = orm.g;
 	METALLIC = 0.0;
 	SPECULAR = 0.25;
@@ -51,5 +51,5 @@ void fragment() {
 	AO_LIGHT_AFFECT = 0.15;
 	NORMAL_MAP = texture(normal_tex, UV).rgb;
 	NORMAL_MAP_DEPTH = normal_strength;
-	BACKLIGHT = base * 0.28;
+	BACKLIGHT = base * 0.11;
 }

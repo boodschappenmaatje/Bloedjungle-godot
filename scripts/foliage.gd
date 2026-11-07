@@ -26,6 +26,9 @@ static func material(kind := "") -> ShaderMaterial:
 		var m := ShaderMaterial.new()
 		m.shader = preload("res://shaders/foliage.gdshader")
 		m.set_shader_parameter("use_tex", kind != "")
+		# Existing source maps are strongly lime-tinted. A restrained olive grade
+		# keeps their detail while reducing the synthetic bright-green read.
+		m.set_shader_parameter("foliage_grade", Vector3(1.04,0.93,0.86) if kind not in ["", "bark", "depth_leaf"] else Vector3.ONE)
 		if kind == "bark":
 			m.set_shader_parameter("tex", load("res://assets/textures/nature/tree_bark/base_color.jpg"))
 			m.set_shader_parameter("nrm", load("res://assets/textures/nature/tree_bark/normal_gl.jpg"))
@@ -39,15 +42,36 @@ static func material(kind := "") -> ShaderMaterial:
 				m.set_shader_parameter("rough_tex", load("res://assets/textures/foliage/depth_pass/jungle_leaf_flower_roughness.png"))
 				m.set_shader_parameter("use_rough_tex", true)
 				m.set_shader_parameter("cut", 0.43)
-				m.set_shader_parameter("tint", Vector3(1.17, 1.19, 1.05))
-				m.set_shader_parameter("backlight", 0.72)
+				m.set_shader_parameter("tint", Vector3(1.07, 1.03, 0.92))
+				m.set_shader_parameter("backlight", 0.27)
+			elif kind.begins_with("depth_"):
+				var depth_textures := {"depth_rosette":"rosette", "depth_arch_fern":"arch_fern", "depth_red_bloom":"shrub"}
+				var texture_kind: String = depth_textures.get(kind, "")
+				if not texture_kind.is_empty():
+					var texture_root := "res://assets/textures/foliage/polyhaven/%s_" % texture_kind
+					m.set_shader_parameter("tex", load(texture_root + "base_color.png"))
+					m.set_shader_parameter("nrm", load(texture_root + "normal_gl.png"))
+					m.set_shader_parameter("rough_tex", load(texture_root + "roughness.png"))
+					m.set_shader_parameter("use_rough_tex", true)
+					m.set_shader_parameter("nrm_depth", 0.72)
+					m.set_shader_parameter("cut", 0.42)
+					m.set_shader_parameter("foliage_grade", Vector3(1.02,0.96,0.88))
+					m.set_shader_parameter("foliage_saturation", 0.92)
+					m.set_shader_parameter("foliage_gamma", 0.94)
+					m.set_shader_parameter("tint", Vector3(0.99, 1.0, 0.95))
+					m.set_shader_parameter("backlight", 0.17)
 			else:
 				m.set_shader_parameter("tex", LeafTex.get_tex(kind))
 				m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
 			if kind == "leaf":
-				# Subtle reflected canopy light keeps the low leaf layer readable from the game camera.
-				m.set_shader_parameter("tint", Vector3(1.19, 1.2, 0.98))
-				m.set_shader_parameter("backlight", 0.9)
+				m.set_shader_parameter("tint", Vector3(0.93, 0.92, 0.83))
+				m.set_shader_parameter("backlight", 0.22)
+			elif kind == "palm":
+				m.set_shader_parameter("tint", Vector3(0.91, 0.92, 0.79))
+				m.set_shader_parameter("backlight", 0.20)
+			elif kind == "fern":
+				m.set_shader_parameter("tint", Vector3(0.93, 0.92, 0.82))
+				m.set_shader_parameter("backlight", 0.18)
 		if kind == "grass":
 			m.set_shader_parameter("sway", 0.08)
 			m.set_shader_parameter("cut", 0.35)
@@ -225,30 +249,13 @@ static func jungle_mesh(name: String) -> Mesh:
 
 ## Struik van brede bladeren.
 static func bush() -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 9
-	for k in 22:
-		var yaw := TAU * k / 22.0 + rng.randf_range(-0.2, 0.2)
-		var o := Vector3(cos(yaw), 0, sin(yaw)) * rng.randf_range(0.0, 0.3) + Vector3.UP * rng.randf_range(0.05, 0.5)
-		_frond(st, o, yaw, rng.randf_range(0.9, 1.5), rng.randf_range(0.4, 0.55), rng.randf_range(0.5, 1.0), rng.randf_range(0.3, 0.8), Color(0.6, 0.7, 0.55), Color(1.0, 1.0, 0.9), 3)
-	var m := st.commit()
-	m.surface_set_material(0, material("leaf"))
-	return m
+	# Replace the old 22-blade plastic fan with the shared ribbed PBR rosette.
+	return JungleUnderstory.depth_mesh("rosette")
 
 
 static func fern() -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 3
-	for k in 10:
-		var yaw := TAU * k / 10.0 + rng.randf_range(-0.15, 0.15)
-		_frond(st, Vector3(0, 0.05, 0), yaw, rng.randf_range(1.0, 1.5), 0.32, rng.randf_range(0.5, 0.9), rng.randf_range(0.6, 1.0), Color(0.6, 0.7, 0.55), Color(1.0, 1.0, 0.9), 4)
-	var m := st.commit()
-	m.surface_set_material(0, material("fern"))
-	return m
+	# Share the authored pinnate fern with its LODs instead of the broad fan mesh.
+	return JungleUnderstory.depth_mesh("arch_fern")
 
 
 ## Pol gras: drie kruisende kaartjes.
@@ -445,7 +452,10 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 	rng.seed = seed_
 	var south_rng := RandomNumberGenerator.new()
 	south_rng.seed = seed_ + 1009
-	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
+	# Keep the established plant counts and trunk colliders. The authored low plants
+	# are now smaller at the combat camera, with the area they occupy coming from
+	# gaps between individual clumps rather than oversized leaf silhouettes.
+	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.55, 1.18, 0.05], "fern": [300, 15.8, 70.0, 0.50, 1.12, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
 	var meshes := {"bush": bush(), "fern": fern(), "grass": grass()}
 	for kind in sets:
 		if step.is_valid():

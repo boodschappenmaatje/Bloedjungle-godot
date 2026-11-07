@@ -9,6 +9,9 @@ uniform sampler2D nrm : hint_normal, filter_linear_mipmap, repeat_enable;
 uniform sampler2D rough_tex : filter_linear_mipmap, repeat_enable;
 uniform bool use_tex = true;
 uniform bool use_rough_tex = false;
+uniform vec3 foliage_grade = vec3(1.0);
+uniform float foliage_saturation = 0.80;
+uniform float foliage_gamma = 0.84;
 uniform bool tile = false;  // schors herhaalt zich; bladeren niet (rand vastgeklemd)
 uniform float nrm_depth = 1.0;
 uniform float sway = 0.14;
@@ -92,21 +95,29 @@ void fragment() {
 	vec4 t = use_tex ? texture(tex, uv) : vec4(1.0);
 	if (t.a < cut) discard;
 	if (fade_sightline) {
-		float hide = sight_hide(world_leaf, view_player, view_camera, 2.6);
-		if (view_e0.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e0.xyz, view_camera, 1.8));
-		if (view_e1.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e1.xyz, view_camera, 1.8));
-		if (view_e2.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e2.xyz, view_camera, 1.8));
+		float hide = sight_hide(world_leaf, view_player, view_camera, 5.2);
+		if (view_e0.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e0.xyz, view_camera, 3.1));
+		if (view_e1.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e1.xyz, view_camera, 3.1));
+		if (view_e2.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e2.xyz, view_camera, 3.1));
 		// alleen in het hoofdbeeld: in de schaduwkaart (camera = de zon) blijft het blad heel, dus geen gaatjesschaduw
 		if (hide > 0.0 && distance(INV_VIEW_MATRIX[3].xyz, view_camera) < 1.0) {
 			float n = fract(52.9829189 * fract(dot(FRAGCOORD.xy, vec2(0.06711056, 0.00583715))));  // goedkoop interleaved-gradient-ruis
-			if (n < hide * 0.76 * fade_amount) discard;
+			if (n < hide * 0.93 * fade_amount) discard;
 		}
 	}
 	if (use_tex) {
 		NORMAL_MAP = texture(nrm, uv).rgb;
 		NORMAL_MAP_DEPTH = nrm_depth;
 	}
-	ALBEDO = base * t.rgb * tint * root_contact;
+	vec3 leaf_color = t.rgb;
+	if (use_tex && !tile) {
+		float leaf_luma = dot(leaf_color, vec3(0.2126, 0.7152, 0.0722));
+		leaf_color = mix(vec3(leaf_luma), leaf_color, foliage_saturation) * foliage_grade;
+		// Lift the source maps' very dark midtones while keeping their hue and
+		// vein contrast; shadowed leaves should read as olive, not black cutouts.
+		leaf_color = pow(max(leaf_color, vec3(0.0)), vec3(foliage_gamma));
+	}
+	ALBEDO = base * leaf_color * tint * root_contact;
 	AO = root_contact;
 	AO_LIGHT_AFFECT = 0.15;
 	ROUGHNESS = tile ? 0.94 : (use_rough_tex ? texture(rough_tex, uv).r : 0.76);

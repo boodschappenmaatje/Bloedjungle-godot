@@ -1,140 +1,699 @@
 {
   "browser": "Chromium software WebGL; not an iPhone/Safari or game-camera test",
+  "source": "Poly Haven CC0 1.0 Universal",
   "species": {
     "rosette": {
-      "lods": {
+      "variants": {
         "0": {
-          "name": "HQ_rosette_LOD0",
-          "visible": true,
-          "triangles": 648,
-          "maps": {
-            "base": true,
-            "normal": true,
-            "roughness": true,
-            "baseSize": [
-              1024,
-              1024
-            ]
+          "lods": {
+            "0": {
+              "name": "HQ_rosette_V0_LOD0",
+              "visible": true,
+              "triangles": 2844,
+              "material": "Poly Haven rosette · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "1": {
+              "name": "HQ_rosette_V0_LOD1",
+              "visible": true,
+              "triangles": 1105,
+              "material": "Poly Haven rosette · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "2": {
+              "name": "HQ_rosette_V0_LOD2",
+              "visible": true,
+              "triangles": 315,
+              "material": "Poly Haven rosette · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            }
           }
         },
         "1": {
-          "name": "HQ_rosette_LOD1",
-          "visible": true,
-          "triangles": 56,
-          "maps": {
-            "base": true,
-            "normal": true,
-            "roughness": true,
-            "baseSize": [
-              1024,
-              1024
-            ]
+          "lods": {
+            "0": {
+              "name": "HQ_rosette_V1_LOD0",
+              "visible": true,
+              "triangles": 2797,
+              "material": "Poly Haven rosette · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "1": {
+              "name": "HQ_rosette_V1_LOD1",
+              "visible": true,
+              "triangles": 1088,
+              "material": "Poly Haven rosette · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "2": {
+              "name": "HQ_rosette_V1_LOD2",
+              "visible": true,
+              "triangles": 310,
+              "material": "Poly Haven rosette · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            }
           }
         },
         "2": {
-          "name": "HQ_rosette_LOD2",
-          "visible": true,
-          "triangles": 10,
-          "maps": {
-            "base": true,
-            "normal": true,
-            "roughness": true,
-            "baseSize": [
-              1024,
-              1024
-            ]
+          "lods": {
+            "0": {
+              "name": "HQ_rosette_V2_LOD0",
+              "visible": true,
+              "triangles": 1631,
+              "material": "Poly Haven rosette · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "1": {
+              "name": "HQ_rosette_V2_LOD1",
+              "visible": true,
+              "triangles": 635,
+              "material": "Poly Haven rosette · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "2": {
+              "name": "HQ_rosette_V2_LOD2",
+              "visible": true,
+              "triangles": 180,
+              "material": "Poly Haven rosette · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            }
           }
         }
       }
     },
     "arch_fern": {
-      "lods": {
+      "variants": {
         "0": {
-          "name": "HQ_arch_fern_LOD0",
-          "visible": true,
-          "triangles": 864,
-          "maps": {
-            "base": true,
-            "normal": true,
-            "roughness": true,
-            "baseSize": [
-              1024,
-              1024
-            ]
+          "lods": {
+            "0": {
+              "name": "HQ_arch_fern_V0_LOD0",
+              "visible": true,
+              "triangles": 784,
+              "material": "Poly Haven arch_fern · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "1": {
+              "name": "HQ_arch_fern_V0_LOD1",
+              "visible": true,
+              "triangles": 469,
+              "material": "Poly Haven arch_fern · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "2": {
+              "name": "HQ_arch_fern_V0_LOD2",
+              "visible": true,
+              "triangles": 156,
+              "material": "Poly Haven arch_fern · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            }
           }
         },
         "1": {
-          "name": "HQ_arch_fern_LOD1",
-          "visible": true,
-          "triangles": 392,
-          "maps": {
-            "base": true,
-            "normal": true,
-            "roughness": true,
-            "baseSize": [
-              1024,
-              1024
-            ]
+          "lods": {
+            "0": {
+              "name": "HQ_arch_fern_V1_LOD0",
+              "visible": true,
+              "triangles": 2384,
+              "material": "Poly Haven arch_fern · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "1": {
+              "name": "HQ_arch_fern_V1_LOD1",
+              "visible": true,
+              "triangles": 1429,
+              "material": "Poly Haven arch_fern · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "2": {
+              "name": "HQ_arch_fern_V1_LOD2",
+              "visible": true,
+              "triangles": 476,
+              "material": "Poly Haven arch_fern · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            }
           }
         },
         "2": {
-          "name": "HQ_arch_fern_LOD2",
-          "visible": true,
-          "triangles": 200,
-          "maps": {
-            "base": true,
-            "normal": true,
-            "roughness": true,
-            "baseSize": [
-              1024,
-              1024
-            ]
+          "lods": {
+            "0": {
+              "name": "HQ_arch_fern_V2_LOD0",
+              "visible": true,
+              "triangles": 2248,
+              "material": "Poly Haven arch_fern · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "1": {
+              "name": "HQ_arch_fern_V2_LOD1",
+              "visible": true,
+              "triangles": 1348,
+              "material": "Poly Haven arch_fern · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "2": {
+              "name": "HQ_arch_fern_V2_LOD2",
+              "visible": true,
+              "triangles": 449,
+              "material": "Poly Haven arch_fern · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            }
           }
         }
       }
     },
     "red_bloom": {
-      "lods": {
+      "variants": {
         "0": {
-          "name": "HQ_red_bloom_LOD0",
-          "visible": true,
-          "triangles": 1108,
-          "maps": {
-            "base": true,
-            "normal": true,
-            "roughness": true,
-            "baseSize": [
-              1024,
-              1024
-            ]
+          "lods": {
+            "0": {
+              "name": "HQ_red_bloom_V0_LOD0",
+              "visible": true,
+              "triangles": 1970,
+              "material": "Poly Haven red_bloom · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "1": {
+              "name": "HQ_red_bloom_V0_LOD1",
+              "visible": true,
+              "triangles": 755,
+              "material": "Poly Haven red_bloom · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "2": {
+              "name": "HQ_red_bloom_V0_LOD2",
+              "visible": true,
+              "triangles": 139,
+              "material": "Poly Haven red_bloom · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            }
           }
         },
         "1": {
-          "name": "HQ_red_bloom_LOD1",
-          "visible": true,
-          "triangles": 366,
-          "maps": {
-            "base": true,
-            "normal": true,
-            "roughness": true,
-            "baseSize": [
-              1024,
-              1024
-            ]
+          "lods": {
+            "0": {
+              "name": "HQ_red_bloom_V1_LOD0",
+              "visible": true,
+              "triangles": 1566,
+              "material": "Poly Haven red_bloom · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "1": {
+              "name": "HQ_red_bloom_V1_LOD1",
+              "visible": true,
+              "triangles": 588,
+              "material": "Poly Haven red_bloom · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "2": {
+              "name": "HQ_red_bloom_V1_LOD2",
+              "visible": true,
+              "triangles": 225,
+              "material": "Poly Haven red_bloom · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            }
           }
         },
         "2": {
-          "name": "HQ_red_bloom_LOD2",
-          "visible": true,
-          "triangles": 102,
-          "maps": {
-            "base": true,
-            "normal": true,
-            "roughness": true,
-            "baseSize": [
-              1024,
-              1024
-            ]
+          "lods": {
+            "0": {
+              "name": "HQ_red_bloom_V2_LOD0",
+              "visible": true,
+              "triangles": 2242,
+              "material": "Poly Haven red_bloom · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "1": {
+              "name": "HQ_red_bloom_V2_LOD1",
+              "visible": true,
+              "triangles": 846,
+              "material": "Poly Haven red_bloom · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            },
+            "2": {
+              "name": "HQ_red_bloom_V2_LOD2",
+              "visible": true,
+              "triangles": 369,
+              "material": "Poly Haven red_bloom · 1K PBR",
+              "alphaTest": 0.42,
+              "maps": {
+                "base": true,
+                "normal": true,
+                "roughness": true,
+                "baseSize": [
+                  1024,
+                  1024
+                ],
+                "normalSize": [
+                  1024,
+                  1024
+                ],
+                "roughnessSize": [
+                  1024,
+                  1024
+                ]
+              }
+            }
           }
         }
       }
@@ -142,6 +701,6 @@
   },
   "errors": [],
   "loading": "Echte GLB-materialen laden…",
-  "status": "Jungle dieptepass · drie nieuwe plantvormen · VQ2 export · 360° draaien en zoomen actief.",
+  "status": "Jungle dieptepass · Poly Haven-ondergroei · VQ2 export · 360° draaien en zoomen actief.",
   "ok": true
 }

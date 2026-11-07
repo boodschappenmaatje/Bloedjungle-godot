@@ -112,7 +112,7 @@ func apply_settings() -> void:
 	_env.fog_light_color = Color(t["fog"]).lerp(Color("9aa59a"), 0.0 if weather == "clear" else 0.35)
 	_env.fog_density = {"clear": 0.0035, "rain": 0.014, "mist": 0.018}[weather]
 	_env.tonemap_exposure = t["exp"]
-	_env.adjustment_saturation = 1.06 if weather == "clear" else 0.85
+	_env.adjustment_saturation = 0.98 if weather == "clear" else 0.85
 	_apply_quality(quality)
 	_apply_trees()
 	Woonhuis.apply_shadow_setting()

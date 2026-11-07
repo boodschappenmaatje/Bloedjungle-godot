@@ -48,20 +48,25 @@ func run() -> void:
 	check(under.has_method("litter_mesh"),"Litter needs a corrected ground normal frame")
 	if under.has_method("litter_mesh"):
 		var litter: ArrayMesh = under.litter_mesh()
-		check(litter.surface_get_arrays(0)[Mesh.ARRAY_NORMAL][0].is_equal_approx(Vector3(0,0,-1)),"Litter normal must face up after horizontal rotation")
+		var litter_normal: Vector3 = litter.surface_get_arrays(0)[Mesh.ARRAY_NORMAL][0]
+		check(litter_normal.dot(Vector3.UP) >= 0.999,"Ground litter leaves must use an upward tangent frame")
+		check(litter.surface_get_arrays(0)[Mesh.ARRAY_TANGENT].size()>0,"Ground litter PBR needs a generated tangent frame")
 		var groundcover: ArrayMesh = under.groundcover_mesh()
 		check(groundcover.get_surface_count() == 1,"Groundcover must stay on one cutout surface for batching")
 		check(groundcover.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size() <= 320,"Low groundcover must spend its geometry budget on coverage, not near-invisible bends")
 	for kind in ["rosette","arch_fern","red_bloom"]:
-		var depth_mesh: ArrayMesh = under.depth_mesh(kind)
-		check(depth_mesh != null and depth_mesh.get_surface_count() == 1,"Depth-pass species must remain a single batched PBR surface: "+kind)
-		if depth_mesh != null:
-			check(depth_mesh.get_meta("depth_lod_distances_m", []) == [20.0,48.0],"Depth-pass species needs useful mid-distance native LOD thresholds: "+kind)
-			var triangles: Array = depth_mesh.get_meta("depth_lod_triangles", [])
-			check(triangles.size() == 3 and triangles[0] > triangles[1] and triangles[1] > triangles[2],"Depth-pass species LOD index sets must reduce triangles at distance: "+kind)
-			var depth_arrays := depth_mesh.surface_get_arrays(0)
-			check(depth_arrays[Mesh.ARRAY_TANGENT].size() > 0,"PBR leaf atlas needs imported tangents: "+kind)
-			check(depth_arrays[Mesh.ARRAY_COLOR].size() > 0,"Plant sway needs authored root-to-tip vertex weights: "+kind)
+		for variant in 3:
+			var depth_variant_mesh: ArrayMesh = under.depth_mesh(kind,variant)
+			var label := "%s variant %d" % [kind,variant]
+			check(depth_variant_mesh != null and depth_variant_mesh.get_surface_count() == 1,"Depth-pass species must remain one batched PBR surface: "+label)
+			if depth_variant_mesh != null:
+				check(depth_variant_mesh.get_meta("depth_lod_distances_m", []) == [20.0,48.0],"Depth-pass species needs useful native LOD thresholds: "+label)
+				check(depth_variant_mesh.get_aabb().size.y <= 0.9,"Understory species must stay below actor-hiding height: "+label)
+				var triangles: Array = depth_variant_mesh.get_meta("depth_lod_triangles", [])
+				check(triangles.size() == 3 and triangles[0] > triangles[1] and triangles[1] > triangles[2],"Source foliage LODs must reduce triangles at distance: "+label)
+				var depth_arrays := depth_variant_mesh.surface_get_arrays(0)
+				check(depth_arrays[Mesh.ARRAY_TANGENT].size() > 0,"PBR leaf surfaces need imported tangents: "+label)
+				check(depth_arrays[Mesh.ARRAY_COLOR].size() > 0,"Plant sway needs authored root-to-tip vertex weights: "+label)
 	check(not details.is_empty(), "Missing clustered understory in the real game level")
 	check(details.any(func(n: MultiMeshInstance3D) -> bool: return n.name.begins_with("Understory_groundcover_")),"Missing fine-scale groundcover in the real game level")
 	for n: MultiMeshInstance3D in details:
@@ -143,6 +148,9 @@ func run() -> void:
 	for file in ["jungle_leaf_flower_base_color.png","jungle_leaf_flower_normal_gl.png","jungle_leaf_flower_roughness.png"]:
 		var tex: Texture2D = load("res://assets/textures/foliage/depth_pass/"+file)
 		check(tex != null and tex.get_image().get_width() == 1024 and tex.get_image().has_mipmaps(),"New 1K leaf PBR atlas needs mipmaps: "+file)
+	for file in ["rosette_base_color.png","rosette_normal_gl.png","rosette_roughness.png","arch_fern_base_color.png","arch_fern_normal_gl.png","arch_fern_roughness.png","shrub_base_color.png","shrub_normal_gl.png","shrub_roughness.png"]:
+		var tex: Texture2D = load("res://assets/textures/foliage/polyhaven/"+file)
+		check(tex != null and tex.get_image().get_width() == 1024 and tex.get_image().has_mipmaps(),"Poly Haven runtime PBR maps need 1K mipmapped cutout textures: "+file)
 	var atm := get_first_node_in_group("atmosphere")
 	for quality in ["low","high","ultra","high"]:
 		settings.values["quality"] = quality

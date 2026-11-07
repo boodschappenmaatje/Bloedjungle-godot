@@ -6,6 +6,7 @@ on:
     paths:
       - "assets/textures/terrain/**"
       - "assets/textures/foliage/depth_pass/**"
+      - "assets/textures/foliage/polyhaven/**"
       - "assets/jungle_depth_foliage.glb"
       - "bron/jungle_foliage_depth/**"
       - "scripts/atmosphere.gd"

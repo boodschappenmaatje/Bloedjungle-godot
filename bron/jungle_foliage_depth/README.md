@@ -1,50 +1,58 @@
-# Jungle Depth Foliage
+# B-depth PBR jungle understory
 
-Three approved visual-only species add distinct silhouettes at the game camera:
-`rosette` (broad, ribbed ground leaves), `arch_fern` (arched pinnate fronds),
-and `red_bloom` (small oxide-red flower spikes). The source is authored in metres
-in Blender Z-up. The exported GLB contains one node for each species/LOD. It is
-batched through the existing jungle detail cells and receives no collision.
+This source replaces the earlier procedural leaf silhouettes with three approved
+CC0 Poly Haven plants: `fern_02`, `anthurium_botany_01`, and `shrub_04`. The first
+two retain three distinct scanned/modelled variants. `shrub_04` combines three
+photographed branches into each compact clump variant. Its project names remain
+`arch_fern`, `rosette`, and `red_bloom` so the existing gameplay scatter and
+clearance code can keep its contracts.
 
-## Rebuild
+## Provenance and rebuild
 
-From the repository root:
+The official Poly Haven source package, asset pages, authors, CC0 license URL,
+download URLs, source MD5 values, and pinned SHA-256 digests are recorded in
+`polyhaven_source/download_manifest.json`. Recheck every source byte and update
+that receipt with:
 
 ```sh
-python3 bron/jungle_foliage_depth/build_pbr_atlas.py
-blender --background --factory-startup --python bron/jungle_foliage_depth/make_assets.py
-blender --background --factory-startup \
-  --python bron/jungle_foliage_depth/export_usdz_previews.py -- \
-  --source bron/jungle_foliage_depth/jungle_foliage_depth.blend \
-  --output-dir previews/usdz/jungle_depth_foliage
+python3 bron/jungle_foliage_depth/record_polyhaven_sources.py
 ```
 
-The generator writes the editable `.blend`, `assets/jungle_depth_foliage.glb`,
-the shared 1024×1024 base-color/OpenGL-normal/roughness set and a triangle manifest.
-It does not change original sources. Four atlas quadrants use the project's native
-leaf (512²), fern (512×256), and palm (512×256) maps; flower color derives from the
-existing leaf source with a restrained red/bronze pigment. The fern and palm maps
-are centered in their 512px atlas cells without enlargement. Roughness is authored
-from source luminance/edge detail; it is not a measured source map. All PBR maps
-are embedded in the GLB and remain available as source files.
+Runtime maps are derived from the official 2K diffuse, alpha, OpenGL normal, and
+ARM maps. Transparent RGB is edge-dilated before downsampling; tangent normals
+are filtered and renormalized; ARM green supplies linear roughness. The mobile
+PBR sets are 1024×1024, mipmapped, alpha-cutout textures in
+`assets/textures/foliage/polyhaven/`. Their hashes and channel handling are in
+that directory's `manifest.json`.
 
-## Runtime and budget
+Rebuild the maps and geometry in this order:
 
-LOD0 triangles: broad rosette 648, arched fern 864, red bloom 1,108.
-LOD1 and LOD2 reduce the same silhouettes: rosette 56/10, fern 392/200,
-bloom 366/102. Godot merges the imported LOD node
-arrays into one `ArrayMesh` with native LOD index sets, then uses the existing
-cell-batched `MultiMesh`, clearances and distance culling. No extra plant shadow
-casters, draw-per-instance objects, or collision shapes are used.
+```sh
+python3 bron/jungle_foliage_depth/prepare_polyhaven_textures.py
+blender --background --factory-startup --python bron/jungle_foliage_depth/make_assets.py
+```
 
-These figures are mesh counts, not mobile frame-rate claims. The iPhone test plan
-and actual game-camera capture decide visual and performance acceptance.
+The editable `jungle_foliage_depth.blend` holds the source silhouettes and the
+three PBR materials. `assets/jungle_depth_foliage.glb` contains 27 render-only
+meshes, with one mesh per source variant and LOD. It deliberately leaves
+materials to the shared Godot shader so no duplicate texture copies are packed
+into the runtime GLB.
 
-## iPhone Quick Look copies
+## Mobile budget and behavior
 
-The three LOD0 USDZ review files are in
-`previews/usdz/jungle_depth_foliage/v1/`. Blender 4.5.3 exports and re-imports
-each package with one visible mesh and its PBR textures; the zip contains one USD
-layer and base-color, normal and roughness images. The Linux environment has no
-Apple `xcrun usdchecker --arkit` or Quick Look, so Apple validation and physical
-iPhone preview remain untested. See the per-file JSON receipts beside each USDZ.
+The largest LOD0 models are 2,844 triangles for anthurium, 2,384 for fern, and
+2,242 for the shrub clump. Their LOD1/LOD2 variants reduce to 1,105/315,
+1,429/476, and 846/369 triangles at most, respectively. Godot joins each
+species/variant's three levels into one `ArrayMesh` surface with native LOD
+switches at 20 m and 48 m; existing cell-batched MultiMeshes and 76 m distance
+culling remain in use. Detail casts no shadows and adds no collision shapes.
+
+The existing plant-count caps and placements are unchanged by this model pass.
+Only the shape variety and material quality change. The species remain low
+enough to keep troops and firing lanes legible; source dimensions are normalized
+to a 0.53–0.64 m plant height before the existing per-instance scale variation.
+
+All textures and models are CC0 from Poly Haven. The source authors and exact
+asset links are in the provenance receipt. No external or generated concept
+images are used as implementation evidence; visual approval is based on the
+real Godot main-camera capture in `docs/visual_upgrade_b_1_0/captures/`.

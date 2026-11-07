@@ -93,7 +93,10 @@ static func litter_mesh() -> ArrayMesh:
 	# The shared PBR atlas gives them a subdued oxide/leaf-litter surface.
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var atlas_min := Vector2(0.52,0.52)
+	# Fallen broad leaves must sample the anthurium cell, not the sparse palm
+	# frond at bottom-right. The latter leaves most of each mesh transparent
+	# after the shader alpha cut and makes the existing litter budget disappear.
+	var atlas_min := Vector2(0.02,0.02)
 	var atlas_span := Vector2(0.46,0.46)
 	# The same three leaves remain one cheap instanced mesh; scale them enough
 	# to read as scattered litter from the normal game camera.

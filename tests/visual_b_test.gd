@@ -52,6 +52,11 @@ func run() -> void:
 		var litter_normal: Vector3 = litter.surface_get_arrays(0)[Mesh.ARRAY_NORMAL][0]
 		check(litter_normal.dot(Vector3.UP) >= 0.999,"Ground litter leaves must use an upward tangent frame")
 		check(litter.surface_get_arrays(0)[Mesh.ARRAY_TANGENT].size()>0,"Ground litter PBR needs a generated tangent frame")
+		var litter_uv: PackedVector2Array = litter.surface_get_arrays(0)[Mesh.ARRAY_TEX_UV]
+		var litter_uv_valid := not litter_uv.is_empty()
+		for uv in litter_uv:
+			litter_uv_valid = litter_uv_valid and uv.x >= 0.019 and uv.x <= 0.481 and uv.y >= 0.019 and uv.y <= 0.481
+		check(litter_uv_valid,"Fallen leaf meshes must sample the broad leaf atlas cell, not mostly transparent palm fronds")
 		var groundcover: ArrayMesh = under.groundcover_mesh()
 		check(groundcover.get_surface_count() == 1,"Groundcover must stay on one cutout surface for batching")
 		check(groundcover.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size() <= 320,"Low groundcover must spend its geometry budget on coverage, not near-invisible bends")

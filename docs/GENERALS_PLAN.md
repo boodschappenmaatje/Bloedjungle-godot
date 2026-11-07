@@ -192,3 +192,10 @@ De native iPhone-test toonde onbedoelde wielkeuzes doordat de knop GEBRUIK tegel
 - Waar de speler en het eerste depot met truck verschijnen als de basis niet meer op de oorsprong staat; wat er met het vaste kamp (`Data.COMPOUND`, 56 x 56 m, poort, vier torens) gebeurt.
 
 **Wat mee moet verhuizen van de vaste basis naar het hoofdkwartier:** terugkomen na sneuvelen (H1), eerste depot en truck, radar en teamwiel, startplek van de speler, en de aanvalsroutes van de vijand (doel wordt het nieuwe hoofdkwartier). Eerst speelbaar met blokken (wagen en hoofdkwartier als blokken), daarna de modellen via een Asset Design Specification. Native iPhone-test: NIET GETEST.
+
+### MCV — aanvullende keuzes van Dennis (7 november 2026, tweede ronde)
+- **Muur trekken:** zoals je in de stad een weg trekt (zelfde bediening als de stadseditor). "Per muur" = zoals die bediening dat telt; vastgelegd: **een complete omheining is gratis** (de eerste keer), daarna 50 per muur.
+- **Torens:** de 4 gratis torens (en latere van 100) mogen **alleen bij de basis** staan.
+- **Het huidige vaste kamp vervalt.** De wagen is het nieuwe begin: muur, poort, torens, wachtposten en bijbehorende vaste props op de oorsprong (`Data.COMPOUND`-code: `gates.gd`, `base_props.gd`, `wachtpost.gd`, `patrouille.gd`, `generator.gd`, `route.gd`, `voorraad.gd`, enz.) moeten dynamisch worden of vervallen.
+- **Gebouwen blijven bouwbaar** (kazerne, garage, enz.) via de bestaande bouwmodus, rond het hoofdkwartier.
+- Nog te beslissen: zie de vragenlijst in het gesprek van 7 november (afstand tot water/stad/vijandbasis, startplek en eerste depot/truck, bunker, HK-gebied, radar, aanvalsdoel van de vijand, wat er met bestaande wachten gebeurt).

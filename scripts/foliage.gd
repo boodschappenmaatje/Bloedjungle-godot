@@ -17,7 +17,7 @@ const PALM_NEAR := 62.0  # dichterbij: volledige palm; verder: de simpele palm
 ## Stam of rots waar je niet doorheen loopt: straal in meters bij schaal 1 (laag Kit.LAYER_NATURE: mensen, voertuigen, kogels en granaten).
 const BOOM_COLLIDE_R := 0.8  # jungleboom: stam met plankwortels (bij schaal 1, voor de 0,75 van BOOM_SCALE)
 const COLLIDE_R := {"palm": 0.32, "rock": 0.45}
-const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.38], "bush": [1.1, 1.8, 0.32], "rock": [0.5, 1.2, 0.32]}  # hoogte, breedte, sterkte
+const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.28], "bush": [1.1, 1.8, 0.32], "rock": [0.5, 1.2, 0.32]}  # hoogte, breedte, sterkte
 
 
 ## Wind-materiaal; met een bladtextuur (kind) of zonder (stam, rotsen).
@@ -123,6 +123,14 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 		mat.set_shader_parameter("view_e0", e[0])
 		mat.set_shader_parameter("view_e1", e[1])
 		mat.set_shader_parameter("view_e2", e[2])
+	# Fade the existing cheap palm-shadow quads close to actor feet. Their leaf
+	# silhouettes remain as soft canopy shade in the surrounding play space.
+	for shadow_mat: ShaderMaterial in _shadow_mats.values():
+		shadow_mat.set_shader_parameter("actor_focus_active", active)
+		shadow_mat.set_shader_parameter("focus_player_xz", Vector2(player_pos.x, player_pos.z))
+		shadow_mat.set_shader_parameter("focus_e0", Vector3(e[0].x, e[0].z, e[0].w))
+		shadow_mat.set_shader_parameter("focus_e1", Vector3(e[1].x, e[1].z, e[1].w))
+		shadow_mat.set_shader_parameter("focus_e2", Vector3(e[2].x, e[2].z, e[2].w))
 
 
 ## Cast real sun shadows only for the nearest few PBR foliage batches. The
@@ -225,6 +233,8 @@ static func _shadow_mat(kind: String) -> ShaderMaterial:
 		m.set_shader_parameter("height", c[0])
 		m.set_shader_parameter("width", c[1])
 		m.set_shader_parameter("strength", c[2])
+		m.set_shader_parameter("actor_clear_inner", 0.9)
+		m.set_shader_parameter("actor_clear_outer", 2.8)
 		if kind == "palm":
 			m.set_shader_parameter("canopy_detail", true)
 			m.set_shader_parameter("canopy_tex", LeafTex.get_tex("palm"))

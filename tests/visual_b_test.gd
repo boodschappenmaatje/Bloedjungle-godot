@@ -66,6 +66,9 @@ func run() -> void:
 		check(litter.surface_get_material(0) == Foliage.material("depth_litter"),"Fallen leaves must use the shared scanned PBR material")
 		check(Foliage.material("depth_litter").get_shader_parameter("wind") == 0.0,"Fallen leaves must remain grounded when gameplay wind is enabled")
 		check(Foliage.material("depth_litter").get_shader_parameter("foliage_grade").x >= 2.5,"Dark scanned leaves need a bounded warm lift for ground readability")
+		var palm_shadow: ShaderMaterial = fol._shadow_mat("palm")
+		check(not palm_shadow.get_shader_parameter("canopy_detail"),"Palm shadow must not project a radial leaf-star pattern onto the floor")
+		check(float(palm_shadow.get_shader_parameter("strength")) <= 0.18,"Palm helper shadow must stay soft under the actor camera")
 		fol.set_wind(true)
 		check(Foliage.material("depth_litter").get_shader_parameter("wind") == 0.0,"Global wind changes must not animate leaves lying on the ground")
 		fol.set_wind(false)
@@ -150,6 +153,8 @@ func run() -> void:
 				if entry.get("visual_role","") == "forest_floor_pebble": visible_floor_pebbles += 1
 				if entry.get("visual_role","") == "forest_floor_twig": visible_floor_twigs += 1
 			var authored_kind: String = authored_batches.get(entry.slots[0].multimesh.get_instance_id(),"")
+			if authored_kind in ["rosette","arch_fern","red_bloom"]:
+				check(Vector2(p.x-7.0,p.z+57.0).length() >= 3.2,"Broad leaves must preserve the opening-game actor sightline pocket")
 			if not authored_kind.is_empty() and Vector2(p.x-7.0,p.z+57.0).length() < 30.0:
 				near_authored[authored_kind] += 1
 			var cover_kind: String = camera_cover_batches.get(batch_id,"")
@@ -187,7 +192,7 @@ func run() -> void:
 		check(fol.count_clearable_in_regions(regions,sample,0.0)>0,"No clearance candidates")
 		fol.clear_for_building(987654,regions,sample,0.0)
 		check(fol.count_clearable_in_regions(regions,sample,0.0)==0,"New vegetation survives building clearing")
-	check(fol._shadow_mat("palm").get_shader_parameter("canopy_tex") is Texture2D,"Fixed palm shadows need the existing leaf silhouette")
+	check(not fol._shadow_mat("palm").get_shader_parameter("canopy_detail"),"Fixed palm shadows must keep the soft, non-radial fallback")
 	var mat: ShaderMaterial = get_tree().get_first_node_in_group("ground").get_meta("mat")
 	for key in ["grass_surface","jungle_surface","mud_surface","moss_surface","moss_tex","gravel_tex","gravel_surface"]:
 		var tex = mat.get_shader_parameter(key)
@@ -217,8 +222,13 @@ func run() -> void:
 	check(Foliage.material("depth_red_bloom").shader.get_code().contains("surface.g"),"PBR foliage shader must consume packed AO without another texture sampler")
 	check(Foliage.material("depth_rosette").get_shader_parameter("roughness_floor") <= 0.35,
 		"Scanned anthurium leaves must retain their measured soft gloss instead of a global matte clamp")
-	check(Foliage.material("depth_rosette").get_shader_parameter("foliage_saturation") <= 0.85,
-		"Scanned foliage should keep a restrained olive palette instead of bright lime green")
+	check(Foliage.material("depth_rosette").get_shader_parameter("foliage_saturation") >= 0.86 and Foliage.material("depth_rosette").get_shader_parameter("foliage_saturation") <= 0.92,
+		"Scanned foliage should retain natural source-map color without a warm color grade")
+	var rosette_grade: Vector3 = Foliage.material("depth_rosette").get_shader_parameter("foliage_grade")
+	var grade_min := minf(rosette_grade.x, minf(rosette_grade.y, rosette_grade.z))
+	var grade_max := maxf(rosette_grade.x, maxf(rosette_grade.y, rosette_grade.z))
+	check(grade_max - grade_min <= 0.10,
+		"Scanned foliage color grade must not shift natural leaf colors toward yellow or brown")
 	check(Foliage.material("depth_arch_fern").get_shader_parameter("roughness_floor") >= 0.58,
 		"Scanned fern leaves must keep their naturally matte response")
 	check(Foliage.material("depth_rosette").get_shader_parameter("nrm_depth") >= 0.78,

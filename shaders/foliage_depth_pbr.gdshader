@@ -50,7 +50,7 @@ float sight_hide(vec3 p, vec3 target, vec3 cam, float radius) {
 // palm fronds that project over the soldier while their trunks sit metres away.
 float actor_screen_hide(vec2 screen_uv, vec2 actor_uv) {
 	vec2 delta = (screen_uv - actor_uv) * vec2(screen_aspect, 1.0);
-	return 1.0 - smoothstep(0.032, 0.11, length(delta));
+	return 1.0 - smoothstep(0.04, 0.14, length(delta));
 }
 
 void vertex() {

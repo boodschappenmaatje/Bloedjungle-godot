@@ -17,7 +17,7 @@ const PALM_NEAR := 62.0  # dichterbij: volledige palm; verder: de simpele palm
 ## Stam of rots waar je niet doorheen loopt: straal in meters bij schaal 1 (laag Kit.LAYER_NATURE: mensen, voertuigen, kogels en granaten).
 const BOOM_COLLIDE_R := 0.8  # jungleboom: stam met plankwortels (bij schaal 1, voor de 0,75 van BOOM_SCALE)
 const COLLIDE_R := {"palm": 0.32, "rock": 0.45}
-const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.28], "bush": [1.1, 1.8, 0.32], "rock": [0.5, 1.2, 0.32]}  # hoogte, breedte, sterkte
+const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.16], "bush": [1.1, 1.8, 0.26], "rock": [0.5, 1.2, 0.26]}  # hoogte, breedte, sterkte
 
 
 ## Wind-materiaal; met een bladtextuur (kind) of zonder (stam, rotsen).
@@ -28,9 +28,9 @@ static func material(kind := "") -> ShaderMaterial:
 		m.shader = preload("res://shaders/foliage_depth_pbr.gdshader") if depth_pbr else preload("res://shaders/foliage.gdshader")
 		if not depth_pbr:
 			m.set_shader_parameter("use_tex", kind != "")
-		# Existing source maps are strongly lime-tinted. A restrained olive grade
-		# keeps their detail while reducing the synthetic bright-green read.
-		m.set_shader_parameter("foliage_grade", Vector3(1.04,0.93,0.86) if kind not in ["", "bark", "depth_leaf"] else Vector3.ONE)
+		# Keep the photographed leaf hue close to the source maps. The old red-heavy
+		# grade pushed both daylight and shadowed leaves toward yellow/brown.
+		m.set_shader_parameter("foliage_grade", Vector3(0.98,1.02,0.98) if kind not in ["", "bark", "depth_leaf"] else Vector3.ONE)
 		if kind == "bark":
 			m.set_shader_parameter("tex", load("res://assets/textures/nature/tree_bark/base_color.jpg"))
 			m.set_shader_parameter("nrm", load("res://assets/textures/nature/tree_bark/normal_gl.jpg"))
@@ -65,22 +65,22 @@ static func material(kind := "") -> ShaderMaterial:
 					m.set_shader_parameter("leaf_specular", specular)
 					m.set_shader_parameter("nrm_depth", normal_depth)
 					m.set_shader_parameter("cut", 0.42)
-					var grade := Vector3(3.1,2.3,1.8) if kind == "depth_litter" else (Vector3(1.18,1.09,0.93) if kind in ["depth_rosette", "depth_arch_fern"] else Vector3(1.14,1.06,0.91))
+					var grade := Vector3(3.1,2.3,1.8) if kind == "depth_litter" else (Vector3(1.04,1.06,1.0) if kind in ["depth_rosette", "depth_arch_fern"] else Vector3(1.02,1.04,0.99))
 					m.set_shader_parameter("foliage_grade", grade)
-					m.set_shader_parameter("foliage_saturation", 0.68 if kind == "depth_litter" else 0.82)
-					m.set_shader_parameter("tint", Vector3.ONE if kind == "depth_litter" else Vector3(1.02,1.03,0.95))
+					m.set_shader_parameter("foliage_saturation", 0.68 if kind == "depth_litter" else 0.90)
+					m.set_shader_parameter("tint", Vector3.ONE if kind == "depth_litter" else Vector3(1.0,1.01,0.98))
 					m.set_shader_parameter("backlight", 0.08 if kind in ["depth_microcover", "depth_litter"] else 0.12)
 			else:
 				m.set_shader_parameter("tex", LeafTex.get_tex(kind))
 				m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
 			if kind == "leaf":
-				m.set_shader_parameter("tint", Vector3(0.93, 0.92, 0.83))
+				m.set_shader_parameter("tint", Vector3(0.96, 0.99, 0.94))
 				m.set_shader_parameter("backlight", 0.22)
 			elif kind == "palm":
-				m.set_shader_parameter("tint", Vector3(0.91, 0.92, 0.79))
+				m.set_shader_parameter("tint", Vector3(0.95, 0.99, 0.94))
 				m.set_shader_parameter("backlight", 0.20)
 			elif kind == "fern":
-				m.set_shader_parameter("tint", Vector3(0.93, 0.92, 0.82))
+				m.set_shader_parameter("tint", Vector3(0.95, 0.99, 0.94))
 				m.set_shader_parameter("backlight", 0.18)
 		if kind == "grass":
 			m.set_shader_parameter("sway", 0.08)
@@ -112,7 +112,9 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 	if camera != null:
 		viewport_size = Vector2(camera.get_viewport().size)
 		viewport_aspect = viewport_size.x / maxf(viewport_size.y, 1.0)
-		render_size_px = viewport_size * camera.get_viewport().scaling_3d_scale
+		# Godot reports FRAGCOORD in the viewport's output-pixel coordinates for
+		# spatial materials even when 3D upscaling is enabled.
+		render_size_px = viewport_size
 	var player_screen_uv := Vector2(0.5, 0.5)
 	if camera != null and viewport_size.x > 0.0 and viewport_size.y > 0.0:
 		player_screen_uv = camera.unproject_position(player_pos + Vector3.UP * 0.8) / viewport_size
@@ -258,8 +260,9 @@ static func _shadow_mat(kind: String) -> ShaderMaterial:
 		m.set_shader_parameter("width", c[1])
 		m.set_shader_parameter("strength", c[2])
 		if kind == "palm":
-			m.set_shader_parameter("canopy_detail", true)
-			m.set_shader_parameter("canopy_tex", LeafTex.get_tex("palm"))
+			# The radial alpha projection looked like a spiky star on the ground.
+			# Use the soft directional blob here; real canopy geometry supplies detail.
+			m.set_shader_parameter("canopy_detail", false)
 		_shadow_mats[kind] = m
 	return _shadow_mats[kind]
 

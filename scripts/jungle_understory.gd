@@ -78,7 +78,11 @@ static func allowed(p: Vector3) -> bool:
 static func _colony_offset(rng: RandomNumberGenerator, radius: float, aspect: float, yaw: float) -> Vector2:
 	var angle := rng.randf() * TAU
 	var radial := sqrt(rng.randf()) * radius
-	return Vector2(cos(angle) * radial * aspect, sin(angle) * radial).rotated(yaw)
+	# Slightly lobed, offset edges avoid the repeated circular-card look while
+	# retaining the existing seeded colony count and MultiMesh batching.
+	var lobe := 0.82 + 0.13 * sin(angle * 3.0 + yaw) + 0.08 * cos(angle * 5.0 - yaw)
+	var forward := 0.91 + 0.13 * cos(angle * 2.0 + yaw)
+	return Vector2(cos(angle) * radial * aspect * lobe, sin(angle) * radial * forward).rotated(yaw)
 
 static func _colony_species(primary: String, rng: RandomNumberGenerator) -> String:
 	# Keep the group visually coherent, but mix adjacent understory shapes so
@@ -409,6 +413,11 @@ static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNu
 		# Reallocate a small part of repeated cards and ground litter to the three
 		# authored PBR silhouettes while keeping the overall scatter bounded.
 		kind = "fern" if roll<0.08 else ("bush" if roll<0.18 else ("groundcover" if roll<0.46 else ("rosette" if roll<0.55 else ("arch_fern" if roll<0.64 else ("red_bloom" if roll<0.70 else ("litter" if roll<0.85 else ("stone" if roll<0.97 else "twig")))))))
+	# Preserve a small, low-cover pocket at the opening-game combat position.
+	# Broad scanned leaves stay out of the soldier silhouette; low groundcover,
+	# litter and grass still provide floor detail there.
+	if kind in ["fern", "bush", "rosette", "arch_fern", "red_bloom"] and Vector2(p.x - 7.0, p.z + 57.0).length() < 3.2:
+		return
 	if counts[kind]>=CAPS[kind]: return
 	var variant := rng.randi_range(0,2) if kind in ["fern","bush","groundcover","rosette","arch_fern","red_bloom"] else 0
 	var cell := Vector2i(floori(p.x/CELL),floori(p.z/CELL))
@@ -429,9 +438,9 @@ static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNu
 		var footprint_x := rng.randf_range(1.40,1.74)
 		var footprint_z := rng.randf_range(1.18,1.55)
 		size_ = Vector3(s*footprint_x,s*rng.randf_range(0.92,1.12),s*footprint_z)
-	if kind=="rosette": size_ *= rng.randf_range(0.70,0.90)
-	if kind=="arch_fern": size_ *= rng.randf_range(0.64,0.84)
-	if kind=="red_bloom": size_ *= rng.randf_range(0.72,0.92)
+	if kind=="rosette": size_ *= rng.randf_range(0.64,0.82)
+	if kind=="arch_fern": size_ *= rng.randf_range(0.60,0.78)
+	if kind=="red_bloom": size_ *= rng.randf_range(0.68,0.86)
 	# Fallen blades need roughly half-metre tips to resolve from the game camera;
 	# keep them on the ground and spend the existing litter budget at this scale.
 	if kind=="litter": size_=Vector3.ONE*rng.randf_range(1.02,1.52)
@@ -442,19 +451,19 @@ static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNu
 	if kind=="twig": basis *= Basis(Vector3.RIGHT,PI*0.5)
 	groups[key].xf.append(Transform3D(basis * Basis.from_scale(size_),p))
 	groups[key].visual_roles.append("trail_edge_pebble" if path_pebble else ("forest_floor_pebble" if floor_pebble else ("forest_floor_twig" if forced_kind == "floor_twig" else "")))
-	var shade := rng.randf_range(0.78,1.12)
+	var shade := rng.randf_range(0.88,1.07)
 	if kind=="litter":
-		var leaf_tones: Array[Color] = [Color(0.90,0.69,0.40),Color(0.72,0.51,0.29),Color(0.82,0.76,0.48)]
+		var leaf_tones: Array[Color] = [Color(0.79,0.70,0.49),Color(0.66,0.54,0.38),Color(0.84,0.78,0.60)]
 		groups[key].col.append(leaf_tones[rng.randi_range(0,leaf_tones.size()-1)]*shade)
 	elif kind in ["bush","fern","groundcover","rosette","arch_fern"]:
-		# Repeated clumps keep their shared MultiMesh material, but mature, shaded
-		# and sun-touched leaves now carry restrained olive/bronze instance tones.
-		var leaf_tones = [Color(0.91,0.94,0.79),Color(0.82,0.89,0.72),Color(0.88,0.85,0.65),Color(0.74,0.85,0.70)]
+		# Retain photographed leaf hues; restrained cool/neutral variation avoids a
+		# scene-wide bronze cast while keeping shared MultiMesh materials.
+		var leaf_tones = [Color(0.94,0.99,0.89),Color(0.84,0.94,0.79),Color(0.98,1.0,0.92),Color(0.78,0.90,0.73)]
 		if kind in ["rosette","arch_fern"]:
-			leaf_tones = [Color(0.96,0.97,0.92),Color(0.90,0.95,0.88),Color(0.94,0.90,0.81),Color(0.86,0.92,0.84)]
+			leaf_tones = [Color(0.98,1.0,0.94),Color(0.90,0.97,0.86),Color(0.94,0.99,0.91),Color(0.84,0.92,0.80)]
 		groups[key].col.append(leaf_tones[rng.randi_range(0,leaf_tones.size()-1)]*shade)
 	elif kind=="red_bloom":
-		groups[key].col.append(Color(0.93,0.96,0.87)*shade)
+		groups[key].col.append(Color(0.96,0.99,0.94)*shade)
 	else:
 		groups[key].col.append(Color(shade,shade,shade))
 	counts[kind]+=1

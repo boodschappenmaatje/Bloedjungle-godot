@@ -90,7 +90,7 @@ jobs:
           mkdir -p "$RUNNER_TEMP/visual-b-quick"
           xvfb-run -a -s "-screen 0 1280x720x24" env \
             GODOT_SILENCE_ROOT_WARNING=1 BJ_INSTANT=1 BJ_TOUCH=1 BJ_RENDER_SCALE=1.0 \
-            BJ_CAPTURE_QUALITY=high BJ_CAPTURE_SPOT=rivier BJ_CAPTURE_ONLY=1 \
+            BJ_CAPTURE_QUALITY=high BJ_CAPTURE_SPOT=bospad BJ_CAPTURE_ONLY=1 \
             BJ_B_OUT="$RUNNER_TEMP/visual-b-quick" \
             "$GODOT_BIN" --path . -s tests/visual_b_capture.gd --resolution 1280x720 \
             2>&1 | tee "$RUNNER_TEMP/visual-b-capture-quick.log"

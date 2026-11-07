@@ -1,7 +1,7 @@
 shader_type spatial;
 render_mode unshaded, blend_mix, depth_draw_never, cull_disabled, skip_vertex_transform, shadows_disabled;
-// Vaste nepschaduw onder bomen en struiken: een zachte ovaal op de grond, in de richting van de zon
-// en zo lang als de boom hoog is gedeeld door de hoek van de zon. Geen schaduwkaart nodig, dus bijna gratis.
+// Mobiele hulp-schaduw: een zachte, lage-cost projectie met richting en lengte uit
+// de zonstand. De echte boomkroon blijft verantwoordelijk voor het bladpatroon.
 
 uniform vec2 sun_dir = vec2(0.6, 0.8);  // waarheen de schaduw valt (x, z)
 uniform float reach = 1.5;  // lengte per meter boomhoogte (1 / tan(zonhoogte))
@@ -48,18 +48,18 @@ void fragment() {
 	if (actor_focus_active) {
 		vec2 screen_uv = FRAGCOORD.xy / screen_size_px;
 		vec2 delta = (screen_uv - focus_player_uv) * vec2(screen_aspect, 1.0);
-		actor_clear = smoothstep(0.032, 0.11, length(delta));
+		actor_clear = smoothstep(0.04, 0.14, length(delta));
 		if (focus_e0_uv.z > 0.5) {
 			vec2 enemy_delta = (screen_uv - focus_e0_uv.xy) * vec2(screen_aspect, 1.0);
-			actor_clear = min(actor_clear, smoothstep(0.032, 0.11, length(enemy_delta)));
+			actor_clear = min(actor_clear, smoothstep(0.04, 0.14, length(enemy_delta)));
 		}
 		if (focus_e1_uv.z > 0.5) {
 			vec2 enemy_delta = (screen_uv - focus_e1_uv.xy) * vec2(screen_aspect, 1.0);
-			actor_clear = min(actor_clear, smoothstep(0.032, 0.11, length(enemy_delta)));
+			actor_clear = min(actor_clear, smoothstep(0.04, 0.14, length(enemy_delta)));
 		}
 		if (focus_e2_uv.z > 0.5) {
 			vec2 enemy_delta = (screen_uv - focus_e2_uv.xy) * vec2(screen_aspect, 1.0);
-			actor_clear = min(actor_clear, smoothstep(0.032, 0.11, length(enemy_delta)));
+			actor_clear = min(actor_clear, smoothstep(0.04, 0.14, length(enemy_delta)));
 		}
 	}
 	ALPHA = (1.0 - smoothstep(0.2, 1.0, d)) * strength * mask * actor_clear;

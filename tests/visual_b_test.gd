@@ -55,8 +55,15 @@ func run() -> void:
 		var litter_uv: PackedVector2Array = litter.surface_get_arrays(0)[Mesh.ARRAY_TEX_UV]
 		var litter_uv_valid := not litter_uv.is_empty()
 		for uv in litter_uv:
-			litter_uv_valid = litter_uv_valid and uv.x >= 0.019 and uv.x <= 0.481 and uv.y >= 0.019 and uv.y <= 0.481
-		check(litter_uv_valid,"Fallen leaf meshes must sample the broad leaf atlas cell, not mostly transparent palm fronds")
+			litter_uv_valid = litter_uv_valid and uv.x >= 0.034 and uv.x <= 0.981 and uv.y >= 0.034 and uv.y <= 0.506
+		check(litter_uv_valid,"Fallen leaves must sample opaque broad-leaf regions of the scanned PBR atlas")
+		var rosette_source := Image.load_from_file(ProjectSettings.globalize_path("res://assets/textures/foliage/polyhaven/rosette_base_color.png"))
+		for uv in [Vector2(0.25,0.14),Vector2(0.74,0.13),Vector2(0.43,0.415)]:
+			var texel := rosette_source.get_pixel(roundi(uv.x*(rosette_source.get_width()-1)),roundi(uv.y*(rosette_source.get_height()-1)))
+			check(texel.a >= 0.95,"Leaf litter UVs must resolve to photographed PBR leaf pixels, not transparent atlas gaps")
+		check(litter.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size() == 108,"Scanned leaf litter must retain its bounded three-leaf geometry budget")
+		check(litter.surface_get_material(0) == Foliage.material("depth_litter"),"Fallen leaves must use the shared scanned PBR material")
+		check(Foliage.material("depth_litter").get_shader_parameter("wind") == 0.0,"Fallen leaves must remain grounded when gameplay wind is enabled")
 		var groundcover: ArrayMesh = under.groundcover_mesh()
 		check(groundcover.get_surface_count() == 1,"Groundcover must stay on one cutout surface for batching")
 		check(groundcover.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size() <= 320,"Low groundcover must spend its geometry budget on coverage, not near-invisible bends")

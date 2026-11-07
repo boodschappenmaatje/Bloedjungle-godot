@@ -47,7 +47,7 @@ static func material(kind := "") -> ShaderMaterial:
 				m.set_shader_parameter("tint", Vector3(1.07, 1.03, 0.92))
 				m.set_shader_parameter("backlight", 0.08)
 			elif kind.begins_with("depth_"):
-				var depth_textures := {"depth_rosette":"rosette", "depth_arch_fern":"arch_fern", "depth_red_bloom":"shrub"}
+				var depth_textures := {"depth_rosette":"rosette", "depth_arch_fern":"arch_fern", "depth_red_bloom":"shrub", "depth_litter":"rosette"}
 				var texture_kind: String = depth_textures.get(kind, "")
 				if not texture_kind.is_empty():
 					var texture_root := "res://assets/textures/foliage/polyhaven/%s_" % texture_kind
@@ -56,11 +56,11 @@ static func material(kind := "") -> ShaderMaterial:
 					m.set_shader_parameter("rough_tex", load(texture_root + "roughness.png"))
 					m.set_shader_parameter("use_rough_tex", true)
 					# Preserve the scanned leaf relief under the standard mobile PBR response.
-					m.set_shader_parameter("nrm_depth", 0.62)
+					m.set_shader_parameter("nrm_depth", 0.72 if kind == "depth_litter" else 0.62)
 					m.set_shader_parameter("cut", 0.42)
-					m.set_shader_parameter("foliage_grade", Vector3(1.06,1.02,0.94))
+					m.set_shader_parameter("foliage_grade", Vector3(1.45,1.12,0.72) if kind == "depth_litter" else Vector3(1.06,1.02,0.94))
 					m.set_shader_parameter("foliage_saturation", 0.84)
-					m.set_shader_parameter("tint", Vector3(1.02,1.03,0.95))
+					m.set_shader_parameter("tint", Vector3.ONE if kind == "depth_litter" else Vector3(1.02,1.03,0.95))
 					m.set_shader_parameter("backlight", 0.08)
 			else:
 				m.set_shader_parameter("tex", LeafTex.get_tex(kind))
@@ -77,7 +77,7 @@ static func material(kind := "") -> ShaderMaterial:
 		if kind == "grass":
 			m.set_shader_parameter("sway", 0.08)
 			m.set_shader_parameter("cut", 0.35)
-		m.set_shader_parameter("wind", 1.0 if GameSettings.get_value("wind") == "on" else 0.0)
+		m.set_shader_parameter("wind", 1.0 if kind != "depth_litter" and GameSettings.get_value("wind") == "on" else 0.0)
 		_mats[kind] = m
 	return _mats[kind]
 
@@ -98,7 +98,7 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 	_fade = move_toward(_fade, 1.0 if active else 0.0, delta / 0.35)
 	if _focus_mats.is_empty():
 		# All detailed species share the actor sightline fade, including the new PBR plants.
-		for key in ["palm", "leaf", "fern", "depth_leaf", "depth_rosette", "depth_arch_fern", "depth_red_bloom"]:
+		for key in ["palm", "leaf", "fern", "depth_leaf", "depth_rosette", "depth_arch_fern", "depth_red_bloom", "depth_litter"]:
 			_focus_mats.append(material(key))
 	var on := _fade > 0.001
 	var e: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO, Vector4.ZERO]

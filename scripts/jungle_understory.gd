@@ -89,19 +89,20 @@ static func _colony_species(primary: String, rng: RandomNumberGenerator) -> Stri
 	return "red_bloom" if primary != "red_bloom" else "rosette"
 
 static func litter_mesh() -> ArrayMesh:
-	# Three small, curved fallen blades replace the generic crossed grass cards.
-	# The shared PBR atlas gives them a subdued oxide/leaf-litter surface.
+	# Three curved, broad leaves reuse the scanned anthurium PBR set. The
+	# atlas regions are individual photographed leaves, so debris keeps readable
+	# veins and a natural edge at the combat camera.
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	# Fallen broad leaves must sample the anthurium cell, not the sparse palm
-	# frond at bottom-right. The latter leaves most of each mesh transparent
-	# after the shader alpha cut and makes the existing litter budget disappear.
-	var atlas_min := Vector2(0.02,0.02)
-	var atlas_span := Vector2(0.46,0.46)
-	# The same three leaves remain one cheap instanced mesh; scale them enough
-	# to read as scattered litter from the normal game camera.
-	var leaf_lengths: Array[float] = [0.46,0.39,0.53]
-	var leaf_widths: Array[float] = [0.125,0.105,0.145]
+	# Crop three distinct broad leaves from the shared 1K rosette atlas. A small
+	# inset avoids transparent atlas borders after mip filtering.
+	var atlas_min: Array[Vector2] = [Vector2(0.035,0.045),Vector2(0.515,0.035),Vector2(0.205,0.325)]
+	var atlas_span: Array[Vector2] = [Vector2(0.425,0.185),Vector2(0.465,0.190),Vector2(0.445,0.180)]
+	# Keep debris low, but broad enough to resolve as individual leaves at the
+	# game camera instead of subpixel flecks. Instance count and triangle budget
+	# remain unchanged.
+	var leaf_lengths: Array[float] = [0.48,0.42,0.54]
+	var leaf_widths: Array[float] = [0.22,0.19,0.24]
 	for leaf_index in 3:
 		var yaw := TAU * leaf_index / 3.0 + 0.31 * leaf_index
 		var direction := Vector3(cos(yaw),0.0,sin(yaw))
@@ -135,12 +136,14 @@ static func litter_mesh() -> ArrayMesh:
 				for vertex_data in [[a,Vector2(u0,v0)],[b,Vector2(u0,v1)],[c,Vector2(u1,v0)],
 						[b,Vector2(u0,v1)],[d,Vector2(u1,v1)],[c,Vector2(u1,v0)]]:
 					st.set_normal(Vector3.UP)
-					st.set_uv(atlas_min + Vector2(vertex_data[1].x,vertex_data[1].y) * atlas_span)
-					st.set_color(Color(0.92,0.82,0.68))
+					st.set_uv(atlas_min[leaf_index] + Vector2(vertex_data[1].x,vertex_data[1].y) * atlas_span[leaf_index])
+					# Zero alpha removes vertex sway; the shared scanned shader still
+					# supplies physical normals, roughness, and instance color.
+					st.set_color(Color(1.0,1.0,1.0,0.0))
 					st.add_vertex(vertex_data[0])
 	st.generate_tangents()
 	var mesh := st.commit()
-	mesh.surface_set_material(0,Foliage.material("depth_leaf"))
+	mesh.surface_set_material(0,Foliage.material("depth_litter"))
 	return mesh
 
 static func groundcover_mesh() -> ArrayMesh:

@@ -196,7 +196,8 @@ static func update_pushers(player: Node3D, tree: SceneTree, active := true) -> v
 ## Zet de wind in alle bladeren aan of uit.
 static func set_wind(on: bool) -> void:
 	for k in _mats:
-		_mats[k].set_shader_parameter("wind", 1.0 if on else 0.0)
+		if k != "depth_litter":
+			_mats[k].set_shader_parameter("wind", 1.0 if on else 0.0)
 	GrassField.set_wind(on)
 
 

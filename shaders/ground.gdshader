@@ -54,14 +54,14 @@ void fragment() {
 	float micro_gate = 1.0 - smoothstep(0.055, 0.19, pixel_span);
 	// Keep the photographed grass, leaf litter and earth at a tighter physical
 	// scale so open ground retains small texture structure in the real camera.
-	vec2 guv = p * 0.14;
-	vec2 juv = p * 0.15 + 0.37;
-	vec2 duv = p * 0.16;
-	vec2 muv = vec2(p.y, -p.x) * 0.16;
-	vec2 moss_uv = p * 0.15;
+	vec2 guv = p * 0.18;
+	vec2 juv = p * 0.19 + 0.37;
+	vec2 duv = p * 0.19;
+	vec2 muv = vec2(p.y, -p.x) * 0.19;
+	vec2 moss_uv = p * 0.19;
 	// The gravel map's natural pebble size lands around 5–10 cm at this scale,
 	// making path aggregate visible without a high-frequency shimmer pattern.
-	vec2 gravel_uv = p * 0.42;
+	vec2 gravel_uv = p * 0.50;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -79,8 +79,9 @@ void fragment() {
 	float floor_mix = smoothstep(0.27, 0.72, n1 * 0.6 + n2 * 0.4) * 0.9;
 	// Shift the broad floor away from the former yellow wash while keeping the
 	// source atlas's fine blades legible after mobile mip filtering.
-	vec3 grass = mix(g * vec3(0.54,0.65,0.47), j * vec3(0.48,0.59,0.43), floor_mix);
-	grass *= mix(vec3(0.88,0.88,0.79),vec3(0.77,0.82,0.70),smoothstep(0.3,0.7,n1));
+	vec3 grass = mix(g * vec3(0.58,0.63,0.51), j * vec3(0.52,0.57,0.47), floor_mix);
+	// Lift earthy red/blue detail slightly while keeping green restrained.
+	grass *= mix(vec3(0.90,0.90,0.84),vec3(0.83,0.86,0.77),smoothstep(0.3,0.7,n1));
 	grass *= (0.82 + 0.34*n3) * mix(1.0,0.86+0.28*n_micro,micro_gate*0.72);
 	float inside = 1.0 - smoothstep(compound-0.5,compound+3.0,max(abs(p.x),abs(p.y)));
 	float path = (1.0-smoothstep(gate_gap*0.9,gate_gap*1.9+n2*1.6,abs(p.x)))

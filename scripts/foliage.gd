@@ -53,13 +53,14 @@ static func material(kind := "") -> ShaderMaterial:
 					m.set_shader_parameter("nrm", load(texture_root + "normal_gl.png"))
 					m.set_shader_parameter("rough_tex", load(texture_root + "roughness.png"))
 					m.set_shader_parameter("use_rough_tex", true)
-					m.set_shader_parameter("nrm_depth", 0.72)
+					# Soften the source normal response at the elevated combat camera.
+					m.set_shader_parameter("nrm_depth", 0.52)
 					m.set_shader_parameter("cut", 0.42)
-					m.set_shader_parameter("foliage_grade", Vector3(1.02,0.96,0.88))
-					m.set_shader_parameter("foliage_saturation", 0.92)
-					m.set_shader_parameter("foliage_gamma", 0.94)
+					m.set_shader_parameter("foliage_grade", Vector3(1.08,1.01,0.90))
+					m.set_shader_parameter("foliage_saturation", 0.87)
+					m.set_shader_parameter("foliage_gamma", 0.86)
 					m.set_shader_parameter("tint", Vector3(0.99, 1.0, 0.95))
-					m.set_shader_parameter("backlight", 0.17)
+					m.set_shader_parameter("backlight", 0.23)
 			else:
 				m.set_shader_parameter("tex", LeafTex.get_tex(kind))
 				m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
@@ -91,7 +92,8 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 	GrassField.set_focus(player_pos, active)
 	_fade = move_toward(_fade, 1.0 if active else 0.0, delta / 0.35)
 	if _focus_mats.is_empty():
-		for key in ["palm", "leaf", "fern", "depth_leaf"]:
+		# All detailed species share the actor sightline fade, including the new PBR plants.
+		for key in ["palm", "leaf", "fern", "depth_leaf", "depth_rosette", "depth_arch_fern", "depth_red_bloom"]:
 			_focus_mats.append(material(key))
 	var on := _fade > 0.001
 	var e: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO, Vector4.ZERO]

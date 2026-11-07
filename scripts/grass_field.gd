@@ -187,13 +187,13 @@ func _add_point(groups: Dictionary, rng: RandomNumberGenerator, kind: String, po
 	var key := "%s_%d_%d_%d" % [kind, variant, cell.x, cell.y]
 	if not groups.has(key):
 		groups[key] = {"kind": kind, "cell": cell, "variant": variant, "xf": [], "colors": []}
-	var scale_ := rng.randf_range(0.78, 1.24) if kind == "short" else rng.randf_range(0.9, 1.08)
-	# Short tufts are 24 cm tall. Their authored footprint was too small to read at the normal
-	# play camera, so grow the existing model into low, varied grass clumps without new instances,
-	# colliders or changes to the preserved firing-lane clearance.
-	var spread := 3.8 if kind == "short" else 1.0
-	var height_scale := 2.1 if kind == "short" else 1.0
-	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_*spread, scale_*height_scale, scale_*spread))
+	var scale_ := rng.randf_range(0.82, 1.18) if kind == "short" else rng.randf_range(0.9, 1.08)
+	# The old 3.8x footprint made single 24 cm tufts read as dark bushes. Keep
+	# them low and vary width independently; counts, routes and clearances stay fixed.
+	var spread_x := rng.randf_range(1.45, 1.95) if kind == "short" else 1.0
+	var spread_z := rng.randf_range(1.10, 1.55) if kind == "short" else 1.0
+	var height_scale := rng.randf_range(0.86, 1.16) if kind == "short" else 1.0
+	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_*spread_x, scale_*height_scale, scale_*spread_z))
 	groups[key].xf.append(Transform3D(basis, pos))
 	if kind == "short":
 		if rng.randf() < 0.14:

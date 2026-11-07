@@ -115,11 +115,11 @@ void fragment() {
 	// Gravel follows the established path and its worn shoulders, with broken edges from the existing macro noise.
 	float gravel_mix = clamp(max(max(path*0.96,trail*0.92)*mix(0.50,1.0,smoothstep(0.18,0.76,n2)),bank*0.28),0.0,0.95);
 	vec3 dirt = d*vec3(0.82,0.73,0.61)*(0.9+0.2*n3);
-	dirt = mix(dirt,gravel*vec3(1.16,1.08,0.94),gravel_mix*0.98);
+	dirt = mix(dirt,gravel*vec3(1.26,1.17,1.02),gravel_mix*0.98);
 	float pebble_speckle = smoothstep(0.68,0.87,n_micro)*micro_gate*gravel_mix;
-	dirt = mix(dirt,gravel*vec3(1.20,1.10,0.94),pebble_speckle*0.70);
-	dirt *= 1.0-rut*0.43;
-	dirt = mix(dirt,m*vec3(0.54,0.47,0.37),wet*0.55);
+	dirt = mix(dirt,gravel*vec3(1.30,1.20,1.03),pebble_speckle*0.70);
+	dirt *= 1.0-rut*0.31;
+	dirt = mix(dirt,m*vec3(0.60,0.52,0.42),wet*0.50);
 	float edge = 4.0*dm*(1.0-dm);
 	float moss_mix = clamp(edge*0.3+bank*(1.0-wet)*0.2+smoothstep(0.58,0.76,n2)*(1.0-dm)*0.23,0.0,0.45);
 	vec3 base = mix(grass,dirt,dm);

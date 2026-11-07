@@ -188,11 +188,12 @@ func _add_point(groups: Dictionary, rng: RandomNumberGenerator, kind: String, po
 	if not groups.has(key):
 		groups[key] = {"kind": kind, "cell": cell, "variant": variant, "xf": [], "colors": []}
 	var scale_ := rng.randf_range(0.82, 1.18) if kind == "short" else rng.randf_range(0.9, 1.08)
-	# The old 3.8x footprint made single 24 cm tufts read as dark bushes. Keep
-	# them low and vary width independently; counts, routes and clearances stay fixed.
-	var spread_x := rng.randf_range(1.45, 1.95) if kind == "short" else 1.0
-	var spread_z := rng.randf_range(1.10, 1.55) if kind == "short" else 1.0
-	var height_scale := rng.randf_range(0.86, 1.16) if kind == "short" else 1.0
+	# The earlier conservative footprint left subpixel grass at the actual combat
+	# camera. Broaden each existing tuft while keeping its top below ~0.55 m; the
+	# same count, clear route and MultiMesh LODs keep this as a silhouette pass.
+	var spread_x := rng.randf_range(2.05, 2.65) if kind == "short" else 1.0
+	var spread_z := rng.randf_range(1.65, 2.20) if kind == "short" else 1.0
+	var height_scale := rng.randf_range(1.10, 1.40) if kind == "short" else 1.0
 	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_*spread_x, scale_*height_scale, scale_*spread_z))
 	groups[key].xf.append(Transform3D(basis, pos))
 	if kind == "short":

@@ -69,6 +69,8 @@ func run() -> void:
 				check(depth_arrays[Mesh.ARRAY_COLOR].size() > 0,"Plant sway needs authored root-to-tip vertex weights: "+label)
 				check(Foliage.material("depth_"+kind).shader.resource_path.ends_with("foliage_depth_pbr.gdshader"),"Scanned plants need the dedicated mobile PBR shader: "+label)
 				check(Foliage.material("depth_"+kind).shader.code.contains("diffuse_burley"),"Scanned plants must use standard Burley response: "+label)
+				var height_factor := 0.84 if kind == "arch_fern" else (0.90 if kind == "rosette" else 0.92)
+				check(depth_variant_mesh.get_aabb().size.y * 1.80 * 1.02 * height_factor <= 1.05,"Combat-camera plant scale must remain below actor-obscuring height: "+label)
 	check(not details.is_empty(), "Missing clustered understory in the real game level")
 	check(details.any(func(n: MultiMeshInstance3D) -> bool: return n.name.begins_with("Understory_groundcover_")),"Missing fine-scale groundcover in the real game level")
 	for n: MultiMeshInstance3D in details:

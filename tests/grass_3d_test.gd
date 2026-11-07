@@ -97,6 +97,8 @@ func _run() -> void:
 	# Independent recreation of the original foliage RNG sequence, including skipped grass.
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 11
+	var south_rng := RandomNumberGenerator.new()
+	south_rng.seed = 1020
 	var expected := PackedVector2Array()
 	var sets := {"palm": [190,18.5,90.0,.85,1.6,.1], "bush": [320,16.5,80.0,.8,1.8,.05], "fern": [300,15.8,70.0,.8,1.7,.04], "grass": [1400,15.2,62.0,.8,1.8,0.0], "rock": [45,18.0,75.0,.7,2.2,.15]}
 	for kind in sets:
@@ -105,9 +107,25 @@ func _run() -> void:
 		var colors: Array = []
 		foliage._scatter(rng,c[0],c[1],c[2],xf,colors,c[3],c[4],c[5])
 		foliage._strip(rng,kind,xf.size()+foliage.STRIP_EXTRA[kind],xf,colors,c[3],c[4],c[5])
+		foliage._south_scatter(south_rng,kind,foliage.SOUTH_COUNTS[kind],xf,colors,c[3],c[4],c[5])
 		if kind in ["palm","rock"]:
 			for t in xf: expected.append(Vector2(t.origin.x,t.origin.z))
-	check(expected == foliage.trees, "existing palm/rock positions changed")
+	var unexpected_trees := 0
+	for actual: Vector2 in foliage.trees:
+		if not expected.has(actual): unexpected_trees += 1
+	check(unexpected_trees == 0,"tree scatter contains positions outside the seeded base and southern layouts")
+	var uncleared_trees := 0
+	for candidate: Vector2 in expected:
+		if foliage.trees.has(candidate): continue
+		var covered_by_building := false
+		for clearing: Dictionary in foliage._building_clearings.values():
+			for region: Dictionary in clearing.regions:
+				if foliage._point_in_build_region(Vector3(candidate.x,0.0,candidate.y),clearing.at,clearing.yaw,region,clearing.margin):
+					covered_by_building = true
+					break
+			if covered_by_building: break
+		if not covered_by_building: uncleared_trees += 1
+	check(uncleared_trees == 0,"seeded palm/rock positions disappeared outside an active building clearance")
 	await main._warm_up()
 	check(get_nodes_in_group("grass_fields").size() == 1, "warm-up added a second field")
 	check(not main.find_children("GrassPreview", "Node3D", true, false).is_empty(), "grass warm-up preview not rendered before cleanup")

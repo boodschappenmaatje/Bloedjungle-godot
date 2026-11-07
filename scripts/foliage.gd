@@ -54,13 +54,13 @@ static func material(kind := "") -> ShaderMaterial:
 					m.set_shader_parameter("rough_tex", load(texture_root + "roughness.png"))
 					m.set_shader_parameter("use_rough_tex", true)
 					# Soften the source normal response at the elevated combat camera.
-					m.set_shader_parameter("nrm_depth", 0.52)
+					m.set_shader_parameter("nrm_depth", 0.48)
 					m.set_shader_parameter("cut", 0.42)
-					m.set_shader_parameter("foliage_grade", Vector3(1.08,1.01,0.90))
-					m.set_shader_parameter("foliage_saturation", 0.87)
-					m.set_shader_parameter("foliage_gamma", 0.86)
+					m.set_shader_parameter("foliage_grade", Vector3(1.12,1.02,0.94))
+					m.set_shader_parameter("foliage_saturation", 0.83)
+					m.set_shader_parameter("foliage_gamma", 0.82)
 					m.set_shader_parameter("tint", Vector3(0.99, 1.0, 0.95))
-					m.set_shader_parameter("backlight", 0.23)
+					m.set_shader_parameter("backlight", 0.26)
 			else:
 				m.set_shader_parameter("tex", LeafTex.get_tex(kind))
 				m.set_shader_parameter("nrm", LeafTex.get_normal(kind))

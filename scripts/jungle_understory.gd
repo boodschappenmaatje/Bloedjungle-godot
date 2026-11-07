@@ -163,8 +163,8 @@ static func understory_variant_mesh(kind: String, variant: int) -> ArrayMesh:
 		var origin := Vector3(cos(yaw), rng.randf_range(0.0,0.16), sin(yaw)) * rng.randf_range(0.0,0.24)
 		# Ground rosettes are broad and low so they read as leafy understory at the game camera,
 		# while the taller fern silhouettes remain sparse and never replace the existing grass LODs.
-		var length_ := rng.randf_range(0.54,0.78) if groundcover else (rng.randf_range(0.70,1.02) if fern else rng.randf_range(0.62,1.02))
-		var width_ := rng.randf_range(0.095,0.15) if groundcover else (rng.randf_range(0.14,0.24) if fern else rng.randf_range(0.20,0.34))
+		var length_ := rng.randf_range(0.62,0.86) if groundcover else (rng.randf_range(0.70,1.02) if fern else rng.randf_range(0.62,1.02))
+		var width_ := rng.randf_range(0.11,0.18) if groundcover else (rng.randf_range(0.14,0.24) if fern else rng.randf_range(0.20,0.34))
 		var rise := rng.randf_range(0.19,0.34) if groundcover else (rng.randf_range(0.30,0.56) if fern else rng.randf_range(0.14,0.46))
 		var droop := rng.randf_range(0.08,0.20) if groundcover else (rng.randf_range(0.28,0.55) if fern else rng.randf_range(0.12,0.38))
 		# Low groundcover has no useful extra silhouette from three bends at game distance.
@@ -406,14 +406,16 @@ static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNu
 	if kind=="groundcover":
 		# Broader, flatter mats make the low understory read at the top-down game
 		# camera without reaching the soldier silhouette or creating a new LOD.
-		var footprint := rng.randf_range(1.12,1.38)
+		var footprint := rng.randf_range(1.18,1.48)
 		size_ = Vector3(s*footprint,s*rng.randf_range(0.92,1.12),s*footprint)
 	if kind=="rosette": size_ *= rng.randf_range(0.82,1.08)
 	if kind=="arch_fern": size_ *= rng.randf_range(0.72,1.02)
 	if kind=="red_bloom": size_ *= rng.randf_range(0.82,1.05)
-	if kind=="litter": size_=Vector3.ONE*s*rng.randf_range(0.78,1.08)
-	if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.14,0.36)
-	if kind=="twig": size_=Vector3(0.035,rng.randf_range(0.35,0.85),0.035)
+	# Fallen blades need roughly half-metre tips to resolve from the game camera;
+	# keep them on the ground and spend the existing litter budget at this scale.
+	if kind=="litter": size_=Vector3.ONE*rng.randf_range(0.78,1.38)
+	if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.22,0.48)
+	if kind=="twig": size_=Vector3(0.045+0.025*s,rng.randf_range(0.35,0.85),0.045+0.025*s)
 	var tilt := rng.randf_range(0.06,0.20) if kind in ["rosette","arch_fern","red_bloom","groundcover"] else 0.0
 	var basis := Basis.from_euler(Vector3(rng.randf_range(-tilt,tilt),rng.randf()*TAU,rng.randf_range(-tilt,tilt)))
 	if kind=="twig": basis *= Basis(Vector3.RIGHT,PI*0.5)

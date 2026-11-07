@@ -16,7 +16,7 @@ uniform sampler2D jungle_surface : repeat_enable, filter_linear_mipmap_anisotrop
 uniform sampler2D mud_surface : repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D moss_surface : repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D gravel_surface : repeat_enable, filter_linear_mipmap_anisotropic;
-uniform float detail_mip_bias : hint_range(0.0, 2.0) = 0.10;
+uniform float detail_mip_bias : hint_range(0.0, 2.0) = 0.05;
 uniform float compound = 14.0;
 uniform float gate_gap = 2.4;
 uniform vec4 pits[8];
@@ -97,9 +97,9 @@ void fragment() {
 	swamp *= 1.0-smoothstep(0.0,2.0,river_off-3.0);
 	// Dirt stays in broken, occasional patches. The earlier wide mask left broad bare
 	// fields that visually swallowed the short grass and understory.
-	float patches = smoothstep(0.45,0.76,n1*0.20+n2*0.45+n3*0.35);
-	float dm = clamp(max(max(inside,path),max(patches*0.68,max(bank,max(swamp*0.9,trail)))),0.0,1.0);
-	dm = smoothstep(0.10,0.78,dm+(n3-0.5)*0.19);
+	float patches = smoothstep(0.43,0.74,n1*0.18+n2*0.42+n3*0.40);
+	float dm = clamp(max(max(inside,path),max(patches*0.82,max(bank,max(swamp*0.9,trail)))),0.0,1.0);
+	dm = smoothstep(0.08,0.76,dm+(n3-0.5)*0.22);
 	// Two broken wheel/walk ruts remain readable through the pebble layer, but
 	// their uneven edges follow the existing path noise instead of drawing rails.
 	float rut_a = 1.0-smoothstep(0.12,0.36,abs(side-0.54+(n2-0.5)*0.14));
@@ -109,11 +109,11 @@ void fragment() {
 	float wet = max(bank*0.65,max(swamp,max(rut*smoothstep(0.43,0.63,n2),puddle_noise*0.72)));
 	wet = clamp(wet+trail*smoothstep(0.67,0.8,n2)*0.65,0.0,1.0);
 	// Gravel follows the established path and its worn shoulders, with broken edges from the existing macro noise.
-	float gravel_mix = clamp(max(path*0.84,trail*0.82)*mix(0.50,1.0,smoothstep(0.18,0.76,n2)),0.0,0.90);
+	float gravel_mix = clamp(max(path*0.96,trail*0.92)*mix(0.50,1.0,smoothstep(0.18,0.76,n2)),0.0,0.95);
 	vec3 dirt = d*vec3(0.82,0.73,0.61)*(0.9+0.2*n3);
-	dirt = mix(dirt,gravel*vec3(0.96,0.89,0.77),gravel_mix*0.92);
+	dirt = mix(dirt,gravel*vec3(0.96,0.89,0.77),gravel_mix*0.98);
 	float pebble_speckle = smoothstep(0.68,0.87,n_micro)*micro_gate*gravel_mix;
-	dirt = mix(dirt,gravel*vec3(1.02,0.94,0.82),pebble_speckle*0.32);
+	dirt = mix(dirt,gravel*vec3(1.02,0.94,0.82),pebble_speckle*0.42);
 	dirt *= 1.0-rut*0.30;
 	dirt = mix(dirt,m*vec3(0.54,0.47,0.37),wet*0.55);
 	float edge = 4.0*dm*(1.0-dm);

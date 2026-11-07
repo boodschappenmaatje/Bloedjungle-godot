@@ -6,8 +6,8 @@ render_mode depth_draw_opaque, cull_disabled;
 // de stroomrichting (x), sneller in het midden dan bij de oevers, met schuim langs de rand.
 
 uniform sampler2D noise : repeat_enable, filter_linear_mipmap;
-uniform vec3 deep : source_color = vec3(0.16, 0.34, 0.34);
-uniform vec3 shallow : source_color = vec3(0.38, 0.59, 0.51);
+uniform vec3 deep : source_color = vec3(0.20, 0.39, 0.43);
+uniform vec3 shallow : source_color = vec3(0.42, 0.64, 0.61);
 uniform vec3 foam : source_color = vec3(0.71, 0.78, 0.67);
 uniform float speed = 1.6;
 
@@ -56,17 +56,20 @@ void fragment() {
 	// camera even when the mobile renderer has no planar reflections.
 	float wave_a = sin(p.x * 0.72 + p.y * 0.31 - TIME * v * 0.86 + (s1 - 0.5) * 1.7);
 	float wave_b = sin(p.x * 1.42 - p.y * 0.48 - TIME * v * 1.24 + (s2 - 0.5) * 1.4);
-	float crest = smoothstep(0.42, 0.92, 0.5 + 0.34 * wave_a + 0.16 * wave_b);
-	col = mix(col, vec3(0.50,0.70,0.60), crest * (1.0 - edge * 0.32) * 0.26);
+	// Break the broad sine crests with the existing flow-noise samples so the
+	// opaque river does not read as evenly spaced contour stripes from above.
+	float crest_field = 0.5 + 0.34 * wave_a + 0.16 * wave_b + (s1 - 0.5) * 0.32 + (s2 - 0.5) * 0.20;
+	float crest = smoothstep(0.68, 0.94, crest_field);
+	col = mix(col, vec3(0.52,0.72,0.70), crest * (1.0 - edge * 0.32) * 0.18);
 	vec2 g = vec2(r1 - 0.5, r2 - 0.5) * 1.12 + vec2(s1 - 0.5, s2 - 0.5) * 0.58;
 	NORMAL = normalize(NORMAL + (VIEW_MATRIX * vec4(g.x, 0.0, g.y, 0.0)).xyz);
 	// spiegeling van de lucht onder een scheve kijkhoek
 	float fres = pow(1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0), 3.0);
-	col = mix(col, vec3(0.48, 0.75, 0.78), fres * 0.40);
+	col = mix(col, vec3(0.54, 0.76, 0.80), fres * 0.40);
 	ALBEDO = col;
 	// Mobile Forward Mobile has no reliable planar reflection; a restrained
 	// self-lit floor keeps deep channels readable without adding transparency.
-	EMISSION = col * 0.055;
+	EMISSION = col * 0.11;
 	ROUGHNESS = 0.10 + 0.20 * flake;
 	SPECULAR = 0.72;
 	METALLIC = 0.0;

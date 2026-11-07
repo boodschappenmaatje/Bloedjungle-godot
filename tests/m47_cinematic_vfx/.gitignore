@@ -1,0 +1,12 @@
+.godot/
+frames/*.png
+graded_frames/*.png
+flipbooks/*/*.png
+*.glb.import
+*.jpg.import
+*.png.import
+*.gd.uid
+*.blend1
+M47_Muurbreker_1_Image_*.jpg
+soldaat_vq2_*.jpg
+cinematic_concrete_breach_*.jpg

@@ -1,0 +1,107 @@
+{
+  "approved_m47": {
+    "path": "docs/assets/m47-muurbreker-1.0/M47_Muurbreker_1.0_animated.glb",
+    "sha256": "4031e935c5ef19a96a10257334a3cc99db92410a01389ef708259d887cf89872",
+    "bytes": 12974144,
+    "mesh_triangles": {
+      "Torus.001": 512,
+      "Mesh_0.001": 50000,
+      "Mesh_0.002": 25000,
+      "Mesh_0.003": 9999,
+      "Cube": 12,
+      "Cylinder.002": 92
+    },
+    "total_triangles": 85615,
+    "animation_channels": {
+      "Aim": 9,
+      "Equip": 9,
+      "Fire": 9,
+      "Idle": 9,
+      "Reload": 9
+    },
+    "materials": {
+      "M47_Mechanism_Steel": {
+        "albedo": false,
+        "roughness_metallic": false,
+        "normal": false
+      },
+      "Material_0": {
+        "albedo": true,
+        "roughness_metallic": true,
+        "normal": true
+      }
+    }
+  },
+  "cinematic_wall": {
+    "path": "tests/m47_cinematic_vfx/cinematic_concrete_breach.glb",
+    "sha256": "c2fbd8e91dfffa59302107f9a66410afc36ab8dcf6e48256dfa5d5f4511418ff",
+    "bytes": 2581416,
+    "mesh_triangles": {
+      "Cube.001": 188,
+      "Cylinder": 1140,
+      "Irregular_Breach_Mesh": 192,
+      "Icosphere": 180,
+      "Icosphere.001": 180,
+      "Icosphere.002": 196,
+      "Icosphere.003": 200,
+      "Icosphere.004": 128,
+      "Icosphere.005": 160,
+      "Icosphere.006": 172,
+      "Icosphere.007": 156,
+      "Icosphere.008": 216,
+      "Icosphere.009": 164,
+      "Icosphere.010": 184,
+      "Icosphere.011": 184,
+      "Icosphere.012": 192,
+      "Icosphere.013": 196,
+      "Icosphere.014": 184,
+      "Icosphere.015": 184,
+      "Icosphere.016": 184,
+      "Icosphere.017": 196,
+      "Icosphere.018": 216,
+      "Icosphere.019": 160,
+      "Icosphere.020": 196,
+      "Icosphere.021": 140,
+      "Icosphere.022": 140,
+      "Icosphere.023": 168,
+      "Icosphere.024": 180,
+      "Icosphere.025": 192,
+      "Icosphere.026": 140,
+      "Icosphere.027": 148,
+      "Icosphere.028": 196,
+      "Icosphere.029": 196,
+      "Icosphere.030": 164,
+      "Icosphere.031": 216,
+      "Icosphere.032": 188,
+      "Icosphere.033": 188,
+      "Icosphere.034": 164,
+      "Icosphere.035": 188,
+      "Icosphere.036": 124,
+      "Icosphere.037": 176,
+      "Icosphere.038": 168,
+      "Icosphere.039": 184,
+      "Icosphere.040": 196,
+      "Icosphere.041": 180
+    },
+    "total_triangles": 8984,
+    "animation_channels": {
+      "Breach": 84
+    },
+    "materials": {
+      "Concrete_PBR_OriginalTextures": {
+        "albedo": true,
+        "roughness_metallic": true,
+        "normal": true
+      },
+      "Concrete_Hairline_Fractures": {
+        "albedo": false,
+        "roughness_metallic": false,
+        "normal": false
+      }
+    },
+    "breach_translation_channels": 42,
+    "breach_channels_moving_over_0_1m": 42,
+    "breach_min_movement_m": 0.425,
+    "breach_max_movement_m": 2.683
+  }
+}

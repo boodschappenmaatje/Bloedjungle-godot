@@ -1,0 +1,15 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+WARNING: Could not set V-Sync mode, as changing V-Sync mode is not supported by the graphics driver.
+     at: set_use_vsync (platform/linuxbsd/x11/gl_manager_x11.cpp:372)
+OpenGL API 4.5 (Core Profile) Mesa 25.0.7-2+deb13u1 - Compatibility - Using Device: Mesa - llvmpipe (LLVM 19.1.7, 256 bits)
+
+CINEMATIC_FRAME 0/270
+CINEMATIC_FRAME 30/270
+CINEMATIC_FRAME 60/270
+CINEMATIC_FRAME 90/270
+CINEMATIC_FRAME 120/270
+CINEMATIC_FRAME 150/270
+CINEMATIC_FRAME 180/270
+CINEMATIC_FRAME 210/270
+CINEMATIC_FRAME 240/270
+M47_CINEMATIC_TEST PASS

@@ -162,6 +162,8 @@ static func spawn(parent: Node3D) -> void:
 	rng.seed = 20261106
 	var fill_rng := RandomNumberGenerator.new()
 	fill_rng.seed = 20261108
+	var pebble_rng := RandomNumberGenerator.new()
+	pebble_rng.seed = 20261109
 	var candidates: Array[Vector3] = []
 	# Most detail belongs in the playable forest, not thinly across the 440 m world.
 	# Seeded colonies leave gaps and vary plant density over several metres.
@@ -197,15 +199,19 @@ static func spawn(parent: Node3D) -> void:
 	# uniformly mixed scatter. The road and firing corridor stay clear.
 	var colony_positions: Array[Vector3] = []
 	var colony_kinds := PackedStringArray()
-	# Reassign part of the existing stone budget to the worn trail shoulders. Small
-	# stones break the dark ribbon into an aggregate path while remaining render-only.
-	for i in 350:
-		var z := fill_rng.randf_range(-86.0,-34.0)
-		var side := -1.0 if fill_rng.randf()<0.5 else 1.0
-		var p := Vector3(Data.path_x(z)+side*fill_rng.randf_range(1.55,2.65),0.012,z)
+	# Reassign part of the existing stone budget to the immediate trail edge.
+	# The route and collision corridor stay clear while rocks soften its border.
+	var path_pebble_count := 0
+	for i in 1800:
+		if path_pebble_count >= 500: break
+		if pebble_rng.randf() < 0.45: continue
+		var z := pebble_rng.randf_range(-86.0,-34.0)
+		var side := -1.0 if pebble_rng.randf()<0.5 else 1.0
+		var p := Vector3(Data.path_x(z)+side*pebble_rng.randf_range(4.0,5.2),0.012,z)
 		if not allowed(p): continue
 		colony_positions.append(p)
-		colony_kinds.append("stone")
+		colony_kinds.append("pebble")
+		path_pebble_count += 1
 	for cluster in 68:
 		var z := rng.randf_range(-86.0,-34.0)
 		var side := -1.0 if rng.randf()<0.5 else 1.0
@@ -322,7 +328,9 @@ static func spawn(parent: Node3D) -> void:
 		candidates[j] = swap
 	var groups := {}
 	var counts := {"fern":0,"bush":0,"groundcover":0,"rosette":0,"arch_fern":0,"red_bloom":0,"litter":0,"stone":0,"twig":0}
-	for i in colony_positions.size(): _add_candidate(groups,counts,rng,colony_positions[i],colony_kinds[i])
+	for i in colony_positions.size():
+		var candidate_rng: RandomNumberGenerator = pebble_rng if colony_kinds[i] == "pebble" else rng
+		_add_candidate(groups,counts,candidate_rng,colony_positions[i],colony_kinds[i])
 	for p in candidates: _add_candidate(groups,counts,rng,p)
 	var twig := CylinderMesh.new()
 	twig.top_radius=0.28
@@ -360,12 +368,14 @@ static func spawn(parent: Node3D) -> void:
 		n.visibility_range_end=76.0 if data.kind in ["rosette","arch_fern","red_bloom"] else (48.0 if data.kind in ["litter","stone","twig"] else 58.0)
 		n.extra_cull_margin=1.5  # leaf spread plus the existing 1.1 m actor push
 		for i in data.xf.size():
-			Foliage._register_vegetation({"kind":"grass","xf":data.xf[i],"slots":[{"multimesh":n.multimesh,"index":i}],"shapes":[]})
+			var visual_role := "trail_edge_pebble" if data.path_pebbles[i] else ""
+			Foliage._register_vegetation({"kind":"grass","visual_role":visual_role,"xf":data.xf[i],"slots":[{"multimesh":n.multimesh,"index":i}],"shapes":[]})
 
 
 static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNumberGenerator, p: Vector3, forced_kind := "") -> void:
+	var small_path_pebble := forced_kind == "pebble"
 	if not allowed(p): return
-	var kind := forced_kind
+	var kind := "stone" if small_path_pebble else forced_kind
 	if kind.is_empty():
 		var roll := rng.randf()
 		# Reallocate a small part of repeated cards and ground litter to the three
@@ -375,19 +385,20 @@ static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNu
 	var variant := rng.randi_range(0,2) if kind in ["fern","bush","groundcover","rosette","arch_fern","red_bloom"] else 0
 	var cell := Vector2i(floori(p.x/CELL),floori(p.z/CELL))
 	var key := "%s_%d_%d_%d" % [kind,variant,cell.x,cell.y]
-	if not groups.has(key): groups[key] = {"kind":kind,"variant":variant,"cell":cell,"xf":[],"col":[]}
+	if not groups.has(key): groups[key] = {"kind":kind,"variant":variant,"cell":cell,"xf":[],"col":[],"path_pebbles":[]}
 	if groups[key].xf.size()>=(900 if kind=="litter" else (480 if kind=="groundcover" else 360)): return
 	# The photographed Poly Haven plants are authored at 0.53–0.64 m tall.
 	# Keep their leaves below actor height, but avoid the previous quarter-scale
 	# silhouettes that disappeared into the open grass at the combat camera.
 	# The authored per-species multipliers keep the tallest fern below ~1 m.
-	var s := rng.randf_range(1.35,1.80) if kind in ["rosette","arch_fern","red_bloom"] else rng.randf_range(0.40,0.86)
+	var s := rng.randf_range(1.35,1.80) if kind in ["rosette","arch_fern","red_bloom"] else (rng.randf_range(0.70,1.02) if kind=="groundcover" else rng.randf_range(0.40,0.86))
 	var size_ := Vector3(s*rng.randf_range(0.78,1.12),s*rng.randf_range(0.62,1.02),s*rng.randf_range(0.82,1.18))
 	if kind=="bush": size_ *= 0.72
 	if kind=="groundcover":
-		# Broader, flatter mats make the low understory read at the top-down game
-		# camera without reaching the soldier silhouette or creating a new LOD.
-		var footprint := rng.randf_range(1.18,1.48)
+		# The scanned fern stayed subpixel in the open combat clearing. Use the
+		# existing instances at a still-low 0.23–0.39 m height so their fronds
+		# resolve as individual floor cover without hiding actors or adding draws.
+		var footprint := rng.randf_range(1.28,1.58)
 		size_ = Vector3(s*footprint,s*rng.randf_range(0.92,1.12),s*footprint)
 	if kind=="rosette": size_ *= rng.randf_range(0.70,0.90)
 	if kind=="arch_fern": size_ *= rng.randf_range(0.64,0.84)
@@ -395,12 +406,13 @@ static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNu
 	# Fallen blades need roughly half-metre tips to resolve from the game camera;
 	# keep them on the ground and spend the existing litter budget at this scale.
 	if kind=="litter": size_=Vector3.ONE*rng.randf_range(0.78,1.38)
-	if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.22,0.48)
+	if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.08,0.17) if small_path_pebble else Vector3.ONE*rng.randf_range(0.22,0.48)
 	if kind=="twig": size_=Vector3(0.045+0.025*s,rng.randf_range(0.35,0.85),0.045+0.025*s)
 	var tilt := rng.randf_range(0.06,0.20) if kind in ["rosette","arch_fern","red_bloom","groundcover"] else 0.0
 	var basis := Basis.from_euler(Vector3(rng.randf_range(-tilt,tilt),rng.randf()*TAU,rng.randf_range(-tilt,tilt)))
 	if kind=="twig": basis *= Basis(Vector3.RIGHT,PI*0.5)
 	groups[key].xf.append(Transform3D(basis * Basis.from_scale(size_),p))
+	groups[key].path_pebbles.append(small_path_pebble)
 	var shade := rng.randf_range(0.78,1.12)
 	if kind=="litter":
 		var leaf_tones: Array[Color] = [Color(0.90,0.69,0.40),Color(0.72,0.51,0.29),Color(0.82,0.76,0.48)]

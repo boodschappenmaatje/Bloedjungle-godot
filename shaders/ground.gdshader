@@ -79,7 +79,7 @@ void fragment() {
 	float floor_mix = smoothstep(0.27, 0.72, n1 * 0.6 + n2 * 0.4) * 0.9;
 	// Shift the broad floor away from the former yellow wash while keeping the
 	// source atlas's fine blades legible after mobile mip filtering.
-	vec3 grass = mix(g * vec3(0.66,0.68,0.57), j * vec3(0.62,0.66,0.56), floor_mix);
+	vec3 grass = mix(g * vec3(0.58,0.66,0.58), j * vec3(0.56,0.64,0.56), floor_mix);
 	// Lift earthy red/blue detail slightly while keeping green restrained.
 	grass *= mix(vec3(0.94,0.93,0.86),vec3(0.89,0.91,0.83),smoothstep(0.3,0.7,n1));
 	// Existing metre-scale noise now carries a little more canopy-dapple contrast;

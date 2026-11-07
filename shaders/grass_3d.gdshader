@@ -43,7 +43,9 @@ void fragment() {
 	if (!FRONT_FACING) NORMAL = -NORMAL;
 	vec3 base = texture(albedo_tex, UV).rgb * blade_color;
 	vec3 orm = texture(orm_tex, UV).rgb;
-	ALBEDO = base * vec3(0.89, 0.94, 0.78) * root_contact;
+	// Hold back the lime/yellow cast from the source map; shaded blades stay
+	// olive while sun-facing edges retain their scanned PBR color.
+	ALBEDO = base * vec3(0.84, 0.90, 0.80) * root_contact;
 	ROUGHNESS = orm.g;
 	METALLIC = 0.0;
 	SPECULAR = 0.25;

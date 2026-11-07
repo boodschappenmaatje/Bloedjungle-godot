@@ -11,7 +11,7 @@ var _rain: GPUParticles3D
 
 # per tijdstip: zonrichting, zonkleur, zonkracht, omgevingslicht, hemel (boven/horizon/grond), mist, belichting
 const TIMES := {
-	"day": {"rot": Vector3(-27, -38, 0), "col": "ffe3b4", "e": 2.05, "amb": 0.34, "top": "526c76", "hor": "b7b49e", "gnd": "7d8d73", "fog": "8b967f", "exp": 0.95},
+	"day": {"rot": Vector3(-22, -38, 0), "col": "ffe3b4", "e": 2.05, "amb": 0.29, "top": "526c76", "hor": "b7b49e", "gnd": "7d8d73", "fog": "8b967f", "exp": 0.95},
 	"dusk": {"rot": Vector3(-9, -38, 0), "col": "ff8f50", "e": 1.6, "amb": 0.3, "top": "3a3f5c", "hor": "d98a55", "gnd": "8a6a50", "fog": "a87a5c", "exp": 1.0},
 	"night": {"rot": Vector3(-52, -38, 0), "col": "8fa8ff", "e": 0.9, "amb": 0.34, "top": "10182e", "hor": "2c3b5a", "gnd": "141c2a", "fog": "27324a", "exp": 0.95},
 }
@@ -68,7 +68,9 @@ func _ready() -> void:
 	sun.shadow_opacity = 0.72  # schaduw wordt niet meer pikzwart
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	sun.directional_shadow_max_distance = 80.0
-	sun.shadow_normal_bias = 1.2
+	# A smaller normal offset keeps the existing mobile shadow map attached to
+	# roots and trail stones, which reads better at the fixed tactical camera.
+	sun.shadow_normal_bias = 0.7
 	add_child(sun)
 	_sky_mat = sky_mat
 	_env = env

@@ -46,6 +46,7 @@ func run() -> void:
 	check(understory_counts.arch >= 1300 and understory_counts.arch <= 1450,"New arched fern must appear inside its cap")
 	check(understory_counts.red >= 750 and understory_counts.red <= 850,"New red/bronze blooms must remain bounded and readable")
 	check(understory_counts.litter >= 12500 and understory_counts.litter <= 15000,"Leaf litter must materially break up exposed soil without exceeding its mobile cap")
+	check(understory_counts.stone >= 1700 and understory_counts.stone <= 1900,"The pebble detail pass must reuse, not grow, the existing stone instance budget")
 	check(under.has_method("litter_mesh"),"Litter needs a corrected ground normal frame")
 	if under.has_method("litter_mesh"):
 		var litter: ArrayMesh = under.litter_mesh()
@@ -115,6 +116,7 @@ func run() -> void:
 	var near_camera_cover := {"short":0,"groundcover":0,"litter":0}
 	var authored_batches := {}
 	var camera_cover_batches := {}
+	var stone_batches := {}
 	for n: MultiMeshInstance3D in details:
 		for kind in ["groundcover","litter"]:
 			if n.name.begins_with("Understory_"+kind+"_"):
@@ -122,10 +124,13 @@ func run() -> void:
 		for kind in near_authored.keys():
 			if n.name.begins_with("Understory_"+kind+"_"):
 				authored_batches[n.multimesh.get_instance_id()] = kind
+		if n.name.begins_with("Understory_stone_"):
+			stone_batches[n.multimesh.get_instance_id()] = true
 	for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("grass_3d"):
 		if n.get_meta("kind") == "short" and int(n.get_meta("lod")) == 0:
 			camera_cover_batches[n.multimesh.get_instance_id()] = "short"
 	var checked := 0
+	var small_path_pebbles := 0
 	var sample := Vector3.INF
 	# Dummy renderer cannot read GPU buffers. Use the production clearance index,
 	# which holds the actual prepared transform for every MultiMesh slot.
@@ -134,6 +139,10 @@ func run() -> void:
 			if entry.slots.is_empty() or not entry.slots[0].multimesh in meshes: continue
 			var p: Vector3 = entry.world_position
 			var batch_id: int = entry.slots[0].multimesh.get_instance_id()
+			var path_pebble: bool = stone_batches.has(batch_id) and entry.get("visual_role","") == "trail_edge_pebble" and absf(p.x-data_rules.path_x(p.z)) >= 3.4 and absf(p.x-data_rules.path_x(p.z)) < 5.6 and entry.xf.basis.get_scale().x < 0.20
+			if path_pebble:
+				small_path_pebbles += 1
+				check(entry.shapes.is_empty(),"Trail pebbles must remain render-only and have no collisions")
 			var authored_kind: String = authored_batches.get(entry.slots[0].multimesh.get_instance_id(),"")
 			if not authored_kind.is_empty() and Vector2(p.x-7.0,p.z+57.0).length() < 30.0:
 				near_authored[authored_kind] += 1
@@ -148,11 +157,13 @@ func run() -> void:
 			checked += 1
 			sample = p
 			check(maxf(absf(p.x),absf(p.z)) > data_rules.COMPOUND+1.8,"Detail in base")
-			check(not fol._in_river(p),"Detail blocks water or forest route")
+			check(path_pebble or not fol._in_river(p),"Detail blocks water or forest route")
 			check(not (absf(p.x)<4.6 and absf(p.z)<70.0),"Detail blocks gate approach")
 	check(near_bank>20 and near_wall>20 and near_path>20,"Detail budget starves banks/foundations/shoulders")
 	print("VISUAL B CAMERA PLANTS ",JSON.stringify(near_authored))
 	print("VISUAL B CAMERA FLOOR ",JSON.stringify(near_camera_cover))
+	print("VISUAL B SMALL PATH PEBBLES ",small_path_pebbles)
+	check(small_path_pebbles >= 250,"The existing stone budget needs small, render-only gravel accents along the trail")
 	check(near_camera_cover.short >= 900 and near_camera_cover.groundcover >= 4400 and near_camera_cover.litter >= 3000,
 		"The open playable floor needs close-camera ground detail while leaving the trail readable")
 	check(near_authored.rosette>=600 and near_authored.arch_fern>=450 and near_authored.red_bloom>=200,

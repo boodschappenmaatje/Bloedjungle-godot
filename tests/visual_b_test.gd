@@ -202,6 +202,12 @@ func run() -> void:
 				if shrub_image.get_pixel(x,y).g < 0.85: sampled_ao += 1
 	check(sampled_ao > 50,"Poly Haven ARM ambient occlusion is packed alongside roughness for red-bloom leaves")
 	check(Foliage.material("depth_red_bloom").shader.get_code().contains("surface.g"),"PBR foliage shader must consume packed AO without another texture sampler")
+	check(Foliage.material("depth_rosette").get_shader_parameter("roughness_floor") <= 0.35,
+		"Scanned anthurium leaves must retain their measured soft gloss instead of a global matte clamp")
+	check(Foliage.material("depth_arch_fern").get_shader_parameter("roughness_floor") >= 0.58,
+		"Scanned fern leaves must keep their naturally matte response")
+	check(Foliage.material("depth_rosette").get_shader_parameter("nrm_depth") >= 0.78,
+		"Broad scanned leaves need visible vein relief at the gameplay camera")
 	var atm := get_tree().get_first_node_in_group("atmosphere")
 	for quality in ["low","high","ultra","high"]:
 		settings.values["quality"] = quality

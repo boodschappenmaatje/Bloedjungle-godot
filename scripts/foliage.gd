@@ -55,13 +55,21 @@ static func material(kind := "") -> ShaderMaterial:
 					m.set_shader_parameter("nrm", load(texture_root + "normal_gl.png"))
 					m.set_shader_parameter("rough_tex", load(texture_root + "roughness.png"))
 					m.set_shader_parameter("use_rough_tex", true)
-					# Preserve the scanned leaf relief under the standard mobile PBR response.
-					m.set_shader_parameter("nrm_depth", 0.72 if kind == "depth_litter" else 0.62)
+					# The shared material previously forced every scanned leaf above 0.56
+					# roughness, removing the anthurium's measured soft sheen. Preserve each
+					# species' actual PBR range while keeping the fern and floor litter matte.
+					var rough_floor := 0.32 if kind == "depth_rosette" else (0.38 if kind == "depth_red_bloom" else (0.68 if kind == "depth_litter" else 0.60))
+					var specular := 0.36 if kind == "depth_rosette" else (0.31 if kind == "depth_red_bloom" else (0.18 if kind == "depth_litter" else 0.23))
+					var normal_depth := 0.82 if kind == "depth_rosette" else (0.74 if kind == "depth_red_bloom" else (0.70 if kind == "depth_arch_fern" else (0.64 if kind == "depth_microcover" else 0.56)))
+					m.set_shader_parameter("roughness_floor", rough_floor)
+					m.set_shader_parameter("leaf_specular", specular)
+					m.set_shader_parameter("nrm_depth", normal_depth)
 					m.set_shader_parameter("cut", 0.42)
-					m.set_shader_parameter("foliage_grade", Vector3(3.1,2.3,1.8) if kind == "depth_litter" else Vector3(1.06,1.02,0.94))
-					m.set_shader_parameter("foliage_saturation", 0.68 if kind == "depth_litter" else 0.84)
+					var grade := Vector3(3.1,2.3,1.8) if kind == "depth_litter" else (Vector3(1.10,1.01,0.87) if kind in ["depth_rosette", "depth_arch_fern"] else Vector3(1.08,1.00,0.86))
+					m.set_shader_parameter("foliage_grade", grade)
+					m.set_shader_parameter("foliage_saturation", 0.68 if kind == "depth_litter" else 0.87)
 					m.set_shader_parameter("tint", Vector3.ONE if kind == "depth_litter" else Vector3(1.02,1.03,0.95))
-					m.set_shader_parameter("backlight", 0.08)
+					m.set_shader_parameter("backlight", 0.08 if kind in ["depth_microcover", "depth_litter"] else 0.12)
 			else:
 				m.set_shader_parameter("tex", LeafTex.get_tex(kind))
 				m.set_shader_parameter("nrm", LeafTex.get_normal(kind))

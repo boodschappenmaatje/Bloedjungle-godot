@@ -40,6 +40,14 @@ float sight_hide(vec3 p, vec3 target, vec3 cam, float radius) {
 	return along * (1.0 - smoothstep(radius * 0.3, radius, d));
 }
 
+// Keep scanned groundcover and palm leaves clear around the player/enemy feet,
+// even where low fronds fall below the camera-to-actor sightline segment.
+float actor_clear_hide(vec3 p, vec3 actor) {
+	vec2 delta = p.xz - actor.xz;
+	float distance_squared = dot(delta, delta);
+	return 1.0 - smoothstep(1.4 * 1.4, 3.8 * 3.8, distance_squared);
+}
+
 void vertex() {
 	vec3 wp = MODEL_MATRIX[3].xyz;
 	float phase = wp.x * 0.37 + wp.z * 0.23;
@@ -79,11 +87,18 @@ void fragment() {
 	if (leaf.a < cut) { discard; }
 	if (fade_sightline) {
 		float hide = sight_hide(world_leaf, view_player, view_camera, 5.2);
+		float actor_clear = actor_clear_hide(world_leaf, view_player);
 		if (view_e0.w > 0.5) { hide = max(hide, sight_hide(world_leaf, view_e0.xyz, view_camera, 3.1)); }
 		if (view_e1.w > 0.5) { hide = max(hide, sight_hide(world_leaf, view_e1.xyz, view_camera, 3.1)); }
 		if (view_e2.w > 0.5) { hide = max(hide, sight_hide(world_leaf, view_e2.xyz, view_camera, 3.1)); }
+		if (view_e0.w > 0.5) { actor_clear = max(actor_clear, actor_clear_hide(world_leaf, view_e0.xyz)); }
+		if (view_e1.w > 0.5) { actor_clear = max(actor_clear, actor_clear_hide(world_leaf, view_e1.xyz)); }
+		if (view_e2.w > 0.5) { actor_clear = max(actor_clear, actor_clear_hide(world_leaf, view_e2.xyz)); }
+		actor_clear *= fade_amount;
+		hide = max(hide, actor_clear);
 		if (hide > 0.0 && distance(INV_VIEW_MATRIX[3].xyz, view_camera) < 1.0) {
 			float noise = fract(52.9829189 * fract(dot(FRAGCOORD.xy, vec2(0.06711056, 0.00583715))));
+			if (actor_clear > 0.985) { discard; }
 			if (noise < hide * 0.93 * fade_amount) { discard; }
 		}
 	}

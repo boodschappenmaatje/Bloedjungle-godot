@@ -46,6 +46,15 @@ float sight_hide(vec3 p, vec3 target, vec3 cam, float r) {
 	return along * (1.0 - smoothstep(r * 0.3, r, d));
 }
 
+// Clear low palm/bush leaves that sit directly around an actor. The camera ray
+// fades taller occluders; this small ground-plane radius also catches leaves
+// below the ray endpoint without creating collisions or extra draw calls.
+float actor_clear_hide(vec3 p, vec3 actor) {
+	vec2 delta = p.xz - actor.xz;
+	float distance_squared = dot(delta, delta);
+	return 1.0 - smoothstep(1.4 * 1.4, 3.8 * 3.8, distance_squared);
+}
+
 void vertex() {
 	vec3 wp = MODEL_MATRIX[3].xyz;
 	float ph = wp.x * 0.37 + wp.z * 0.23;
@@ -99,12 +108,19 @@ void fragment() {
 	vec4 plant_surface = use_rough_tex ? texture(rough_tex, uv) : vec4(0.76,1.0,0.0,1.0);
 	if (fade_sightline) {
 		float hide = sight_hide(world_leaf, view_player, view_camera, 5.2);
+		float actor_clear = actor_clear_hide(world_leaf, view_player);
 		if (view_e0.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e0.xyz, view_camera, 3.1));
 		if (view_e1.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e1.xyz, view_camera, 3.1));
 		if (view_e2.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e2.xyz, view_camera, 3.1));
+		if (view_e0.w > 0.5) actor_clear = max(actor_clear, actor_clear_hide(world_leaf, view_e0.xyz));
+		if (view_e1.w > 0.5) actor_clear = max(actor_clear, actor_clear_hide(world_leaf, view_e1.xyz));
+		if (view_e2.w > 0.5) actor_clear = max(actor_clear, actor_clear_hide(world_leaf, view_e2.xyz));
+		actor_clear *= fade_amount;
+		hide = max(hide, actor_clear);
 		// alleen in het hoofdbeeld: in de schaduwkaart (camera = de zon) blijft het blad heel, dus geen gaatjesschaduw
 		if (hide > 0.0 && distance(INV_VIEW_MATRIX[3].xyz, view_camera) < 1.0) {
 			float n = fract(52.9829189 * fract(dot(FRAGCOORD.xy, vec2(0.06711056, 0.00583715))));  // goedkoop interleaved-gradient-ruis
+			if (actor_clear > 0.985) discard;
 			if (n < hide * 0.93 * fade_amount) discard;
 		}
 	}

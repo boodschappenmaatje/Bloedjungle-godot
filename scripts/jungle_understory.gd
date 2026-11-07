@@ -283,12 +283,10 @@ static func spawn(parent: Node3D) -> void:
 			if absf(p.x-Data.path_x(p.z))<2.8 or not allowed(p): continue
 			colony_positions.append(p)
 			colony_kinds.append("groundcover")
-	# Distribute the same camera-floor budget as smaller groups close to both trail
-	# shoulders. This fills the open combat floor without planting into the firing lane.
+	# Reassign the same small-group budget across the playable entry field instead
+	# of concentrating it on one trail side. Keep the route and a clear player pocket.
 	for cluster in 120:
-		var z := fill_rng.randf_range(-82.0,-36.0)
-		var side := -1.0 if fill_rng.randf()<0.5 else 1.0
-		var center := Vector3(Data.path_x(z)+side*fill_rng.randf_range(8.5,16.0),0.012,z)
+		var center := Vector3(fill_rng.randf_range(-8.0,30.0),0.012,fill_rng.randf_range(-80.0,-36.0))
 		var radius := fill_rng.randf_range(2.2,3.4)
 		var roll := fill_rng.randf()
 		var species := "groundcover" if roll<0.65 else ("rosette" if roll<0.85 else ("arch_fern" if roll<0.97 else "red_bloom"))
@@ -296,7 +294,7 @@ static func spawn(parent: Node3D) -> void:
 			var angle := fill_rng.randf()*TAU
 			var r := sqrt(fill_rng.randf())*radius
 			var p := center+Vector3(cos(angle)*r,0,sin(angle)*r)
-			if absf(p.x-Data.path_x(p.z))<7.5 or not allowed(p): continue
+			if absf(p.x-Data.path_x(p.z))<5.2 or Vector2(p.x-7.0,p.z+57.0).length()<5.0 or not allowed(p): continue
 			colony_positions.append(p)
 			colony_kinds.append(_colony_species(species,fill_rng))
 	# Reserve a small litter budget for the camera-facing floor before the broad fill.

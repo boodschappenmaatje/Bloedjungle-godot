@@ -57,13 +57,13 @@ void fragment() {
 	// mipmapping fade this larger grain before it can shimmer in the distance.
 	// Tighter world tiling keeps the grass and floor litter from averaging into a
 	// broad painted wash at the tactical camera. Mipmapping still filters distant detail.
-	vec2 guv = p * 0.18;
-	vec2 juv = p * 0.19 + 0.37;
-	vec2 duv = p * 0.18;
-	vec2 muv = vec2(p.y, -p.x) * 0.19;
-	vec2 moss_uv = p * 0.19;
-	// Tighter aggregate scale resolves smaller stones and worn tread marks.
-	vec2 gravel_uv = p * 0.22;
+	vec2 guv = p * 0.27;
+	vec2 juv = p * 0.29 + 0.37;
+	vec2 duv = p * 0.26;
+	vec2 muv = vec2(p.y, -p.x) * 0.27;
+	vec2 moss_uv = p * 0.26;
+	// Keep trail stone and crushed grit visible at the fixed combat-camera scale.
+	vec2 gravel_uv = p * 0.31;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -78,15 +78,17 @@ void fragment() {
 	ms.rg = vec2(ms.g,1.0-ms.r);
 	vec4 mos = texture(moss_surface, moss_uv, detail_mip_bias);
 	vec4 grs = texture(gravel_surface, gravel_uv, detail_mip_bias);
-	float floor_mix = smoothstep(0.27, 0.72, n1 * 0.6 + n2 * 0.4) * 0.9;
+	// Bring photographed litter into the clearings instead of letting grass dominate
+	// almost every pixel. This reuses the texture reads already needed by the terrain.
+	float floor_mix = smoothstep(0.18, 0.62, n1 * 0.35 + n2 * 0.65) * 0.95;
 	// Shift the broad floor away from the former yellow wash while keeping the
 	// source atlas's fine blades legible after mobile mip filtering.
-	vec3 grass = mix(g * vec3(0.62,0.61,0.54), j * vec3(0.60,0.59,0.52), floor_mix);
+	vec3 grass = mix(g * vec3(0.70,0.67,0.56), j * vec3(0.72,0.68,0.56), floor_mix);
 	// Warm the shaded floor toward soil and olive, avoiding the bright green cast.
 	grass *= mix(vec3(1.00,0.94,0.84),vec3(0.94,0.90,0.79),smoothstep(0.3,0.7,n1));
 	// Existing metre-scale noise now carries a little more canopy-dapple contrast;
 	// the already derivative-gated micro breakup stays unchanged for shimmer control.
-	grass *= (0.78 + 0.44*n3) * mix(1.0,0.86+0.28*n_micro,micro_gate*0.72);
+	grass *= (0.70 + 0.62*n3) * mix(1.0,0.86+0.28*n_micro,micro_gate*0.72);
 	float inside = 1.0 - smoothstep(compound-0.5,compound+3.0,max(abs(p.x),abs(p.y)));
 	float path = (1.0-smoothstep(gate_gap*0.9,gate_gap*1.9+n2*1.6,abs(p.x)))
 		* smoothstep(compound-2.0,compound+1.5,abs(p.y))*(1.0-smoothstep(30.0,52.0,abs(p.y)));

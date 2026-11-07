@@ -132,6 +132,8 @@ func run() -> void:
 			camera_cover_batches[n.multimesh.get_instance_id()] = "short"
 	var checked := 0
 	var small_path_pebbles := 0
+	var visible_floor_pebbles := 0
+	var visible_floor_twigs := 0
 	var sample := Vector3.INF
 	# Dummy renderer cannot read GPU buffers. Use the production clearance index,
 	# which holds the actual prepared transform for every MultiMesh slot.
@@ -144,6 +146,9 @@ func run() -> void:
 			if path_pebble:
 				small_path_pebbles += 1
 				check(entry.shapes.is_empty(),"Trail pebbles must remain render-only and have no collisions")
+			if p.x >= -17.0 and p.x <= 31.0 and p.z >= -77.0 and p.z <= -48.0:
+				if entry.get("visual_role","") == "forest_floor_pebble": visible_floor_pebbles += 1
+				if entry.get("visual_role","") == "forest_floor_twig": visible_floor_twigs += 1
 			var authored_kind: String = authored_batches.get(entry.slots[0].multimesh.get_instance_id(),"")
 			if not authored_kind.is_empty() and Vector2(p.x-7.0,p.z+57.0).length() < 30.0:
 				near_authored[authored_kind] += 1
@@ -167,7 +172,9 @@ func run() -> void:
 	print("VISUAL B CAMERA FLOOR ",JSON.stringify(near_camera_cover))
 	print("VISUAL B VISIBLE CAMERA FLOOR ",JSON.stringify(visible_camera_cover))
 	print("VISUAL B SMALL PATH PEBBLES ",small_path_pebbles)
+	print("VISUAL B CAMERA DEBRIS stones=%d twigs=%d" % [visible_floor_pebbles,visible_floor_twigs])
 	check(small_path_pebbles >= 250,"The existing stone budget needs small, render-only gravel accents along the trail")
+	check(visible_floor_pebbles >= 160 and visible_floor_twigs >= 55,"The fixed combat-camera opening needs bounded low rock and branch breakup")
 	check(near_camera_cover.short >= 3000 and near_camera_cover.groundcover >= 4500 and near_camera_cover.litter >= 3700,
 		"The camera neighborhood needs existing low cover and leaf litter while leaving the trail readable")
 	check(visible_camera_cover.short >= 6000 and visible_camera_cover.groundcover >= 3200 and visible_camera_cover.litter >= 1700,

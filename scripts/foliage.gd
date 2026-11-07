@@ -58,8 +58,8 @@ static func material(kind := "") -> ShaderMaterial:
 					# Preserve the scanned leaf relief under the standard mobile PBR response.
 					m.set_shader_parameter("nrm_depth", 0.72 if kind == "depth_litter" else 0.62)
 					m.set_shader_parameter("cut", 0.42)
-					m.set_shader_parameter("foliage_grade", Vector3(1.45,1.12,0.72) if kind == "depth_litter" else Vector3(1.06,1.02,0.94))
-					m.set_shader_parameter("foliage_saturation", 0.84)
+					m.set_shader_parameter("foliage_grade", Vector3(3.1,2.3,1.8) if kind == "depth_litter" else Vector3(1.06,1.02,0.94))
+					m.set_shader_parameter("foliage_saturation", 0.68 if kind == "depth_litter" else 0.84)
 					m.set_shader_parameter("tint", Vector3.ONE if kind == "depth_litter" else Vector3(1.02,1.03,0.95))
 					m.set_shader_parameter("backlight", 0.08)
 			else:

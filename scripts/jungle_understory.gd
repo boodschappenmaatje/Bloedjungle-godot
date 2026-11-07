@@ -102,7 +102,7 @@ static func litter_mesh() -> ArrayMesh:
 	# game camera instead of subpixel flecks. Instance count and triangle budget
 	# remain unchanged.
 	var leaf_lengths: Array[float] = [0.48,0.42,0.54]
-	var leaf_widths: Array[float] = [0.22,0.19,0.24]
+	var leaf_widths: Array[float] = [0.16,0.145,0.18]
 	for leaf_index in 3:
 		var yaw := TAU * leaf_index / 3.0 + 0.31 * leaf_index
 		var direction := Vector3(cos(yaw),0.0,sin(yaw))

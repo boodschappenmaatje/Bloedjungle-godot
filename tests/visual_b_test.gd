@@ -64,6 +64,7 @@ func run() -> void:
 		check(litter.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size() == 108,"Scanned leaf litter must retain its bounded three-leaf geometry budget")
 		check(litter.surface_get_material(0) == Foliage.material("depth_litter"),"Fallen leaves must use the shared scanned PBR material")
 		check(Foliage.material("depth_litter").get_shader_parameter("wind") == 0.0,"Fallen leaves must remain grounded when gameplay wind is enabled")
+		check(Foliage.material("depth_litter").get_shader_parameter("foliage_grade").x >= 2.5,"Dark scanned leaves need a bounded warm lift for ground readability")
 		fol.set_wind(true)
 		check(Foliage.material("depth_litter").get_shader_parameter("wind") == 0.0,"Global wind changes must not animate leaves lying on the ground")
 		fol.set_wind(false)

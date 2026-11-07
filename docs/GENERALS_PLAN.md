@@ -199,3 +199,17 @@ De native iPhone-test toonde onbedoelde wielkeuzes doordat de knop GEBRUIK tegel
 - **Het huidige vaste kamp vervalt.** De wagen is het nieuwe begin: muur, poort, torens, wachtposten en bijbehorende vaste props op de oorsprong (`Data.COMPOUND`-code: `gates.gd`, `base_props.gd`, `wachtpost.gd`, `patrouille.gd`, `generator.gd`, `route.gd`, `voorraad.gd`, enz.) moeten dynamisch worden of vervallen.
 - **Gebouwen blijven bouwbaar** (kazerne, garage, enz.) via de bestaande bouwmodus, rond het hoofdkwartier.
 - Nog te beslissen: zie de vragenlijst in het gesprek van 7 november (afstand tot water/stad/vijandbasis, startplek en eerste depot/truck, bunker, HK-gebied, radar, aanvalsdoel van de vijand, wat er met bestaande wachten gebeurt).
+
+### MCV — derde ronde, antwoorden op de tien vragen (Dennis, 7 november 2026)
+1. **Start:** je begint *in* de wagen, rijdt hem naar een plek, klapt hem uit, en dan komt de speler eruit.
+2. **Hoofdkwartier:** blijft bestaan (is al vervangen); het komt uit de wagen geklapt.
+3. **Terugkomen:** na 8 s bij het kamp (het HK). **Is het HK vernield, dan is het spel voorbij.**
+4. **De wagen is het HK** (geen apart gebouw ernaast).
+5. **Depot en eerste truck gratis**, maar je plaatst het depot zelf in je nieuwe kamp, en je kiest zelf naar welke voorraadstapel de truck rijdt.
+6. **Startgeld: 2000** (ongewijzigd).
+7. **Afstand tot water/stad/vijandbasis:** door Claude in te vullen (voorstel: zie PR/stap); **geen vast kader, het kamp mag zo groot worden als je zelf wilt.**
+8. **Poort:** je plaatst de poort zelf in de muur.
+9. **Rust voor de eerste vijandelijke groep: 10 minuten** (was 3, `Data.GROEP_RUST`). Aanname, nog te bevestigen: de klok start bij het uitklappen.
+10. **Wachten/patrouilles:** je koopt ze als mannetjes bij de kazerne en zij lopen patrouille; de vaste wachtposten van het oude kamp vervallen.
+
+**Gevolgen om rekening mee te houden:** geen vast kader betekent dat muur, poorten, patrouillelijnen, `Route`, voorraadroutes, radar en vijandige aanvalsdoelen allemaal van de wagenplek moeten uitgaan en niet van een vast vierkant; prestaties op iPhone met een groot kamp NIET GEMETEN. De bunker als doel vervalt: het HK (de wagen) is het doel.

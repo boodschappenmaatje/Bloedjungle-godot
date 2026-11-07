@@ -115,7 +115,9 @@ func _populate(existing: Array) -> void:
 	# Keep the same 19,000 placement attempts, but arrange them in irregular,
 	# overlapping colonies instead of an even lawn-like random scatter.
 	for colony in 250:
-		var center := Vector2(shoulder_rng.randf_range(-65.0,65.0),shoulder_rng.randf_range(-85.0,-34.0))
+		# Put most of those same colonies in the actual fixed combat-camera footprint;
+		# leave a smaller distant reserve so the wider map still has forest-floor cover.
+		var center := Vector2(shoulder_rng.randf_range(-13.0,26.0),shoulder_rng.randf_range(-74.0,-49.0)) if colony < 160 else Vector2(shoulder_rng.randf_range(-65.0,65.0),shoulder_rng.randf_range(-85.0,-34.0))
 		var radius := shoulder_rng.randf_range(1.5,3.4)
 		var aspect := shoulder_rng.randf_range(0.38,0.82)
 		var axis := shoulder_rng.randf_range(0.0,TAU)

@@ -217,7 +217,7 @@ static func spawn(parent: Node3D) -> void:
 	var attempts := 0
 	while plant_colony_centers.size() < 68 and attempts < 900:
 		attempts += 1
-		var center := Vector2(rng.randf_range(-22.0,32.0),rng.randf_range(-82.0,-38.0))
+		var center := Vector2(rng.randf_range(-13.0,30.0),rng.randf_range(-74.0,-49.0))
 		if absf(center.x-Data.path_x(center.y)) < 5.0 or Vector2(center.x-7.0,center.y+57.0).length() < 7.0: continue
 		if plant_colony_centers.any(func(other: Vector2) -> bool: return other.distance_to(center) < 5.2): continue
 		plant_colony_centers.append(center)
@@ -253,9 +253,9 @@ static func spawn(parent: Node3D) -> void:
 	# rosette/fern groups. Their centres are jittered and clustered; the firing road,
 	# base approach, build clearances and river stay open under the same acceptance rules.
 	for cluster in 300:
-		# The old 80 m scatter spent many of these same instances outside the active
-		# camera width. Bias their existing budget over the 50 m playable battle band.
-		var center := Vector3(fill_rng.randf_range(-18.0,32.0),0.012,fill_rng.randf_range(-80.0,-38.0))
+		# Keep 200 of the same clusters inside the fixed camera footprint; retain a
+		# smaller broad scatter so the rest of the map still has floor detail.
+		var center := Vector3(fill_rng.randf_range(-13.0,26.0),0.012,fill_rng.randf_range(-74.0,-49.0)) if cluster < 200 else Vector3(fill_rng.randf_range(-18.0,32.0),0.012,fill_rng.randf_range(-80.0,-38.0))
 		var radius := fill_rng.randf_range(1.2,2.8)
 		for i in 30:
 			var angle := fill_rng.randf()*TAU
@@ -280,7 +280,7 @@ static func spawn(parent: Node3D) -> void:
 			colony_kinds.append(_colony_species(species,fill_rng))
 	# Reserve the existing leaf-litter budget for the visible open floor before the broad fill.
 	for cluster in 75:
-		var center := Vector3(fill_rng.randf_range(-18.0,32.0),0.012,fill_rng.randf_range(-82.0,-37.0))
+		var center := Vector3(fill_rng.randf_range(-13.0,26.0),0.012,fill_rng.randf_range(-74.0,-49.0))
 		var radius := fill_rng.randf_range(0.9,2.0)
 		for i in fill_rng.randi_range(10,18):
 			var angle := fill_rng.randf()*TAU

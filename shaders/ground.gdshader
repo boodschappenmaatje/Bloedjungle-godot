@@ -57,13 +57,13 @@ void fragment() {
 	// mipmapping fade this larger grain before it can shimmer in the distance.
 	// Tighter world tiling keeps the grass and floor litter from averaging into a
 	// broad painted wash at the tactical camera. Mipmapping still filters distant detail.
-	vec2 guv = p * 0.105;
-	vec2 juv = p * 0.115 + 0.37;
-	vec2 duv = p * 0.12;
-	vec2 muv = vec2(p.y, -p.x) * 0.13;
-	vec2 moss_uv = p * 0.13;
-	// Smaller stone scale gives the trail aggregate a more natural, walkable size.
-	vec2 gravel_uv = p * 0.15;
+	vec2 guv = p * 0.18;
+	vec2 juv = p * 0.19 + 0.37;
+	vec2 duv = p * 0.18;
+	vec2 muv = vec2(p.y, -p.x) * 0.19;
+	vec2 moss_uv = p * 0.19;
+	// Tighter aggregate scale resolves smaller stones and worn tread marks.
+	vec2 gravel_uv = p * 0.22;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -81,9 +81,9 @@ void fragment() {
 	float floor_mix = smoothstep(0.27, 0.72, n1 * 0.6 + n2 * 0.4) * 0.9;
 	// Shift the broad floor away from the former yellow wash while keeping the
 	// source atlas's fine blades legible after mobile mip filtering.
-	vec3 grass = mix(g * vec3(0.61,0.63,0.56), j * vec3(0.59,0.62,0.54), floor_mix);
+	vec3 grass = mix(g * vec3(0.62,0.61,0.54), j * vec3(0.60,0.59,0.52), floor_mix);
 	// Warm the shaded floor toward soil and olive, avoiding the bright green cast.
-	grass *= mix(vec3(0.97,0.94,0.86),vec3(0.92,0.91,0.82),smoothstep(0.3,0.7,n1));
+	grass *= mix(vec3(1.00,0.94,0.84),vec3(0.94,0.90,0.79),smoothstep(0.3,0.7,n1));
 	// Existing metre-scale noise now carries a little more canopy-dapple contrast;
 	// the already derivative-gated micro breakup stays unchanged for shimmer control.
 	grass *= (0.78 + 0.44*n3) * mix(1.0,0.86+0.28*n_micro,micro_gate*0.72);
@@ -135,7 +135,7 @@ void fragment() {
 	ROUGHNESS = mix(max(ROUGHNESS,0.86),ROUGHNESS,micro_detail);
 	SPECULAR = mix(0.12,0.25,dm);
 	NORMAL_MAP = surf.rgb;
-	NORMAL_MAP_DEPTH = mix(1.0,1.24,dm)*micro_detail;
+	NORMAL_MAP_DEPTH = mix(1.0,1.34,dm)*micro_detail;
 	AO = 1.0-0.19*(1.0-dm)*n3;
 	AO_LIGHT_AFFECT = 0.20;
 }

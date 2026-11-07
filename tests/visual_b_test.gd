@@ -40,7 +40,7 @@ func run() -> void:
 	var short_grass_limit: int = grass_script.get_script_constant_map()["LIMIT"]["short"]
 	print("VISUAL B DENSITY short_grass=%d understory=%s" % [grass_tufts, JSON.stringify(understory_counts)])
 	check(grass_tufts >= 22000 and grass_tufts <= short_grass_limit,"Fine grass must fill the bounded playable-floor LOD budget")
-	check(understory_counts.groundcover >= 12500 and understory_counts.groundcover <= 14500,"Groundcover stays at or below the previously captured instance count")
+	check(understory_counts.groundcover >= 10000 and understory_counts.groundcover <= 14500,"Groundcover stays within its existing budget after camera-focused placement")
 	check(understory_counts.fern <= 2178 and understory_counts.bush >= 2000 and understory_counts.bush <= 2737,"Ferns and bushes stay at or below their previously captured instance counts")
 	check(understory_counts.rosette >= 1700 and understory_counts.rosette <= 1900,"New ribbed rosettes must appear inside their cap")
 	check(understory_counts.arch >= 1300 and understory_counts.arch <= 1450,"New arched fern must appear inside its cap")
@@ -114,6 +114,7 @@ func run() -> void:
 	var near_path := 0
 	var near_authored := {"rosette":0,"arch_fern":0,"red_bloom":0}
 	var near_camera_cover := {"short":0,"groundcover":0,"litter":0}
+	var visible_camera_cover := {"short":0,"groundcover":0,"litter":0}
 	var authored_batches := {}
 	var camera_cover_batches := {}
 	var stone_batches := {}
@@ -146,9 +147,11 @@ func run() -> void:
 			var authored_kind: String = authored_batches.get(entry.slots[0].multimesh.get_instance_id(),"")
 			if not authored_kind.is_empty() and Vector2(p.x-7.0,p.z+57.0).length() < 30.0:
 				near_authored[authored_kind] += 1
+			var cover_kind: String = camera_cover_batches.get(batch_id,"")
 			if Vector2(p.x-7.0,p.z+57.0).length() < 26.0 and absf(p.x-data_rules.path_x(p.z)) > 2.8:
-				var cover_kind: String = camera_cover_batches.get(batch_id,"")
 				if near_camera_cover.has(cover_kind): near_camera_cover[cover_kind] += 1
+			if p.x >= -17.0 and p.x <= 31.0 and p.z >= -75.0 and p.z <= -49.0:
+				if visible_camera_cover.has(cover_kind): visible_camera_cover[cover_kind] += 1
 			if data_rules.river_off(p.x,p.z) < 10.0: near_bank += 1
 			if maxf(absf(p.x),absf(p.z)) < data_rules.COMPOUND+4.5: near_wall += 1
 			if absf(p.x-data_rules.path_x(p.z)) < 10.0 and p.z < -34.0 and p.z > -86.0: near_path += 1
@@ -162,10 +165,13 @@ func run() -> void:
 	check(near_bank>20 and near_wall>20 and near_path>20,"Detail budget starves banks/foundations/shoulders")
 	print("VISUAL B CAMERA PLANTS ",JSON.stringify(near_authored))
 	print("VISUAL B CAMERA FLOOR ",JSON.stringify(near_camera_cover))
+	print("VISUAL B VISIBLE CAMERA FLOOR ",JSON.stringify(visible_camera_cover))
 	print("VISUAL B SMALL PATH PEBBLES ",small_path_pebbles)
 	check(small_path_pebbles >= 250,"The existing stone budget needs small, render-only gravel accents along the trail")
-	check(near_camera_cover.short >= 900 and near_camera_cover.groundcover >= 5700 and near_camera_cover.litter >= 3900,
-		"The real camera footprint needs clustered low cover and leaf litter while leaving the trail readable")
+	check(near_camera_cover.short >= 3000 and near_camera_cover.groundcover >= 4500 and near_camera_cover.litter >= 3700,
+		"The camera neighborhood needs existing low cover and leaf litter while leaving the trail readable")
+	check(visible_camera_cover.short >= 6000 and visible_camera_cover.groundcover >= 3200 and visible_camera_cover.litter >= 1700,
+		"The fixed main-camera footprint needs visible ground detail, not only nearby detail outside the screen")
 	check(near_authored.rosette>=600 and near_authored.arch_fern>=450 and near_authored.red_bloom>=200,
 		"New high-detail plant colonies must read in the real bospad camera area")
 	check(checked > 1000,"Missing registered removable detail")

@@ -50,4 +50,11 @@ For mobile efficiency the effects cap one-shot emission at 64 particles, use onl
 - [No-capture performance metrics](results_performance.json)
 - Godot logs: [`logs/`](logs/)
 
-Unsigned iOS export and non-publishing OTA preview are run through the existing GitHub workflows after pushing this branch. No artifact has been published to the `updates` release.
+## CI previews
+
+Both manual preview workflows completed successfully for branch commit `6d75022` with the official Godot 4.7.2 toolchain:
+
+- [Unsigned iOS workflow](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42403049506) — cache import, project validation, the workflow's root regression suite, Godot iOS export, Xcode build, IPA existence check, ZIP integrity check, and `Payload/*.app/Info.plist` check all passed. Artifact `bloedjungle-ios-unsigned-6d75022527d5c026c800d6a9fe102816a376588f` uploaded at 1,144,245,464 bytes. It is unsigned; no device install was performed.
+- [Non-publishing OTA preview workflow](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42403050612) — base and patch exports, OTA safety simulations, and preview upload passed. The generated light update is 5.5 MB, the preview manifest carries the existing 57-piece heavy chain (5,657.9 MB total), and the bridge is 0.01 MB. Artifact `ota-preview-6d75022527d5c026c800d6a9fe102816a376588f` uploaded at 92,964,590 bytes. The `Publish to the "updates" release` step was **skipped** (`publish=false`); nothing was published.
+
+The GitHub Actions runs and artifacts are available from the linked run pages. CI logs show Godot shutdown `resources still in use at exit` diagnostics for headless tests; the workflow permits that exact shutdown-only message, and the job completed successfully. No unsigned IPA was installed on a physical iPhone, and no OTA package was published.

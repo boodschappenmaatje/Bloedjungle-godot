@@ -13,6 +13,10 @@ From the repository root:
 ```sh
 python3 bron/jungle_foliage_depth/build_pbr_atlas.py
 blender --background --factory-startup --python bron/jungle_foliage_depth/make_assets.py
+blender --background --factory-startup \
+  --python bron/jungle_foliage_depth/export_usdz_previews.py -- \
+  --source bron/jungle_foliage_depth/jungle_foliage_depth.blend \
+  --output-dir previews/usdz/jungle_depth_foliage
 ```
 
 The generator writes the editable `.blend`, `assets/jungle_depth_foliage.glb`,
@@ -35,3 +39,12 @@ casters, draw-per-instance objects, or collision shapes are used.
 
 These figures are mesh counts, not mobile frame-rate claims. The iPhone test plan
 and actual game-camera capture decide visual and performance acceptance.
+
+## iPhone Quick Look copies
+
+The three LOD0 USDZ review files are in
+`previews/usdz/jungle_depth_foliage/v1/`. Blender 4.5.3 exports and re-imports
+each package with one visible mesh and its PBR textures; the zip contains one USD
+layer and base-color, normal and roughness images. The Linux environment has no
+Apple `xcrun usdchecker --arkit` or Quick Look, so Apple validation and physical
+iPhone preview remain untested. See the per-file JSON receipts beside each USDZ.

@@ -1,0 +1,23 @@
+{
+  "species": "arch_fern",
+  "source": "bron/jungle_foliage_depth/jungle_foliage_depth.blend",
+  "source_sha256": "e62d58afdd4a0412b487fed2fac06a57a27e4dfcb82b93578cdda4a4ce92dfcd",
+  "output": "previews/usdz/jungle_depth_foliage/v1/jungle_arch_fern_iphone.usdz",
+  "output_bytes": 1279239,
+  "output_sha256": "4ea3d6761c6bfd646656a35c45e3799756e244fb8ceb699a96fb6af55a508592",
+  "blender_version": "4.5.3 LTS",
+  "mesh_objects": 1,
+  "materials": 1,
+  "material_images": 3,
+  "texture_max_px": 1024,
+  "package_status": "PASS",
+  "blender_usd_import_validation": "PASS \u2014 one visible LOD0 mesh and packaged PBR textures resolved",
+  "apple_arkit_validation": "NOT_RUN \u2014 Apple USD tools are unavailable in this Linux environment",
+  "quicklook_validation": "NOT_RUN \u2014 no macOS Quick Look or physical iPhone was available",
+  "packaged_files": [
+    "jungle_arch_fern_iphone.usdc",
+    "textures/jungle_leaf_flower_normal_gl.png",
+    "textures/jungle_leaf_flower_roughness.png",
+    "textures/jungle_leaf_flower_base_color.png"
+  ]
+}

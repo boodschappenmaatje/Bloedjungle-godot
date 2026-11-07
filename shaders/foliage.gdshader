@@ -94,6 +94,9 @@ void fragment() {
 	vec3 base = tile ? pow(vcol, vec3(2.2)) : vcol;
 	vec4 t = use_tex ? texture(tex, uv) : vec4(1.0);
 	if (t.a < cut) discard;
+	// AO is packed in green next to linear roughness in red; reuse the existing
+	// per-material sample after alpha cutout so it costs no extra fetch or overdraw.
+	vec4 plant_surface = use_rough_tex ? texture(rough_tex, uv) : vec4(0.76,1.0,0.0,1.0);
 	if (fade_sightline) {
 		float hide = sight_hide(world_leaf, view_player, view_camera, 5.2);
 		if (view_e0.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e0.xyz, view_camera, 3.1));
@@ -118,9 +121,9 @@ void fragment() {
 		leaf_color = pow(max(leaf_color, vec3(0.0)), vec3(foliage_gamma));
 	}
 	ALBEDO = base * leaf_color * tint * root_contact;
-	AO = root_contact;
-	AO_LIGHT_AFFECT = 0.15;
-	ROUGHNESS = tile ? 0.94 : (use_rough_tex ? texture(rough_tex, uv).r : 0.76);
+	AO = clamp(root_contact * mix(1.0,plant_surface.g,0.42),0.65,1.0);
+	AO_LIGHT_AFFECT = 0.28;
+	ROUGHNESS = tile ? 0.94 : clamp(plant_surface.r * 0.90,0.40,0.96);
 	SPECULAR = tile ? 0.12 : 0.28;
 	BACKLIGHT = ALBEDO * backlight;
 }

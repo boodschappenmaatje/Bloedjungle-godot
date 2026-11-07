@@ -70,7 +70,33 @@ jobs:
             2>&1 | tee "$RUNNER_TEMP/visual-b-test.log"
           grep -Fq "VISUAL B TEST PASS" "$RUNNER_TEMP/visual-b-test.log"
           if grep -Eq 'SCRIPT ERROR:|Parse Error:' "$RUNNER_TEMP/visual-b-test.log"; then exit 1; fi
+      - name: Select quick preview mode
+        id: capture_mode
+        shell: bash
+        run: |
+          if [[ -f .github/visual_b_quick_preview ]]; then
+            echo "quick=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "quick=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Capture one fast, real main-camera preview
+        if: steps.capture_mode.outputs.quick == 'true'
+        timeout-minutes: 18
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/visual-b-quick"
+          xvfb-run -a -s "-screen 0 1280x720x24" env \
+            GODOT_SILENCE_ROOT_WARNING=1 BJ_INSTANT=1 BJ_TOUCH=1 BJ_RENDER_SCALE=1.0 \
+            BJ_CAPTURE_QUALITY=high BJ_CAPTURE_SPOT=bospad BJ_CAPTURE_ONLY=1 \
+            BJ_B_OUT="$RUNNER_TEMP/visual-b-quick" \
+            "$GODOT_BIN" --path . -s tests/visual_b_capture.gd --resolution 1280x720 \
+            2>&1 | tee "$RUNNER_TEMP/visual-b-capture-quick.log"
+          grep -Fq "VISUAL B CAPTURE PASS" "$RUNNER_TEMP/visual-b-capture-quick.log"
+          grep -Fq "CAPTURE RENDERER " "$RUNNER_TEMP/visual-b-capture-quick.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:' "$RUNNER_TEMP/visual-b-capture-quick.log"; then exit 1; fi
       - name: Capture real main-scene camera at benchmark settings
+        if: steps.capture_mode.outputs.quick != 'true'
         timeout-minutes: 35
         shell: bash
         run: |
@@ -101,8 +127,10 @@ jobs:
           path: |
             ${{ runner.temp }}/visual-b-60
             ${{ runner.temp }}/visual-b-100
+            ${{ runner.temp }}/visual-b-quick
             ${{ runner.temp }}/visual-b-import.log
             ${{ runner.temp }}/visual-b-test.log
+            ${{ runner.temp }}/visual-b-capture-quick.log
             ${{ runner.temp }}/visual-b-capture-60.log
             ${{ runner.temp }}/visual-b-capture-100.log
             ${{ runner.temp }}/vulkan-summary.log

@@ -41,17 +41,22 @@ void fragment() {
 	vec3 col = mix(shallow, deep, depth * 0.78);
 	// Distinct, uneven current bands stay visible in the mobile camera without
 	// planar reflections or transparent overdraw.
-	float water_tone = clamp(0.79 + 0.30 * streak + 0.12 * (s2 - s1), 0.70, 1.08);
+	float water_tone = clamp(0.68 + 0.48 * streak + 0.18 * (s2 - s1), 0.58, 1.16);
 	col *= water_tone;
-	col = mix(col, shallow * vec3(1.03, 1.05, 0.98), current_glint * 0.30);
-	col += vec3(0.07, 0.075, 0.045) * current_glint;
+	// Existing flow noise doubles as broken canopy and sky reflection. This
+	// raises broad water contrast without another texture fetch or transparency.
+	float reflection_band = smoothstep(0.34,0.72,streak + (s2-s1)*0.24);
+	vec3 reflection_tone = mix(vec3(0.07,0.16,0.14),vec3(0.40,0.59,0.54),smoothstep(0.28,0.76,s1*0.58+s2*0.42));
+	col = mix(col,reflection_tone,reflection_band*0.30);
+	col = mix(col, shallow * vec3(1.03, 1.05, 0.98), current_glint * 0.38);
+	col += vec3(0.08, 0.09, 0.055) * current_glint;
 	col = mix(col, foam, clamp(flake * 0.55 + edgefoam * 0.8, 0.0, 1.0));
 	// rimpels die in twee richtingen schuiven: geven glinsteringen in het zonlicht en een bewegend oppervlak
 	float r1 = texture(noise, p * 0.55 + vec2(-TIME * v * 0.09, TIME * 0.03)).r;
 	float r2 = texture(noise, p * 0.9 + vec2(-TIME * v * 0.14, -TIME * 0.05) + 0.3).r;
 	float rip = r1 * 0.55 + r2 * 0.45;
-	float glint = smoothstep(0.56, 0.78, rip) * (1.0 - flake);
-	col += vec3(0.32,0.30,0.22) * glint * 0.38;
+	float glint = smoothstep(0.59, 0.81, rip) * (1.0 - flake);
+	col += vec3(0.34,0.34,0.25) * glint * 0.46;
 	// Animated broken crests make small-scale flow legible in the real overhead
 	// camera even when the mobile renderer has no planar reflections.
 	float wave_a = sin(p.x * 0.72 + p.y * 0.31 - TIME * v * 0.86 + (s1 - 0.5) * 1.7);
@@ -69,7 +74,7 @@ void fragment() {
 	ALBEDO = col;
 	// Mobile Forward Mobile has no reliable planar reflection; a restrained
 	// self-lit floor keeps deep channels readable without adding transparency.
-	EMISSION = col * 0.11;
+	EMISSION = col * 0.13;
 	ROUGHNESS = 0.10 + 0.20 * flake;
 	SPECULAR = 0.72;
 	METALLIC = 0.0;

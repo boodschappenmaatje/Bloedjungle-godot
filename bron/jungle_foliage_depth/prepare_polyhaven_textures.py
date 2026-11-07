@@ -68,9 +68,18 @@ def build(species: str, asset_id: str) -> dict:
     normal = np.uint8(np.round(np.clip(normal * 0.5 + 0.5, 0.0, 1.0) * 255.0))
     normal_image = Image.fromarray(normal, "RGB")
 
-    # Poly Haven ARM stores AO in R, roughness in G and metalness in B.
+    # Poly Haven ARM stores AO in R and roughness in G. Edge-dilate both from
+    # the leaf alpha so mip filtering does not draw dark halos at cutout edges.
     arm = np.asarray(Image.open(arm_path).convert("RGB"), dtype=np.uint8)
-    rough_image = Image.fromarray(arm[:, :, 1], "L").resize(SIZE, Image.Resampling.LANCZOS)
+    rough = arm[:, :, 1]
+    ao = arm[:, :, 0]
+    if valid.any():
+        rough = rough[nearest[0], nearest[1]]
+        ao = ao[nearest[0], nearest[1]]
+    rough_resized = np.asarray(Image.fromarray(rough, "L").resize(SIZE, Image.Resampling.LANCZOS), dtype=np.uint8)
+    ao_resized = np.asarray(Image.fromarray(ao, "L").resize(SIZE, Image.Resampling.LANCZOS), dtype=np.uint8)
+    rough_image = Image.fromarray(np.dstack((rough_resized, ao_resized, rough_resized,
+                                              np.full(SIZE, 255, dtype=np.uint8))), "RGBA")
 
     OUT.mkdir(parents=True, exist_ok=True)
     outputs = {
@@ -98,7 +107,7 @@ def build(species: str, asset_id: str) -> dict:
         "channels": {
             "base_color": "sRGB RGB from diffuse; alpha from Poly Haven alpha mask; transparent RGB edge-dilated before 1K resize",
             "normal_gl": "OpenGL tangent normal from Poly Haven nor_gl; vector-filtered and renormalized after resize",
-            "roughness": "Linear G channel from Poly Haven ARM map",
+            "roughness": "Linear roughness from ARM G packed in runtime red; ambient occlusion from ARM R packed in runtime green",
         },
     }
 

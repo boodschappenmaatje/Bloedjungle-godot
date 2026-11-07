@@ -19,9 +19,11 @@ python3 bron/jungle_foliage_depth/record_polyhaven_sources.py
 ```
 
 Runtime maps are derived from the official 2K diffuse, alpha, OpenGL normal, and
-ARM maps. Transparent RGB is edge-dilated before downsampling; tangent normals
-are filtered and renormalized; ARM green supplies linear roughness. The mobile
-PBR sets are 1024×1024, mipmapped, alpha-cutout textures in
+ARM maps. Transparent RGB and leaf-surface data are edge-dilated before
+downsampling; tangent normals are filtered and renormalized. Each 1K runtime
+roughness texture stores linear roughness in red and ambient occlusion in green,
+so the shader reuses one sample for both channels. The mobile PBR sets are
+1024×1024, mipmapped, alpha-cutout textures in
 `assets/textures/foliage/polyhaven/`. Their hashes and channel handling are in
 that directory's `manifest.json`.
 

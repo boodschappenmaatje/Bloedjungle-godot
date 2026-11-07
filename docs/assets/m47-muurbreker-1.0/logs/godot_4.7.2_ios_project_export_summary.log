@@ -1,0 +1,8 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf
+Local unsigned iOS export project step (existing iOS preset; temporary project-only option restored afterward)
+Command: Godot --headless --path . --export-release "iOS" build/Bloedjungle-ios.zip
+Result: exit code 0; generated build/Bloedjungle-ios.xcodeproj/project.pbxproj (16,200 bytes).
+Godot output: WARNING: Xcode Build: .ipa can only be built on macOS. Leaving Xcode project without building the package.
+IPA produced locally: no.
+xcodebuild available locally: no (Linux environment).
+Official 4.7.2 iOS export template installed: ~/.local/share/godot/export_templates/4.7.2.stable/ios.zip (202,976,946 bytes).

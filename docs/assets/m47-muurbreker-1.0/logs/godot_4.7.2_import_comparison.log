@@ -1,0 +1,10 @@
+Godot 4.7.2.stable.official.ed1daf0bf import comparison
+
+Feature branch local iOS project export/full import: exit 0, Xcode project generated; 12 `Basis ... must be normalized ... Quaternion` ERROR lines from existing `assets/brandkraan.glb`.
+Feature branch after cache priming: second full import exit 0; 107 imported scenes; zero ERROR and SCRIPT ERROR lines.
+
+Local detached cold-cache main worktree at b808fe1: first full import exit 0; 104 imported scenes; 296 engine ERROR lines, including 12 matching zero-basis brandkraan lines and cache-dependent VQ2 texture load messages. Its local follow-up import remained noisy (497 ERROR lines), so this scratch worktree was not used as pass evidence. `assets/brandkraan.glb` is byte-identical between branch and main.
+
+Independent CI baseline: GitHub Actions iOS run 42247986984 on main completed successfully. Its `Prime Godot asset import cache`, `Import and validate project`, and `Export iOS project` steps all passed. The repository workflow performs a cache-prime import followed by validation in a fresh process.
+
+Regression test files and the bazooka, weapon, and wall gameplay assets/scripts are unchanged from main. Both main and feature branch test outputs are available alongside this report; main test output was captured from the detached main checkout with the same imported GLB cache.

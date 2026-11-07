@@ -1,6 +1,6 @@
 # M-47 Muurbreker Blender 1.0 — testrapport
 
-**Resultaat:** Blender-productie en GLB-validatie geslaagd. Godot 4.7.2-controle ontbreekt; versie 4.6.3 is niet als vervanging gebruikt.
+**Resultaat:** Blender-productie, GLB-validatie en de 32 geïsoleerde Godot 4.7.2-assetcontroles zijn geslaagd. De drie bestaande bazooka-, wapenclips- en HQ2-muurregressies slagen na volledige root-projectimport. De lokale iOS-export maakt het Xcode-project; de unsigned IPA wordt door de macOS-workflow gebouwd.
 
 ## Invoer en onveranderlijk origineel
 
@@ -47,6 +47,6 @@ De laadkamer en kern zijn aparte testgeometrie; de originele mesh is niet opgesp
 - `build_lods_and_renders.py`, `rig_animations_and_export.py` — batchproductiescripts.
 - `M47_Muurbreker_original.glb` — ongewijzigde bronreferentie.
 
-## Godot 4.7.2 en regressie
+## Godot 4.7.2, regressies en iOS-export
 
-De aparte Godot-testscene, import/animatie/PBR/LOD/montagecontroles, screenshot, bestaande bazooka/wall regressie-uitkomsten en iOS-exportblokkade zijn vastgelegd in [GODOT_TESTRAPPORT.md](GODOT_TESTRAPPORT.md). De testscene met de echte VQ2-speler en handbotten staat in `tests/m47_godot/`; zie de gedetailleerde PASS/FAIL-statussen daar.
+De volledige rootimport, cache-oorzaak, drie regressies, iOS-template en exportstatus zijn vastgelegd in [GODOT_TESTRAPPORT.md](GODOT_TESTRAPPORT.md). De lokale Godot 4.7.2-uitvoeringslogs staan in [`logs/`](logs/). De testscene met de echte VQ2-speler en handbotten staat in `tests/m47_godot/`.

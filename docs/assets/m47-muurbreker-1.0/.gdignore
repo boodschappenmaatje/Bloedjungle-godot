@@ -1,0 +1,1 @@
+Imported Godot test/archive assets live outside the runtime project; keep the Blender/GLB source and renders from filesystem auto-import.

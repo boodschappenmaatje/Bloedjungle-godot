@@ -1,15 +1,15 @@
-extends SceneTree
+extends Node
 ## Integration: render-only detail cannot obstruct routes or survive building clearance.
 var game: Node
 var failures := 0
-func _initialize() -> void:
+func _ready() -> void:
 	call_deferred("run")
 func check(ok: bool, message: String) -> void:
 	if not ok:
 		failures += 1
 		push_error(message)
 func run() -> void:
-	game = root.get_node("Game")
+	game = get_tree().root.get_node("Game")
 	var settings: GDScript = load("res://scripts/game_settings.gd")
 	var governor: GDScript = load("res://scripts/perf_governor.gd")
 	var progress: GDScript = load("res://scripts/progress.gd")
@@ -19,12 +19,12 @@ func run() -> void:
 	settings._loaded = true
 	settings.values["sound"] = "off"
 	var main: Node3D = load("res://scenes/main.tscn").instantiate()
-	root.add_child(main)
+	get_tree().root.add_child(main)
 	await main.begin()
 	main.set_process(false)
 	for mesh: ArrayMesh in [fol.fern(),fol.bush()]:
 		check(mesh.surface_get_arrays(0)[Mesh.ARRAY_TANGENT].size()>0,"Foliage PBR needs an authored tangent frame")
-	var details := get_nodes_in_group("jungle_understory")
+	var details := get_tree().get_nodes_in_group("jungle_understory")
 	var under: GDScript = load("res://scripts/jungle_understory.gd")
 	var understory_counts := {"fern":0,"bush":0,"groundcover":0,"rosette":0,"arch":0,"red":0,"litter":0,"stone":0,"twig":0}
 	for n: MultiMeshInstance3D in details:
@@ -32,7 +32,7 @@ func run() -> void:
 		var bucket := "arch" if kind == "arch_fern" else ("red" if kind == "red_bloom" else kind)
 		understory_counts[bucket] += int(n.get_meta("full"))
 	var grass_tufts := 0
-	for n: MultiMeshInstance3D in get_nodes_in_group("grass_3d"):
+	for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("grass_3d"):
 		if n.get_meta("kind") == "short" and int(n.get_meta("lod")) == 0:
 			grass_tufts += int(n.get_meta("full"))
 	var grass_script: GDScript = load("res://scripts/grass_field.gd")
@@ -77,7 +77,7 @@ func run() -> void:
 		check(n.find_children("*","CollisionShape3D",true,false).is_empty(),"Detail introduces collisions")
 	var meshes := details.map(func(n): return n.multimesh)
 	var detail_meshes := meshes.duplicate()
-	for n: MultiMeshInstance3D in get_nodes_in_group("grass_3d"):
+	for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("grass_3d"):
 		if n.get_meta("kind") == "short" and int(n.get_meta("lod")) == 0:
 			meshes.append(n.multimesh)
 	var near_bank := 0
@@ -94,7 +94,7 @@ func run() -> void:
 		for kind in near_authored.keys():
 			if n.name.begins_with("Understory_"+kind+"_"):
 				authored_batches[n.multimesh.get_instance_id()] = kind
-	for n: MultiMeshInstance3D in get_nodes_in_group("grass_3d"):
+	for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("grass_3d"):
 		if n.get_meta("kind") == "short" and int(n.get_meta("lod")) == 0:
 			camera_cover_batches[n.multimesh.get_instance_id()] = "short"
 	var checked := 0
@@ -136,7 +136,7 @@ func run() -> void:
 		fol.clear_for_building(987654,regions,sample,0.0)
 		check(fol.count_clearable_in_regions(regions,sample,0.0)==0,"New vegetation survives building clearing")
 	check(fol._shadow_mat("palm").get_shader_parameter("canopy_tex") is Texture2D,"Fixed palm shadows need the existing leaf silhouette")
-	var mat: ShaderMaterial = get_first_node_in_group("ground").get_meta("mat")
+	var mat: ShaderMaterial = get_tree().get_first_node_in_group("ground").get_meta("mat")
 	for key in ["grass_surface","jungle_surface","mud_surface","moss_surface","moss_tex","gravel_tex","gravel_surface"]:
 		var tex = mat.get_shader_parameter(key)
 		check(tex is Texture2D,"Missing terrain PBR binding: "+key)
@@ -163,7 +163,7 @@ func run() -> void:
 				if shrub_image.get_pixel(x,y).g < 0.85: sampled_ao += 1
 	check(sampled_ao > 50,"Poly Haven ARM ambient occlusion is packed alongside roughness for red-bloom leaves")
 	check(Foliage.material("depth_red_bloom").shader.get_code().contains("plant_surface.g"),"Foliage shader must consume packed AO without another texture sampler")
-	var atm := get_first_node_in_group("atmosphere")
+	var atm := get_tree().get_first_node_in_group("atmosphere")
 	for quality in ["low","high","ultra","high"]:
 		settings.values["quality"] = quality
 		atm.apply_settings()
@@ -173,4 +173,4 @@ func run() -> void:
 	atm.apply_settings()
 	for n: MultiMeshInstance3D in details: check(not n.visible,"Jungle switch leaves details visible")
 	print("VISUAL B TEST %s (%d failures)" % ["PASS" if failures==0 else "FAIL",failures])
-	quit(0 if failures==0 else 1)
+	get_tree().quit(0 if failures==0 else 1)

@@ -19,6 +19,7 @@ on:
       - "shaders/ground.gdshader"
       - "shaders/water.gdshader"
       - "tests/visual_b_capture.gd"
+      - "tests/visual_b_test.tscn"
       - "tests/visual_b_test.gd"
       - ".github/workflows/visual-b-capture.yml"
 
@@ -66,7 +67,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          "$GODOT_BIN" --headless --path . -s tests/visual_b_test.gd --fixed-fps 60 \
+          "$GODOT_BIN" --headless --path . --fixed-fps 60 res://tests/visual_b_test.tscn \
             2>&1 | tee "$RUNNER_TEMP/visual-b-test.log"
           grep -Fq "VISUAL B TEST PASS" "$RUNNER_TEMP/visual-b-test.log"
           if grep -Eq 'SCRIPT ERROR:|Parse Error:' "$RUNNER_TEMP/visual-b-test.log"; then exit 1; fi

@@ -1,0 +1,1444 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Started Project initialization (5 steps)[39m[0m
+[   0% ] [90m[1mfirst_scan_filesystem[22m | Scanning file structure...[39m[0m
+WARNING: Detected another project.godot at res://prototypes/meshy_player_lab. The folder will be ignored.
+     at: _should_skip_directory (editor/file_system/editor_file_system.cpp:3497)
+[  16% ] [90m[1mfirst_scan_filesystem[22m | Loading global class names...[39m[0m
+[  33% ] [90m[1mfirst_scan_filesystem[22m | Verifying GDExtensions...[39m[0m
+[  50% ] [90m[1mfirst_scan_filesystem[22m | Creating autoload scripts...[39m[0m
+[  66% ] [90m[1mfirst_scan_filesystem[22m | Initializing plugins...[39m[0m
+[  83% ] [90m[1mfirst_scan_filesystem[22m | Starting file scan...[39m[0m
+[92m[ DONE ][39m [1mfirst_scan_filesystem[22m
+[0m
+WARNING: Missing .uid file for path "res://scripts/bazooka_aim_feedback.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/combat_aim_feedback.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/combat_target_hud.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/vijand_m2_body.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/vijand_m2_toren.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/vijand_verdediger.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://scripts/wall_diagnostics.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/aanval_basis_foto.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/aanval_basis_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/assault_type_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/assault_weapon_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/base_wall_lod_render_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/bunker_hq_replacement_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/combat_bazooka_aim_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/combat_feedback_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/combat_infantry_feedback_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/enemy_meshy_only_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/garage_hoogte_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/grote_kaart_foto.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/grote_kaart_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/jeep_m2_schutter_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/jeep_respawn_feedback_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/ota_brug_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/streep_foto.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/surface_filtering_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/surface_temporal_capture.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/terrain_a1_capture.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/vijand_basis_foto.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/vijand_hk_foto.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/vijand_hk_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/vijand_m2_articulatie_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/vijand_m2_toren_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tests/wall_diagnostics_test.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tools/enemy_assault/capture_meshy_weapon.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tools/enemy_assault/dump_runtime_pose.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tools/enemy_assault/list_animation_clips.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tools/enemy_assault/test_animation_clips.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tools/enemy_assault/validate_rig.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+WARNING: Missing .uid file for path "res://tools/ota_brug_simulatie.gd". The file was re-created from cache.
+     at: _process_file_system (editor/file_system/editor_file_system.cpp:1391)
+[   0% ] [90m[1m_update_scan_actions[22m | Started Scanning actions... (58 steps)[39m[0m
+[   0% ] [90m[1m_update_scan_actions[22m | assault_meshy_hq2_runtime.glb[39m[0m
+[   1% ] [90m[1m_update_scan_actions[22m | brokstukken.glb[39m[0m
+[   3% ] [90m[1m_update_scan_actions[22m | krater.glb[39m[0m
+[   5% ] [90m[1m_update_scan_actions[22m | vat.glb[39m[0m
+[   6% ] [90m[1m_update_scan_actions[22m | grass_baseline.glb[39m[0m
+[   8% ] [90m[1m_update_scan_actions[22m | grass_medium_lod0.glb[39m[0m
+[  10% ] [90m[1m_update_scan_actions[22m | grass_medium_lod1.glb[39m[0m
+[  11% ] [90m[1m_update_scan_actions[22m | grass_medium_lod2.glb[39m[0m
+[  13% ] [90m[1m_update_scan_actions[22m | grass_short_lod0.glb[39m[0m
+[  15% ] [90m[1m_update_scan_actions[22m | grass_short_lod1.glb[39m[0m
+[  16% ] [90m[1m_update_scan_actions[22m | grass_short_lod2.glb[39m[0m
+[  18% ] [90m[1m_update_scan_actions[22m | grass_tall_lod0.glb[39m[0m
+[  20% ] [90m[1m_update_scan_actions[22m | grass_tall_lod1.glb[39m[0m
+[  22% ] [90m[1m_update_scan_actions[22m | grass_tall_lod2.glb[39m[0m
+[  23% ] [90m[1m_update_scan_actions[22m | jeep.glb[39m[0m
+[  25% ] [90m[1m_update_scan_actions[22m | kazerne.glb[39m[0m
+[  27% ] [90m[1m_update_scan_actions[22m | legerjeep.glb[39m[0m
+[  28% ] [90m[1m_update_scan_actions[22m | tank_v1.glb[39m[0m
+[  30% ] [90m[1m_update_scan_actions[22m | voorraadtruck_v1.glb[39m[0m
+[  32% ] [90m[1m_update_scan_actions[22m | voorraadtruck_wrak_v1.glb[39m[0m
+[  33% ] [90m[1m_update_scan_actions[22m | wachttoren.glb[39m[0m
+[  35% ] [90m[1m_update_scan_actions[22m | acties.glb[39m[0m
+[  37% ] [90m[1m_update_scan_actions[22m | auto.glb[39m[0m
+[  38% ] [90m[1m_update_scan_actions[22m | brandkraan.glb[39m[0m
+[  40% ] [90m[1m_update_scan_actions[22m | bus.glb[39m[0m
+[  42% ] [90m[1m_update_scan_actions[22m | generator.glb[39m[0m
+[  44% ] [90m[1m_update_scan_actions[22m | helipad.glb[39m[0m
+[  45% ] [90m[1m_update_scan_actions[22m | hoofdkwartier.glb[39m[0m
+[  47% ] [90m[1m_update_scan_actions[22m | hoofdkwartier_lod1.glb[39m[0m
+[  49% ] [90m[1m_update_scan_actions[22m | hoofdkwartier_omgeving.glb[39m[0m
+[  50% ] [90m[1m_update_scan_actions[22m | hotel.glb[39m[0m
+[  52% ] [90m[1m_update_scan_actions[22m | klimmen.glb[39m[0m
+[  54% ] [90m[1m_update_scan_actions[22m | loopgraaf.glb[39m[0m
+[  55% ] [90m[1m_update_scan_actions[22m | magazijn.glb[39m[0m
+[  57% ] [90m[1m_update_scan_actions[22m | meshy_m1911.glb[39m[0m
+[  59% ] [90m[1m_update_scan_actions[22m | meshy_weapon.glb[39m[0m
+[  61% ] [90m[1m_update_scan_actions[22m | munitiekist_meshy.glb[39m[0m
+[  62% ] [90m[1m_update_scan_actions[22m | poort.glb[39m[0m
+[  64% ] [90m[1m_update_scan_actions[22m | props.glb[39m[0m
+[  66% ] [90m[1m_update_scan_actions[22m | soldaat.glb[39m[0m
+[  67% ] [90m[1m_update_scan_actions[22m | soldaat_jungle_commando.glb[39m[0m
+[  69% ] [90m[1m_update_scan_actions[22m | soldaat_vq2.glb[39m[0m
+[  71% ] [90m[1m_update_scan_actions[22m | straaljager.glb[39m[0m
+[  72% ] [90m[1m_update_scan_actions[22m | uitrusting.glb[39m[0m
+[  74% ] [90m[1m_update_scan_actions[22m | verzamelvlag.glb[39m[0m
+[  76% ] [90m[1m_update_scan_actions[22m | verzamelvlag_lod1.glb[39m[0m
+[  77% ] [90m[1m_update_scan_actions[22m | vijand_hk.glb[39m[0m
+[  79% ] [90m[1m_update_scan_actions[22m | vijand_m2_toren.glb[39m[0m
+[  81% ] [90m[1m_update_scan_actions[22m | voorraaddepot.glb[39m[0m
+[  83% ] [90m[1m_update_scan_actions[22m | voorraaddepot_lod1.glb[39m[0m
+[  84% ] [90m[1m_update_scan_actions[22m | voorraadstapel.glb[39m[0m
+[  86% ] [90m[1m_update_scan_actions[22m | voorraadtruck.glb[39m[0m
+[  88% ] [90m[1m_update_scan_actions[22m | voorraadtruck_lod1.glb[39m[0m
+[  89% ] [90m[1m_update_scan_actions[22m | voorraadtruck_wrak.glb[39m[0m
+[  91% ] [90m[1m_update_scan_actions[22m | vrachtwagen.glb[39m[0m
+[  93% ] [90m[1m_update_scan_actions[22m | wapens.glb[39m[0m
+[  94% ] [90m[1m_update_scan_actions[22m | zitten.glb[39m[0m
+[  96% ] [90m[1m_update_scan_actions[22m | zwaailamp.glb[39m[0m
+[92m[ DONE ][39m [1m_update_scan_actions[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (301 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   0% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   0% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   0% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   1% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   1% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   1% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   2% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   2% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   2% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   3% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   3% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   3% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   4% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   4% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   4% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   5% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   5% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   5% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   6% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   6% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   6% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   7% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   7% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   7% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   8% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   8% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   8% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   9% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   9% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   9% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  10% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  10% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  10% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  11% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  11% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  11% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  12% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  12% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  12% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  13% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  13% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  13% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  14% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  14% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  14% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  15% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  15% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  15% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  16% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  16% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  16% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  17% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  17% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  17% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  18% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  18% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  18% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  19% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  19% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  19% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  20% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  20% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  20% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  21% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  21% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  21% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  22% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  22% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  22% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  23% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  23% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  23% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  24% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  24% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  24% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  25% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  25% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  25% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  26% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  26% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  26% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  27% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  27% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  27% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  28% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  28% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  28% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  29% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  29% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  29% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  30% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  30% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  30% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  31% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  31% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  31% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  32% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  32% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  32% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  33% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  33% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  33% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  34% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  34% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  34% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  35% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  35% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  35% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  36% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  36% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  36% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  37% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  37% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  37% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  38% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  38% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  38% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  39% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  39% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  39% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  40% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  40% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  40% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  41% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  41% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  41% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  42% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  42% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  42% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  43% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  43% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  43% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  44% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  44% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  44% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  45% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  45% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  45% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  46% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  46% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  46% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  47% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  47% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  47% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  48% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  48% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  48% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  49% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  49% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  49% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  50% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  50% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  50% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  50% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  51% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  51% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  51% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  52% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  52% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  52% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  53% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  53% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  53% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  54% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  54% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  54% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  55% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  55% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  55% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  56% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  56% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  56% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  57% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  57% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  57% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  58% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  58% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  58% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  59% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  59% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  59% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  60% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  60% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  60% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  61% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  61% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  61% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  62% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  62% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  62% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  63% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  63% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  63% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  64% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  64% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  64% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  65% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  65% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  65% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  66% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  66% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  66% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  67% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  67% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  67% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  68% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  68% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  68% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  69% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  69% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  69% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  70% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  70% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  70% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  71% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  71% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  71% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  72% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  72% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  72% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  73% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  73% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  73% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  74% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  74% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  74% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  75% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  75% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  75% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  76% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  76% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  76% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  77% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  77% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  77% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  78% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  78% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  78% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  79% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  79% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  79% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  80% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  80% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  80% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  81% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  81% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  81% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  82% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  82% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  82% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  83% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  83% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  83% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  84% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  84% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  84% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  85% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  85% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  85% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  86% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  86% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  86% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  87% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  87% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  87% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  88% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  88% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  88% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  89% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  89% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  89% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  90% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  90% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  90% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  91% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  91% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  91% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  92% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  92% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  92% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  93% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  93% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  93% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  94% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  94% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  94% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  95% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  95% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  95% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  96% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  96% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  96% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  97% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  97% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  97% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  98% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  98% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  98% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  99% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[  99% ] [90m[1mreimport[22m | Preparing files to reimport...[39m[0m
+[   0% ] [90m[1mreimport[22m | Executing pre-reimport operations...[39m[0m
+ERROR: Unrecognized UID: "uid://bw6qrpyeq8b7o".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://bmg2yfnriu8y7".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://ckuibsuh2a3ej".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://b7sm8j0rf6tpe".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://cjbgp85qk4snb".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://cnfoptydknppw".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dqhdpvgc4sfxe".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://cip2wc6tebeeu".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://c8jil1c3ne8cw".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://t1rljrpbp6la".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://denj0mok2ekjs".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://bqsivbmegqwdo".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dgulu85lr8mw2".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://brign1761mhos".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dwqnw3tya6hej".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://cg3p27xkd16mm".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://co2wjg3tpie81".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://b83m1hqt5xm8o".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://byf00lssukm0t".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://cbthw0a84tpvg".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://ca5j5eulvjwhn".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://w5nuet650ocw".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dhmdmy6j3rqmk".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://bmxvxwotgcy".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dsfq2hnyaf2m5".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dk6u1ipxargi7".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://bh2cfyeaqg7h4".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dbn6la0frv1lm".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://bflomjm3fs37q".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dufovvtp0f4fm".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://drqtdwyuj0j5h".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://crgye6kc468ke".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dq8qxnx64l5t2".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://gcbw8ot0q344".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://rlf7bcreucm5".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://cwsj1men5h26f".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dpsxwvhemhweo".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://ch42vv2leb2b5".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://blixvxlkelpaq".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dtl33k2u4qx7d".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://b55pemx7ca367".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://f7lwd84f5t3r".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://ssr3oyxgshx1".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://hcx321fk64sp".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://cpdcie5lwb7yd".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://mct786cntlje".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://cepskt12dqb65".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://b2frkvmb57itd".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://cnx66845y21jc".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dh2q0a5sjnbdh".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://c20aaws80vlod".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://cdphfbtfmo3nv".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://csy8bqwopfk5s".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://bm2vctpampdjs".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://lc4eoi6tix2x".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://d325sthclqnbd".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://byfaody4jcl17".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://gqwgw1adih2t".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://c56bwexnlvsfv".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dbcs1sihavqq".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dykms8gm4m16o".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://cvqosy0fj8tt4".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://cn8uhaqp2g47u".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://grchme5as3kl".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://bo2ooqdp7mx0d".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://484vklqsajow".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://b3emwsku75i1v".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://o17y33scnswm".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://dnix0uovjlm6e".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://duc8n6fvdx4lu".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://ck72fy6u2fu1u".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://d1gsv50k75y78".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+ERROR: Unrecognized UID: "uid://c2xl3dp1tabyr".
+   at: get_id_path (core/io/resource_uid.cpp:214)
+[   0% ] [90m[1mpreload_reimporting_scene[22m | Started Preparing scenes for reload (1 steps)[39m[0m
+[   0% ] [90m[1mpreload_reimporting_scene[22m | Analyzing scene [empty][39m[0m
+[  50% ] [90m[1mpreload_reimporting_scene[22m | Preparation done.[39m[0m
+[92m[ DONE ][39m [1mpreload_reimporting_scene[22m
+[0m
+[   0% ] [90m[1mreimport[22m | dtl33k2u4qx7d[39m[0m
+ERROR: Can't find file 'uid://dtl33k2u4qx7d' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   0% ] [90m[1mreimport[22m | d1gsv50k75y78[39m[0m
+ERROR: Can't find file 'uid://d1gsv50k75y78' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   0% ] [90m[1mreimport[22m | blixvxlkelpaq[39m[0m
+ERROR: Can't find file 'uid://blixvxlkelpaq' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   0% ] [90m[1mreimport[22m | ch42vv2leb2b5[39m[0m
+ERROR: Can't find file 'uid://ch42vv2leb2b5' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   1% ] [90m[1mreimport[22m | dpsxwvhemhweo[39m[0m
+ERROR: Can't find file 'uid://dpsxwvhemhweo' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   1% ] [90m[1mreimport[22m | c2xl3dp1tabyr[39m[0m
+ERROR: Can't find file 'uid://c2xl3dp1tabyr' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   1% ] [90m[1mreimport[22m | cwsj1men5h26f[39m[0m
+ERROR: Can't find file 'uid://cwsj1men5h26f' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   2% ] [90m[1mreimport[22m | rlf7bcreucm5[39m[0m
+ERROR: Can't find file 'uid://rlf7bcreucm5' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   2% ] [90m[1mreimport[22m | gcbw8ot0q344[39m[0m
+ERROR: Can't find file 'uid://gcbw8ot0q344' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   2% ] [90m[1mreimport[22m | dq8qxnx64l5t2[39m[0m
+ERROR: Can't find file 'uid://dq8qxnx64l5t2' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   3% ] [90m[1mreimport[22m | crgye6kc468ke[39m[0m
+ERROR: Can't find file 'uid://crgye6kc468ke' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   3% ] [90m[1mreimport[22m | drqtdwyuj0j5h[39m[0m
+ERROR: Can't find file 'uid://drqtdwyuj0j5h' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   3% ] [90m[1mreimport[22m | dufovvtp0f4fm[39m[0m
+ERROR: Can't find file 'uid://dufovvtp0f4fm' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   4% ] [90m[1mreimport[22m | bflomjm3fs37q[39m[0m
+ERROR: Can't find file 'uid://bflomjm3fs37q' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   4% ] [90m[1mreimport[22m | dbn6la0frv1lm[39m[0m
+ERROR: Can't find file 'uid://dbn6la0frv1lm' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   4% ] [90m[1mreimport[22m | bh2cfyeaqg7h4[39m[0m
+ERROR: Can't find file 'uid://bh2cfyeaqg7h4' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   5% ] [90m[1mreimport[22m | dk6u1ipxargi7[39m[0m
+ERROR: Can't find file 'uid://dk6u1ipxargi7' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   5% ] [90m[1mreimport[22m | dsfq2hnyaf2m5[39m[0m
+ERROR: Can't find file 'uid://dsfq2hnyaf2m5' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   5% ] [90m[1mreimport[22m | bmxvxwotgcy[39m[0m
+ERROR: Can't find file 'uid://bmxvxwotgcy' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   6% ] [90m[1mreimport[22m | dhmdmy6j3rqmk[39m[0m
+ERROR: Can't find file 'uid://dhmdmy6j3rqmk' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   6% ] [90m[1mreimport[22m | w5nuet650ocw[39m[0m
+ERROR: Can't find file 'uid://w5nuet650ocw' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   6% ] [90m[1mreimport[22m | ca5j5eulvjwhn[39m[0m
+ERROR: Can't find file 'uid://ca5j5eulvjwhn' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   7% ] [90m[1mreimport[22m | cbthw0a84tpvg[39m[0m
+ERROR: Can't find file 'uid://cbthw0a84tpvg' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   7% ] [90m[1mreimport[22m | byf00lssukm0t[39m[0m
+ERROR: Can't find file 'uid://byf00lssukm0t' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   7% ] [90m[1mreimport[22m | b83m1hqt5xm8o[39m[0m
+ERROR: Can't find file 'uid://b83m1hqt5xm8o' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   8% ] [90m[1mreimport[22m | co2wjg3tpie81[39m[0m
+ERROR: Can't find file 'uid://co2wjg3tpie81' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   8% ] [90m[1mreimport[22m | cg3p27xkd16mm[39m[0m
+ERROR: Can't find file 'uid://cg3p27xkd16mm' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   8% ] [90m[1mreimport[22m | dwqnw3tya6hej[39m[0m
+ERROR: Can't find file 'uid://dwqnw3tya6hej' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   9% ] [90m[1mreimport[22m | brign1761mhos[39m[0m
+ERROR: Can't find file 'uid://brign1761mhos' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   9% ] [90m[1mreimport[22m | dgulu85lr8mw2[39m[0m
+ERROR: Can't find file 'uid://dgulu85lr8mw2' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[   9% ] [90m[1mreimport[22m | bqsivbmegqwdo[39m[0m
+ERROR: Can't find file 'uid://bqsivbmegqwdo' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  10% ] [90m[1mreimport[22m | cn8uhaqp2g47u[39m[0m
+ERROR: Can't find file 'uid://cn8uhaqp2g47u' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  10% ] [90m[1mreimport[22m | cvqosy0fj8tt4[39m[0m
+ERROR: Can't find file 'uid://cvqosy0fj8tt4' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  10% ] [90m[1mreimport[22m | dykms8gm4m16o[39m[0m
+ERROR: Can't find file 'uid://dykms8gm4m16o' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  11% ] [90m[1mreimport[22m | dbcs1sihavqq[39m[0m
+ERROR: Can't find file 'uid://dbcs1sihavqq' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  11% ] [90m[1mreimport[22m | c56bwexnlvsfv[39m[0m
+ERROR: Can't find file 'uid://c56bwexnlvsfv' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  11% ] [90m[1mreimport[22m | gqwgw1adih2t[39m[0m
+ERROR: Can't find file 'uid://gqwgw1adih2t' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  12% ] [90m[1mreimport[22m | grchme5as3kl[39m[0m
+ERROR: Can't find file 'uid://grchme5as3kl' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  12% ] [90m[1mreimport[22m | byfaody4jcl17[39m[0m
+ERROR: Can't find file 'uid://byfaody4jcl17' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  12% ] [90m[1mreimport[22m | d325sthclqnbd[39m[0m
+ERROR: Can't find file 'uid://d325sthclqnbd' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  13% ] [90m[1mreimport[22m | lc4eoi6tix2x[39m[0m
+ERROR: Can't find file 'uid://lc4eoi6tix2x' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  13% ] [90m[1mreimport[22m | bm2vctpampdjs[39m[0m
+ERROR: Can't find file 'uid://bm2vctpampdjs' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  13% ] [90m[1mreimport[22m | csy8bqwopfk5s[39m[0m
+ERROR: Can't find file 'uid://csy8bqwopfk5s' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  14% ] [90m[1mreimport[22m | cdphfbtfmo3nv[39m[0m
+ERROR: Can't find file 'uid://cdphfbtfmo3nv' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  14% ] [90m[1mreimport[22m | c20aaws80vlod[39m[0m
+ERROR: Can't find file 'uid://c20aaws80vlod' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  14% ] [90m[1mreimport[22m | dh2q0a5sjnbdh[39m[0m
+ERROR: Can't find file 'uid://dh2q0a5sjnbdh' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  15% ] [90m[1mreimport[22m | cnx66845y21jc[39m[0m
+ERROR: Can't find file 'uid://cnx66845y21jc' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  15% ] [90m[1mreimport[22m | b2frkvmb57itd[39m[0m
+ERROR: Can't find file 'uid://b2frkvmb57itd' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  15% ] [90m[1mreimport[22m | cepskt12dqb65[39m[0m
+ERROR: Can't find file 'uid://cepskt12dqb65' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  16% ] [90m[1mreimport[22m | mct786cntlje[39m[0m
+ERROR: Can't find file 'uid://mct786cntlje' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  16% ] [90m[1mreimport[22m | bo2ooqdp7mx0d[39m[0m
+ERROR: Can't find file 'uid://bo2ooqdp7mx0d' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  16% ] [90m[1mreimport[22m | 484vklqsajow[39m[0m
+ERROR: Can't find file 'uid://484vklqsajow' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  17% ] [90m[1mreimport[22m | cpdcie5lwb7yd[39m[0m
+ERROR: Can't find file 'uid://cpdcie5lwb7yd' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  17% ] [90m[1mreimport[22m | hcx321fk64sp[39m[0m
+ERROR: Can't find file 'uid://hcx321fk64sp' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  17% ] [90m[1mreimport[22m | ssr3oyxgshx1[39m[0m
+ERROR: Can't find file 'uid://ssr3oyxgshx1' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  18% ] [90m[1mreimport[22m | b3emwsku75i1v[39m[0m
+ERROR: Can't find file 'uid://b3emwsku75i1v' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  18% ] [90m[1mreimport[22m | o17y33scnswm[39m[0m
+ERROR: Can't find file 'uid://o17y33scnswm' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  18% ] [90m[1mreimport[22m | dnix0uovjlm6e[39m[0m
+ERROR: Can't find file 'uid://dnix0uovjlm6e' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  19% ] [90m[1mreimport[22m | duc8n6fvdx4lu[39m[0m
+ERROR: Can't find file 'uid://duc8n6fvdx4lu' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  19% ] [90m[1mreimport[22m | ck72fy6u2fu1u[39m[0m
+ERROR: Can't find file 'uid://ck72fy6u2fu1u' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  19% ] [90m[1mreimport[22m | f7lwd84f5t3r[39m[0m
+ERROR: Can't find file 'uid://f7lwd84f5t3r' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  20% ] [90m[1mreimport[22m | b55pemx7ca367[39m[0m
+ERROR: Can't find file 'uid://b55pemx7ca367' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  20% ] [90m[1mreimport[22m | b7sm8j0rf6tpe[39m[0m
+ERROR: Can't find file 'uid://b7sm8j0rf6tpe' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  20% ] [90m[1mreimport[22m | cjbgp85qk4snb[39m[0m
+ERROR: Can't find file 'uid://cjbgp85qk4snb' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  21% ] [90m[1mreimport[22m | cnfoptydknppw[39m[0m
+ERROR: Can't find file 'uid://cnfoptydknppw' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  21% ] [90m[1mreimport[22m | dqhdpvgc4sfxe[39m[0m
+ERROR: Can't find file 'uid://dqhdpvgc4sfxe' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  21% ] [90m[1mreimport[22m | cip2wc6tebeeu[39m[0m
+ERROR: Can't find file 'uid://cip2wc6tebeeu' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  22% ] [90m[1mreimport[22m | c8jil1c3ne8cw[39m[0m
+ERROR: Can't find file 'uid://c8jil1c3ne8cw' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  22% ] [90m[1mreimport[22m | t1rljrpbp6la[39m[0m
+ERROR: Can't find file 'uid://t1rljrpbp6la' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  22% ] [90m[1mreimport[22m | denj0mok2ekjs[39m[0m
+ERROR: Can't find file 'uid://denj0mok2ekjs' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  23% ] [90m[1mreimport[22m | bw6qrpyeq8b7o[39m[0m
+ERROR: Can't find file 'uid://bw6qrpyeq8b7o' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  23% ] [90m[1mreimport[22m | bmg2yfnriu8y7[39m[0m
+ERROR: Can't find file 'uid://bmg2yfnriu8y7' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  23% ] [90m[1mreimport[22m | ckuibsuh2a3ej[39m[0m
+ERROR: Can't find file 'uid://ckuibsuh2a3ej' during file reimport.
+   at: _reimport_file (editor/file_system/editor_file_system.cpp:2821)
+[  24% ] [90m[1mreimport[22m | dtl33k2u4qx7d[39m[0m
+[  24% ] [90m[1mreimport[22m | d1gsv50k75y78[39m[0m
+[  24% ] [90m[1mreimport[22m | blixvxlkelpaq[39m[0m
+[  25% ] [90m[1mreimport[22m | ch42vv2leb2b5[39m[0m
+[  25% ] [90m[1mreimport[22m | dpsxwvhemhweo[39m[0m
+[  25% ] [90m[1mreimport[22m | c2xl3dp1tabyr[39m[0m
+[  26% ] [90m[1mreimport[22m | cwsj1men5h26f[39m[0m
+[  26% ] [90m[1mreimport[22m | rlf7bcreucm5[39m[0m
+[  26% ] [90m[1mreimport[22m | gcbw8ot0q344[39m[0m
+[  27% ] [90m[1mreimport[22m | dq8qxnx64l5t2[39m[0m
+[  27% ] [90m[1mreimport[22m | crgye6kc468ke[39m[0m
+[  27% ] [90m[1mreimport[22m | drqtdwyuj0j5h[39m[0m
+[  28% ] [90m[1mreimport[22m | dufovvtp0f4fm[39m[0m
+[  28% ] [90m[1mreimport[22m | bflomjm3fs37q[39m[0m
+[  28% ] [90m[1mreimport[22m | dbn6la0frv1lm[39m[0m
+[  29% ] [90m[1mreimport[22m | bh2cfyeaqg7h4[39m[0m
+[  29% ] [90m[1mreimport[22m | dk6u1ipxargi7[39m[0m
+[  29% ] [90m[1mreimport[22m | dsfq2hnyaf2m5[39m[0m
+[  30% ] [90m[1mreimport[22m | bmxvxwotgcy[39m[0m
+[  30% ] [90m[1mreimport[22m | dhmdmy6j3rqmk[39m[0m
+[  30% ] [90m[1mreimport[22m | w5nuet650ocw[39m[0m
+[  31% ] [90m[1mreimport[22m | ca5j5eulvjwhn[39m[0m
+[  31% ] [90m[1mreimport[22m | cbthw0a84tpvg[39m[0m
+[  31% ] [90m[1mreimport[22m | byf00lssukm0t[39m[0m
+[  32% ] [90m[1mreimport[22m | b83m1hqt5xm8o[39m[0m
+[  32% ] [90m[1mreimport[22m | co2wjg3tpie81[39m[0m
+[  32% ] [90m[1mreimport[22m | cg3p27xkd16mm[39m[0m
+[  33% ] [90m[1mreimport[22m | dwqnw3tya6hej[39m[0m
+[  33% ] [90m[1mreimport[22m | brign1761mhos[39m[0m
+[  33% ] [90m[1mreimport[22m | dgulu85lr8mw2[39m[0m
+[  34% ] [90m[1mreimport[22m | bqsivbmegqwdo[39m[0m
+[  34% ] [90m[1mreimport[22m | cn8uhaqp2g47u[39m[0m
+[  34% ] [90m[1mreimport[22m | cvqosy0fj8tt4[39m[0m
+[  35% ] [90m[1mreimport[22m | dykms8gm4m16o[39m[0m
+[  35% ] [90m[1mreimport[22m | dbcs1sihavqq[39m[0m
+[  35% ] [90m[1mreimport[22m | c56bwexnlvsfv[39m[0m
+[  36% ] [90m[1mreimport[22m | gqwgw1adih2t[39m[0m
+[  36% ] [90m[1mreimport[22m | grchme5as3kl[39m[0m
+[  36% ] [90m[1mreimport[22m | byfaody4jcl17[39m[0m
+[  37% ] [90m[1mreimport[22m | d325sthclqnbd[39m[0m
+[  37% ] [90m[1mreimport[22m | lc4eoi6tix2x[39m[0m
+[  37% ] [90m[1mreimport[22m | bm2vctpampdjs[39m[0m
+[  38% ] [90m[1mreimport[22m | csy8bqwopfk5s[39m[0m
+[  38% ] [90m[1mreimport[22m | cdphfbtfmo3nv[39m[0m
+[  38% ] [90m[1mreimport[22m | c20aaws80vlod[39m[0m
+[  39% ] [90m[1mreimport[22m | dh2q0a5sjnbdh[39m[0m
+[  39% ] [90m[1mreimport[22m | cnx66845y21jc[39m[0m
+[  39% ] [90m[1mreimport[22m | b2frkvmb57itd[39m[0m
+[  40% ] [90m[1mreimport[22m | cepskt12dqb65[39m[0m
+[  40% ] [90m[1mreimport[22m | mct786cntlje[39m[0m
+[  40% ] [90m[1mreimport[22m | bo2ooqdp7mx0d[39m[0m
+[  41% ] [90m[1mreimport[22m | 484vklqsajow[39m[0m
+[  41% ] [90m[1mreimport[22m | cpdcie5lwb7yd[39m[0m
+[  41% ] [90m[1mreimport[22m | hcx321fk64sp[39m[0m
+[  42% ] [90m[1mreimport[22m | ssr3oyxgshx1[39m[0m
+[  42% ] [90m[1mreimport[22m | b3emwsku75i1v[39m[0m
+[  42% ] [90m[1mreimport[22m | o17y33scnswm[39m[0m
+[  43% ] [90m[1mreimport[22m | dnix0uovjlm6e[39m[0m
+[  43% ] [90m[1mreimport[22m | duc8n6fvdx4lu[39m[0m
+[  43% ] [90m[1mreimport[22m | ck72fy6u2fu1u[39m[0m
+[  44% ] [90m[1mreimport[22m | f7lwd84f5t3r[39m[0m
+[  44% ] [90m[1mreimport[22m | b55pemx7ca367[39m[0m
+[  44% ] [90m[1mreimport[22m | b7sm8j0rf6tpe[39m[0m
+[  45% ] [90m[1mreimport[22m | cjbgp85qk4snb[39m[0m
+[  45% ] [90m[1mreimport[22m | cnfoptydknppw[39m[0m
+[  45% ] [90m[1mreimport[22m | dqhdpvgc4sfxe[39m[0m
+[  46% ] [90m[1mreimport[22m | cip2wc6tebeeu[39m[0m
+[  46% ] [90m[1mreimport[22m | c8jil1c3ne8cw[39m[0m
+[  46% ] [90m[1mreimport[22m | t1rljrpbp6la[39m[0m
+[  47% ] [90m[1mreimport[22m | denj0mok2ekjs[39m[0m
+[  47% ] [90m[1mreimport[22m | bw6qrpyeq8b7o[39m[0m
+[  47% ] [90m[1mreimport[22m | bmg2yfnriu8y7[39m[0m
+[  48% ] [90m[1mreimport[22m | ckuibsuh2a3ej[39m[0m
+[  48% ] [90m[1mreimport[22m | normal.png[39m[0m
+[  48% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  49% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  49% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  49% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  50% ] [90m[1mreimport[22m | normal.jpg[39m[0m
+[  50% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  50% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  50% ] [90m[1mreimport[22m | normal.jpg[39m[0m
+[  51% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  51% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  51% ] [90m[1mreimport[22m | normal.jpg[39m[0m
+[  52% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  52% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  52% ] [90m[1mreimport[22m | normal.jpg[39m[0m
+[  53% ] [90m[1mreimport[22m | magazijn_militair olijfgroen_normal.png[39m[0m
+[  53% ] [90m[1mreimport[22m | magazijn_golfplaat roest_base.png[39m[0m
+[  53% ] [90m[1mreimport[22m | magazijn_golfplaat roest_normal.png[39m[0m
+[  54% ] [90m[1mreimport[22m | magazijn_staal_base.png[39m[0m
+[  54% ] [90m[1mreimport[22m | magazijn_staal_normal.png[39m[0m
+[  54% ] [90m[1mreimport[22m | magazijn_beton_base.png[39m[0m
+[  55% ] [90m[1mreimport[22m | magazijn_beton_normal.png[39m[0m
+[  55% ] [90m[1mreimport[22m | magazijn_waarschuwing geel_base.png[39m[0m
+[  55% ] [90m[1mreimport[22m | magazijn_waarschuwing geel_normal.png[39m[0m
+[  56% ] [90m[1mreimport[22m | magazijn_verweerd hout_base.png[39m[0m
+[  56% ] [90m[1mreimport[22m | magazijn_verweerd hout_normal.png[39m[0m
+[  56% ] [90m[1mreimport[22m | magazijn_pleister_base.png[39m[0m
+[  57% ] [90m[1mreimport[22m | magazijn_pleister_normal.png[39m[0m
+[  57% ] [90m[1mreimport[22m | magazijn_baksteen_base.png[39m[0m
+[  57% ] [90m[1mreimport[22m | magazijn_baksteen_normal.png[39m[0m
+[  58% ] [90m[1mreimport[22m | normal.png[39m[0m
+[  58% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  58% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  59% ] [90m[1mreimport[22m | voorraadtruck_lod1_Truck_lod1_albedo.jpg[39m[0m
+[  59% ] [90m[1mreimport[22m | normal.png[39m[0m
+[  59% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  60% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  60% ] [90m[1mreimport[22m | voorraadtruck_lod1_Truck_lod1_orm.jpg[39m[0m
+[  60% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  61% ] [90m[1mreimport[22m | straaljager_jet_donker_albedo.jpg[39m[0m
+[  61% ] [90m[1mreimport[22m | straaljager_jet_donker_orm.jpg[39m[0m
+[  61% ] [90m[1mreimport[22m | straaljager_jet_donker_normal.jpg[39m[0m
+[  62% ] [90m[1mreimport[22m | straaljager_jet_bus_albedo.jpg[39m[0m
+[  62% ] [90m[1mreimport[22m | straaljager_jet_bus_orm.jpg[39m[0m
+[  62% ] [90m[1mreimport[22m | straaljager_jet_bus_normal.jpg[39m[0m
+[  63% ] [90m[1mreimport[22m | straaljager_jet_staal_albedo.jpg[39m[0m
+[  63% ] [90m[1mreimport[22m | straaljager_jet_staal_orm.jpg[39m[0m
+[  63% ] [90m[1mreimport[22m | straaljager_jet_staal_normal.jpg[39m[0m
+[  64% ] [90m[1mreimport[22m | normal.png[39m[0m
+[  64% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  64% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  65% ] [90m[1mreimport[22m | voorraadtruck_wrak_Wrak_albedo.jpg[39m[0m
+[  65% ] [90m[1mreimport[22m | normal.png[39m[0m
+[  65% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  66% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  66% ] [90m[1mreimport[22m | voorraadtruck_wrak_Wrak_orm.jpg[39m[0m
+[  66% ] [90m[1mreimport[22m | normal.png[39m[0m
+[  67% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  67% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  67% ] [90m[1mreimport[22m | albedo.jpg[39m[0m
+[  67% ] [90m[1mreimport[22m | voorraadtruck_wrak_Truck_normal.jpg[39m[0m
+[  68% ] [90m[1mreimport[22m | vrachtwagen_vrachtwagen_olijf.png[39m[0m
+[  68% ] [90m[1mreimport[22m | soldaat_vq2_uitrusting_albedo.jpg[39m[0m
+[  68% ] [90m[1mreimport[22m | soldaat_vq2_uitrusting_albedo.jpg[39m[0m
+[  68% ] [90m[1mreimport[22m | soldaat_vq2_uitrusting_orm.jpg[39m[0m
+[  69% ] [90m[1mreimport[22m | soldaat_vq2_uitrusting_normal.jpg[39m[0m
+[  69% ] [90m[1mreimport[22m | soldaat_vq2_lijf_bloot_albedo.jpg[39m[0m
+[  69% ] [90m[1mreimport[22m | soldaat_vq2_lijf_bloot_orm.jpg[39m[0m
+[  69% ] [90m[1mreimport[22m | soldaat_vq2_lijf_bloot_orm.jpg[39m[0m
+[  70% ] [90m[1mreimport[22m | soldaat_vq2_lijf_bloot_normal.jpg[39m[0m
+[  70% ] [90m[1mreimport[22m | soldaat_vq2_lijf_mouwloos_albedo.jpg[39m[0m
+[  70% ] [90m[1mreimport[22m | soldaat_vq2_lijf_mouwloos_orm.jpg[39m[0m
+[  71% ] [90m[1mreimport[22m | soldaat_vq2_lijf_mouwloos_normal.jpg[39m[0m
+[  71% ] [90m[1mreimport[22m | soldaat_vq2_lijf_uniform_albedo.jpg[39m[0m
+[  71% ] [90m[1mreimport[22m | soldaat_vq2_lijf_uniform_orm.jpg[39m[0m
+[  72% ] [90m[1mreimport[22m | soldaat_vq2_lijf_uniform_normal.jpg[39m[0m
+[  72% ] [90m[1mreimport[22m | soldaat_vq2_lijf_vijand_albedo.jpg[39m[0m
+[  72% ] [90m[1mreimport[22m | soldaat_vq2_lijf_vijand_orm.jpg[39m[0m
+[  73% ] [90m[1mreimport[22m | soldaat_vq2_lijf_vijand_normal.jpg[39m[0m
+[  73% ] [90m[1mreimport[22m | voorraadtruck_lod1_Truck_lod1_normal.jpg[39m[0m
+[  73% ] [90m[1mreimport[22m | straaljager_jet_boven_albedo.jpg[39m[0m
+[  74% ] [90m[1mreimport[22m | straaljager_jet_boven_orm.jpg[39m[0m
+[  74% ] [90m[1mreimport[22m | straaljager_jet_boven_normal.jpg[39m[0m
+[  74% ] [90m[1mreimport[22m | straaljager_jet_onder_albedo.jpg[39m[0m
+[  75% ] [90m[1mreimport[22m | straaljager_jet_onder_orm.jpg[39m[0m
+[  75% ] [90m[1mreimport[22m | straaljager_jet_onder_normal.jpg[39m[0m
+[  75% ] [90m[1mreimport[22m | normal.png[39m[0m
+[  76% ] [90m[1mreimport[22m | orm.png[39m[0m
+[  76% ] [90m[1mreimport[22m | bus_bus_lak_n.jpg[39m[0m
+[  76% ] [90m[1mreimport[22m | bus_bus_plastic.jpg[39m[0m
+[  77% ] [90m[1mreimport[22m | bus_bus_plastic_orm.jpg[39m[0m
+[  77% ] [90m[1mreimport[22m | bus_bus_plastic_n.jpg[39m[0m
+[  77% ] [90m[1mreimport[22m | bus_bus_chroom.jpg[39m[0m
+[  78% ] [90m[1mreimport[22m | bus_bus_chroom_orm.jpg[39m[0m
+[  78% ] [90m[1mreimport[22m | bus_bus_chroom_n.jpg[39m[0m
+[  78% ] [90m[1mreimport[22m | bus_bus_chroom_n.jpg[39m[0m
+[  78% ] [90m[1mreimport[22m | bus_bus_chroom_n.jpg[39m[0m
+[  78% ] [90m[1mreimport[22m | bus_bus_binnen.jpg[39m[0m
+[  79% ] [90m[1mreimport[22m | bus_bus_binnen_orm.jpg[39m[0m
+[  79% ] [90m[1mreimport[22m | bus_bus_binnen_n.jpg[39m[0m
+[  79% ] [90m[1mreimport[22m | bus_bus_bord.jpg[39m[0m
+[  80% ] [90m[1mreimport[22m | bus_bus_wrak.jpg[39m[0m
+[  80% ] [90m[1mreimport[22m | wapens.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  80% ] [90m[1mreimport[22m | zitten.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  81% ] [90m[1mreimport[22m | zwaailamp.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  81% ] [90m[1mreimport[22m | voorraaddepot.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  81% ] [90m[1mreimport[22m | vrachtwagen.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  82% ] [90m[1mreimport[22m | voorraadtruck_wrak.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  82% ] [90m[1mreimport[22m | voorraadtruck_lod1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  82% ] [90m[1mreimport[22m | vijand_m2_toren.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  83% ] [90m[1mreimport[22m | voorraadstapel.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  83% ] [90m[1mreimport[22m | voorraadtruck.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  83% ] [90m[1mreimport[22m | voorraaddepot_lod1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  84% ] [90m[1mreimport[22m | vijand_hk.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  84% ] [90m[1mreimport[22m | auto.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  84% ] [90m[1mreimport[22m | acties.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  85% ] [90m[1mreimport[22m | wachttoren.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  85% ] [90m[1mreimport[22m | voorraadtruck_wrak_v1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  85% ] [90m[1mreimport[22m | voorraadtruck_v1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  86% ] [90m[1mreimport[22m | tank_v1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  86% ] [90m[1mreimport[22m | legerjeep.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  86% ] [90m[1mreimport[22m | kazerne.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  87% ] [90m[1mreimport[22m | jeep.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  87% ] [90m[1mreimport[22m | grass_tall_lod2.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  87% ] [90m[1mreimport[22m | grass_tall_lod1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  88% ] [90m[1mreimport[22m | grass_tall_lod0.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  88% ] [90m[1mreimport[22m | grass_short_lod2.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  88% ] [90m[1mreimport[22m | grass_short_lod1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  89% ] [90m[1mreimport[22m | grass_short_lod0.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  89% ] [90m[1mreimport[22m | grass_medium_lod2.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  89% ] [90m[1mreimport[22m | grass_medium_lod1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  90% ] [90m[1mreimport[22m | grass_medium_lod0.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  90% ] [90m[1mreimport[22m | grass_baseline.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  90% ] [90m[1mreimport[22m | vat.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  91% ] [90m[1mreimport[22m | krater.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  91% ] [90m[1mreimport[22m | brokstukken.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  91% ] [90m[1mreimport[22m | assault_meshy_hq2_runtime.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  92% ] [90m[1mreimport[22m | verzamelvlag_lod1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  92% ] [90m[1mreimport[22m | verzamelvlag.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  92% ] [90m[1mreimport[22m | uitrusting.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  93% ] [90m[1mreimport[22m | straaljager.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  93% ] [90m[1mreimport[22m | soldaat_vq2.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  93% ] [90m[1mreimport[22m | soldaat_jungle_commando.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  94% ] [90m[1mreimport[22m | soldaat.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  94% ] [90m[1mreimport[22m | props.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  94% ] [90m[1mreimport[22m | poort.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  95% ] [90m[1mreimport[22m | munitiekist_meshy.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  95% ] [90m[1mreimport[22m | meshy_weapon.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  95% ] [90m[1mreimport[22m | meshy_m1911.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  96% ] [90m[1mreimport[22m | magazijn.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  96% ] [90m[1mreimport[22m | loopgraaf.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  96% ] [90m[1mreimport[22m | klimmen.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  97% ] [90m[1mreimport[22m | hotel.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  97% ] [90m[1mreimport[22m | hoofdkwartier_omgeving.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  97% ] [90m[1mreimport[22m | hoofdkwartier_lod1.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  98% ] [90m[1mreimport[22m | hoofdkwartier.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  98% ] [90m[1mreimport[22m | helipad.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  98% ] [90m[1mreimport[22m | generator.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  99% ] [90m[1mreimport[22m | bus.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  99% ] [90m[1mreimport[22m | brandkraan.glb[39m[0m
+[   0% ] [90m[1mimport[22m | Started Import Scene (104 steps)[39m[0m
+[   0% ] [90m[1mimport[22m | Importing Scene...[39m[0m
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+ERROR: Basis [X: (0.0, 0.0, 0.0), Y: (0.0, 0.0, 0.0), Z: (0.0, 0.0, 0.0)] must be normalized in order to be casted to a Quaternion. Use get_rotation_quaternion() or call orthonormalized() if the Basis contains linearly independent vectors.
+   at: get_quaternion (core/math/basis.cpp:717)
+[   1% ] [90m[1mimport[22m | Running Custom Script...[39m[0m
+[  99% ] [90m[1mimport[22m | Saving...[39m[0m
+[92m[ DONE ][39m [1mimport[22m
+[0m
+[  99% ] [90m[1mreimport[22m | Finalizing Asset Import...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mreimport[22m | Started (Re)Importing Assets (301 steps)[39m[0m
+[   0% ] [90m[1mreimport[22m | Executing post-reimport operations...[39m[0m
+[92m[ DONE ][39m [1mreimport[22m
+[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Started Loading editor (5 steps)[39m[0m
+[   0% ] [90m[1mloading_editor_layout[22m | Loading editor layout...[39m[0m
+[  16% ] [90m[1mloading_editor_layout[22m | Loading docks...[39m[0m
+[92m[ DONE ][39m [1mloading_editor_layout[22m
+[0m
+WARNING: 25 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)

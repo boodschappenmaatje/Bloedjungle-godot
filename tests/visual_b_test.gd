@@ -37,9 +37,9 @@ func run() -> void:
 	var grass_script: GDScript = load("res://scripts/grass_field.gd")
 	var short_grass_limit: int = grass_script.get_script_constant_map()["LIMIT"]["short"]
 	print("VISUAL B DENSITY short_grass=%d understory=%s" % [grass_tufts, JSON.stringify(understory_counts)])
-	check(grass_tufts > 8500 and grass_tufts <= short_grass_limit,"Fine grass must stay within its bounded LOD budget")
-	check(understory_counts.groundcover > 6000 and understory_counts.groundcover <= 8000,"Low broadleaf cover must be prominent and bounded")
-	check(understory_counts.fern <= 3800 and understory_counts.bush > 2500,"Keep tall fern silhouettes sparse and fill with low/mid-height plants")
+	check(grass_tufts > 11500 and grass_tufts <= short_grass_limit,"Fine grass must stay within its bounded LOD budget")
+	check(understory_counts.groundcover > 10000 and understory_counts.groundcover <= 11000,"Low broadleaf cover must be prominent and bounded")
+	check(understory_counts.fern <= 3300 and understory_counts.bush > 3000,"Keep tall fern silhouettes sparse and fill with low/mid-height plants")
 	check(under.has_method("litter_mesh"),"Litter needs a corrected ground normal frame")
 	if under.has_method("litter_mesh"):
 		var litter: ArrayMesh = under.litter_mesh()

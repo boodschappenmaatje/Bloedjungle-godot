@@ -2,7 +2,7 @@ class_name JungleUnderstory
 ## Render-only depth pass. Reuses shipped meshes/materials and the building-clearance index.
 ## A separate RNG leaves every existing tree, rock, collider and route unchanged.
 const CELL := 24.0
-const CAPS := {"fern":3800,"bush":4500,"groundcover":8000,"litter":5400,"stone":1900,"twig":700}
+const CAPS := {"fern":3300,"bush":4100,"groundcover":11000,"litter":5400,"stone":1900,"twig":700}
 
 static func allowed(p: Vector3) -> bool:
 	return GrassField._allowed(p) and not (p.x > Data.COMPOUND and p.x < Data.COMPOUND+11.5 and absf(p.z)<23.0)
@@ -100,9 +100,9 @@ static func spawn(parent: Node3D) -> void:
 	for p in candidates:
 		if not allowed(p): continue
 		var roll := rng.randf()
-		# The former scatter spent too much of the shared visual budget on tall fern fans.
-		# Broadleaf shrubs/rosettes and scattered litter now fill open soil without adding draw passes.
-		var kind := "fern" if roll<0.16 else ("bush" if roll<0.34 else ("groundcover" if roll<0.68 else ("litter" if roll<0.86 else ("stone" if roll<0.985 else "twig"))))
+		# Move part of the capped detail budget from small litter and tall fans to readable low rosettes.
+		# The existing cell MultiMeshes, route clearances and draw-pass structure remain unchanged.
+		var kind := "fern" if roll<0.13 else ("bush" if roll<0.29 else ("groundcover" if roll<0.72 else ("litter" if roll<0.88 else ("stone" if roll<0.985 else "twig"))))
 		if counts[kind]>=CAPS[kind]: continue
 		var variant := rng.randi_range(0,2) if kind in ["fern","bush","groundcover"] else 0
 		var cell := Vector2i(floori(p.x/CELL),floori(p.z/CELL))
@@ -112,7 +112,7 @@ static func spawn(parent: Node3D) -> void:
 		var s := rng.randf_range(0.5,1.18)
 		var size_ := Vector3(s,s*rng.randf_range(0.65,1.1),s)
 		if kind=="bush": size_ *= 0.78
-		if kind=="groundcover": size_ *= 1.18
+		if kind=="groundcover": size_ *= 1.38
 		if kind=="litter": size_=Vector3(s*0.65,s*0.65,0.025)
 		if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.12,0.32)
 		if kind=="twig": size_=Vector3(0.035,rng.randf_range(0.35,0.85),0.035)

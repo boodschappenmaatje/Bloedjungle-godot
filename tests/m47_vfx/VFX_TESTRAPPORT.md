@@ -39,4 +39,10 @@ De projectielray raakt de wand vóór de inslag. Bij de doorgang worden de besta
 
 Deze software-renderwaarden zijn geen iPhone-meting. **60 FPS op iPhone is niet aangetoond**; er was geen fysieke iPhone met GPU-profiler beschikbaar. De particlegrens, effectpool en uitgeschakelde dynamische schaduwen beperken de VFX-kosten, maar een 60-FPS-claim vereist een apparaatmeting.
 
-De eerdere VFX 2.0 iOS- en OTA-previewruns horen bij commit `6d75022`; voor deze nieuwe implementatie moet CI opnieuw lopen. Er is niets gemerged of naar OTA gepubliceerd.
+## CI op Visual Upgrade 2.1
+
+De bestaande [iOS unsigned IPA-workflow, run 42407653630](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42407653630), is **success** op implementatiecommit `e06943ba02a05ccbf7605da2b485464b9859f0f0`. De officiële Godot 4.7.2-installatie, volledige root-import, bestaande regressiesuite, Godot iOS-export en Xcode-build zijn geslaagd. De log bevat `BUILD SUCCEEDED`, een niet-lege IPA met geslaagde ZIP-controle en `Payload/Bloedjungle-ios.app/Info.plist`.
+
+Het unsigned IPA-artifact `bloedjungle-ios-unsigned-e06943ba02a05ccbf7605da2b485464b9859f0f0` is geüpload (artifact-ID `13588880828`, 1.144.247.541 bytes als Actions-archief). Het [diagnostiekartifact](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42407653630) bevat de CI-testlogs. Godot meldt bij enkele headless tests nog de bekende shutdownmelding `resources still in use at exit`; de workflow staat precies die afsluitmelding toe en is geslaagd.
+
+Er is geen iPhone-installatie of hardwareprestatiemeting uitgevoerd. Deze nieuwe commit heeft geen OTA-run gestart; de eerdere OTA-preview hoort bij VFX 2.0. Er is niets gemerged of naar OTA gepubliceerd.

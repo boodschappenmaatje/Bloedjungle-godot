@@ -169,7 +169,7 @@ func _run() -> void:
 		await process_frame
 		_check(build_radar.visible, "minimap verdwijnt in bouwmodus")
 		game.set("build_mode", false)
-	var materials := ["palm", "leaf", "fern"]
+	var materials := ["palm", "leaf", "fern", "depth_rosette", "depth_arch_fern", "depth_red_bloom"]
 	foliage_script.call("update_visibility_focus", player.global_position, camera.global_position, 1.0, true, [player.global_position + Vector3(5, 0, 0)])
 	for kind in materials:
 		var mat: ShaderMaterial = foliage_script.call("material", kind)

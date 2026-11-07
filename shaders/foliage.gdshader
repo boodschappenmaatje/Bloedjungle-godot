@@ -6,15 +6,20 @@ render_mode cull_disabled, diffuse_lambert_wrap;
 
 uniform sampler2D tex : source_color, filter_linear_mipmap, repeat_enable;
 uniform sampler2D nrm : hint_normal, filter_linear_mipmap, repeat_enable;
+uniform sampler2D rough_tex : filter_linear_mipmap, repeat_enable;
 uniform bool use_tex = true;
+uniform bool use_rough_tex = false;
+uniform vec3 foliage_grade = vec3(1.0);
+uniform float foliage_saturation = 0.80;
+uniform float foliage_gamma = 0.84;
 uniform bool tile = false;  // schors herhaalt zich; bladeren niet (rand vastgeklemd)
 uniform float nrm_depth = 1.0;
 uniform float sway = 0.14;
 uniform float wind = 0.0;  // 0 = bomen staan stil, 1 = ze bewegen (instelling "Bomen bewegen")
 uniform float speed = 1.5;
 uniform float cut = 0.45;
-uniform float backlight = 0.5;
-uniform vec3 tint = vec3(0.82, 0.86, 0.74);
+uniform float backlight = 0.6;
+uniform vec3 tint = vec3(0.98, 1.0, 0.9);
 
 // Zichtlijn: bladeren tussen camera en speler (en de drie dichtstbijzijnde vijanden, w = 1 als actief)
 // worden gedither-uitgedund. fade_amount loopt zacht 0..1 (in- en uitfaden in de tijd).
@@ -23,12 +28,19 @@ uniform vec3 view_camera = vec3(0.0);
 uniform vec4 view_e0 = vec4(0.0);
 uniform vec4 view_e1 = vec4(0.0);
 uniform vec4 view_e2 = vec4(0.0);
+uniform vec2 focus_player_uv = vec2(0.5);
+uniform vec3 focus_e0_uv = vec3(0.0);
+uniform vec3 focus_e1_uv = vec3(0.0);
+uniform vec3 focus_e2_uv = vec3(0.0);
+uniform vec2 screen_size_px = vec2(1280.0, 720.0);
+uniform float screen_aspect = 1.7777778;
 uniform float fade_amount = 1.0;
 uniform bool fade_sightline = false;
 // Wie er door de struiken loopt (speler, soldaten, vijanden, voertuigen): tot 8 stuks, x/y = positie op de grond (x, z),
 // z = straal waarbinnen het blad opzij gaat, w = kracht (0 = niet gebruikt). Zet door Foliage.update_pushers.
 uniform vec4 pushers[8];
 varying vec3 vcol;
+varying float root_contact;
 varying vec3 world_leaf;
 
 // 0 = blad staat niet in de weg, 1 = midden op de zichtlijn
@@ -38,6 +50,13 @@ float sight_hide(vec3 p, vec3 target, vec3 cam, float r) {
 	float d = distance(p, target + line * param);
 	float along = smoothstep(0.03, 0.12, param) * (1.0 - smoothstep(0.84, 0.94, param));
 	return along * (1.0 - smoothstep(r * 0.3, r, d));
+}
+
+// Clear foliage by its actual screen overlap with the actor. This catches high
+// palm fronds that project over the soldier while their trunks sit metres away.
+float actor_screen_hide(vec2 screen_uv, vec2 actor_uv) {
+	vec2 delta = (screen_uv - actor_uv) * vec2(screen_aspect, 1.0);
+	return 1.0 - smoothstep(0.04, 0.14, length(delta));
 }
 
 void vertex() {
@@ -76,32 +95,56 @@ void vertex() {
 		vec2 rustle = vec2(sin(TIME * 11.0 + ph * 3.0 + base_pos.y * 4.0), cos(TIME * 9.0 + ph * 2.0)) * 0.13 * shake;
 		VERTEX += transpose(MODEL_NORMAL_MATRIX) * vec3(push.x + rustle.x, -min(len * 0.7, base_pos.y * 0.85), push.y + rustle.y);
 	}
+	// Authored root-to-tip weight also grounds each frond without SSAO.
+	root_contact = mix(0.72, 1.0, smoothstep(0.0, 0.38, COLOR.a));
 	vcol = COLOR.rgb;
 	world_leaf = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }
 
 void fragment() {
 	vec2 uv = tile ? UV : clamp(UV, 0.0, 1.0);
-	vec3 base = pow(vcol, vec3(2.2));  // vertexkleuren zijn sRGB gekozen, de shader rekent lineair
+	// glTF/mesh vertex colors are linear; only the legacy bark palette needs conversion.
+	vec3 base = tile ? pow(vcol, vec3(2.2)) : vcol;
 	vec4 t = use_tex ? texture(tex, uv) : vec4(1.0);
 	if (t.a < cut) discard;
+	// AO is packed in green next to linear roughness in red; reuse the existing
+	// per-material sample after alpha cutout so it costs no extra fetch or overdraw.
+	vec4 plant_surface = use_rough_tex ? texture(rough_tex, uv) : vec4(0.76,1.0,0.0,1.0);
 	if (fade_sightline) {
-		float hide = sight_hide(world_leaf, view_player, view_camera, 2.6);
-		if (view_e0.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e0.xyz, view_camera, 1.8));
-		if (view_e1.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e1.xyz, view_camera, 1.8));
-		if (view_e2.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e2.xyz, view_camera, 1.8));
+		float hide = sight_hide(world_leaf, view_player, view_camera, 5.2);
+		vec2 screen_uv = FRAGCOORD.xy / screen_size_px;
+		float actor_clear = actor_screen_hide(screen_uv, focus_player_uv);
+		if (view_e0.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e0.xyz, view_camera, 3.1));
+		if (view_e1.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e1.xyz, view_camera, 3.1));
+		if (view_e2.w > 0.5) hide = max(hide, sight_hide(world_leaf, view_e2.xyz, view_camera, 3.1));
+		if (focus_e0_uv.z > 0.5) actor_clear = max(actor_clear, actor_screen_hide(screen_uv, focus_e0_uv.xy));
+		if (focus_e1_uv.z > 0.5) actor_clear = max(actor_clear, actor_screen_hide(screen_uv, focus_e1_uv.xy));
+		if (focus_e2_uv.z > 0.5) actor_clear = max(actor_clear, actor_screen_hide(screen_uv, focus_e2_uv.xy));
+		actor_clear *= fade_amount;
+		hide = max(hide, actor_clear);
 		// alleen in het hoofdbeeld: in de schaduwkaart (camera = de zon) blijft het blad heel, dus geen gaatjesschaduw
 		if (hide > 0.0 && distance(INV_VIEW_MATRIX[3].xyz, view_camera) < 1.0) {
 			float n = fract(52.9829189 * fract(dot(FRAGCOORD.xy, vec2(0.06711056, 0.00583715))));  // goedkoop interleaved-gradient-ruis
-			if (n < hide * 0.76 * fade_amount) discard;
+			if (actor_clear > 0.985) discard;
+			if (n < hide * 0.93 * fade_amount) discard;
 		}
 	}
 	if (use_tex) {
 		NORMAL_MAP = texture(nrm, uv).rgb;
 		NORMAL_MAP_DEPTH = nrm_depth;
 	}
-	ALBEDO = base * t.rgb * tint;
-	ROUGHNESS = 0.58;
-	SPECULAR = 0.3;
+	vec3 leaf_color = t.rgb;
+	if (use_tex && !tile) {
+		float leaf_luma = dot(leaf_color, vec3(0.2126, 0.7152, 0.0722));
+		leaf_color = mix(vec3(leaf_luma), leaf_color, foliage_saturation) * foliage_grade;
+		// Lift the source maps' very dark midtones while keeping their hue and
+		// vein contrast; shadowed leaves should read as olive, not black cutouts.
+		leaf_color = pow(max(leaf_color, vec3(0.0)), vec3(foliage_gamma));
+	}
+	ALBEDO = base * leaf_color * tint * root_contact;
+	AO = clamp(root_contact * mix(1.0,plant_surface.g,0.24),0.70,1.0);
+	AO_LIGHT_AFFECT = 0.20;
+	ROUGHNESS = tile ? 0.94 : clamp(plant_surface.r * 0.90,0.40,0.96);
+	SPECULAR = tile ? 0.12 : 0.28;
 	BACKLIGHT = ALBEDO * backlight;
 }

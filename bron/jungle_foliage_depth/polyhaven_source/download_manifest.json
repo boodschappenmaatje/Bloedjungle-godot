@@ -1,0 +1,249 @@
+{
+  "provider": "Poly Haven",
+  "api": "https://api.polyhaven.com",
+  "license": "CC0 1.0 Universal",
+  "license_url": "https://polyhaven.com/license",
+  "license_note": "Poly Haven assets are published under CC0 1.0 Universal; verified against the official license page and selected source asset pages.",
+  "resolution": "2k",
+  "verified_utc": "2026-11-07T14:44:40+00:00",
+  "integrity_note": "Each official API MD5 matches the local source bytes; SHA-256 pins the vendored file for future checks.",
+  "assets": {
+    "fern_02": {
+      "page": "https://polyhaven.com/a/fern_02",
+      "name": "Fern 02",
+      "description": "Free 8K model of four realistic fern clumps featuring detailed serrated fronds, varied silhouettes and rich dappled green foliage.",
+      "authors": {
+        "Rob Tuytel": "scanning",
+        "Rico Cilliers": "modeling"
+      },
+      "source_polycount": 6232,
+      "source_dimensions_mm": [
+        1972.5302457809448,
+        1724.0281701087952,
+        427.6947118341923
+      ],
+      "download_resolution": "2k",
+      "files": [
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/fern_02/source_blend.blend",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/blend/2k/fern_02/fern_02_2k.blend",
+          "bytes": 262018,
+          "polyhaven_md5": "fa04e3968d9dbfba0fac542b8381788c",
+          "sha256": "cf721e00ed5bb72f0b9c3fb59b8febc7b2b9b2082f162d5a80ba3a11e4e7028d",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/fern_02/textures/fern_02_diff_2k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fern_02/fern_02_diff_2k.jpg",
+          "bytes": 993703,
+          "polyhaven_md5": "ba8bbb9dc9ff55bdc081565cd926d776",
+          "sha256": "9ee18172170728050871772e2cd6d8d37b52f9138e61b49b04486623f9caf84b",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/fern_02/textures/fern_02_nor_gl_2k.exr",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/fern_02/fern_02_nor_gl_2k.exr",
+          "bytes": 2895843,
+          "polyhaven_md5": "4e1fa9220f53965604b406ba28e223b3",
+          "sha256": "2787b69707c37a4b90627085f36e818b13816c6587aa0d06c5c6d004ccde7557",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/fern_02/textures/fern_02_rough_2k.exr",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/fern_02/fern_02_rough_2k.exr",
+          "bytes": 901394,
+          "polyhaven_md5": "beb315edeb84760a46dcc3d223b609fd",
+          "sha256": "877fd64af4d815a2522700c676b2c32c6f075ce8bca59c6a2d267309b2fca550",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/fern_02/textures/fern_02_alpha_2k.png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/fern_02/fern_02_alpha_2k.png",
+          "bytes": 230089,
+          "polyhaven_md5": "ff18f7e8e869c58eac8f9c7d7c519f4a",
+          "sha256": "f51eb9b8f9f4b25a882f8fe12d1ef53ba69448bac7e71396ec1f05b684e9ea75",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/fern_02/runtime_maps/fern_02_arm_2k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fern_02/fern_02_arm_2k.jpg",
+          "bytes": 850856,
+          "polyhaven_md5": "7f7b46e813a3cb4811405191de0ecdce",
+          "sha256": "1eaf9bd29e2d83a77ca5d89bdddebcd9216b8b4ba244644580fe5b89bbe713f1",
+          "category": "polyhaven_gltf_runtime_map"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/fern_02/runtime_maps/fern_02_nor_gl_2k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/fern_02/fern_02_nor_gl_2k.jpg",
+          "bytes": 1365615,
+          "polyhaven_md5": "00936dff4661dc9fe1f2fbe6c000615a",
+          "sha256": "dfe1ac4a428d21f7c134411500177d66b8dd800c8fec6f0040c50f44414a777b",
+          "category": "polyhaven_gltf_runtime_map"
+        }
+      ]
+    },
+    "anthurium_botany_01": {
+      "page": "https://polyhaven.com/a/anthurium_botany_01",
+      "name": "Anthurium Botany 01",
+      "description": "Free 8K shrub showcasing glossy broad leaves, wet sheen, detailed veins and varied low-growing clumps.",
+      "authors": {
+        "Rob Tuytel": "scanning",
+        "Rico Cilliers": "modeling"
+      },
+      "source_polycount": 4134,
+      "source_dimensions_mm": [
+        2806.4264059066772,
+        1800.9886145591736,
+        506.7181019112468
+      ],
+      "download_resolution": "2k",
+      "files": [
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/anthurium_botany_01/source_blend.blend",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/blend/2k/anthurium_botany_01/anthurium_botany_01_2k.blend",
+          "bytes": 200840,
+          "polyhaven_md5": "8605694a10485a9cae73f57e35345b3d",
+          "sha256": "0254d9f04ac511c8a31077e749e6a9c7caa15d2304a8571cd62c7f251b2a38ee",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/anthurium_botany_01/textures/anthurium_botany_01_nor_gl_2k.exr",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/anthurium_botany_01/anthurium_botany_01_nor_gl_2k.exr",
+          "bytes": 4308519,
+          "polyhaven_md5": "e36c3d061cbf24d761fa0ba92fe71f28",
+          "sha256": "7862aaed447466102bb76e540e93dcb462cfb24a921bba789effd23c711e4036",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/anthurium_botany_01/textures/anthurium_botany_01_rough_2k.exr",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/anthurium_botany_01/anthurium_botany_01_rough_2k.exr",
+          "bytes": 3087710,
+          "polyhaven_md5": "67b2e9bfd7e907dc4007e12f6766c7d1",
+          "sha256": "a381395d422e4cf952bcdb5df1c8264c66ccd017822d578fcab966eb00411983",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/anthurium_botany_01/textures/anthurium_botany_01_disp_2k.png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/anthurium_botany_01/anthurium_botany_01_disp_2k.png",
+          "bytes": 3081059,
+          "polyhaven_md5": "da8dce19fe6144cfa166f5a78970efd9",
+          "sha256": "6e8fa8ed02c22f396331e5693ee70706f21cc3028053d52dad6207a4d1caede6",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/anthurium_botany_01/textures/anthurium_botany_01_alpha_2k.png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/anthurium_botany_01/anthurium_botany_01_alpha_2k.png",
+          "bytes": 95881,
+          "polyhaven_md5": "2a14dde9381b983427adcba195c7d6c6",
+          "sha256": "77b48de549a9612b271af990016884eab3efe344b4b0704298b4b5e9ffc64280",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/anthurium_botany_01/textures/anthurium_botany_01_diff_2k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/anthurium_botany_01/anthurium_botany_01_diff_2k.jpg",
+          "bytes": 1565878,
+          "polyhaven_md5": "0fc12b2b2db969ff4f5cc783ffdb807c",
+          "sha256": "7ef41c8fb14951c8fb74e9924a60ce6b2fc8c150b8f0c21e59af29b88df36762",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/anthurium_botany_01/runtime_maps/anthurium_botany_01_nor_gl_2k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/anthurium_botany_01/anthurium_botany_01_nor_gl_2k.jpg",
+          "bytes": 1900025,
+          "polyhaven_md5": "d91661ccf57f931fbc22d5b1cd1db92b",
+          "sha256": "515f9168577d727bd208d8f8e521c8c6ac318fc9d5c65f29510a5b861608c639",
+          "category": "polyhaven_gltf_runtime_map"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/anthurium_botany_01/runtime_maps/anthurium_botany_01_arm_2k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/anthurium_botany_01/anthurium_botany_01_arm_2k.jpg",
+          "bytes": 1833646,
+          "polyhaven_md5": "5e327c9486f0470a7808b6cea99993b4",
+          "sha256": "81bcc96fa59e09169df48cf2eb930361c4df157a8114e7f3149c97934d47aadc",
+          "category": "polyhaven_gltf_runtime_map"
+        }
+      ]
+    },
+    "shrub_04": {
+      "page": "https://polyhaven.com/a/shrub_04",
+      "name": "Shrub 04",
+      "description": "Free 4K model - four detailed shrub branches with glossy green leaves, thin woody stems and natural undergrowth variation.",
+      "authors": {
+        "Rico Cilliers": "All"
+      },
+      "source_polycount": 47813,
+      "source_dimensions_mm": [
+        746.7864416539669,
+        186.9201734662056,
+        280.6698549538851
+      ],
+      "download_resolution": "2k",
+      "files": [
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/shrub_04/source_blend.blend",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/blend/2k/shrub_04/shrub_04_2k.blend",
+          "bytes": 1547935,
+          "polyhaven_md5": "f05c38426a3cf8c297fef5091c48f333",
+          "sha256": "89469bce9d46beabcadcd41a6296ab38f79be864d8328ded0384e14de70d297c",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/shrub_04/textures/shrub_04_nor_gl_2k.exr",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/shrub_04/shrub_04_nor_gl_2k.exr",
+          "bytes": 2998775,
+          "polyhaven_md5": "cf460b780cc1180f9a4b4e5922833a5c",
+          "sha256": "84234b8e698a4f355877722c755adaa4d53f37b5f7be81d2bd2d8d38fa657adb",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/shrub_04/textures/shrub_04_alpha_2k.png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/shrub_04/shrub_04_alpha_2k.png",
+          "bytes": 91048,
+          "polyhaven_md5": "c580b41967ed8e43358c2b8621fd07b1",
+          "sha256": "6c30e2ffb781b3d54b246a2b1f9bf128e0c814fa9314b8d842e253f4914ac4de",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/shrub_04/textures/shrub_04_mask_2k.png",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/png/2k/shrub_04/shrub_04_mask_2k.png",
+          "bytes": 19483,
+          "polyhaven_md5": "b7dc8b263db86377d5c426dbf93578cb",
+          "sha256": "1dab74521b98685653257259897d0ea2062a2f9f34f493b23300537d5ccced64",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/shrub_04/textures/shrub_04_diff_2k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/shrub_04/shrub_04_diff_2k.jpg",
+          "bytes": 1202317,
+          "polyhaven_md5": "76f10cb443bc5964ec9484cfea474196",
+          "sha256": "a45e95f3c78c31a1d411c58232089bd472bb31ebe146ba4237c3f1a930f49fc9",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/shrub_04/textures/shrub_04_rough_2k.exr",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/exr/2k/shrub_04/shrub_04_rough_2k.exr",
+          "bytes": 841015,
+          "polyhaven_md5": "764de351a494d04d552592bf078aedc4",
+          "sha256": "7926caa1d9b61ac8ac9ad4a6561684f9ddb29b081f2dcd7b0bd3defb106b481a",
+          "category": "source_model_and_maps"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/shrub_04/runtime_maps/shrub_04_arm_2k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/shrub_04/shrub_04_arm_2k.jpg",
+          "bytes": 1005689,
+          "polyhaven_md5": "f37749dbbfe57024799df7b96f896643",
+          "sha256": "030c84b34ed22469c281310d2b18c298892f78d25518be061e8f0fe22e7423d7",
+          "category": "polyhaven_gltf_runtime_map"
+        },
+        {
+          "path": "bron/jungle_foliage_depth/polyhaven_source/shrub_04/runtime_maps/shrub_04_nor_gl_2k.jpg",
+          "url": "https://dl.polyhaven.org/file/ph-assets/Models/jpg/2k/shrub_04/shrub_04_nor_gl_2k.jpg",
+          "bytes": 1428577,
+          "polyhaven_md5": "ca4ecc50015a85e38675a4967e843485",
+          "sha256": "dd2a0aea75996a390f10fd82aa24166263713d02c42ff68edaaaf7d0a884f5eb",
+          "category": "polyhaven_gltf_runtime_map"
+        }
+      ]
+    }
+  }
+}

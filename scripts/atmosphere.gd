@@ -1,7 +1,7 @@
 class_name Atmosphere
 extends Node3D
-## Lucht, zon, mist en kleur van het beeld: warme middagzon laag boven de jungle, heiige verte,
-## filmische kleuren en een zachte gloed. Alles in code, zodat je het hier makkelijk kunt bijstellen.
+## Natuurlijk tropisch daglicht met leesbaar groen, zachte grondschaduwen en
+## subtiele afstandshaze. De grade behoudt de kleuren van de PBR-materialen.
 # Test synchronisatie iPhone
 
 var _sky_mat: ProceduralSkyMaterial
@@ -11,7 +11,7 @@ var _rain: GPUParticles3D
 
 # per tijdstip: zonrichting, zonkleur, zonkracht, omgevingslicht, hemel (boven/horizon/grond), mist, belichting
 const TIMES := {
-	"day": {"rot": Vector3(-33, -38, 0), "col": "ffe2b0", "e": 1.55, "amb": 0.32, "top": "56707a", "hor": "a3b09a", "gnd": "8e9c80", "fog": "7f9078", "exp": 0.9},
+	"day": {"rot": Vector3(-32, -48, 0), "col": "fff4df", "e": 1.72, "amb": 0.42, "top": "526d63", "hor": "b5c0a9", "gnd": "53604a", "fog": "849486", "exp": 1.0},
 	"dusk": {"rot": Vector3(-9, -38, 0), "col": "ff8f50", "e": 1.6, "amb": 0.3, "top": "3a3f5c", "hor": "d98a55", "gnd": "8a6a50", "fog": "a87a5c", "exp": 1.0},
 	"night": {"rot": Vector3(-52, -38, 0), "col": "8fa8ff", "e": 0.9, "amb": 0.34, "top": "10182e", "hor": "2c3b5a", "gnd": "141c2a", "fog": "27324a", "exp": 0.95},
 }
@@ -20,9 +20,9 @@ const TIMES := {
 func _ready() -> void:
 	add_to_group("atmosphere")
 	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color("56707a")
-	sky_mat.sky_horizon_color = Color("a3b09a")
-	sky_mat.ground_horizon_color = Color("8e9c80")
+	sky_mat.sky_top_color = Color("627b70")
+	sky_mat.sky_horizon_color = Color("b2bfad")
+	sky_mat.ground_horizon_color = Color("7f8b73")
 	sky_mat.ground_bottom_color = Color("2a3820")
 	sky_mat.sky_curve = 0.18
 	sky_mat.sun_angle_max = 25.0
@@ -33,24 +33,24 @@ func _ready() -> void:
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
-	env.ambient_light_energy = 0.58
+	env.ambient_light_energy = 0.44
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
 	env.tonemap_exposure = 1.0
 	env.tonemap_white = 8.0
 	env.fog_enabled = true
-	env.fog_light_color = Color("7f9078")
-	env.fog_density = 0.0075
-	env.fog_aerial_perspective = 0.1
-	env.fog_sky_affect = 0.3
+	env.fog_light_color = Color("849486")
+	env.fog_density = 0.0038
+	env.fog_aerial_perspective = 0.12
+	env.fog_sky_affect = 0.24
 	env.glow_enabled = true
 	env.glow_intensity = 0.4
 	env.glow_bloom = 0.02
 	env.glow_hdr_threshold = 1.2
 	env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SOFTLIGHT
 	env.adjustment_enabled = true
-	env.adjustment_contrast = 1.2
-	env.adjustment_saturation = 1.1
+	env.adjustment_contrast = 1.08
+	env.adjustment_saturation = 1.0
 	# alleen bij de zwaarste renderer (Forward+) actief; de mobiele renderer slaat dit over
 	env.ssao_enabled = true
 	env.ssao_radius = 1.4
@@ -61,14 +61,16 @@ func _ready() -> void:
 
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-33.0, -38.0, 0.0)
-	sun.light_color = Color("ffe2b0")
-	sun.light_energy = 2.2
+	sun.light_color = Color("fff3e3")
+	sun.light_energy = 1.8
 	sun.shadow_enabled = true
 	sun.shadow_blur = 1.8  # zachtere randen
 	sun.shadow_opacity = 0.72  # schaduw wordt niet meer pikzwart
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
 	sun.directional_shadow_max_distance = 80.0
-	sun.shadow_normal_bias = 1.2
+	# A smaller normal offset keeps the existing mobile shadow map attached to
+	# roots and trail stones, which reads better at the fixed tactical camera.
+	sun.shadow_normal_bias = 0.7
 	add_child(sun)
 	_sky_mat = sky_mat
 	_env = env
@@ -76,7 +78,8 @@ func _ready() -> void:
 	apply_settings()
 	apply_settings.call_deferred()  # nog eens als de camera en de jungle er staan
 
-	# donkere randen en een warme tint over alles, zoals een filmbeeld
+	# Een bijna onzichtbare neutrale vignette houdt het speelveld rustig zonder
+	# de groenen geel/bruin te kleuren.
 	var layer := CanvasLayer.new()
 	layer.layer = -1
 	var rect := ColorRect.new()
@@ -87,7 +90,7 @@ func _ready() -> void:
 void fragment() {
 	vec2 d = UV - 0.5;
 	float v = smoothstep(0.35, 0.95, length(d * vec2(1.0, 1.15)));
-	COLOR = vec4(0.03, 0.05, 0.02, v * 0.55);
+		COLOR = vec4(0.01, 0.015, 0.01, v * 0.10);
 }"""
 	var sm := ShaderMaterial.new()
 	sm.shader = sh
@@ -110,9 +113,9 @@ func apply_settings() -> void:
 	_sky_mat.sky_horizon_color = Color(t["hor"])
 	_sky_mat.ground_horizon_color = Color(t["gnd"])
 	_env.fog_light_color = Color(t["fog"]).lerp(Color("9aa59a"), 0.0 if weather == "clear" else 0.35)
-	_env.fog_density = {"clear": 0.0075, "rain": 0.014, "mist": 0.018}[weather]
+	_env.fog_density = {"clear": 0.0045, "rain": 0.014, "mist": 0.018}[weather]
 	_env.tonemap_exposure = t["exp"]
-	_env.adjustment_saturation = 1.1 if weather == "clear" else 0.85
+	_env.adjustment_saturation = 1.0 if weather == "clear" else 0.94
 	_apply_quality(quality)
 	_apply_trees()
 	Woonhuis.apply_shadow_setting()
@@ -224,7 +227,7 @@ func _process(_d: float) -> void:
 # geen onscherpe verte, minder gras en iets minder pixels. Ultra is het volledige beeld.
 const QUALITY := {
 	"low": {"shadow": false, "dist": 40.0, "atlas": 1024, "glow": false, "dof": false, "scale": 0.6, "grass": 0.2, "fern": 0.5, "bush_shadow": false, "ssao": false},
-	"high": {"shadow": true, "dist": 40.0, "atlas": 1024, "glow": false, "dof": false, "scale": 0.8, "grass": 0.45, "fern": 0.7, "bush_shadow": false, "ssao": false},
+	"high": {"shadow": true, "dist": 40.0, "atlas": 1024, "glow": false, "dof": false, "scale": 0.8, "grass": 0.6, "fern": 0.7, "bush_shadow": false, "ssao": false},
 	"ultra": {"shadow": true, "dist": 55.0, "atlas": 4096, "glow": true, "dof": true, "scale": 1.0, "grass": 1.0, "fern": 1.0, "bush_shadow": true, "ssao": true},
 }
 

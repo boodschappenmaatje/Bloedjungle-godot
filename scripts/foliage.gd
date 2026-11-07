@@ -17,15 +17,20 @@ const PALM_NEAR := 62.0  # dichterbij: volledige palm; verder: de simpele palm
 ## Stam of rots waar je niet doorheen loopt: straal in meters bij schaal 1 (laag Kit.LAYER_NATURE: mensen, voertuigen, kogels en granaten).
 const BOOM_COLLIDE_R := 0.8  # jungleboom: stam met plankwortels (bij schaal 1, voor de 0,75 van BOOM_SCALE)
 const COLLIDE_R := {"palm": 0.32, "rock": 0.45}
-const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.5], "bush": [1.1, 1.8, 0.45], "rock": [0.5, 1.2, 0.4]}  # hoogte, breedte, sterkte
+const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.16], "bush": [1.1, 1.8, 0.26], "rock": [0.5, 1.2, 0.26]}  # hoogte, breedte, sterkte
 
 
 ## Wind-materiaal; met een bladtextuur (kind) of zonder (stam, rotsen).
 static func material(kind := "") -> ShaderMaterial:
 	if not _mats.has(kind):
 		var m := ShaderMaterial.new()
-		m.shader = preload("res://shaders/foliage.gdshader")
-		m.set_shader_parameter("use_tex", kind != "")
+		var depth_pbr := kind == "depth_leaf" or kind.begins_with("depth_")
+		m.shader = preload("res://shaders/foliage_depth_pbr.gdshader") if depth_pbr else preload("res://shaders/foliage.gdshader")
+		if not depth_pbr:
+			m.set_shader_parameter("use_tex", kind != "")
+		# Keep the photographed leaf hue close to the source maps. The old red-heavy
+		# grade pushed both daylight and shadowed leaves toward yellow/brown.
+		m.set_shader_parameter("foliage_grade", Vector3(0.98,1.02,0.98) if kind not in ["", "bark", "depth_leaf"] else Vector3.ONE)
 		if kind == "bark":
 			m.set_shader_parameter("tex", load("res://assets/textures/nature/tree_bark/base_color.jpg"))
 			m.set_shader_parameter("nrm", load("res://assets/textures/nature/tree_bark/normal_gl.jpg"))
@@ -33,18 +38,63 @@ static func material(kind := "") -> ShaderMaterial:
 			m.set_shader_parameter("cut", 0.0)
 			m.set_shader_parameter("tint", Vector3(0.55, 0.45, 0.36))
 		elif kind != "":
-			m.set_shader_parameter("tex", LeafTex.get_tex(kind))
-			m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
+			if kind == "depth_leaf":
+				m.set_shader_parameter("tex", load("res://assets/textures/foliage/depth_pass/jungle_leaf_flower_base_color.png"))
+				m.set_shader_parameter("nrm", load("res://assets/textures/foliage/depth_pass/jungle_leaf_flower_normal_gl.png"))
+				m.set_shader_parameter("rough_tex", load("res://assets/textures/foliage/depth_pass/jungle_leaf_flower_roughness.png"))
+				m.set_shader_parameter("use_rough_tex", true)
+				m.set_shader_parameter("cut", 0.43)
+				m.set_shader_parameter("tint", Vector3(1.07, 1.03, 0.92))
+				m.set_shader_parameter("backlight", 0.08)
+			elif kind.begins_with("depth_"):
+				var depth_textures := {"depth_rosette":"rosette", "depth_arch_fern":"arch_fern", "depth_microcover":"arch_fern", "depth_red_bloom":"shrub", "depth_litter":"rosette"}
+				var texture_kind: String = depth_textures.get(kind, "")
+				if not texture_kind.is_empty():
+					var texture_root := "res://assets/textures/foliage/polyhaven/%s_" % texture_kind
+					m.set_shader_parameter("tex", load(texture_root + "base_color.png"))
+					m.set_shader_parameter("nrm", load(texture_root + "normal_gl.png"))
+					m.set_shader_parameter("rough_tex", load(texture_root + "roughness.png"))
+					m.set_shader_parameter("use_rough_tex", true)
+					# The shared material previously forced every scanned leaf above 0.56
+					# roughness, removing the anthurium's measured soft sheen. Preserve each
+					# species' actual PBR range while keeping the fern and floor litter matte.
+					var rough_floor := 0.32 if kind == "depth_rosette" else (0.38 if kind == "depth_red_bloom" else (0.68 if kind == "depth_litter" else 0.60))
+					var specular := 0.36 if kind == "depth_rosette" else (0.31 if kind == "depth_red_bloom" else (0.18 if kind == "depth_litter" else 0.23))
+					var normal_depth := 0.82 if kind == "depth_rosette" else (0.74 if kind == "depth_red_bloom" else (0.70 if kind == "depth_arch_fern" else (0.64 if kind == "depth_microcover" else 0.56)))
+					m.set_shader_parameter("roughness_floor", rough_floor)
+					m.set_shader_parameter("leaf_specular", specular)
+					m.set_shader_parameter("nrm_depth", normal_depth)
+					m.set_shader_parameter("cut", 0.42)
+					var grade := Vector3(3.1,2.3,1.8) if kind == "depth_litter" else (Vector3(1.04,1.06,1.0) if kind in ["depth_rosette", "depth_arch_fern"] else Vector3(1.02,1.04,0.99))
+					m.set_shader_parameter("foliage_grade", grade)
+					m.set_shader_parameter("foliage_saturation", 0.68 if kind == "depth_litter" else 0.90)
+					m.set_shader_parameter("tint", Vector3.ONE if kind == "depth_litter" else Vector3(1.0,1.01,0.98))
+					m.set_shader_parameter("backlight", 0.08 if kind in ["depth_microcover", "depth_litter"] else 0.12)
+			else:
+				m.set_shader_parameter("tex", LeafTex.get_tex(kind))
+				m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
+			if kind == "leaf":
+				m.set_shader_parameter("tint", Vector3(0.96, 0.99, 0.94))
+				m.set_shader_parameter("backlight", 0.22)
+			elif kind == "palm":
+				m.set_shader_parameter("tint", Vector3(0.95, 0.99, 0.94))
+				m.set_shader_parameter("backlight", 0.20)
+			elif kind == "fern":
+				m.set_shader_parameter("tint", Vector3(0.95, 0.99, 0.94))
+				m.set_shader_parameter("backlight", 0.18)
 		if kind == "grass":
 			m.set_shader_parameter("sway", 0.08)
 			m.set_shader_parameter("cut", 0.35)
-		m.set_shader_parameter("wind", 1.0 if GameSettings.get_value("wind") == "on" else 0.0)
+		m.set_shader_parameter("wind", 1.0 if kind != "depth_litter" and GameSettings.get_value("wind") == "on" else 0.0)
 		_mats[kind] = m
 	return _mats[kind]
 
 
 static var _focus_mats: Array[ShaderMaterial] = []
 static var _fade := 0.0  # 0..1, loopt zacht mee zodat bladeren niet ploffen
+static var _depth_shadow_clock := 1.0
+const DEPTH_SHADOW_BATCH_LIMIT := 8
+const DEPTH_SHADOW_RANGE := 28.0
 
 
 ## Globale uniforms op gedeelde leaf-materialen, zonder per-palm drawcalls of raycasts.
@@ -52,17 +102,39 @@ static var _fade := 0.0  # 0..1, loopt zacht mee zodat bladeren niet ploffen
 ## extras = tot drie wereldposities (vijanden) die ook uit de bladeren moeten blijven.
 static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, delta := 1.0 / 60.0, active := true, extras: Array = []) -> void:
 	GrassField.set_focus(player_pos, active)
+	update_depth_shadow_batches(camera_pos, delta, active)
 	_fade = move_toward(_fade, 1.0 if active else 0.0, delta / 0.35)
+	var scene_tree := Engine.get_main_loop() as SceneTree
+	var camera: Camera3D = scene_tree.root.get_viewport().get_camera_3d() if scene_tree != null else null
+	var viewport_size := Vector2.ONE
+	var render_size_px := Vector2.ONE
+	var viewport_aspect := 1.0
+	if camera != null:
+		viewport_size = Vector2(camera.get_viewport().size)
+		viewport_aspect = viewport_size.x / maxf(viewport_size.y, 1.0)
+		# Godot reports FRAGCOORD in the viewport's output-pixel coordinates for
+		# spatial materials even when 3D upscaling is enabled.
+		render_size_px = viewport_size
+	var player_screen_uv := Vector2(0.5, 0.5)
+	if camera != null and viewport_size.x > 0.0 and viewport_size.y > 0.0:
+		player_screen_uv = camera.unproject_position(player_pos + Vector3.UP * 0.8) / viewport_size
 	if _focus_mats.is_empty():
-		for key in ["palm", "leaf", "fern"]:
+		# All detailed species share the actor sightline fade, including the new PBR plants.
+		for key in ["palm", "leaf", "fern", "depth_leaf", "depth_rosette", "depth_arch_fern", "depth_microcover", "depth_red_bloom", "depth_litter"]:
 			_focus_mats.append(material(key))
 	var on := _fade > 0.001
 	var e: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO, Vector4.ZERO]
+	var screen_e: Array[Vector3] = [Vector3.ZERO, Vector3.ZERO, Vector3.ZERO]
 	for i in mini(extras.size(), 3):
 		var pos: Vector3 = extras[i]
 		e[i] = Vector4(pos.x, pos.y + 1.0, pos.z, 1.0)
+		if camera != null and viewport_size.x > 0.0 and viewport_size.y > 0.0:
+			var actor_uv := camera.unproject_position(pos + Vector3.UP)
+			screen_e[i] = Vector3(actor_uv.x / viewport_size.x, actor_uv.y / viewport_size.y, 1.0)
 	for mat in _focus_mats:
 		mat.set_shader_parameter("fade_sightline", on)
+		mat.set_shader_parameter("screen_size_px", render_size_px)
+		mat.set_shader_parameter("screen_aspect", viewport_aspect)
 		if not on:
 			continue
 		mat.set_shader_parameter("fade_amount", _fade)
@@ -71,6 +143,49 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 		mat.set_shader_parameter("view_e0", e[0])
 		mat.set_shader_parameter("view_e1", e[1])
 		mat.set_shader_parameter("view_e2", e[2])
+		mat.set_shader_parameter("focus_player_uv", player_screen_uv)
+		mat.set_shader_parameter("focus_e0_uv", screen_e[0])
+		mat.set_shader_parameter("focus_e1_uv", screen_e[1])
+		mat.set_shader_parameter("focus_e2_uv", screen_e[2])
+	# Fade the existing cheap palm-shadow quads close to actor feet. Their leaf
+	# silhouettes remain as soft canopy shade in the surrounding play space.
+	for shadow_mat: ShaderMaterial in _shadow_mats.values():
+		shadow_mat.set_shader_parameter("actor_focus_active", active)
+		shadow_mat.set_shader_parameter("screen_size_px", render_size_px)
+		shadow_mat.set_shader_parameter("screen_aspect", viewport_aspect)
+		shadow_mat.set_shader_parameter("focus_player_uv", player_screen_uv)
+		shadow_mat.set_shader_parameter("focus_e0_uv", screen_e[0])
+		shadow_mat.set_shader_parameter("focus_e1_uv", screen_e[1])
+		shadow_mat.set_shader_parameter("focus_e2_uv", screen_e[2])
+
+
+## Cast real sun shadows only for the nearest few PBR foliage batches. The
+## existing MultiMeshes and alpha-cutout material are reused; distant batches
+## remain shadowless to keep the Mobile shadow pass bounded.
+static func update_depth_shadow_batches(camera_pos: Vector3, delta: float, active := true) -> void:
+	_depth_shadow_clock += delta
+	if _depth_shadow_clock < 0.25:
+		return
+	_depth_shadow_clock = 0.0
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	var candidates: Array[Node] = tree.get_nodes_in_group("understory_pbr_shadow_candidate")
+	var allow_shadows := active and GameSettings.get_value("quality") != "low" and GameSettings.get_value("t_sun") == "on" and Atmosphere.tier == 0
+	var ranked: Array = []
+	if allow_shadows:
+		for node: Node in candidates:
+			var center: Vector3 = node.get_meta("shadow_center", Vector3.INF)
+			var distance := camera_pos.distance_to(center)
+			if distance <= DEPTH_SHADOW_RANGE:
+				ranked.append([distance, node])
+	ranked.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	var selected := {}
+	for i in mini(DEPTH_SHADOW_BATCH_LIMIT, ranked.size()):
+		selected[(ranked[i][1] as Node).get_instance_id()] = true
+	for node: Node in candidates:
+		var should_cast: bool = selected.has(node.get_instance_id())
+		(node as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if should_cast else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 const PUSH_MAX := 8
@@ -123,7 +238,8 @@ static func update_pushers(player: Node3D, tree: SceneTree, active := true) -> v
 ## Zet de wind in alle bladeren aan of uit.
 static func set_wind(on: bool) -> void:
 	for k in _mats:
-		_mats[k].set_shader_parameter("wind", 1.0 if on else 0.0)
+		if k != "depth_litter":
+			_mats[k].set_shader_parameter("wind", 1.0 if on else 0.0)
 	GrassField.set_wind(on)
 
 
@@ -143,38 +259,12 @@ static func _shadow_mat(kind: String) -> ShaderMaterial:
 		m.set_shader_parameter("height", c[0])
 		m.set_shader_parameter("width", c[1])
 		m.set_shader_parameter("strength", c[2])
+		if kind == "palm":
+			# The radial alpha projection looked like a spiky star on the ground.
+			# Use the soft directional blob here; real canopy geometry supplies detail.
+			m.set_shader_parameter("canopy_detail", false)
 		_shadow_mats[kind] = m
 	return _shadow_mats[kind]
-
-
-## Eén blad of palmtak: een gebogen strook met een licht gevouwen middenrib. De textuur loopt
-## in de lengte (u) en over de breedte (v), met de nerf op v = 0,5.
-static func _frond(st: SurfaceTool, origin: Vector3, yaw: float, length: float, width: float, rise: float, droop: float, c0: Color, c1: Color, segs := 6) -> void:
-	var d := Vector3(cos(yaw), 0.0, sin(yaw))
-	var side := Vector3(-d.z, 0.0, d.x)
-	var rows: Array = []
-	for i in segs + 1:
-		var t := float(i) / segs
-		var c := origin + d * length * t + Vector3.UP * (sin(t * PI * 0.6) * rise - t * t * droop)
-		var col := c0.lerp(c1, t)
-		col.a = t
-		var n := (Vector3.UP * 0.75 + d * 0.15).normalized()
-		rows.append([
-			[c - side * width + Vector3.DOWN * width * 0.3, Vector2(t, 0.0), col, n],
-			[c + Vector3.UP * width * 0.1, Vector2(t, 0.5), col, n],
-			[c + side * width + Vector3.DOWN * width * 0.3, Vector2(t, 1.0), col, n]])
-	for i in segs:
-		for k in 2:
-			var a: Array = rows[i][k]
-			var b: Array = rows[i][k + 1]
-			var cc: Array = rows[i + 1][k]
-			var dd: Array = rows[i + 1][k + 1]
-			for tri in [[a, cc, b], [b, cc, dd]]:
-				for v in tri:
-					st.set_uv(v[1])
-					st.set_color(v[2])
-					st.set_normal(v[3])
-					st.add_vertex(v[0])
 
 
 ## Palmen en rotsen komen uit assets/jungle.glb (bron/jungle/maak_jungle.py): 3 palmen met een
@@ -209,30 +299,13 @@ static func jungle_mesh(name: String) -> Mesh:
 
 ## Struik van brede bladeren.
 static func bush() -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 9
-	for k in 22:
-		var yaw := TAU * k / 22.0 + rng.randf_range(-0.2, 0.2)
-		var o := Vector3(cos(yaw), 0, sin(yaw)) * rng.randf_range(0.0, 0.3) + Vector3.UP * rng.randf_range(0.05, 0.5)
-		_frond(st, o, yaw, rng.randf_range(0.9, 1.5), rng.randf_range(0.4, 0.55), rng.randf_range(0.5, 1.0), rng.randf_range(0.3, 0.8), Color(0.6, 0.7, 0.55), Color(1.0, 1.0, 0.9), 3)
-	var m := st.commit()
-	m.surface_set_material(0, material("leaf"))
-	return m
+	# Replace the old 22-blade plastic fan with the shared ribbed PBR rosette.
+	return JungleUnderstory.depth_mesh("rosette")
 
 
 static func fern() -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 3
-	for k in 10:
-		var yaw := TAU * k / 10.0 + rng.randf_range(-0.15, 0.15)
-		_frond(st, Vector3(0, 0.05, 0), yaw, rng.randf_range(1.0, 1.5), 0.32, rng.randf_range(0.5, 0.9), rng.randf_range(0.6, 1.0), Color(0.6, 0.7, 0.55), Color(1.0, 1.0, 0.9), 4)
-	var m := st.commit()
-	m.surface_set_material(0, material("fern"))
-	return m
+	# Share the authored pinnate fern with its LODs instead of the broad fan mesh.
+	return JungleUnderstory.depth_mesh("arch_fern")
 
 
 ## Pol gras: drie kruisende kaartjes.
@@ -429,7 +502,10 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 	rng.seed = seed_
 	var south_rng := RandomNumberGenerator.new()
 	south_rng.seed = seed_ + 1009
-	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
+	# Keep the established plant counts and trunk colliders. The authored low plants
+	# are now smaller at the combat camera, with the area they occupy coming from
+	# gaps between individual clumps rather than oversized leaf silhouettes.
+	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.55, 1.18, 0.05], "fern": [300, 15.8, 70.0, 0.50, 1.12, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
 	var meshes := {"bush": bush(), "fern": fern(), "grass": grass()}
 	for kind in sets:
 		if step.is_valid():
@@ -525,6 +601,7 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 							_reg[key] = []
 						_reg[key].append(entry)
 					_register_vegetation(entry)
+	JungleUnderstory.spawn(parent)
 	reapply_building_clearings()
 
 

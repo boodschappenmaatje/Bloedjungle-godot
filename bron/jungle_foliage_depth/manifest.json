@@ -1,0 +1,237 @@
+{
+  "asset": "jungle_foliage_depth",
+  "source_blend": "bron/jungle_foliage_depth/jungle_foliage_depth.blend",
+  "generator": "bron/jungle_foliage_depth/make_assets.py",
+  "units": "metres",
+  "provider": "Poly Haven",
+  "license": "CC0 1.0 Universal",
+  "license_url": "https://polyhaven.com/license",
+  "sources": {
+    "rosette": "anthurium_botany_01",
+    "arch_fern": "fern_02",
+    "microcover": "fern_02",
+    "red_bloom": "shrub_04"
+  },
+  "game_mesh_nodes": "One mesh per species, natural source variant and LOD; each species remains one cutout surface in cell-batched MultiMeshes.",
+  "game_lod_distances_m": {
+    "default": [
+      20.0,
+      48.0
+    ],
+    "microcover": [
+      8.0,
+      22.0
+    ]
+  },
+  "runtime_materials": "Three 1K PBR texture sets with OpenGL normal and roughness, supplied by the shared Godot alpha-cutout foliage shader.",
+  "collision": "None. Existing building clearance, actor collision, route and firing corridor remain in the owning scene code.",
+  "wind": "Color alpha holds a root-to-tip vertex sway weight; one shared shader remains active.",
+  "species": {
+    "rosette": {
+      "polyhaven_asset_id": "anthurium_botany_01",
+      "variants": [
+        {
+          "source_objects": [
+            "anthurium_botany_01_a"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            2844,
+            1105,
+            315
+          ],
+          "dimensions_m_lod0": [
+            0.9506,
+            1.2113,
+            0.53
+          ]
+        },
+        {
+          "source_objects": [
+            "anthurium_botany_01_b"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            2797,
+            1088,
+            310
+          ],
+          "dimensions_m_lod0": [
+            0.8502,
+            0.6426,
+            0.5294
+          ]
+        },
+        {
+          "source_objects": [
+            "anthurium_botany_01_c"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            1631,
+            635,
+            180
+          ],
+          "dimensions_m_lod0": [
+            0.8879,
+            0.9714,
+            0.5295
+          ]
+        }
+      ]
+    },
+    "arch_fern": {
+      "polyhaven_asset_id": "fern_02",
+      "variants": [
+        {
+          "source_objects": [
+            "fern_02_a"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            784,
+            469,
+            156
+          ],
+          "dimensions_m_lod0": [
+            1.2317,
+            1.3688,
+            0.64
+          ]
+        },
+        {
+          "source_objects": [
+            "fern_02_b"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            2384,
+            1429,
+            476
+          ],
+          "dimensions_m_lod0": [
+            1.4811,
+            1.3373,
+            0.64
+          ]
+        },
+        {
+          "source_objects": [
+            "fern_02_c"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            2248,
+            1348,
+            449
+          ],
+          "dimensions_m_lod0": [
+            1.6033,
+            1.4032,
+            0.64
+          ]
+        }
+      ]
+    },
+    "microcover": {
+      "polyhaven_asset_id": "fern_02",
+      "variants": [
+        {
+          "source_objects": [
+            "fern_02_a"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            78,
+            39,
+            19
+          ],
+          "dimensions_m_lod0": [
+            0.6548,
+            0.7316,
+            0.3417
+          ]
+        },
+        {
+          "source_objects": [
+            "fern_02_b"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            238,
+            119,
+            59
+          ],
+          "dimensions_m_lod0": [
+            0.7895,
+            0.6875,
+            0.3422
+          ]
+        },
+        {
+          "source_objects": [
+            "fern_02_c"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            224,
+            112,
+            56
+          ],
+          "dimensions_m_lod0": [
+            0.8504,
+            0.7448,
+            0.3427
+          ]
+        }
+      ]
+    },
+    "red_bloom": {
+      "polyhaven_asset_id": "shrub_04",
+      "variants": [
+        {
+          "source_objects": [
+            "shrub_04_a_LOD0",
+            "shrub_04_c_LOD0",
+            "shrub_04_d_LOD0"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            1970,
+            755,
+            139
+          ],
+          "dimensions_m_lod0": [
+            0.4186,
+            0.5142,
+            0.5821
+          ]
+        },
+        {
+          "source_objects": [
+            "shrub_04_b_LOD0",
+            "shrub_04_c_LOD0",
+            "shrub_04_a_LOD0"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            1566,
+            588,
+            225
+          ],
+          "dimensions_m_lod0": [
+            0.4089,
+            0.415,
+            0.5815
+          ]
+        },
+        {
+          "source_objects": [
+            "shrub_04_d_LOD0",
+            "shrub_04_b_LOD0",
+            "shrub_04_c_LOD0"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            2242,
+            846,
+            369
+          ],
+          "dimensions_m_lod0": [
+            0.4607,
+            0.5214,
+            0.5821
+          ]
+        }
+      ]
+    }
+  }
+}

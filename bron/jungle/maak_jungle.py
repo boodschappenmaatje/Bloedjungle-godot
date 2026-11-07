@@ -143,15 +143,19 @@ def palm(name, seed, height, lean, ring_n, fronds, far=False):
                 loop[uvl].uv = uv
     white = (0.78, 0.9, 0.7)
     dark = (0.5, 0.64, 0.42)
-    n = max(7, int(fronds * (0.6 if far else 1.0)))
+    n = max(7, int(fronds * (0.6 if far else 0.82)))
     for k in range(n):
         yaw = math.tau * k / n + rnd.uniform(-0.2, 0.2)
-        frond(bm, lay, uvl, top + Vector((0, 0, 0.05)), yaw, rnd.uniform(2.6, 3.5), rnd.uniform(0.62, 0.86), rnd.uniform(0.9, 1.6), rnd.uniform(1.0, 2.0), dark, white, 3 if far else 7)
+        # Keep the trunk/collision footprint intact while trimming the crown's
+        # foreground reach so it frames the scene instead of covering actors.
+        # Keep the trunk and its collider intact, but trim the canopy reach so
+        # nearby fronds frame combat instead of covering the actor silhouettes.
+        frond(bm, lay, uvl, top + Vector((0, 0, 0.05)), yaw, rnd.uniform(0.58, 0.86), rnd.uniform(0.14, 0.21), rnd.uniform(0.32, 0.52), rnd.uniform(0.58, 0.84), dark, white, 3 if far else 7)
     for k in range(0 if far else 6):   # korte, rechtopstaande jonge bladeren in het hart
-        frond(bm, lay, uvl, top + Vector((0, 0, 0.1)), math.tau * k / 6 + 0.3, 1.5, 0.45, 1.3, 0.3, dark, white, 4)
+        frond(bm, lay, uvl, top + Vector((0, 0, 0.1)), math.tau * k / 6 + 0.3, 0.42, 0.11, 0.44, 0.16, dark, white, 4)
     if not far:   # twee verdorde, hangende bladeren onder de kroon
         for k in range(2):
-            frond(bm, lay, uvl, top + Vector((0, 0, -0.15)), rnd.random() * math.tau, rnd.uniform(1.6, 2.1), 0.5, 0.2, 2.2, (0.38, 0.30, 0.16), (0.55, 0.46, 0.26), 4)
+            frond(bm, lay, uvl, top + Vector((0, 0, -0.15)), rnd.random() * math.tau, rnd.uniform(0.62, 0.80), 0.20, 0.10, 0.84, (0.38, 0.30, 0.16), (0.55, 0.46, 0.26), 4)
     bm.normal_update()
     return make_obj(name, bm, [M_STAM, M_BLAD])
 

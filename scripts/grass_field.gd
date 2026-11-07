@@ -5,7 +5,9 @@ extends Node3D
 const KINDS := ["short", "medium", "tall"]
 const ZONE_DATA := preload("res://resources/grass_zones.tres")
 const CELL := 24.0
-const LIMIT := {"short": 6200, "medium": 2200, "tall": 1600}
+# Freeze short grass at the last measured instance count; visual work only
+# changes its shape, material and spatial grouping from here.
+const LIMIT := {"short": 23739, "medium": 2200, "tall": 1600}
 const END := {"short": 52.0, "medium": 62.0, "tall": 72.0}
 static var _meshes := {}
 static var _material: ShaderMaterial
@@ -98,6 +100,35 @@ func _populate(existing: Array) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 27102026
 	var groups := {}
+	# Spend the existing tuft budget on visible short-grass shoulders first.
+	# A separate RNG preserves the original foliage/collider generation sequence.
+	var shoulder_rng := RandomNumberGenerator.new()
+	shoulder_rng.seed = 20261107
+	for i in 3000:
+		var z := shoulder_rng.randf_range(-86.0, -33.0)
+		var side := -1.0 if shoulder_rng.randf() < 0.5 else 1.0
+		var p := Vector3(Data.path_x(z) + side * shoulder_rng.randf_range(3.5, 9.0), 0.0, z)
+		if _allowed(p):
+			_add_point(groups, shoulder_rng, "short", p)
+	# The playable ground used to inherit mostly sparse tree-ring tufts. Add a finer,
+	# bounded low layer over the jungle floor; the established open firing lane stays clear.
+	# Keep the same 19,000 placement attempts, but arrange them in irregular,
+	# overlapping colonies instead of an even lawn-like random scatter.
+	for colony in 250:
+		# Put most of those same colonies in the actual fixed combat-camera footprint;
+		# leave a smaller distant reserve so the wider map still has forest-floor cover.
+		var center := Vector2(shoulder_rng.randf_range(-13.0,26.0),shoulder_rng.randf_range(-74.0,-49.0)) if colony < 160 else Vector2(shoulder_rng.randf_range(-65.0,65.0),shoulder_rng.randf_range(-85.0,-34.0))
+		var radius := shoulder_rng.randf_range(1.5,3.4)
+		var aspect := shoulder_rng.randf_range(0.38,0.82)
+		var axis := shoulder_rng.randf_range(0.0,TAU)
+		for i in 76:
+			var angle := shoulder_rng.randf() * TAU
+			var radial := sqrt(shoulder_rng.randf()) * radius
+			var offset := Vector2(cos(angle) * radial * aspect, sin(angle) * radial).rotated(axis)
+			var p := Vector3(center.x + offset.x,0,center.y + offset.y)
+			var road_clear := p.z < -30.0 and p.z > -100.0 and absf(p.x - Data.path_x(p.z)) < 2.25
+			if _allowed(p) and not road_clear and shoulder_rng.randf() < 0.56 + 0.44 * Foliage._grove(p.x,p.z):
+				_add_point(groups, shoulder_rng, "short", p)
 	for transform: Transform3D in existing:
 		for _j in 3:
 			var p := transform.origin + Vector3(rng.randf_range(-0.5, 0.5), 0, rng.randf_range(-0.5, 0.5))
@@ -126,7 +157,7 @@ func _populate(existing: Array) -> void:
 			inst.set_meta("kind", data.kind)
 			inst.set_meta("lod", lod)
 			inst.set_meta("full", data.xf.size())
-			inst.multimesh.visible_instance_count = roundi(data.xf.size() * {"low": 0.2, "high": 0.45, "ultra": 1.0}[GameSettings.get_value("quality")])
+			inst.multimesh.visible_instance_count = roundi(data.xf.size() * {"low": 0.2, "high": 0.6, "ultra": 1.0}[GameSettings.get_value("quality")])
 			inst.extra_cull_margin = 0.4
 			inst.visible = lod == 0
 			nodes.append(inst)
@@ -158,11 +189,23 @@ func _add_point(groups: Dictionary, rng: RandomNumberGenerator, kind: String, po
 	var key := "%s_%d_%d_%d" % [kind, variant, cell.x, cell.y]
 	if not groups.has(key):
 		groups[key] = {"kind": kind, "cell": cell, "variant": variant, "xf": [], "colors": []}
-	var scale_ := rng.randf_range(0.9, 1.08)
-	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_, scale_, scale_))
+	var scale_ := rng.randf_range(0.82, 1.18) if kind == "short" else rng.randf_range(0.9, 1.08)
+	# The earlier conservative footprint left subpixel grass at the actual combat
+	# camera. Broaden each existing tuft while keeping its top below ~0.55 m; the
+	# same count, clear route and MultiMesh LODs keep this as a silhouette pass.
+	var spread_x := rng.randf_range(2.05, 2.65) if kind == "short" else 1.0
+	var spread_z := rng.randf_range(1.65, 2.20) if kind == "short" else 1.0
+	var height_scale := rng.randf_range(1.10, 1.40) if kind == "short" else 1.0
+	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_*spread_x, scale_*height_scale, scale_*spread_z))
 	groups[key].xf.append(Transform3D(basis, pos))
-	var shade := rng.randf_range(0.88, 1.0)
-	groups[key].colors.append(Color(shade, shade, shade))
+	if kind == "short":
+		if rng.randf() < 0.14:
+				groups[key].colors.append(Color(rng.randf_range(0.76,0.88),rng.randf_range(0.68,0.81),rng.randf_range(0.54,0.68)))
+		else:
+				groups[key].colors.append(Color(rng.randf_range(0.76,0.90),rng.randf_range(0.73,0.88),rng.randf_range(0.61,0.78)))
+	else:
+		var shade := rng.randf_range(0.88, 1.0)
+		groups[key].colors.append(Color(shade, shade, shade))
 
 
 func _process(delta: float) -> void:

@@ -39,6 +39,23 @@ python3 tools/publish_vq2_site.py /tmp/bloedjungle-vq2-site
 
 Three.js 0.180.0 is pinned; its MIT license is in `THREE-LICENSE.txt`.
 
+## Visual Upgrade B — Poly Haven foliage review
+
+Select **Jungle dieptepass · Poly Haven-ondergroei** to review the CC0 fern,
+anthurium rosette and shrub source meshes used by the game. The viewer loads the
+real exported GLB variants and all three shared 1K maps (base color with leaf
+alpha, OpenGL normal and roughness). The species, source variant and LOD
+selectors expose every game mesh; the material remains opaque alpha-cutout with
+double-sided leaf surfaces, matching the runtime foliage setup. These replace
+existing undergrowth meshes within the existing scatter budget; this pass does
+not raise plant counts.
+
+Run `node test-jungle-depth.mjs` to verify all 27 species/variant/LOD meshes,
+manifest triangle counts, visible-node selection and 1K PBR bindings. This
+Chromium/SwiftShader viewer check is a fast asset inspection only. It does not
+replace the real Godot Mobile/Vulkan screenshots or a physical iPhone test; the
+game-camera comparisons and iPhone plan live in `docs/visual_upgrade_b_1_0/`.
+
 ## Airfield HQ 2.0
 
 Select **Airfield HQ 2.0** to inspect the isolated WWII airfield replacement:

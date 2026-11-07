@@ -6,6 +6,9 @@ import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 const $=id=>document.getElementById(id), stage=$('stage'), canvas=$('canvas');
 const names={vijand_m2_toren:'Vijandelijke M2HB-toren · goedgekeurde Meshy-vorm',voorraaddepot:'Voorraaddepot · schuur, rolpoort en portaalkraan (Intendance)',voorraadtruck:'Voorraadtruck · Meshy-kraanwagen met telescoopgiek en grijper (V1 = vorige procedurele truck)',voorraadtruck_wrak:'Voorraadtruck · wrak',voorraadstapel:'Voorraadstapel · vol, half en leeg (Intendance)',hoofdkwartier:'Hoofdkwartier · radar, pantserdeur, 3 niveaus, schade',hoofdkwartier_omgeving:'Voorplein · omgeving van het hoofdkwartier (platen, lichtmasten, afzetblokken, vaten, kisten)',verzamelvlag:'Verzamelvlag · wapperend doek, zandzakken en lamp',airfield_hq:'Airfield HQ 2.2 · vergelijking met 2.1',m1911:'M1911 Meshy',kazerne:'Kazerne',wachttoren:'Wachttoren',legerjeep:'Legerjeep',jeep:'Speelbare jeep',auto:'Personenauto',bus:'Stadsbus',straaljager:'Straaljager F-16 (napalm)',soldaat:'Soldaat (mannetjes)',wapens:'Wapens (bewegende delen)',jungle:'Jungle (palmen en rotsen)',props:'Props (zandzakken en kisten)',wachtpost:'Poortwachtpost (slagboom en wachthuis)',generator:'Generator (heel en wrak)',munitiekist:'Munitiekist (Meshy-test)',tank:'Tiger-tank (Meshy, speelbaar)',garage:'Garage (Meshy-motorpool)'};
 const NEW_ONLY=['vijand_m2_toren','voorraaddepot','voorraadstapel','hoofdkwartier','hoofdkwartier_omgeving','verzamelvlag','jeep','auto','bus','wapens','jungle','props','wachtpost','generator'];
+names.jungle_depth_foliage='Jungle dieptepass · Poly Haven-ondergroei';
+NEW_ONLY.push('jungle_depth_foliage');
+$('asset').add(new Option(names.jungle_depth_foliage,'jungle_depth_foliage'),8);
 // wapens: alle wapens staan in één glb op dezelfde plek (oorsprong = rechterhand); de keuzelijst laat er één zien. Clips heten <wapen>_schot / <wapen>_leeg.
 const GUN_NODES=['M1911','Thompson','Garand','Trench','MG42','Bazooka','Huls','Raket'];
 function applyGun(){
@@ -24,6 +27,35 @@ function applyJungle(){
  // stronken: de vertexkleuren (schors, licht hout op de breuk) blijven zichtbaar, op een eigen kopie van het schorsmateriaal
  slots.v2.root.traverse(o=>{if(o.isMesh&&o.name.startsWith('Stomp')&&!o.userData.stumpMat){o.material=[].concat(o.material)[0].clone();o.material.vertexColors=true;o.material.color.set(0xffffff);o.material.needsUpdate=true;o.userData.stumpMat=true;}});
  bounds.makeEmpty();slots.v2.root.traverse(o=>{if(o.isMesh&&o.visible&&isUnder(o,g))bounds.expandByObject(o);});
+ setCamera(false);stats();dirty=true;
+}
+const JUNGLE_DEPTH_SPECIES=['rosette','arch_fern','red_bloom'];
+const JUNGLE_DEPTH_NODES=JUNGLE_DEPTH_SPECIES.flatMap(s=>[0,1,2].flatMap(v=>[0,1,2].map(l=>`HQ_${s}_V${v}_LOD${l}`)));
+async function loadJungleDepthMaterials(){
+ const loader=new THREE.TextureLoader(),sets={rosette:'rosette',arch_fern:'arch_fern',red_bloom:'shrub'},result={};
+ const loadMap=(name,kind,colorSpace)=>new Promise((resolve,reject)=>loader.load(`../../assets/textures/foliage/polyhaven/${name}_${kind}.png`,texture=>{
+  texture.flipY=false;texture.colorSpace=colorSpace;texture.generateMipmaps=true;
+  texture.minFilter=THREE.LinearMipmapLinearFilter;texture.magFilter=THREE.LinearFilter;
+  texture.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());texture.needsUpdate=true;resolve(texture);
+ },undefined,reject));
+ await Promise.all(Object.entries(sets).map(async([species,prefix])=>{
+  const [map,normalMap,roughnessMap]=await Promise.all([
+   loadMap(prefix,'base_color',THREE.SRGBColorSpace),
+   loadMap(prefix,'normal_gl',THREE.NoColorSpace),
+   loadMap(prefix,'roughness',THREE.NoColorSpace)
+  ]);
+  result[species]=new THREE.MeshStandardMaterial({name:`Poly Haven ${species} · 1K PBR`,map,normalMap,roughnessMap,roughness:1,metalness:0,normalScale:new THREE.Vector2(.8,.8),alphaTest:.42,transparent:false,depthWrite:true,side:THREE.DoubleSide,color:0xf4f2e9});
+ }));
+ return result;
+}
+function prepareJungleDepthMaterials(root,materials){
+ root.traverse(o=>{const match=o.isMesh&&o.name.match(/^HQ_(rosette|arch_fern|red_bloom)_V[0-2]_LOD[0-2]$/);if(!match)return;o.material=materials[match[1]];o.userData.original=o.material;});
+}
+function applyJungleDepth(){
+ if($('asset').value!=='jungle_depth_foliage'||!slots.v2)return;
+ const node=`HQ_${$('jungle-depth-species').value}_V${$('jungle-depth-variant').value}_LOD${$('jungle-depth-lod').value}`;
+ slots.v2.root.traverse(o=>{if(JUNGLE_DEPTH_NODES.includes(o.name))o.visible=o.name===node;});
+ bounds.makeEmpty();slots.v2.root.traverse(o=>{if(o.isMesh&&o.visible&&isUnder(o,node))bounds.expandByObject(o);});
  setCamera(false);stats();dirty=true;
 }
 // props: zandzakken en kisten staan in één glb op de oorsprong; de keuzelijst laat er één zien. Geen clips.
@@ -184,16 +216,20 @@ async function load(){
   $('airfield-lod-wrap').hidden=asset!=='airfield_hq';
  const versions=NEW_ONLY.includes(asset)?['v2']:['v1','v2'];
  try{
-  $('look-row').hidden=asset!=='soldaat';$('gun-row').hidden=asset!=='wapens';$('plant-row').hidden=asset!=='jungle';$('prop-row').hidden=asset!=='props';$('post-row').hidden=asset!=='wachtpost';$('gen-row').hidden=asset!=='generator';$('hk-row').hidden=asset!=='hoofdkwartier';$('tank-row').hidden=asset!=='tank';$('garage-row').hidden=asset!=='garage';
+	  $('look-row').hidden=asset!=='soldaat';$('gun-row').hidden=asset!=='wapens';$('plant-row').hidden=asset!=='jungle';$('jungle-depth-row').hidden=asset!=='jungle_depth_foliage';$('prop-row').hidden=asset!=='props';$('post-row').hidden=asset!=='wachtpost';$('gen-row').hidden=asset!=='generator';$('hk-row').hidden=asset!=='hoofdkwartier';$('tank-row').hidden=asset!=='tank';$('garage-row').hidden=asset!=='garage';
   const grassPath=v=>`../../assets/grass/${v==='v1'?'grass_baseline':asset+'_lod'+$('grass-lod').value}.glb`;
   const loaded=await Promise.all(versions.map(async v=>[v,makeSlot(await loader.loadAsync(GRASS.includes(asset)?grassPath(v):glbPath(asset,v)))]));
   // extra clips met hetzelfde skelet (klimmen, zitten, rollen, sprinten, herladen, explosie- en branddood), zoals SoldierModel.setup()
   for(const file of EXTRA_CLIPS[asset]||[]){const g=await loader.loadAsync(`../../assets/${file}`);for(const [,slot] of loaded){for(const c of g.animations){slot.clips=slot.clips.filter(x=>x.name!==c.name);slot.clips.push(c);}}}
   const next=Object.fromEntries(loaded);
+  if(asset==='jungle_depth_foliage'){
+   const materials=await loadJungleDepthMaterials();prepareJungleDepthMaterials(next.v2.root,materials);
+   if(current!==request){disposeSlots(next);return;}
+  }
   if(current!==request){disposeSlots(next);return;}
   disposeSlots(slots);slots=next;
   bounds.makeEmpty();for(const s of Object.values(slots))bounds.union(new THREE.Box3().setFromObject(s.root));
-  if(asset==='wapens'||asset==='m1911')applyGun();if(asset==='jungle')applyJungle();if(asset==='props')applyProp();if(asset==='wachtpost')applyWachtpost();if(asset==='generator')applyGenerator();if(asset==='hoofdkwartier')applyHk();if(asset==='munitiekist')applyMunitie();if(asset==='tank'){prepareTank();applyTank();}if(asset==='garage')applyGarage();setCamera(false);setupClips();setupMaterials();shading();if(DAMAGED.includes(asset))applyPhase(0);applyLook();if(GRASS.includes(asset))grassVariant();stats();$('loading').hidden=true;status();dirty=true;
+  if(asset==='wapens'||asset==='m1911')applyGun();if(asset==='jungle')applyJungle();if(asset==='jungle_depth_foliage')applyJungleDepth();if(asset==='props')applyProp();if(asset==='wachtpost')applyWachtpost();if(asset==='generator')applyGenerator();if(asset==='hoofdkwartier')applyHk();if(asset==='munitiekist')applyMunitie();if(asset==='tank'){prepareTank();applyTank();}if(asset==='garage')applyGarage();setCamera(false);setupClips();setupMaterials();shading();if(DAMAGED.includes(asset))applyPhase(0);applyLook();if(GRASS.includes(asset))grassVariant();stats();$('loading').hidden=true;status();dirty=true;
  }catch(error){if(current!==request)return;$('loading').hidden=false;$('loading').textContent='Het GLB-model kon niet geladen worden. Controleer de verbinding en open de viewer via HTTP(S). '+error.message;}
 }
 
@@ -361,6 +397,7 @@ function stats(){
  if(name==='munitiekist'&&slots.v2){const count=slot=>{let tri=0;const mats=new Set(),texs=new Set();if(slot)slot.root.traverse(o=>{if(!o.isMesh||!shown(o))return;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const k of ['map','normalMap','roughnessMap','metalnessMap'])if(m[k])texs.add(m[k].image?.width||0);}});return `${Math.round(tri).toLocaleString('nl')} driehoeken · ${mats.size} materialen · texturen ${[...texs].map(w=>w+'px').join('/')||'geen'}`;};$('stats').textContent=`Munitiekist: V1 ${count(slots.v1)}. Meshy ${count(slots.v2)}. Geen iPhone-FPS gemeten.`;return;}
  if(name==='props'&&slots.v2){let tri=0,meshes=0;const mats=new Set(),texs=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh||!o.visible||!isUnder(o,$('prop').value))return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const k of ['map','normalMap','roughnessMap','metalnessMap'])if(m[k])texs.add(m[k].uuid);}});$('stats').textContent=`${$('prop').value}: ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · ${texs.size} texturen (gedeelde 1K-VQ2-sets). Geen iPhone-FPS gemeten.`;return;}
  if(name==='jungle'&&slots.v2){let tri=0,meshes=0;const mats=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh||!o.visible||!isUnder(o,$('plant').value))return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material))mats.add(m.uuid);});$('stats').textContent=`${$('plant').value}: ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} mesh · ${mats.size} materialen · vertexkleuren, UV's voor schors en blad (textuur in Godot). Geen iPhone-FPS gemeten.`;return;}
+ if(name==='jungle_depth_foliage'&&slots.v2){let tri=0,meshes=0;const mats=new Set(),maps=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh||!o.visible)return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const k of ['map','normalMap','roughnessMap'])if(m[k]?.image)maps.add(k+': '+m[k].image.width+'×'+m[k].image.height);}});$('stats').textContent=`Poly Haven ${$('jungle-depth-species').value} · vorm ${Number($('jungle-depth-variant').value)+1} · LOD ${$('jungle-depth-lod').value}: ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} mesh · ${mats.size} materiaal · ${[...maps].join(', ')}. Bronvarianten, gedeeld 1K PBR en mobiele LOD's; geen iPhone-FPS gemeten.`;return;}
  if((name==='wapens'||name==='m1911')&&slots.v2){let tri=0,meshes=0;const mats=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh)return;let p=o,vis=true;while(p){if(!p.visible)vis=false;p=p.parent;}if(!vis)return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material))mats.add(m.uuid);});$('stats').textContent=`${name==='m1911'?'M1911 Meshy':$('gun').value}: ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · Meshy-PBR, drie 1K-textures. Geen iPhone-FPS gemeten.`;return;}
  if(name==='soldaat'){const count=slot=>{let tri=0;const mats=new Set(),imgs=new Set();slot.root.traverse(o=>{if(!o.isMesh)return;let p=o,vis=true;while(p){if(!p.visible)vis=false;p=p.parent;}if(!vis)return;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original)){mats.add(m.uuid);for(const v of Object.values(m))if(v?.isTexture&&v.image)imgs.add(v.image.width+'×'+v.image.height);}});return `${Math.round(tri).toLocaleString('nl')} driehoeken · ${mats.size} materialen · texturen ${[...imgs].join(', ')||'geen'}`;};$('stats').textContent=(slots.v1?`V1 (pop zonder uitrusting): ${count(slots.v1)}. `:'')+(slots.v2?`VQ2 (deze look): ${count(slots.v2)}. `:'')+'Geen iPhone-FPS gemeten.';return;}
  if(name==='hoofdkwartier'&&slots.v2){let tri=0,meshes=0;const mats=new Set(),texs=new Set();slots.v2.root.traverse(o=>{if(!o.isMesh||!shown(o))return;meshes++;const g=o.geometry;tri+=(g.index?g.index.count:g.attributes.position.count)/3;for(const m of [].concat(o.userData.original||o.material)){mats.add(m.uuid);for(const k of ['map','normalMap','roughnessMap','metalnessMap','emissiveMap'])if(m[k])texs.add(m[k].uuid);}});$('stats').textContent=`Hoofdkwartier (spelversie, zichtbare onderdelen): ${Math.round(tri).toLocaleString('nl')} driehoeken · ${meshes} meshes · ${mats.size} materialen · ${texs.size} texturen · echte clips Radar-loop, Open, Dicht, Wapperen-loop. Twee unieke 2K-texturensets (albedo, normaal, ORM). HQ-bron 273.210 driehoeken, LOD1 3,4k. Geen iPhone-FPS gemeten.`;return;}
@@ -399,7 +436,7 @@ canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();$('loading').h
 fetch('../../docs/vq2/results/asset-report.json').then(r=>r.json()).then(r=>{report=r;stats();}).catch(()=>{});
 window.__VQ2_READY__=true;
 // Bounded read-only browser verification hook; never changes model files.
-window.__VQ2_TEST__={node:n=>{let r=null;slots.v2?.root.traverse(o=>{if(o.name===n)r=o;});return r;},deuk:()=>{let v=null;slots.v2?.root.traverse(o=>{if(o.isMesh&&o.morphTargetInfluences?.length&&v===null)v=o.morphTargetInfluences[0];});return v;},ready:()=>!!slots.v2&&$('loading').hidden,clips:()=>slots.v2?.clips.map(c=>c.name)||[],
+window.__VQ2_TEST__={node:n=>{let r=null;slots.v2?.root.traverse(o=>{if(o.name===n)r=o;});return r;},deuk:()=>{let v=null;slots.v2?.root.traverse(o=>{if(o.isMesh&&o.morphTargetInfluences?.length&&v===null)v=o.morphTargetInfluences[0];});return v;},ready:()=>!!slots.v2&&$('loading').hidden,clips:()=>slots.v2?.clips.map(c=>c.name)||[],jungleDepthVisible:()=>{const out=[];slots.v2?.root.traverse(o=>{if(JUNGLE_DEPTH_NODES.includes(o.name)&&o.visible)out.push(o.name);});return out;},
  sample:()=>{const out={};slots.v2?.root.traverse(o=>{if(/WielLV|StuurLV|MG$|Body$|Geschut$/.test(o.name)){out[o.name]={position:o.position.toArray(),quaternion:o.quaternion.toArray(),scale:o.scale.toArray()};}});return out;},
  visible:()=>{const o=[];slots.v2?.root.traverse(x=>{if(ALL_PARTS.has(x.name)&&x.visible)o.push(x.name);});return o.sort();},
  bone:n=>{let r=null;slots.v2?.root.traverse(o=>{if(o.isBone&&o.name===n)r=o.quaternion.toArray();});return r;},
@@ -417,3 +454,6 @@ function grassInfo(){let triangles=0;const meshes=[];slots.v2?.root.traverse(o=>
 window.__VQ2_TEST__.grassInfo=grassInfo;
 $('grass-variant').onchange=grassVariant;
 $('grass-lod').onchange=load;
+$('jungle-depth-species').onchange=applyJungleDepth;
+$('jungle-depth-variant').onchange=applyJungleDepth;
+$('jungle-depth-lod').onchange=applyJungleDepth;

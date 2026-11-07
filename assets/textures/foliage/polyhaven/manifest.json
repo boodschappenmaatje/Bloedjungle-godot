@@ -1,0 +1,118 @@
+{
+  "asset": "Bloedjungle_PolyHaven_Foliage_PBR",
+  "license": "CC0 1.0 Universal",
+  "license_url": "https://polyhaven.com/license",
+  "provider": "Poly Haven",
+  "api": "https://api.polyhaven.com",
+  "runtime_texture_policy": "Three 1K PBR sets; one material per plant species; alpha-cutout, no blended foliage transparency.",
+  "species": {
+    "arch_fern": {
+      "polyhaven_asset_id": "fern_02",
+      "source_resolution": "2k",
+      "runtime_resolution": [
+        1024,
+        1024
+      ],
+      "source_maps": {
+        "fern_02_diff_2k.jpg": "9ee18172170728050871772e2cd6d8d37b52f9138e61b49b04486623f9caf84b",
+        "fern_02_alpha_2k.png": "f51eb9b8f9f4b25a882f8fe12d1ef53ba69448bac7e71396ec1f05b684e9ea75",
+        "fern_02_nor_gl_2k.jpg": "dfe1ac4a428d21f7c134411500177d66b8dd800c8fec6f0040c50f44414a777b",
+        "fern_02_arm_2k.jpg": "1eaf9bd29e2d83a77ca5d89bdddebcd9216b8b4ba244644580fe5b89bbe713f1"
+      },
+      "runtime_maps": {
+        "base_color": {
+          "path": "assets/textures/foliage/polyhaven/arch_fern_base_color.png",
+          "sha256": "c3ef5db1c6ea1c688338816833feb098756328c4e173472477b9039028a9f527",
+          "bytes": 533246
+        },
+        "normal_gl": {
+          "path": "assets/textures/foliage/polyhaven/arch_fern_normal_gl.png",
+          "sha256": "211d5fa520707700c979b97da207da1236381ced48dbde95722b1144349005a5",
+          "bytes": 752148
+        },
+        "roughness": {
+          "path": "assets/textures/foliage/polyhaven/arch_fern_roughness.png",
+          "sha256": "05a147956552de9665487d116c289f998b27eb5b702994ca103f34cefd36159f",
+          "bytes": 708221
+        }
+      },
+      "channels": {
+        "base_color": "sRGB RGB from diffuse; alpha from Poly Haven alpha mask; transparent RGB edge-dilated before 1K resize",
+        "normal_gl": "OpenGL tangent normal from Poly Haven nor_gl; vector-filtered and renormalized after resize",
+        "roughness": "Linear roughness from ARM G packed in runtime red; ambient occlusion from ARM R packed in runtime green"
+      }
+    },
+    "rosette": {
+      "polyhaven_asset_id": "anthurium_botany_01",
+      "source_resolution": "2k",
+      "runtime_resolution": [
+        1024,
+        1024
+      ],
+      "source_maps": {
+        "anthurium_botany_01_diff_2k.jpg": "7ef41c8fb14951c8fb74e9924a60ce6b2fc8c150b8f0c21e59af29b88df36762",
+        "anthurium_botany_01_alpha_2k.png": "77b48de549a9612b271af990016884eab3efe344b4b0704298b4b5e9ffc64280",
+        "anthurium_botany_01_nor_gl_2k.jpg": "515f9168577d727bd208d8f8e521c8c6ac318fc9d5c65f29510a5b861608c639",
+        "anthurium_botany_01_arm_2k.jpg": "81bcc96fa59e09169df48cf2eb930361c4df157a8114e7f3149c97934d47aadc"
+      },
+      "runtime_maps": {
+        "base_color": {
+          "path": "assets/textures/foliage/polyhaven/rosette_base_color.png",
+          "sha256": "ff27fadc51bef839946dc8e71a66a22c769d9e65b3f0f4cfaab54a643a4ada7f",
+          "bytes": 797877
+        },
+        "normal_gl": {
+          "path": "assets/textures/foliage/polyhaven/rosette_normal_gl.png",
+          "sha256": "96f10a0b999fbdf0c70b0736e9d7e7769ca3a5550a3301db8b47aa9f7398bdbe",
+          "bytes": 1051514
+        },
+        "roughness": {
+          "path": "assets/textures/foliage/polyhaven/rosette_roughness.png",
+          "sha256": "64ea443f6b2d838827e3cd193bb0ffbb6dfece4206acaa054cbe620ce505bbaf",
+          "bytes": 976205
+        }
+      },
+      "channels": {
+        "base_color": "sRGB RGB from diffuse; alpha from Poly Haven alpha mask; transparent RGB edge-dilated before 1K resize",
+        "normal_gl": "OpenGL tangent normal from Poly Haven nor_gl; vector-filtered and renormalized after resize",
+        "roughness": "Linear roughness from ARM G packed in runtime red; ambient occlusion from ARM R packed in runtime green"
+      }
+    },
+    "shrub": {
+      "polyhaven_asset_id": "shrub_04",
+      "source_resolution": "2k",
+      "runtime_resolution": [
+        1024,
+        1024
+      ],
+      "source_maps": {
+        "shrub_04_diff_2k.jpg": "a45e95f3c78c31a1d411c58232089bd472bb31ebe146ba4237c3f1a930f49fc9",
+        "shrub_04_alpha_2k.png": "6c30e2ffb781b3d54b246a2b1f9bf128e0c814fa9314b8d842e253f4914ac4de",
+        "shrub_04_nor_gl_2k.jpg": "dd2a0aea75996a390f10fd82aa24166263713d02c42ff68edaaaf7d0a884f5eb",
+        "shrub_04_arm_2k.jpg": "030c84b34ed22469c281310d2b18c298892f78d25518be061e8f0fe22e7423d7"
+      },
+      "runtime_maps": {
+        "base_color": {
+          "path": "assets/textures/foliage/polyhaven/shrub_base_color.png",
+          "sha256": "7e9af10a9d5189701e9e3513808aa303b67dc25b6367ea418a3534b002870621",
+          "bytes": 595153
+        },
+        "normal_gl": {
+          "path": "assets/textures/foliage/polyhaven/shrub_normal_gl.png",
+          "sha256": "1cd9f0130a5bf586aaa0d235c148e7f168269c8701fab441323d2fd5bd0d2d72",
+          "bytes": 911316
+        },
+        "roughness": {
+          "path": "assets/textures/foliage/polyhaven/shrub_roughness.png",
+          "sha256": "a692a6ad87adf85bf8b37d44c639150e1a97d501a819bd03394fc097127cf291",
+          "bytes": 570122
+        }
+      },
+      "channels": {
+        "base_color": "sRGB RGB from diffuse; alpha from Poly Haven alpha mask; transparent RGB edge-dilated before 1K resize",
+        "normal_gl": "OpenGL tangent normal from Poly Haven nor_gl; vector-filtered and renormalized after resize",
+        "roughness": "Linear roughness from ARM G packed in runtime red; ambient occlusion from ARM R packed in runtime green"
+      }
+    }
+  }
+}

@@ -1,78 +1,57 @@
-# Visual Upgrade B 1.0 — Terrain + Foliage Depth Pass
+# Bloedjungle — Visual Upgrade B 1.0
 
-**Werk in uitvoering, geen visuele of mobiele eindacceptatie.** Eén featurebranch `feature/visual-upgrade-b-1-0`, vanaf `b808fe1`. Niet mergen; geen OTA.
+**Branch:** `feature/visual-upgrade-b-1-0`
 
-## Visuele opdracht
+**Draft PR:** [#237](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/237)
 
-Het door de gebruiker gecorrigeerde [goedgekeurde beeld B](reference/approved-b.jpg) is de doelstandaard. Het eerder meegestuurde beeld C is niet de doelreferentie. [Oorspronkelijke gebruikersscreenshot](reference/user-before.jpg) is uitsluitend door de gebruiker aangeleverd bewijs; de FPS daarvan is geen eigen meting. De gebruiker heeft verduidelijkt dat renderresolutie de zichtbare upgrade niet moet beperken. Bestaande grafische instellingen worden behouden.
+**Laatste codecommit:** `69d3f434802a2f8ef6b7fc918badca3dea2a24c3`
 
-## Inventaris vóór productie
+De upgrade voegt zichtbaar meer lage junglevegetatie en grasstructuur toe, met PBR-terrein en een gedetailleerder pad. De echte Godot-render is beter dan de oude scène, maar haalt de volle sfeer en microdetaildichtheid van beeld B nog niet. Visuele acceptatie blijft open. De gebruiker test de unsigned iOS-build zelf op een iPhone; er zijn geen toestelprestaties gemeten. Deze PR blijft Draft, is niet gemerged en heeft niets gepubliceerd.
 
-- `assets/jungle.glb`, `bron/jungle/maak_jungle.py`: 3 palmvormen, 2 jungleboomvormen, bijbehorende verre vormen, 3 rotsen en 2 stronken. Bestaande boom-/rotsposities, colliders, vallen, rammen en bouwclearing blijven behouden.
-- `assets/grass/manifest.json`, `bron/gras/gras.blend`: short/medium/tall × 4 varianten × 3 geometrische LOD's, gedeelde 2K PBR-atlas. Bestaande celbatches, kwaliteitsschaal, LOD-selectie en buigen blijven in gebruik.
-- `Foliage.bush/fern`: bestaande gebogen bladmeshes, gedeelde leaf/fern-texturen, wind en zichtlijnfade. Geen duplicaat van deze modellen geproduceerd.
-- Reeds aanwezige terreinsets: gras, junglegrond, droge aarde, grind, modder, mos en rivierzand, elk albedo/normal/roughness. De oude grondshader gebruikte geen gras-/bosgrondnormal en koppelde `mud_tex` aan grind.
-- Bestaande zon, sky, eenvoudige mist, optionele vaste/echte boomschaduw en PerfGovernor. Geen nieuwe lichtbron, volumetrische mist of schermruimte-effect toegevoegd.
+## Richting en grenzen
 
-## Implementatie
+Het door de gebruiker goedgekeurde beeld B is een kwaliteitsrichting, geen letterlijke scènebouwopdracht. De [oorspronkelijke gebruikersscreenshot](reference/user-before.jpg) bevat geen opslagpositie of vaste camera-instellingen; de vergelijking claimt daarom geen identieke reconstructie. De [driebeeldvergelijking](captures/compare/three-way.jpg) labelt de gebruikersscreenshot, referentie en echte game-render apart.
 
-- `ground.gdshader` mengt gras, bosgrond, aarde, modder, mos en bestaande grindsteen met echte normal/roughnessrespons op wereldvaste schaal. De bestaande `gravel_rock`-PBR-set is toegevoegd aan het ingesleten pad en de onderbroken schouders; organische overgangen en natte sporen blijven zichtbaar. Geen parallax, terreinverplaatsing of collisionwijziging. De drie bestaande discard-contracten (rivier/loopgraven/helipad) blijven behouden.
-- `pack_terrain_surfaces.py` pakt bestaande normal RGB en roughness A verliesloos in één bronafbeelding per materiaal, nu ook voor `gravel_rock`. Geen download, vergroting of nieuwe fotobron. Het manifest bevat bron- en outputhashes; de oorspronkelijke licenties staan in `docs/ASSET_SOURCES.md`. Import bewaart alpha, gebruikt VRAM-compressie en mipmaps; geen normalmap-optimalisatie die de roughnessalpha weggooit. Het zes-kaartenpakket is 8.39 MB met mipmaps in de lokale Godot-import; gravel voegt 1.40 MB toe. De shader houdt 15 texture lookups per grondpixel aan; er zijn twee extra samplerbindingen voor het grind-PBR-paar.
-- `JungleUnderstory` hergebruikt bestaande varen-, struik-, rots- en stamgeometrie voor onregelmatige kolonies bij natuurankers, padschouders, oevers en buitenfunderingen. Drie goedkope frondsilhouetten en kleine rozetten zijn uit de bestaande bladmaterialen opgebouwd; plat gedraaide grasbladen vormen strooisel. Geen nieuwe fotobron of geïmporteerde GLB.
-- Detail is in 24 m cellen gebatcht, maximaal 360 instances per batch, globale soortlimieten, 48/58 m afstandsculling en geen schaduwdraws. Alle extra details volgen bestaande jungle-/dichtheids-/kwaliteitstrappen en de bouwclearance-index. Een afzonderlijke RNG houdt de bestaande natuurcolliders op hun originele posities.
-- `GrassField` besteedt short grass eerst aan padschouders en vult daarna de speelvloer buiten een vrije strook van 2,25 m langs het pad. Het begrensde short-grassbudget is 8.200 instances (voorheen 6.200); high rendert 60% via dezelfde cellen, LOD's en afstandsculling. De ondergroei verschuift het bestaande detailbudget van grove hoge varenwaaiers naar bredere lage rozetten en struiken. Er worden geen nieuwe modellen of extra materiaaldrawcalls toegevoegd.
-- Wortelcontact in bestaande foliage-/grasshaders; een warmere, lagere dagzon met minder omgevingsinvulling geeft langere schaduwen en meer materiaalcontrast. Tijd, weer en kwaliteitskeuzes blijven werken. Geen dure volumetrische mist of C-lichtbundels.
+De game gebruikt bestaande gestileerde, relatief lichte boom- en bladmodellen. De resterende afstand tot B zit vooral in de vlakke speelruimte, het beperkte aantal kleine bladvormen, het nog vrij eenvoudige water en het ontbreken van geometrisch terreinreliëf. De referentie heeft fijnere, fotografische blad- en bodemdetaillering en meer reflecterend water. Die kenmerken zijn met de huidige modellen, terreinplaat en materialen niet volledig te evenaren zonder een aparte asset-/terreinproductieronde. Er zijn geen AI-conceptbeelden als implementatiebewijs gebruikt.
 
-## Bewijsprotocol
+## Wat de upgrade aanpast
 
-`tests/visual_b_capture.gd` laadt de echte `scenes/main.tscn`, gebruikt de ongewijzigde `Camera`-node met bestaande camerascript en vaste wereldposities, seed `20261106`, High/day/clear, fake tree shadows, wind uit. HUD en sticks zijn zichtbaar. Resolutieschaal 60% wordt alleen voor de gecontroleerde vergelijking ingesteld; geen productinstelling gewijzigd. PerfGovernor staat uitsluitend in het testproces stil zodat hij de A/B-schaal niet verandert.
+- Hergebruikt `assets/jungle.glb`, de bestaande grasvarianten en hun drie geometrische LOD's, foliage- en fernmeshes, en de bestaande PBR-texturen voor gras, bosgrond, aarde, modder, mos, grind en rivierzand.
+- De terreinshader mengt de bestaande albedo-, normal- en roughness-informatie op wereldvaste schaal. Het ingesleten pad gebruikt de bestaande gravel-rock PBR-set; randen zijn organischer en sporen blijven herkenbaar. Er is geen displacement, parallax of collisionwijziging.
+- `GrassField` en `JungleUnderstory` vullen de speelvloer met short grass, rozetten, bladeren, stenen, twijgen en varens. De laatste pass verhoogt het begrensde short-grassbudget naar 14.500, zet groundcover op maximaal 11.000 en verplaatst een deel van hoog/klein detail naar lage planten. De planten blijven in bestaande MultiMesh-batches, kwaliteitschalen en afstandsculling.
+- Bestaande leaf-materialen krijgen wat meer lichtrespons. De eerdere passes voegden wortelcontact, warmere zonrespons en een subtiele mistlaag toe. Er zijn geen volumetrische lichtbundels of dure schermruimte-effecten toegevoegd.
+- De bestaande bouw-clearance, routes, schietlijnen, bomen, collisions, camera, HUD, besturing, AI, wapens en voertuigen blijven behouden. Renderdetail krijgt geen nieuwe collisions.
 
-De oorspronkelijke screenshot bevat geen savepositie, exacte camera-/kwaliteitsinstellingen of wereldcoördinaten. Daarom wordt **geen identieke reconstructie van die screenshot geclaimd**. De echte nieuwe voor/na-paren gebruiken wel dezelfde locaties, kwaliteit en tijd; de vastgezette camera-pose wijkt per paar hoogstens 1 cm af. De referentie is apart gelabeld en nooit als geïmplementeerde render gepresenteerd.
+## Echte Godot-beelden
 
-De eerdere lokale meettabel is gemaakt op Linux met **Godot 4.7.2 Mobile/Vulkan, Mesa llvmpipe (software)**, 1280×720 en twee gedeelde CPU-cores. De latere PR-run `42276280736` rapporteerde door ontbrekende Vulkan-surface-extensies echter **OpenGL Compatibility / llvmpipe LLVM 20**; die echte PNG's zijn geen Mobile-renderpad. De captureworkflow installeert nu Mesa lavapipe wanneer beschikbaar en schrijft de werkelijk gebruikte renderer en Vulkan-diagnostiek naar het artifact. Geen van beide softwarepaden is een fysieke iPhone- of Windows-meting. De gevechtsproef gebruikt 80 echte vijanden met bestaande AI en wapens; de bestaande wereldverdedigers blijven aanwezig. Shaderopwarming en gesorteerde frametijden staan los van structurele draw-/primitivecounts.
+Capture: [GitHub Actions-run 42315505667](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42315505667), geslaagd op de codecommit hierboven. De workflow start de echte `scenes/main.tscn`, ongewijzigde hoofdgamecamera, vaste wereldposities en seed, Godot 4.7.2 Mobile/Vulkan, High/day/clear en dezelfde pose-/kwaliteitsprocedure als de baseline. De vier scènes worden op 60% interne schaal vastgelegd; er staat ook een aparte bospadopname op 100%. Die 100%-opname bevestigt dat de open graszone niet door de lagere interne schaal wordt veroorzaakt.
 
-## Nog zichtbaar onder de kwaliteitslat
+De huidige echte beelden zijn [bospad](captures/after/bospad.png), [bospad op 100%](captures/after/bospad-100.png), [rivier](captures/after/rivier.png), [kamp](captures/after/kamp.png) en [combat met 80 vijanden](captures/after/combat.png). De [voor/na-vergelijkingen](captures/compare/) gebruiken echte gamecaptures; de camera pose in ieder paar blijft binnen 1 cm.
 
-Beeld B is de richting, geen checklist van letterlijk na te maken stenen of planten. De echte render van commit `1f2d814` (Godot-run `42276280736`) haalt de bredere maatstaf **nog niet**: grote rustige grasvlakken blijven zichtbaar en het pad ligt vanuit die camera te ver van de speler om de detailverbetering goed te tonen. De gravel-PBR maakt de aarde beter herkenbaar, maar bodem en ondergroei ogen nog niet rijk genoeg. Daarom schuift deze iteratie budget naar lage bladplanten en kort gras en maakt de bestaande steentextuur op het pad fijner. De nieuwe Godot-render moet die wijziging nog bevestigen; visuele acceptatie blijft open.
+De laatste pass vergroot lage rozetten en short grass; de render toont meer herkenbare bladgroepen langs de speelruimte, oevers en bosrand. Het midden van het bospad blijft open voor leesbaarheid en de weg blijft vrij. Mijn visuele beoordeling: duidelijke verbetering ten opzichte van de oude render, maar nog geen volledige match met de rijke, premium dichtheid van B. Het grote egale grasvlak, de gestileerde bladmodellen en het vlakke water blijven de belangrijkste zichtbare verschillen.
 
-De atlas van bestaande bladeren beperkt de vormvariatie van kleine tropische bodemplanten; vaste schaduwen zijn benaderingen en de grond blijft geometrisch vlak. Deze wijziging verandert geen bestaande natuurcolliders of levelhoogte. De vochtplekken zijn materiaalvariatie, geen geometrische plassen met gereflecteerde boomkruinen. Fysieke iPhone-profilering en langere shimmer-/gevechtstests zijn nodig voor mobiele acceptatie.
+De PNG's zijn echte Mobile/Vulkan-gamecaptures via **llvmpipe software-rendering** op Linux. De ingebrande `1 FPS` in die beelden is de trage softwarebackend; die waarde zegt niets over een iPhone. Renderresolutie is niet de visuele kwaliteitslat en de productinstellingen zijn niet gewijzigd.
 
-## Acceptatie
+## Softwaremetingen
 
-Echte native iPhone-/Windows-metingen, thermiek, 60 seconden bewegingsshimmer en representatieve lange grote gevechten blijven nodig. Geen fysieke iPhone-test, iOS Quick Look of iMac-productiepipeline uitgevoerd. De [iPhone-testlijst](IPHONE_TEST_PLAN.md) legt de laatste toestelcontrole vast.
+Huidige ruwe resultaten van `results/after-metrics.json`: Godot 4.7.2 Mobile/Vulkan, llvmpipe LLVM 20.1.2, 1280×720 output, High, 60% interne schaal en korte vaste-camerasamples. Combat gebruikt 80 echte vijanden. Draw calls en primitives zijn Godot-rendererdiagnostiek; de softwaretijden zijn geen hardwarebenchmark.
 
-## Regressietests en iOS-export
+| Scène | Gemiddelde ms | P99 ms | 1%-low FPS | Draw calls | Primitives |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Bospad | 2.053 | 3.399 | 0,294 | 514 | 2.922.663 |
+| Rivier | 1.220 | 1.274 | 0,785 | 365 | 2.026.194 |
+| Kamp | 5.096 | 5.220 | 0,192 | 393 | 1.778.068 |
+| Combat, 80 vijanden | 3.747 | 13.547 | 0,074 | 1.371 | 3.761.680 |
 
-- `visual_b_test.gd`: PASS, 0 failures na toevoeging van gravel; controleert de echte gamelevel, PBR/mips, objectlimieten, clearings, paden/oeverdetails, kwaliteits- en jungleknoppen en ontbreken van nieuwe colliders.
-- `visual_b_capture.gd`: de vorige iteratie slaagde met echte camerabeelden en 80 bestaande AI-vijandscènes. De toegevoegde PR-workflow draait deze capture opnieuw voor de graveliteratie, inclusief de render op 100% schaal. De lokale shell heeft geen grafische displayserver; daarom is daar geen nieuwe GPU-capture uitgevoerd.
-- Bestaande tests `jungle_test`, `rivier_test`, `schaduw_test`, `kwaliteit_test`, `surface_filtering_test`, `camera_test` en `team_commands`: geslaagd.
-- GitHub-checks voor vijandbasis/voertuigen/wapens/touchregressie en de unsigned iOS-IPA-export: geslaagd. De [iOS-run voor commit `95d46b5`](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42283258620) heeft een unsigned IPA-artifact van 1,15 GB opgeleverd; die is klaar om door de gebruiker te ondertekenen en op iPhone te testen. Dit bewijst compilatie en gesimuleerde touch-events, geen uitvoering op een iPhone.
-- GitHub OTA-patchcontrole en PR-preview: geslaagd; de release-publicatiestap is overgeslagen.
-- `grass_3d_test`: faalt alleen op de bestaande verwachting voor palm-/rotsposities. Dezelfde test faalt op de onaangepaste startcommit `b808fe1`, dus deze check legt een bestaande discrepantie vast.
-- De brede `run_tests.sh`-verzameling is afgebroken bij `airfield_hq_22_import_test`: die test vereist de wrapper-scène `airfield_hq_22_import_test_scene.tscn`, terwijl de algemene runner hem rechtstreeks met `-s` start en `Game` daardoor ontbreekt. Dit is een runner-/testaanroepfout, geen regressie-uitspraak over de asset.
-- Godot 4.7.2 `--export-pack iOS` maakte een resourcepack van circa 1,2 GB. Tijdens het opnieuw importeren meldde Godot twaalf `Basis must be normalized`-fouten bij de ongewijzigde `assets/brandkraan.glb`; de pack-export liep daarna wel door. Dit controleert alleen de resourcepack, niet een IPA-build, Apple Metal-rendering, ondertekening of uitvoering op een iPhone.
+De oude voor-meting gebruikte eveneens Godot Mobile/Vulkan, maar **llvmpipe LLVM 19.1.7** in plaats van LLVM 20.1.2. Daarom zijn de oude en nieuwe frametijden en 1%-lows niet rechtstreeks vergelijkbaar. De softwaretijden hierboven zijn seconden per frame door de gedeelde CI-renderer en mogen niet als iPhone-FPS worden gelezen. De ruwe voor/na-structurele tellers staan in [comparison.json](results/comparison.json); ze laten de extra scènegeometrie zien, geen telefoonprestatie.
 
-## Reviewcorrecties
+De laatste densiteitspass (`862cf0b` → `69d3f43`) is ook apart met dezelfde llvmpipe-setup vastgelegd: draw calls veranderen per scène tussen 0 en +1%; primitives stijgen 3,5–10,4%. De 1%-low in deze test is één langzaamste sample uit 60 frames (of één uit 100 in combat), dus niet betrouwbaar als hardwareacceptatie. Op iPhone zijn frametimes, 1%-lows, shimmer, langdurige gevechten en thermiek **niet gemeten**.
 
-Een afzonderlijke GPT-6 Astra-review controleerde de code zonder tests te claimen. Hersteld: vaste AABB's per detailcel (clearance verplaatst oude slots onder de wereld), correcte lokale assen voor takjes, gemeenschappelijke tangentbasis voor gedraaide modder-normalmaps, deterministisch gemengde habitatkandidaten vóór dichtheidslimieten, bijgewerkte bestaande surface-capture en gecontroleerde bestandswrites. De gerichte integratietest faalde vóór de bounds-/schaduwcorrectie en slaagde erna met 0 failures.
+## Validatie en iPhone-test
 
-De bestaande vaste palmschaduw gebruikt nu dezelfde palm-alfa om de egale ovaal te onderbreken. Dit is uitdrukkelijk een **benaderde vaste schaduw**, geen nieuwe geometrisch correcte realtime-schaduw. De bestaande schaduwmodus blijft ongewijzigd; echte boomschaduw blijft een bestaande gebruikerskeuze.
+- GitHub voor `69d3f43`: echte Godot-capture PASS, unsigned iOS-export PASS, vijandbasisregressie PASS en OTA-patchpreview PASS. De OTA-publicatiestap is overgeslagen voor deze PR-run.
+- Lokaal met Godot 4.6.3: `visual_b_test.gd` PASS (14.500 short grass; groundcover 11.000; clearances/collisions blijven intact), `surface_filtering_test.gd` PASS, `rivier_test.gd` exit 0, `camera_test.gd` PASS en `schaduw_test.gd` PASS. De gepinde Godot 4.7.2-integratietest slaagde ook in de captureworkflow.
+- iOS-export: [run 42315505684](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42315505684), geslaagd. Unsigned artifact **`bloedjungle-ios-unsigned-a3e5dd8cca52fa33c29a2d381b638d4c02ed5e53`**, artifact-id **`13551276722`**, **1.151.750.795 bytes** (circa 1,15 GB). Download op de runpagina, onderteken met je eigen Apple-account en installeer met je gebruikelijke iOS-installatiemethode.
+- De export bewijst geen ondertekening, installatie, Metal-rendering of iPhone-uitvoering. Er is geen fysieke iPhone-test of Windows-runtime-test uitgevoerd. De [iPhone-testlijst](IPHONE_TEST_PLAN.md) bevat vaste stappen voor stilstaand beeld, shimmer/pop-in, een groot gevecht, terreinranden, frametimes, 1%-lows en thermiek. Laat die velden op **niet gemeten** staan tot je de tests uitvoert.
 
-## Echte renders en softwaremetingen
-
-[Gebruikersbeeld / doel B / vorige echte Godot-render](captures/compare/three-way.jpg)
-
-De bovenstaande vergelijking en tabel zijn van de vorige iteratie, vóór de gravel-PBR-binding; de tabel meet dus niet de huidige detailverdeling. De echte GL Compatibility-render en 100%-bospadcapture van commit `1f2d814` staan in het PR-artifact. De nieuwe branchwijziging wordt na de lavapipe/Mobile capture opnieuw beoordeeld en alleen dan worden de voor/na-afbeelding en tabel vernieuwd.
-
-| Plek | Echt voor/na, zelfde camera | Gem. ms voor → na | P99 ms voor → na | 1% low FPS voor → na | Draws voor → na | Primitives voor → na |
-| --- | --- | ---: | ---: | ---: | ---: | ---: |
-| bospad | [Vergelijking](captures/compare/bospad.jpg) | 818.6 → 1613.5 | 1186.6 → 2144.6 | 0.84 → 0.47 | 331 → 504 | 836804 → 1797869 |
-| rivier | [Vergelijking](captures/compare/rivier.jpg) | 406.6 → 960.9 | 544.9 → 1231.0 | 1.84 → 0.81 | 280 → 364 | 255653 → 1092208 |
-| kamp | [Vergelijking](captures/compare/kamp.jpg) | 2465.1 → 2717.1 | 3075.1 → 3375.8 | 0.33 → 0.30 | 310 → 390 | 670925 → 1293442 |
-| combat_80 | [Vergelijking](captures/compare/combat.jpg) | 2504.7 → 2735.2 | 25552.8 → 4372.2 | 0.04 → 0.23 | 1277 → 1369 | 1904919 → 2930846 |
-
-**WARNING:** deze softwaremetingen bewijzen extra renderkosten, geen behoud van native iPhone-FPS. De lange frametijden, korte vensters (60 frames per stille plek, 100 in gevecht) en shader-/hoststalls maken de 1% lows ongeschikt als toestelacceptatie. Alle individuele gesorteerde frametijden, 1% lows en capturemetadata staan onverkort in [before-metrics.json](results/before-metrics.json), [after-metrics.json](results/after-metrics.json) en [comparison.json](results/comparison.json). De eerste baselineplek overlapt deels de importopwarming; gebruik die tijd niet als geïsoleerde GPU-regressiemeting. Camera-/pusher-CPU staat tijdens meten stil; dit is een vaste-camera-renderdiagnose, geen volledige gameplaybenchmark.
-
-De oude gevechtsteller vroeg een niet-bestaande nodegroep op en registreerde daardoor 0. De test spawnede daadwerkelijk 80 vijanden (ook zichtbaar in de HUD/renders); de huidige capturecode leest de echte `Game.enemies`-lijst. Het oude ongeldige tellerveld is in de ruwe nulmeting behouden en expliciet gelabeld.
-
-De 12-frame langzame camera-translatie is lokaal gerenderd voor/na. Er is geen gekalibreerde temporele shimmer-score en geen 60-secondencontrole op native hardware uitgevoerd. Shimmer en 1% lows blijven open acceptatiepunten.
+Visuele acceptatie blijft open door het resterende vlakke speelveld en de stilistische assetgrens. Mobiele acceptatie blijft open totdat de gebruiker deze build op de iPhone heeft gespeeld en de resultaten heeft teruggekoppeld.

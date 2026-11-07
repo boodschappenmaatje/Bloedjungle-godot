@@ -1,9 +1,136 @@
 {
-  "platform": "Linux, Godot 4.7.2 Mobile/Vulkan, llvmpipe software, 2 shared CPU cores",
+  "current_commit": "69d3f434802a2f8ef6b7fc918badca3dea2a24c3",
+  "capture_run": "https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42315505667",
+  "capture_artifact_id": 13552075676,
+  "engine": "Godot 4.7.2-stable",
+  "current_renderer": "Mobile / Vulkan",
+  "current_adapter": "llvmpipe (LLVM 20.1.2, 256 bits), Linux software rendering, shared CI CPU",
   "native_device_tested": false,
-  "timing_scope": "fixed-camera diagnostic; live combat differs in simulated duration; short samples; no hardware GPU timer",
-  "baseline_counter_note": "before combat enemies_start/end=0 is an invalid group query; 80 enemies were explicitly spawned. Current harness uses Game.enemies.size(). Do not interpret 0 as absent combat.",
-  "comparison": [
+  "baseline_timing_comparable": false,
+  "baseline_timing_note": "The original before metrics used llvmpipe LLVM 19.1.7; this capture used LLVM 20.1.2. Reported before/after frame timings and 1% lows are raw software-runner values, not a valid hardware speed comparison or iPhone estimate.",
+  "same_renderer_iteration": {
+    "from_commit": "862cf0b",
+    "to_commit": "69d3f43",
+    "adapter": "llvmpipe (LLVM 20.1.2, 256 bits)",
+    "timing_note": "Same Godot Mobile/Vulkan software setup and fixed camera procedure. Samples are short; 1% low uses only the slowest one frame in each 60-frame scene and the slowest one in the 100-frame combat scene. Compare as a software diagnostic only.",
+    "scenes": [
+      {
+        "spot": "bospad",
+        "capture_settings_match": {
+          "focus": true,
+          "fov": true,
+          "scale": true,
+          "msaa": true,
+          "quality": true
+        },
+        "camera_position_delta_m": 0.0011800000000050659,
+        "camera_basis_max_component_delta": 1.0000000000287557e-06,
+        "camera_pose_within_1cm_tolerance": true,
+        "before": {
+          "mean_ms": 1907.97121666667,
+          "p99_ms": 3368.926,
+          "one_percent_low_fps": 0.296830503252372,
+          "draw_calls_mean": 509.05,
+          "primitives_mean": 2647397.21666667,
+          "samples": 60
+        },
+        "after": {
+          "mean_ms": 2053.21563333333,
+          "p99_ms": 3399.049,
+          "one_percent_low_fps": 0.294199936511654,
+          "draw_calls_mean": 514.05,
+          "primitives_mean": 2922663.21666667,
+          "samples": 60
+        }
+      },
+      {
+        "spot": "rivier",
+        "capture_settings_match": {
+          "focus": true,
+          "fov": true,
+          "scale": true,
+          "msaa": true,
+          "quality": true
+        },
+        "camera_position_delta_m": 0.0011100000000112686,
+        "camera_basis_max_component_delta": 0.0,
+        "camera_pose_within_1cm_tolerance": true,
+        "before": {
+          "mean_ms": 1088.62961666667,
+          "p99_ms": 1138.484,
+          "one_percent_low_fps": 0.878361048552285,
+          "draw_calls_mean": 365.383333333333,
+          "primitives_mean": 1856949.83333333,
+          "samples": 60
+        },
+        "after": {
+          "mean_ms": 1220.40081666667,
+          "p99_ms": 1273.856,
+          "one_percent_low_fps": 0.78501808681672,
+          "draw_calls_mean": 365.383333333333,
+          "primitives_mean": 2026193.83333333,
+          "samples": 60
+        }
+      },
+      {
+        "spot": "kamp",
+        "capture_settings_match": {
+          "focus": true,
+          "fov": true,
+          "scale": true,
+          "msaa": true,
+          "quality": true
+        },
+        "camera_position_delta_m": 0.002169999999999561,
+        "camera_basis_max_component_delta": 0.0,
+        "camera_pose_within_1cm_tolerance": true,
+        "before": {
+          "mean_ms": 4917.97991666667,
+          "p99_ms": 5058.094,
+          "one_percent_low_fps": 0.19770292920614,
+          "draw_calls_mean": 392.066666666667,
+          "primitives_mean": 1704500.73333333,
+          "samples": 60
+        },
+        "after": {
+          "mean_ms": 5096.32051666667,
+          "p99_ms": 5219.859,
+          "one_percent_low_fps": 0.191576055981589,
+          "draw_calls_mean": 393.083333333333,
+          "primitives_mean": 1778068.4,
+          "samples": 60
+        }
+      },
+      {
+        "spot": "combat_80",
+        "capture_settings_match": {},
+        "camera_position_delta_m": 0.0004400000000011062,
+        "camera_basis_max_component_delta": 1.0000000000287557e-06,
+        "camera_pose_within_1cm_tolerance": true,
+        "before": {
+          "mean_ms": 3625.68401,
+          "p99_ms": 9267.939,
+          "one_percent_low_fps": 0.107898854319175,
+          "draw_calls_mean": 1367.02,
+          "primitives_mean": 3633586.6,
+          "samples": 100,
+          "enemies_start": 80,
+          "enemies_end": 80
+        },
+        "after": {
+          "mean_ms": 3747.12132,
+          "p99_ms": 13546.588,
+          "one_percent_low_fps": 0.073819326313017,
+          "draw_calls_mean": 1370.72,
+          "primitives_mean": 3761679.68,
+          "samples": 100,
+          "enemies_start": 80,
+          "enemies_end": 80
+        }
+      }
+    ]
+  },
+  "baseline_to_current": [
     {
       "spot": "bospad",
       "capture_settings_match": {
@@ -13,7 +140,7 @@
         "msaa": true,
         "quality": true
       },
-      "camera_position_max_delta_m": 0.003930000000003986,
+      "camera_position_delta_m": 0.0006699999999995043,
       "camera_basis_max_component_delta": 0.0,
       "camera_pose_within_1cm_tolerance": true,
       "before": {
@@ -21,14 +148,16 @@
         "p99_ms": 1186.571,
         "one_percent_low_fps": 0.842764571188745,
         "draw_calls_mean": 330.883333333333,
-        "primitives_mean": 836804.3
+        "primitives_mean": 836804.3,
+        "samples": 60
       },
       "after": {
-        "mean_ms": 1613.5164,
-        "p99_ms": 2144.562,
-        "one_percent_low_fps": 0.466295681822209,
-        "draw_calls_mean": 504.05,
-        "primitives_mean": 1797869.21666667
+        "mean_ms": 2053.21563333333,
+        "p99_ms": 3399.049,
+        "one_percent_low_fps": 0.294199936511654,
+        "draw_calls_mean": 514.05,
+        "primitives_mean": 2922663.21666667,
+        "samples": 60
       }
     },
     {
@@ -40,7 +169,7 @@
         "msaa": true,
         "quality": true
       },
-      "camera_position_max_delta_m": 0.00015999999999394277,
+      "camera_position_delta_m": 0.0002000000000066393,
       "camera_basis_max_component_delta": 0.0,
       "camera_pose_within_1cm_tolerance": true,
       "before": {
@@ -48,14 +177,16 @@
         "p99_ms": 544.873,
         "one_percent_low_fps": 1.83529005841728,
         "draw_calls_mean": 280.466666666667,
-        "primitives_mean": 255652.733333333
+        "primitives_mean": 255652.733333333,
+        "samples": 60
       },
       "after": {
-        "mean_ms": 960.93985,
-        "p99_ms": 1231.048,
-        "one_percent_low_fps": 0.812316010423639,
-        "draw_calls_mean": 364.383333333333,
-        "primitives_mean": 1092207.83333333
+        "mean_ms": 1220.40081666667,
+        "p99_ms": 1273.856,
+        "one_percent_low_fps": 0.78501808681672,
+        "draw_calls_mean": 365.383333333333,
+        "primitives_mean": 2026193.83333333,
+        "samples": 60
       }
     },
     {
@@ -67,7 +198,7 @@
         "msaa": true,
         "quality": true
       },
-      "camera_position_max_delta_m": 0.005250000000000199,
+      "camera_position_delta_m": 0.005280000000002616,
       "camera_basis_max_component_delta": 1.0000000000287557e-06,
       "camera_pose_within_1cm_tolerance": true,
       "before": {
@@ -75,36 +206,55 @@
         "p99_ms": 3075.059,
         "one_percent_low_fps": 0.325197012480086,
         "draw_calls_mean": 310.0,
-        "primitives_mean": 670925.0
+        "primitives_mean": 670925.0,
+        "samples": 60
       },
       "after": {
-        "mean_ms": 2717.14853333333,
-        "p99_ms": 3375.803,
-        "one_percent_low_fps": 0.296225816494624,
-        "draw_calls_mean": 390.083333333333,
-        "primitives_mean": 1293442.4
+        "mean_ms": 5096.32051666667,
+        "p99_ms": 5219.859,
+        "one_percent_low_fps": 0.191576055981589,
+        "draw_calls_mean": 393.083333333333,
+        "primitives_mean": 1778068.4,
+        "samples": 60
       }
     },
     {
       "spot": "combat_80",
       "capture_settings_match": {},
-      "camera_position_max_delta_m": 0.0004500000000007276,
-      "camera_basis_max_component_delta": 1.0000000000287557e-06,
+      "camera_position_delta_m": 0.0007200000000011642,
+      "camera_basis_max_component_delta": 0.0,
       "camera_pose_within_1cm_tolerance": true,
       "before": {
         "mean_ms": 2504.70158,
         "p99_ms": 25552.756,
         "one_percent_low_fps": 0.039134721906318,
         "draw_calls_mean": 1276.7,
-        "primitives_mean": 1904919.06
+        "primitives_mean": 1904919.06,
+        "samples": 100,
+        "enemies_start": 0,
+        "enemies_end": 0
       },
       "after": {
-        "mean_ms": 2735.22952,
-        "p99_ms": 4372.17,
-        "one_percent_low_fps": 0.228719377334367,
-        "draw_calls_mean": 1369.02,
-        "primitives_mean": 2930846.18
+        "mean_ms": 3747.12132,
+        "p99_ms": 13546.588,
+        "one_percent_low_fps": 0.073819326313017,
+        "draw_calls_mean": 1370.72,
+        "primitives_mean": 3761679.68,
+        "samples": 100,
+        "enemies_start": 80,
+        "enemies_end": 80
       }
     }
-  ]
+  ],
+  "combat_note": "Current test spawned and retained 80 real enemies. The older baseline counter was an invalid group query; it reported zero even though the prior scene did spawn enemies. Do not compare that baseline enemy count.",
+  "settings": {
+    "quality": "high",
+    "weather": "clear",
+    "time": "day",
+    "shadow_mode": "fake tree shadows",
+    "wind": "off",
+    "capture_size": "1280x720",
+    "render_scale": 0.6,
+    "additional_bospad_render_scale": 1.0
+  }
 }

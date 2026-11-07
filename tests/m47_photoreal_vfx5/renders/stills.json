@@ -1,0 +1,27 @@
+[
+  {
+    "frame": 24,
+    "label": "Laden / kernrotatie",
+    "file": "01_load_core_rotation.png"
+  },
+  {
+    "frame": 53,
+    "label": "Afvuren / mechanische terugslag",
+    "file": "02_muzzle_fire.png"
+  },
+  {
+    "frame": 91,
+    "label": "Projectiel in vlucht",
+    "file": "03_projectile_flight.png"
+  },
+  {
+    "frame": 122,
+    "label": "Impact / zeshoekige schokgolf",
+    "file": "04_impact_shockwave.png"
+  },
+  {
+    "frame": 171,
+    "label": "Muurdoorbraak / puin en stof",
+    "file": "05_permanent_breach.png"
+  }
+]

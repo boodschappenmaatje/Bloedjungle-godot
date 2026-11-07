@@ -1,0 +1,19 @@
+Visual Upgrade B 1.0 — natural color and foliage placement pass
+
+Code commit: 6e7701a26332a6c3f9b4767d5ebd6934a45ae52a
+Godot capture run: https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42425169412
+GitHub artifact: 13595675153
+Engine: Godot 4.7.2
+Renderer: Mobile / Vulkan
+Adapter: llvmpipe LLVM 20.1.2 (Linux software renderer)
+Scene/camera: scenes/main.tscn, existing gameplay camera, bospad at (7, 0, -57)
+Quality: High, day, clear; 1280x720 output, 100% capture scale
+
+The PNG is a real in-game capture, not an AI concept image. The frame confirms
+more neutral leaf colors, no radial palm-shadow star, and a visible player. A
+large open grass area and the remaining gap in fine foliage/material detail
+still fall short of the user's C quality direction. The displayed 1 FPS is from
+llvmpipe and is not an iPhone performance measurement.
+
+This run was a quick visual preview only; no GPU timing, combat benchmark,
+physical iPhone test, Metal run, or Windows runtime test was performed.

@@ -1,60 +1,42 @@
-# M-47 Muurbreker VFX 2.0 — test report
+# M-47 Visual Upgrade 2.1 — geïsoleerd testrapport
 
-**Status:** 36 isolated Godot checks PASS; four root regressions PASS; official Godot 4.7.2 used. The scene and all new geometry are test-only. No bazooka, gameplay script, player control, shared scene, or root rendering setting changed.
+**Status:** 41 capturechecks PASS, 36 aparte performancechecks PASS, vier lokale wapen/muurregressies PASS. Alle VFX-code en beelden staan onder `tests/m47_vfx/`. De bestaande M-47 GLB, gameplay, bazooka, player controls, gedeelde scenes en projectinstellingen zijn niet gewijzigd. Getest met de officiële Godot `4.7.2.stable.official.ed1daf0bf`.
 
-## Isolated test range
+## Vergelijking met het aangeleverde doelbeeld
 
-`M47VfxTest.tscn` loads the approved `M47_Muurbreker_1.0_animated.glb` and existing VQ2 player as relative read-only symlinks. The test project uses the Compatibility renderer; `run_test.sh` rejects any Godot version other than 4.7.2 and saves the separate screenshot and no-capture performance passes.
+| Fase | VFX 2.0 vóór | Visual Upgrade 2.1 na |
+| --- | --- | --- |
+| Laden en afvuren | Kleine, moeilijk leesbare kern en korte flits | Zichtbare blauwe rotor, versnellende originele Idle-kern, gemeten terugslag van de testmontage en vooraf aangemaakte sterflits |
+| Projectiel | Kleine bol en dun spoor dat al over de volledige baan zichtbaar was | Grotere blauwe kern met witte accenten, twee draaiende ringen en vier vonkpunten; 100-segments rookspiraal wordt pas zichtbaar als het projectiel passeert |
+| Inslag | Eén zwakke hexring, beperkte stof | Cluster van zeven zeshoekige lijnen, korte centrumflits, 28 stofdeeltjes, 12 rookdeeltjes en 8 inslagvonken |
+| Muur | Wand en collision verdwijnen, acht kubusachtige stukken | Permanente doorgang met achterblijvend frame, onregelmatige breukrand, één gerenderde puinlaag en acht fysieke tetraëdrische brokstukken |
 
-The M-47 GLB is not edited. LOD0 remains 50,000 triangles, its original albedo, normal, roughness, and metallic textures import, and the test keeps one LOD visible at a time. `Idle`, `Equip`, `Aim`, `Fire`, and `Reload` each advance. The existing `Idle` core-bone animation is played at 0.4× and 3.6×; the sampled bone rotation confirms the faster rate produces faster motion.
+[Projectiel vóór](screenshots/before_vfx20_projectile.png) · [projectiel na](screenshots/after_vfx21_projectile.png) · [mondingsflits na](screenshots/after_vfx21_muzzle_flash.png)
+[Inslag vóór](screenshots/before_vfx20_impact.png) · [inslag na](screenshots/after_vfx21_impact.png) · [blijvende doorgang](screenshots/after_vfx21_breach.png) · [video, 5,23 s](screenshots/m47_vfx_preview.mp4)
 
-## Effect and collision checks
+**Visuele beperking:** de nieuwe Godot-captures halen de aangeleverde conceptafbeelding niet exact. Het doelbeeld heeft een gedetailleerde jungleomgeving, volumetrische rook, elektrische lichtspreiding en complexe gebarsten steen; deze geïsoleerde testscene heeft vereenvoudigde geometrie en een testbaan. Daarom blijft dit een Draft-iteratie. De voor/na-beelden tonen de feitelijke afstand tot het doelbeeld.
 
-- The energy payload has a scrolling plasma shader, two rotating containment rings, and three orbiting filaments. It travels from the actual M-47 muzzle line to the wall.
-- Its low-poly smoke trail winds 6.25 turns along 75 longitudinal segments.
-- The impact expands a six-sided ring and emits two one-shot dust/smoke systems. Three emitters use **64 particles total**.
-- The test wall begins with a continuous static collider. On impact the wall shape is disabled, the wall layer is cleared, the test label and wall visuals disappear, and a ray passes through the opening. Eight low-poly debris bodies retain their own collision shapes.
-- The projectile, spiral, shockwave, particle billboards and debris use **2,924 triangles** combined. The effects add no shadow-casting dynamic lights or full-screen post-effects.
+## Asset, collision en budget
 
-## Results
+De goedgekeurde geanimeerde GLB blijft via een relatieve symlink ongewijzigd. De originele `Idle`, `Equip`, `Aim`, `Fire` en `Reload` clips bewegen in Godot. LOD0 heeft 50.000 driehoeken, LOD1/LOD2 zijn aanwezig, er wordt één LOD tegelijk getekend en albedo/normal/roughness/metallic importeren. De testwand gebruikt de bestaande VQ2-betontexturen als read-only bron.
 
-| Check | Result |
-| --- | --- |
-| Godot 4.7.2 isolated VFX scene | 36 PASS, 0 failures |
-| GLB clips and mechanical-core acceleration | PASS |
-| PBR maps and single-LOD visibility | PASS |
-| Pre-impact wall ray, disabled wall collision, clear post-impact ray | PASS |
-| Eight debris collision shapes | PASS |
-| Root project import | Second import pass exits 0 with no `ERROR`, `SCRIPT ERROR`, or parse errors |
-| `surface_filtering_test.gd` | PASS (0 failures) |
-| `combat_bazooka_aim_test.gd` | PASS |
-| `wapen_clips_test.gd` | PASS |
-| `base_wall_hq2_test.gd` | PASS (0 failures) |
+De projectielray raakt de wand vóór de inslag. Bij de doorgang worden de bestaande wandcollider en collision layer uitgeschakeld; dezelfde ray passeert daarna de opening. Acht onregelmatige brokstukken houden elk een eigen convex collision shape. Dit zijn testobjecten; bestaande gameplaylogica is niet aangepast.
 
-The first root cache-prime pass reimported the project's scenes and printed temporary missing-UID messages while rebuilding the import cache. The second full import pass was clean. The first pass also logged the repository's existing non-normalized `brandkraan.glb` basis warnings; the M-47 VFX test does not touch that asset. The bazooka and weapon-clip scripts print the same shutdown resource/PagedAllocator messages as the recorded `main` baseline; their test PASS markers and exit codes remain successful.
+| Budget | Gemeten |
+| --- | ---: |
+| VFX-driehoeken inclusief particle-meshes | 3.744 |
+| Eenmalige particles, vier emitters | 64 |
+| Tijdelijke rigid bodies | 8 |
+| Vooraf gemaakte projectielen / flitsen / emitters | 1 / 2 / 4 |
+| Dynamische schaduwen in de testscene | 0 |
+| Fullscreen postprocessing | 0 |
 
-## Memory and performance observation
+## Controles en performance
 
-The final separate no-capture pass ran at 1280×720 on **Xvfb + Mesa llvmpipe software rendering**. It reported a 2–9 FPS range, peak engine process time of 253.039 ms, 133 scene draw calls, and 238,342 rendered primitives. Process static memory was 66,029,018 bytes at sequence start, 84,596,287 bytes after the sequence, and 104,749,789 bytes at peak. These are whole-process/software-renderer values; they do not isolate GPU memory or predict native iPhone performance. No iPhone hardware or native frame-time measurement was available, so native iPhone performance remains **NOT RUN**.
+- `run_test.sh`: 41 checks PASS met captures; 36 checks PASS in de aparte run zonder PNG/video-encoding. Godot meldde geen script- of rendererfouten in die runs.
+- Tweede volledige root-import uit VFX 2.0 blijft het uitgangspunt voor de ongewijzigde gameplay; de vier relevante regressies zijn op deze branch opnieuw uitgevoerd: `surface_filtering_test.gd`, `combat_bazooka_aim_test.gd`, `wapen_clips_test.gd` en `base_wall_hq2_test.gd`, alle PASS. Zie `logs/v21_*.log`.
+- Laatste no-capture run op Xvfb/Mesa llvmpipe, 1280×720: 4–20 software-FPS, piekprocesduur 169,51 ms, 130 draw calls, 228.730 gerenderde primitives. Statisch procesgeheugen: 66.116.169 bytes vóór, 86.778.641 bytes na en 104.855.437 bytes piek.
 
-For mobile efficiency the effects cap one-shot emission at 64 particles, use only eight temporary debris colliders, keep the shockwave low-poly, and add no dynamic shadowed lights or full-screen post-processing. The PBR M-47 model and its LODs remain the approved source asset.
+Deze software-renderwaarden zijn geen iPhone-meting. **60 FPS op iPhone is niet aangetoond**; er was geen fysieke iPhone met GPU-profiler beschikbaar. De particlegrens, effectpool en uitgeschakelde dynamische schaduwen beperken de VFX-kosten, maar een 60-FPS-claim vereist een apparaatmeting.
 
-## Captures and logs
-
-- [Ready scene](screenshots/m47_vfx_01_ready.png)
-- [Energy projectile mid-flight](screenshots/m47_vfx_02_projectile_midflight.png)
-- [Impact and wall collision reset](screenshots/m47_vfx_02_impact.png)
-- [Reload and debris](screenshots/m47_vfx_03_reload_rubble.png)
-- [5.23-second video preview](screenshots/m47_vfx_preview.mp4)
-- [VFX checks and capture metrics](results.json)
-- [No-capture performance metrics](results_performance.json)
-- Godot logs: [`logs/`](logs/)
-
-## CI previews
-
-Both manual preview workflows completed successfully for branch commit `6d75022` with the official Godot 4.7.2 toolchain:
-
-- [Unsigned iOS workflow](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42403049506) — cache import, project validation, the workflow's root regression suite, Godot iOS export, Xcode build, IPA existence check, ZIP integrity check, and `Payload/*.app/Info.plist` check all passed. Artifact `bloedjungle-ios-unsigned-6d75022527d5c026c800d6a9fe102816a376588f` uploaded at 1,144,245,464 bytes. It is unsigned; no device install was performed.
-- [Non-publishing OTA preview workflow](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42403050612) — base and patch exports, OTA safety simulations, and preview upload passed. The generated light update is 5.5 MB, the preview manifest carries the existing 57-piece heavy chain (5,657.9 MB total), and the bridge is 0.01 MB. Artifact `ota-preview-6d75022527d5c026c800d6a9fe102816a376588f` uploaded at 92,964,590 bytes. The `Publish to the "updates" release` step was **skipped** (`publish=false`); nothing was published.
-
-The GitHub Actions runs and artifacts are available from the linked run pages. CI logs show Godot shutdown `resources still in use at exit` diagnostics for headless tests; the workflow permits that exact shutdown-only message, and the job completed successfully. No unsigned IPA was installed on a physical iPhone, and no OTA package was published.
+De eerdere VFX 2.0 iOS- en OTA-previewruns horen bij commit `6d75022`; voor deze nieuwe implementatie moet CI opnieuw lopen. Er is niets gemerged of naar OTA gepubliceerd.

@@ -1,4 +1,4 @@
-# M-47 VFX 2.0 — isolated Godot test range
+# M-47 Visual Upgrade 2.1 — isolated Godot test range
 
 This is a test-only Godot 4.7.2 project. It links to the approved M-47 GLB and VQ2 player GLB without copying or modifying either source. The wall, projectile, particles, shock ring, and debris are local test geometry; no gameplay scene or player-control script is changed.
 

@@ -36,4 +36,4 @@ if grep -Eq 'SCRIPT ERROR:|Parse Error:|ERROR:' "$TEST_DIR/logs/godot_m47_vfx_pe
 	exit 1
 fi
 
-echo "M47 VFX 2.0 checks and captures passed with $VERSION"
+echo "M47 Visual Upgrade 2.1 checks and captures passed with $VERSION"

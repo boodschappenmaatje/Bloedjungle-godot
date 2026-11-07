@@ -7,6 +7,7 @@ const GROUND_LAYER := 1 << 3
 var _collision_shape: CollisionShape3D
 var _test_label: Label3D
 var _visuals: Array[MeshInstance3D] = []
+var _fracture_visuals: Array[Node3D] = []
 var _debris: Array[RigidBody3D] = []
 var _destroyed := false
 
@@ -40,6 +41,8 @@ func break_open(debris_parent: Node3D, impact_point: Vector3) -> void:
 	_collision_shape.set_deferred("disabled", true)
 	for visual in _visuals:
 		visual.visible = false
+	for visual in _fracture_visuals:
+		visual.visible = true
 	if _test_label != null:
 		_test_label.visible = false
 	_spawn_debris(debris_parent, impact_point)
@@ -53,10 +56,16 @@ func _build_panel() -> void:
 	add_child(_collision_shape)
 
 	var concrete := StandardMaterial3D.new()
-	concrete.albedo_color = Color("68706f")
+	concrete.albedo_color = Color("b4aa98")
+	concrete.albedo_texture = load("res://wall_concrete_albedo.jpg") as Texture2D
 	concrete.roughness = 0.94
 	concrete.metallic = 0.04
-	concrete.normal_enabled = false
+	concrete.normal_enabled = true
+	concrete.normal_texture = load("res://wall_concrete_normal.jpg") as Texture2D
+	concrete.normal_scale = 1.35
+	var fracture := StandardMaterial3D.new()
+	fracture.albedo_color = Color("8d806c")
+	fracture.roughness = 0.98
 	var edge := StandardMaterial3D.new()
 	edge.albedo_color = Color("313a3a")
 	edge.roughness = 0.82
@@ -66,17 +75,48 @@ func _build_panel() -> void:
 	hazard.roughness = 0.77
 	hazard.metallic = 0.18
 
-	# A modular concrete test panel with dark steel seams and small hazard edges.
-	_add_box("Foundation", Vector3(0.68, 0.24, 3.8), Vector3(0.0, -1.22, 0.0), edge)
-	_add_box("TopCap", Vector3(0.66, 0.18, 3.72), Vector3(0.0, 1.22, 0.0), edge)
-	for row in 2:
-		for column in 4:
-			var size := Vector3(0.51, 1.0, 0.84)
-			var position := Vector3(0.0, -0.59 + float(row) * 1.02, -1.29 + float(column) * 0.86)
-			_add_box("Concrete_%d_%d" % [row, column], size, position, concrete)
+	# Keep the structural frame after the centre slab opens. Only the slab is removed.
+	_add_box("Foundation", Vector3(0.68, 0.24, 3.8), Vector3(0.0, -1.22, 0.0), edge, false)
+	_add_box("TopCap", Vector3(0.66, 0.18, 3.72), Vector3(0.0, 1.22, 0.0), edge, false)
+	_add_box("ContinuousConcreteSlab", Vector3(0.51, 2.30, 3.30), Vector3.ZERO, concrete)
+	for seam_z in [-1.05, -0.14, 0.88]:
+		_add_box("FineScoredJoint", Vector3(0.016, 2.23, 0.013), Vector3(-0.264, 0.0, seam_z), edge)
 	for z_sign in [-1.0, 1.0]:
-		_add_box("SteelPier_%s" % str(z_sign), Vector3(0.58, 2.42, 0.16), Vector3(0.0, 0.0, z_sign * 1.73), edge)
-		_add_box("HazardEdge_%s" % str(z_sign), Vector3(0.59, 0.08, 0.2), Vector3(0.0, 1.05, z_sign * 1.73), hazard)
+		_add_box("SteelPier_%s" % str(z_sign), Vector3(0.58, 2.42, 0.16), Vector3(0.0, 0.0, z_sign * 1.73), edge, false)
+		_add_box("HazardEdge_%s" % str(z_sign), Vector3(0.59, 0.08, 0.2), Vector3(0.0, 1.05, z_sign * 1.73), hazard, false)
+	var rim_rng := RandomNumberGenerator.new()
+	rim_rng.seed = 470022
+	for index in 8:
+		var rim := MeshInstance3D.new()
+		rim.name = "JaggedFractureRim_%02d" % index
+		rim.mesh = _make_shard_mesh(Vector3(rim_rng.randf_range(0.24, 0.42), rim_rng.randf_range(0.32, 0.60), rim_rng.randf_range(0.38, 0.70)))
+		rim.material_override = fracture
+		rim.position = Vector3(-0.11, (0.91 if index < 4 else -0.90) + rim_rng.randf_range(-0.13, 0.13), -1.25 + float(index % 4) * 0.82 + rim_rng.randf_range(-0.17, 0.17))
+		rim.rotation.x = rim_rng.randf_range(-PI, PI)
+		rim.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		rim.visible = false
+		add_child(rim)
+		_fracture_visuals.append(rim)
+	var rubble_mesh := _make_shard_mesh(Vector3(0.25, 0.24, 0.34))
+	rubble_mesh.surface_set_material(0, fracture)
+	var rubble_instances := MultiMesh.new()
+	rubble_instances.transform_format = MultiMesh.TRANSFORM_3D
+	rubble_instances.mesh = rubble_mesh
+	rubble_instances.instance_count = 18
+	var rubble_rng := RandomNumberGenerator.new()
+	rubble_rng.seed = 470021
+	for index in 18:
+		var rotation := Basis(Vector3.UP, rubble_rng.randf_range(-PI, PI))
+		var size_scale := rubble_rng.randf_range(0.65, 2.2)
+		var offset := Vector3(rubble_rng.randf_range(-1.05, -0.30), -1.13, rubble_rng.randf_range(-1.48, 1.48))
+		rubble_instances.set_instance_transform(index, Transform3D(rotation.scaled(Vector3.ONE * size_scale), offset))
+	var rubble_pile := MultiMeshInstance3D.new()
+	rubble_pile.name = "PersistentBrokenWallRubble"
+	rubble_pile.multimesh = rubble_instances
+	rubble_pile.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	rubble_pile.visible = false
+	add_child(rubble_pile)
+	_fracture_visuals.append(rubble_pile)
 
 	_test_label = Label3D.new()
 	_test_label.name = "TestRangeLabel"
@@ -90,7 +130,7 @@ func _build_panel() -> void:
 	_test_label.rotation.y = -PI / 2.0
 	add_child(_test_label)
 
-func _add_box(box_name: String, size: Vector3, position: Vector3, material: Material) -> void:
+func _add_box(box_name: String, size: Vector3, position: Vector3, material: Material, breaks: bool = true) -> void:
 	var mesh_instance := MeshInstance3D.new()
 	mesh_instance.name = box_name
 	var box := BoxMesh.new()
@@ -100,7 +140,23 @@ func _add_box(box_name: String, size: Vector3, position: Vector3, material: Mate
 	mesh_instance.position = position
 	mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	add_child(mesh_instance)
-	_visuals.append(mesh_instance)
+	if breaks:
+		_visuals.append(mesh_instance)
+
+func _make_shard_mesh(size: Vector3) -> ArrayMesh:
+	var points := PackedVector3Array([
+		Vector3(-size.x * 0.5, -size.y * 0.5, -size.z * 0.5),
+		Vector3(size.x * 0.5, -size.y * 0.44, size.z * 0.48),
+		Vector3(-size.x * 0.42, size.y * 0.5, size.z * 0.22),
+		Vector3(size.x * 0.44, size.y * 0.18, -size.z * 0.5),
+	])
+	var surface := SurfaceTool.new()
+	surface.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for face in [[0, 1, 2], [0, 3, 1], [1, 3, 2], [0, 2, 3]]:
+		for point_index in face:
+			surface.add_vertex(points[point_index])
+	surface.generate_normals()
+	return surface.commit()
 
 func _spawn_debris(debris_parent: Node3D, impact_point: Vector3) -> void:
 	var rng := RandomNumberGenerator.new()
@@ -118,17 +174,21 @@ func _spawn_debris(debris_parent: Node3D, impact_point: Vector3) -> void:
 		body.angular_damp = 0.55
 		body.collision_layer = DEBRIS_LAYER
 		body.collision_mask = GROUND_LAYER
-		var mesh := BoxMesh.new()
-		mesh.size = size
-		mesh.material = material
+		var mesh := _make_shard_mesh(size)
 		var mesh_instance := MeshInstance3D.new()
 		mesh_instance.mesh = mesh
+		mesh_instance.material_override = material
 		mesh_instance.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		body.add_child(mesh_instance)
 		var shape := CollisionShape3D.new()
-		var box_shape := BoxShape3D.new()
-		box_shape.size = size * 0.92
-		shape.shape = box_shape
+		var convex_shape := ConvexPolygonShape3D.new()
+		convex_shape.points = PackedVector3Array([
+			Vector3(-size.x * 0.5, -size.y * 0.5, -size.z * 0.5),
+			Vector3(size.x * 0.5, -size.y * 0.44, size.z * 0.48),
+			Vector3(-size.x * 0.42, size.y * 0.5, size.z * 0.22),
+			Vector3(size.x * 0.44, size.y * 0.18, -size.z * 0.5),
+		])
+		shape.shape = convex_shape
 		body.add_child(shape)
 		debris_parent.add_child(body)
 		var side := -1.0 if index % 2 == 0 else 1.0

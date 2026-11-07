@@ -6,8 +6,8 @@ render_mode depth_draw_opaque, cull_disabled;
 // de stroomrichting (x), sneller in het midden dan bij de oevers, met schuim langs de rand.
 
 uniform sampler2D noise : repeat_enable, filter_linear_mipmap;
-uniform vec3 deep : source_color = vec3(0.25, 0.48, 0.49);
-uniform vec3 shallow : source_color = vec3(0.48, 0.69, 0.62);
+uniform vec3 deep : source_color = vec3(0.34, 0.58, 0.64);
+uniform vec3 shallow : source_color = vec3(0.55, 0.77, 0.75);
 uniform vec3 foam : source_color = vec3(0.85, 0.92, 0.88);
 uniform float speed = 1.6;
 
@@ -38,7 +38,7 @@ void fragment() {
 	// Diepte: een iets donkerder stroomgoot, ondiepe turkooizen randen.
 	float depth = smoothstep(2.7, 0.28, d);
 	float current_glint = smoothstep(0.38, 0.7, streak);
-	vec3 col = mix(shallow, deep, depth * 0.72);
+	vec3 col = mix(shallow, deep, depth * 0.58);
 	col = mix(col, shallow * vec3(1.02, 1.07, 1.04), current_glint * 0.24);
 	col += vec3(0.025, 0.055, 0.055) * current_glint;
 	col = mix(col, foam, clamp(flake * 0.55 + edgefoam * 0.8, 0.0, 1.0));
@@ -52,10 +52,12 @@ void fragment() {
 	NORMAL = normalize(NORMAL + (VIEW_MATRIX * vec4(g.x, 0.0, g.y, 0.0)).xyz);
 	// spiegeling van de lucht onder een scheve kijkhoek
 	float fres = pow(1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0), 3.0);
-	col = mix(col, vec3(0.36, 0.66, 0.70), fres * 0.32);
+	col = mix(col, vec3(0.40, 0.70, 0.76), fres * 0.32);
 	ALBEDO = col;
-	EMISSION = vec3(0.0);
-	ROUGHNESS = 0.12 + 0.19 * flake;
-	SPECULAR = 0.72;
+	// Mobile Forward Mobile has no reliable planar reflection; a restrained
+	// self-lit floor keeps deep channels readable without adding transparency.
+	EMISSION = col * 0.12;
+	ROUGHNESS = 0.22 + 0.20 * flake;
+	SPECULAR = 0.58;
 	METALLIC = 0.0;
 }

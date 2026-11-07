@@ -39,11 +39,11 @@ func run() -> void:
 	var short_grass_limit: int = grass_script.get_script_constant_map()["LIMIT"]["short"]
 	print("VISUAL B DENSITY short_grass=%d understory=%s" % [grass_tufts, JSON.stringify(understory_counts)])
 	check(grass_tufts > 11500 and grass_tufts <= short_grass_limit,"Fine grass must stay within its bounded LOD budget")
-	check(understory_counts.groundcover >= 8000 and understory_counts.groundcover <= 9000,"Retain broadleaf cover within the new mobile-scatter budget")
+	check(understory_counts.groundcover >= 7000 and understory_counts.groundcover <= 9000,"Retain broadleaf cover within the new mobile-scatter budget")
 	check(understory_counts.fern <= 2400 and understory_counts.bush >= 2000,"Keep old fern/bush coverage bounded while reallocating to new silhouettes")
-	check(understory_counts.rosette >= 900 and understory_counts.rosette <= 1500,"New ribbed rosettes must appear inside their cap")
-	check(understory_counts.arch >= 700 and understory_counts.arch <= 1200,"New arched fern must appear inside its cap")
-	check(understory_counts.red >= 350 and understory_counts.red <= 650,"New red/brown blooms must remain sparse and readable")
+	check(understory_counts.rosette >= 1700 and understory_counts.rosette <= 1900,"New ribbed rosettes must appear inside their cap")
+	check(understory_counts.arch >= 1300 and understory_counts.arch <= 1450,"New arched fern must appear inside its cap")
+	check(understory_counts.red >= 750 and understory_counts.red <= 850,"New red/bronze blooms must remain bounded and readable")
 	check(under.has_method("litter_mesh"),"Litter needs a corrected ground normal frame")
 	if under.has_method("litter_mesh"):
 		var litter: ArrayMesh = under.litter_mesh()
@@ -55,7 +55,7 @@ func run() -> void:
 		var depth_mesh: ArrayMesh = under.depth_mesh(kind)
 		check(depth_mesh != null and depth_mesh.get_surface_count() == 1,"Depth-pass species must remain a single batched PBR surface: "+kind)
 		if depth_mesh != null:
-			check(depth_mesh.get_meta("depth_lod_distances_m", []).size() == 2,"Depth-pass species needs native LOD1/LOD2 thresholds: "+kind)
+			check(depth_mesh.get_meta("depth_lod_distances_m", []) == [20.0,48.0],"Depth-pass species needs useful mid-distance native LOD thresholds: "+kind)
 			var triangles: Array = depth_mesh.get_meta("depth_lod_triangles", [])
 			check(triangles.size() == 3 and triangles[0] > triangles[1] and triangles[1] > triangles[2],"Depth-pass species LOD index sets must reduce triangles at distance: "+kind)
 			var depth_arrays := depth_mesh.surface_get_arrays(0)
@@ -66,13 +66,19 @@ func run() -> void:
 	for n: MultiMeshInstance3D in details:
 		check(n.multimesh.custom_aabb.size.x > 0.0 and n.multimesh.custom_aabb.size.x <= 28.0,"Detail batch needs stable cell bounds after clearing")
 		check(n.multimesh.instance_count <= 360, "Unbounded detail batch")
-		check(n.visibility_range_end <= 58.0, "Microdetail must distance cull")
+		check(n.visibility_range_end <= 76.0, "Microdetail must distance cull")
 		check(n.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "Detail adds shadow cost")
 		check(n.find_children("*","CollisionShape3D",true,false).is_empty(),"Detail introduces collisions")
 	var meshes := details.map(func(n): return n.multimesh)
 	var near_bank := 0
 	var near_wall := 0
 	var near_path := 0
+	var near_authored := {"rosette":0,"arch_fern":0,"red_bloom":0}
+	var authored_batches := {}
+	for n: MultiMeshInstance3D in details:
+		for kind in near_authored.keys():
+			if n.name.begins_with("Understory_"+kind+"_"):
+				authored_batches[n.multimesh.get_instance_id()] = kind
 	var checked := 0
 	var sample := Vector3.INF
 	# Dummy renderer cannot read GPU buffers. Use the production clearance index,
@@ -81,6 +87,9 @@ func run() -> void:
 		for entry: Dictionary in cell:
 			if entry.slots.is_empty() or not entry.slots[0].multimesh in meshes: continue
 			var p: Vector3 = entry.world_position
+			var authored_kind: String = authored_batches.get(entry.slots[0].multimesh.get_instance_id(),"")
+			if not authored_kind.is_empty() and Vector2(p.x-7.0,p.z+57.0).length() < 30.0:
+				near_authored[authored_kind] += 1
 			if data_rules.river_off(p.x,p.z) < 10.0: near_bank += 1
 			if maxf(absf(p.x),absf(p.z)) < data_rules.COMPOUND+4.5: near_wall += 1
 			if absf(p.x-data_rules.path_x(p.z)) < 10.0 and p.z < -34.0 and p.z > -86.0: near_path += 1
@@ -91,6 +100,9 @@ func run() -> void:
 			check(not fol._in_river(p),"Detail blocks water or forest route")
 			check(not (absf(p.x)<4.6 and absf(p.z)<70.0),"Detail blocks gate approach")
 	check(near_bank>20 and near_wall>20 and near_path>20,"Detail budget starves banks/foundations/shoulders")
+	print("VISUAL B CAMERA PLANTS ",JSON.stringify(near_authored))
+	check(near_authored.rosette>=600 and near_authored.arch_fern>=450 and near_authored.red_bloom>=250,
+		"New high-detail plant colonies must read in the real bospad camera area")
 	check(checked > 1000,"Missing registered removable detail")
 	if sample != Vector3.INF:
 		var regions := [{"center":Vector2.ZERO,"size":Vector2(2.0,2.0)}]

@@ -16,7 +16,7 @@ uniform sampler2D jungle_surface : repeat_enable, filter_linear_mipmap_anisotrop
 uniform sampler2D mud_surface : repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D moss_surface : repeat_enable, filter_linear_mipmap_anisotropic;
 uniform sampler2D gravel_surface : repeat_enable, filter_linear_mipmap_anisotropic;
-uniform float detail_mip_bias : hint_range(0.0, 2.0) = 0.25;
+uniform float detail_mip_bias : hint_range(0.0, 2.0) = 0.10;
 uniform float compound = 14.0;
 uniform float gate_gap = 2.4;
 uniform vec4 pits[8];
@@ -75,10 +75,10 @@ void fragment() {
 	vec4 mos = texture(moss_surface, moss_uv, detail_mip_bias);
 	vec4 grs = texture(gravel_surface, gravel_uv, detail_mip_bias);
 	float floor_mix = smoothstep(0.27, 0.72, n1 * 0.6 + n2 * 0.4) * 0.9;
-	// Keep the living floor green in the midground; the source grass atlas is deliberately
-	// low-contrast, so the former dark tint made its small blades average to a brown wash.
-	vec3 grass = mix(g * vec3(0.86,1.06,0.70), j * vec3(0.70,0.90,0.55), floor_mix);
-	grass *= mix(vec3(1.03,0.99,0.88),vec3(0.86,1.0,0.9),smoothstep(0.3,0.7,n1));
+	// Shift the broad floor away from the former yellow wash while keeping the
+	// source atlas's fine blades legible after mobile mip filtering.
+	vec3 grass = mix(g * vec3(0.78,1.00,0.82), j * vec3(0.66,0.88,0.63), floor_mix);
+	grass *= mix(vec3(0.96,1.0,0.94),vec3(0.84,1.0,0.92),smoothstep(0.3,0.7,n1));
 	grass *= (0.82 + 0.34*n3) * mix(1.0,0.86+0.28*n_micro,micro_gate*0.72);
 	float inside = 1.0 - smoothstep(compound-0.5,compound+3.0,max(abs(p.x),abs(p.y)));
 	float path = (1.0-smoothstep(gate_gap*0.9,gate_gap*1.9+n2*1.6,abs(p.x)))
@@ -108,13 +108,13 @@ void fragment() {
 	vec3 dirt = d*vec3(0.76,0.65,0.52)*(0.9+0.2*n3);
 	dirt = mix(dirt,gravel*vec3(0.9,0.78,0.63),gravel_mix*0.94);
 	float pebble_speckle = smoothstep(0.68,0.87,n_micro)*micro_gate*gravel_mix;
-	dirt = mix(dirt,gravel*vec3(1.02,0.94,0.82),pebble_speckle*0.24);
+	dirt = mix(dirt,gravel*vec3(1.02,0.94,0.82),pebble_speckle*0.32);
 	dirt *= 1.0-rut*0.22;
 	dirt = mix(dirt,m*vec3(0.54,0.47,0.37),wet*0.55);
 	float edge = 4.0*dm*(1.0-dm);
 	float moss_mix = clamp(edge*0.3+bank*(1.0-wet)*0.2+smoothstep(0.58,0.76,n2)*(1.0-dm)*0.23,0.0,0.45);
 	vec3 base = mix(grass,dirt,dm);
-	ALBEDO = mix(base,moss*vec3(0.5,0.64,0.35),moss_mix);
+	ALBEDO = mix(base,moss*vec3(0.48,0.65,0.42),moss_mix);
 	vec4 earth_surface = mix(ds,grs,gravel_mix*0.78);
 	vec4 surf = mix(mix(gs,js,floor_mix),mix(earth_surface,ms,wet*0.55),dm);
 	surf = mix(surf,mos,moss_mix);

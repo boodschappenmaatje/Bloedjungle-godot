@@ -2,7 +2,7 @@ class_name JungleUnderstory
 ## Render-only depth pass. Reuses shipped meshes/materials and the building-clearance index.
 ## A separate RNG leaves every existing tree, rock, collider and route unchanged.
 const CELL := 24.0
-const CAPS := {"fern":2400,"bush":3000,"groundcover":9000,"rosette":1500,"arch_fern":1200,"red_bloom":650,"litter":5400,"stone":1900,"twig":700}
+const CAPS := {"fern":2400,"bush":3000,"groundcover":9000,"rosette":1900,"arch_fern":1450,"red_bloom":850,"litter":5400,"stone":1900,"twig":700}
 static var _depth_lod_meshes: Dictionary = {}
 static var _depth_source_meshes: Dictionary = {}
 
@@ -52,14 +52,14 @@ static func _merge_native_lods(sources: Array, kind: String) -> ArrayMesh:
 			merged[attribute].append_array(source_arrays[attribute])
 		var indices: PackedInt32Array = source_arrays[Mesh.ARRAY_INDEX].duplicate()
 		for i in indices.size(): indices[i] += offset
-		lod_indices[16.0 if lod == 1 else 36.0] = indices
+		lod_indices[20.0 if lod == 1 else 48.0] = indices
 		triangle_counts.append(indices.size() / 3)
 	merged[Mesh.ARRAY_INDEX] = base_indices
 	var result := ArrayMesh.new()
 	result.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, merged, [], lod_indices)
 	result.surface_set_material(0, Foliage.material("depth_leaf"))
 	result.resource_name = "JungleDepth_%s_LOD0_1_2" % kind
-	result.set_meta("depth_lod_distances_m", [16.0, 36.0])
+	result.set_meta("depth_lod_distances_m", [20.0, 48.0])
 	result.set_meta("depth_lod_triangles", triangle_counts)
 	return result
 
@@ -148,6 +148,39 @@ static func spawn(parent: Node3D) -> void:
 		var p := Vector3(rng.randf_range(-Data.COMPOUND,Data.COMPOUND),0.012,Data.COMPOUND+rng.randf_range(2.0,4.2))
 		p = Basis(Vector3.UP,side*PI*0.5)*p
 		candidates.append(p)
+	# Readable understory colonies along both shoulders: one dominant species per
+	# colony gives the real camera recognizable plant groups instead of a thin,
+	# uniformly mixed scatter. The road and firing corridor stay clear.
+	var colony_positions: Array[Vector3] = []
+	var colony_kinds := PackedStringArray()
+	for cluster in 68:
+		var z := rng.randf_range(-86.0,-34.0)
+		var side := -1.0 if rng.randf()<0.5 else 1.0
+		var center := Vector3(Data.path_x(z)+side*rng.randf_range(4.0,8.5),0.012,z)
+		var choice := rng.randf()
+		var species := "rosette" if choice<0.44 else ("arch_fern" if choice<0.80 else "red_bloom")
+		var radius := rng.randf_range(1.8,3.2)
+		for i in rng.randi_range(14,21):
+			var angle := rng.randf()*TAU
+			var r := sqrt(rng.randf())*radius
+			var p := center+Vector3(cos(angle)*r,0,sin(angle)*r)
+			if absf(p.x-Data.path_x(p.z))<3.2 or not allowed(p): continue
+			colony_positions.append(p)
+			colony_kinds.append(species)
+	# Ferns and broad leaves also gather on the two shelves beside moving water.
+	for cluster in 28:
+		var x := rng.randf_range(-66.0,66.0)
+		var side := -1.0 if rng.randf()<0.5 else 1.0
+		var center := Vector3(x,0.012,Data.river_z(x)+side*rng.randf_range(4.0,7.2))
+		var species := "arch_fern" if rng.randf()<0.56 else "rosette"
+		var radius := rng.randf_range(1.6,2.8)
+		for i in rng.randi_range(10,16):
+			var angle := rng.randf()*TAU
+			var r := sqrt(rng.randf())*radius
+			var p := center+Vector3(cos(angle)*r,0,sin(angle)*r)
+			if not allowed(p): continue
+			colony_positions.append(p)
+			colony_kinds.append(species)
 	# Interleave habitat sources before caps; anchors cannot consume the whole budget.
 	for i in range(candidates.size()-1,0,-1):
 		var j := rng.randi_range(0,i)
@@ -156,34 +189,8 @@ static func spawn(parent: Node3D) -> void:
 		candidates[j] = swap
 	var groups := {}
 	var counts := {"fern":0,"bush":0,"groundcover":0,"rosette":0,"arch_fern":0,"red_bloom":0,"litter":0,"stone":0,"twig":0}
-	for p in candidates:
-		if not allowed(p): continue
-		var roll := rng.randf()
-		# Trade part of the repeated low cards for three authored silhouettes while
-		# keeping the total scatter cap near its current level.
-		var kind := "fern" if roll<0.08 else ("bush" if roll<0.18 else ("groundcover" if roll<0.50 else ("rosette" if roll<0.56 else ("arch_fern" if roll<0.63 else ("red_bloom" if roll<0.67 else ("litter" if roll<0.83 else ("stone" if roll<0.97 else "twig")))))))
-		if counts[kind]>=CAPS[kind]: continue
-		var variant := rng.randi_range(0,2) if kind in ["fern","bush","groundcover"] else 0
-		var cell := Vector2i(floori(p.x/CELL),floori(p.z/CELL))
-		var key := "%s_%d_%d_%d" % [kind,variant,cell.x,cell.y]
-		if not groups.has(key): groups[key] = {"kind":kind,"cell":cell,"xf":[],"col":[]}
-		if groups[key].xf.size()>=360: continue
-		var s := rng.randf_range(0.5,1.18)
-		var size_ := Vector3(s,s*rng.randf_range(0.65,1.1),s)
-		if kind=="bush": size_ *= 0.78
-		if kind=="groundcover": size_ *= 1.38
-		if kind=="rosette": size_ *= rng.randf_range(0.92,1.32)
-		if kind=="arch_fern": size_ *= rng.randf_range(0.82,1.22)
-		if kind=="red_bloom": size_ *= rng.randf_range(0.85,1.18)
-		if kind=="litter": size_=Vector3(s*0.65,s*0.65,0.025)
-		if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.12,0.32)
-		if kind=="twig": size_=Vector3(0.035,rng.randf_range(0.35,0.85),0.035)
-		var basis := Basis(Vector3.UP,rng.randf()*TAU)
-		if kind in ["twig","litter"]: basis *= Basis(Vector3.RIGHT,PI*0.5)
-		groups[key].xf.append(Transform3D(basis * Basis.from_scale(size_),p))
-		var shade := rng.randf_range(0.78,1.12)
-		groups[key].col.append(Color(shade,shade,shade) if kind!="litter" else Color(shade*0.7,shade*0.56,shade*0.32))
-		counts[kind]+=1
+	for i in colony_positions.size(): _add_candidate(groups,counts,rng,colony_positions[i],colony_kinds[i])
+	for p in candidates: _add_candidate(groups,counts,rng,p)
 	var twig := CylinderMesh.new()
 	twig.top_radius=0.28
 	twig.bottom_radius=0.4
@@ -211,7 +218,39 @@ static func spawn(parent: Node3D) -> void:
 		# Existing density, governor and diagnostic switches operate on this group.
 		n.add_to_group("foliage_grass")
 		n.set_meta("full",data.xf.size())
-		n.visibility_range_end=48.0 if data.kind in ["litter","stone","twig"] else 58.0
+		n.visibility_range_end=76.0 if data.kind in ["rosette","arch_fern","red_bloom"] else (48.0 if data.kind in ["litter","stone","twig"] else 58.0)
 		n.extra_cull_margin=1.5  # leaf spread plus the existing 1.1 m actor push
 		for i in data.xf.size():
 			Foliage._register_vegetation({"kind":"grass","xf":data.xf[i],"slots":[{"multimesh":n.multimesh,"index":i}],"shapes":[]})
+
+
+static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNumberGenerator, p: Vector3, forced_kind := "") -> void:
+	if not allowed(p): return
+	var kind := forced_kind
+	if kind.is_empty():
+		var roll := rng.randf()
+		# Reallocate a small part of repeated cards and ground litter to the three
+		# authored PBR silhouettes while keeping the overall scatter bounded.
+		kind = "fern" if roll<0.08 else ("bush" if roll<0.18 else ("groundcover" if roll<0.46 else ("rosette" if roll<0.55 else ("arch_fern" if roll<0.64 else ("red_bloom" if roll<0.70 else ("litter" if roll<0.85 else ("stone" if roll<0.97 else "twig")))))))
+	if counts[kind]>=CAPS[kind]: return
+	var variant := rng.randi_range(0,2) if kind in ["fern","bush","groundcover"] else 0
+	var cell := Vector2i(floori(p.x/CELL),floori(p.z/CELL))
+	var key := "%s_%d_%d_%d" % [kind,variant,cell.x,cell.y]
+	if not groups.has(key): groups[key] = {"kind":kind,"cell":cell,"xf":[],"col":[]}
+	if groups[key].xf.size()>=360: return
+	var s := rng.randf_range(0.5,1.18)
+	var size_ := Vector3(s,s*rng.randf_range(0.65,1.1),s)
+	if kind=="bush": size_ *= 0.78
+	if kind=="groundcover": size_ *= 1.12
+	if kind=="rosette": size_ *= rng.randf_range(1.1,1.5)
+	if kind=="arch_fern": size_ *= rng.randf_range(0.98,1.38)
+	if kind=="red_bloom": size_ *= rng.randf_range(1.02,1.3)
+	if kind=="litter": size_=Vector3(s*0.82,s*0.82,0.025)
+	if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.14,0.36)
+	if kind=="twig": size_=Vector3(0.035,rng.randf_range(0.35,0.85),0.035)
+	var basis := Basis(Vector3.UP,rng.randf()*TAU)
+	if kind in ["twig","litter"]: basis *= Basis(Vector3.RIGHT,PI*0.5)
+	groups[key].xf.append(Transform3D(basis * Basis.from_scale(size_),p))
+	var shade := rng.randf_range(0.78,1.12)
+	groups[key].col.append(Color(shade,shade,shade) if kind!="litter" else Color(shade*0.7,shade*0.56,shade*0.32))
+	counts[kind]+=1

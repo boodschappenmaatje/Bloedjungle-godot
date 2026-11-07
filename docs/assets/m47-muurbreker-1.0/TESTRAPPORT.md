@@ -1,29 +1,48 @@
-# M-47 Muurbreker Blender 1.0 — inspectierapport
+# M-47 Muurbreker Blender 1.0 — testrapport
 
-**Status: geblokkeerd vóór assetproductie.** Er is geen nieuwe assetversie gegenereerd. Originele bestanden bleven ongewijzigd in `/tmp`.
+**Resultaat:** Blender-productie en GLB-validatie geslaagd. Godot 4.7.2-controle ontbreekt; versie 4.6.3 is niet als vervanging gebruikt.
 
-## Verkrijging bronbestanden
+## Invoer en onveranderlijk origineel
 
-Beide originelen zijn met de Drive `fetch`-downloadroute verkregen via de tijdelijke signed download-URL (de `download_file`-route had een limiet van 32 MiB).
+`M47_Muurbreker_original.glb` is de ongewijzigde GLB uit de opgegeven Drive-map. De Blender-pipeline importeert deze GLB in een nieuwe scene. Het originele meshobject blijft als verborgen referentie behouden; LOD's worden op aparte kopieën gemaakt. De originele BLEND is niet geopend.
 
-- BLEND `1NMqUBBdEW484Dab1Jtmqf_84RFcm8qx_`: 62.820.483 bytes; herkend als Blender-bestand, opgeslagen met versie 4.04.
-- GLB `1w07k_SetivIz8mmLEtxVneZ6IVmTkPZC`: 26.718.252 bytes; glTF binary v2.
+## Geometry en PBR
 
-## Batchinspectie (Blender 4.3.2)
+| Onderdeel | Driehoeken | UV | Materiaal |
+| --- | ---: | --- | --- |
+| Origineel | 631.206 | aanwezig | `Material_0` |
+| LOD0 | 50.000 | behouden | `Material_0` |
+| LOD1 | 25.000 | behouden | `Material_0` |
+| LOD2 | 9.999 | behouden | `Material_0` |
+| Draaiende kern | 92 | — | apart metallic staal |
+| Laadkamer (testonderdeel) | 12 | — | apart metallic staal |
 
-| Bron | Mesh | Driehoeken | Materialen | Animaties |
-| --- | --- | ---: | --- | --- |
-| BLEND | `Mesh_0` | 631.171 | `Material_0` (Principled BSDF, image textures, normal map) | Geen actions |
-| GLB | `Mesh_0` | 631.206 | `Material_0` (Principled BSDF, image textures, normal map) | Geen actions |
+De drie originele, ingebedde 2048×2048 kaarten zijn gecontroleerd na GLB-herimport: `Image_0` albedo/base color, `Image_1` packed ORM (groen → roughness, blauw → metallic) en `Image_2` normal map. Alle drie zijn in de export ingebed. De originele en LOD0 Cycles-renders zijn onder dezelfde camera en belichting vergeleken; silhouet, UV/PBR-detail en goedgekeurde materiaalindruk blijven visueel behouden. Renders zijn previews zonder denoising, wegens ontbrekende OpenImageDenoise in deze Blender-build.
 
-De GLB bevat daarnaast een 12-driehoeken `Cube` met standaardmateriaal. De bron- en GLB-triangeltellingen verschillen 35 driehoeken. Blender 4.3.2 waarschuwt dat de BLEND door een nieuwere Blender-binary is geschreven; de versie meldt expliciet mogelijk gegevensverlies bij openen.
+## Animaties
 
-## Niet aanwezig / niet geverifieerd
+De laadkamer en kern zijn aparte testgeometrie; de originele mesh is niet opgesplitst of beschadigd. De GLB bevat vijf clips met bonekanalen voor root, kern en/of laadkamer:
 
-De bron bevat geen losse laadkamer en centrale kern en geen clips `Idle`, `Equip`, `Aim`, `Fire`, `Reload`. De gevraagde LOD's bestaan niet in deze bronnen. Scheiding van meshdelen, retopologie/decimatie, nieuwe animaties of opslaan vanuit een oudere Blender kan het goedgekeurde uiterlijk, PBR of onbekende nieuwere Blender-data wijzigen. Om die reden zijn zulke mutaties niet toegepast.
+| Clip | Lengte | Beweging gecontroleerd |
+| --- | ---: | --- |
+| Idle | 48 frames | kernrotatie en kleine laadkamerbeweging |
+| Equip | 36 frames | root positionering en kernrotatie |
+| Aim | 30 frames | root positionering en kernrotatie |
+| Fire | 18 frames | root-terugslag, kernrotatie, laadkamerslag |
+| Reload | 60 frames | laadkamerslag en kernrotatie |
 
-Godot 4.7.2 is niet geïnstalleerd/beschikbaar; deze omgeving heeft 4.6.3. Er is dus geen Godot-import-, schaal-, materiaal-, animatie- of regressietest volgens de vereiste versie uitgevoerd. Geen screenshots van een bewerkte of in Godot geladen asset geproduceerd.
+## Uitgevoerde controles
 
-## Conclusie
+- Blender 4.3.2 batch: source GLB import, LOD-generatie, Cycles PBR-renders, animatie-opbouw, GLB-export.
+- Herhaalbare scripts vanaf de repositorybron uitgevoerd: `build_lods_and_renders.py`, daarna `rig_animations_and_export.py`.
+- Geëxporteerde GLB opnieuw geïmporteerd in Blender; `validation.json` bevestigt vijf werkelijk bewegende acties, de genoemde driehoektellingen, één PBR-materiaal op de LOD's en ingebedde textuurkaarten.
+- Screenshots: `screenshots/pbr-original.png`, `screenshots/pbr-lod0.png`, plus `idle.png`, `equip.png`, `aim.png`, `fire.png`, `reload.png`.
+- Godot 4.7.2 is niet beschikbaar in deze omgeving (alleen 4.6.3). Godot-import, materiaal-/schaalcontrole en projectregressies zijn daarom **NIET GETEST**.
 
-Er zijn geen resultaten voor LOD0 30k–60k, LOD1/LOD2, de vijf clips of losse mechanische onderdelen om aan te leveren of als intact te bevestigen. Voor veilige productie is een bronbestand nodig waarin beide mechanische onderdelen afzonderlijk beschikbaar zijn en compatibele Blender-versie, plus Godot 4.7.2 voor de vereiste verificatie. Dit rapport is de enige wijziging; bestaande gameplay, scenes en instellingen zijn ongemoeid.
+## Artefacten
+
+- `M47_Muurbreker_Blender_1.0.blend` — bewerkbare scene met referentie, LOD's, rig en actions.
+- `M47_Muurbreker_1.0_animated.glb` — geanimeerde glTF met LOD0–2 en vijf clips.
+- `validation.json` — Blender-herimportcontroles.
+- `build_lods_and_renders.py`, `rig_animations_and_export.py` — batchproductiescripts.
+- `M47_Muurbreker_original.glb` — ongewijzigde bronreferentie.

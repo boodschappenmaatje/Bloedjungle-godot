@@ -1,0 +1,195 @@
+{
+  "file": "M47_Muurbreker_1.0_animated.glb",
+  "animations": {
+    "Aim": {
+      "frame_range": [
+        1.0,
+        30.0
+      ],
+      "moving_channels": [
+        {
+          "path": "pose.bones[\"Core\"].rotation_quaternion",
+          "index": 0,
+          "delta": 1.0
+        },
+        {
+          "path": "pose.bones[\"Core\"].rotation_quaternion",
+          "index": 2,
+          "delta": 1.0
+        },
+        {
+          "path": "pose.bones[\"Root\"].location",
+          "index": 2,
+          "delta": 0.05
+        }
+      ]
+    },
+    "Equip": {
+      "frame_range": [
+        1.0,
+        36.0
+      ],
+      "moving_channels": [
+        {
+          "path": "pose.bones[\"Core\"].rotation_quaternion",
+          "index": 0,
+          "delta": 2.0
+        },
+        {
+          "path": "pose.bones[\"Core\"].rotation_quaternion",
+          "index": 2,
+          "delta": 0.998993
+        },
+        {
+          "path": "pose.bones[\"Root\"].location",
+          "index": 2,
+          "delta": 0.18
+        }
+      ]
+    },
+    "Fire": {
+      "frame_range": [
+        1.0,
+        18.0
+      ],
+      "moving_channels": [
+        {
+          "path": "pose.bones[\"Core\"].rotation_quaternion",
+          "index": 0,
+          "delta": 1.707107
+        },
+        {
+          "path": "pose.bones[\"Core\"].rotation_quaternion",
+          "index": 2,
+          "delta": 0.998933
+        },
+        {
+          "path": "pose.bones[\"Chamber\"].location",
+          "index": 1,
+          "delta": 0.075
+        },
+        {
+          "path": "pose.bones[\"Root\"].location",
+          "index": 0,
+          "delta": 0.135
+        }
+      ]
+    },
+    "Idle": {
+      "frame_range": [
+        1.0,
+        48.0
+      ],
+      "moving_channels": [
+        {
+          "path": "pose.bones[\"Core\"].rotation_quaternion",
+          "index": 0,
+          "delta": 2.0
+        },
+        {
+          "path": "pose.bones[\"Core\"].rotation_quaternion",
+          "index": 2,
+          "delta": 0.999441
+        },
+        {
+          "path": "pose.bones[\"Chamber\"].location",
+          "index": 1,
+          "delta": 0.02
+        }
+      ]
+    },
+    "Reload": {
+      "frame_range": [
+        1.0,
+        60.0
+      ],
+      "moving_channels": [
+        {
+          "path": "pose.bones[\"Core\"].rotation_quaternion",
+          "index": 0,
+          "delta": 2.0
+        },
+        {
+          "path": "pose.bones[\"Core\"].rotation_quaternion",
+          "index": 2,
+          "delta": 0.999646
+        },
+        {
+          "path": "pose.bones[\"Chamber\"].location",
+          "index": 1,
+          "delta": 0.12
+        },
+        {
+          "path": "pose.bones[\"Root\"].location",
+          "index": 2,
+          "delta": 0.025
+        }
+      ]
+    }
+  },
+  "meshes": {
+    "M47_Core_Retaining_Ring": {
+      "triangles": 512,
+      "material_count": 1
+    },
+    "M47_LOD0": {
+      "triangles": 50000,
+      "material_count": 1
+    },
+    "M47_LOD1": {
+      "triangles": 25000,
+      "material_count": 1
+    },
+    "M47_LOD2": {
+      "triangles": 9999,
+      "material_count": 1
+    },
+    "M47_Moving_Loading_Chamber": {
+      "triangles": 12,
+      "material_count": 1
+    },
+    "M47_Rotating_Core": {
+      "triangles": 92,
+      "material_count": 1
+    },
+    "Icosphere": {
+      "triangles": 80,
+      "material_count": 0
+    }
+  },
+  "materials": [
+    {
+      "name": "M47_Mechanism_Steel",
+      "images": []
+    },
+    {
+      "name": "Material_0",
+      "images": [
+        {
+          "name": "Image_0",
+          "size": [
+            2048,
+            2048
+          ],
+          "packed": true
+        },
+        {
+          "name": "Image_1",
+          "size": [
+            2048,
+            2048
+          ],
+          "packed": true
+        },
+        {
+          "name": "Image_2",
+          "size": [
+            2048,
+            2048
+          ],
+          "packed": true
+        }
+      ]
+    }
+  ]
+}

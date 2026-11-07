@@ -104,17 +104,35 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 	GrassField.set_focus(player_pos, active)
 	update_depth_shadow_batches(camera_pos, delta, active)
 	_fade = move_toward(_fade, 1.0 if active else 0.0, delta / 0.35)
+	var scene_tree := Engine.get_main_loop() as SceneTree
+	var camera: Camera3D = scene_tree.root.get_viewport().get_camera_3d() if scene_tree != null else null
+	var viewport_size := Vector2.ONE
+	var render_size_px := Vector2.ONE
+	var viewport_aspect := 1.0
+	if camera != null:
+		viewport_size = Vector2(camera.get_viewport().size)
+		viewport_aspect = viewport_size.x / maxf(viewport_size.y, 1.0)
+		render_size_px = viewport_size * camera.get_viewport().scaling_3d_scale
+	var player_screen_uv := Vector2(0.5, 0.5)
+	if camera != null and viewport_size.x > 0.0 and viewport_size.y > 0.0:
+		player_screen_uv = camera.unproject_position(player_pos + Vector3.UP * 0.8) / viewport_size
 	if _focus_mats.is_empty():
 		# All detailed species share the actor sightline fade, including the new PBR plants.
 		for key in ["palm", "leaf", "fern", "depth_leaf", "depth_rosette", "depth_arch_fern", "depth_microcover", "depth_red_bloom", "depth_litter"]:
 			_focus_mats.append(material(key))
 	var on := _fade > 0.001
 	var e: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO, Vector4.ZERO]
+	var screen_e: Array[Vector3] = [Vector3.ZERO, Vector3.ZERO, Vector3.ZERO]
 	for i in mini(extras.size(), 3):
 		var pos: Vector3 = extras[i]
 		e[i] = Vector4(pos.x, pos.y + 1.0, pos.z, 1.0)
+		if camera != null and viewport_size.x > 0.0 and viewport_size.y > 0.0:
+			var actor_uv := camera.unproject_position(pos + Vector3.UP)
+			screen_e[i] = Vector3(actor_uv.x / viewport_size.x, actor_uv.y / viewport_size.y, 1.0)
 	for mat in _focus_mats:
 		mat.set_shader_parameter("fade_sightline", on)
+		mat.set_shader_parameter("screen_size_px", render_size_px)
+		mat.set_shader_parameter("screen_aspect", viewport_aspect)
 		if not on:
 			continue
 		mat.set_shader_parameter("fade_amount", _fade)
@@ -123,14 +141,20 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 		mat.set_shader_parameter("view_e0", e[0])
 		mat.set_shader_parameter("view_e1", e[1])
 		mat.set_shader_parameter("view_e2", e[2])
+		mat.set_shader_parameter("focus_player_uv", player_screen_uv)
+		mat.set_shader_parameter("focus_e0_uv", screen_e[0])
+		mat.set_shader_parameter("focus_e1_uv", screen_e[1])
+		mat.set_shader_parameter("focus_e2_uv", screen_e[2])
 	# Fade the existing cheap palm-shadow quads close to actor feet. Their leaf
 	# silhouettes remain as soft canopy shade in the surrounding play space.
 	for shadow_mat: ShaderMaterial in _shadow_mats.values():
 		shadow_mat.set_shader_parameter("actor_focus_active", active)
-		shadow_mat.set_shader_parameter("focus_player_xz", Vector2(player_pos.x, player_pos.z))
-		shadow_mat.set_shader_parameter("focus_e0", Vector3(e[0].x, e[0].z, e[0].w))
-		shadow_mat.set_shader_parameter("focus_e1", Vector3(e[1].x, e[1].z, e[1].w))
-		shadow_mat.set_shader_parameter("focus_e2", Vector3(e[2].x, e[2].z, e[2].w))
+		shadow_mat.set_shader_parameter("screen_size_px", render_size_px)
+		shadow_mat.set_shader_parameter("screen_aspect", viewport_aspect)
+		shadow_mat.set_shader_parameter("focus_player_uv", player_screen_uv)
+		shadow_mat.set_shader_parameter("focus_e0_uv", screen_e[0])
+		shadow_mat.set_shader_parameter("focus_e1_uv", screen_e[1])
+		shadow_mat.set_shader_parameter("focus_e2_uv", screen_e[2])
 
 
 ## Cast real sun shadows only for the nearest few PBR foliage batches. The
@@ -233,8 +257,6 @@ static func _shadow_mat(kind: String) -> ShaderMaterial:
 		m.set_shader_parameter("height", c[0])
 		m.set_shader_parameter("width", c[1])
 		m.set_shader_parameter("strength", c[2])
-		m.set_shader_parameter("actor_clear_inner", 0.9)
-		m.set_shader_parameter("actor_clear_outer", 2.8)
 		if kind == "palm":
 			m.set_shader_parameter("canopy_detail", true)
 			m.set_shader_parameter("canopy_tex", LeafTex.get_tex("palm"))

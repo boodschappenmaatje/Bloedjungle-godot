@@ -11,13 +11,12 @@ uniform float strength = 0.5;
 uniform bool canopy_detail = false;
 uniform sampler2D canopy_tex : filter_linear_mipmap, repeat_disable;
 uniform bool actor_focus_active = false;
-uniform vec2 focus_player_xz = vec2(0.0);
-uniform vec3 focus_e0 = vec3(0.0);
-uniform vec3 focus_e1 = vec3(0.0);
-uniform vec3 focus_e2 = vec3(0.0);
-uniform float actor_clear_inner = 0.9;
-uniform float actor_clear_outer = 2.8;
-varying vec2 world_shadow_xz;
+uniform vec2 focus_player_uv = vec2(0.5);
+uniform vec3 focus_e0_uv = vec3(0.0);
+uniform vec3 focus_e1_uv = vec3(0.0);
+uniform vec3 focus_e2_uv = vec3(0.0);
+uniform vec2 screen_size_px = vec2(1280.0, 720.0);
+uniform float screen_aspect = 1.7777778;
 
 void vertex() {
 	vec2 l = normalize(sun_dir);
@@ -27,7 +26,6 @@ void vertex() {
 	float along = (VERTEX.x + 0.5) * len - width * s * 0.35;
 	float across = VERTEX.z * width * s;
 	vec3 wp = MODEL_MATRIX[3].xyz + vec3(l.x * along + w.x * across, 0.05, l.y * along + w.y * across);
-	world_shadow_xz = wp.xz;
 	VERTEX = (VIEW_MATRIX * vec4(wp, 1.0)).xyz;
 	NORMAL = (VIEW_MATRIX * vec4(0.0, 1.0, 0.0, 0.0)).xyz;
 }
@@ -48,10 +46,21 @@ void fragment() {
 	}
 	float actor_clear = 1.0;
 	if (actor_focus_active) {
-		actor_clear = smoothstep(actor_clear_inner, actor_clear_outer, distance(world_shadow_xz, focus_player_xz));
-		if (focus_e0.z > 0.5) actor_clear = min(actor_clear, smoothstep(actor_clear_inner, actor_clear_outer, distance(world_shadow_xz, focus_e0.xy)));
-		if (focus_e1.z > 0.5) actor_clear = min(actor_clear, smoothstep(actor_clear_inner, actor_clear_outer, distance(world_shadow_xz, focus_e1.xy)));
-		if (focus_e2.z > 0.5) actor_clear = min(actor_clear, smoothstep(actor_clear_inner, actor_clear_outer, distance(world_shadow_xz, focus_e2.xy)));
+		vec2 screen_uv = FRAGCOORD.xy / screen_size_px;
+		vec2 delta = (screen_uv - focus_player_uv) * vec2(screen_aspect, 1.0);
+		actor_clear = smoothstep(0.032, 0.11, length(delta));
+		if (focus_e0_uv.z > 0.5) {
+			vec2 enemy_delta = (screen_uv - focus_e0_uv.xy) * vec2(screen_aspect, 1.0);
+			actor_clear = min(actor_clear, smoothstep(0.032, 0.11, length(enemy_delta)));
+		}
+		if (focus_e1_uv.z > 0.5) {
+			vec2 enemy_delta = (screen_uv - focus_e1_uv.xy) * vec2(screen_aspect, 1.0);
+			actor_clear = min(actor_clear, smoothstep(0.032, 0.11, length(enemy_delta)));
+		}
+		if (focus_e2_uv.z > 0.5) {
+			vec2 enemy_delta = (screen_uv - focus_e2_uv.xy) * vec2(screen_aspect, 1.0);
+			actor_clear = min(actor_clear, smoothstep(0.032, 0.11, length(enemy_delta)));
+		}
 	}
 	ALPHA = (1.0 - smoothstep(0.2, 1.0, d)) * strength * mask * actor_clear;
 }

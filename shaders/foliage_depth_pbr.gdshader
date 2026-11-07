@@ -24,6 +24,12 @@ uniform vec3 view_camera = vec3(0.0);
 uniform vec4 view_e0 = vec4(0.0);
 uniform vec4 view_e1 = vec4(0.0);
 uniform vec4 view_e2 = vec4(0.0);
+uniform vec2 focus_player_uv = vec2(0.5);
+uniform vec3 focus_e0_uv = vec3(0.0);
+uniform vec3 focus_e1_uv = vec3(0.0);
+uniform vec3 focus_e2_uv = vec3(0.0);
+uniform vec2 screen_size_px = vec2(1280.0, 720.0);
+uniform float screen_aspect = 1.7777778;
 uniform float fade_amount = 1.0;
 uniform bool fade_sightline = false;
 uniform vec4 pushers[8];
@@ -40,12 +46,11 @@ float sight_hide(vec3 p, vec3 target, vec3 cam, float radius) {
 	return along * (1.0 - smoothstep(radius * 0.3, radius, d));
 }
 
-// Keep scanned groundcover and palm leaves clear around the player/enemy feet,
-// even where low fronds fall below the camera-to-actor sightline segment.
-float actor_clear_hide(vec3 p, vec3 actor) {
-	vec2 delta = p.xz - actor.xz;
-	float distance_squared = dot(delta, delta);
-	return 1.0 - smoothstep(1.4 * 1.4, 3.8 * 3.8, distance_squared);
+// Clear foliage by its actual screen overlap with the actor. This catches high
+// palm fronds that project over the soldier while their trunks sit metres away.
+float actor_screen_hide(vec2 screen_uv, vec2 actor_uv) {
+	vec2 delta = (screen_uv - actor_uv) * vec2(screen_aspect, 1.0);
+	return 1.0 - smoothstep(0.032, 0.11, length(delta));
 }
 
 void vertex() {
@@ -87,13 +92,14 @@ void fragment() {
 	if (leaf.a < cut) { discard; }
 	if (fade_sightline) {
 		float hide = sight_hide(world_leaf, view_player, view_camera, 5.2);
-		float actor_clear = actor_clear_hide(world_leaf, view_player);
+		vec2 screen_uv = FRAGCOORD.xy / screen_size_px;
+		float actor_clear = actor_screen_hide(screen_uv, focus_player_uv);
 		if (view_e0.w > 0.5) { hide = max(hide, sight_hide(world_leaf, view_e0.xyz, view_camera, 3.1)); }
 		if (view_e1.w > 0.5) { hide = max(hide, sight_hide(world_leaf, view_e1.xyz, view_camera, 3.1)); }
 		if (view_e2.w > 0.5) { hide = max(hide, sight_hide(world_leaf, view_e2.xyz, view_camera, 3.1)); }
-		if (view_e0.w > 0.5) { actor_clear = max(actor_clear, actor_clear_hide(world_leaf, view_e0.xyz)); }
-		if (view_e1.w > 0.5) { actor_clear = max(actor_clear, actor_clear_hide(world_leaf, view_e1.xyz)); }
-		if (view_e2.w > 0.5) { actor_clear = max(actor_clear, actor_clear_hide(world_leaf, view_e2.xyz)); }
+		if (focus_e0_uv.z > 0.5) { actor_clear = max(actor_clear, actor_screen_hide(screen_uv, focus_e0_uv.xy)); }
+		if (focus_e1_uv.z > 0.5) { actor_clear = max(actor_clear, actor_screen_hide(screen_uv, focus_e1_uv.xy)); }
+		if (focus_e2_uv.z > 0.5) { actor_clear = max(actor_clear, actor_screen_hide(screen_uv, focus_e2_uv.xy)); }
 		actor_clear *= fade_amount;
 		hide = max(hide, actor_clear);
 		if (hide > 0.0 && distance(INV_VIEW_MATRIX[3].xyz, view_camera) < 1.0) {

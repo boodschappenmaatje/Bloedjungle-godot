@@ -63,7 +63,7 @@ jobs:
         run: |
           set -euo pipefail
           "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/visual-b-import.log"
-          if grep -Eq 'SCRIPT ERROR:|Parse Error:' "$RUNNER_TEMP/visual-b-import.log"; then exit 1; fi
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|SHADER ERROR:|Shader compilation failed' "$RUNNER_TEMP/visual-b-import.log"; then exit 1; fi
       - name: Run visual B terrain and foliage integration test
         shell: bash
         run: |
@@ -71,7 +71,7 @@ jobs:
           "$GODOT_BIN" --headless --path . --fixed-fps 60 res://tests/visual_b_test.tscn \
             2>&1 | tee "$RUNNER_TEMP/visual-b-test.log"
           grep -Fq "VISUAL B TEST PASS" "$RUNNER_TEMP/visual-b-test.log"
-          if grep -Eq 'SCRIPT ERROR:|Parse Error:' "$RUNNER_TEMP/visual-b-test.log"; then exit 1; fi
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|SHADER ERROR:|Shader compilation failed' "$RUNNER_TEMP/visual-b-test.log"; then exit 1; fi
       - name: Select quick preview mode
         id: capture_mode
         shell: bash
@@ -96,7 +96,7 @@ jobs:
             2>&1 | tee "$RUNNER_TEMP/visual-b-capture-quick.log"
           grep -Fq "VISUAL B CAPTURE PASS" "$RUNNER_TEMP/visual-b-capture-quick.log"
           grep -Fq "CAPTURE RENDERER " "$RUNNER_TEMP/visual-b-capture-quick.log"
-          if grep -Eq 'SCRIPT ERROR:|Parse Error:' "$RUNNER_TEMP/visual-b-capture-quick.log"; then exit 1; fi
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|SHADER ERROR:|Shader compilation failed' "$RUNNER_TEMP/visual-b-capture-quick.log"; then exit 1; fi
       - name: Capture real main-scene camera at benchmark settings
         if: steps.capture_mode.outputs.quick != 'true'
         timeout-minutes: 35
@@ -111,7 +111,7 @@ jobs:
             2>&1 | tee "$RUNNER_TEMP/visual-b-capture-60.log"
           grep -Fq "VISUAL B CAPTURE PASS" "$RUNNER_TEMP/visual-b-capture-60.log"
           grep -Fq "CAPTURE RENDERER " "$RUNNER_TEMP/visual-b-capture-60.log"
-          if grep -Eq 'SCRIPT ERROR:|Parse Error:' "$RUNNER_TEMP/visual-b-capture-60.log"; then exit 1; fi
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|SHADER ERROR:|Shader compilation failed' "$RUNNER_TEMP/visual-b-capture-60.log"; then exit 1; fi
           xvfb-run -a -s "-screen 0 1280x720x24" env \
             GODOT_SILENCE_ROOT_WARNING=1 BJ_INSTANT=1 BJ_TOUCH=1 BJ_RENDER_SCALE=1.0 \
             BJ_CAPTURE_QUALITY=high BJ_CAPTURE_SPOT=bospad BJ_CAPTURE_ONLY=1 \
@@ -120,7 +120,7 @@ jobs:
             2>&1 | tee "$RUNNER_TEMP/visual-b-capture-100.log"
           grep -Fq "VISUAL B CAPTURE PASS" "$RUNNER_TEMP/visual-b-capture-100.log"
           grep -Fq "CAPTURE RENDERER " "$RUNNER_TEMP/visual-b-capture-100.log"
-          if grep -Eq 'SCRIPT ERROR:|Parse Error:' "$RUNNER_TEMP/visual-b-capture-100.log"; then exit 1; fi
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|SHADER ERROR:|Shader compilation failed' "$RUNNER_TEMP/visual-b-capture-100.log"; then exit 1; fi
       - name: Upload Godot captures and measurements
         if: always()
         uses: actions/upload-artifact@v4

@@ -151,13 +151,17 @@ func run() -> void:
 	for file in ["rosette_base_color.png","rosette_normal_gl.png","rosette_roughness.png","arch_fern_base_color.png","arch_fern_normal_gl.png","arch_fern_roughness.png","shrub_base_color.png","shrub_normal_gl.png","shrub_roughness.png"]:
 		var tex: Texture2D = load("res://assets/textures/foliage/polyhaven/"+file)
 		check(tex != null and tex.get_image().get_width() == 1024 and tex.get_image().has_mipmaps(),"Poly Haven runtime PBR maps need 1K mipmapped cutout textures: "+file)
-	var shrub_surface: Texture2D = load("res://assets/textures/foliage/polyhaven/shrub_roughness.png")
-	var shrub_image := shrub_surface.get_image()
+	# Inspect the source PNG rather than the VRAM-compressed imported texture.
+	# Reading individual pixels from the imported GPU format can stall the headless
+	# renderer; a coarse source-image sample verifies the same packed AO channel.
+	var shrub_image := Image.load_from_file(ProjectSettings.globalize_path("res://assets/textures/foliage/polyhaven/shrub_roughness.png"))
 	var sampled_ao := 0
-	for y in range(0,shrub_image.get_height(),8):
-		for x in range(0,shrub_image.get_width(),8):
-			if shrub_image.get_pixel(x,y).g < 0.85: sampled_ao += 1
-	check(sampled_ao > 500,"Poly Haven ARM ambient occlusion is packed alongside roughness for red-bloom leaves")
+	check(shrub_image != null,"Could not read the source Poly Haven ARM map")
+	if shrub_image != null:
+		for y in range(0,shrub_image.get_height(),32):
+			for x in range(0,shrub_image.get_width(),32):
+				if shrub_image.get_pixel(x,y).g < 0.85: sampled_ao += 1
+	check(sampled_ao > 50,"Poly Haven ARM ambient occlusion is packed alongside roughness for red-bloom leaves")
 	check(Foliage.material("depth_red_bloom").shader.get_code().contains("plant_surface.g"),"Foliage shader must consume packed AO without another texture sampler")
 	var atm := get_first_node_in_group("atmosphere")
 	for quality in ["low","high","ultra","high"]:

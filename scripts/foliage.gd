@@ -17,7 +17,7 @@ const PALM_NEAR := 62.0  # dichterbij: volledige palm; verder: de simpele palm
 ## Stam of rots waar je niet doorheen loopt: straal in meters bij schaal 1 (laag Kit.LAYER_NATURE: mensen, voertuigen, kogels en granaten).
 const BOOM_COLLIDE_R := 0.8  # jungleboom: stam met plankwortels (bij schaal 1, voor de 0,75 van BOOM_SCALE)
 const COLLIDE_R := {"palm": 0.32, "rock": 0.45}
-const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.5], "bush": [1.1, 1.8, 0.45], "rock": [0.5, 1.2, 0.4]}  # hoogte, breedte, sterkte
+const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.38], "bush": [1.1, 1.8, 0.32], "rock": [0.5, 1.2, 0.32]}  # hoogte, breedte, sterkte
 
 
 ## Wind-materiaal; met een bladtextuur (kind) of zonder (stam, rotsen).
@@ -33,8 +33,21 @@ static func material(kind := "") -> ShaderMaterial:
 			m.set_shader_parameter("cut", 0.0)
 			m.set_shader_parameter("tint", Vector3(0.55, 0.45, 0.36))
 		elif kind != "":
-			m.set_shader_parameter("tex", LeafTex.get_tex(kind))
-			m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
+			if kind == "depth_leaf":
+				m.set_shader_parameter("tex", load("res://assets/textures/foliage/depth_pass/jungle_leaf_flower_base_color.png"))
+				m.set_shader_parameter("nrm", load("res://assets/textures/foliage/depth_pass/jungle_leaf_flower_normal_gl.png"))
+				m.set_shader_parameter("rough_tex", load("res://assets/textures/foliage/depth_pass/jungle_leaf_flower_roughness.png"))
+				m.set_shader_parameter("use_rough_tex", true)
+				m.set_shader_parameter("cut", 0.43)
+				m.set_shader_parameter("tint", Vector3(1.17, 1.19, 1.05))
+				m.set_shader_parameter("backlight", 0.72)
+			else:
+				m.set_shader_parameter("tex", LeafTex.get_tex(kind))
+				m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
+			if kind == "leaf":
+				# Subtle reflected canopy light keeps the low leaf layer readable from the game camera.
+				m.set_shader_parameter("tint", Vector3(1.19, 1.2, 0.98))
+				m.set_shader_parameter("backlight", 0.9)
 		if kind == "grass":
 			m.set_shader_parameter("sway", 0.08)
 			m.set_shader_parameter("cut", 0.35)
@@ -54,7 +67,7 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 	GrassField.set_focus(player_pos, active)
 	_fade = move_toward(_fade, 1.0 if active else 0.0, delta / 0.35)
 	if _focus_mats.is_empty():
-		for key in ["palm", "leaf", "fern"]:
+		for key in ["palm", "leaf", "fern", "depth_leaf"]:
 			_focus_mats.append(material(key))
 	var on := _fade > 0.001
 	var e: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO, Vector4.ZERO]
@@ -143,6 +156,9 @@ static func _shadow_mat(kind: String) -> ShaderMaterial:
 		m.set_shader_parameter("height", c[0])
 		m.set_shader_parameter("width", c[1])
 		m.set_shader_parameter("strength", c[2])
+		if kind == "palm":
+			m.set_shader_parameter("canopy_detail", true)
+			m.set_shader_parameter("canopy_tex", LeafTex.get_tex("palm"))
 		_shadow_mats[kind] = m
 	return _shadow_mats[kind]
 
@@ -525,6 +541,7 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 							_reg[key] = []
 						_reg[key].append(entry)
 					_register_vegetation(entry)
+	JungleUnderstory.spawn(parent)
 	reapply_building_clearings()
 
 

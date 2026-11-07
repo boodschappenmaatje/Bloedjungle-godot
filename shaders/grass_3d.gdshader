@@ -9,6 +9,7 @@ uniform float normal_strength = 0.35;
 uniform float player_bend = 0.0;  // 1 = gras buigt voor wie erdoorheen loopt (uit in de bouwmodus)
 uniform vec4 pushers[8];          // zoals in foliage.gdshader: x/y = positie (x, z), z = straal, w = kracht
 varying vec3 blade_color;
+varying float root_contact;
 
 void vertex() {
 	vec3 wp = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
@@ -34,6 +35,7 @@ void vertex() {
 	push *= tip * player_bend;
 	// Convert a world-space push into the local basis (rotation/scale may vary per tuft).
 	VERTEX += transpose(MODEL_NORMAL_MATRIX) * vec3(push.x, 0.0, push.y);
+	root_contact = mix(0.72, 1.0, smoothstep(0.0, 0.5, COLOR.a));
 	blade_color = COLOR.rgb;
 }
 
@@ -41,11 +43,11 @@ void fragment() {
 	if (!FRONT_FACING) NORMAL = -NORMAL;
 	vec3 base = texture(albedo_tex, UV).rgb * blade_color;
 	vec3 orm = texture(orm_tex, UV).rgb;
-	ALBEDO = base;
+	ALBEDO = base * vec3(1.06, 1.14, 0.84) * root_contact;
 	ROUGHNESS = orm.g;
 	METALLIC = 0.0;
 	SPECULAR = 0.25;
-	AO = orm.r;
+	AO = orm.r * root_contact;
 	AO_LIGHT_AFFECT = 0.15;
 	NORMAL_MAP = texture(normal_tex, UV).rgb;
 	NORMAL_MAP_DEPTH = normal_strength;

@@ -5,7 +5,7 @@ extends Node3D
 const KINDS := ["short", "medium", "tall"]
 const ZONE_DATA := preload("res://resources/grass_zones.tres")
 const CELL := 24.0
-const LIMIT := {"short": 6200, "medium": 2200, "tall": 1600}
+const LIMIT := {"short": 24000, "medium": 2200, "tall": 1600}
 const END := {"short": 52.0, "medium": 62.0, "tall": 72.0}
 static var _meshes := {}
 static var _material: ShaderMaterial
@@ -98,6 +98,23 @@ func _populate(existing: Array) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 27102026
 	var groups := {}
+	# Spend the existing tuft budget on visible short-grass shoulders first.
+	# A separate RNG preserves the original foliage/collider generation sequence.
+	var shoulder_rng := RandomNumberGenerator.new()
+	shoulder_rng.seed = 20261107
+	for i in 3000:
+		var z := shoulder_rng.randf_range(-86.0, -33.0)
+		var side := -1.0 if shoulder_rng.randf() < 0.5 else 1.0
+		var p := Vector3(Data.path_x(z) + side * shoulder_rng.randf_range(3.5, 9.0), 0.0, z)
+		if _allowed(p):
+			_add_point(groups, shoulder_rng, "short", p)
+	# The playable ground used to inherit mostly sparse tree-ring tufts. Add a finer,
+	# bounded low layer over the jungle floor; the established open firing lane stays clear.
+	for i in 19000:
+		var p := Vector3(shoulder_rng.randf_range(-65.0,65.0),0,shoulder_rng.randf_range(-85.0,-34.0))
+		var road_clear := p.z < -30.0 and p.z > -100.0 and absf(p.x - Data.path_x(p.z)) < 2.25
+		if _allowed(p) and not road_clear and shoulder_rng.randf() < 0.56 + 0.44 * Foliage._grove(p.x,p.z):
+			_add_point(groups, shoulder_rng, "short", p)
 	for transform: Transform3D in existing:
 		for _j in 3:
 			var p := transform.origin + Vector3(rng.randf_range(-0.5, 0.5), 0, rng.randf_range(-0.5, 0.5))
@@ -126,7 +143,7 @@ func _populate(existing: Array) -> void:
 			inst.set_meta("kind", data.kind)
 			inst.set_meta("lod", lod)
 			inst.set_meta("full", data.xf.size())
-			inst.multimesh.visible_instance_count = roundi(data.xf.size() * {"low": 0.2, "high": 0.45, "ultra": 1.0}[GameSettings.get_value("quality")])
+			inst.multimesh.visible_instance_count = roundi(data.xf.size() * {"low": 0.2, "high": 0.6, "ultra": 1.0}[GameSettings.get_value("quality")])
 			inst.extra_cull_margin = 0.4
 			inst.visible = lod == 0
 			nodes.append(inst)
@@ -158,11 +175,19 @@ func _add_point(groups: Dictionary, rng: RandomNumberGenerator, kind: String, po
 	var key := "%s_%d_%d_%d" % [kind, variant, cell.x, cell.y]
 	if not groups.has(key):
 		groups[key] = {"kind": kind, "cell": cell, "variant": variant, "xf": [], "colors": []}
-	var scale_ := rng.randf_range(0.9, 1.08)
-	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_, scale_, scale_))
+	var scale_ := rng.randf_range(0.78, 1.24) if kind == "short" else rng.randf_range(0.9, 1.08)
+	# Short tufts are 24 cm tall. Their authored footprint was too small to read at the normal
+	# play camera, so grow the existing model into low, varied grass clumps without new instances,
+	# colliders or changes to the preserved firing-lane clearance.
+	var spread := 3.8 if kind == "short" else 1.0
+	var height_scale := 2.1 if kind == "short" else 1.0
+	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_*spread, scale_*height_scale, scale_*spread))
 	groups[key].xf.append(Transform3D(basis, pos))
-	var shade := rng.randf_range(0.88, 1.0)
-	groups[key].colors.append(Color(shade, shade, shade))
+	if kind == "short":
+		groups[key].colors.append(Color(rng.randf_range(0.82, 1.02), rng.randf_range(0.94, 1.12), rng.randf_range(0.72, 0.93)))
+	else:
+		var shade := rng.randf_range(0.88, 1.0)
+		groups[key].colors.append(Color(shade, shade, shade))
 
 
 func _process(delta: float) -> void:

@@ -8,6 +8,8 @@ uniform float reach = 1.5;  // lengte per meter boomhoogte (1 / tan(zonhoogte))
 uniform float height = 6.0;  // boomhoogte in meters (bij schaal 1)
 uniform float width = 2.4;  // breedte van de schaduw in meters
 uniform float strength = 0.5;
+uniform bool canopy_detail = false;
+uniform sampler2D canopy_tex : filter_linear_mipmap, repeat_disable;
 
 void vertex() {
 	vec2 l = normalize(sun_dir);
@@ -24,5 +26,16 @@ void vertex() {
 void fragment() {
 	float d = length((UV - 0.5) * 2.0);
 	ALBEDO = vec3(0.0);
-	ALPHA = (1.0 - smoothstep(0.2, 1.0, d)) * strength;
+	float mask = 1.0;
+	if (canopy_detail) {
+		// Reuse the shipped palm alpha silhouette on the existing shadow quad.
+		// This is explicitly an approximate fixed shadow, never geometry-accurate shadowing.
+		vec2 q = (UV-0.5)*2.0;
+		float angle = atan(q.y,q.x);
+		vec2 frond_uv = vec2(clamp(d,0.0,1.0),fract((angle/6.2831853+0.5)*9.0));
+		float leaf = texture(canopy_tex,frond_uv).a;
+		float detail = 1.0-smoothstep(0.02,0.1,max(length(dFdx(q)),length(dFdy(q))));
+		mask = mix(0.62,0.28+0.72*leaf,detail);
+	}
+	ALPHA = (1.0 - smoothstep(0.2, 1.0, d)) * strength * mask;
 }

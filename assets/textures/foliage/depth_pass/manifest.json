@@ -1,0 +1,26 @@
+{
+  "asset": "jungle_foliage_depth",
+  "resolution": [
+    1024,
+    1024
+  ],
+  "license": "Reuses the project's existing foliage texture sources; no external texture downloaded.",
+  "source_maps": {
+    "assets/textures/foliage/leaf_color.png": "e69596d1387492ef9764d24c69847aa73f1a9d7897510d5668a6ff256d56493f",
+    "assets/textures/foliage/leaf_normal.png": "529d52113a9408b4a17710b6054e5e71cfea8b6aaa5c7caba5d90b1299fa47ab",
+    "assets/textures/foliage/fern_color.png": "a7bbb73bf5d51c75715a4b3cf161400997b1f6237b76e545b46d733b82910e9d",
+    "assets/textures/foliage/fern_normal.png": "30ffdd00274ffbf4b1ffb97d21e43fa5aafe1180e6efc55d9da96d6b66b8ded5",
+    "assets/textures/foliage/palm_color.png": "62d3e70737193491ec5882094365744b8f17bee35820b3cccee4c0face36be00",
+    "assets/textures/foliage/palm_normal.png": "67ce5ee014b665def48f6f27855711545a9eb8d4a708ab09234c15cb8abc7d97"
+  },
+  "maps": {
+    "jungle_leaf_flower_base_color.png": "sRGB RGBA; 2x2 atlas from native 512px source maps: leaf, derived red/bronze flower, fine fern and pinnate palm; 512x256 fern/palm maps centered in their 512px cells; original alpha silhouettes retained",
+    "jungle_leaf_flower_normal_gl.png": "OpenGL tangent normal; approved leaf, fern and palm normal maps; leaf normal reused by flower variant",
+    "jungle_leaf_flower_roughness.png": "Linear grayscale; authored per region from source luminance and edge detail; glossy leaf/palm and satin fern/flowers"
+  },
+  "sha256": {
+    "jungle_leaf_flower_base_color.png": "b443d9361b4639d360f70277a60dc1ee42b0b9ea046f36782a08e201895e5d83",
+    "jungle_leaf_flower_normal_gl.png": "ff4922376383fa15626486dd6f531c07781c26d6520d66dabaca322ab2fb6e1d",
+    "jungle_leaf_flower_roughness.png": "5bf2f982947769b34c3d1e353d66f7e7924517293b68937a9a1c4c4a2602d8a1"
+  }
+}

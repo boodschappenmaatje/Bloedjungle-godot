@@ -61,6 +61,8 @@ static func hut_alive(sz: float) -> bool:
 
 
 func _process(_delta: float) -> void:
+	if Data.mcv_mode:
+		return   # MCV-start: geen wachthuisjes en slagbomen bij een vast kamp
 	if not _spawned and (Game.state == "prep" or Game.state == "play") and Game.gates != null:
 		_spawned = true
 		_spawn()

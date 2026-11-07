@@ -10,6 +10,10 @@ const IN := Data.COMPOUND - 2.5
 
 
 static func waypoint(from: Vector3, goal: Vector3) -> Vector3:
+	if Data.mcv_mode:
+		# MCV-start: geen vierkante muur met poorten meer; alleen de rivier (brug of ondiepte) en verder rechtdoor
+		var over: Variant = _river(from, goal)
+		return over if over != null else goal
 	var me_in := _inside(from)
 	var goal_in := _inside(goal)
 	# Wie nog binnen de muur staat en naar buiten moet, gaat eerst door de poort, ook als het doel over de rivier ligt:

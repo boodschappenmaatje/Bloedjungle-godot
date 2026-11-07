@@ -81,6 +81,20 @@ func _ready() -> void:
 	_apply_all()
 
 
+## MCV-start: de twee poorten van het vaste kamp bestaan niet (de knoop blijft, andere code kijkt naar Game.gates en zijn wereld).
+func clear_for_mcv() -> void:
+	for g in list:
+		for k in ["root", "bar"]:
+			var n: Variant = g.get(k)
+			if n != null and is_instance_valid(n):
+				n.queue_free()
+		for b in g.get("beacons", []):
+			var br: Variant = b.get("root")
+			if br != null and is_instance_valid(br):
+				br.queue_free()
+	list.clear()
+
+
 ## Zwaailamp uit assets/zwaailamp.glb op een poortpost: de reflector draait en een SpotLight3D zwaait mee.
 func _beacon(at: Vector3) -> Dictionary:
 	var root: Node3D = (load("res://assets/zwaailamp.glb") as PackedScene).instantiate()

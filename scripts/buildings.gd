@@ -136,15 +136,30 @@ func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null)
 	var d: Dictionary = DEFS[kind]
 	var sz: Vector3 = d.size
 	var piece := is_piece(kind)
-	if Vector2(at.x, at.z).length() > Data.WORLD_R - 3.0:
-		return _placement_result(false, "Buiten speelbaar gebied", 0)
-	if Data.river_off(at.x, at.z) < Data.RIVER_HALF + 3.0:
-		return _placement_result(false, "Kan niet in de rivier bouwen", 0)
+	if Data.mcv_mode:
+		# MCV-start: het kamp mag zo groot worden als je wilt, overal aan jouw kant van de rivier (geen vaste muur, geen vast kader)
+		if not Game.mcv_deployed:
+			return _placement_result(false, "Klap eerst je wagen uit", 0)
+		if not Mcv.in_play_area(at, 4.0):
+			return _placement_result(false, "Buiten speelbaar gebied", 0)
+		if not Mcv.dry_side(at, 3.0):
+			return _placement_result(false, "Kan niet in of voorbij de rivier bouwen", 0)
+	else:
+		if Vector2(at.x, at.z).length() > Data.WORLD_R - 3.0:
+			return _placement_result(false, "Buiten speelbaar gebied", 0)
+		if Data.river_off(at.x, at.z) < Data.RIVER_HALF + 3.0:
+			return _placement_result(false, "Kan niet in de rivier bouwen", 0)
 	var feet := _tower_feet()
 	for iu in 3:
 		for iv in 3:
 			var p := _pt(at, yaw, (iu - 1) * sz.x * 0.5, (iv - 1) * sz.z * 0.5)
-			if piece:
+			if Data.mcv_mode:
+				if not Mcv.dry_side(p, 3.0):
+					return _placement_result(false, "Kan niet in of voorbij de rivier bouwen", 0)
+				for f in feet:
+					if p.distance_to(f[0]) < 1.4 or p.distance_to(f[1]) < 1.9:
+						return _placement_result(false, "Te dicht bij bestaande gebouwen", 0)
+			elif piece:
 				if absf(maxf(absf(p.x), absf(p.z)) - C) < 0.7:
 					return _placement_result(false, "Te dicht bij muren", 0)
 				if absf(p.x) < Data.GATE_GAP + 1.0 and absf(absf(p.z) - C) < 3.4:
@@ -170,7 +185,7 @@ func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null)
 		return _placement_result(true, "Bouwen mogelijk — begroeiing wordt verwijderd" if removable_piece > 0 else "Bouwen mogelijk", removable_piece)
 	# de deur moet op vrij terrein uitkomen
 	var door := _pt(at, yaw, 0.0, sz.z / 2.0 + 0.9)
-	if maxf(absf(door.x), absf(door.z)) > C - 0.6:
+	if not Data.mcv_mode and maxf(absf(door.x), absf(door.z)) > C - 0.6:
 		return _placement_result(false, "Belangrijke route geblokkeerd", 0)
 	var q2 := PhysicsShapeQueryParameters3D.new()
 	var s2 := SphereShape3D.new()
@@ -375,7 +390,7 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 	if with_time and BUILD_TIME.has(kind):
 		_site_start(b)
 	Game.buildings.append(b)
-	Foliage.clear_for_building(node.get_instance_id(), _clearance_regions(kind), at, yaw)
+	Foliage.clear_for_building(node.get_instance_id(), _clearance_regions(kind), at, yaw, Foliage.BUILD_CLEAR_MARGIN, Data.mcv_mode)
 	_push_out(b)
 	_cut_pad()
 	Sfx.play("thud")

@@ -11,7 +11,7 @@ const UPGRADE_TEXT := {
 	2: "Niveau 3 (2.500 punten): automatisch dakgeweer (je ziet het in 10 s gebouwd worden), artilleriecommando met 5 granaten en 90 s afkoeling, +500 sterkte.",
 	3: "Volledig opgewaardeerd: radar, 25% sneller bouwen, dakgeweer en artillerie (knop boven de luchtsteun-knop).",
 }
-const RADAR_RANGE := 85.0       # m rond het hoofdkwartier (wereldnulpunt)
+const RADAR_RANGE := 85.0       # m rond het hoofdkwartier (Game.base_pos)
 const ALERT_PAUSE := 14.0       # s tussen twee radarwaarschuwingen
 const ALERT_SCAN := 0.3         # s tussen twee scans
 const DIRS := ["NOORDEN", "NOORDOOSTEN", "OOSTEN", "ZUIDOOSTEN", "ZUIDEN", "ZUIDWESTEN", "WESTEN", "NOORDWESTEN"]
@@ -27,7 +27,7 @@ var _first := true
 
 ## Windrichting (NOORDEN ... NOORDWESTEN) van een punt gezien vanaf het hoofdkwartier. Noord = -Z (zoals op de radar).
 static func compass(p: Vector3) -> String:
-	var a := atan2(p.x, -p.z)              # 0 = noord, kloksgewijs
+	var a := atan2(p.x - Game.base_pos.x, -(p.z - Game.base_pos.z))   # 0 = noord, kloksgewijs
 	var i := int(roundf(a / (PI / 4.0))) % 8
 	if i < 0:
 		i += 8
@@ -38,7 +38,7 @@ static func compass(p: Vector3) -> String:
 static func contacts() -> Array:
 	var out := []
 	for e in Game.enemies:
-		if is_instance_valid(e) and e.get("dead") != true and Vector2(e.global_position.x, e.global_position.z).length() <= RADAR_RANGE:
+		if is_instance_valid(e) and e.get("dead") != true and Vector2(e.global_position.x - Game.base_pos.x, e.global_position.z - Game.base_pos.z).length() <= RADAR_RANGE:
 			out.append(e)
 	return out
 

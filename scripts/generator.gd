@@ -39,6 +39,8 @@ func _exit_tree() -> void:
 
 
 func _process(delta: float) -> void:
+	if Data.mcv_mode:
+		return   # MCV-start: de generator komt later weer terug als gebouw (Generals-plan A4)
 	if not _spawned:
 		if Game.state == "prep" or Game.state == "play":
 			_spawned = true

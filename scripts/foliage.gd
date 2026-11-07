@@ -269,7 +269,12 @@ static var _building_clearings := {}  # live placed building id -> regions reapp
 
 
 static func collider_is_clearable(collider: Object) -> bool:
-	return is_instance_valid(collider) and collider.has_meta("clearable_vegetation") and bool(collider.get_meta("clearable_vegetation"))
+	if not is_instance_valid(collider):
+		return false
+	if collider.has_meta("clearable_vegetation") and bool(collider.get_meta("clearable_vegetation")):
+		return true
+	# MCV-start (Dennis, 7 nov): bij het uitklappen en bouwen verdwijnt alles wat er staat, ook rotsen
+	return Data.mcv_mode and collider.has_meta("vegetation_kind") and String(collider.get_meta("vegetation_kind")) == "rock"
 
 
 static func _register_vegetation(entry: Dictionary) -> Dictionary:
@@ -337,7 +342,7 @@ static func _entries_for_build_regions(regions: Array, at: Vector3, yaw: float, 
 
 
 static func count_clearable_in_regions(regions: Array, at: Vector3, yaw: float, margin := BUILD_CLEAR_MARGIN) -> int:
-	return _entries_for_build_regions(regions, at, yaw, margin).size()
+	return _entries_for_build_regions(regions, at, yaw, margin, Data.mcv_mode).size()
 
 
 ## rocks = true: ook rotsen verdwijnen (de wegen van de voorraadtrucks, voorraad.gd).

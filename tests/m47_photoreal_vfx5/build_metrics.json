@@ -1,0 +1,150 @@
+{
+  "blender_version": "4.3.2",
+  "render_engine": "CYCLES",
+  "frame_range": [
+    1,
+    192
+  ],
+  "fps": 24,
+  "duration_seconds": 8.0,
+  "source_glb": "docs/assets/m47-muurbreker-1.0/M47_Muurbreker_1.0_animated.glb",
+  "source_glb_sha256": "4031e935c5ef19a96a10257334a3cc99db92410a01389ef708259d887cf89872",
+  "m47_lod_triangles": {
+    "M47_LOD0": 50000,
+    "M47_LOD1": 25000,
+    "M47_LOD2": 9999
+  },
+  "lod0_render_visible": true,
+  "lod1_lod2_render_hidden": true,
+  "m47_actions": [
+    {
+      "name": "Idle",
+      "action": "Idle_M47_Mechanism_Rig",
+      "found": true,
+      "frame_range": [
+        1.0,
+        48.0
+      ],
+      "fcurves": 30,
+      "keyframes": 382,
+      "curves_with_motion": 3
+    },
+    {
+      "name": "Equip",
+      "action": "Equip_M47_Mechanism_Rig",
+      "found": true,
+      "frame_range": [
+        1.0,
+        36.0
+      ],
+      "fcurves": 30,
+      "keyframes": 298,
+      "curves_with_motion": 3
+    },
+    {
+      "name": "Aim",
+      "action": "Aim_M47_Mechanism_Rig",
+      "found": true,
+      "frame_range": [
+        1.0,
+        30.0
+      ],
+      "fcurves": 30,
+      "keyframes": 256,
+      "curves_with_motion": 3
+    },
+    {
+      "name": "Fire",
+      "action": "Fire_M47_Mechanism_Rig",
+      "found": true,
+      "frame_range": [
+        1.0,
+        18.0
+      ],
+      "fcurves": 30,
+      "keyframes": 220,
+      "curves_with_motion": 4
+    },
+    {
+      "name": "Reload",
+      "action": "Reload_M47_Mechanism_Rig",
+      "found": true,
+      "frame_range": [
+        1.0,
+        60.0
+      ],
+      "fcurves": 30,
+      "keyframes": 640,
+      "curves_with_motion": 4
+    }
+  ],
+  "m47_materials": {
+    "M47_Mechanism_Steel": {
+      "shader_nodes": 2,
+      "image_textures": [],
+      "packed_images": []
+    },
+    "Material_0": {
+      "shader_nodes": 7,
+      "image_textures": [
+        "Image_0",
+        "Image_1",
+        "Image_2"
+      ],
+      "packed_images": [
+        "Image_0",
+        "Image_1",
+        "Image_2"
+      ]
+    }
+  },
+  "mantaflow_domains": [
+    {
+      "name": "Volumetric simulation | blue-grey projectile smoke",
+      "found": true,
+      "cache_directory": "/workspace/Bloedjungle-godot/tests/m47_photoreal_vfx5/blender/cache/smoke",
+      "data_baked": true,
+      "noise_enabled": true,
+      "noise_baked": true,
+      "vdb_files": 384,
+      "resolution": 48,
+      "noise_scale": 2
+    },
+    {
+      "name": "Volumetric simulation | warm concrete dust",
+      "found": true,
+      "cache_directory": "/workspace/Bloedjungle-godot/tests/m47_photoreal_vfx5/blender/cache/dust",
+      "data_baked": true,
+      "noise_enabled": true,
+      "noise_baked": true,
+      "vdb_files": 384,
+      "resolution": 48,
+      "noise_scale": 2
+    }
+  ],
+  "photogrammetry_tree_instances": 7,
+  "fern_patches": 48,
+  "grass_clumps": 85,
+  "leaf_litter_mesh_faces": 35916,
+  "masonry_stones": 74,
+  "static_wall_stone_components": 55,
+  "animated_fracture_stones": 19,
+  "large_concrete_debris": 56,
+  "cycles_still_settings": {
+    "resolution": [
+      960,
+      540
+    ],
+    "samples": 8
+  },
+  "cycles_video_settings": {
+    "resolution": [
+      960,
+      540
+    ],
+    "fps": 24,
+    "frames": 192,
+    "samples": 8,
+    "duration_seconds": 8.0
+  }
+}

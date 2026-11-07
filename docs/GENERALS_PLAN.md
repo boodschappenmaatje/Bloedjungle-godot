@@ -174,3 +174,21 @@ Na de voltooide jeep-MG en infanterie-uitbreiding is gekozen voor de bazooka als
 ### Granaatbesturing 2.0 — UITRUSTING apart, rechterstick richten/loslaten (6 november 2026)
 
 De native iPhone-test toonde onbedoelde wielkeuzes doordat de knop GEBRUIK tegelijk granaatknop en uitrustingswiel was. **Gekozen optie B:** UITRUSTING als aparte keuzeknop boven/links van de wapenbalk; GRANAAT kiezen sluit het wiel zonder te gooien; een **nieuwe** rechterstick-aanraking richt met de bestaande boog en landingscirkel; rechterstick loslaten gooit **exact eenmaal**; terug naar het midden annuleert. In deze modus schiet de rechterstick nooit kogels. Bestaande granaatfysica, schietschade, range, touch-left-stick en waarschuwingen blijven intact. Zie [GRANAAT_BESTURING_2_0.md](GRANAAT_BESTURING_2_0.md). **Draft PR, nog niet mergen of OTA publiceren** totdat Godot- en iOS-testresultaten én een afzonderlijke toestemming binnen zijn.
+
+## Stap MCV — uitklapbare bouwwagen als start van je basis (keuzes van Dennis, 7 november 2026)
+**Idee:** zoals in Command & Conquer begin je met een grote bouwwagen (MCV). Je kiest een plek, klapt de wagen uit, en dat wordt je hoofdkwartier (B3) en het hart van je kamp. **Er is nog niets gebouwd.** Past bij Fase 1 (B3, B1, B4); bouw niets voordat Dennis "ga door" zegt, Draft PR, niet mergen of OTA zonder apart ja.
+
+| Vraag | Keuze van Dennis |
+|---|---|
+| 1 Waar mag je uitklappen? | **Overal, behalve bij water en in de stad.** Altijd aan dezelfde kant van de rivier als de huidige basis (`Data.river_z`), links (west) of rechts (oost) maakt niet uit. **Bomen, struiken, varens en rotsen verdwijnen** op de plek waar je uitklapt (zelfde aanpak als de vrijgemaakte stroken voor de voorraadtrucks). |
+| 2 Inklappen? | **Nee.** Is het spel eenmaal begonnen en is de wagen uitgeklapt, dan kun je niet meer inklappen of verhuizen. Begin je een nieuw potje, of heb je verloren, dan kies je opnieuw. |
+| 3 Muur en torens | **Zelf bouwen via het bouwmenu.** **Muur:** je trekt hem met je vinger; de eerste keer kost het niets, daarna **50 per muur**. **Torens:** je krijgt er **4 gratis aan het begin**, daarna **100 per stuk**. |
+
+**Open punten om bij de start van deze stap te bepalen (nog niet beslist):**
+- Wat "per muur" is: per segment, per tik of per getrokken lijn.
+- Wat de "eerste keer gratis" precies omvat: één getrokken omheining, of een vast aantal segmenten.
+- Of de 4 gratis torens overal geplaatst mogen worden, of binnen een straal van het hoofdkwartier.
+- Hoe ver de plek van het water, de stad en de vijandbasis moet blijven (rood/groen voetafdrukspook bij het kiezen).
+- Waar de speler en het eerste depot met truck verschijnen als de basis niet meer op de oorsprong staat; wat er met het vaste kamp (`Data.COMPOUND`, 56 x 56 m, poort, vier torens) gebeurt.
+
+**Wat mee moet verhuizen van de vaste basis naar het hoofdkwartier:** terugkomen na sneuvelen (H1), eerste depot en truck, radar en teamwiel, startplek van de speler, en de aanvalsroutes van de vijand (doel wordt het nieuwe hoofdkwartier). Eerst speelbaar met blokken (wagen en hoofdkwartier als blokken), daarna de modellen via een Asset Design Specification. Native iPhone-test: NIET GETEST.

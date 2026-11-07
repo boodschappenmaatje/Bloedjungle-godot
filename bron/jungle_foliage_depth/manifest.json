@@ -1,0 +1,28 @@
+{
+  "asset": "jungle_foliage_depth",
+  "source_blend": "bron/jungle_foliage_depth/jungle_foliage_depth.blend",
+  "generator": "bron/jungle_foliage_depth/make_assets.py",
+  "units": "metres",
+  "lod_nodes": "One GLB node per species/LOD; game code merges each species into a MultiMesh mesh with native ArrayMesh LOD index sets.",
+  "materials": 1,
+  "texture_set": "assets/textures/foliage/depth_pass/",
+  "game_triangle_counts": {
+    "rosette": {
+      "0": 648,
+      "1": 56,
+      "2": 10
+    },
+    "arch_fern": {
+      "0": 864,
+      "1": 392,
+      "2": 200
+    },
+    "red_bloom": {
+      "0": 1108,
+      "1": 366,
+      "2": 102
+    }
+  },
+  "wind": "Vertex alpha is authored root-to-tip wind weight; Godot foliage shader drives sway.",
+  "collisions": "None; render-only foliage."
+}

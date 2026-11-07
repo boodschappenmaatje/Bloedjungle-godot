@@ -26,10 +26,11 @@ func run() -> void:
 		check(mesh.surface_get_arrays(0)[Mesh.ARRAY_TANGENT].size()>0,"Foliage PBR needs an authored tangent frame")
 	var details := get_nodes_in_group("jungle_understory")
 	var under: GDScript = load("res://scripts/jungle_understory.gd")
-	var understory_counts := {"fern":0,"bush":0,"groundcover":0,"litter":0,"stone":0,"twig":0}
+	var understory_counts := {"fern":0,"bush":0,"groundcover":0,"rosette":0,"arch":0,"red":0,"litter":0,"stone":0,"twig":0}
 	for n: MultiMeshInstance3D in details:
 		var kind: String = n.name.get_slice("_", 1)
-		understory_counts[kind] += int(n.get_meta("full"))
+		var bucket := "arch" if kind == "arch_fern" else ("red" if kind == "red_bloom" else kind)
+		understory_counts[bucket] += int(n.get_meta("full"))
 	var grass_tufts := 0
 	for n: MultiMeshInstance3D in get_nodes_in_group("grass_3d"):
 		if n.get_meta("kind") == "short" and int(n.get_meta("lod")) == 0:
@@ -38,8 +39,11 @@ func run() -> void:
 	var short_grass_limit: int = grass_script.get_script_constant_map()["LIMIT"]["short"]
 	print("VISUAL B DENSITY short_grass=%d understory=%s" % [grass_tufts, JSON.stringify(understory_counts)])
 	check(grass_tufts > 11500 and grass_tufts <= short_grass_limit,"Fine grass must stay within its bounded LOD budget")
-	check(understory_counts.groundcover > 10000 and understory_counts.groundcover <= 11000,"Low broadleaf cover must be prominent and bounded")
-	check(understory_counts.fern <= 3300 and understory_counts.bush > 3000,"Keep tall fern silhouettes sparse and fill with low/mid-height plants")
+	check(understory_counts.groundcover >= 8000 and understory_counts.groundcover <= 9000,"Retain broadleaf cover within the new mobile-scatter budget")
+	check(understory_counts.fern <= 2400 and understory_counts.bush >= 2000,"Keep old fern/bush coverage bounded while reallocating to new silhouettes")
+	check(understory_counts.rosette >= 900 and understory_counts.rosette <= 1500,"New ribbed rosettes must appear inside their cap")
+	check(understory_counts.arch >= 700 and understory_counts.arch <= 1200,"New arched fern must appear inside its cap")
+	check(understory_counts.red >= 350 and understory_counts.red <= 650,"New red/brown blooms must remain sparse and readable")
 	check(under.has_method("litter_mesh"),"Litter needs a corrected ground normal frame")
 	if under.has_method("litter_mesh"):
 		var litter: ArrayMesh = under.litter_mesh()
@@ -47,6 +51,16 @@ func run() -> void:
 		var groundcover: ArrayMesh = under.groundcover_mesh()
 		check(groundcover.get_surface_count() == 1,"Groundcover must stay on one cutout surface for batching")
 		check(groundcover.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size() <= 320,"Low groundcover must spend its geometry budget on coverage, not near-invisible bends")
+	for kind in ["rosette","arch_fern","red_bloom"]:
+		var depth_mesh: ArrayMesh = under.depth_mesh(kind)
+		check(depth_mesh != null and depth_mesh.get_surface_count() == 1,"Depth-pass species must remain a single batched PBR surface: "+kind)
+		if depth_mesh != null:
+			check(depth_mesh.get_meta("depth_lod_distances_m", []).size() == 2,"Depth-pass species needs native LOD1/LOD2 thresholds: "+kind)
+			var triangles: Array = depth_mesh.get_meta("depth_lod_triangles", [])
+			check(triangles.size() == 3 and triangles[0] > triangles[1] and triangles[1] > triangles[2],"Depth-pass species LOD index sets must reduce triangles at distance: "+kind)
+			var depth_arrays := depth_mesh.surface_get_arrays(0)
+			check(depth_arrays[Mesh.ARRAY_TANGENT].size() > 0,"PBR leaf atlas needs imported tangents: "+kind)
+			check(depth_arrays[Mesh.ARRAY_COLOR].size() > 0,"Plant sway needs authored root-to-tip vertex weights: "+kind)
 	check(not details.is_empty(), "Missing clustered understory in the real game level")
 	check(details.any(func(n: MultiMeshInstance3D) -> bool: return n.name.begins_with("Understory_groundcover_")),"Missing fine-scale groundcover in the real game level")
 	for n: MultiMeshInstance3D in details:
@@ -93,6 +107,9 @@ func run() -> void:
 		for channel in ["color","normal"]:
 			var tex: Texture2D = load("res://assets/textures/foliage/%s_%s.png" % [family,channel])
 			check(tex.get_image().has_mipmaps(),"Foliage needs mipmaps: "+family+channel)
+	for file in ["jungle_leaf_flower_base_color.png","jungle_leaf_flower_normal_gl.png","jungle_leaf_flower_roughness.png"]:
+		var tex: Texture2D = load("res://assets/textures/foliage/depth_pass/"+file)
+		check(tex != null and tex.get_image().get_width() == 1024 and tex.get_image().has_mipmaps(),"New 1K leaf PBR atlas needs mipmaps: "+file)
 	var atm := get_first_node_in_group("atmosphere")
 	for quality in ["low","high","ultra","high"]:
 		settings.values["quality"] = quality

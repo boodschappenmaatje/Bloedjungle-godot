@@ -1,0 +1,147 @@
+{
+  "browser": "Chromium software WebGL; not an iPhone/Safari or game-camera test",
+  "species": {
+    "rosette": {
+      "lods": {
+        "0": {
+          "name": "HQ_rosette_LOD0",
+          "visible": true,
+          "triangles": 648,
+          "maps": {
+            "base": true,
+            "normal": true,
+            "roughness": true,
+            "baseSize": [
+              1024,
+              1024
+            ]
+          }
+        },
+        "1": {
+          "name": "HQ_rosette_LOD1",
+          "visible": true,
+          "triangles": 56,
+          "maps": {
+            "base": true,
+            "normal": true,
+            "roughness": true,
+            "baseSize": [
+              1024,
+              1024
+            ]
+          }
+        },
+        "2": {
+          "name": "HQ_rosette_LOD2",
+          "visible": true,
+          "triangles": 10,
+          "maps": {
+            "base": true,
+            "normal": true,
+            "roughness": true,
+            "baseSize": [
+              1024,
+              1024
+            ]
+          }
+        }
+      }
+    },
+    "arch_fern": {
+      "lods": {
+        "0": {
+          "name": "HQ_arch_fern_LOD0",
+          "visible": true,
+          "triangles": 864,
+          "maps": {
+            "base": true,
+            "normal": true,
+            "roughness": true,
+            "baseSize": [
+              1024,
+              1024
+            ]
+          }
+        },
+        "1": {
+          "name": "HQ_arch_fern_LOD1",
+          "visible": true,
+          "triangles": 392,
+          "maps": {
+            "base": true,
+            "normal": true,
+            "roughness": true,
+            "baseSize": [
+              1024,
+              1024
+            ]
+          }
+        },
+        "2": {
+          "name": "HQ_arch_fern_LOD2",
+          "visible": true,
+          "triangles": 200,
+          "maps": {
+            "base": true,
+            "normal": true,
+            "roughness": true,
+            "baseSize": [
+              1024,
+              1024
+            ]
+          }
+        }
+      }
+    },
+    "red_bloom": {
+      "lods": {
+        "0": {
+          "name": "HQ_red_bloom_LOD0",
+          "visible": true,
+          "triangles": 1108,
+          "maps": {
+            "base": true,
+            "normal": true,
+            "roughness": true,
+            "baseSize": [
+              1024,
+              1024
+            ]
+          }
+        },
+        "1": {
+          "name": "HQ_red_bloom_LOD1",
+          "visible": true,
+          "triangles": 366,
+          "maps": {
+            "base": true,
+            "normal": true,
+            "roughness": true,
+            "baseSize": [
+              1024,
+              1024
+            ]
+          }
+        },
+        "2": {
+          "name": "HQ_red_bloom_LOD2",
+          "visible": true,
+          "triangles": 102,
+          "maps": {
+            "base": true,
+            "normal": true,
+            "roughness": true,
+            "baseSize": [
+              1024,
+              1024
+            ]
+          }
+        }
+      }
+    }
+  },
+  "errors": [],
+  "loading": "Echte GLB-materialen laden…",
+  "status": "Jungle dieptepass · drie nieuwe plantvormen · VQ2 export · 360° draaien en zoomen actief.",
+  "ok": true
+}

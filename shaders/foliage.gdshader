@@ -6,7 +6,9 @@ render_mode cull_disabled, diffuse_lambert_wrap;
 
 uniform sampler2D tex : source_color, filter_linear_mipmap, repeat_enable;
 uniform sampler2D nrm : hint_normal, filter_linear_mipmap, repeat_enable;
+uniform sampler2D rough_tex : filter_linear_mipmap, repeat_enable;
 uniform bool use_tex = true;
+uniform bool use_rough_tex = false;
 uniform bool tile = false;  // schors herhaalt zich; bladeren niet (rand vastgeklemd)
 uniform float nrm_depth = 1.0;
 uniform float sway = 0.14;
@@ -107,7 +109,7 @@ void fragment() {
 	ALBEDO = base * t.rgb * tint * root_contact;
 	AO = root_contact;
 	AO_LIGHT_AFFECT = 0.15;
-	ROUGHNESS = tile ? 0.94 : 0.76;
+	ROUGHNESS = tile ? 0.94 : (use_rough_tex ? texture(rough_tex, uv).r : 0.76);
 	SPECULAR = tile ? 0.12 : 0.28;
 	BACKLIGHT = ALBEDO * backlight;
 }

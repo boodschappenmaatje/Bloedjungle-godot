@@ -33,8 +33,16 @@ static func material(kind := "") -> ShaderMaterial:
 			m.set_shader_parameter("cut", 0.0)
 			m.set_shader_parameter("tint", Vector3(0.55, 0.45, 0.36))
 		elif kind != "":
-			m.set_shader_parameter("tex", LeafTex.get_tex(kind))
-			m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
+			if kind == "depth_leaf":
+				m.set_shader_parameter("tex", load("res://assets/textures/foliage/depth_pass/jungle_leaf_flower_base_color.png"))
+				m.set_shader_parameter("nrm", load("res://assets/textures/foliage/depth_pass/jungle_leaf_flower_normal_gl.png"))
+				m.set_shader_parameter("rough_tex", load("res://assets/textures/foliage/depth_pass/jungle_leaf_flower_roughness.png"))
+				m.set_shader_parameter("use_rough_tex", true)
+				m.set_shader_parameter("cut", 0.43)
+				m.set_shader_parameter("tint", Vector3(1.12, 1.14, 1.02))
+			else:
+				m.set_shader_parameter("tex", LeafTex.get_tex(kind))
+				m.set_shader_parameter("nrm", LeafTex.get_normal(kind))
 			if kind == "leaf":
 				# Subtle reflected canopy light keeps the low leaf layer readable from the game camera.
 				m.set_shader_parameter("tint", Vector3(1.19, 1.2, 0.98))
@@ -58,7 +66,7 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 	GrassField.set_focus(player_pos, active)
 	_fade = move_toward(_fade, 1.0 if active else 0.0, delta / 0.35)
 	if _focus_mats.is_empty():
-		for key in ["palm", "leaf", "fern"]:
+		for key in ["palm", "leaf", "fern", "depth_leaf"]:
 			_focus_mats.append(material(key))
 	var on := _fade > 0.001
 	var e: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO, Vector4.ZERO]

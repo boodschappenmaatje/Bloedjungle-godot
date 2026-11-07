@@ -5,6 +5,9 @@ on:
     branches: [main]
     paths:
       - "assets/textures/terrain/**"
+      - "assets/textures/foliage/depth_pass/**"
+      - "assets/jungle_depth_foliage.glb"
+      - "bron/jungle_foliage_depth/**"
       - "scripts/atmosphere.gd"
       - "scripts/foliage.gd"
       - "scripts/grass_field.gd"
@@ -13,7 +16,9 @@ on:
       - "shaders/foliage.gdshader"
       - "shaders/grass_3d.gdshader"
       - "shaders/ground.gdshader"
+      - "shaders/water.gdshader"
       - "tests/visual_b_capture.gd"
+      - "tests/visual_b_test.gd"
       - ".github/workflows/visual-b-capture.yml"
 
 permissions:

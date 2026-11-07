@@ -48,14 +48,18 @@ void fragment() {
 	float n1 = texture(noise_a, p * 0.025).r;
 	float n2 = texture(noise_b, p * 0.09).r;
 	float n3 = texture(noise_b, p * 0.48).r;
+	// Fine, pixel-gated variation breaks broad painted patches without adding
+	// distant subpixel sparkle on the mobile renderer.
+	float n_micro = texture(noise_a, p * 1.7).r;
+	float micro_gate = 1.0 - smoothstep(0.055, 0.19, pixel_span);
 	// Approximate source-material scale so grass blades, earth clods and 8–15 cm trail
 	// stones survive gameplay-distance minification instead of averaging into flat color.
-	vec2 guv = p * 0.28;
+	vec2 guv = p * 0.46;
 	vec2 juv = p * 0.30 + 0.37;
-	vec2 duv = p * 0.32;
+	vec2 duv = p * 0.44;
 	vec2 muv = vec2(p.y, -p.x) * 0.28;
 	vec2 moss_uv = p * 0.34;
-vec2 gravel_uv = p * 0.55;
+	vec2 gravel_uv = p * 0.86;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -73,9 +77,9 @@ vec2 gravel_uv = p * 0.55;
 	float floor_mix = smoothstep(0.27, 0.72, n1 * 0.6 + n2 * 0.4) * 0.9;
 	// Keep the living floor green in the midground; the source grass atlas is deliberately
 	// low-contrast, so the former dark tint made its small blades average to a brown wash.
-	vec3 grass = mix(g * vec3(0.9,1.02,0.68), j * vec3(0.72,0.86,0.56), floor_mix);
+	vec3 grass = mix(g * vec3(0.86,1.06,0.70), j * vec3(0.70,0.90,0.55), floor_mix);
 	grass *= mix(vec3(1.03,0.99,0.88),vec3(0.86,1.0,0.9),smoothstep(0.3,0.7,n1));
-	grass *= 0.76 + 0.48*n3;
+	grass *= (0.82 + 0.34*n3) * mix(1.0,0.86+0.28*n_micro,micro_gate*0.72);
 	float inside = 1.0 - smoothstep(compound-0.5,compound+3.0,max(abs(p.x),abs(p.y)));
 	float path = (1.0-smoothstep(gate_gap*0.9,gate_gap*1.9+n2*1.6,abs(p.x)))
 		* smoothstep(compound-2.0,compound+1.5,abs(p.y))*(1.0-smoothstep(30.0,52.0,abs(p.y)));
@@ -93,13 +97,18 @@ vec2 gravel_uv = p * 0.55;
 	float patches = smoothstep(0.56,0.82,n1*0.68+n2*0.32);
 	float dm = clamp(max(max(inside,path),max(patches*0.48,max(bank,max(swamp*0.9,trail)))),0.0,1.0);
 	dm = smoothstep(0.12,0.88,dm+(n3-0.5)*0.17);
-	float rut = (1.0-smoothstep(0.12,0.38,abs(side-0.78+(n2-0.5)*0.12)))*road_active*trail;
-	float wet = max(bank*0.65,max(swamp,rut*smoothstep(0.46,0.66,n2)));
+	float rut_a = 1.0-smoothstep(0.10,0.31,abs(side-0.63+(n2-0.5)*0.10));
+	float rut_b = 1.0-smoothstep(0.10,0.31,abs(side-1.22+(n3-0.5)*0.12));
+	float rut = max(rut_a,rut_b)*road_active*trail;
+	float puddle_noise = smoothstep(0.73,0.90,n_micro)*micro_gate*trail;
+	float wet = max(bank*0.65,max(swamp,max(rut*smoothstep(0.43,0.63,n2),puddle_noise*0.72)));
 	wet = clamp(wet+trail*smoothstep(0.67,0.8,n2)*0.65,0.0,1.0);
 	// Gravel follows the established path and its worn shoulders, with broken edges from the existing macro noise.
-	float gravel_mix = clamp(max(path*0.94,trail*0.93)*mix(0.58,1.0,smoothstep(0.18,0.76,n2)),0.0,0.95);
+	float gravel_mix = clamp(max(path*0.94,trail*0.93)*mix(0.54,1.0,smoothstep(0.18,0.76,n2)),0.0,0.95);
 	vec3 dirt = d*vec3(0.76,0.65,0.52)*(0.9+0.2*n3);
 	dirt = mix(dirt,gravel*vec3(0.9,0.78,0.63),gravel_mix*0.94);
+	float pebble_speckle = smoothstep(0.68,0.87,n_micro)*micro_gate*gravel_mix;
+	dirt = mix(dirt,gravel*vec3(1.02,0.94,0.82),pebble_speckle*0.24);
 	dirt *= 1.0-rut*0.22;
 	dirt = mix(dirt,m*vec3(0.54,0.47,0.37),wet*0.55);
 	float edge = 4.0*dm*(1.0-dm);
@@ -109,7 +118,7 @@ vec2 gravel_uv = p * 0.55;
 	vec4 earth_surface = mix(ds,grs,gravel_mix*0.78);
 	vec4 surf = mix(mix(gs,js,floor_mix),mix(earth_surface,ms,wet*0.55),dm);
 	surf = mix(surf,mos,moss_mix);
-	ROUGHNESS = clamp(mix(0.94,mix(0.79,0.97,surf.a),dm)-wet*0.24,0.52,1.0);
+	ROUGHNESS = clamp(mix(0.94,mix(0.79,0.97,surf.a),dm)-wet*(0.20+0.16*puddle_noise),0.48,1.0);
 	// Restrained dielectric response; broaden specular at subpixel normal scales.
 	ROUGHNESS = mix(max(ROUGHNESS,0.86),ROUGHNESS,micro_detail);
 	SPECULAR = mix(0.12,0.25,dm);

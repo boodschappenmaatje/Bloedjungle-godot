@@ -2,7 +2,66 @@ class_name JungleUnderstory
 ## Render-only depth pass. Reuses shipped meshes/materials and the building-clearance index.
 ## A separate RNG leaves every existing tree, rock, collider and route unchanged.
 const CELL := 24.0
-const CAPS := {"fern":3300,"bush":4100,"groundcover":11000,"litter":5400,"stone":1900,"twig":700}
+const CAPS := {"fern":2400,"bush":3000,"groundcover":9000,"rosette":1500,"arch_fern":1200,"red_bloom":650,"litter":5400,"stone":1900,"twig":700}
+static var _depth_lod_meshes: Dictionary = {}
+static var _depth_source_meshes: Dictionary = {}
+
+
+static func depth_mesh(kind: String) -> ArrayMesh:
+	if not _depth_lod_meshes.has(kind):
+		_load_depth_assets()
+	return _depth_lod_meshes.get(kind)
+
+
+static func _load_depth_assets() -> void:
+	if not _depth_lod_meshes.is_empty(): return
+	var packed := load("res://assets/jungle_depth_foliage.glb") as PackedScene
+	if packed == null: return
+	var root := packed.instantiate()
+	for node: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		for kind in ["rosette", "arch_fern", "red_bloom"]:
+			for lod in 3:
+				if node.name == "HQ_%s_LOD%d" % [kind, lod]:
+					if not _depth_source_meshes.has(kind): _depth_source_meshes[kind] = [null, null, null]
+					var source_meshes: Array = _depth_source_meshes[kind]
+					source_meshes[lod] = node.mesh
+					_depth_source_meshes[kind] = source_meshes
+					break
+	root.free()
+	for kind in ["rosette", "arch_fern", "red_bloom"]:
+		var sources: Array = _depth_source_meshes.get(kind, [])
+		if sources.size() == 3 and sources.all(func(mesh): return mesh is Mesh):
+			_depth_lod_meshes[kind] = _merge_native_lods(sources, kind)
+
+
+static func _merge_native_lods(sources: Array, kind: String) -> ArrayMesh:
+	var arrays_by_lod: Array = []
+	for source: Mesh in sources:
+		if source.get_surface_count() != 1: return null
+		arrays_by_lod.append(source.surface_get_arrays(0))
+	var merged: Array = arrays_by_lod[0].duplicate()
+	var base_indices: PackedInt32Array = arrays_by_lod[0][Mesh.ARRAY_INDEX]
+	var lod_indices: Dictionary = {}
+	var triangle_counts := [base_indices.size() / 3]
+	for lod in [1, 2]:
+		var source_arrays: Array = arrays_by_lod[lod]
+		var source_vertices: PackedVector3Array = source_arrays[Mesh.ARRAY_VERTEX]
+		var offset: int = merged[Mesh.ARRAY_VERTEX].size()
+		for attribute in range(Mesh.ARRAY_MAX):
+			if attribute == Mesh.ARRAY_INDEX or merged[attribute] == null: continue
+			merged[attribute].append_array(source_arrays[attribute])
+		var indices: PackedInt32Array = source_arrays[Mesh.ARRAY_INDEX].duplicate()
+		for i in indices.size(): indices[i] += offset
+		lod_indices[16.0 if lod == 1 else 36.0] = indices
+		triangle_counts.append(indices.size() / 3)
+	merged[Mesh.ARRAY_INDEX] = base_indices
+	var result := ArrayMesh.new()
+	result.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, merged, [], lod_indices)
+	result.surface_set_material(0, Foliage.material("depth_leaf"))
+	result.resource_name = "JungleDepth_%s_LOD0_1_2" % kind
+	result.set_meta("depth_lod_distances_m", [16.0, 36.0])
+	result.set_meta("depth_lod_triangles", triangle_counts)
+	return result
 
 static func allowed(p: Vector3) -> bool:
 	return GrassField._allowed(p) and not (p.x > Data.COMPOUND and p.x < Data.COMPOUND+11.5 and absf(p.z)<23.0)
@@ -96,13 +155,13 @@ static func spawn(parent: Node3D) -> void:
 		candidates[i] = candidates[j]
 		candidates[j] = swap
 	var groups := {}
-	var counts := {"fern":0,"bush":0,"groundcover":0,"litter":0,"stone":0,"twig":0}
+	var counts := {"fern":0,"bush":0,"groundcover":0,"rosette":0,"arch_fern":0,"red_bloom":0,"litter":0,"stone":0,"twig":0}
 	for p in candidates:
 		if not allowed(p): continue
 		var roll := rng.randf()
-		# Move part of the capped detail budget from small litter and tall fans to readable low rosettes.
-		# The existing cell MultiMeshes, route clearances and draw-pass structure remain unchanged.
-		var kind := "fern" if roll<0.13 else ("bush" if roll<0.29 else ("groundcover" if roll<0.72 else ("litter" if roll<0.88 else ("stone" if roll<0.985 else "twig"))))
+		# Trade part of the repeated low cards for three authored silhouettes while
+		# keeping the total scatter cap near its current level.
+		var kind := "fern" if roll<0.08 else ("bush" if roll<0.18 else ("groundcover" if roll<0.50 else ("rosette" if roll<0.56 else ("arch_fern" if roll<0.63 else ("red_bloom" if roll<0.67 else ("litter" if roll<0.83 else ("stone" if roll<0.97 else "twig")))))))
 		if counts[kind]>=CAPS[kind]: continue
 		var variant := rng.randi_range(0,2) if kind in ["fern","bush","groundcover"] else 0
 		var cell := Vector2i(floori(p.x/CELL),floori(p.z/CELL))
@@ -113,6 +172,9 @@ static func spawn(parent: Node3D) -> void:
 		var size_ := Vector3(s,s*rng.randf_range(0.65,1.1),s)
 		if kind=="bush": size_ *= 0.78
 		if kind=="groundcover": size_ *= 1.38
+		if kind=="rosette": size_ *= rng.randf_range(0.92,1.32)
+		if kind=="arch_fern": size_ *= rng.randf_range(0.82,1.22)
+		if kind=="red_bloom": size_ *= rng.randf_range(0.85,1.18)
 		if kind=="litter": size_=Vector3(s*0.65,s*0.65,0.025)
 		if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.12,0.32)
 		if kind=="twig": size_=Vector3(0.035,rng.randf_range(0.35,0.85),0.035)
@@ -133,12 +195,13 @@ static func spawn(parent: Node3D) -> void:
 	var meshes := {"fern":[understory_variant_mesh("fern",0),understory_variant_mesh("fern",1),understory_variant_mesh("fern",2)],
 		"bush":[understory_variant_mesh("bush",0),understory_variant_mesh("bush",1),understory_variant_mesh("bush",2)],
 		"groundcover":[understory_variant_mesh("groundcover",0),understory_variant_mesh("groundcover",1),understory_variant_mesh("groundcover",2)],
+		"rosette":depth_mesh("rosette"),"arch_fern":depth_mesh("arch_fern"),"red_bloom":depth_mesh("red_bloom"),
 		"litter":litter,"stone":Foliage.jungle_mesh("Rots2"),"twig":twig}
 	var stone := Kit.rock().duplicate() as StandardMaterial3D
 	stone.vertex_color_use_as_albedo=true
 	for key in groups:
 		var data: Dictionary = groups[key]
-		var mat: Material = stone if data.kind=="stone" else (Kit.photo("nature/tree_bark",1.5,Color(0.48,0.4,0.3)) if data.kind=="twig" else null)
+		var mat: Material = stone if data.kind=="stone" else (Kit.photo("nature/tree_bark",1.5,Color(0.48,0.4,0.3)) if data.kind=="twig" else (Foliage.material("depth_leaf") if data.kind in ["rosette","arch_fern","red_bloom"] else null))
 		var mesh: Mesh = meshes[data.kind][int(key.split("_")[1])] if data.kind in ["fern","bush","groundcover"] else meshes[data.kind]
 		var n := Kit.scatter(parent,mesh,mat,data.xf,data.col,false)
 		# Cleared slots move below the world; never let that alter the cell culling center.

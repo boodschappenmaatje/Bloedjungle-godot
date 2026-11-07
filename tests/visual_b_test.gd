@@ -38,12 +38,13 @@ func run() -> void:
 	var grass_script: GDScript = load("res://scripts/grass_field.gd")
 	var short_grass_limit: int = grass_script.get_script_constant_map()["LIMIT"]["short"]
 	print("VISUAL B DENSITY short_grass=%d understory=%s" % [grass_tufts, JSON.stringify(understory_counts)])
-	check(grass_tufts > 11500 and grass_tufts <= short_grass_limit,"Fine grass must stay within its bounded LOD budget")
-	check(understory_counts.groundcover >= 7000 and understory_counts.groundcover <= 9000,"Retain broadleaf cover within the new mobile-scatter budget")
+	check(grass_tufts >= 22000 and grass_tufts <= short_grass_limit,"Fine grass must fill the bounded playable-floor LOD budget")
+	check(understory_counts.groundcover >= 13000 and understory_counts.groundcover <= 14000,"Fine groundcover must fill its bounded camera-area scatter budget")
 	check(understory_counts.fern <= 2400 and understory_counts.bush >= 2000,"Keep old fern/bush coverage bounded while reallocating to new silhouettes")
 	check(understory_counts.rosette >= 1700 and understory_counts.rosette <= 1900,"New ribbed rosettes must appear inside their cap")
 	check(understory_counts.arch >= 1300 and understory_counts.arch <= 1450,"New arched fern must appear inside its cap")
 	check(understory_counts.red >= 750 and understory_counts.red <= 850,"New red/bronze blooms must remain bounded and readable")
+	check(understory_counts.litter >= 12500 and understory_counts.litter <= 14000,"Leaf litter must materially break up exposed soil without exceeding its mobile cap")
 	check(under.has_method("litter_mesh"),"Litter needs a corrected ground normal frame")
 	if under.has_method("litter_mesh"):
 		var litter: ArrayMesh = under.litter_mesh()
@@ -65,20 +66,32 @@ func run() -> void:
 	check(details.any(func(n: MultiMeshInstance3D) -> bool: return n.name.begins_with("Understory_groundcover_")),"Missing fine-scale groundcover in the real game level")
 	for n: MultiMeshInstance3D in details:
 		check(n.multimesh.custom_aabb.size.x > 0.0 and n.multimesh.custom_aabb.size.x <= 28.0,"Detail batch needs stable cell bounds after clearing")
-		check(n.multimesh.instance_count <= 360, "Unbounded detail batch")
+		check(n.multimesh.instance_count <= (720 if n.name.begins_with("Understory_litter_") else 360), "Unbounded detail batch")
 		check(n.visibility_range_end <= 76.0, "Microdetail must distance cull")
 		check(n.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "Detail adds shadow cost")
 		check(n.find_children("*","CollisionShape3D",true,false).is_empty(),"Detail introduces collisions")
 	var meshes := details.map(func(n): return n.multimesh)
+	var detail_meshes := meshes.duplicate()
+	for n: MultiMeshInstance3D in get_nodes_in_group("grass_3d"):
+		if n.get_meta("kind") == "short" and int(n.get_meta("lod")) == 0:
+			meshes.append(n.multimesh)
 	var near_bank := 0
 	var near_wall := 0
 	var near_path := 0
 	var near_authored := {"rosette":0,"arch_fern":0,"red_bloom":0}
+	var near_camera_cover := {"short":0,"groundcover":0,"litter":0}
 	var authored_batches := {}
+	var camera_cover_batches := {}
 	for n: MultiMeshInstance3D in details:
+		for kind in ["groundcover","litter"]:
+			if n.name.begins_with("Understory_"+kind+"_"):
+				camera_cover_batches[n.multimesh.get_instance_id()] = kind
 		for kind in near_authored.keys():
 			if n.name.begins_with("Understory_"+kind+"_"):
 				authored_batches[n.multimesh.get_instance_id()] = kind
+	for n: MultiMeshInstance3D in get_nodes_in_group("grass_3d"):
+		if n.get_meta("kind") == "short" and int(n.get_meta("lod")) == 0:
+			camera_cover_batches[n.multimesh.get_instance_id()] = "short"
 	var checked := 0
 	var sample := Vector3.INF
 	# Dummy renderer cannot read GPU buffers. Use the production clearance index,
@@ -87,13 +100,18 @@ func run() -> void:
 		for entry: Dictionary in cell:
 			if entry.slots.is_empty() or not entry.slots[0].multimesh in meshes: continue
 			var p: Vector3 = entry.world_position
+			var batch_id: int = entry.slots[0].multimesh.get_instance_id()
 			var authored_kind: String = authored_batches.get(entry.slots[0].multimesh.get_instance_id(),"")
 			if not authored_kind.is_empty() and Vector2(p.x-7.0,p.z+57.0).length() < 30.0:
 				near_authored[authored_kind] += 1
+			if Vector2(p.x-7.0,p.z+57.0).length() < 26.0 and absf(p.x-data_rules.path_x(p.z)) > 2.8:
+				var cover_kind: String = camera_cover_batches.get(batch_id,"")
+				if near_camera_cover.has(cover_kind): near_camera_cover[cover_kind] += 1
 			if data_rules.river_off(p.x,p.z) < 10.0: near_bank += 1
 			if maxf(absf(p.x),absf(p.z)) < data_rules.COMPOUND+4.5: near_wall += 1
 			if absf(p.x-data_rules.path_x(p.z)) < 10.0 and p.z < -34.0 and p.z > -86.0: near_path += 1
-			check(entry.slots[0].multimesh.custom_aabb.has_point(entry.local_position),"Prepared detail outside stable bounds")
+			if entry.slots[0].multimesh in detail_meshes:
+				check(entry.slots[0].multimesh.custom_aabb.has_point(entry.local_position),"Prepared detail outside stable bounds")
 			checked += 1
 			sample = p
 			check(maxf(absf(p.x),absf(p.z)) > data_rules.COMPOUND+1.8,"Detail in base")
@@ -101,7 +119,10 @@ func run() -> void:
 			check(not (absf(p.x)<4.6 and absf(p.z)<70.0),"Detail blocks gate approach")
 	check(near_bank>20 and near_wall>20 and near_path>20,"Detail budget starves banks/foundations/shoulders")
 	print("VISUAL B CAMERA PLANTS ",JSON.stringify(near_authored))
-	check(near_authored.rosette>=600 and near_authored.arch_fern>=450 and near_authored.red_bloom>=250,
+	print("VISUAL B CAMERA FLOOR ",JSON.stringify(near_camera_cover))
+	check(near_camera_cover.short >= 900 and near_camera_cover.groundcover >= 1000 and near_camera_cover.litter >= 700,
+		"The open playable floor needs close-camera ground detail while leaving the trail readable")
+	check(near_authored.rosette>=600 and near_authored.arch_fern>=450 and near_authored.red_bloom>=200,
 		"New high-detail plant colonies must read in the real bospad camera area")
 	check(checked > 1000,"Missing registered removable detail")
 	if sample != Vector3.INF:

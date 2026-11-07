@@ -59,7 +59,7 @@ void fragment() {
 	vec2 duv = p * 0.44;
 	vec2 muv = vec2(p.y, -p.x) * 0.28;
 	vec2 moss_uv = p * 0.34;
-	vec2 gravel_uv = p * 0.86;
+	vec2 gravel_uv = p * 1.18;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -77,7 +77,7 @@ void fragment() {
 	float floor_mix = smoothstep(0.27, 0.72, n1 * 0.6 + n2 * 0.4) * 0.9;
 	// Shift the broad floor away from the former yellow wash while keeping the
 	// source atlas's fine blades legible after mobile mip filtering.
-	vec3 grass = mix(g * vec3(0.78,1.00,0.82), j * vec3(0.66,0.88,0.63), floor_mix);
+	vec3 grass = mix(g * vec3(0.68,0.93,0.74), j * vec3(0.58,0.82,0.60), floor_mix);
 	grass *= mix(vec3(0.96,1.0,0.94),vec3(0.84,1.0,0.92),smoothstep(0.3,0.7,n1));
 	grass *= (0.82 + 0.34*n3) * mix(1.0,0.86+0.28*n_micro,micro_gate*0.72);
 	float inside = 1.0 - smoothstep(compound-0.5,compound+3.0,max(abs(p.x),abs(p.y)));
@@ -94,9 +94,9 @@ void fragment() {
 	swamp *= 1.0-smoothstep(0.0,2.0,river_off-3.0);
 	// Dirt stays in broken, occasional patches. The earlier wide mask left broad bare
 	// fields that visually swallowed the short grass and understory.
-	float patches = smoothstep(0.56,0.82,n1*0.68+n2*0.32);
-	float dm = clamp(max(max(inside,path),max(patches*0.48,max(bank,max(swamp*0.9,trail)))),0.0,1.0);
-	dm = smoothstep(0.12,0.88,dm+(n3-0.5)*0.17);
+	float patches = smoothstep(0.45,0.76,n1*0.20+n2*0.45+n3*0.35);
+	float dm = clamp(max(max(inside,path),max(patches*0.58,max(bank,max(swamp*0.9,trail)))),0.0,1.0);
+	dm = smoothstep(0.10,0.78,dm+(n3-0.5)*0.19);
 	float rut_a = 1.0-smoothstep(0.10,0.31,abs(side-0.63+(n2-0.5)*0.10));
 	float rut_b = 1.0-smoothstep(0.10,0.31,abs(side-1.22+(n3-0.5)*0.12));
 	float rut = max(rut_a,rut_b)*road_active*trail;

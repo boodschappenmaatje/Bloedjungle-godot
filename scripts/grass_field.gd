@@ -5,7 +5,7 @@ extends Node3D
 const KINDS := ["short", "medium", "tall"]
 const ZONE_DATA := preload("res://resources/grass_zones.tres")
 const CELL := 24.0
-const LIMIT := {"short": 14500, "medium": 2200, "tall": 1600}
+const LIMIT := {"short": 24000, "medium": 2200, "tall": 1600}
 const END := {"short": 52.0, "medium": 62.0, "tall": 72.0}
 static var _meshes := {}
 static var _material: ShaderMaterial
@@ -110,7 +110,7 @@ func _populate(existing: Array) -> void:
 			_add_point(groups, shoulder_rng, "short", p)
 	# The playable ground used to inherit mostly sparse tree-ring tufts. Add a finer,
 	# bounded low layer over the jungle floor; the established open firing lane stays clear.
-	for i in 10500:
+	for i in 19000:
 		var p := Vector3(shoulder_rng.randf_range(-65.0,65.0),0,shoulder_rng.randf_range(-85.0,-34.0))
 		var road_clear := p.z < -30.0 and p.z > -100.0 and absf(p.x - Data.path_x(p.z)) < 2.25
 		if _allowed(p) and not road_clear and shoulder_rng.randf() < 0.56 + 0.44 * Foliage._grove(p.x,p.z):
@@ -179,8 +179,8 @@ func _add_point(groups: Dictionary, rng: RandomNumberGenerator, kind: String, po
 	# Short tufts are 24 cm tall. Their authored footprint was too small to read at the normal
 	# play camera, so grow the existing model into low, varied grass clumps without new instances,
 	# colliders or changes to the preserved firing-lane clearance.
-	var spread := 3.4 if kind == "short" else 1.0
-	var height_scale := 2.7 if kind == "short" else 1.0
+	var spread := 3.8 if kind == "short" else 1.0
+	var height_scale := 2.1 if kind == "short" else 1.0
 	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_*spread, scale_*height_scale, scale_*spread))
 	groups[key].xf.append(Transform3D(basis, pos))
 	if kind == "short":

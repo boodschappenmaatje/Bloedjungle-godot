@@ -37,27 +37,27 @@ void fragment() {
 	float edgefoam = edge * smoothstep(0.42, 0.65, texture(noise, vec2(p.x * 0.3 - TIME * v * 0.12, p.y * 0.3)).r);
 	// Diepte: een iets donkerder stroomgoot, ondiepe turkooizen randen.
 	float depth = smoothstep(2.7, 0.28, d);
-	float current_glint = smoothstep(0.38, 0.7, streak);
+	float current_glint = smoothstep(0.34, 0.66, streak);
 	vec3 col = mix(shallow, deep, depth * 0.58);
-	col = mix(col, shallow * vec3(1.02, 1.07, 1.04), current_glint * 0.24);
-	col += vec3(0.025, 0.055, 0.055) * current_glint;
+	col = mix(col, shallow * vec3(1.03, 1.08, 1.06), current_glint * 0.32);
+	col += vec3(0.035, 0.065, 0.065) * current_glint;
 	col = mix(col, foam, clamp(flake * 0.55 + edgefoam * 0.8, 0.0, 1.0));
 	// rimpels die in twee richtingen schuiven: geven glinsteringen in het zonlicht en een bewegend oppervlak
 	float r1 = texture(noise, p * 0.55 + vec2(-TIME * v * 0.09, TIME * 0.03)).r;
 	float r2 = texture(noise, p * 0.9 + vec2(-TIME * v * 0.14, -TIME * 0.05) + 0.3).r;
 	float rip = r1 * 0.55 + r2 * 0.45;
-	float glint = smoothstep(0.68, 0.82, rip) * (1.0 - flake);
-	col += vec3(0.20,0.18,0.12) * glint * 0.14;
-	vec2 g = vec2(r1 - 0.5, r2 - 0.5) * 0.5 + vec2(s1 - 0.5, s2 - 0.5) * 0.25;
+	float glint = smoothstep(0.62, 0.80, rip) * (1.0 - flake);
+	col += vec3(0.24,0.22,0.16) * glint * 0.24;
+	vec2 g = vec2(r1 - 0.5, r2 - 0.5) * 0.88 + vec2(s1 - 0.5, s2 - 0.5) * 0.4;
 	NORMAL = normalize(NORMAL + (VIEW_MATRIX * vec4(g.x, 0.0, g.y, 0.0)).xyz);
 	// spiegeling van de lucht onder een scheve kijkhoek
 	float fres = pow(1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0), 3.0);
-	col = mix(col, vec3(0.40, 0.70, 0.76), fres * 0.32);
+	col = mix(col, vec3(0.48, 0.75, 0.78), fres * 0.40);
 	ALBEDO = col;
 	// Mobile Forward Mobile has no reliable planar reflection; a restrained
 	// self-lit floor keeps deep channels readable without adding transparency.
 	EMISSION = col * 0.12;
-	ROUGHNESS = 0.22 + 0.20 * flake;
-	SPECULAR = 0.58;
+	ROUGHNESS = 0.16 + 0.20 * flake;
+	SPECULAR = 0.72;
 	METALLIC = 0.0;
 }

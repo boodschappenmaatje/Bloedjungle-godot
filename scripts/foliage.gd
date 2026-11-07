@@ -39,7 +39,8 @@ static func material(kind := "") -> ShaderMaterial:
 				m.set_shader_parameter("rough_tex", load("res://assets/textures/foliage/depth_pass/jungle_leaf_flower_roughness.png"))
 				m.set_shader_parameter("use_rough_tex", true)
 				m.set_shader_parameter("cut", 0.43)
-				m.set_shader_parameter("tint", Vector3(1.12, 1.14, 1.02))
+				m.set_shader_parameter("tint", Vector3(1.17, 1.19, 1.05))
+				m.set_shader_parameter("backlight", 0.72)
 			else:
 				m.set_shader_parameter("tex", LeafTex.get_tex(kind))
 				m.set_shader_parameter("nrm", LeafTex.get_normal(kind))

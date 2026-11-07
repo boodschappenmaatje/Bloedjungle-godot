@@ -46,9 +46,15 @@ void fragment() {
 	float r1 = texture(noise, p * 0.55 + vec2(-TIME * v * 0.09, TIME * 0.03)).r;
 	float r2 = texture(noise, p * 0.9 + vec2(-TIME * v * 0.14, -TIME * 0.05) + 0.3).r;
 	float rip = r1 * 0.55 + r2 * 0.45;
-	float glint = smoothstep(0.62, 0.80, rip) * (1.0 - flake);
-	col += vec3(0.24,0.22,0.16) * glint * 0.24;
-	vec2 g = vec2(r1 - 0.5, r2 - 0.5) * 0.88 + vec2(s1 - 0.5, s2 - 0.5) * 0.4;
+	float glint = smoothstep(0.56, 0.78, rip) * (1.0 - flake);
+	col += vec3(0.32,0.30,0.22) * glint * 0.38;
+	// Animated broken crests make small-scale flow legible in the real overhead
+	// camera even when the mobile renderer has no planar reflections.
+	float wave_a = sin(p.x * 0.72 + p.y * 0.31 - TIME * v * 0.86 + (s1 - 0.5) * 1.7);
+	float wave_b = sin(p.x * 1.42 - p.y * 0.48 - TIME * v * 1.24 + (s2 - 0.5) * 1.4);
+	float crest = smoothstep(0.42, 0.92, 0.5 + 0.34 * wave_a + 0.16 * wave_b);
+	col = mix(col, vec3(0.54,0.78,0.78), crest * (1.0 - edge * 0.32) * 0.20);
+	vec2 g = vec2(r1 - 0.5, r2 - 0.5) * 1.12 + vec2(s1 - 0.5, s2 - 0.5) * 0.58;
 	NORMAL = normalize(NORMAL + (VIEW_MATRIX * vec4(g.x, 0.0, g.y, 0.0)).xyz);
 	// spiegeling van de lucht onder een scheve kijkhoek
 	float fres = pow(1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0), 3.0);
@@ -56,8 +62,8 @@ void fragment() {
 	ALBEDO = col;
 	// Mobile Forward Mobile has no reliable planar reflection; a restrained
 	// self-lit floor keeps deep channels readable without adding transparency.
-	EMISSION = col * 0.12;
-	ROUGHNESS = 0.16 + 0.20 * flake;
+	EMISSION = col * 0.18;
+	ROUGHNESS = 0.14 + 0.18 * flake;
 	SPECULAR = 0.72;
 	METALLIC = 0.0;
 }

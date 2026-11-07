@@ -17,7 +17,7 @@ const PALM_NEAR := 62.0  # dichterbij: volledige palm; verder: de simpele palm
 ## Stam of rots waar je niet doorheen loopt: straal in meters bij schaal 1 (laag Kit.LAYER_NATURE: mensen, voertuigen, kogels en granaten).
 const BOOM_COLLIDE_R := 0.8  # jungleboom: stam met plankwortels (bij schaal 1, voor de 0,75 van BOOM_SCALE)
 const COLLIDE_R := {"palm": 0.32, "rock": 0.45}
-const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.5], "bush": [1.1, 1.8, 0.45], "rock": [0.5, 1.2, 0.4]}  # hoogte, breedte, sterkte
+const SHADOW_KINDS := {"palm": [4.2, 2.6, 0.38], "bush": [1.1, 1.8, 0.32], "rock": [0.5, 1.2, 0.32]}  # hoogte, breedte, sterkte
 
 
 ## Wind-materiaal; met een bladtextuur (kind) of zonder (stam, rotsen).

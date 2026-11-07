@@ -54,12 +54,12 @@ void fragment() {
 	float micro_gate = 1.0 - smoothstep(0.055, 0.19, pixel_span);
 	// Approximate source-material scale so grass blades, earth clods and 8–15 cm trail
 	// stones survive gameplay-distance minification instead of averaging into flat color.
-	vec2 guv = p * 0.46;
-	vec2 juv = p * 0.30 + 0.37;
-	vec2 duv = p * 0.44;
-	vec2 muv = vec2(p.y, -p.x) * 0.28;
-	vec2 moss_uv = p * 0.34;
-	vec2 gravel_uv = p * 1.18;
+	vec2 guv = p * 0.72;
+	vec2 juv = p * 0.45 + 0.37;
+	vec2 duv = p * 0.64;
+	vec2 muv = vec2(p.y, -p.x) * 0.40;
+	vec2 moss_uv = p * 0.48;
+	vec2 gravel_uv = p * 1.58;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -115,6 +115,9 @@ void fragment() {
 	float moss_mix = clamp(edge*0.3+bank*(1.0-wet)*0.2+smoothstep(0.58,0.76,n2)*(1.0-dm)*0.23,0.0,0.45);
 	vec3 base = mix(grass,dirt,dm);
 	ALBEDO = mix(base,moss*vec3(0.48,0.65,0.42),moss_mix);
+	// Keep close grass and earth from averaging into a painted field. The
+	// derivative gate fades this fine material grain before it can shimmer at distance.
+	ALBEDO *= 0.94 + 0.12 * n_micro * micro_gate;
 	vec4 earth_surface = mix(ds,grs,gravel_mix*0.78);
 	vec4 surf = mix(mix(gs,js,floor_mix),mix(earth_surface,ms,wet*0.55),dm);
 	surf = mix(surf,mos,moss_mix);

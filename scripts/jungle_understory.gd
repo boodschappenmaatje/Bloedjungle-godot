@@ -2,7 +2,7 @@ class_name JungleUnderstory
 ## Render-only depth pass. Reuses shipped meshes/materials and the building-clearance index.
 ## A separate RNG leaves every existing tree, rock, collider and route unchanged.
 const CELL := 24.0
-const CAPS := {"fern":2400,"bush":3000,"groundcover":14000,"rosette":1900,"arch_fern":1450,"red_bloom":850,"litter":14000,"stone":1900,"twig":700}
+const CAPS := {"fern":2400,"bush":3000,"groundcover":16000,"rosette":1900,"arch_fern":1450,"red_bloom":850,"litter":15000,"stone":1900,"twig":700}
 static var _depth_lod_meshes: Dictionary = {}
 static var _depth_source_meshes: Dictionary = {}
 
@@ -187,7 +187,7 @@ static func spawn(parent: Node3D) -> void:
 	# rosette/fern groups. Their centres are jittered and clustered; the firing road,
 	# base approach, build clearances and river stay open under the same acceptance rules.
 	for cluster in 300:
-		var center := Vector3(fill_rng.randf_range(-54.0,54.0),0.012,fill_rng.randf_range(-84.0,-35.0))
+		var center := Vector3(fill_rng.randf_range(-38.0,42.0),0.012,fill_rng.randf_range(-79.0,-38.0))
 		var radius := fill_rng.randf_range(1.2,2.8)
 		for i in 30:
 			var angle := fill_rng.randf()*TAU
@@ -196,6 +196,17 @@ static func spawn(parent: Node3D) -> void:
 			if absf(p.x-Data.path_x(p.z))<2.8 or not allowed(p): continue
 			colony_positions.append(p)
 			colony_kinds.append("groundcover")
+	# Reserve a small litter budget for the camera-facing floor before the broad fill.
+	for cluster in 75:
+		var center := Vector3(fill_rng.randf_range(-32.0,36.0),0.012,fill_rng.randf_range(-78.0,-39.0))
+		var radius := fill_rng.randf_range(0.9,2.0)
+		for i in fill_rng.randi_range(10,18):
+			var angle := fill_rng.randf()*TAU
+			var r := sqrt(fill_rng.randf())*radius
+			var p := center+Vector3(cos(angle)*r,0,sin(angle)*r)
+			if absf(p.x-Data.path_x(p.z))<3.0 or not allowed(p): continue
+			colony_positions.append(p)
+			colony_kinds.append("litter")
 	for cluster in 1200:
 		var center := Vector3(fill_rng.randf_range(-62.0,62.0),0.012,fill_rng.randf_range(-86.0,-34.0))
 		var radius := fill_rng.randf_range(0.8,2.6)
@@ -206,6 +217,18 @@ static func spawn(parent: Node3D) -> void:
 			if not allowed(p): continue
 			colony_positions.append(p)
 			colony_kinds.append("litter")
+	# Prioritize low detail inside the playable camera area instead of spreading
+	# the whole budget over the distant map. Tall sightlines and the roadway stay clear.
+	for cluster in 110:
+		var center := Vector3(fill_rng.randf_range(-30.0,34.0),0.012,fill_rng.randf_range(-77.0,-40.0))
+		var radius := fill_rng.randf_range(1.5,2.8)
+		for i in fill_rng.randi_range(15,23):
+			var angle := fill_rng.randf()*TAU
+			var r := sqrt(fill_rng.randf())*radius
+			var p := center+Vector3(cos(angle)*r,0,sin(angle)*r)
+			if absf(p.x-Data.path_x(p.z))<3.3 or not allowed(p): continue
+			colony_positions.append(p)
+			colony_kinds.append("groundcover")
 	# Interleave habitat sources before caps; anchors cannot consume the whole budget.
 	for i in range(candidates.size()-1,0,-1):
 		var j := rng.randi_range(0,i)
@@ -262,15 +285,15 @@ static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNu
 	var cell := Vector2i(floori(p.x/CELL),floori(p.z/CELL))
 	var key := "%s_%d_%d_%d" % [kind,variant,cell.x,cell.y]
 	if not groups.has(key): groups[key] = {"kind":kind,"cell":cell,"xf":[],"col":[]}
-	if groups[key].xf.size()>=(720 if kind=="litter" else 360): return
+	if groups[key].xf.size()>=(900 if kind=="litter" else (480 if kind=="groundcover" else 360)): return
 	var s := rng.randf_range(0.5,1.18)
 	var size_ := Vector3(s,s*rng.randf_range(0.65,1.1),s)
 	if kind=="bush": size_ *= 0.78
-	if kind=="groundcover": size_ *= rng.randf_range(0.52,0.70)
+	if kind=="groundcover": size_ *= rng.randf_range(0.82,1.05)
 	if kind=="rosette": size_ *= rng.randf_range(1.1,1.5)
 	if kind=="arch_fern": size_ *= rng.randf_range(0.98,1.38)
 	if kind=="red_bloom": size_ *= rng.randf_range(1.02,1.3)
-	if kind=="litter": size_=Vector3(s*0.55,s*0.55,0.025)
+	if kind=="litter": size_=Vector3(s*0.72,s*0.72,0.025)
 	if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.14,0.36)
 	if kind=="twig": size_=Vector3(0.035,rng.randf_range(0.35,0.85),0.035)
 	var basis := Basis(Vector3.UP,rng.randf()*TAU)

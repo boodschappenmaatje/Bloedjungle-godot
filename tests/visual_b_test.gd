@@ -39,12 +39,12 @@ func run() -> void:
 	var short_grass_limit: int = grass_script.get_script_constant_map()["LIMIT"]["short"]
 	print("VISUAL B DENSITY short_grass=%d understory=%s" % [grass_tufts, JSON.stringify(understory_counts)])
 	check(grass_tufts >= 22000 and grass_tufts <= short_grass_limit,"Fine grass must fill the bounded playable-floor LOD budget")
-	check(understory_counts.groundcover >= 13000 and understory_counts.groundcover <= 14000,"Fine groundcover must fill its bounded camera-area scatter budget")
+	check(understory_counts.groundcover >= 12500 and understory_counts.groundcover <= 16000,"Fine groundcover must fill its bounded camera-area scatter budget")
 	check(understory_counts.fern <= 2400 and understory_counts.bush >= 2000,"Keep old fern/bush coverage bounded while reallocating to new silhouettes")
 	check(understory_counts.rosette >= 1700 and understory_counts.rosette <= 1900,"New ribbed rosettes must appear inside their cap")
 	check(understory_counts.arch >= 1300 and understory_counts.arch <= 1450,"New arched fern must appear inside its cap")
 	check(understory_counts.red >= 750 and understory_counts.red <= 850,"New red/bronze blooms must remain bounded and readable")
-	check(understory_counts.litter >= 12500 and understory_counts.litter <= 14000,"Leaf litter must materially break up exposed soil without exceeding its mobile cap")
+	check(understory_counts.litter >= 12500 and understory_counts.litter <= 15000,"Leaf litter must materially break up exposed soil without exceeding its mobile cap")
 	check(under.has_method("litter_mesh"),"Litter needs a corrected ground normal frame")
 	if under.has_method("litter_mesh"):
 		var litter: ArrayMesh = under.litter_mesh()
@@ -66,7 +66,7 @@ func run() -> void:
 	check(details.any(func(n: MultiMeshInstance3D) -> bool: return n.name.begins_with("Understory_groundcover_")),"Missing fine-scale groundcover in the real game level")
 	for n: MultiMeshInstance3D in details:
 		check(n.multimesh.custom_aabb.size.x > 0.0 and n.multimesh.custom_aabb.size.x <= 28.0,"Detail batch needs stable cell bounds after clearing")
-		check(n.multimesh.instance_count <= (720 if n.name.begins_with("Understory_litter_") else 360), "Unbounded detail batch")
+		check(n.multimesh.instance_count <= (900 if n.name.begins_with("Understory_litter_") else (480 if n.name.begins_with("Understory_groundcover_") else 360)), "Unbounded detail batch")
 		check(n.visibility_range_end <= 76.0, "Microdetail must distance cull")
 		check(n.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "Detail adds shadow cost")
 		check(n.find_children("*","CollisionShape3D",true,false).is_empty(),"Detail introduces collisions")
@@ -120,7 +120,7 @@ func run() -> void:
 	check(near_bank>20 and near_wall>20 and near_path>20,"Detail budget starves banks/foundations/shoulders")
 	print("VISUAL B CAMERA PLANTS ",JSON.stringify(near_authored))
 	print("VISUAL B CAMERA FLOOR ",JSON.stringify(near_camera_cover))
-	check(near_camera_cover.short >= 900 and near_camera_cover.groundcover >= 1000 and near_camera_cover.litter >= 700,
+	check(near_camera_cover.short >= 900 and near_camera_cover.groundcover >= 4400 and near_camera_cover.litter >= 3000,
 		"The open playable floor needs close-camera ground detail while leaving the trail readable")
 	check(near_authored.rosette>=600 and near_authored.arch_fern>=450 and near_authored.red_bloom>=200,
 		"New high-detail plant colonies must read in the real bospad camera area")

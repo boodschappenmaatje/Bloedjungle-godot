@@ -26,6 +26,8 @@ De totalen van de goedgekeurde GLB zijn 85.615 driehoeken over alle LOD's en los
 
 Blender Cycles genereerde 16 RGBA-volumeopnamen voor rook en 16 voor stof, samengevoegd tot flipbooks. De geïmporteerde wand behoudt albedo, normal en roughness/metallic-texturen. De Godot-scène voegt de draaiende kern, mechanische terugslag, helder projectiel, elektrische filamenten, een zichtbare spiraal, mondingsflits, drie zeshoekige golflagen, puin, stof en een blijvende opening samen.
 
+De opgeslagen `.blend` is opnieuw geopend in Blender 4.3.2 ter controle: renderengine `CYCLES`, één Cycles-volumeobject, het materiaal `Animated_Procedural_Volume` en 42 Breach-acties/sporen zijn aanwezig. De volledige batchuitvoer staat in [blender_full.log](logs/blender_full.log).
+
 De goedgekeurde M-47 GLB bevat de vijf clips `Idle`, `Equip`, `Aim`, `Fire` en `Reload`, elk met 9 animatiekanalen. De GLB-animatiedata bevat bewegende kanalen voor alle vijf. De Godot-importcontrole vond alle clips, de PBR-texturen en LOD0–LOD2.
 
 ## Godot-controle

@@ -267,6 +267,11 @@ bpy.context.scene.render.image_settings.file_format = "PNG"
 bpy.context.scene.render.image_settings.color_mode = "RGBA"
 bpy.context.scene.world.color = (0, 0, 0)
 
+# Save the complete editable source, including the Cycles volume material,
+# animation-ready breach/debris, orthographic render setup and blue rim light.
+bpy.context.scene.frame_set(1)
+bpy.ops.wm.save_as_mainfile(filepath=str(BLENDER_OUT / "M47_Cinematic_Breach_4_0.blend"))
+
 for kind in ("smoke", "dust"):
     folder = OUT / "flipbooks" / kind
     folder.mkdir(parents=True, exist_ok=True)

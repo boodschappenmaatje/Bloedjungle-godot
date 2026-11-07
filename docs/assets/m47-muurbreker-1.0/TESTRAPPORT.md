@@ -46,3 +46,7 @@ De laadkamer en kern zijn aparte testgeometrie; de originele mesh is niet opgesp
 - `validation.json` — Blender-herimportcontroles.
 - `build_lods_and_renders.py`, `rig_animations_and_export.py` — batchproductiescripts.
 - `M47_Muurbreker_original.glb` — ongewijzigde bronreferentie.
+
+## Godot 4.7.2 en regressie
+
+De aparte Godot-testscene, import/animatie/PBR/LOD/montagecontroles, screenshot, bestaande bazooka/wall regressie-uitkomsten en iOS-exportblokkade zijn vastgelegd in [GODOT_TESTRAPPORT.md](GODOT_TESTRAPPORT.md). De testscene met de echte VQ2-speler en handbotten staat in `tests/m47_godot/`; zie de gedetailleerde PASS/FAIL-statussen daar.

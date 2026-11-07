@@ -1,0 +1,6 @@
+.godot/
+*.jpg
+*.jpg.import
+*.glb.import
+*.uid
+results.txt

@@ -1,0 +1,21 @@
+PASS official Godot 4.7.2
+PASS approved M-47 GLB and AnimationPlayer imported
+PASS approved animation Idle
+PASS approved animation Equip
+PASS approved animation Aim
+PASS approved animation Fire
+PASS approved animation Reload
+PASS approved M47_LOD0
+PASS approved M47_LOD1
+PASS approved M47_LOD2
+PASS exactly one M-47 LOD visible
+PASS approved M-47 PBR channels intact
+PASS Blender concrete wall and permanent breach imported
+PASS Blender Breach GLB animation imported
+PASS Blender Cycles smoke and dust flipbooks imported
+PASS same comparison camera as VFX 2.1
+PASS permanent visible wall breach after impact
+PASS test wall collision removed after breach
+PASS video sequence at least eight seconds
+Godot 4.7.2-stable (official)
+Result PASS

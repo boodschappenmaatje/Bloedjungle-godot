@@ -248,7 +248,9 @@ static func spawn(parent: Node3D) -> void:
 	# rosette/fern groups. Their centres are jittered and clustered; the firing road,
 	# base approach, build clearances and river stay open under the same acceptance rules.
 	for cluster in 300:
-		var center := Vector3(fill_rng.randf_range(-38.0,42.0),0.012,fill_rng.randf_range(-79.0,-38.0))
+		# The old 80 m scatter spent many of these same instances outside the active
+		# camera width. Bias their existing budget over the 50 m playable battle band.
+		var center := Vector3(fill_rng.randf_range(-18.0,32.0),0.012,fill_rng.randf_range(-80.0,-38.0))
 		var radius := fill_rng.randf_range(1.2,2.8)
 		for i in 30:
 			var angle := fill_rng.randf()*TAU
@@ -257,10 +259,10 @@ static func spawn(parent: Node3D) -> void:
 			if absf(p.x-Data.path_x(p.z))<2.8 or not allowed(p): continue
 			colony_positions.append(p)
 			colony_kinds.append("groundcover")
-	# Reassign the same small-group budget to the open eastern playfield. Its low
+	# Keep the small mixed groups around the visible player-side floor. Their low
 	# forms remain below actors, with an irregular clear pocket around the player.
 	for cluster in 120:
-		var center := Vector3(fill_rng.randf_range(6.0,40.0),0.012,fill_rng.randf_range(-80.0,-36.0))
+		var center := Vector3(fill_rng.randf_range(-10.0,26.0),0.012,fill_rng.randf_range(-78.0,-38.0))
 		var radius := fill_rng.randf_range(2.2,3.4)
 		var roll := fill_rng.randf()
 		var species := "groundcover" if roll<0.65 else ("rosette" if roll<0.85 else ("arch_fern" if roll<0.97 else "red_bloom"))
@@ -273,7 +275,7 @@ static func spawn(parent: Node3D) -> void:
 			colony_kinds.append(_colony_species(species,fill_rng))
 	# Reserve the existing leaf-litter budget for the visible open floor before the broad fill.
 	for cluster in 75:
-		var center := Vector3(fill_rng.randf_range(-14.0,40.0),0.012,fill_rng.randf_range(-82.0,-37.0))
+		var center := Vector3(fill_rng.randf_range(-18.0,32.0),0.012,fill_rng.randf_range(-82.0,-37.0))
 		var radius := fill_rng.randf_range(0.9,2.0)
 		for i in fill_rng.randi_range(10,18):
 			var angle := fill_rng.randf()*TAU
@@ -308,7 +310,7 @@ static func spawn(parent: Node3D) -> void:
 	# Prioritize low detail inside the playable camera area instead of spreading
 	# the whole budget over the distant map. Tall sightlines and the roadway stay clear.
 	for cluster in 160:
-		var center := Vector3(fill_rng.randf_range(-30.0,34.0),0.012,fill_rng.randf_range(-77.0,-40.0))
+		var center := Vector3(fill_rng.randf_range(-24.0,30.0),0.012,fill_rng.randf_range(-77.0,-40.0))
 		var radius := fill_rng.randf_range(1.0,2.1)
 		var axis := fill_rng.randf_range(0.0,TAU)
 		var aspect := fill_rng.randf_range(0.42,0.82)

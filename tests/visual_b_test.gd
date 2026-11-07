@@ -164,8 +164,8 @@ func run() -> void:
 	print("VISUAL B CAMERA FLOOR ",JSON.stringify(near_camera_cover))
 	print("VISUAL B SMALL PATH PEBBLES ",small_path_pebbles)
 	check(small_path_pebbles >= 250,"The existing stone budget needs small, render-only gravel accents along the trail")
-	check(near_camera_cover.short >= 900 and near_camera_cover.groundcover >= 4400 and near_camera_cover.litter >= 3000,
-		"The open playable floor needs close-camera ground detail while leaving the trail readable")
+	check(near_camera_cover.short >= 900 and near_camera_cover.groundcover >= 5700 and near_camera_cover.litter >= 3900,
+		"The real camera footprint needs clustered low cover and leaf litter while leaving the trail readable")
 	check(near_authored.rosette>=600 and near_authored.arch_fern>=450 and near_authored.red_bloom>=200,
 		"New high-detail plant colonies must read in the real bospad camera area")
 	check(checked > 1000,"Missing registered removable detail")

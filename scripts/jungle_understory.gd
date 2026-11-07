@@ -2,7 +2,7 @@ class_name JungleUnderstory
 ## Render-only depth pass. Reuses shipped meshes/materials and the building-clearance index.
 ## A separate RNG leaves every existing tree, rock, collider and route unchanged.
 const CELL := 24.0
-const CAPS := {"fern":2400,"bush":3000,"groundcover":16000,"rosette":1900,"arch_fern":1450,"red_bloom":850,"litter":15000,"stone":1900,"twig":700}
+const CAPS := {"fern":2178,"bush":2737,"groundcover":14500,"rosette":1900,"arch_fern":1450,"red_bloom":850,"litter":15000,"stone":1900,"twig":700}
 static var _depth_lod_meshes: Dictionary = {}
 static var _depth_source_meshes: Dictionary = {}
 
@@ -229,6 +229,15 @@ static func spawn(parent: Node3D) -> void:
 	# uniformly mixed scatter. The road and firing corridor stay clear.
 	var colony_positions: Array[Vector3] = []
 	var colony_kinds := PackedStringArray()
+	# Reassign part of the existing stone budget to the worn trail shoulders. Small
+	# stones break the dark ribbon into an aggregate path while remaining render-only.
+	for i in 350:
+		var z := fill_rng.randf_range(-86.0,-34.0)
+		var side := -1.0 if fill_rng.randf()<0.5 else 1.0
+		var p := Vector3(Data.path_x(z)+side*fill_rng.randf_range(1.55,2.65),0.012,z)
+		if not allowed(p): continue
+		colony_positions.append(p)
+		colony_kinds.append("stone")
 	for cluster in 68:
 		var z := rng.randf_range(-86.0,-34.0)
 		var side := -1.0 if rng.randf()<0.5 else 1.0
@@ -274,21 +283,20 @@ static func spawn(parent: Node3D) -> void:
 			if absf(p.x-Data.path_x(p.z))<2.8 or not allowed(p): continue
 			colony_positions.append(p)
 			colony_kinds.append("groundcover")
-	# The camera-facing field east of the winding trail was still reading as bare
-	# ground in the real game render. Reallocate a small part of the existing
-	# groundcover cap into smaller, mixed-species colonies here. The road is at
-	# least 11 m away; allowed() still enforces base, water and building clearances.
-	for cluster in 70:
+	# Distribute the same camera-floor budget on both trail shoulders. Smaller,
+	# looser colonies keep actors visible and break the old bare-east / dense-west split.
+	for cluster in 84:
 		var z := fill_rng.randf_range(-75.0,-43.0)
-		var center := Vector3(Data.path_x(z)+fill_rng.randf_range(14.5,25.0),0.012,z)
-		var radius := fill_rng.randf_range(1.1,1.8)
+		var side := -1.0 if fill_rng.randf()<0.5 else 1.0
+		var center := Vector3(Data.path_x(z)+side*fill_rng.randf_range(13.0,22.0),0.012,z)
+		var radius := fill_rng.randf_range(1.8,2.6)
 		var roll := fill_rng.randf()
-		var species := "groundcover" if roll<0.52 else ("rosette" if roll<0.78 else ("arch_fern" if roll<0.94 else "red_bloom"))
-		for i in fill_rng.randi_range(16,18):
+		var species := "groundcover" if roll<0.58 else ("rosette" if roll<0.79 else ("arch_fern" if roll<0.94 else "red_bloom"))
+		for i in 14:
 			var angle := fill_rng.randf()*TAU
 			var r := sqrt(fill_rng.randf())*radius
 			var p := center+Vector3(cos(angle)*r,0,sin(angle)*r)
-			if absf(p.x-Data.path_x(p.z))<8.0 or not allowed(p): continue
+			if absf(p.x-Data.path_x(p.z))<7.5 or not allowed(p): continue
 			colony_positions.append(p)
 			colony_kinds.append(_colony_species(species,fill_rng))
 	# Reserve a small litter budget for the camera-facing floor before the broad fill.
@@ -408,9 +416,9 @@ static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNu
 		# camera without reaching the soldier silhouette or creating a new LOD.
 		var footprint := rng.randf_range(1.18,1.48)
 		size_ = Vector3(s*footprint,s*rng.randf_range(0.92,1.12),s*footprint)
-	if kind=="rosette": size_ *= rng.randf_range(0.82,1.08)
-	if kind=="arch_fern": size_ *= rng.randf_range(0.72,1.02)
-	if kind=="red_bloom": size_ *= rng.randf_range(0.82,1.05)
+	if kind=="rosette": size_ *= rng.randf_range(0.70,0.90)
+	if kind=="arch_fern": size_ *= rng.randf_range(0.64,0.84)
+	if kind=="red_bloom": size_ *= rng.randf_range(0.72,0.92)
 	# Fallen blades need roughly half-metre tips to resolve from the game camera;
 	# keep them on the ground and spend the existing litter budget at this scale.
 	if kind=="litter": size_=Vector3.ONE*rng.randf_range(0.78,1.38)

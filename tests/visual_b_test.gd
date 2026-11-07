@@ -39,8 +39,8 @@ func run() -> void:
 	var short_grass_limit: int = grass_script.get_script_constant_map()["LIMIT"]["short"]
 	print("VISUAL B DENSITY short_grass=%d understory=%s" % [grass_tufts, JSON.stringify(understory_counts)])
 	check(grass_tufts >= 22000 and grass_tufts <= short_grass_limit,"Fine grass must fill the bounded playable-floor LOD budget")
-	check(understory_counts.groundcover >= 12500 and understory_counts.groundcover <= 16000,"Fine groundcover must fill its bounded camera-area scatter budget")
-	check(understory_counts.fern <= 2400 and understory_counts.bush >= 2000,"Keep old fern/bush coverage bounded while reallocating to new silhouettes")
+	check(understory_counts.groundcover >= 12500 and understory_counts.groundcover <= 14500,"Groundcover stays at or below the previously captured instance count")
+	check(understory_counts.fern <= 2178 and understory_counts.bush >= 2000 and understory_counts.bush <= 2737,"Ferns and bushes stay at or below their previously captured instance counts")
 	check(understory_counts.rosette >= 1700 and understory_counts.rosette <= 1900,"New ribbed rosettes must appear inside their cap")
 	check(understory_counts.arch >= 1300 and understory_counts.arch <= 1450,"New arched fern must appear inside its cap")
 	check(understory_counts.red >= 750 and understory_counts.red <= 850,"New red/bronze blooms must remain bounded and readable")

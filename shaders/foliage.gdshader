@@ -121,8 +121,8 @@ void fragment() {
 		leaf_color = pow(max(leaf_color, vec3(0.0)), vec3(foliage_gamma));
 	}
 	ALBEDO = base * leaf_color * tint * root_contact;
-	AO = clamp(root_contact * mix(1.0,plant_surface.g,0.42),0.65,1.0);
-	AO_LIGHT_AFFECT = 0.28;
+	AO = clamp(root_contact * mix(1.0,plant_surface.g,0.24),0.70,1.0);
+	AO_LIGHT_AFFECT = 0.20;
 	ROUGHNESS = tile ? 0.94 : clamp(plant_surface.r * 0.90,0.40,0.96);
 	SPECULAR = tile ? 0.12 : 0.28;
 	BACKLIGHT = ALBEDO * backlight;

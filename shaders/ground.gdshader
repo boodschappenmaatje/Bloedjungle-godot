@@ -63,7 +63,7 @@ void fragment() {
 	vec2 muv = vec2(p.y, -p.x) * 0.14;
 	vec2 moss_uv = p * 0.14;
 	// Four-metre aggregate tiles show individual trail stones at tactical distance.
-	vec2 gravel_uv = p * 0.24;
+	vec2 gravel_uv = p * 0.19;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -113,10 +113,10 @@ void fragment() {
 	// Gravel follows the established path and its worn shoulders, with broken edges from the existing macro noise.
 	float gravel_mix = clamp(max(max(path*0.96,trail*0.92)*mix(0.50,1.0,smoothstep(0.18,0.76,n2)),bank*0.28),0.0,0.95);
 	vec3 dirt = d*vec3(0.82,0.73,0.61)*(0.9+0.2*n3);
-	dirt = mix(dirt,gravel*vec3(1.08,1.00,0.86),gravel_mix*0.98);
+	dirt = mix(dirt,gravel*vec3(1.16,1.08,0.94),gravel_mix*0.98);
 	float pebble_speckle = smoothstep(0.68,0.87,n_micro)*micro_gate*gravel_mix;
-	dirt = mix(dirt,gravel*vec3(1.12,1.02,0.87),pebble_speckle*0.56);
-	dirt *= 1.0-rut*0.30;
+	dirt = mix(dirt,gravel*vec3(1.20,1.10,0.94),pebble_speckle*0.70);
+	dirt *= 1.0-rut*0.43;
 	dirt = mix(dirt,m*vec3(0.54,0.47,0.37),wet*0.55);
 	float edge = 4.0*dm*(1.0-dm);
 	float moss_mix = clamp(edge*0.3+bank*(1.0-wet)*0.2+smoothstep(0.58,0.76,n2)*(1.0-dm)*0.23,0.0,0.45);

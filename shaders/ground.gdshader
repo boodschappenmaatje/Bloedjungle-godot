@@ -84,7 +84,9 @@ void fragment() {
 	vec3 grass = mix(g * vec3(0.66,0.68,0.57), j * vec3(0.62,0.66,0.56), floor_mix);
 	// Lift earthy red/blue detail slightly while keeping green restrained.
 	grass *= mix(vec3(0.94,0.93,0.86),vec3(0.89,0.91,0.83),smoothstep(0.3,0.7,n1));
-	grass *= (0.82 + 0.34*n3) * mix(1.0,0.86+0.28*n_micro,micro_gate*0.72);
+	// Existing metre-scale noise now carries a little more canopy-dapple contrast;
+	// the already derivative-gated micro breakup stays unchanged for shimmer control.
+	grass *= (0.78 + 0.44*n3) * mix(1.0,0.86+0.28*n_micro,micro_gate*0.72);
 	float inside = 1.0 - smoothstep(compound-0.5,compound+3.0,max(abs(p.x),abs(p.y)));
 	float path = (1.0-smoothstep(gate_gap*0.9,gate_gap*1.9+n2*1.6,abs(p.x)))
 		* smoothstep(compound-2.0,compound+1.5,abs(p.y))*(1.0-smoothstep(30.0,52.0,abs(p.y)));

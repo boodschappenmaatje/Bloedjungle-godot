@@ -283,16 +283,16 @@ static func spawn(parent: Node3D) -> void:
 			if absf(p.x-Data.path_x(p.z))<2.8 or not allowed(p): continue
 			colony_positions.append(p)
 			colony_kinds.append("groundcover")
-	# Distribute the same camera-floor budget on both trail shoulders. Smaller,
-	# looser colonies keep actors visible and break the old bare-east / dense-west split.
-	for cluster in 84:
-		var z := fill_rng.randf_range(-75.0,-43.0)
+	# Distribute the same camera-floor budget as smaller groups close to both trail
+	# shoulders. This fills the open combat floor without planting into the firing lane.
+	for cluster in 120:
+		var z := fill_rng.randf_range(-82.0,-36.0)
 		var side := -1.0 if fill_rng.randf()<0.5 else 1.0
-		var center := Vector3(Data.path_x(z)+side*fill_rng.randf_range(13.0,22.0),0.012,z)
-		var radius := fill_rng.randf_range(1.8,2.6)
+		var center := Vector3(Data.path_x(z)+side*fill_rng.randf_range(8.5,16.0),0.012,z)
+		var radius := fill_rng.randf_range(2.2,3.4)
 		var roll := fill_rng.randf()
-		var species := "groundcover" if roll<0.58 else ("rosette" if roll<0.79 else ("arch_fern" if roll<0.94 else "red_bloom"))
-		for i in 14:
+		var species := "groundcover" if roll<0.65 else ("rosette" if roll<0.85 else ("arch_fern" if roll<0.97 else "red_bloom"))
+		for i in 10:
 			var angle := fill_rng.randf()*TAU
 			var r := sqrt(fill_rng.randf())*radius
 			var p := center+Vector3(cos(angle)*r,0,sin(angle)*r)

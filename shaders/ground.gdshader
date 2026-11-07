@@ -52,18 +52,16 @@ void fragment() {
 	// distant subpixel sparkle on the mobile renderer.
 	float n_micro = texture(noise_a, p * 1.7).r;
 	float micro_gate = 1.0 - smoothstep(0.055, 0.19, pixel_span);
-	// Keep the photographed grass, leaf litter and earth at a tighter physical
-	// scale so open ground retains small texture structure in the real camera.
-	// The previous tiles averaged the photographed blades and pebbles below one
-	// screen pixel at the fixed combat camera. These world-space tile lengths keep
-	// their physical shapes legible while mipmapping and derivative gating remain on.
-	vec2 guv = p * 0.12;
-	vec2 juv = p * 0.125 + 0.37;
-	vec2 duv = p * 0.13;
-	vec2 muv = vec2(p.y, -p.x) * 0.14;
-	vec2 moss_uv = p * 0.14;
-	// Four-metre aggregate tiles show individual trail stones at tactical distance.
-	vec2 gravel_uv = p * 0.19;
+	// Keep photographed grass blades, leaf litter and trail aggregate large enough
+	// to resolve from the tactical camera. Derivative-gated micro breakup and
+	// mipmapping fade this larger grain before it can shimmer in the distance.
+	vec2 guv = p * 0.075;
+	vec2 juv = p * 0.085 + 0.37;
+	vec2 duv = p * 0.09;
+	vec2 muv = vec2(p.y, -p.x) * 0.10;
+	vec2 moss_uv = p * 0.10;
+	// Larger aggregate grains make the worn track read as gravel, not a dark strip.
+	vec2 gravel_uv = p * 0.10;
 	vec3 g = texture(grass_tex, guv, detail_mip_bias).rgb;
 	vec3 j = texture(jungle_tex, juv, detail_mip_bias).rgb;
 	vec3 d = texture(dirt_tex, duv, detail_mip_bias).rgb;
@@ -135,7 +133,7 @@ void fragment() {
 	ROUGHNESS = mix(max(ROUGHNESS,0.86),ROUGHNESS,micro_detail);
 	SPECULAR = mix(0.12,0.25,dm);
 	NORMAL_MAP = surf.rgb;
-	NORMAL_MAP_DEPTH = mix(0.72,0.88,dm)*micro_detail;
-	AO = 1.0-0.12*(1.0-dm)*n3;
-	AO_LIGHT_AFFECT = 0.12;
+	NORMAL_MAP_DEPTH = mix(1.0,1.24,dm)*micro_detail;
+	AO = 1.0-0.19*(1.0-dm)*n3;
+	AO_LIGHT_AFFECT = 0.20;
 }

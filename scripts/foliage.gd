@@ -47,7 +47,7 @@ static func material(kind := "") -> ShaderMaterial:
 				m.set_shader_parameter("tint", Vector3(1.07, 1.03, 0.92))
 				m.set_shader_parameter("backlight", 0.08)
 			elif kind.begins_with("depth_"):
-				var depth_textures := {"depth_rosette":"rosette", "depth_arch_fern":"arch_fern", "depth_red_bloom":"shrub", "depth_litter":"rosette"}
+				var depth_textures := {"depth_rosette":"rosette", "depth_arch_fern":"arch_fern", "depth_microcover":"arch_fern", "depth_red_bloom":"shrub", "depth_litter":"rosette"}
 				var texture_kind: String = depth_textures.get(kind, "")
 				if not texture_kind.is_empty():
 					var texture_root := "res://assets/textures/foliage/polyhaven/%s_" % texture_kind
@@ -98,7 +98,7 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 	_fade = move_toward(_fade, 1.0 if active else 0.0, delta / 0.35)
 	if _focus_mats.is_empty():
 		# All detailed species share the actor sightline fade, including the new PBR plants.
-		for key in ["palm", "leaf", "fern", "depth_leaf", "depth_rosette", "depth_arch_fern", "depth_red_bloom", "depth_litter"]:
+		for key in ["palm", "leaf", "fern", "depth_leaf", "depth_rosette", "depth_arch_fern", "depth_microcover", "depth_red_bloom", "depth_litter"]:
 			_focus_mats.append(material(key))
 	var on := _fade > 0.001
 	var e: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO, Vector4.ZERO]
@@ -222,36 +222,6 @@ static func _shadow_mat(kind: String) -> ShaderMaterial:
 			m.set_shader_parameter("canopy_tex", LeafTex.get_tex("palm"))
 		_shadow_mats[kind] = m
 	return _shadow_mats[kind]
-
-
-## Eén blad of palmtak: een gebogen strook met een licht gevouwen middenrib. De textuur loopt
-## in de lengte (u) en over de breedte (v), met de nerf op v = 0,5.
-static func _frond(st: SurfaceTool, origin: Vector3, yaw: float, length: float, width: float, rise: float, droop: float, c0: Color, c1: Color, segs := 6) -> void:
-	var d := Vector3(cos(yaw), 0.0, sin(yaw))
-	var side := Vector3(-d.z, 0.0, d.x)
-	var rows: Array = []
-	for i in segs + 1:
-		var t := float(i) / segs
-		var c := origin + d * length * t + Vector3.UP * (sin(t * PI * 0.6) * rise - t * t * droop)
-		var col := c0.lerp(c1, t)
-		col.a = t
-		var n := (Vector3.UP * 0.75 + d * 0.15).normalized()
-		rows.append([
-			[c - side * width + Vector3.DOWN * width * 0.3, Vector2(t, 0.0), col, n],
-			[c + Vector3.UP * width * 0.1, Vector2(t, 0.5), col, n],
-			[c + side * width + Vector3.DOWN * width * 0.3, Vector2(t, 1.0), col, n]])
-	for i in segs:
-		for k in 2:
-			var a: Array = rows[i][k]
-			var b: Array = rows[i][k + 1]
-			var cc: Array = rows[i + 1][k]
-			var dd: Array = rows[i + 1][k + 1]
-			for tri in [[a, cc, b], [b, cc, dd]]:
-				for v in tri:
-					st.set_uv(v[1])
-					st.set_color(v[2])
-					st.set_normal(v[3])
-					st.add_vertex(v[0])
 
 
 ## Palmen en rotsen komen uit assets/jungle.glb (bron/jungle/maak_jungle.py): 3 palmen met een

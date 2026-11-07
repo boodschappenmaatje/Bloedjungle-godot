@@ -69,15 +69,21 @@ func run() -> void:
 		check(Foliage.material("depth_litter").get_shader_parameter("wind") == 0.0,"Global wind changes must not animate leaves lying on the ground")
 		fol.set_wind(false)
 		var groundcover: ArrayMesh = under.groundcover_mesh()
-		check(groundcover.get_surface_count() == 1,"Groundcover must stay on one cutout surface for batching")
-		check(groundcover.surface_get_arrays(0)[Mesh.ARRAY_VERTEX].size() <= 320,"Low groundcover must spend its geometry budget on coverage, not near-invisible bends")
-	for kind in ["rosette","arch_fern","red_bloom"]:
+		check(groundcover.get_surface_count() == 1,"Scanned groundcover must stay on one cutout surface for batching")
+		check(groundcover.surface_get_material(0) == Foliage.material("depth_microcover"),"Existing groundcover instances must use scanned Poly Haven PBR")
+		var groundcover_lods: Array = groundcover.get_meta("depth_lod_triangles", [])
+		check(groundcover_lods.size() == 3 and groundcover_lods[0] <= 320 and groundcover_lods[1] <= 160 and groundcover_lods[2] <= 80,
+			"Scanned microcover must keep a mobile-first three-level triangle budget")
+		check(groundcover.get_meta("depth_lod_distances_m", []) == [8.0,22.0],"Small floor plants must switch to cheap native LODs early")
+	for kind in ["rosette","arch_fern","microcover","red_bloom"]:
 		for variant in 3:
 			var depth_variant_mesh: ArrayMesh = under.depth_mesh(kind,variant)
 			var label := "%s variant %d" % [kind,variant]
 			check(depth_variant_mesh != null and depth_variant_mesh.get_surface_count() == 1,"Depth-pass species must remain one batched PBR surface: "+label)
 			if depth_variant_mesh != null:
-				check(depth_variant_mesh.get_meta("depth_lod_distances_m", []) == [20.0,48.0],"Depth-pass species needs useful native LOD thresholds: "+label)
+				var expected_lod_1 := 8.0 if kind == "microcover" else 20.0
+				var expected_lod_2 := 22.0 if kind == "microcover" else 48.0
+				check(depth_variant_mesh.get_meta("depth_lod_distances_m", []) == [expected_lod_1,expected_lod_2],"Depth-pass species needs useful native LOD thresholds: "+label)
 				check(depth_variant_mesh.get_aabb().size.y <= 0.9,"Understory species must stay below actor-hiding height: "+label)
 				var triangles: Array = depth_variant_mesh.get_meta("depth_lod_triangles", [])
 				check(triangles.size() == 3 and triangles[0] > triangles[1] and triangles[1] > triangles[2],"Source foliage LODs must reduce triangles at distance: "+label)

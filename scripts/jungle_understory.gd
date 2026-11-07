@@ -24,7 +24,7 @@ static func _load_depth_assets() -> void:
 	if packed == null: return
 	var root := packed.instantiate()
 	for node: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
-		for kind in ["rosette", "arch_fern", "red_bloom"]:
+		for kind in ["rosette", "arch_fern", "microcover", "red_bloom"]:
 			for variant in 3:
 				for lod in 3:
 					if node.name == "HQ_%s_V%d_LOD%d" % [kind, variant, lod]:
@@ -34,7 +34,7 @@ static func _load_depth_assets() -> void:
 						source_meshes[lod] = node.mesh
 						_depth_source_meshes[key] = source_meshes
 	root.free()
-	for kind in ["rosette", "arch_fern", "red_bloom"]:
+	for kind in ["rosette", "arch_fern", "microcover", "red_bloom"]:
 		for variant in 3:
 			var key := _depth_key(kind, variant)
 			var sources: Array = _depth_source_meshes.get(key, [])
@@ -60,14 +60,15 @@ static func _merge_native_lods(sources: Array, kind: String, variant: int) -> Ar
 			merged[attribute].append_array(source_arrays[attribute])
 		var indices: PackedInt32Array = source_arrays[Mesh.ARRAY_INDEX].duplicate()
 		for i in indices.size(): indices[i] += offset
-		lod_indices[20.0 if lod == 1 else 48.0] = indices
+		var lod_distance := (8.0 if lod == 1 else 22.0) if kind == "microcover" else (20.0 if lod == 1 else 48.0)
+		lod_indices[lod_distance] = indices
 		triangle_counts.append(indices.size() / 3)
 	merged[Mesh.ARRAY_INDEX] = base_indices
 	var result := ArrayMesh.new()
 	result.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, merged, [], lod_indices)
 	result.surface_set_material(0, Foliage.material("depth_%s" % kind))
 	result.resource_name = "JungleDepth_%s_V%d_LOD0_1_2" % [kind, variant]
-	result.set_meta("depth_lod_distances_m", [20.0, 48.0])
+	result.set_meta("depth_lod_distances_m", [8.0, 22.0] if kind == "microcover" else [20.0, 48.0])
 	result.set_meta("depth_lod_triangles", triangle_counts)
 	return result
 
@@ -152,48 +153,9 @@ static func groundcover_mesh() -> ArrayMesh:
 static func understory_variant_mesh(kind: String, variant: int) -> ArrayMesh:
 	if kind == "fern": return depth_mesh("arch_fern", variant % 3)
 	if kind == "bush": return depth_mesh("rosette", variant % 3)
-	# A few inexpensive silhouettes break the single-mesh repetition in the shipped scatter.
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 7301 + variant * 97 + (101 if kind == "fern" else (202 if kind == "bush" else 303))
-	var fern := kind == "fern"
-	var groundcover := kind == "groundcover"
-	var count := (8 + variant * 2) if fern else ((7 + variant) if groundcover else (13 + variant * 3))
-	var palette_base: Array[Color] = [Color(0.52,0.59,0.41), Color(0.47,0.55,0.39), Color(0.55,0.60,0.42)]
-	var palette_tip: Array[Color] = [Color(0.72,0.75,0.55), Color(0.68,0.71,0.53), Color(0.76,0.72,0.52)]
-	var base: Color = palette_base[variant]
-	var tip: Color = palette_tip[variant]
-	for k in count:
-		var yaw := TAU * k / count + rng.randf_range(-0.24, 0.24)
-		var origin := Vector3(cos(yaw), rng.randf_range(0.0,0.16), sin(yaw)) * rng.randf_range(0.0,0.24)
-		# Ground rosettes are broad and low so they read as leafy understory at the game camera,
-		# while the taller fern silhouettes remain sparse and never replace the existing grass LODs.
-		var length_ := rng.randf_range(0.62,0.86) if groundcover else (rng.randf_range(0.70,1.02) if fern else rng.randf_range(0.62,1.02))
-		var width_ := rng.randf_range(0.11,0.18) if groundcover else (rng.randf_range(0.14,0.24) if fern else rng.randf_range(0.20,0.34))
-		var rise := rng.randf_range(0.19,0.34) if groundcover else (rng.randf_range(0.30,0.56) if fern else rng.randf_range(0.14,0.46))
-		var droop := rng.randf_range(0.08,0.20) if groundcover else (rng.randf_range(0.28,0.55) if fern else rng.randf_range(0.12,0.38))
-		# Low groundcover has no useful extra silhouette from three bends at game distance.
-		# Two segments keep its leaf shape while reserving the same triangle budget for more clumps.
-		Foliage._frond(st, origin, yaw, length_, width_, rise, droop, base, tip, 2 if groundcover else 3)
-	st.generate_tangents()
-	var mesh := st.commit()
-	if groundcover:
-		# Use the shared leaf quadrant from the depth-pass atlas so low plants
-		# receive the same OpenGL normal and per-pixel roughness as the authored
-		# rosette/fern assets, without adding another material or texture set.
-		var surface_arrays: Array = mesh.surface_get_arrays(0)
-		var uv: PackedVector2Array = surface_arrays[Mesh.ARRAY_TEX_UV]
-		for i in uv.size():
-			uv[i] = Vector2(0.02,0.52) + uv[i] * Vector2(0.46,0.46)
-		surface_arrays[Mesh.ARRAY_TEX_UV] = uv
-		var pbr_mesh := ArrayMesh.new()
-		pbr_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES,surface_arrays)
-		pbr_mesh.surface_set_material(0,Foliage.material("depth_leaf"))
-		pbr_mesh.resource_name = "Groundcover_PBR_Low"
-		return pbr_mesh
-	mesh.surface_set_material(0,Foliage.material("fern" if fern else "leaf"))
-	return mesh
+	if kind == "groundcover": return depth_mesh("microcover", variant % 3)
+	push_error("Unknown PBR understory role: " + kind)
+	return null
 
 static func spawn(parent: Node3D) -> void:
 	var rng := RandomNumberGenerator.new()

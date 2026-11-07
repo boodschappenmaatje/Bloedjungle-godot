@@ -9,13 +9,20 @@
   "sources": {
     "rosette": "anthurium_botany_01",
     "arch_fern": "fern_02",
+    "microcover": "fern_02",
     "red_bloom": "shrub_04"
   },
   "game_mesh_nodes": "One mesh per species, natural source variant and LOD; each species remains one cutout surface in cell-batched MultiMeshes.",
-  "game_lod_distances_m": [
-    20.0,
-    48.0
-  ],
+  "game_lod_distances_m": {
+    "default": [
+      20.0,
+      48.0
+    ],
+    "microcover": [
+      8.0,
+      22.0
+    ]
+  },
   "runtime_materials": "Three 1K PBR texture sets with OpenGL normal and roughness, supplied by the shared Godot alpha-cutout foliage shader.",
   "collision": "None. Existing building clearance, actor collision, route and firing corridor remain in the owning scene code.",
   "wind": "Color alpha holds a root-to-tip vertex sway weight; one shared shader remains active.",
@@ -116,6 +123,56 @@
             1.6033,
             1.4032,
             0.64
+          ]
+        }
+      ]
+    },
+    "microcover": {
+      "polyhaven_asset_id": "fern_02",
+      "variants": [
+        {
+          "source_objects": [
+            "fern_02_a"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            78,
+            39,
+            19
+          ],
+          "dimensions_m_lod0": [
+            0.6548,
+            0.7316,
+            0.3417
+          ]
+        },
+        {
+          "source_objects": [
+            "fern_02_b"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            238,
+            119,
+            59
+          ],
+          "dimensions_m_lod0": [
+            0.7895,
+            0.6875,
+            0.3422
+          ]
+        },
+        {
+          "source_objects": [
+            "fern_02_c"
+          ],
+          "triangles_lod0_lod1_lod2": [
+            224,
+            112,
+            56
+          ],
+          "dimensions_m_lod0": [
+            0.8504,
+            0.7448,
+            0.3427
           ]
         }
       ]

@@ -39,6 +39,16 @@ SPECIES = {
         "height": 0.64,
         "lod_ratios": [1.0, 0.60, 0.20],
     },
+    # The old low groundcover was a hand-drawn fern card. Reuse the scanned
+    # Poly Haven fern silhouettes at a lower target height and a mobile-first
+    # triangle budget so all 14.5K existing instances can use real PBR leaves.
+    "microcover": {
+        "source": "fern_02",
+        "variants": [["fern_02_a"], ["fern_02_b"], ["fern_02_c"]],
+        "height": 0.34,
+        "lod_ratios": [0.10, 0.05, 0.025],
+        "lod_distances_m": [8.0, 22.0],
+    },
     "red_bloom": {
         "source": "shrub_04",
         # Each small photographed branch is combined into one irregular low clump.
@@ -52,7 +62,7 @@ SPECIES = {
         "lod_ratios": [0.095, 0.032, 0.009],
     },
 }
-TEXTURE_KEYS = {"rosette": "rosette", "arch_fern": "arch_fern", "red_bloom": "shrub"}
+TEXTURE_KEYS = {"rosette": "rosette", "arch_fern": "arch_fern", "microcover": "arch_fern", "red_bloom": "shrub"}
 
 
 def activate(obj: bpy.types.Object) -> None:
@@ -225,11 +235,13 @@ def main() -> None:
     bpy.context.scene.unit_settings.scale_length = 1.0
     bpy.context.scene.render.engine = "BLENDER_EEVEE_NEXT"
 
-    materials = {kind: new_pbr_material(kind) for kind in SPECIES}
+    materials = {kind: new_pbr_material(kind) for kind in ("rosette", "arch_fern", "red_bloom")}
+    materials["microcover"] = materials["arch_fern"]
     source_objects: dict[str, dict[str, bpy.types.Object]] = {}
     for data in SPECIES.values():
         asset_id = data["source"]
-        source_objects[asset_id] = load_source_objects(asset_id, source_names(asset_id))
+        if asset_id not in source_objects:
+            source_objects[asset_id] = load_source_objects(asset_id, source_names(asset_id))
 
     build_manifest: dict[str, dict[str, object]] = {}
     generated: list[bpy.types.Object] = []
@@ -320,7 +332,7 @@ def main() -> None:
         "license_url": "https://polyhaven.com/license",
         "sources": {kind: spec["source"] for kind, spec in SPECIES.items()},
         "game_mesh_nodes": "One mesh per species, natural source variant and LOD; each species remains one cutout surface in cell-batched MultiMeshes.",
-        "game_lod_distances_m": [20.0, 48.0],
+        "game_lod_distances_m": {"default": [20.0, 48.0], "microcover": [8.0, 22.0]},
         "runtime_materials": "Three 1K PBR texture sets with OpenGL normal and roughness, supplied by the shared Godot alpha-cutout foliage shader.",
         "collision": "None. Existing building clearance, actor collision, route and firing corridor remain in the owning scene code.",
         "wind": "Color alpha holds a root-to-tip vertex sway weight; one shared shader remains active.",

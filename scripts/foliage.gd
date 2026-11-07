@@ -84,6 +84,9 @@ static func material(kind := "") -> ShaderMaterial:
 
 static var _focus_mats: Array[ShaderMaterial] = []
 static var _fade := 0.0  # 0..1, loopt zacht mee zodat bladeren niet ploffen
+static var _depth_shadow_clock := 1.0
+const DEPTH_SHADOW_BATCH_LIMIT := 8
+const DEPTH_SHADOW_RANGE := 28.0
 
 
 ## Globale uniforms op gedeelde leaf-materialen, zonder per-palm drawcalls of raycasts.
@@ -91,6 +94,7 @@ static var _fade := 0.0  # 0..1, loopt zacht mee zodat bladeren niet ploffen
 ## extras = tot drie wereldposities (vijanden) die ook uit de bladeren moeten blijven.
 static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, delta := 1.0 / 60.0, active := true, extras: Array = []) -> void:
 	GrassField.set_focus(player_pos, active)
+	update_depth_shadow_batches(camera_pos, delta, active)
 	_fade = move_toward(_fade, 1.0 if active else 0.0, delta / 0.35)
 	if _focus_mats.is_empty():
 		# All detailed species share the actor sightline fade, including the new PBR plants.
@@ -111,6 +115,35 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 		mat.set_shader_parameter("view_e0", e[0])
 		mat.set_shader_parameter("view_e1", e[1])
 		mat.set_shader_parameter("view_e2", e[2])
+
+
+## Cast real sun shadows only for the nearest few PBR foliage batches. The
+## existing MultiMeshes and alpha-cutout material are reused; distant batches
+## remain shadowless to keep the Mobile shadow pass bounded.
+static func update_depth_shadow_batches(camera_pos: Vector3, delta: float, active := true) -> void:
+	_depth_shadow_clock += delta
+	if _depth_shadow_clock < 0.25:
+		return
+	_depth_shadow_clock = 0.0
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return
+	var candidates: Array[Node] = tree.get_nodes_in_group("understory_pbr_shadow_candidate")
+	var allow_shadows := active and GameSettings.get_value("quality") != "low" and GameSettings.get_value("t_sun") == "on" and Atmosphere.tier == 0
+	var ranked: Array = []
+	if allow_shadows:
+		for node: Node in candidates:
+			var center: Vector3 = node.get_meta("shadow_center", Vector3.INF)
+			var distance := camera_pos.distance_to(center)
+			if distance <= DEPTH_SHADOW_RANGE:
+				ranked.append([distance, node])
+	ranked.sort_custom(func(a: Array, b: Array) -> bool: return a[0] < b[0])
+	var selected := {}
+	for i in mini(DEPTH_SHADOW_BATCH_LIMIT, ranked.size()):
+		selected[(ranked[i][1] as Node).get_instance_id()] = true
+	for node: Node in candidates:
+		var should_cast: bool = selected.has(node.get_instance_id())
+		(node as GeometryInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if should_cast else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
 const PUSH_MAX := 8

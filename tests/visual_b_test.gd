@@ -25,6 +25,7 @@ func run() -> void:
 	for mesh: ArrayMesh in [fol.fern(),fol.bush()]:
 		check(mesh.surface_get_arrays(0)[Mesh.ARRAY_TANGENT].size()>0,"Foliage PBR needs an authored tangent frame")
 	var details := get_tree().get_nodes_in_group("jungle_understory")
+	Foliage.update_depth_shadow_batches((main.get_node("Camera") as Camera3D).global_position,1.0,true)
 	var under: GDScript = load("res://scripts/jungle_understory.gd")
 	var understory_counts := {"fern":0,"bush":0,"groundcover":0,"rosette":0,"arch":0,"red":0,"litter":0,"stone":0,"twig":0}
 	for n: MultiMeshInstance3D in details:
@@ -77,7 +78,8 @@ func run() -> void:
 		check(n.multimesh.custom_aabb.size.x > 0.0 and n.multimesh.custom_aabb.size.x <= 28.0,"Detail batch needs stable cell bounds after clearing")
 		check(n.multimesh.instance_count <= (900 if n.name.begins_with("Understory_litter_") else (480 if n.name.begins_with("Understory_groundcover_") else 360)), "Unbounded detail batch")
 		check(n.visibility_range_end <= 76.0, "Microdetail must distance cull")
-		check(n.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "Detail adds shadow cost")
+		if not n.is_in_group("understory_pbr_shadow_candidate"):
+			check(n.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF, "Non-PBR microdetail stays shadowless")
 		check(n.find_children("*","CollisionShape3D",true,false).is_empty(),"Detail introduces collisions")
 	var meshes := details.map(func(n): return n.multimesh)
 	var detail_meshes := meshes.duplicate()
@@ -171,8 +173,13 @@ func run() -> void:
 	for quality in ["low","high","ultra","high"]:
 		settings.values["quality"] = quality
 		atm.apply_settings()
+		Foliage.update_depth_shadow_batches((main.get_node("Camera") as Camera3D).global_position,1.0,true)
 		for n: MultiMeshInstance3D in details:
-			check(n.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,"Quality enabled detail shadows")
+			if quality == "low" or quality == "high" and Atmosphere.tier > 0:
+				check(n.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_OFF,"Low or governed quality enables detail shadows")
+	var shadow_batches := details.filter(func(n: MultiMeshInstance3D) -> bool: return n.cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_ON)
+	check(shadow_batches.size() <= Foliage.DEPTH_SHADOW_BATCH_LIMIT,"PBR plant shadows exceed the near-field mobile budget")
+	check(shadow_batches.all(func(n: MultiMeshInstance3D) -> bool: return n.is_in_group("understory_pbr_shadow_candidate")),"Only PBR plant batches may cast near-field detail shadows")
 	settings.values["t_jungle"] = "off"
 	atm.apply_settings()
 	for n: MultiMeshInstance3D in details: check(not n.visible,"Jungle switch leaves details visible")

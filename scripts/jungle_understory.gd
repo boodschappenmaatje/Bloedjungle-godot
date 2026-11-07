@@ -385,6 +385,9 @@ static func spawn(parent: Node3D) -> void:
 		n.add_to_group("jungle_understory")
 		# Existing density, governor and diagnostic switches operate on this group.
 		n.add_to_group("foliage_grass")
+		if data.kind in ["fern","bush","rosette","arch_fern","red_bloom"]:
+			n.add_to_group("understory_pbr_shadow_candidate")
+			n.set_meta("shadow_center",Vector3((data.cell.x+0.5)*CELL,0.0,(data.cell.y+0.5)*CELL))
 		n.set_meta("full",data.xf.size())
 		n.visibility_range_end=76.0 if data.kind in ["rosette","arch_fern","red_bloom"] else (48.0 if data.kind in ["litter","stone","twig"] else 58.0)
 		n.extra_cull_margin=1.5  # leaf spread plus the existing 1.1 m actor push

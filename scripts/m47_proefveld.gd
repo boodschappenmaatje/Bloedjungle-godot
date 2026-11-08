@@ -293,7 +293,7 @@ func _process(delta: float) -> void:
 		_auto_capture()
 
 
-const CAPS := [0.05, 0.12, 0.28, 0.55, 0.9, 1.4, 2.0, 2.8, 3.8]
+const CAPS := [0.05, 0.12, 0.28, 0.55, 0.9, 1.4, 2.2, 3.0, 4.2]
 var _t_fire := -1.0
 
 

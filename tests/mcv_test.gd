@@ -19,7 +19,8 @@ func _initialize() -> void:
 	M = load("res://scripts/mcv.gd")
 	F = load("res://scripts/foliage.gd")
 	R = load("res://scripts/route.gd")
-	D.set("mcv_mode", true)   # vóór het laden van de wereld: zonder vast kamp
+	D.set("mcv_mode", true)
+	D.set("mcv_autodeploy", false)   # zelf rijden en uitklappen
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 

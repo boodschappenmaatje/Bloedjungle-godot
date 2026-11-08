@@ -61,11 +61,11 @@ static func _zone_match(pos: Vector3, border := 1.0) -> Dictionary:
 
 
 static func _allowed(pos: Vector3) -> bool:
-	if maxf(absf(pos.x), absf(pos.z)) < Data.COMPOUND + 1.8:
+	if maxf(absf(pos.x), absf(pos.z)) < Data.START_CLEAR + 1.8:
 		return false
 	if absf(pos.x) < 4.6 and absf(pos.z) < 70.0:
 		return false
-	if pos.x > Data.COMPOUND and pos.x < Data.COMPOUND + 11.5 and absf(pos.z) < 23.0:
+	if pos.x > Data.START_CLEAR and pos.x < Data.START_CLEAR + 11.5 and absf(pos.z) < 23.0:
 		return false
 	return not Foliage._in_river(pos)
 

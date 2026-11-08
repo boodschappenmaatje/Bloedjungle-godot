@@ -1,12 +1,10 @@
 class_name Gates
 extends Node3D
-## De twee stalen schuifpoorten (05b-gates.js). Het paneel hangt vóór de muur en schuift langzaam
-## (2,5 s, animatie uit assets/poort.glb) opzij langs de buitenkant. Jij opent en sluit met de knop bij
-## de poort, je soldaten openen hem als ze erdoor moeten, vijanden nooit: die slaan of schieten erop tot
-## hij kapot gaat. Een kapotte poort staat open tot je hem in de wapenkamer repareert.
+## De stalen schuifpoorten die je zelf in je muur zet (Kampmuur.place_gate; oorspronkelijk 05b-gates.js). Het paneel hangt vóór de muur en schuift langzaam
+## (2,5 s, animatie uit assets/poort.glb) opzij langs de buitenkant. Hij gaat vanzelf open voor jou, je soldaten en je trucks, vijanden nooit: die slaan
+## of schieten erop tot hij kapot gaat. Een kapotte poort staat open tot je hem in de wapenkamer repareert. Sinds stap 4b zijn er geen vaste poorten meer.
 
-const C := Data.COMPOUND
-const G := Data.GATE_GAP
+const G := 3.4   # halve breedte van de poortopening (m)
 const HP := 900.0
 const REACH := 4.4
 const ALLY_REACH := 4.6
@@ -31,15 +29,11 @@ func _ready() -> void:
 				var st: String = b.state
 				b.state = ""
 				_beacon_state(b, st))
-	for sz in [-1.0, 1.0]:
-		_make_gate("noord" if sz < 0.0 else "zuid", sz, Vector3(0, 0, sz * C), 0.0 if sz < 0.0 else PI)
-	_apply_all()
 
 
-## Maakt één poort (model, paneel, botsblok, zwaailampen en levensbalk) op `at` met draaiing `yaw`. `sz` is alleen voor het oude kamp (noord/zuid); `posts`
-## zet er poortposten bij (poorten die je zelf in een muur zet, MCV-start).
-func _make_gate(label: String, sz: float, at: Vector3, yaw: float, posts := false) -> Dictionary:
-	var g := {"name": label, "sz": sz, "at": at, "yaw": yaw, "open": 0.0, "hold": 0.0, "user_open": false, "locked": false,
+## Maakt één poort (model, paneel, botsblok, zwaailampen, poortposten en levensbalk) op `at` met draaiing `yaw`.
+func _make_gate(label: String, at: Vector3, yaw: float) -> Dictionary:
+	var g := {"name": label, "at": at, "yaw": yaw, "open": 0.0, "hold": 0.0, "user_open": false, "locked": false,
 		"hp": HP, "max_hp": HP, "broken": false, "moving": false}
 	var root := Node3D.new()
 	root.position = at
@@ -85,10 +79,9 @@ func _make_gate(label: String, sz: float, at: Vector3, yaw: float, posts := fals
 	g.bar = HpBar.new()
 	add_child(g.bar)
 	g.bar.position = at + Vector3(0, Data.BASE_WALL_H + 0.9, 0)
-	if posts:
-		for px in [-(G + 0.3), G + 0.3]:   # poortposten, zoals bij het oude kamp (base_props.gd)
-			Kit.box(root, Vector3(px, 0.0, 0.0), Vector3(0.7, Data.BASE_WALL_H, 0.7), Kit.concrete_dark(), 0.0, Kit.LAYER_WALL)
-			Kit.box(root, Vector3(px, Data.BASE_WALL_H, 0.0), Vector3(0.9, 0.16, 0.9), Kit.concrete())
+	for px in [-(G + 0.3), G + 0.3]:   # poortposten
+		Kit.box(root, Vector3(px, 0.0, 0.0), Vector3(0.7, Data.BASE_WALL_H, 0.7), Kit.concrete_dark(), 0.0, Kit.LAYER_WALL)
+		Kit.box(root, Vector3(px, Data.BASE_WALL_H, 0.0), Vector3(0.9, 0.16, 0.9), Kit.concrete())
 	list.append(g)
 	return g
 
@@ -96,7 +89,7 @@ func _make_gate(label: String, sz: float, at: Vector3, yaw: float, posts := fals
 
 ## MCV-start: een poort in de muur van het kamp. `edge` en `edge2` zijn de twee roosterranden (Kampmuur) die hij vervangt.
 func add_gate(at: Vector3, yaw: float, edge: Vector4i, edge2: Vector4i) -> Dictionary:
-	var g := _make_gate("kamp", 0.0, at, yaw, true)
+	var g := _make_gate("kamp", at, yaw)
 	g["kind"] = "poort"
 	g["edge"] = edge
 	g["edge2"] = edge2
@@ -128,20 +121,6 @@ func gate_at(p: Vector3) -> Variant:
 		if absf(rel.x) <= G + 0.6 and absf(rel.z) <= 1.2:
 			return g
 	return null
-
-
-## MCV-start: de twee poorten van het vaste kamp bestaan niet (de knoop blijft, andere code kijkt naar Game.gates en zijn wereld).
-func clear_for_mcv() -> void:
-	for g in list:
-		for k in ["root", "bar"]:
-			var n: Variant = g.get(k)
-			if n != null and is_instance_valid(n):
-				n.queue_free()
-		for b in g.get("beacons", []):
-			var br: Variant = b.get("root")
-			if br != null and is_instance_valid(br):
-				br.queue_free()
-	list.clear()
 
 
 ## Zwaailamp uit assets/zwaailamp.glb op een poortpost: de reflector draait en een SpotLight3D zwaait mee.
@@ -215,8 +194,6 @@ func pos_of(g: Dictionary) -> Vector3:
 
 ## De poort die voor deze soldaat dicht zit: hij staat er vlakbij, aan de andere kant van de muur dan zijn doel.
 func blocking(from: Vector3, goal: Vector3) -> Variant:
-	if not Data.mcv_mode and _inside(from) == _inside(goal):
-		return null
 	for g in list:
 		if g.broken or g.open > 0.6:
 			continue
@@ -224,10 +201,6 @@ func blocking(from: Vector3, goal: Vector3) -> Variant:
 		if absf(rel.x) < G + 0.6 and absf(rel.z) < 1.9:
 			return g
 	return null
-
-
-static func _inside(p: Vector3) -> bool:
-	return absf(p.x) < C and absf(p.z) < C
 
 
 func near_player() -> Variant:

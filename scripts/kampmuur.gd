@@ -201,8 +201,37 @@ static func cell_center(c: Vector2i) -> Vector3:
 
 
 ## Na het bouwen of verkopen: is de eerste omheining nu compleet? Dan blijft alles wat tot nu toe gratis was gratis en kost elk volgend stuk 50.
+## Alles binnen de omheining verdwijnt vanzelf (bomen, struiken, gras, stammen, rotsen), waar het ook staat: het vierkant is dan van jou.
+static func clear_inside() -> int:
+	var cells := region()
+	if cells.is_empty():
+		return 0
+	var rows := {}   # rij (z) -> de x-cellen in die rij
+	for c: Vector2i in cells:
+		if not rows.has(c.y):
+			rows[c.y] = []
+		(rows[c.y] as Array).append(c.x)
+	var rects: Array = []
+	for z in rows:
+		var xs: Array = rows[z]
+		xs.sort()
+		var start: int = xs[0]
+		var prev: int = xs[0]
+		for i in range(1, xs.size() + 1):
+			if i < xs.size() and int(xs[i]) == prev + 1:
+				prev = xs[i]
+				continue
+			rects.append(Rect2(start * STEP, int(z) * STEP, (prev - start + 1) * STEP, STEP))
+			if i < xs.size():
+				start = xs[i]
+				prev = xs[i]
+	return Foliage.clear_world_rects(rects, 0.4)
+
+
 static func check_enclosure() -> void:
-	if Data.mcv_mode and Game.free_wall and Game.mcv_deployed and enclosed():
+	if Game.mcv_deployed and enclosed():
+		clear_inside()
+	if Game.free_wall and Game.mcv_deployed and enclosed():
 		Game.free_wall = false
 		Game.banner.emit("OMHEINING COMPLEET", "Die was gratis · elk volgend muurstuk kost %d" % COST, 3.5)
 		Sfx.play("buy")
@@ -347,7 +376,7 @@ static func gate_pair(k: Vector4i, toward: Vector3) -> Variant:
 
 ## Zet een poort op de plek van twee muurstukken naast elkaar. Geeft {ok, reason}.
 static func place_gate(k: Vector4i, toward: Vector3) -> Dictionary:
-	if not Data.mcv_mode or not Game.mcv_deployed or Game.gates == null:
+	if not Game.mcv_deployed or Game.gates == null:
 		return {"ok": false, "reason": "Klap eerst je wagen uit"}
 	var pair: Variant = gate_pair(k, toward)
 	if pair == null:

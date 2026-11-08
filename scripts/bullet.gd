@@ -445,12 +445,10 @@ func _boom_enemy(at: Vector3) -> void:
 	Barrel.catch_blast(at, r)
 	if Game.builds:
 		Game.builds.blast(at, r, dmg, false)
-	Wachtpost.blast(at, r, dmg)
-	Generator.blast(at, r, dmg)
 	if Game.gates:
 		for i in Game.gates.list.size():
 			var g: Dictionary = Game.gates.list[i]
-			var gd: float = maxf(0.0, Vector2(Game.gates.pos_of(g).x - at.x, Game.gates.pos_of(g).z - at.z).length() - Data.GATE_GAP)
+			var gd: float = maxf(0.0, Vector2(Game.gates.pos_of(g).x - at.x, Game.gates.pos_of(g).z - at.z).length() - Gates.G)
 			if not g.broken and gd < r:
 				Game.gates.damage(i, dmg * 1.2 * (1.0 - gd / r), "explosive")
 	var p = Game.player

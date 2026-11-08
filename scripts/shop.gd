@@ -789,22 +789,11 @@ func _base_cards() -> void:
 	var gcost: int = Game.gates.total_repair_cost()
 	var gtag := " · ".join(Game.gates.list.map(func(g): return "%s %s" % [g.name, "kapot" if g.broken else "%d%%" % roundi(g.hp / g.max_hp * 100.0)]))
 	if gcost > 0:
-		_plain_card("Poorten repareren", "Zet de stalen schuifpoorten weer als nieuw in de muur. Jij opent ze met de knop bij de poort.", gtag, 0, 0, "Repareer · %s" % UI.nl(gcost), Game.points >= gcost, func():
+		_plain_card("Poorten repareren", "Zet je stalen schuifpoorten weer als nieuw in de muur. Ze gaan vanzelf open voor jou, je soldaten en je trucks.", gtag, 0, 0, "Repareer · %s" % UI.nl(gcost), Game.points >= gcost, func():
 			if Game.buy(gcost):
 				Game.gates.repair_all())
-	var wcost: int = Game.wachtpost_cost()
-	if wcost > 0:
-		_plain_card("Wachtposten repareren", "Zet de wachthuisjes en slagbomen bij de poorten weer als nieuw neer.", "", 0, 0, "Repareer · %s" % UI.nl(wcost), Game.points >= wcost, func():
-			if Game.buy(wcost):
-				Wachtpost.inst.repair_all())
-	var ecost: int = Game.generator_cost()
-	if ecost > 0:
-		var estat := "kapot, alle lampen uit" if Generator.inst.down else "%d%%" % roundi(Generator.inst.hp / Generator.HP * 100.0)
-		_plain_card("Generator repareren", "Zet de dieselgenerator in de westhoek weer als nieuw neer. Kapot = geen stroom: de lampen in de basis en in de stad zijn uit.", estat, 0, 0, "Repareer · %s" % UI.nl(ecost), Game.points >= ecost, func():
-			if Game.buy(ecost):
-				Generator.inst.repair())
 	var gl: int = Game.upg["gate"]
-	_plain_card("Poorten versterken", "Dikker staal: +40%% stevigheid voor beide poorten (nu %d). Tip: houd bij een beschadigde poort de knop ingedrukt." % roundi(Game.gates.max_hp()), "", gl, 5, "Max" if gl >= 5 else "Versterk · %s" % UI.nl(350 * (gl + 1)), gl < 5 and Game.points >= 350 * (gl + 1), func():
+	_plain_card("Poorten versterken", "Dikker staal: +40%% stevigheid voor al je poorten (nu %d). Tip: houd bij een beschadigde poort de knop ingedrukt." % roundi(Game.gates.max_hp()), "", gl, 5, "Max" if gl >= 5 else "Versterk · %s" % UI.nl(350 * (gl + 1)), gl < 5 and Game.points >= 350 * (gl + 1), func():
 		if Game.buy(350 * (gl + 1)):
 			Game.gates.upgrade())
 	_tiered("Beton versterken", "+300 maximale structuur en direct hersteld.", "fort", 5, 400, "Versterk", func():

@@ -9,9 +9,8 @@ const P47_PURCHASE_ENABLED := false # aircraft work resumes only after iPhone ap
 const AIRCRAFT_CAPACITY := 1
 const UNWANTED_WORKSHOP_LIGHT_PREFIX := "Warm workshop practical light"
 
-# BaseProps._wall() puts the outermost side-wall posts at ±(COMPOUND + .325)
-# and end posts at ±(COMPOUND + .475), including their authored caps/paling sizes.
-const BASE_GROUND_SIZE := Vector2(Data.COMPOUND * 2.0 + 0.65, Data.COMPOUND * 2.0 + 0.95)
+# De grootte van het oude vaste kamp (56,65 x 56,95 m); sinds stap 4b alleen nog het oppervlaktebudget van het vliegveld (MAX_GROUND_AREA).
+const BASE_GROUND_SIZE := Vector2(56.65, 56.95)
 const MAX_GROUND_AREA := 2.0 * BASE_GROUND_SIZE.x * BASE_GROUND_SIZE.y
 
 # The actual construction footprint is a connected composition of the fixed
@@ -361,19 +360,6 @@ static func site_clear_of_river(at: Vector3, yaw: float) -> bool:
 				var world := Vector2(at.x,at.z) + _rotate_local(local,yaw)
 				if Data.river_off(world.x,world.y) < Data.RIVER_HALF + 2.0:
 					return false
-	return true
-
-static func site_clear_of_south_gate_route(at: Vector3, yaw: float) -> bool:
-	# Keep the established south gate exit open into the expanded playable area.
-	var route_start := Data.COMPOUND + 2.0
-	var route_center := Vector2(0.0, (route_start + Data.WORLD_Z_S) * 0.5)
-	var route_size := Vector2(Data.GATE_GAP * 2.0 + 3.2, Data.WORLD_Z_S - route_start)
-	for region in site_regions():
-		var center: Vector2 = region.center
-		var world_center := Vector2(at.x, at.z) + _rotate_local(center, yaw)
-		var angle := yaw + float(region.get("yaw", 0.0))
-		if _rectangles_overlap(world_center, region.size, angle, route_center, route_size, 0.0):
-			return false
 	return true
 
 static func _rectangles_overlap(a_center: Vector2, a_size: Vector2, a_yaw: float, b_center: Vector2, b_size: Vector2, b_yaw: float) -> bool:

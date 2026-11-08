@@ -202,14 +202,12 @@ func _explode() -> void:
 				e.hit(DAMAGE * (1.0 - d / r * 0.7), (e.global_position - at).normalized(), true)
 	if Game.builds:
 		Game.builds.blast(at, r, DAMAGE, true)
-	Wachtpost.blast(at, r, DAMAGE)
-	Generator.blast(at, r, DAMAGE)
 	VijandHk.blast(at, r, DAMAGE)   # het vijandelijke hoofdkwartier slopen = winnen
 	VijandM2Toren.blast(at, r, DAMAGE)
 	if Game.gates:
 		for i in Game.gates.list.size():
 			var gt: Dictionary = Game.gates.list[i]
-			var gd: float = maxf(0.0, Vector2(Game.gates.pos_of(gt).x - at.x, Game.gates.pos_of(gt).z - at.z).length() - Data.GATE_GAP)
+			var gd: float = maxf(0.0, Vector2(Game.gates.pos_of(gt).x - at.x, Game.gates.pos_of(gt).z - at.z).length() - Gates.G)
 			if not gt.broken and gd < r:
 				Game.gates.damage(i, DAMAGE * 0.35 * (1.0 - gd / r), "explosive")
 	var p = Game.player

@@ -16,6 +16,9 @@ const FOOT_SIZE := Vector2(14.0, 16.0)
 const RIVER_MARGIN := 12.0   # zo ver moet je minstens van het water blijven om uit te klappen
 const EDGE_MARGIN := 14.0    # en van de rand van de kaart
 const DEPLOY_TIME := 1.4     # s tussen "UITKLAPPEN" en het staan van het hoofdkwartier
+const PARK_Z := -9.6         # m: de wagen rijdt na het uitklappen zo ver naar voren (lokaal -Z) en blijft daar als commandokern staan
+const PARK_SPEED := 3.2      # m/s (met zachte start en stop)
+const PARK_REGION := {"name": "wagen", "center": Vector2(0.0, -9.6), "size": Vector2(4.8, 9.6), "yaw": 0.0}
 const START_POS := Vector3(0.0, 0.0, 6.0)   # de kale open plek op de oorsprong (er worden daar geen bomen geplant)
 
 var deploying := false
@@ -27,6 +30,15 @@ var _status := {"valid": true, "reason": "", "vegetation": 0}
 var _status_t := 0.0
 var _btn: ActionBtn
 var _board_done := false
+var _model: McvModel
+var _layer: CanvasLayer
+var _steer := 0.0
+var _park_from := Vector3.ZERO
+var _park_to := Vector3.ZERO
+var _park_t := -1.0          # s sinds het wegrijden (-1 = niet bezig)
+var _park_len := 1.0
+var _park_play := false
+var _park_last := 0.0
 
 
 # ---------------------------------------------------------------- plekkeuze (statisch, ook voor de bouwregels)
@@ -53,6 +65,9 @@ static func footprint_points(at: Vector3, yaw: float) -> Array:
 		for iv in 3:
 			var l := Vector3(FOOT_CENTER.x + (iu - 1) * FOOT_SIZE.x * 0.5, 0.0, FOOT_CENTER.y + (iv - 1) * FOOT_SIZE.y * 0.5)
 			out.append(at + basis * l)
+	# de wagen blijft na het uitklappen voor het hoofdkwartier staan: ook die plek moet droog zijn en binnen de kaart liggen
+	out.append(at + basis * Vector3(0.0, 0.0, PARK_Z - 4.4))
+	out.append(at + basis * Vector3(0.0, 0.0, PARK_Z))
 	return out
 
 
@@ -125,33 +140,11 @@ func _ready() -> void:
 	cs.shape = bs
 	cs.position.y = HALF.y
 	add_child(cs)
-	_build_block_model()
+	_model = McvModel.new()
+	add_child(_model)
 	_build_ghost()
 	_build_button()
 	_board()
-
-
-func _build_block_model() -> void:
-	var body := Node3D.new()
-	body.name = "Blokmodel"
-	add_child(body)
-	Kit.box(body, Vector3(0, 0.55, 0.6), Vector3(3.6, 1.7, 6.6), Kit.olive())              # laadbak met het opgevouwen hoofdkwartier
-	Kit.box(body, Vector3(0, 0.55, -3.3), Vector3(3.4, 2.0, 1.9), Kit.olive())              # cabine
-	Kit.box(body, Vector3(0, 2.0, -3.9), Vector3(3.0, 0.7, 0.7), Kit.flat(Color("2b3a40"), 0.3))   # voorruit
-	Kit.box(body, Vector3(0, 2.25, 0.6), Vector3(3.0, 0.5, 6.0), Kit.rust())                # dak van de laadbak
-	var wheel := CylinderMesh.new()
-	wheel.top_radius = 0.62
-	wheel.bottom_radius = 0.62
-	wheel.height = 0.5
-	var mat := Kit.flat(Color("1c1d1b"), 0.95)
-	for z in [-3.1, -0.9, 1.3, 3.1]:
-		for x in [-1.85, 1.85]:
-			var mi := MeshInstance3D.new()
-			mi.mesh = wheel
-			mi.material_override = mat
-			mi.position = Vector3(x, 0.62, z)
-			mi.rotation.z = PI / 2.0
-			body.add_child(mi)
 
 
 ## Het spookbeeld van de voetafdruk: groen = hier kan je uitklappen, rood = niet.
@@ -168,12 +161,21 @@ func _build_ghost() -> void:
 	_ghost.position = Vector3(FOOT_CENTER.x, 0.08, FOOT_CENTER.y)
 	_ghost.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	add_child(_ghost)
+	var park := MeshInstance3D.new()   # de plek waar de wagen blijft staan
+	var pm := BoxMesh.new()
+	pm.size = Vector3(4.2, 0.05, 8.8)
+	park.mesh = pm
+	park.material_override = _ghost_mat
+	park.position = Vector3(0.0, 0.01, PARK_Z - FOOT_CENTER.y)   # kind van de hoofdgrond: verdwijnt er samen mee
+	park.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_ghost.add_child(park)
 
 
 func _build_button() -> void:
 	var layer := CanvasLayer.new()
 	layer.layer = 5
 	add_child(layer)
+	_layer = layer
 	_btn = ActionBtn.make("enter", "UITKLAPPEN")
 	_btn.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
 	_btn.offset_left = ActionBtn.slot_x(2)
@@ -200,10 +202,12 @@ func _board() -> void:
 
 func _physics_process(delta: float) -> void:
 	if deployed:
+		_park_step(delta)
 		return
 	var p = Game.player
 	var live: bool = Game.state == "prep" and not deploying and not Game.build_mode
 	var want_speed := 0.0
+	var steer_want := 0.0
 	var mv := Game.move
 	if live and mv.length() > 0.15:
 		# de wagen draait naar de kant waar je de stick duwt; ligt die achter hem, dan rijdt hij achteruit
@@ -212,10 +216,13 @@ func _physics_process(delta: float) -> void:
 		var reverse := absf(diff) > 2.3
 		if reverse:
 			diff = wrapf(diff - PI, -PI, PI)
+		steer_want = clampf(diff * 1.2, -1.0, 1.0)
 		rotation.y += clampf(diff, -TURN * delta, TURN * delta)
 		var align := 1.0 - 0.6 * minf(absf(diff) / 1.2, 1.0)
 		want_speed = (-REVERSE if reverse else SPEED * align) * minf(mv.length() * 1.3, 1.0)
 	_speed = move_toward(_speed, want_speed, ACCEL * delta)
+	_steer = move_toward(_steer, 0.0 if want_speed == 0.0 else steer_want * 0.5, 2.0 * delta)
+	_model.drive(_speed, _steer, delta)
 	if absf(_speed) > 0.01:
 		velocity = -global_transform.basis.z * _speed
 		move_and_slide()
@@ -279,6 +286,9 @@ func deploy_now() -> void:
 	# alles wat er staat verdwijnt: bomen, struiken, varens, gras en rotsen
 	var removed := Foliage.clear_for_building(holder.get_instance_id(), footprint_regions(), at, yaw, Foliage.BUILD_CLEAR_MARGIN, true)
 	BaseProps.build_hq(holder)
+	# de wagen blijft als commandokern voor het hoofdkwartier staan: ook die strook wordt vrijgemaakt
+	removed += Foliage.clear_for_building(get_instance_id(), [PARK_REGION], at, yaw, Foliage.BUILD_CLEAR_MARGIN, true)
+	McvOpbouw.new().start(holder)   # het hoofdkwartier groeit in 20 s met steigers (de wagen rijdt eerst weg)
 	Game.base_pos = at
 	Game.base_yaw = yaw
 	Game.mcv_deployed = true
@@ -296,8 +306,46 @@ func deploy_now() -> void:
 		p.home = Game.base_home()
 		p.global_position = p.home
 		p.face = yaw
-	Game.banner.emit("HOOFDKWARTIER STAAT", "Bouw via BOUW je gratis depot, muren en 4 gratis torens · eerste groep over %d min" % roundi(Data.MCV_RUST / 60.0), 5.0)
+	Game.banner.emit("HOOFDKWARTIER WORDT GEBOUWD", "Bouw via BOUW je gratis depot, muren en 4 gratis torens · eerste groep over %d min" % roundi(Data.MCV_RUST / 60.0), 5.0)
 	Sfx.play("buy")
 	Game.changed.emit()
 	PerfMonitor.note("mcv uitgeklapt: %d planten weggehaald" % removed)
-	queue_free()
+	_start_park()
+
+
+## De wagen blijft staan als commandokern: hij is geen bestuurbaar voertuig meer en rijdt eerst uit het kamp (lokaal -Z).
+func _start_park() -> void:
+	remove_from_group("mcv")
+	remove_from_group("voertuigen")
+	add_to_group("mcv_wagen")
+	collision_layer = 0   # tijdens het wegrijden staat de speler bij het hoofdkwartier: de wagen mag hem niet wegduwen
+	for n in [_layer, _ghost]:
+		if n != null and is_instance_valid(n):
+			n.queue_free()
+	_speed = 0.0
+	_park_from = global_position
+	_park_to = global_position + global_transform.basis * Vector3(0.0, 0.0, PARK_Z)
+	_park_len = _park_from.distance_to(_park_to)
+	_park_t = 0.0
+	_park_play = false
+	_model.set_schild_omhoog(true)
+
+
+func _park_step(delta: float) -> void:
+	if _park_t < 0.0:
+		return
+	_park_t += delta
+	var dur := _park_len / PARK_SPEED * 1.35
+	var k := clampf(_park_t / dur, 0.0, 1.0)
+	var e := smoothstep(0.0, 1.0, k)
+	global_position = _park_from.lerp(_park_to, e)
+	var v := (_park_len / dur) * (6.0 * k * (1.0 - k))   # afgeleide van smoothstep
+	_model.drive(v, 0.0, delta)
+	Foliage.ram(self, v, 3.0, 5.0)
+	if k >= 1.0 and not _park_play:
+		_park_play = true
+		_model.play_uitklappen()
+		Sfx.play("spuit", 0.9)
+	if _park_play and _model.uitklappen_klaar():
+		_park_t = -1.0
+		collision_layer = 32

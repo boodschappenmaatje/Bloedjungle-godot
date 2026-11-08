@@ -184,6 +184,9 @@ func _process(delta: float) -> void:
 	var plane = VLIEGTUIG.driven_plane if is_instance_valid(VLIEGTUIG.driven_plane) else null
 	if plane != null:
 		wanted_distance += plane.camera_extra()   # hoger en sneller vliegen: de tactische camera zoomt rustig mee uit
+	# Bouwwagen kiest een plek: ver genoeg weg om het hele voorterrein en de omgeving te zien waar het hoofdkwartier komt.
+	if not get_tree().get_nodes_in_group("mcv").is_empty():
+		wanted_distance = maxf(wanted_distance, MCV_DISTANCE)
 	# Alleen automatische tank-/groepskadrering kan de vaste speelcamera tijdelijk verruimen.
 	if _group_hold > 0.0:
 		wanted_distance = maxf(wanted_distance, _group_distance)
@@ -232,6 +235,7 @@ func _process(delta: float) -> void:
 	Foliage.update_pushers(p, get_tree())
 
 
+const MCV_DISTANCE := 38.0   # camera-afstand terwijl de bouwwagen een plek zoekt (normaal 22,5)
 var _camera_distance := 0.0
 
 

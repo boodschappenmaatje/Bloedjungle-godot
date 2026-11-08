@@ -92,9 +92,13 @@ func select_asset(asset: String, revision := "v2") -> void:
 				_replace_visual(subject, "kazerne", "kazerne")
 		"wachttoren":
 			subject = Node3D.new()
-			BaseProps._tower(subject, Vector3.ZERO)
-			tower = subject.get_child(0)
-			tower.rotation.y = 0.0
+			tower = Node3D.new()
+			tower.add_to_group("tower")   # de speler klimt erop (player.gd zoekt de groep)
+			subject.add_child(tower)
+			Kit.collider(tower, Vector3(0, 2.5, 0), Vector3(1.9, 5.0, 1.9), Kit.LAYER_WALL)
+			var tower_model: Node = (load("res://assets/wachttoren.glb") as PackedScene).instantiate()
+			Kit.skin(tower_model, "toren")
+			tower.add_child(tower_model)
 			if version == "v1":
 				_replace_visual(tower, "wachttoren", "toren")
 		"legerjeep":

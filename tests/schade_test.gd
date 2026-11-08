@@ -23,7 +23,7 @@ func _process(_d: float) -> bool:
 		main.begin()
 		game.build_credit = 5000
 		kaz = game.builds.place("kazerne", Vector3(-10, 0, -24), 0.0)
-		muur = game.builds.place("muur", Vector3(8, 0, 22), 0.0)
+		muur = game.builds.place("zandzak", Vector3(8, 0, 22), 0.0)
 		zak = game.builds.place("zandzak", Vector3(-8, 0, 22), 0.0)
 		print("geplaatst: ", kaz != null, muur != null, zak != null)
 	if frames == 6:

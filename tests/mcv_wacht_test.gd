@@ -24,7 +24,7 @@ func _initialize() -> void:
 	M = load("res://scripts/mcv.gd")
 	K = load("res://scripts/kampmuur.gd")
 	W = load("res://scripts/wachten.gd")
-	D.set("mcv_mode", true)
+	D.set("mcv_autodeploy", false)
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 

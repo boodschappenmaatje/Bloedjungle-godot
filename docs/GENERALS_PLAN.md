@@ -268,3 +268,10 @@ Naar de vier keuzes hierboven. Alleen in MCV-modus.
 - **Aanval:** bij een aanvalsgroep rennen ze naar de **poort die het dichtst bij de aanvallers ligt**, 4,5 m aan de binnenkant, naast elkaar (1,8 m ertussen). Een kapotte poort telt ook (dat is een gat in de muur). Zonder poort: aan de binnenkant van de muur aan de kant van de aanval; zonder omheining: 8 m voor het hoofdkwartier. Door een muur schieten ze niet (`Ally._nearest_enemy` kijkt al naar `BaseWallRules`).
 - **Bekend:** gebouwen op de ronde (bijvoorbeeld een depot tegen de muur) blokkeren een wacht; hij loopt er met de bestaande omloop-logica omheen. Wachten zijn (zoals rekruten) niet te doden: vijanden schieten er nog niet op.
 - **Test:** `tests/mcv_wacht_test.gd` (kopen, 250, maximum 4, verschillende plekken, ronde binnen en langs de muur, lopen en binnen blijven, post bij de noord- en zuidpoort, zonder poort, verkochte kazerne, knop in het paneel), workflow `mcv.yml`. **NIET GETEST:** iPhone.
+
+### Stap 4b gebouwd (8 november 2026): MCV is de enige modus, het oude vaste kamp is weg
+- **Weg:** de schakelaar `Data.mcv_mode`, het vaste kamp (muur, vier hoektorens, vaste poorten, wachthuisjes en slagbomen, generator, oude patrouilles, kampbodem en -rekwisieten) en de bijbehorende oude tests.
+- **Blijft:** het hoofdkwartier (bunkerlichaam, HK-model, voorplein, zandzakkenring), de gekochte wachttoren (4 gratis, daarna 100), je eigen muren en poorten, de kazerne met wachten, depot en trucks.
+- **Generator:** weg; komt later terug als bouwwerk (plan A4, "stroom die echt telt"). `Game.power` blijft tot dan altijd aan.
+- **Test:** in headless start de wagen automatisch uitgeklapt op de oorsprong (`Data.mcv_autodeploy`); de MCV-tests zetten dat uit. `voorraad_test` en `voorraad_verkeer_test` plaatsen hun eigen gratis depot.
+- **Bekend:** bij een depot op andere plekken (bijvoorbeeld (24, -24)) rijden trucks op de brug en in de stad soms door elkaar (verkeerstest); de test gebruikt (0, -24). Nog uit te zoeken.

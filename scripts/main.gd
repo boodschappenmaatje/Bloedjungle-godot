@@ -25,9 +25,6 @@ func _ready() -> void:
 	GameSettings.apply_hz()
 	add_child(PerfGovernor.new())
 	add_child(JungleGeluid.new())
-	add_child(Wachtpost.new())
-	add_child(Generator.new())
-	add_child(Patrouille.new())
 	add_child(Diagnose.new())
 	Game.state = "menu"
 	if Progress.autostart:
@@ -60,13 +57,15 @@ func _start_world() -> void:
 	for n in get_tree().get_nodes_in_group("mcv_hq"):
 		n.queue_free()   # het hoofdkwartier van een vorig spel
 	Game.supply.start_game()   # MCV-start: alleen de voorraadstapels; het depot is gratis maar zet je zelf neer
-	if not Data.mcv_mode:
-		return
-	if Game.gates != null and is_instance_valid(Game.gates):
-		Game.gates.clear_for_mcv()
 	var mcv := Mcv.new()
 	mcv.position = Mcv.START_POS
 	add_child(mcv)
+	if Data.mcv_autodeploy:
+		mcv.global_position = Vector3.ZERO
+		mcv.rotation.y = 0.0
+		mcv.deploy_now()
+		Game.state = "prep"
+		return
 	var p = Game.player
 	if p != null and is_instance_valid(p):
 		p.global_position = Vector3(Mcv.START_POS.x, 0.0, Mcv.START_POS.z)
@@ -195,7 +194,7 @@ func _start_prep() -> void:
 	Game.next_routes = AanvalRoutes.pick_group(1)
 	Game.routes = Game.next_routes.duplicate()  # de pijlen tonen al tijdens de rust waar de eerste groep vandaan komt
 	Game.state = "prep"
-	Game.prep_t = Data.MCV_RUST if Data.mcv_mode else Data.GROEP_RUST
+	Game.prep_t = Data.MCV_RUST
 	clear_t = -1.0
 	Game.changed.emit()
 
@@ -231,7 +230,7 @@ func _process(delta: float) -> void:
 	if Game.state == "prep" or Game.state == "play":
 		# het aftellen naar de volgende groep loopt altijd door, behalve zolang het bouwscherm open is
 		# MCV-start: de klok van de eerste groep staat stil tot de wagen is uitgeklapt
-		if not (Game.state == "prep" and Game.build_mode) and not (Data.mcv_mode and not Game.mcv_deployed):
+		if not (Game.state == "prep" and Game.build_mode) and Game.mcv_deployed:
 			Game.prep_t -= delta
 			if Game.prep_t <= 0.0:
 				_launch_group()

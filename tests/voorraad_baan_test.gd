@@ -33,6 +33,9 @@ func _process(_d: float) -> bool:
 		g.prep_t = 1e9
 	if frames == 40:
 		_pure()
+		# een depot in je kamp, voorkant naar het noorden (het eerste depot is gratis na het uitklappen)
+		var dep = g.builds.place("depot", Vector3(20.0, 0.0, 16.0), PI, false)
+		_check("depot geplaatst", dep != null)
 		_routes(g)
 		print("klaar, fouten: ", fails)
 		quit(1 if fails > 0 else 0)
@@ -166,10 +169,13 @@ func _routes(g) -> void:
 	var dock: Vector2 = sup.dock_point(depot)
 	var yaw := float(depot.yaw)
 	var front := Vector2(sin(yaw), cos(yaw))
-	var lead: Vector2 = sup.dock_lead(depot, "poort_n_in")
-	_check("de route van het depot naar de poort heeft één ronde bocht (afbuigpunt %s, %.1f m voor het depot)" % [lead, dock.distance_to(lead)], dock.distance_to(lead) >= 4.5 and absf(dock.distance_to(lead) - 9.0) > 0.5)
+	var tested := 0
 	for s in sup.stapels:
 		var r: Array = sup.route(depot, s.slot)
+		var dir0: Vector2 = ((r[r.size() - 1] as Vector2) - dock).normalized()
+		if dir0.dot(front) < 0.4:
+			continue   # deze stapel ligt achter het depot: de truck moet eerst keren (dat doet de baan apart, zie hieronder)
+		tested += 1
 		# heen: de truck staat op het depotplein, kijkt van het depot af
 		var out: Array = r.duplicate()
 		out.pop_front()
@@ -213,3 +219,4 @@ func _routes(g) -> void:
 				for q in l3[i].p:
 					ex = maxf(ex, q.distance_to(dock))
 			_check("stapel %d: de keer bij het depot gaat eerst weg van het depot en blijft binnen 6 m" % (s.slot + 1), l3[0].end_pos().distance_to(dock) > 1.0 and (l3[0].end_pos() - dock).dot(front) > 1.0 and ex <= 6.0)
+	_check("minstens één stapel ligt voor het depot en is getest (%d)" % tested, tested >= 1)

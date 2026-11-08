@@ -97,12 +97,7 @@ static func truck_box(c: Vector2, psi: float, extra_l := 0.0, extra_w := 0.0) ->
 
 ## De vakken bij de twee poorten (de poortopening plus de ruimte waarin de poort schuift).
 static func gate_boxes() -> Array:
-	if Data.mcv_mode:
-		return []   # MCV-start: geen vaste poorten
-	if _gates.is_empty():
-		for sz in [-1.0, 1.0]:
-			_gates.append(box(Vector2(0.0, sz * Data.COMPOUND), 0.0, GATE_HALF_Z, Data.GATE_GAP + GATE_EXTRA_X))
-	return _gates
+	return []   # er zijn geen vaste poorten meer (alleen de poorten die je zelf in je muur zet; een truck rijdt daar kinematisch doorheen)
 
 
 ## Staat een truck op deze plek (en met deze richting) in een poort?
@@ -246,11 +241,8 @@ func release_check() -> void:
 			continue
 		var far: bool
 		if bool(h.gate):
-			# de poort-sleutel (de depots, het kruispunt ertussen en de poort) komt vrij als de truck weer vertrokken is en het kruispunt achter zich heeft
-			if Data.mcv_mode:
-				far = p.distance_to(truck.sup.dock_point(truck.depot)) > 16.0   # zonder poort: het stuk voor het depot is vrij als hij 16 m weg is
-			else:
-				far = absf(p.y) > Data.COMPOUND - GATE_RELEASE
+			# de uitrit-sleutel komt vrij als de truck weer vertrokken is: het stuk voor het depot is vrij als hij 16 m weg is
+			far = p.distance_to(truck.sup.dock_point(truck.depot)) > 16.0
 		elif bool(h.smal):
 			far = not in_smal(p, 8.0)
 		else:

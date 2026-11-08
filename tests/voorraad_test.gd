@@ -1,7 +1,7 @@
 extends SceneTree
 ## Generals stap 4a (en het gameplaycontract voor 4b): voorraadstapels, depot en trucks (scripts/voorraad*.gd). Eerste depot met gratis truck, vier stapels met een vrije weg,
 ## een truck die haalt en brengt (geld komt binnen), een wrak, een lege stapel die een nieuwe plek krijgt, kills zonder geld,
-## poorten die voor trucks opengaan, het depotpaneel en een tweede depot bouwen.
+## het depotpaneel en een tweede depot bouwen.
 ## godot --headless --path . --script tests/voorraad_test.gd --fixed-fps 60
 
 var main: Node
@@ -39,6 +39,10 @@ func _process(_d: float) -> bool:
 			m._show("")
 	if frames > 4 and g.state == "prep":
 		g.prep_t = 1e9   # geen golf tijdens deze test
+	if frames == 20:
+		var dp = g.builds.place("depot", Vector3(20.0, 0.0, 16.0), PI, true)
+		if dp != null:
+			dp.build_t = 0.05
 	if frames == 40:
 		_check_start(g)
 	if frames > 40 and frames < 5000 and not cycle_done:
@@ -47,8 +51,6 @@ func _process(_d: float) -> bool:
 		_check("een volledige rit is binnen 83 s gebeurd", cycle_done)
 	if frames == 5002:
 		_check_rest(g)
-	if frames == 5100:
-		_check_gate(g)
 	if frames == 5200:
 		_check_panel(g)
 		print("klaar, fouten: ", fails)
@@ -95,9 +97,8 @@ func _check_start(g) -> void:
 		var val: int = sup.trip_value(depot, s.slot)
 		print("  stapel %d %s: route %.0f m, rit %d punten" % [s.slot + 1, s.site.name, len, val])
 		_check("rit van stapel %d levert 100 tot 400 op" % (s.slot + 1), val >= 100 and val <= 400)
-		var left_in_road: int = load("res://scripts/foliage.gd")._entries_for_build_regions(sup.road_regions(s.site), Vector3.ZERO, 0.0, 0.5, true).size()
-		_check("geen bomen of rotsen meer op de weg naar stapel %d" % (s.slot + 1), left_in_road == 0)
-		cleared_total += int(sup._roads[s.site.id].get_meta("cleared", 0))
+		sup.prepare_trip(depot, s.slot)
+		cleared_total += int(sup._roads["mcv:%s:%s" % [sup.depot_key(depot), String(s.site.id)]].get_meta("cleared", 0))
 	print("  weggehaald: ", cleared_total)
 	_check("er zijn bomen of rotsen weggehaald langs de wegen", cleared_total > 0)
 	points0 = g.points
@@ -149,29 +150,11 @@ func _check_rest(g) -> void:
 	print("  nieuwe plek: ", sup.stapels[0].site.name)
 	# tweede depot bouwen (bouwtijd, geld)
 	g.points = 3000
-	var spot: Array = sup.START_SPOTS[1]
-	var second = g.builds.place("depot", spot[0], spot[1], true)
-	if second == null:
-		spot = sup.START_SPOTS[2]
-		second = g.builds.place("depot", spot[0], spot[1], true)
+	var second = g.builds.place("depot", Vector3(-20.0, 0.0, 16.0), PI, true)
 	_check("een tweede depot kun je bouwen", second != null and g.builds.count("depot") == 2)
 	if second != null:
 		_check("het tweede depot heeft bouwtijd en nog geen gratis truck", g.builds.under_construction(second) and sup.trucks_of(second).is_empty())
 		g.builds.remove(second)
-	# truck naar de noordpoort zetten: de poort gaat open
-	var t0 = sup.trucks_of(depot)[1]
-	t0.state = 0
-	t0.global_position = Vector3(0, 0, -23.0)
-	t0.path.clear()
-	truck = t0
-
-
-func _check_gate(g) -> void:
-	var gate: Dictionary = g.gates.list[0]
-	var other: Dictionary = g.gates.list[1]
-	var best: float = maxf(float(gate.open), float(other.open))
-	print("  poortstand: ", gate.open, " / ", other.open, " (trucks naast de poort)")
-	_check("de poort schuift open voor een truck", best > 0.4)
 
 
 func _check_panel(g) -> void:
@@ -191,8 +174,15 @@ func _check_panel(g) -> void:
 	_check("het paneel toont een truckknop en de stapels", kopen != null and stapels >= 1)
 	if kopen != null:
 		_check("de truckknop is uit (maximum bereikt)", kopen.disabled)
+	# een stapel waar de weg vrij naartoe is (de weg langs het hoofdkwartier is versperd)
+	var want := -1
+	for i in range(1, 4):
+		if g.supply.stapels[i] != null and g.supply.blocked_by(depot, i) == "":
+			want = i
+			break
+	_check("er is een stapel met een vrije weg", want >= 0)
 	for b in gm._box.find_children("*", "Button", true, false):
-		if (b as Button).text.begins_with("Stapel 2"):
+		if (b as Button).text.begins_with("Stapel %d" % (want + 1)):
 			b.pressed.emit()
 			break
-	_check("een stapel kiezen als bestemming", int(depot.get("dest", -1)) == 1)
+	_check("een stapel kiezen als bestemming", int(depot.get("dest", -1)) == want)

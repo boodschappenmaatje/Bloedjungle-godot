@@ -37,7 +37,7 @@ var _radar_refresh := 0.0
 ## Een gezien contact blijft nog even (vervagend) staan.
 const RADAR_SIGHT := 38.0  # m rond de speler
 const RADAR_POST_SIGHT := 26.0  # m rond torens, soldaten en gebouwen
-const RADAR_BASE_MARGIN := 8.0  # m buiten de muur die de basis overziet
+const RADAR_BASE_MARGIN := 8.0  # m buiten de startplek-maat rond het hoofdkwartier die de basis overziet
 const RADAR_MEMORY := 2.5  # s
 var _seen := {}  # instance-id -> laatste keer gezien (s)
 
@@ -380,11 +380,6 @@ func _draw_map_content(map: Rect2) -> void:
 	var mid_y: float = map.position.y + map.size.y * 0.5
 	_cv.draw_line(Vector2(mid_x, map.position.y), Vector2(mid_x, map.end.y), Color(0.42, 0.52, 0.38, 0.2), 1.0 * _k)
 	_cv.draw_line(Vector2(map.position.x, mid_y), Vector2(map.end.x, mid_y), Color(0.42, 0.52, 0.38, 0.2), 1.0 * _k)
-	var wall_color := Color(0.56, 0.64, 0.42, 0.8)
-	for side in ([] if Data.mcv_mode else [-1.0, 1.0]):   # MCV-start: geen vaste muur
-		_cv.draw_line(_radar_point(Vector3(side * Data.COMPOUND, 0, -Data.COMPOUND), map), _radar_point(Vector3(side * Data.COMPOUND, 0, Data.COMPOUND), map), wall_color, 1.4 * _k)
-		for span in [[-Data.COMPOUND, -Data.GATE_GAP], [Data.GATE_GAP, Data.COMPOUND]]:
-			_cv.draw_line(_radar_point(Vector3(span[0], 0, side * Data.COMPOUND), map), _radar_point(Vector3(span[1], 0, side * Data.COMPOUND), map), wall_color, 1.4 * _k)
 	var river := PackedVector2Array()
 	for i in 33:
 		var xw: float = lerpf(-Data.WORLD_X, Data.WORLD_X, float(i) / 32.0)
@@ -393,7 +388,7 @@ func _draw_map_content(map: Rect2) -> void:
 	_draw_vijand_basis(map)
 	# De bunker staat op het echte wereldnulpunt; overige markers volgen de huidige bouwdata.
 	var base := _radar_point(Game.base_pos, map)
-	if not Data.mcv_mode or Game.mcv_deployed:   # MCV-start: pas een hoofdkwartier als de wagen is uitgeklapt
+	if Game.mcv_deployed:   # pas een hoofdkwartier als de wagen is uitgeklapt
 		if Game.hq_level >= 2:
 			_draw_hq_radar(map, base)
 		_cv.draw_rect(Rect2(base - Vector2(3.5, 3.5) * _k, Vector2(7, 7) * _k), Color(1.0, 0.74, 0.28), true)
@@ -467,10 +462,8 @@ func _in_friendly_sight(pos: Vector3) -> bool:
 	var player: Node3D = Game.player
 	if player != null and is_instance_valid(player) and Vector2(pos.x - player.global_position.x, pos.z - player.global_position.z).length() <= RADAR_SIGHT:
 		return true
-	var edge := Data.COMPOUND + RADAR_BASE_MARGIN
-	if not Data.mcv_mode and absf(pos.x) <= edge and absf(pos.z) <= edge:
-		return true
-	if Data.mcv_mode and Game.mcv_deployed and absf(pos.x - Game.base_pos.x) <= edge and absf(pos.z - Game.base_pos.z) <= edge:
+	var edge := Data.START_CLEAR + RADAR_BASE_MARGIN
+	if Game.mcv_deployed and absf(pos.x - Game.base_pos.x) <= edge and absf(pos.z - Game.base_pos.z) <= edge:
 		return true
 	for tower in get_tree().get_nodes_in_group("tower"):
 		if is_instance_valid(tower) and tower is Node3D and Vector2(pos.x - tower.global_position.x, pos.z - tower.global_position.z).length() <= RADAR_POST_SIGHT:

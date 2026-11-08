@@ -7,8 +7,7 @@ extends Control
 
 const CARD_H := 78.0
 const GAP := 8.0
-const ORDER := ["depot", "kazerne", "garage", "helipad", "airfield", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "muur"]
-const ORDER_MCV := ["depot", "kazerne", "garage", "helipad", "airfield", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "kampmuur", "poort", "wachttoren"]   # MCV-start: de kampmuur trek je met je vinger
+const ORDER := ["depot", "kazerne", "garage", "helipad", "airfield", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "kampmuur", "poort", "wachttoren"]
 const ORDERS := {"follow": "Volgen", "hold": "Posten"}
 
 var _ui: Control
@@ -119,7 +118,7 @@ class Card:
 			"zandzak":
 				for p in [[14, 36], [32, 36], [50, 36], [23, 27], [41, 27], [32, 18]]:
 					_ell(r, p[0], p[1], 9, 5, Color("8a7a50"))
-			"muur", "kampmuur":
+			"kampmuur":
 				_rc(r, 4, 40, 56, 3, Color("5e5e58"))
 				for x in [6, 24, 42]:
 					_rc(r, x, 14, 16, 26, Color("9a978c"))
@@ -173,18 +172,13 @@ class Card:
 				_ell(r, 20, 33, 3, 3, Color("c9a227"))
 
 
-## De kaartjes onderin. De MCV-start zet Data.mcv_mode pas als je op START MISSIE drukt, ná het laden van dit scherm: daarom bouwt _enter() ze opnieuw
-## als de modus sindsdien veranderde (anders zie je de oude Betonmuur in plaats van Kampmuur, Poort en Wachttoren).
-var _cards_mcv := false
-
-
+## De kaartjes onderin.
 func _build_cards() -> void:
 	for c in _cards:
 		if is_instance_valid(c):
 			c.queue_free()
 	_cards.clear()
-	_cards_mcv = Data.mcv_mode
-	for k in (ORDER_MCV if Data.mcv_mode else ORDER):
+	for k in ORDER:
 		var c := Card.new()
 		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		c.kind = k
@@ -293,9 +287,6 @@ func _enter() -> void:
 	if Game.player.elev > 0.5:
 		Game.banner.emit("KOM EERST VAN DE TOREN", "", 1.4)
 		return
-	if _cards_mcv != Data.mcv_mode:
-		_build_cards()
-		_layout()
 	Game.build_mode = true
 	_airfield_armed = false
 	Game.airfield_build_view = false
@@ -766,9 +757,8 @@ func _fill_panel() -> void:
 		vb.add_child(rij)
 		vb.move_child(rij, row.get_index())
 		_act(row, "Schutter", "%d pt" % Buildings.TRAIN_COST, Game.builds.room(b) > 0 and b.queue < Buildings.RIJ_MAX and Game.points >= Buildings.TRAIN_COST, func(): Game.builds.recruit(b))
-		if Data.mcv_mode:
-			var nw: int = Game.builds.wachten_of(b).size()
-			_act(row, "Wacht", "%d pt · %d/%d" % [Wachten.COST, nw, Wachten.MAX_PER_KAZERNE], Game.builds.can_buy_wacht(b), func(): Game.builds.buy_wacht(b))
+		var nw: int = Game.builds.wachten_of(b).size()
+		_act(row, "Wacht", "%d pt · %d/%d" % [Wachten.COST, nw, Wachten.MAX_PER_KAZERNE], Game.builds.can_buy_wacht(b), func(): Game.builds.buy_wacht(b))
 		_act(row, "Vlag", "zet punt", true, func():
 			_flag_for = b
 			_say("Tik op de grond voor het verzamelpunt", UI.INK_DIM, 3.0))
@@ -1019,7 +1009,7 @@ func _down(id: int, pos: Vector2) -> void:
 		_fill_panel()
 		return
 	var st = _struct_at(g)
-	var gate_hit: Variant = Game.gates.gate_at(g) if (Data.mcv_mode and Game.gates != null) else null
+	var gate_hit: Variant = Game.gates.gate_at(g) if Game.gates != null else null
 	if _gate_armed and st != null and st.kind == "kampmuur":
 		_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id, "gate_make": st, "at": g}   # tik = poort maken, slepen = kaart
 	elif gate_hit != null and not _wall_armed:
@@ -1305,16 +1295,8 @@ func _clamp_pan() -> void:
 		Game.bcam.x = (min_x + max_x) * 0.5 if min_x > max_x else clampf(Game.bcam.x, min_x, max_x)
 		Game.bcam.y = (min_z + max_z) * 0.5 if min_z > max_z else clampf(Game.bcam.y, min_z, max_z)
 		return
-	if Data.mcv_mode:
-		Game.bcam.x = clampf(Game.bcam.x, -Data.WORLD_X + 6.0, Data.WORLD_X - 6.0)
-		Game.bcam.y = clampf(Game.bcam.y, -Data.WORLD_Z_N + 6.0, Data.WORLD_Z_S - 6.0)
-		return
-	var m := Data.WORLD_R - 6.0
-	var v := Vector2(Game.bcam.x, Game.bcam.y)
-	if v.length() > m:
-		v = v.normalized() * m
-		Game.bcam.x = v.x
-		Game.bcam.y = v.y
+	Game.bcam.x = clampf(Game.bcam.x, -Data.WORLD_X + 6.0, Data.WORLD_X - 6.0)
+	Game.bcam.y = clampf(Game.bcam.y, -Data.WORLD_Z_N + 6.0, Data.WORLD_Z_S - 6.0)
 
 
 # ---------------------------------------------------------------- spookbeeld en selectiering

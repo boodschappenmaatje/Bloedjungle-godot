@@ -9,6 +9,7 @@ const UNDERSTORY_CELL_M := 24.0
 
 var game_main: Node3D
 var out_dir := ""
+var overlay_scale := 1.0
 
 func _ready() -> void:
 	call_deferred("run")
@@ -87,6 +88,7 @@ func run() -> void:
 	Engine.max_fps = 0
 	print("FERN TRIAL renderer=%s adapter=%s camera=%s center=%s replaced_ferns=%d" % [
 		RenderingServer.get_current_rendering_method(), RenderingServer.get_video_adapter_name(), str(camera.global_transform), str(center), hidden])
+	print("FERN TRIAL overlay inverse_ui_scale=%.4f content_scale_factor=%.4f" % [overlay_scale, get_window().content_scale_factor])
 	for i in 10:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw
@@ -107,6 +109,7 @@ func run() -> void:
 		"adapter": RenderingServer.get_video_adapter_name(),
 		"engine": Engine.get_version_info().string,
 		"size": [image.get_width(), image.get_height()],
+		"comparison_overlay_inverse_ui_scale": overlay_scale,
 		"quality": settings.values.duplicate(),
 		"camera": {"fov_degrees": camera.fov, "transform": str(camera.global_transform), "field_test_pitch_degrees": 53.0, "note": "same gameplay Camera node/FOV/pitch; moved closer for the single asset-review capture"},
 		"test_area": {"label": "bospad · isolated render-only fern replacement", "center": [center.x, center.y, center.z], "replacement_cell_m": UNDERSTORY_CELL_M, "existing_fern_instances_temporarily_hidden": hidden},
@@ -198,6 +201,9 @@ func add_specimen(parent: Node3D, label: String, mesh: Mesh, position_: Vector3)
 	parent.add_child(instance)
 
 func add_comparison_overlay() -> void:
+	# BJ_TOUCH lets the main HUD use its native mobile sizing. The comparison
+	# is authored in output pixels, so compensate for the window's UI scale.
+	overlay_scale = 1.0 / maxf(get_window().content_scale_factor, 0.1)
 	var layer := CanvasLayer.new()
 	layer.name = "FernTrial_ComparisonLabels"
 	layer.layer = 100
@@ -208,8 +214,8 @@ func add_comparison_overlay() -> void:
 	layer.add_child(root_control)
 	var title := Label.new()
 	title.text = "BOSPAD · FERN 02 VELDPROEF"
-	title.position = Vector2(30, 20)
-	title.add_theme_font_size_override("font_size", 24)
+	title.position = Vector2(30, 20) * overlay_scale
+	title.add_theme_font_size_override("font_size", roundi(24 * overlay_scale))
 	title.add_theme_color_override("font_color", Color(0.95, 0.84, 0.56))
 	title.add_theme_color_override("font_shadow_color", Color(0.02, 0.04, 0.025, 0.95))
 	title.add_theme_constant_override("shadow_offset_x", 2)
@@ -219,8 +225,8 @@ func add_comparison_overlay() -> void:
 	_add_tag(root_control, "NIEUW · CLUSTER A + C", Vector2(585, 555), Vector2(240, 42))
 	var panel := PanelContainer.new()
 	panel.name = "ApprovedReferenceB"
-	panel.position = Vector2(884, 54)
-	panel.size = Vector2(366, 236)
+	panel.position = Vector2(884, 54) * overlay_scale
+	panel.size = Vector2(366, 236) * overlay_scale
 	var box := StyleBoxFlat.new()
 	box.bg_color = Color(0.025, 0.04, 0.03, 0.94)
 	box.border_color = Color(0.77, 0.58, 0.24, 1.0)
@@ -243,23 +249,23 @@ func add_comparison_overlay() -> void:
 
 func _add_tag(parent: Control, text_: String, position_: Vector2, size_: Vector2) -> void:
 	var panel := PanelContainer.new()
-	panel.position = position_
-	panel.size = size_
+	panel.position = position_ * overlay_scale
+	panel.size = size_ * overlay_scale
 	var box := StyleBoxFlat.new()
 	box.bg_color = Color(0.025, 0.035, 0.027, 0.91)
 	box.border_color = Color(0.66, 0.50, 0.22, 0.9)
-	box.set_border_width_all(1)
-	box.set_corner_radius_all(7)
-	box.content_margin_left = 9
-	box.content_margin_right = 9
-	box.content_margin_top = 5
-	box.content_margin_bottom = 5
+	box.set_border_width_all(maxi(1, roundi(overlay_scale)))
+	box.set_corner_radius_all(roundi(7 * overlay_scale))
+	box.content_margin_left = roundi(9 * overlay_scale)
+	box.content_margin_right = roundi(9 * overlay_scale)
+	box.content_margin_top = roundi(5 * overlay_scale)
+	box.content_margin_bottom = roundi(5 * overlay_scale)
 	panel.add_theme_stylebox_override("panel", box)
 	var label := Label.new()
 	label.text = text_
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	label.add_theme_font_size_override("font_size", 15)
+	label.add_theme_font_size_override("font_size", roundi(15 * overlay_scale))
 	label.add_theme_color_override("font_color", Color(0.96, 0.88, 0.67))
 	panel.add_child(label)
 	parent.add_child(panel)

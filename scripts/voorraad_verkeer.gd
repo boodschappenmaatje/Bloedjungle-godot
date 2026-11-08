@@ -246,7 +246,12 @@ func release_check() -> void:
 		elif bool(h.smal):
 			far = not in_smal(p, 8.0)
 		else:
-			far = p.distance_to(h.pos) > RELEASE_D
+			# bij een korte rit (een stapel vlak bij het depot) ligt de wachtplek minder dan RELEASE_D van de plek: dan lost hij eerder af,
+			# anders wachten de trucks eeuwig op elkaar (de een houdt de stapel, de ander de uitrit)
+			var leg_len: float = RELEASE_D / 0.4
+			if not truck._legs.is_empty():
+				leg_len = (truck._legs[truck._legs.size() - 1] as VoorraadBaan.Leg).length
+			far = p.distance_to(h.pos) > minf(RELEASE_D, leg_len * 0.4)
 		if far:
 			truck.sup.release_resource(String(h.key), truck)
 			held.remove_at(i)

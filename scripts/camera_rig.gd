@@ -190,7 +190,7 @@ func _process(delta: float) -> void:
 	# Wegrijden, uitklappen en bouwen van het hoofdkwartier: ruim beeld, midden tussen hoofdkwartier en wagen.
 	var opbouw := get_tree().get_first_node_in_group("mcv_opbouw")
 	if opbouw != null:
-		wanted_distance = maxf(wanted_distance, MCV_DISTANCE)
+		wanted_distance = maxf(wanted_distance, OPBOUW_DISTANCE)
 	_opbouw_weight = lerpf(_opbouw_weight, 1.0 if opbouw != null else 0.0, 1.0 - exp(-1.5 * delta))
 	# Alleen automatische tank-/groepskadrering kan de vaste speelcamera tijdelijk verruimen.
 	if _group_hold > 0.0:
@@ -224,7 +224,8 @@ func _process(delta: float) -> void:
 	# De ingestelde kijkhoek blijft behouden; de uitsnede houdt ruimte voor de schietrichting.
 	focus = target + Vector3(0.0, 0.0, -dist * (0.05 if portrait else 0.07))
 	var goal: Vector3 = focus + Vector3(0.0, h, back)
-	goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)
+	if opbouw == null and _opbouw_weight < 0.05:
+		goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)   # tijdens de opbouw telt de bouwplek zelf niet als obstakel
 	var follow := 1.0 - exp(-(8.0 if plane != null else 5.0) * delta)
 	global_position = goal if _snap else global_position.lerp(goal, follow)
 	# Kijkpunt en positie volgen met dezelfde snelheid: de kijkhoek blijft gelijk en draait niet abrupt.
@@ -246,6 +247,7 @@ func _process(delta: float) -> void:
 
 var _opbouw_weight := 0.0
 var _opbouw_focus := Vector3.ZERO
+const OPBOUW_DISTANCE := 27.0   # camera-afstand tijdens wegrijden, uitklappen en bouwen (dichterbij: je ziet de kraan en de bouwers)
 const MCV_DISTANCE := 38.0   # camera-afstand terwijl de bouwwagen een plek zoekt (normaal 22,5)
 var _camera_distance := 0.0
 

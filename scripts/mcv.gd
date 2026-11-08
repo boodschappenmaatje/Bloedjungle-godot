@@ -17,9 +17,9 @@ const RIVER_MARGIN := 12.0   # zo ver moet je minstens van het water blijven om 
 const EDGE_MARGIN := 14.0    # en van de rand van de kaart
 const DEPLOY_TIME := 1.4     # s tussen "UITKLAPPEN" en het staan van het hoofdkwartier
 const PARK_Z := -9.6         # m: de wagen rijdt na het uitklappen zo ver naar voren (lokaal -Z) en blijft daar als commandokern staan
-const LIFT_T := 1.3           # s: de container komt omhoog van de laadbak
-const LIFT_H := 0.4           # m: zo ver tilt de hydrauliek hem op, zodat de wagen eronderuit kan
-const NEER_T := 1.7           # s: de container zakt op de grond
+const LIFT_T := 1.8           # s: de laadbak kantelt de container omhoog
+const KANTEL := 0.45          # rad (26 graden): zo schuin staat de container als hij van de laadbak glijdt
+const SLIDE_D := 5.5          # m: zo ver rijdt de wagen door terwijl de container eraf glijdt en landt
 const PARK_SPEED := 3.2      # m/s (met zachte start en stop)
 const PARK_REGION := {"name": "wagen", "center": Vector2(0.0, -9.6), "size": Vector2(4.8, 9.6), "yaw": 0.0}
 const START_POS := Vector3(0.0, 0.0, 6.0)   # de kale open plek op de oorsprong (er worden daar geen bomen geplant)
@@ -42,7 +42,8 @@ var _park_t := -1.0          # s sinds het wegrijden (-1 = niet bezig)
 var _park_len := 1.0
 var _park_play := false
 var _pre := 0.0               # s: de container wordt opgetild
-var _neer_t := -1.0           # s sinds de container zakt (-1 = nog niet)
+var _geland := false          # de container staat op de grond
+var _raakt := false           # de achterrand heeft de grond geraakt
 var _opbouw   # McvOpbouw
 var _park_last := 0.0
 
@@ -336,7 +337,8 @@ func _start_park() -> void:
 	_park_t = 0.0
 	_park_play = false
 	_pre = 0.0
-	_neer_t = -1.0
+	_geland = false
+	_raakt = false
 	_model.los_container()
 	Sfx.play("spuit", 0.9)
 	Sfx.play("gate", 0.8)
@@ -359,9 +361,9 @@ func _park_step(delta: float) -> void:
 	if _park_t < 0.0:
 		return
 	if _pre < LIFT_T:
-		# de hydrauliek tilt de container van de laadbak, de wagen wacht
+		# de laadbak kantelt de container omhoog, de wagen wacht
 		_pre = minf(_pre + delta, LIFT_T)
-		_model.zet_lift(LIFT_H * smoothstep(0.0, 1.0, _pre / LIFT_T))
+		_model.zet_kantel(KANTEL * smoothstep(0.0, 1.0, _pre / LIFT_T), 0.0)
 		return
 	_park_t += delta
 	var dur := _park_len / PARK_SPEED * 1.35
@@ -371,15 +373,21 @@ func _park_step(delta: float) -> void:
 	var v := (_park_len / dur) * (6.0 * k * (1.0 - k))   # afgeleide van smoothstep
 	_model.drive(v, 0.0, delta)
 	Foliage.ram(self, v, 3.0, 5.0)
-	if k > 0.45 and _neer_t < 0.0:
-		_neer_t = 0.0   # de wagen is vrij van de container: die zakt op de grond
-		Sfx.play("spuit", 0.8)
-	if _neer_t >= 0.0 and _neer_t < NEER_T:
-		_neer_t = minf(_neer_t + delta, NEER_T)
-		_model.zet_lift(lerpf(LIFT_H, -McvModel.BAK_HOOGTE, smoothstep(0.0, 1.0, _neer_t / NEER_T)))
-		if _neer_t >= NEER_T:
+	# de wagen rijdt vooruit en de container glijdt van de laadbak: de achterrand raakt de grond, dan klapt de voorkant omlaag
+	var q := clampf(_park_from.distance_to(global_position) / SLIDE_D, 0.0, 1.0)
+	if not _geland:
+		var zak := McvModel.BAK_HOOGTE * smoothstep(0.0, 1.0, clampf((q - 0.3) / 0.45, 0.0, 1.0))
+		var kant := KANTEL * (1.0 - smoothstep(0.0, 1.0, clampf((q - 0.75) / 0.25, 0.0, 1.0)))
+		_model.zet_kantel(kant, zak)
+		if q >= 0.75 and not _raakt:
+			_raakt = true
+			Sfx.play("thud", 0.7)
+			var c0 := _model.container_pos()
+			McvFx.puff(get_parent(), c0 + Basis(Vector3.UP, rotation.y) * Vector3(0.0, 0.2, 1.9), 1.3, Color(0.6, 0.53, 0.42), 9, 1.0)
+		if q >= 1.0:
+			_geland = true
 			_container_staat()
-	if k >= 1.0 and not _park_play and _neer_t >= NEER_T:
+	if k >= 1.0 and not _park_play and _geland:
 		_park_play = true
 		_model.play_uitklappen()
 		Sfx.play("spuit", 0.9)

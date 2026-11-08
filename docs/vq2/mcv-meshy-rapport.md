@@ -42,3 +42,9 @@ Volgorde nu: wagen rijdt 4 s weg, klapt 6 s uit, daarna 20 s bouwen in vier fase
 - Bouw ca. 35 s: voorplein 5 s, daarna 8 cycli van 3,4 s (pakken, zwenken, plaatsen; het gebouw groeit een laag per plaat), afwerking 3 s. Drie bouwers dragen kisten; na afloop lopen ze naar binnen en zakt de container weg. Steigers zijn vervallen.
 - Tests: mcv_wagen_test (29 controles), mcv_test, mcv_wacht_test, jeep_respawn_feedback_test: 0 fouten. Renders: `docs/vq2/renders/mcv-v198-*.png`.
 - Open: kraan nog niet in `tools/blender-vq2-viewer`, geen .usdz, iPhone NIET GETEST.
+
+## v199 (feedback op Dennis' schermfilmpje)
+- Container: de laadbak kantelt hem 26 graden omhoog, de wagen rijdt vooruit en de container glijdt over de achterrand van de laadbak, de achterrand raakt de grond (dreun, stof) en de voorkant klapt omlaag. Renders `mcv-v199-02/04/06`.
+- Kraan: 1,9x groter (bereik over het hele gebouw), stapels verder van de kraanvoet, de kabel hangt nu altijd recht omlaag, de haak zwaait in een boog om de kraan en volgt het doel binnen 0,2 m (test). Platen draaien mee naar de stand van het gebouw, landen binnen de plattegrond en zakken in het groeiende gebouw.
+- Camera: tijdens wegrijden, uitklappen en bouwen 27 m i.p.v. 38 m, geen obstakelcheck (de bouwplek hield de camera in de wagen), en terug naar de speler pas als de container weg is. Bouwers zonder team-ring.
+- NIET GETEST op iPhone. Camera niet in headless beeld gecontroleerd (de fotoscript gebruikt een eigen camera).

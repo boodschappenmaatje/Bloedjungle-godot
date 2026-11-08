@@ -65,17 +65,18 @@ func _process(_d: float) -> bool:
 	# na deploy_now: 1,3 s container omhoog, ~4,3 s wegrijden (container zakt vanaf 45 %), clip 6 s, dan 35 s bouwen, dan 4 s container weg
 	var na := fr - 70
 	var sec := float(na) / 60.0
-	var BEGIN := 1.3 + 4.3 + 6.0 + 0.3    # s tot de bouw begint
+	var BEGIN := 1.8 + 4.1 + 6.0 + 0.4    # s tot de bouw begint
 	var lijst := [
-		[0.9, "01_tillen"], [3.0, "02_wegrijden"], [5.2, "03_zakken"], [6.6, "04_staat"], [8.5, "05_poten_neer"], [10.8, "06_panelen"],
-		[BEGIN + 1.0, "07_kraan_op"], [BEGIN + 4.5, "08_voorplein"], [BEGIN + 7.5, "09_pakken"], [BEGIN + 10.0, "10_zwenken"], [BEGIN + 11.2, "11_plaatsen"],
-		[BEGIN + 18.0, "12_laag4"], [BEGIN + 26.0, "13_laag7"], [BEGIN + 33.0, "14_afwerking"], [BEGIN + 37.5, "15_klaar"], [BEGIN + 40.5, "16_container_zakt"], [BEGIN + 44.0, "17_weg"],
+		[1.0, "01_kantelen"], [2.4, "02_glijden"], [3.2, "03_glijden2"], [4.0, "04_achterrand"], [4.8, "05_voorkant_neer"], [6.2, "06_staat"], [9.0, "07_poten"],
+		[BEGIN + 1.0, "08_kraan_op"], [BEGIN + 6.4, "09_pakken"], [BEGIN + 7.2, "10_hijsen"], [BEGIN + 8.4, "11_zwenken"], [BEGIN + 9.4, "12_boven_hk"], [BEGIN + 10.5, "13_geplaatst"],
+		[BEGIN + 16.5, "14_laag3"], [BEGIN + 23.5, "15_laag6"], [BEGIN + 33.0, "16_afwerking"], [BEGIN + 38.0, "17_klaar"], [BEGIN + 40.5, "18_container_zakt"],
 	]
-	if cam != null and sec > 4.0 and cam.global_position.y > 10.0 and sec < BEGIN - 1.0:
-		pass
+	if na == int((BEGIN - 0.5) * 60.0):
+		cam.global_position = Vector3(40.0 + 11.0, 12.0, 35.3 + 11.0)
+		cam.look_at(Vector3(40.0, 2.0, 35.3), Vector3.UP)
 	for e in lijst:
 		if na == int(float(e[0]) * 60.0):
 			_shot(String(e[1]))
-	if na == int((BEGIN + 44.5) * 60.0):
+	if na == int((BEGIN + 42.5) * 60.0):
 		quit()
 	return false

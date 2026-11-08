@@ -5,9 +5,10 @@ extends Node3D
 ## van de stapel op het groeiende hoofdkwartier (zie McvOpbouw). Het hoofd van de kraan staat op de laadbak, 3,3 m achter het midden van de wagen.
 
 const PAD := "res://assets/mcv_kraan.glb"
-const SCHAAL := 1.5               # de kraan is groter dan het model: de giek moet over het hele gebouw reiken
+const SCHAAL := 1.9               # de kraan is groter dan het model: de giek moet over het hele gebouw reiken
 const BASIS_Z := 3.3              # m: plek van de kraanvoet op de laadbak (lokaal)
 const LAADBAK_Y := 1.41
+const STAPEL_Z := -1.3            # m: plek van de platenstapels op de laadbak (lokaal)
 const HAAK_NAAR_PLAAT := 0.8      # m: de haak hangt zo ver boven het midden van de plaat (stroppen)
 const PLAAT_VOLGORDE := [3, 7, 2, 6, 1, 5, 0, 4]   # index in platen: eerst de bovenste van elke stapel
 
@@ -18,10 +19,13 @@ var _dr: Node3D
 var _ga: Node3D
 var _gb: Node3D
 var _km: Node3D
+var _kab: Node3D
 var _haak: Node3D
 var _lamp: Node3D
 var _lamp_t := 0.0
 var _gb_rust: Vector3
+var uitlijn := 0.0                # 0 = plaat ligt zoals op de stapel, 1 = uitgelijnd op het gebouw
+var uitlijn_yaw := 0.0
 var _vast: Array = []             # [plaat, wereldtransform]: platen in de haak
 
 
@@ -37,6 +41,7 @@ func _ready() -> void:
 	_ga = m.find_child("GiekA", true, false) as Node3D
 	_gb = m.find_child("GiekB", true, false) as Node3D
 	_km = m.find_child("KabelMesh", true, false) as Node3D
+	_kab = m.find_child("Kabel", true, false) as Node3D
 	_haak = m.find_child("Haak", true, false) as Node3D
 	_lamp = m.find_child("Zwaailamp", true, false) as Node3D
 	for i in range(1, 9):
@@ -48,7 +53,7 @@ func _ready() -> void:
 	add_child(stapel)
 	kraan.position = Vector3(0.0, 0.0, BASIS_Z)
 	kraan.scale = Vector3.ONE * SCHAAL
-	stapel.position = Vector3.ZERO
+	stapel.position = Vector3(0.0, 0.0, STAPEL_Z)   # de stapels staan ver genoeg van de kraanvoet om te bereiken
 	_gb_rust = _gb.position
 	for mi in find_children("*", "MeshInstance3D", true, false):
 		(mi as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -67,6 +72,8 @@ func rust() -> void:
 
 
 func _kabel(lengte: float) -> void:
+	if _kab != null and _kab.is_inside_tree():
+		_kab.global_basis = Basis.from_scale(Vector3.ONE * SCHAAL)   # de kabel hangt altijd recht omlaag, ook als de giek schuin staat
 	_km.scale.y = lengte
 	_km.position.y = -lengte * 0.5
 	_haak.position.y = -lengte
@@ -85,7 +92,7 @@ func haak_naar(doel: Vector3) -> bool:
 	var min_l := schuif0 + 3.0
 	var max_l := schuif0 + 2.0 + 3.0
 	var ok := false
-	for graden in range(10, 76, 2):
+	for graden in range(10, 82, 2):
 		var a := deg_to_rad(float(graden))
 		var l := d / SCHAAL / cos(a)
 		if l < min_l or l > max_l:
@@ -99,8 +106,9 @@ func haak_naar(doel: Vector3) -> bool:
 			beste_l = l
 			ok = true
 	if not ok:
-		beste_a = deg_to_rad(35.0)
-		beste_l = clampf(d / SCHAAL / cos(beste_a), min_l, max_l)
+		# buiten bereik: de haak komt zo dicht mogelijk bij het punt (horizontaal gelijk houden)
+		beste_l = max_l if d / SCHAAL > max_l * 0.6 else min_l
+		beste_a = acos(clampf(d / SCHAAL / beste_l, 0.1, 1.0))
 	var top_y := voet + beste_l * sin(beste_a) * SCHAAL
 	_ga.rotation.x = -beste_a
 	_gb.position = Vector3(_gb_rust.x, _gb_rust.y, beste_l - 3.0)
@@ -140,4 +148,4 @@ func _process(delta: float) -> void:
 	if not _vast.is_empty():
 		var p: Node3D = _vast[0]
 		p.global_position = _haak.global_position + Vector3(0.0, -HAAK_NAAR_PLAAT, 0.0)
-		p.global_rotation = Vector3(0.0, _dr.global_rotation.y, 0.0)
+		p.global_rotation = Vector3(0.0, lerp_angle(global_rotation.y, uitlijn_yaw, uitlijn), 0.0)

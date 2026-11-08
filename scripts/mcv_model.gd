@@ -28,6 +28,11 @@ var _baken_licht: OmniLight3D
 var _baken_mat: StandardMaterial3D
 var _baken_modus := 0           # 0 uit, 1 knipperend oranje (bezig), 2 groen (klaar)
 var _baken_t := 0.0
+var _module: Node3D             # de container: komt los van de wagen (top_level) en blijft op de bouwplek staan
+var _anker := Transform3D.IDENTITY
+var _los := false
+var _lift := 0.0                # m: hoogte van de container boven de laadbak (negatief = op de grond)
+const BAK_HOOGTE := 1.41        # m: de container staat op de laadbak; zo ver zakt hij naar de grond
 
 const T_POTEN := 1.97           # s in de clip: de poten staan op de grond
 const T_DAK0 := 1.83
@@ -49,6 +54,7 @@ func _ready() -> void:
 		_steer.append(n as Node3D)
 	for n in m.find_children("Poot_*", "Node3D", false, false):
 		_poten.append(n as Node3D)
+	_module = m.find_child("Module", true, false) as Node3D
 	_maak_daken(m)
 	_maak_baken(m)
 	for mi in m.find_children("*", "MeshInstance3D", true, false):
@@ -74,6 +80,36 @@ func drive(speed: float, steer: float, delta: float) -> void:
 		position.y = sin(_bob * 2.3) * 0.018 * k
 		rotation.z = sin(_bob * 1.7 + 1.3) * 0.012 * k
 		rotation.x = sin(_bob * 1.1) * 0.008 * k
+
+
+## De container komt los van de wagen: hij blijft op zijn plek in de wereld, de wagen kan eronderuit rijden.
+func los_container() -> void:
+	if _module == null or _los:
+		return
+	_anker = _module.global_transform
+	_module.top_level = true
+	_los = true
+	_module.global_transform = _anker
+
+
+## Hoogte van de container boven de laadbak (m); BAK_HOOGTE-negatief = op de grond.
+func zet_lift(y: float) -> void:
+	_lift = y
+	if _los and _module != null:
+		_module.global_transform = Transform3D(_anker.basis, _anker.origin + Vector3(0.0, y, 0.0))
+
+
+func container_pos() -> Vector3:
+	return _module.global_position if _module != null else global_position
+
+
+func container_los() -> bool:
+	return _los
+
+
+func container_weg() -> void:
+	if _module != null and is_instance_valid(_module):
+		_module.visible = false
 
 
 func set_schild_omhoog(up: bool) -> void:
@@ -245,7 +281,7 @@ func _gebeurtenissen(a: float, b: float) -> void:
 	if _kruist(a, b, T_DAK1):
 		Sfx.play("thud", 0.8)
 		Sfx.play("click", 1.0)
-		McvFx.puff(host, global_position + global_transform.basis * Vector3(0.0, 2.0, 0.0), 0.8, Color(0.7, 0.66, 0.58), 6, 0.6)
+		McvFx.puff(host, container_pos() + Vector3(0.0, 1.6, 0.0), 0.8, Color(0.7, 0.66, 0.58), 6, 0.6)
 	if _kruist(a, b, T_MAST):
 		Sfx.play("wuuf", 0.5)    # de mast rijst
 	if _kruist(a, b, T_SCHOTEL):

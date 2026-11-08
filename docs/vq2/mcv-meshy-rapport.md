@@ -35,3 +35,10 @@ Volgorde nu: wagen rijdt 4 s weg, klapt 6 s uit, daarna 20 s bouwen in vier fase
 - Lasvonken en stof tijdens de bouw, hamerslagen en hydrauliek per fase. De camera blijft ruim (38 m) en kijkt naar het midden tussen hoofdkwartier en wagen.
 - Het scharnier en de effecten zitten in Godot (scripts/mcv_model.gd, mcv_opbouw.gd, mcv_fx.gd), niet in de glb-clip; de viewer toont dus nog de oorspronkelijke zijwaartse schuif.
 - Opnames: docs/vq2/renders/mcv-opbouw-*.png (software-Vulkan). Native iPhone: NIET GETEST. Geluiden zijn bestaande Sfx-effecten, geen nieuwe opnamen.
+
+## Opbouw v198: container, kraan en bouwers
+- De wagen tilt de container (hydrauliek 0,4 m), rijdt eronderuit en de container zakt op de bouwplek (stof, dreun). De steunpoten horen bij de wagen; de clip Uitklappen klapt de container open (panelen, mast, schotel).
+- Nieuw model `assets/mcv_kraan.glb` (bron `bron/mcv_meshy/stap6_kraan.py`): kraan met giek/uitschuifdeel/kabel/haak + twee stapels van 4 prefab-platen, ca. 1.250 driehoeken, PBR-factoren (geen texturen), clip Werken (8 s, alleen voor de viewer; in het spel stuurt Godot de kraan).
+- Bouw ca. 35 s: voorplein 5 s, daarna 8 cycli van 3,4 s (pakken, zwenken, plaatsen; het gebouw groeit een laag per plaat), afwerking 3 s. Drie bouwers dragen kisten; na afloop lopen ze naar binnen en zakt de container weg. Steigers zijn vervallen.
+- Tests: mcv_wagen_test (29 controles), mcv_test, mcv_wacht_test, jeep_respawn_feedback_test: 0 fouten. Renders: `docs/vq2/renders/mcv-v198-*.png`.
+- Open: kraan nog niet in `tools/blender-vq2-viewer`, geen .usdz, iPhone NIET GETEST.

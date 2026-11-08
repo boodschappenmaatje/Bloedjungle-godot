@@ -56,35 +56,26 @@ func _process(_d: float) -> bool:
 		cam = Camera3D.new()
 		main.add_child(cam)
 		cam.fov = 42.0
-		cam.global_position = Vector3(40.0 + 17.0, 20.0, 35.0 + 15.0)
-		cam.look_at(Vector3(40.0, 1.0, 35.5), Vector3.UP)
+		cam.global_position = Vector3(40.0 + 15.0, 15.0, 35.3 + 15.0)
+		cam.look_at(Vector3(40.0, 1.5, 35.3), Vector3.UP)
 		cam.make_current()
 		for c in main.get_children():
 			if c is CanvasLayer:
 				c.visible = false
-	# wagen rijdt 4 s weg, klaptuit (6 s: poten t=2, panelen 1,8-4,2, mast 3,6, schotel 4,9), dan 20 s bouwen
+	# na deploy_now: 1,3 s container omhoog, ~4,3 s wegrijden (container zakt vanaf 45 %), clip 6 s, dan 35 s bouwen, dan 4 s container weg
 	var na := fr - 70
-	if na == 150:
-		_shot("2_wegrijden")
-	if na == 60 * 4 + 60 * 5 + 30:
-		cam.global_position = Vector3(40.0 + 6.5, 4.2, 30.4 + 6.5)
-		cam.look_at(Vector3(40.0, 1.6, 30.4), Vector3.UP)
-	if na == 60 * 4 + 60 * 6 + 50:
-		_shot("10_wagen_nah")
-		quit()
-	if na == 60 * 4 + 60 * 2 + 20:
-		_shot("3_poten_neer")
-	if na == 60 * 4 + 60 * 4 + 20:
-		_shot("4_panelen_open")
-	if na == 60 * 4 + 60 * 6 + 60 * 3:
-		_shot("5_fundering")
-	if na == 60 * 4 + 60 * 6 + 60 * 9:
-		_shot("6_wanden")
-	if na == 60 * 4 + 60 * 6 + 60 * 14:
-		_shot("7_dak")
-	if na == 60 * 4 + 60 * 6 + 60 * 18:
-		_shot("8_afwerking")
-	if na == 60 * 4 + 60 * 6 + 60 * 22:
-		_shot("9_klaar")
+	var sec := float(na) / 60.0
+	var BEGIN := 1.3 + 4.3 + 6.0 + 0.3    # s tot de bouw begint
+	var lijst := [
+		[0.9, "01_tillen"], [3.0, "02_wegrijden"], [5.2, "03_zakken"], [6.6, "04_staat"], [8.5, "05_poten_neer"], [10.8, "06_panelen"],
+		[BEGIN + 1.0, "07_kraan_op"], [BEGIN + 4.5, "08_voorplein"], [BEGIN + 7.5, "09_pakken"], [BEGIN + 10.0, "10_zwenken"], [BEGIN + 11.2, "11_plaatsen"],
+		[BEGIN + 18.0, "12_laag4"], [BEGIN + 26.0, "13_laag7"], [BEGIN + 33.0, "14_afwerking"], [BEGIN + 37.5, "15_klaar"], [BEGIN + 40.5, "16_container_zakt"], [BEGIN + 44.0, "17_weg"],
+	]
+	if cam != null and sec > 4.0 and cam.global_position.y > 10.0 and sec < BEGIN - 1.0:
+		pass
+	for e in lijst:
+		if na == int(float(e[0]) * 60.0):
+			_shot(String(e[1]))
+	if na == int((BEGIN + 44.5) * 60.0):
 		quit()
 	return false

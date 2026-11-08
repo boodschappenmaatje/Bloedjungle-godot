@@ -1,0 +1,7 @@
+Blender 4.3.2 (hash 32f5fdce0a0a built 2024-12-17 01:31:14)
+Read blend: "/workspace/Bloedjungle-godot/tests/m47_photoreal_vfx5_1/blender/M47_Impact_Hero_5_2.blend"
+Info: Read library: '/workspace/Bloedjungle-godot/tests/m47_photoreal_vfx5_1/assets/polyhaven/island_tree_01_1k.blend', '//../assets/polyhaven/island_tree_01_1k.blend', parent '<direct>'
+Info: Read library: '/workspace/Bloedjungle-godot/tests/m47_photoreal_vfx5_1/assets/polyhaven/island_tree_02_1k.blend', '//../assets/polyhaven/island_tree_02_1k.blend', parent '<direct>'
+SCENE_5_2_VALIDATION {"5_2_concrete_fragments": 302, "5_2_facade_present": true, "5_2_smoke_and_dust_objects": 70, "approved_glb_sha256": "4031e935c5ef19a96a10257334a3cc99db92410a01389ef708259d887cf89872", "blender": "4.3.2", "engine": "CYCLES", "frame": 122, "m47_actions": ["Aim_M47_Mechanism_Rig", "Equip_M47_Mechanism_Rig", "Fire_M47_Mechanism_Rig", "Idle_M47_Mechanism_Rig", "Reload_M47_Mechanism_Rig"], "m47_lod0_triangles": 50000, "m47_lod1_hidden_from_render": true, "m47_lod2_hidden_from_render": true, "m47_materials": ["M47_Mechanism_Steel", "Material_0"], "packed_image_count": 50, "resolution": [1920, 1080], "samples": 80}
+
+Blender quit

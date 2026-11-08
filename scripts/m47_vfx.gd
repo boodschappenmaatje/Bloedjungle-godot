@@ -216,6 +216,10 @@ func _emissive(c: Color, e: float) -> StandardMaterial3D:
 
 
 ## Speelt het hele schot. van = monding, naar = inslagpunt (op de muur), muur = Node met begin_breuk() (optioneel).
+func is_idle() -> bool:
+	return _t < 0.0
+
+
 func fire(van: Vector3, naar: Vector3, muur: Node3D = null) -> void:
 	_from = van
 	_to = naar

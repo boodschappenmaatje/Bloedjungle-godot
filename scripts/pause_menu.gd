@@ -272,6 +272,7 @@ func _build_menu() -> void:
 	row.add_child(_button("Uitrusting", "secondary", func(): _open_gear("menu")))
 	row.add_child(_button("Instellingen", "secondary", func(): _open_settings("menu")))
 	row.add_child(_button("Stadseditor", "secondary", _open_stad_editor))
+	row.add_child(_button("M-47", "secondary", func(): get_tree().change_scene_to_file("res://scenes/m47_proefveld.tscn")))
 	row.add_child(_button("Updates", "secondary", func(): UpdatePanel.open(self)))
 	left.add_child(row)
 	var right := VBoxContainer.new()

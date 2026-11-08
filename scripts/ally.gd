@@ -20,6 +20,7 @@ var _shot_sequence := 0
 var recall = null    # Vector3 als de versterking naar de truck terug moet lopen
 var helper := false  # versterking uit de luchtsteun: volgt altijd de speler en blijft los van de kazerne
 var guard := false   # wacht van de basis (Patrouille): loopt in de pauze heen en weer langs de muur, rent bij het alarm naar zijn post
+var wacht_slot := 0  # MCV-start: welke van de (hooguit 4) wachten van de kazerne (Wachten); bepaalt waar op de ronde hij begint en waar hij bij de poort staat
 var _leg := 0        # welk eindpunt van de wandellijn hij nu heeft
 var _wait_t := -1.0  # blijft even staan op het eindpunt (en kijkt rond)
 var _full_mask := 0   # botsmasker van setup(); de wacht in het wachthuisje loopt niet tegen de muren van het huisje aan
@@ -243,6 +244,8 @@ func _march_goal() -> Vector3:
 func _goal() -> Vector3:
 	if recall != null:
 		return recall
+	if guard and Data.mcv_mode:
+		return Wachten.goal(self)   # MCV-start: ronde langs de binnenkant van de muur, bij een aanval naar de poort
 	if guard:
 		if idx == Patrouille.HUT_GUARD and Wachtpost.hut_alive(Wachtpost.GUARD_SZ):
 			return Wachtpost.guard_spot(Wachtpost.GUARD_SZ)   # hij blijft in het wachthuisje en schiet door het raam

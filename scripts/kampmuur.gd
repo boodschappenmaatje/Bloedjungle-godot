@@ -158,10 +158,15 @@ static func next_cost() -> int:
 ## Is het hoofdkwartier omsloten? Vanuit zijn cel over het rooster (de cellen tussen vier roosterpunten): elke stap kruist een rand; staat daar een muur of poort,
 ## dan kom je er niet door. Bereik je de rand van het zoekgebied, dan is het kamp open.
 static func enclosed(walls: Dictionary = {}) -> bool:
+	return not region(walls).is_empty()
+
+
+## De cellen (Vector2i) binnen de omheining, of een leeg woordenboek als het hoofdkwartier niet omsloten is.
+static func region(walls: Dictionary = {}) -> Dictionary:
 	if walls.is_empty():
 		walls = existing()
 	if walls.is_empty():
-		return false
+		return {}
 	var start := Vector2i(floori(Game.base_pos.x / STEP), floori(Game.base_pos.z / STEP))
 	var seen := {start: true}
 	var queue: Array = [start]
@@ -170,21 +175,29 @@ static func enclosed(walls: Dictionary = {}) -> bool:
 		var c: Vector2i = queue[qi]
 		qi += 1
 		if absi(c.x - start.x) > RADIUS or absi(c.y - start.y) > RADIUS:
-			return false
-		# vier buren: de gedeelde rand loopt tussen twee roosterpunten
-		var moves := [
-			[Vector2i(1, 0), edge_key(Vector2i(c.x + 1, c.y), Vector2i(c.x + 1, c.y + 1))],
-			[Vector2i(-1, 0), edge_key(Vector2i(c.x, c.y), Vector2i(c.x, c.y + 1))],
-			[Vector2i(0, 1), edge_key(Vector2i(c.x, c.y + 1), Vector2i(c.x + 1, c.y + 1))],
-			[Vector2i(0, -1), edge_key(Vector2i(c.x, c.y), Vector2i(c.x + 1, c.y))],
-		]
-		for m in moves:
+			return {}
+		for m in cell_moves(c):
 			var n: Vector2i = c + (m[0] as Vector2i)
 			if seen.has(n) or walls.has(m[1]):
 				continue
 			seen[n] = true
 			queue.append(n)
-	return true
+	return seen
+
+
+## De vier buren van een cel met de rand ertussen: [[stap, randsleutel], ...]. De rand loopt tussen twee roosterpunten.
+static func cell_moves(c: Vector2i) -> Array:
+	return [
+		[Vector2i(1, 0), edge_key(Vector2i(c.x + 1, c.y), Vector2i(c.x + 1, c.y + 1))],
+		[Vector2i(-1, 0), edge_key(Vector2i(c.x, c.y), Vector2i(c.x, c.y + 1))],
+		[Vector2i(0, 1), edge_key(Vector2i(c.x, c.y + 1), Vector2i(c.x + 1, c.y + 1))],
+		[Vector2i(0, -1), edge_key(Vector2i(c.x, c.y), Vector2i(c.x + 1, c.y))],
+	]
+
+
+## Middelpunt van een cel in de wereld.
+static func cell_center(c: Vector2i) -> Vector3:
+	return Vector3((c.x + 0.5) * STEP, 0.0, (c.y + 0.5) * STEP)
 
 
 ## Na het bouwen of verkopen: is de eerste omheining nu compleet? Dan blijft alles wat tot nu toe gratis was gratis en kost elk volgend stuk 50.
@@ -301,6 +314,7 @@ static func build(path: Array) -> Dictionary:
 			r.skipped += 1
 	b.batch = false
 	if int(r.built) > 0:
+		Wachten.invalidate()
 		Sfx.play("thud")
 		Game.changed.emit()
 		check_enclosure()
@@ -349,6 +363,7 @@ static func place_gate(k: Vector4i, toward: Vector3) -> Dictionary:
 	Game.builds.remove(b2)
 	Game.builds.batch = false
 	Game.gates.add_gate(pair[2], edge_yaw(pair[0]), pair[0], pair[1])
+	Wachten.invalidate()
 	Sfx.play("thud")
 	check_enclosure()
 	return {"ok": true, "reason": ""}
@@ -358,4 +373,5 @@ static func place_gate(k: Vector4i, toward: Vector3) -> Dictionary:
 static func sell_gate(g: Dictionary) -> void:
 	Game.build_credit += GATE_COST / 2
 	Game.gates.remove_gate(g)
+	Wachten.invalidate()
 	Sfx.play("buy")

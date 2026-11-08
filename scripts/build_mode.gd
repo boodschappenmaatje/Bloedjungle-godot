@@ -766,6 +766,9 @@ func _fill_panel() -> void:
 		vb.add_child(rij)
 		vb.move_child(rij, row.get_index())
 		_act(row, "Schutter", "%d pt" % Buildings.TRAIN_COST, Game.builds.room(b) > 0 and b.queue < Buildings.RIJ_MAX and Game.points >= Buildings.TRAIN_COST, func(): Game.builds.recruit(b))
+		if Data.mcv_mode:
+			var nw: int = Game.builds.wachten_of(b).size()
+			_act(row, "Wacht", "%d pt · %d/%d" % [Wachten.COST, nw, Wachten.MAX_PER_KAZERNE], Game.builds.can_buy_wacht(b), func(): Game.builds.buy_wacht(b))
 		_act(row, "Vlag", "zet punt", true, func():
 			_flag_for = b
 			_say("Tik op de grond voor het verzamelpunt", UI.INK_DIM, 3.0))

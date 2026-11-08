@@ -275,3 +275,7 @@ Naar de vier keuzes hierboven. Alleen in MCV-modus.
 - **Generator:** weg; komt later terug als bouwwerk (plan A4, "stroom die echt telt"). `Game.power` blijft tot dan altijd aan.
 - **Test:** in headless start de wagen automatisch uitgeklapt op de oorsprong (`Data.mcv_autodeploy`); de MCV-tests zetten dat uit. `voorraad_test` en `voorraad_verkeer_test` plaatsen hun eigen gratis depot.
 - **Bekend:** bij een depot op andere plekken (bijvoorbeeld (24, -24)) rijden trucks op de brug en in de stad soms door elkaar (verkeerstest); de test gebruikt (0, -24). Nog uit te zoeken.
+
+### Vrachtwagenverkeer bij een depot dichtbij een stapel (8 november 2026)
+- **Gevonden:** een depot op bijvoorbeeld (24, -24) met de voorkant naar het noorden ligt 22 m van stapel Bosrand. De terugkerende truck hield de stapel nog vast (minder dan 11 m ervan af) en de vertrekkende truck hield de uitrit vast: ze wachtten eeuwig op elkaar. Nu geldt de vrijgave-afstand als hooguit 40% van de rit (`voorraad_verkeer.gd`, `release_check`). Test: `tests/voorraad_kort_test.gd`.
+- **Nog open:** staat een depot zo dat de trucks bij het depot een eind moeten omrijden (bijvoorbeeld de voorkant van de bestemming af), dan wachten terugkerende trucks soms midden op de uitgaande route en komen de dozen even in elkaar (zonder vastlopen; ze rijden achteruit en lossen het zelf op). Oorzaak: de wachtplek (15 m voor het depot) ligt op de route van de vertrekkende truck. Een verder weg gelegen wachtplek helpt niet overal (probeerd met 24 en 26 m).

@@ -37,7 +37,8 @@ jobs:
           df -h "$RUNNER_TEMP" "$GITHUB_WORKSPACE"
           AVAILABLE_KB="$(df -Pk "$RUNNER_TEMP" | awk 'NR==2 {print $4}')"
           if (( AVAILABLE_KB < 8000000 )); then echo "Need at least 8 GB free for templates, import and Xcode build" >&2; exit 1; fi
-          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 900 "$RELEASE/Godot_v${VERSION}-stable_macos.universal.zip" --output "$RUNNER_TEMP/godot.zip"
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 900 "$RELEASE/Godot_v${VERSION}-stable_macos.universal.zip" --output "$RUNNER_TEMP/godot.zip" || \
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 900 "https://downloads.godotengine.org/?version=${VERSION}&flavor=stable&slug=macos.universal.zip&platform=macos.universal" --output "$RUNNER_TEMP/godot.zip"
           test -s "$RUNNER_TEMP/godot.zip"
           unzip -tq "$RUNNER_TEMP/godot.zip"
           mkdir -p "$RUNNER_TEMP/godot"
@@ -47,7 +48,8 @@ jobs:
           chmod +x "$GODOT"
           "$GODOT" --version | grep -F "${VERSION}.stable"
           echo "GODOT_BIN=$GODOT" >> "$GITHUB_ENV"
-          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 1800 "$RELEASE/Godot_v${VERSION}-stable_export_templates.tpz" --output "$RUNNER_TEMP/templates.tpz"
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 1800 "$RELEASE/Godot_v${VERSION}-stable_export_templates.tpz" --output "$RUNNER_TEMP/templates.tpz" || \
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 1800 "https://downloads.godotengine.org/?version=${VERSION}&flavor=stable&slug=export_templates.tpz&platform=templates" --output "$RUNNER_TEMP/templates.tpz"
           test -s "$RUNNER_TEMP/templates.tpz"
           unzip -tq "$RUNNER_TEMP/templates.tpz"
           mkdir -p "$HOME/Library/Application Support/Godot/export_templates/${VERSION}.stable"

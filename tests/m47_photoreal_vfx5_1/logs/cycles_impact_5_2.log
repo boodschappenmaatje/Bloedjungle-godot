@@ -1,0 +1,873 @@
+Info: Read library: '/workspace/Bloedjungle-godot/tests/m47_photoreal_vfx5_1/assets/polyhaven/island_tree_01_1k.blend', '//../assets/polyhaven/island_tree_01_1k.blend', parent '<direct>'
+Info: Read library: '/workspace/Bloedjungle-godot/tests/m47_photoreal_vfx5_1/assets/polyhaven/island_tree_02_1k.blend', '//../assets/polyhaven/island_tree_02_1k.blend', parent '<direct>'
+Info: No new files have been packed
+Info: Saved "M47_Impact_Hero_5_2.blend"
+[M47-IMPACT-5.2] scene ready preview=False source_sha256=4031e935c5ef19a96a10257334a3cc99db92410a01389ef708259d887cf89872 camera=35.0 render=/workspace/Bloedjungle-godot/tests/m47_photoreal_vfx5_1/renders/M47_Impact_Hero_Cycles_5_2.png
+Blender 4.3.2 (hash 32f5fdce0a0a built 2024-12-17 01:31:14)
+Read blend: "/workspace/Bloedjungle-godot/tests/m47_photoreal_vfx5_1/blender/M47_Impact_Hero_5_1.blend"
+Fra:122 Mem:352.45M (Peak 354.57M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Dense_Jungle_Forest_Floor_PBR
+Fra:122 Mem:352.45M (Peak 354.57M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Damp fallen broadleaf litter | dense scatter
+Fra:122 Mem:356.15M (Peak 356.15M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Bent reinforcement rod | blast torn
+Fra:122 Mem:356.18M (Peak 356.18M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Bent reinforcement rod | blast torn.001
+Fra:122 Mem:356.29M (Peak 356.29M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Bent reinforcement rod | blast torn.002
+Fra:122 Mem:356.29M (Peak 356.29M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Bent reinforcement rod | blast torn.003
+Fra:122 Mem:356.30M (Peak 356.30M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Bent reinforcement rod | blast torn.004
+Fra:122 Mem:356.35M (Peak 356.35M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Bent reinforcement rod | blast torn.005
+Fra:122 Mem:356.35M (Peak 356.35M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Bent reinforcement rod | blast torn.006
+Fra:122 Mem:356.36M (Peak 356.36M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Bent reinforcement rod | blast torn.007
+Fra:122 Mem:356.37M (Peak 356.37M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Bent reinforcement rod | blast torn.008
+Fra:122 Mem:356.37M (Peak 356.37M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Bent reinforcement rod | blast torn.009
+Fra:122 Mem:356.38M (Peak 356.38M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Bent reinforcement rod | blast torn.010
+Fra:122 Mem:359.31M (Peak 359.31M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 00
+Fra:122 Mem:359.31M (Peak 359.31M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 00
+Fra:122 Mem:359.32M (Peak 359.32M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 01
+Fra:122 Mem:359.33M (Peak 359.33M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 02
+Fra:122 Mem:359.34M (Peak 359.34M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 02
+Fra:122 Mem:359.34M (Peak 359.34M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 03
+Fra:122 Mem:359.35M (Peak 359.35M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 04
+Fra:122 Mem:359.36M (Peak 359.36M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 04
+Fra:122 Mem:359.36M (Peak 359.36M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 05
+Fra:122 Mem:359.37M (Peak 359.37M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 06
+Fra:122 Mem:359.38M (Peak 359.38M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 06
+Fra:122 Mem:359.39M (Peak 359.39M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 07
+Fra:122 Mem:359.39M (Peak 359.39M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 08
+Fra:122 Mem:359.41M (Peak 359.41M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 08
+Fra:122 Mem:359.41M (Peak 359.41M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 09
+Fra:122 Mem:359.42M (Peak 359.42M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 10
+Fra:122 Mem:359.43M (Peak 359.43M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 10
+Fra:122 Mem:359.43M (Peak 359.43M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 11
+Fra:122 Mem:359.45M (Peak 359.45M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 12
+Fra:122 Mem:359.46M (Peak 359.46M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 12
+Fra:122 Mem:359.46M (Peak 359.46M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 13
+Fra:122 Mem:359.48M (Peak 359.48M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 14
+Fra:122 Mem:359.48M (Peak 359.48M) | Time:00:00.19 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 14
+Fra:122 Mem:359.49M (Peak 359.49M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 15
+Fra:122 Mem:359.50M (Peak 359.50M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 16
+Fra:122 Mem:359.51M (Peak 359.51M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 16
+Fra:122 Mem:359.51M (Peak 359.51M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 17
+Fra:122 Mem:359.52M (Peak 359.52M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 18
+Fra:122 Mem:359.54M (Peak 359.54M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 18
+Fra:122 Mem:359.54M (Peak 359.54M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 19
+Fra:122 Mem:359.55M (Peak 359.55M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 20
+Fra:122 Mem:359.56M (Peak 359.56M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 20
+Fra:122 Mem:359.56M (Peak 359.56M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 21
+Fra:122 Mem:359.57M (Peak 359.57M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 22
+Fra:122 Mem:359.57M (Peak 359.57M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 22
+Fra:122 Mem:359.58M (Peak 359.58M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 23
+Fra:122 Mem:359.59M (Peak 359.59M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 24
+Fra:122 Mem:359.59M (Peak 359.59M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 24
+Fra:122 Mem:359.60M (Peak 359.60M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 25
+Fra:122 Mem:359.61M (Peak 359.61M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 26
+Fra:122 Mem:359.62M (Peak 359.62M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 26
+Fra:122 Mem:359.62M (Peak 359.62M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 27
+Fra:122 Mem:359.63M (Peak 359.63M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 28
+Fra:122 Mem:359.64M (Peak 359.64M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 28
+Fra:122 Mem:359.64M (Peak 359.64M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 29
+Fra:122 Mem:359.66M (Peak 359.66M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | branching blast crack 30
+Fra:122 Mem:359.67M (Peak 359.67M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | secondary crack branch 30
+Fra:122 Mem:360.81M (Peak 360.81M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | island_tree_01_LOD1
+Fra:122 Mem:366.89M (Peak 367.99M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Angular laterite and basalt pebble scatter
+Fra:122 Mem:367.42M (Peak 367.99M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Contained plasma core | weapon mid-section
+Fra:122 Mem:367.57M (Peak 367.99M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rotating weapon-core containment ring 00
+Fra:122 Mem:367.73M (Peak 367.99M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rotating weapon-core containment ring 01
+Fra:122 Mem:367.86M (Peak 367.99M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rotating weapon-core containment ring 02
+Fra:122 Mem:367.88M (Peak 367.99M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rotating weapon-core containment ring 03
+Fra:122 Mem:368.05M (Peak 368.05M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | White-hot muzzle flash nucleus
+Fra:122 Mem:368.11M (Peak 368.11M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Plasma heart | white-hot center
+Fra:122 Mem:368.10M (Peak 368.11M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Coherent blue plasma envelope
+Fra:122 Mem:368.24M (Peak 368.24M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rotating containment hoop 00
+Fra:122 Mem:368.31M (Peak 368.31M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rotating containment hoop 01
+Fra:122 Mem:368.36M (Peak 368.36M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rotating containment hoop 02
+Fra:122 Mem:368.46M (Peak 368.46M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rotating containment hoop 03
+Fra:122 Mem:368.51M (Peak 368.51M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rotating containment hoop 04
+Fra:122 Mem:368.60M (Peak 368.60M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex
+Fra:122 Mem:368.61M (Peak 368.61M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.001
+Fra:122 Mem:368.64M (Peak 368.64M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.002
+Fra:122 Mem:368.65M (Peak 368.65M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.003
+Fra:122 Mem:368.66M (Peak 368.66M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.004
+Fra:122 Mem:368.67M (Peak 368.67M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.005
+Fra:122 Mem:368.68M (Peak 368.68M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.006
+Fra:122 Mem:368.70M (Peak 368.70M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.007
+Fra:122 Mem:368.71M (Peak 368.71M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.008
+Fra:122 Mem:368.73M (Peak 368.73M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.009
+Fra:122 Mem:368.74M (Peak 368.74M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.010
+Fra:122 Mem:368.76M (Peak 368.76M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.011
+Fra:122 Mem:368.76M (Peak 368.76M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.012
+Fra:122 Mem:368.78M (Peak 368.78M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.013
+Fra:122 Mem:368.78M (Peak 368.78M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.014
+Fra:122 Mem:368.81M (Peak 368.81M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.015
+Fra:122 Mem:368.82M (Peak 368.82M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.016
+Fra:122 Mem:368.83M (Peak 368.83M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.017
+Fra:122 Mem:368.84M (Peak 368.84M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.018
+Fra:122 Mem:368.85M (Peak 368.85M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.019
+Fra:122 Mem:368.87M (Peak 368.87M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.020
+Fra:122 Mem:368.87M (Peak 368.87M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.021
+Fra:122 Mem:368.90M (Peak 368.90M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.022
+Fra:122 Mem:368.91M (Peak 368.91M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Ionized hexagon vertex.023
+Fra:122 Mem:368.92M (Peak 368.92M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact | widened ice-white plasma kernel
+Fra:122 Mem:368.98M (Peak 368.98M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact | soft blue-white ion corona
+Fra:122 Mem:369.55M (Peak 369.55M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact | turbulent outer energy envelope
+Fra:122 Mem:369.74M (Peak 369.74M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 00
+Fra:122 Mem:369.79M (Peak 369.79M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 01
+Fra:122 Mem:384.15M (Peak 384.15M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 02
+Fra:122 Mem:386.72M (Peak 386.72M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 03
+Fra:122 Mem:386.80M (Peak 386.80M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 04
+Fra:122 Mem:386.85M (Peak 386.85M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 05
+Fra:122 Mem:386.89M (Peak 386.89M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 06
+Fra:122 Mem:386.95M (Peak 386.95M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 07
+Fra:122 Mem:386.96M (Peak 386.96M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 08
+Fra:122 Mem:387.05M (Peak 387.05M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 09
+Fra:122 Mem:387.10M (Peak 387.10M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 10
+Fra:122 Mem:387.14M (Peak 387.14M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 11
+Fra:122 Mem:387.18M (Peak 387.18M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact plasma | volumetric turbulent lobe 12
+Fra:122 Mem:387.25M (Peak 387.25M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 000
+Fra:122 Mem:387.25M (Peak 387.25M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 001
+Fra:122 Mem:387.26M (Peak 387.26M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 002
+Fra:122 Mem:387.28M (Peak 387.28M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 003
+Fra:122 Mem:387.30M (Peak 387.30M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 004
+Fra:122 Mem:387.30M (Peak 387.30M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 005
+Fra:122 Mem:387.32M (Peak 387.32M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 006
+Fra:122 Mem:387.33M (Peak 387.33M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 007
+Fra:122 Mem:387.34M (Peak 387.34M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 008
+Fra:122 Mem:387.35M (Peak 387.35M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 009
+Fra:122 Mem:387.35M (Peak 387.35M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 010
+Fra:122 Mem:387.38M (Peak 387.38M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 011
+Fra:122 Mem:387.39M (Peak 387.39M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 012
+Fra:122 Mem:387.40M (Peak 387.40M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 013
+Fra:122 Mem:387.40M (Peak 387.40M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 014
+Fra:122 Mem:387.42M (Peak 387.42M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 015
+Fra:122 Mem:387.43M (Peak 387.43M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 016
+Fra:122 Mem:395.80M (Peak 395.80M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 017
+Fra:122 Mem:395.81M (Peak 395.81M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 018
+Fra:122 Mem:395.82M (Peak 395.82M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 019
+Fra:122 Mem:395.84M (Peak 395.84M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 020
+Fra:122 Mem:395.84M (Peak 395.84M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 021
+Fra:122 Mem:395.85M (Peak 395.85M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 022
+Fra:122 Mem:395.87M (Peak 395.87M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 023
+Fra:122 Mem:395.87M (Peak 395.87M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 024
+Fra:122 Mem:395.88M (Peak 395.88M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 025
+Fra:122 Mem:395.91M (Peak 395.91M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 026
+Fra:122 Mem:395.92M (Peak 395.92M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 027
+Fra:122 Mem:395.93M (Peak 395.93M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 028
+Fra:122 Mem:395.94M (Peak 395.94M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 029
+Fra:122 Mem:395.95M (Peak 395.95M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 030
+Fra:122 Mem:395.97M (Peak 395.97M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 031
+Fra:122 Mem:395.98M (Peak 395.98M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 032
+Fra:122 Mem:395.99M (Peak 395.99M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 033
+Fra:122 Mem:396.00M (Peak 396.00M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 034
+Fra:122 Mem:396.00M (Peak 396.00M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 035
+Fra:122 Mem:396.03M (Peak 396.03M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 036
+Fra:122 Mem:396.03M (Peak 396.03M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 037
+Fra:122 Mem:396.04M (Peak 396.04M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 038
+Fra:122 Mem:396.06M (Peak 396.06M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 039
+Fra:122 Mem:396.07M (Peak 396.07M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 040
+Fra:122 Mem:396.08M (Peak 396.08M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 041
+Fra:122 Mem:396.09M (Peak 396.09M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 042
+Fra:122 Mem:396.11M (Peak 396.11M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 043
+Fra:122 Mem:396.11M (Peak 396.11M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 044
+Fra:122 Mem:396.13M (Peak 396.13M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 045
+Fra:122 Mem:396.14M (Peak 396.14M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 046
+Fra:122 Mem:396.15M (Peak 396.15M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 047
+Fra:122 Mem:396.16M (Peak 396.16M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 048
+Fra:122 Mem:396.17M (Peak 396.17M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 049
+Fra:122 Mem:396.19M (Peak 396.19M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 050
+Fra:122 Mem:396.19M (Peak 396.19M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 051
+Fra:122 Mem:396.21M (Peak 396.21M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 052
+Fra:122 Mem:396.22M (Peak 396.22M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 053
+Fra:122 Mem:396.23M (Peak 396.23M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 054
+Fra:122 Mem:396.25M (Peak 396.25M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 055
+Fra:122 Mem:396.25M (Peak 396.25M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 056
+Fra:122 Mem:396.27M (Peak 396.27M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 057
+Fra:122 Mem:396.28M (Peak 396.28M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 058
+Fra:122 Mem:396.29M (Peak 396.29M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 059
+Fra:122 Mem:396.30M (Peak 396.30M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 060
+Fra:122 Mem:396.31M (Peak 396.31M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 061
+Fra:122 Mem:396.32M (Peak 396.32M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 062
+Fra:122 Mem:396.34M (Peak 396.34M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 063
+Fra:122 Mem:396.34M (Peak 396.34M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 064
+Fra:122 Mem:396.36M (Peak 396.36M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 065
+Fra:122 Mem:396.38M (Peak 396.38M) | Time:00:00.20 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 066
+Fra:122 Mem:396.39M (Peak 396.39M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 067
+Fra:122 Mem:396.40M (Peak 396.40M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 068
+Fra:122 Mem:396.41M (Peak 396.41M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 069
+Fra:122 Mem:396.41M (Peak 396.41M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 070
+Fra:122 Mem:396.43M (Peak 396.43M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 071
+Fra:122 Mem:396.45M (Peak 396.45M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 072
+Fra:122 Mem:396.46M (Peak 396.46M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 073
+Fra:122 Mem:396.46M (Peak 396.46M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 074
+Fra:122 Mem:396.48M (Peak 396.48M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 075
+Fra:122 Mem:396.49M (Peak 396.49M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 076
+Fra:122 Mem:396.50M (Peak 396.50M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 077
+Fra:122 Mem:396.52M (Peak 396.52M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 078
+Fra:122 Mem:396.53M (Peak 396.53M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 079
+Fra:122 Mem:396.54M (Peak 396.54M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 080
+Fra:122 Mem:396.55M (Peak 396.55M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 081
+Fra:122 Mem:396.56M (Peak 396.56M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 082
+Fra:122 Mem:396.58M (Peak 396.58M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 083
+Fra:122 Mem:396.59M (Peak 396.59M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 084
+Fra:122 Mem:396.60M (Peak 396.60M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 085
+Fra:122 Mem:396.61M (Peak 396.61M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 086
+Fra:122 Mem:396.62M (Peak 396.62M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 087
+Fra:122 Mem:396.64M (Peak 396.64M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 088
+Fra:122 Mem:396.64M (Peak 396.64M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 089
+Fra:122 Mem:396.66M (Peak 396.66M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 090
+Fra:122 Mem:396.67M (Peak 396.67M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 091
+Fra:122 Mem:396.68M (Peak 396.68M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 092
+Fra:122 Mem:396.69M (Peak 396.69M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 093
+Fra:122 Mem:396.70M (Peak 396.70M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 094
+Fra:122 Mem:396.71M (Peak 396.71M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 095
+Fra:122 Mem:396.73M (Peak 396.73M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 096
+Fra:122 Mem:396.74M (Peak 396.74M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 097
+Fra:122 Mem:396.74M (Peak 396.74M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 098
+Fra:122 Mem:396.76M (Peak 396.76M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 099
+Fra:122 Mem:396.77M (Peak 396.77M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 100
+Fra:122 Mem:396.78M (Peak 396.78M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 101
+Fra:122 Mem:396.79M (Peak 396.79M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 102
+Fra:122 Mem:396.81M (Peak 396.81M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 103
+Fra:122 Mem:396.82M (Peak 396.82M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 104
+Fra:122 Mem:396.83M (Peak 396.83M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 105
+Fra:122 Mem:396.84M (Peak 396.84M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 106
+Fra:122 Mem:396.86M (Peak 396.86M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 107
+Fra:122 Mem:396.86M (Peak 396.86M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 108
+Fra:122 Mem:396.88M (Peak 396.88M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 109
+Fra:122 Mem:396.89M (Peak 396.89M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 110
+Fra:122 Mem:396.91M (Peak 396.91M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 111
+Fra:122 Mem:396.92M (Peak 396.92M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 112
+Fra:122 Mem:396.92M (Peak 396.92M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 113
+Fra:122 Mem:396.93M (Peak 396.93M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 114
+Fra:122 Mem:396.95M (Peak 396.95M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 115
+Fra:122 Mem:396.96M (Peak 396.96M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 116
+Fra:122 Mem:396.97M (Peak 396.97M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 117
+Fra:122 Mem:396.98M (Peak 396.98M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 118
+Fra:122 Mem:397.00M (Peak 397.00M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 119
+Fra:122 Mem:397.01M (Peak 397.01M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 120
+Fra:122 Mem:397.02M (Peak 397.02M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 121
+Fra:122 Mem:397.02M (Peak 397.02M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 122
+Fra:122 Mem:397.05M (Peak 397.05M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 123
+Fra:122 Mem:397.05M (Peak 397.05M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 124
+Fra:122 Mem:402.68M (Peak 402.68M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 125
+Fra:122 Mem:402.69M (Peak 402.69M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 126
+Fra:122 Mem:402.71M (Peak 402.71M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 127
+Fra:122 Mem:402.71M (Peak 402.71M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 128
+Fra:122 Mem:402.73M (Peak 402.73M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 129
+Fra:122 Mem:402.74M (Peak 402.74M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 130
+Fra:122 Mem:402.75M (Peak 402.75M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 131
+Fra:122 Mem:402.75M (Peak 402.75M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 132
+Fra:122 Mem:402.76M (Peak 402.76M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 133
+Fra:122 Mem:402.79M (Peak 402.79M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 134
+Fra:122 Mem:402.79M (Peak 402.79M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 135
+Fra:122 Mem:402.81M (Peak 402.81M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 136
+Fra:122 Mem:402.81M (Peak 402.81M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 137
+Fra:122 Mem:402.83M (Peak 402.83M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 138
+Fra:122 Mem:402.85M (Peak 402.85M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 139
+Fra:122 Mem:402.85M (Peak 402.85M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 140
+Fra:122 Mem:402.87M (Peak 402.87M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 141
+Fra:122 Mem:402.88M (Peak 402.88M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 142
+Fra:122 Mem:402.88M (Peak 402.88M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 143
+Fra:122 Mem:402.91M (Peak 402.91M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 144
+Fra:122 Mem:402.91M (Peak 402.91M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 145
+Fra:122 Mem:402.92M (Peak 402.92M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 146
+Fra:122 Mem:402.94M (Peak 402.94M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 147
+Fra:122 Mem:402.95M (Peak 402.95M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 148
+Fra:122 Mem:402.96M (Peak 402.96M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater lip | fine angular concrete spall 149
+Fra:122 Mem:402.97M (Peak 402.97M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 000
+Fra:122 Mem:402.99M (Peak 402.99M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 001
+Fra:122 Mem:402.99M (Peak 402.99M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 002
+Fra:122 Mem:403.01M (Peak 403.01M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 003
+Fra:122 Mem:403.02M (Peak 403.02M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 004
+Fra:122 Mem:403.04M (Peak 403.04M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 005
+Fra:122 Mem:403.05M (Peak 403.05M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 006
+Fra:122 Mem:403.07M (Peak 403.07M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 007
+Fra:122 Mem:403.08M (Peak 403.08M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 008
+Fra:122 Mem:403.09M (Peak 403.09M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 009
+Fra:122 Mem:403.11M (Peak 403.11M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 010
+Fra:122 Mem:403.11M (Peak 403.11M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 011
+Fra:122 Mem:403.13M (Peak 403.13M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 012
+Fra:122 Mem:403.15M (Peak 403.15M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 013
+Fra:122 Mem:403.16M (Peak 403.16M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 014
+Fra:122 Mem:403.17M (Peak 403.17M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 015
+Fra:122 Mem:403.17M (Peak 403.17M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 016
+Fra:122 Mem:403.20M (Peak 403.20M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 017
+Fra:122 Mem:403.21M (Peak 403.21M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 018
+Fra:122 Mem:403.23M (Peak 403.23M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 019
+Fra:122 Mem:403.23M (Peak 403.23M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 020
+Fra:122 Mem:403.25M (Peak 403.25M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 021
+Fra:122 Mem:403.27M (Peak 403.27M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 022
+Fra:122 Mem:403.28M (Peak 403.28M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 023
+Fra:122 Mem:403.29M (Peak 403.29M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 024
+Fra:122 Mem:403.30M (Peak 403.30M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 025
+Fra:122 Mem:403.32M (Peak 403.32M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 026
+Fra:122 Mem:403.32M (Peak 403.32M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 027
+Fra:122 Mem:403.35M (Peak 403.35M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 028
+Fra:122 Mem:403.35M (Peak 403.35M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 029
+Fra:122 Mem:403.37M (Peak 403.37M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 030
+Fra:122 Mem:403.39M (Peak 403.39M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 031
+Fra:122 Mem:403.39M (Peak 403.39M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 032
+Fra:122 Mem:403.41M (Peak 403.41M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 033
+Fra:122 Mem:403.43M (Peak 403.43M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 034
+Fra:122 Mem:403.44M (Peak 403.44M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 035
+Fra:122 Mem:403.44M (Peak 403.44M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 036
+Fra:122 Mem:403.47M (Peak 403.47M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 037
+Fra:122 Mem:403.48M (Peak 403.48M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 038
+Fra:122 Mem:403.49M (Peak 403.49M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 039
+Fra:122 Mem:403.51M (Peak 403.51M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 040
+Fra:122 Mem:403.52M (Peak 403.52M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 041
+Fra:122 Mem:403.53M (Peak 403.53M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 042
+Fra:122 Mem:403.55M (Peak 403.55M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 043
+Fra:122 Mem:403.56M (Peak 403.56M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 044
+Fra:122 Mem:403.57M (Peak 403.57M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 045
+Fra:122 Mem:403.59M (Peak 403.59M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 046
+Fra:122 Mem:403.59M (Peak 403.59M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 047
+Fra:122 Mem:403.61M (Peak 403.61M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 048
+Fra:122 Mem:403.63M (Peak 403.63M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 049
+Fra:122 Mem:403.64M (Peak 403.64M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 050
+Fra:122 Mem:403.65M (Peak 403.65M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 051
+Fra:122 Mem:403.66M (Peak 403.66M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 052
+Fra:122 Mem:403.68M (Peak 403.68M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 053
+Fra:122 Mem:403.69M (Peak 403.69M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 054
+Fra:122 Mem:403.71M (Peak 403.71M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 055
+Fra:122 Mem:403.71M (Peak 403.71M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 056
+Fra:122 Mem:403.73M (Peak 403.73M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 057
+Fra:122 Mem:403.75M (Peak 403.75M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 058
+Fra:122 Mem:403.76M (Peak 403.76M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 059
+Fra:122 Mem:403.77M (Peak 403.77M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 060
+Fra:122 Mem:403.78M (Peak 403.78M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 061
+Fra:122 Mem:403.80M (Peak 403.80M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 062
+Fra:122 Mem:403.80M (Peak 403.80M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 063
+Fra:122 Mem:403.83M (Peak 403.83M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 064
+Fra:122 Mem:403.84M (Peak 403.84M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 065
+Fra:122 Mem:403.85M (Peak 403.85M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 066
+Fra:122 Mem:403.87M (Peak 403.87M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 067
+Fra:122 Mem:403.87M (Peak 403.87M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 068
+Fra:122 Mem:403.89M (Peak 403.89M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 069
+Fra:122 Mem:403.90M (Peak 403.90M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 070
+Fra:122 Mem:403.92M (Peak 403.92M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 071
+Fra:122 Mem:403.93M (Peak 403.93M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 072
+Fra:122 Mem:403.95M (Peak 403.95M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 073
+Fra:122 Mem:403.96M (Peak 403.96M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 074
+Fra:122 Mem:403.96M (Peak 403.96M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 075
+Fra:122 Mem:403.99M (Peak 403.99M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 076
+Fra:122 Mem:404.00M (Peak 404.00M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact apron | chipped limestone fragment 077
+Fra:122 Mem:404.01M (Peak 404.01M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 00
+Fra:122 Mem:404.02M (Peak 404.02M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 01
+Fra:122 Mem:404.03M (Peak 404.03M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 02
+Fra:122 Mem:404.05M (Peak 404.05M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 03
+Fra:122 Mem:404.05M (Peak 404.05M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 04
+Fra:122 Mem:404.06M (Peak 404.06M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 05
+Fra:122 Mem:404.08M (Peak 404.08M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 06
+Fra:122 Mem:404.08M (Peak 404.08M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 07
+Fra:122 Mem:404.10M (Peak 404.10M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 08
+Fra:122 Mem:404.11M (Peak 404.11M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 09
+Fra:122 Mem:404.12M (Peak 404.12M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 10
+Fra:122 Mem:404.13M (Peak 404.13M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 11
+Fra:122 Mem:404.15M (Peak 404.15M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 12
+Fra:122 Mem:404.15M (Peak 404.15M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 13
+Fra:122 Mem:404.16M (Peak 404.16M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 14
+Fra:122 Mem:404.18M (Peak 404.18M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 15
+Fra:122 Mem:404.19M (Peak 404.19M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 16
+Fra:122 Mem:404.19M (Peak 404.19M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 17
+Fra:122 Mem:404.22M (Peak 404.22M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 18
+Fra:122 Mem:404.22M (Peak 404.22M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 19
+Fra:122 Mem:404.24M (Peak 404.24M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 20
+Fra:122 Mem:404.25M (Peak 404.25M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 21
+Fra:122 Mem:404.26M (Peak 404.26M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 22
+Fra:122 Mem:404.27M (Peak 404.27M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 23
+Fra:122 Mem:404.28M (Peak 404.28M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 24
+Fra:122 Mem:404.29M (Peak 404.29M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 25
+Fra:122 Mem:404.30M (Peak 404.30M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 26
+Fra:122 Mem:404.32M (Peak 404.32M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 27
+Fra:122 Mem:404.32M (Peak 404.32M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 28
+Fra:122 Mem:404.34M (Peak 404.34M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 29
+Fra:122 Mem:404.35M (Peak 404.35M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 30
+Fra:122 Mem:404.36M (Peak 404.36M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 31
+Fra:122 Mem:404.36M (Peak 404.36M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 32
+Fra:122 Mem:404.38M (Peak 404.38M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 33
+Fra:122 Mem:404.39M (Peak 404.39M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 34
+Fra:122 Mem:404.40M (Peak 404.40M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 35
+Fra:122 Mem:404.42M (Peak 404.42M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 36
+Fra:122 Mem:404.42M (Peak 404.42M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 37
+Fra:122 Mem:404.43M (Peak 404.43M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 38
+Fra:122 Mem:404.45M (Peak 404.45M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 39
+Fra:122 Mem:404.46M (Peak 404.46M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 40
+Fra:122 Mem:404.46M (Peak 404.46M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 41
+Fra:122 Mem:404.48M (Peak 404.48M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 42
+Fra:122 Mem:404.49M (Peak 404.49M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 43
+Fra:122 Mem:404.50M (Peak 404.50M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 44
+Fra:122 Mem:404.52M (Peak 404.52M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 45
+Fra:122 Mem:404.52M (Peak 404.52M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 46
+Fra:122 Mem:404.53M (Peak 404.53M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 47
+Fra:122 Mem:404.55M (Peak 404.55M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 48
+Fra:122 Mem:404.56M (Peak 404.56M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 49
+Fra:122 Mem:404.56M (Peak 404.56M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 50
+Fra:122 Mem:404.58M (Peak 404.58M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Crater rim | fractured face shard 51
+Fra:122 Mem:404.59M (Peak 404.59M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 00
+Fra:122 Mem:404.60M (Peak 404.60M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 01
+Fra:122 Mem:404.61M (Peak 404.61M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 02
+Fra:122 Mem:404.62M (Peak 404.62M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 03
+Fra:122 Mem:404.63M (Peak 404.63M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 04
+Fra:122 Mem:404.64M (Peak 404.64M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 05
+Fra:122 Mem:404.66M (Peak 404.66M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 06
+Fra:122 Mem:404.66M (Peak 404.66M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 07
+Fra:122 Mem:404.68M (Peak 404.68M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 08
+Fra:122 Mem:404.69M (Peak 404.69M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 09
+Fra:122 Mem:404.70M (Peak 404.70M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 10
+Fra:122 Mem:404.71M (Peak 404.71M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 11
+Fra:122 Mem:404.73M (Peak 404.73M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 12
+Fra:122 Mem:404.73M (Peak 404.73M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 13
+Fra:122 Mem:404.74M (Peak 404.74M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 14
+Fra:122 Mem:404.76M (Peak 404.76M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 15
+Fra:122 Mem:404.77M (Peak 404.77M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 16
+Fra:122 Mem:404.77M (Peak 404.77M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 17
+Fra:122 Mem:404.79M (Peak 404.79M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 18
+Fra:122 Mem:404.80M (Peak 404.80M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 19
+Fra:122 Mem:404.81M (Peak 404.81M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 20
+Fra:122 Mem:404.83M (Peak 404.83M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | large chipped crater lip 21
+Fra:122 Mem:404.83M (Peak 404.83M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 00
+Fra:122 Mem:404.86M (Peak 404.86M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 01
+Fra:122 Mem:404.93M (Peak 404.93M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 02
+Fra:122 Mem:404.98M (Peak 404.98M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 03
+Fra:122 Mem:405.02M (Peak 405.02M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 04
+Fra:122 Mem:405.09M (Peak 405.09M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 05
+Fra:122 Mem:405.08M (Peak 405.09M) | Time:00:00.21 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 06
+Fra:122 Mem:405.18M (Peak 405.18M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 07
+Fra:122 Mem:405.22M (Peak 405.22M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 08
+Fra:122 Mem:405.28M (Peak 405.28M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 09
+Fra:122 Mem:405.28M (Peak 405.28M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 10
+Fra:122 Mem:405.37M (Peak 405.37M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 11
+Fra:122 Mem:405.42M (Peak 405.42M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 12
+Fra:122 Mem:405.46M (Peak 405.46M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 13
+Fra:122 Mem:405.52M (Peak 405.52M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 14
+Fra:122 Mem:405.55M (Peak 405.55M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 15
+Fra:122 Mem:405.62M (Peak 405.62M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 16
+Fra:122 Mem:405.67M (Peak 405.67M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 17
+Fra:122 Mem:405.71M (Peak 405.71M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 18
+Fra:122 Mem:405.77M (Peak 405.77M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 19
+Fra:122 Mem:405.80M (Peak 405.80M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 20
+Fra:122 Mem:405.87M (Peak 405.87M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 21
+Fra:122 Mem:405.92M (Peak 405.92M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 22
+Fra:122 Mem:405.95M (Peak 405.95M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 smoke wake | rolling grey-blue lobe 23
+Fra:122 Mem:406.02M (Peak 406.02M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 00
+Fra:122 Mem:406.05M (Peak 406.05M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 01
+Fra:122 Mem:406.11M (Peak 406.11M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 02
+Fra:122 Mem:406.16M (Peak 406.16M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 03
+Fra:122 Mem:406.20M (Peak 406.20M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 04
+Fra:122 Mem:406.27M (Peak 406.27M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 05
+Fra:122 Mem:406.27M (Peak 406.27M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 06
+Fra:122 Mem:406.36M (Peak 406.36M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 07
+Fra:122 Mem:406.41M (Peak 406.41M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 08
+Fra:122 Mem:406.45M (Peak 406.45M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 09
+Fra:122 Mem:406.51M (Peak 406.51M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 10
+Fra:122 Mem:406.52M (Peak 406.52M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 11
+Fra:122 Mem:406.61M (Peak 406.61M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 12
+Fra:122 Mem:406.65M (Peak 406.65M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 13
+Fra:122 Mem:406.70M (Peak 406.70M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 14
+Fra:122 Mem:406.75M (Peak 406.75M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 impact plume | turbulent smoke fold 15
+Fra:122 Mem:406.77M (Peak 406.77M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 00
+Fra:122 Mem:406.85M (Peak 406.85M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 01
+Fra:122 Mem:406.90M (Peak 406.90M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 02
+Fra:122 Mem:406.95M (Peak 406.95M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 03
+Fra:122 Mem:406.96M (Peak 406.96M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 04
+Fra:122 Mem:407.05M (Peak 407.05M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 05
+Fra:122 Mem:407.10M (Peak 407.10M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 06
+Fra:122 Mem:407.15M (Peak 407.15M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 07
+Fra:122 Mem:407.20M (Peak 407.20M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 08
+Fra:122 Mem:407.21M (Peak 407.21M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 09
+Fra:122 Mem:407.30M (Peak 407.30M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 10
+Fra:122 Mem:407.34M (Peak 407.34M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 11
+Fra:122 Mem:407.40M (Peak 407.40M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 12
+Fra:122 Mem:407.45M (Peak 407.45M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 13
+Fra:122 Mem:407.46M (Peak 407.46M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 14
+Fra:122 Mem:407.50M (Peak 407.50M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 15
+Fra:122 Mem:407.59M (Peak 407.59M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 16
+Fra:122 Mem:407.64M (Peak 407.64M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 17
+Fra:122 Mem:407.70M (Peak 407.70M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 18
+Fra:122 Mem:407.70M (Peak 407.70M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 19
+Fra:122 Mem:407.79M (Peak 407.79M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 20
+Fra:122 Mem:407.84M (Peak 407.84M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 21
+Fra:122 Mem:407.89M (Peak 407.89M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 22
+Fra:122 Mem:407.94M (Peak 407.94M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 dust front | rolling limestone cloud 23
+Fra:122 Mem:407.96M (Peak 407.96M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 energy haze | translucent cyan vapor 00
+Fra:122 Mem:408.01M (Peak 408.01M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 energy haze | translucent cyan vapor 01
+Fra:122 Mem:408.05M (Peak 408.05M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 energy haze | translucent cyan vapor 02
+Fra:122 Mem:408.14M (Peak 408.14M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 energy haze | translucent cyan vapor 03
+Fra:122 Mem:408.19M (Peak 408.19M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 energy haze | translucent cyan vapor 04
+Fra:122 Mem:408.23M (Peak 408.23M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 energy haze | translucent cyan vapor 05
+Fra:122 Mem:408.29M (Peak 408.29M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 001
+Fra:122 Mem:408.29M (Peak 408.29M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 002
+Fra:122 Mem:412.54M (Peak 412.54M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 003
+Fra:122 Mem:412.60M (Peak 412.60M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 004
+Fra:122 Mem:412.63M (Peak 412.63M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 005
+Fra:122 Mem:412.65M (Peak 412.65M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 006
+Fra:122 Mem:412.65M (Peak 412.65M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 007
+Fra:122 Mem:418.57M (Peak 418.59M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 008
+Fra:122 Mem:418.56M (Peak 418.59M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 009
+Fra:122 Mem:420.79M (Peak 420.79M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 010
+Fra:122 Mem:420.80M (Peak 420.80M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 011
+Fra:122 Mem:420.88M (Peak 420.88M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 013
+Fra:122 Mem:420.93M (Peak 420.93M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 015
+Fra:122 Mem:421.01M (Peak 421.01M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 016
+Fra:122 Mem:421.02M (Peak 421.02M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 017
+Fra:122 Mem:421.09M (Peak 421.09M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 018
+Fra:122 Mem:421.22M (Peak 421.22M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 019
+Fra:122 Mem:421.29M (Peak 421.29M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 020
+Fra:122 Mem:421.24M (Peak 421.29M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 022
+Fra:122 Mem:421.36M (Peak 421.36M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 024
+Fra:122 Mem:421.37M (Peak 421.37M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 025
+Fra:122 Mem:421.43M (Peak 421.43M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 026
+Fra:122 Mem:421.56M (Peak 421.56M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 027
+Fra:122 Mem:421.61M (Peak 421.61M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 028
+Fra:122 Mem:421.60M (Peak 421.61M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 029
+Fra:122 Mem:421.72M (Peak 421.72M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 030
+Fra:122 Mem:421.70M (Peak 421.72M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 032
+Fra:122 Mem:421.87M (Peak 421.87M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 034
+Fra:122 Mem:421.86M (Peak 421.87M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 035
+Fra:122 Mem:421.98M (Peak 421.98M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 037
+Fra:122 Mem:421.98M (Peak 421.98M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 039
+Fra:122 Mem:422.08M (Peak 422.08M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 040
+Fra:122 Mem:422.13M (Peak 422.13M) | Time:00:00.22 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 041
+Fra:122 Mem:422.16M (Peak 422.16M) | Time:00:00.23 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 042
+Fra:122 Mem:422.31M (Peak 422.31M) | Time:00:00.23 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 043
+Fra:122 Mem:422.35M (Peak 422.35M) | Time:00:00.23 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 045
+Fra:122 Mem:422.40M (Peak 422.40M) | Time:00:00.23 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 046
+Fra:122 Mem:422.42M (Peak 422.42M) | Time:00:00.23 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Broken concrete cell 047
+Fra:122 Mem:478.63M (Peak 502.42M) | Time:00:00.50 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | island_tree_02_LOD1
+Fra:122 Mem:543.41M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | CC0 fern source | fern_02_d.001
+Fra:122 Mem:543.42M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | CC0 fern source | fern_02_c.001
+Fra:122 Mem:543.93M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | CC0 fern source | fern_02_b.001
+Fra:122 Mem:544.35M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | CC0 fern source | fern_02_a.001
+Fra:122 Mem:544.49M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | PBR broadleaf grass clump 000
+Fra:122 Mem:544.62M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | PBR broadleaf grass clump 001
+Fra:122 Mem:544.80M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow
+Fra:122 Mem:544.82M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture branch | shadow
+Fra:122 Mem:544.84M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.001
+Fra:122 Mem:544.89M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.002
+Fra:122 Mem:545.01M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture branch | shadow.001
+Fra:122 Mem:545.03M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.003
+Fra:122 Mem:545.04M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.004
+Fra:122 Mem:545.05M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture branch | shadow.002
+Fra:122 Mem:545.05M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.005
+Fra:122 Mem:545.15M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.006
+Fra:122 Mem:545.17M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture branch | shadow.003
+Fra:122 Mem:545.17M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.007
+Fra:122 Mem:545.18M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.008
+Fra:122 Mem:545.19M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture branch | shadow.004
+Fra:122 Mem:545.19M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.009
+Fra:122 Mem:545.20M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.010
+Fra:122 Mem:545.21M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture branch | shadow.005
+Fra:122 Mem:545.21M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.011
+Fra:122 Mem:545.22M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.012
+Fra:122 Mem:545.23M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture branch | shadow.006
+Fra:122 Mem:545.23M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.013
+Fra:122 Mem:545.24M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.014
+Fra:122 Mem:545.25M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture branch | shadow.007
+Fra:122 Mem:545.25M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.015
+Fra:122 Mem:545.26M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.016
+Fra:122 Mem:545.27M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture branch | shadow.008
+Fra:122 Mem:545.27M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.017
+Fra:122 Mem:545.28M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.018
+Fra:122 Mem:545.29M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture branch | shadow.009
+Fra:122 Mem:545.30M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.019
+Fra:122 Mem:545.30M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | PBR broadleaf grass clump 002
+Fra:122 Mem:545.36M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.020
+Fra:122 Mem:545.40M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture branch | shadow.010
+Fra:122 Mem:545.40M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | PBR broadleaf grass clump 009
+Fra:122 Mem:545.42M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.021
+Fra:122 Mem:545.53M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.022
+Fra:122 Mem:545.55M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture branch | shadow.011
+Fra:122 Mem:545.61M (Peak 558.15M) | Time:00:00.64 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radial fracture | deep shadow.023
+Fra:122 Mem:545.92M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M47_Core_Retaining_Ring
+Fra:122 Mem:546.02M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M47_LOD0
+Fra:122 Mem:546.12M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M47_Moving_Loading_Chamber
+Fra:122 Mem:546.17M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M47_Rotating_Core
+Fra:122 Mem:546.17M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Elbow_Reinforcements
+Fra:122 Mem:547.19M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Gloves_Closed
+Fra:122 Mem:552.06M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact | soft irregular hex shockwave 00
+Fra:122 Mem:553.34M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact | short ionized edge flare 00
+Fra:122 Mem:553.41M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact | short ionized edge flare 01
+Fra:122 Mem:553.48M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact | short ionized edge flare 02
+Fra:122 Mem:553.55M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact | short ionized edge flare 03
+Fra:122 Mem:553.62M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact | short ionized edge flare 04
+Fra:122 Mem:553.70M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Impact | short ionized edge flare 05
+Fra:122 Mem:555.02M (Peak 558.15M) | Time:00:00.65 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | 5.2 wall | weathered aggregate face around jagged breach
+Fra:122 Mem:558.91M (Peak 559.47M) | Time:00:00.66 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Hair_Cropped
+Fra:122 Mem:562.56M (Peak 562.56M) | Time:00:00.67 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | IFAK_Pouch
+Fra:122 Mem:563.02M (Peak 563.02M) | Time:00:00.67 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Knee_Reinforcements
+Fra:122 Mem:563.03M (Peak 563.03M) | Time:00:00.67 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Koppel
+Fra:122 Mem:563.24M (Peak 563.24M) | Time:00:00.67 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Laarzen
+Fra:122 Mem:565.98M (Peak 565.98M) | Time:00:00.67 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Lijf_JungleCommando
+Fra:122 Mem:565.33M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 15
+Fra:122 Mem:565.34M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 14
+Fra:122 Mem:565.34M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 13
+Fra:122 Mem:565.35M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 12
+Fra:122 Mem:565.44M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 11
+Fra:122 Mem:565.45M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 10
+Fra:122 Mem:565.45M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 09
+Fra:122 Mem:565.46M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 08
+Fra:122 Mem:565.46M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 07
+Fra:122 Mem:565.47M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 06
+Fra:122 Mem:565.47M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 05
+Fra:122 Mem:565.48M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 04
+Fra:122 Mem:565.48M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 03
+Fra:122 Mem:565.49M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 02
+Fra:122 Mem:565.50M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 01
+Fra:122 Mem:565.50M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | M-47 plasma | broad curled filament 00
+Fra:122 Mem:565.51M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Blast field | fine aggregate and chips
+Fra:122 Mem:565.91M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 35
+Fra:122 Mem:565.92M (Peak 565.98M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 34
+Fra:122 Mem:566.81M (Peak 566.81M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 33
+Fra:122 Mem:566.95M (Peak 566.95M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 32
+Fra:122 Mem:567.05M (Peak 567.05M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 31
+Fra:122 Mem:567.16M (Peak 567.16M) | Time:00:00.68 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 30
+Fra:122 Mem:567.30M (Peak 567.30M) | Time:00:00.69 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 29
+Fra:122 Mem:566.82M (Peak 567.30M) | Time:00:00.69 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 28
+Fra:122 Mem:567.22M (Peak 567.54M) | Time:00:00.69 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Mag_Pouches
+Fra:122 Mem:567.27M (Peak 567.54M) | Time:00:00.69 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 27
+Fra:122 Mem:571.19M (Peak 571.19M) | Time:00:00.69 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 26
+Fra:122 Mem:571.33M (Peak 571.33M) | Time:00:00.69 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 25
+Fra:122 Mem:571.51M (Peak 571.51M) | Time:00:00.69 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 24
+Fra:122 Mem:572.33M (Peak 572.33M) | Time:00:00.69 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 23
+Fra:122 Mem:572.45M (Peak 572.45M) | Time:00:00.69 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 22
+Fra:122 Mem:572.53M (Peak 572.53M) | Time:00:00.69 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 21
+Fra:122 Mem:572.95M (Peak 572.95M) | Time:00:00.69 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 20
+Fra:122 Mem:573.10M (Peak 573.10M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 19
+Fra:122 Mem:572.39M (Peak 573.10M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 18
+Fra:122 Mem:572.58M (Peak 573.10M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Radio_Field
+Fra:122 Mem:572.81M (Peak 573.10M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 17
+Fra:122 Mem:573.17M (Peak 573.17M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Uniform_Jacket_Shell
+Fra:122 Mem:573.18M (Peak 573.18M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 16
+Fra:122 Mem:573.70M (Peak 573.70M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 15
+Fra:122 Mem:573.83M (Peak 573.83M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 14
+Fra:122 Mem:574.25M (Peak 574.25M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 13
+Fra:122 Mem:574.68M (Peak 574.68M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 12
+Fra:122 Mem:575.26M (Peak 575.26M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 11
+Fra:122 Mem:575.38M (Peak 575.38M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 10
+Fra:122 Mem:575.49M (Peak 575.49M) | Time:00:00.70 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 09
+Fra:122 Mem:575.58M (Peak 575.58M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 08
+Fra:122 Mem:575.72M (Peak 575.72M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 07
+Fra:122 Mem:575.19M (Peak 575.72M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Uniform_Trousers_Shell
+Fra:122 Mem:575.30M (Peak 575.72M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 06
+Fra:122 Mem:575.54M (Peak 575.72M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 05
+Fra:122 Mem:575.74M (Peak 575.74M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Vest_JungleCommando
+Fra:122 Mem:575.77M (Peak 575.77M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 04
+Fra:122 Mem:575.96M (Peak 575.96M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 03
+Fra:122 Mem:576.09M (Peak 576.09M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 02
+Fra:122 Mem:576.21M (Peak 576.21M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 01
+Fra:122 Mem:576.46M (Peak 576.46M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Vest_JungleCommando_Back
+Fra:122 Mem:576.43M (Peak 576.46M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Rubble apron | broken aggregate 00
+Fra:122 Mem:576.55M (Peak 576.55M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 13
+Fra:122 Mem:576.71M (Peak 576.71M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Vest_JungleCommando_Details
+Fra:122 Mem:576.87M (Peak 576.87M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 00
+Fra:122 Mem:576.87M (Peak 576.87M) | Time:00:00.71 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 01
+Fra:122 Mem:577.42M (Peak 577.42M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 12
+Fra:122 Mem:577.78M (Peak 577.78M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 02
+Fra:122 Mem:577.78M (Peak 577.78M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 03
+Fra:122 Mem:578.09M (Peak 578.09M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 04
+Fra:122 Mem:578.01M (Peak 578.09M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 11
+Fra:122 Mem:578.29M (Peak 578.29M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 05
+Fra:122 Mem:578.29M (Peak 578.29M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 10
+Fra:122 Mem:579.14M (Peak 579.14M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 06
+Fra:122 Mem:579.14M (Peak 579.14M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 09
+Fra:122 Mem:579.43M (Peak 579.43M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 07
+Fra:122 Mem:578.98M (Peak 579.43M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Synchronizing object | Airborne fractured concrete 08
+Fra:122 Mem:570.86M (Peak 579.43M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Initializing
+Fra:122 Mem:570.85M (Peak 579.43M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Updating Images | Loading tiger_stripe_albedo_2048
+Fra:122 Mem:570.85M (Peak 579.43M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Updating Images | Loading Bloedjungle_Airfield_HQ_2_1_LOD0_dirt_diff_1024.jpg
+Fra:122 Mem:570.85M (Peak 579.43M) | Time:00:00.72 | Mem:0.00M, Peak:0.00M | Scene, ViewLayer | Updating Images | Loading Bloedjungle_Airfield_HQ_2_1_LOD0_dirt_nor_gl_1024.jpg
+Fra:122 Mem:594.87M (Peak 602.86M) | Time:00:00.77 | Mem:4.00M, Peak:4.00M | Scene, ViewLayer | Updating Images | Loading Bloedjungle_Airfield_HQ_2_1_LOD0_dirt_arm_1024.jpg
+Fra:122 Mem:598.87M (Peak 606.88M) | Time:00:00.77 | Mem:8.00M, Peak:8.00M | Scene, ViewLayer | Updating Images | Loading Bloedjungle_Airfield_HQ_2_1_LOD0_concrete_floor_01_diff_2k.jpg
+Fra:122 Mem:614.87M (Peak 622.88M) | Time:00:00.78 | Mem:12.00M, Peak:12.00M | Scene, ViewLayer | Updating Images | Loading Bloedjungle_Airfield_HQ_2_1_LOD0_concrete_floor_01_nor_gl_2k.jp
+Fra:122 Mem:630.87M (Peak 662.88M) | Time:00:00.83 | Mem:28.00M, Peak:28.00M | Scene, ViewLayer | Updating Images | Loading Bloedjungle_Airfield_HQ_2_1_LOD0_concrete_floor_01_arm_2k.jpg
+Fra:122 Mem:678.88M (Peak 710.89M) | Time:00:00.88 | Mem:44.00M, Peak:44.00M | Scene, ViewLayer | Updating Images | Loading fern_02_nor_gl.png
+Fra:122 Mem:662.87M (Peak 710.89M) | Time:00:00.88 | Mem:60.00M, Peak:60.00M | Scene, ViewLayer | Updating Images | Loading lijf_uniform_normal
+Fra:122 Mem:666.87M (Peak 710.89M) | Time:00:00.89 | Mem:64.00M, Peak:64.00M | Scene, ViewLayer | Updating Images | Loading lijf_uniform_orm
+Fra:122 Mem:710.88M (Peak 734.88M) | Time:00:00.90 | Mem:80.00M, Peak:80.00M | Scene, ViewLayer | Updating Images | Loading fern_02_alpha.png
+Fra:122 Mem:718.87M (Peak 734.88M) | Time:00:00.90 | Mem:84.00M, Peak:84.00M | Scene, ViewLayer | Updating Images | Loading commando_skin_stubble_1024
+Fra:122 Mem:690.87M (Peak 734.88M) | Time:00:00.90 | Mem:100.00M, Peak:100.00M | Scene, ViewLayer | Updating Images | Loading fern_02_diff.png
+Fra:122 Mem:726.88M (Peak 734.89M) | Time:00:00.91 | Mem:104.00M, Peak:104.00M | Scene, ViewLayer | Updating Images | Loading fern_02_rough.png
+Fra:122 Mem:710.88M (Peak 750.89M) | Time:00:00.92 | Mem:108.00M, Peak:108.00M | Scene, ViewLayer | Updating Images | Loading combat_boot_rubber_normal_512
+Fra:122 Mem:711.87M (Peak 750.89M) | Time:00:00.92 | Mem:124.00M, Peak:124.00M | Scene, ViewLayer | Updating Images | Loading albedo
+Fra:122 Mem:727.87M (Peak 750.89M) | Time:00:00.92 | Mem:125.00M, Peak:125.00M | Scene, ViewLayer | Updating Images | Loading combat_boot_rubber_roughness_512
+Fra:122 Mem:728.87M (Peak 750.89M) | Time:00:00.92 | Mem:126.00M, Peak:126.00M | Scene, ViewLayer | Updating Images | Loading combat_boot_rubber_albedo_512
+Fra:122 Mem:761.88M (Peak 762.89M) | Time:00:00.92 | Mem:127.00M, Peak:127.00M | Scene, ViewLayer | Updating Images | Loading combat_boot_leather_normal_512
+Fra:122 Mem:730.87M (Peak 762.89M) | Time:00:00.93 | Mem:143.00M, Peak:143.00M | Scene, ViewLayer | Updating Images | Loading orm
+Fra:122 Mem:746.87M (Peak 762.89M) | Time:00:00.96 | Mem:144.00M, Peak:144.00M | Scene, ViewLayer | Updating Images | Loading combat_boot_leather_roughness_512
+Fra:122 Mem:747.87M (Peak 762.89M) | Time:00:00.97 | Mem:145.00M, Peak:145.00M | Scene, ViewLayer | Updating Images | Loading combat_boot_leather_albedo_512
+Fra:122 Mem:748.87M (Peak 762.89M) | Time:00:00.97 | Mem:146.00M, Peak:146.00M | Scene, ViewLayer | Updating Images | Loading uitrusting_normal
+Fra:122 Mem:752.87M (Peak 762.89M) | Time:00:00.98 | Mem:150.00M, Peak:150.00M | Scene, ViewLayer | Updating Images | Loading uitrusting_orm
+Fra:122 Mem:764.88M (Peak 792.88M) | Time:00:00.99 | Mem:166.00M, Peak:166.00M | Scene, ViewLayer | Updating Images | Loading normal
+Fra:122 Mem:772.87M (Peak 792.88M) | Time:00:00.99 | Mem:170.00M, Peak:170.00M | Scene, ViewLayer | Updating Images | Loading uitrusting_albedo
+Fra:122 Mem:776.87M (Peak 792.88M) | Time:00:01.00 | Mem:174.00M, Peak:174.00M | Scene, ViewLayer | Updating Images | Loading short_cropped_hair_normal_512
+Fra:122 Mem:777.87M (Peak 792.88M) | Time:00:01.00 | Mem:175.00M, Peak:175.00M | Scene, ViewLayer | Updating Images | Loading short_cropped_hair_roughness_512
+Fra:122 Mem:778.87M (Peak 792.88M) | Time:00:01.00 | Mem:176.00M, Peak:176.00M | Scene, ViewLayer | Updating Images | Loading parkerized_steel_normal_512
+Fra:122 Mem:779.87M (Peak 792.88M) | Time:00:01.00 | Mem:177.00M, Peak:177.00M | Scene, ViewLayer | Updating Images | Loading parkerized_steel_roughness_512
+Fra:122 Mem:780.87M (Peak 792.88M) | Time:00:01.00 | Mem:178.00M, Peak:178.00M | Scene, ViewLayer | Updating Images | Loading parkerized_steel_albedo_512
+Fra:122 Mem:781.87M (Peak 792.88M) | Time:00:01.01 | Mem:179.00M, Peak:179.00M | Scene, ViewLayer | Updating Images | Loading dark_olive_webbing_normal_512
+Fra:122 Mem:782.87M (Peak 792.88M) | Time:00:01.01 | Mem:180.00M, Peak:180.00M | Scene, ViewLayer | Updating Images | Loading dark_olive_webbing_roughness_512
+Fra:122 Mem:783.87M (Peak 792.88M) | Time:00:01.01 | Mem:181.00M, Peak:181.00M | Scene, ViewLayer | Updating Images | Loading dark_olive_webbing_albedo_512
+Fra:122 Mem:816.88M (Peak 817.89M) | Time:00:01.02 | Mem:182.00M, Peak:182.00M | Scene, ViewLayer | Updating Images | Loading olive_nylon_normal_512
+Fra:122 Mem:817.88M (Peak 818.89M) | Time:00:01.02 | Mem:183.00M, Peak:183.00M | Scene, ViewLayer | Updating Images | Loading olive_nylon_roughness_512
+Fra:122 Mem:818.88M (Peak 819.89M) | Time:00:01.02 | Mem:184.00M, Peak:184.00M | Scene, ViewLayer | Updating Images | Loading olive_nylon_albedo_512
+Fra:122 Mem:787.87M (Peak 819.89M) | Time:00:01.02 | Mem:200.00M, Peak:200.00M | Scene, ViewLayer | Updating Images | Loading Image_0
+Fra:122 Mem:835.88M (Peak 836.89M) | Time:00:01.02 | Mem:201.00M, Peak:201.00M | Scene, ViewLayer | Updating Images | Loading Image_2
+Fra:122 Mem:819.87M (Peak 851.88M) | Time:00:01.03 | Mem:217.00M, Peak:217.00M | Scene, ViewLayer | Updating Images | Loading Image_1
+Fra:122 Mem:835.86M (Peak 899.89M) | Time:00:01.11 | Mem:265.00M, Peak:265.00M | Scene, ViewLayer | Waiting for render to start
+Fra:122 Mem:835.87M (Peak 899.89M) | Time:00:01.11 | Mem:265.00M, Peak:265.00M | Scene, ViewLayer | Loading render kernels (may take a few minutes the first time)
+Fra:122 Mem:835.87M (Peak 899.89M) | Time:00:01.11 | Mem:265.00M, Peak:265.00M | Scene, ViewLayer | Updating Scene
+Fra:122 Mem:835.87M (Peak 899.89M) | Time:00:01.11 | Mem:265.00M, Peak:265.00M | Scene, ViewLayer | Updating Shaders
+Fra:122 Mem:836.02M (Peak 899.89M) | Time:00:01.11 | Mem:265.07M, Peak:265.07M | Scene, ViewLayer | Updating Procedurals
+Fra:122 Mem:836.02M (Peak 899.89M) | Time:00:01.11 | Mem:265.07M, Peak:265.07M | Scene, ViewLayer | Updating Background
+Fra:122 Mem:836.02M (Peak 899.89M) | Time:00:01.11 | Mem:265.07M, Peak:265.07M | Scene, ViewLayer | Updating Camera
+Fra:122 Mem:836.02M (Peak 899.89M) | Time:00:01.11 | Mem:265.07M, Peak:265.07M | Scene, ViewLayer | Updating Meshes Flags
+Fra:122 Mem:836.02M (Peak 899.89M) | Time:00:01.11 | Mem:265.07M, Peak:265.07M | Scene, ViewLayer | Updating Objects
+Fra:122 Mem:836.02M (Peak 899.89M) | Time:00:01.11 | Mem:265.07M, Peak:265.07M | Scene, ViewLayer | Updating Objects | Copying Transformations to device
+Fra:122 Mem:836.53M (Peak 899.89M) | Time:00:01.11 | Mem:265.56M, Peak:265.56M | Scene, ViewLayer | Updating Objects | Applying Static Transformations
+Fra:122 Mem:836.53M (Peak 899.89M) | Time:00:01.11 | Mem:265.56M, Peak:265.56M | Scene, ViewLayer | Updating Particle Systems
+Fra:122 Mem:836.53M (Peak 899.89M) | Time:00:01.11 | Mem:265.56M, Peak:265.56M | Scene, ViewLayer | Updating Particle Systems | Copying Particles to device
+Fra:122 Mem:836.53M (Peak 899.89M) | Time:00:01.11 | Mem:265.56M, Peak:265.56M | Scene, ViewLayer | Updating Meshes
+Fra:122 Mem:854.49M (Peak 899.89M) | Time:00:01.13 | Mem:265.56M, Peak:265.56M | Scene, ViewLayer | Updating Mesh | Computing attributes
+Fra:122 Mem:939.40M (Peak 939.40M) | Time:00:01.15 | Mem:265.64M, Peak:265.64M | Scene, ViewLayer | Updating Mesh | Copying Attributes to device
+Fra:122 Mem:939.13M (Peak 939.40M) | Time:00:01.15 | Mem:350.20M, Peak:350.20M | Scene, ViewLayer | Updating Geometry BVH Grass_tall_03_LOD0 10/10 | Building BVH
+Fra:122 Mem:939.13M (Peak 939.40M) | Time:00:01.15 | Mem:350.24M, Peak:350.24M | Scene, ViewLayer | Updating Geometry BVH Grass_tall_03_LOD0 10/10 | Building BVH 0%
+Fra:122 Mem:939.13M (Peak 939.40M) | Time:00:01.15 | Mem:350.28M, Peak:350.32M | Scene, ViewLayer | Updating Geometry BVH Grass_tall_01_LOD0 9/10 | Building BVH
+Fra:122 Mem:939.13M (Peak 939.40M) | Time:00:01.15 | Mem:350.36M, Peak:350.39M | Scene, ViewLayer | Updating Geometry BVH Grass_tall_02_LOD0 8/10 | Building BVH
+Fra:122 Mem:939.13M (Peak 939.40M) | Time:00:01.15 | Mem:350.44M, Peak:350.47M | Scene, ViewLayer | Updating Geometry BVH Grass_tall_04_LOD0 7/10 | Building BVH
+Fra:122 Mem:939.13M (Peak 939.40M) | Time:00:01.15 | Mem:350.54M, Peak:350.54M | Scene, ViewLayer | Updating Geometry BVH island_trees_01_blockout_cleaned.004 1/10 | Building BVH
+Fra:122 Mem:939.13M (Peak 939.40M) | Time:00:01.15 | Mem:366.39M, Peak:366.43M | Scene, ViewLayer | Updating Geometry BVH Plane.006 6/10 | Building BVH
+Fra:122 Mem:939.13M (Peak 939.40M) | Time:00:01.15 | Mem:366.44M, Peak:366.47M | Scene, ViewLayer | Updating Geometry BVH Plane.024 5/10 | Building BVH
+Fra:122 Mem:939.13M (Peak 939.40M) | Time:00:01.15 | Mem:366.60M, Peak:366.60M | Scene, ViewLayer | Updating Geometry BVH mesh.002 2/10 | Building BVH
+Fra:122 Mem:939.13M (Peak 939.40M) | Time:00:01.15 | Mem:376.43M, Peak:376.50M | Scene, ViewLayer | Updating Geometry BVH Plane.044 4/10 | Building BVH
+Fra:122 Mem:939.13M (Peak 939.40M) | Time:00:01.15 | Mem:376.58M, Peak:376.64M | Scene, ViewLayer | Updating Geometry BVH Plane.059 3/10 | Building BVH
+Fra:122 Mem:939.13M (Peak 939.40M) | Time:00:01.30 | Mem:409.94M, Peak:425.81M | Scene, ViewLayer | Updating Scene BVH | Building
+Fra:122 Mem:939.15M (Peak 939.40M) | Time:00:01.30 | Mem:409.94M, Peak:425.81M | Scene, ViewLayer | Updating Scene BVH | Building BVH
+Fra:122 Mem:939.15M (Peak 939.40M) | Time:00:01.38 | Mem:432.12M, Peak:442.03M | Scene, ViewLayer | Updating Scene BVH | Copying BVH to device
+Fra:122 Mem:939.15M (Peak 939.40M) | Time:00:01.38 | Mem:432.12M, Peak:442.03M | Scene, ViewLayer | Updating Mesh | Computing normals
+Fra:122 Mem:1000.15M (Peak 1000.15M) | Time:00:01.39 | Mem:432.12M, Peak:442.03M | Scene, ViewLayer | Updating Mesh | Copying Mesh to device
+Fra:122 Mem:1000.15M (Peak 1000.15M) | Time:00:01.39 | Mem:493.12M, Peak:493.12M | Scene, ViewLayer | Updating Objects Flags
+Fra:122 Mem:1000.15M (Peak 1000.15M) | Time:00:01.39 | Mem:493.14M, Peak:493.14M | Scene, ViewLayer | Updating Primitive Offsets
+Fra:122 Mem:1000.16M (Peak 1000.16M) | Time:00:01.39 | Mem:493.14M, Peak:493.14M | Scene, ViewLayer | Updating Images
+Fra:122 Mem:1000.16M (Peak 1000.16M) | Time:00:01.39 | Mem:493.14M, Peak:493.14M | Scene, ViewLayer | Updating Images | Loading island_tree_02_branches_nor_gl_1k.png
+Fra:122 Mem:1000.16M (Peak 1000.16M) | Time:00:01.39 | Mem:493.14M, Peak:493.14M | Scene, ViewLayer | Updating Images | Loading island_tree_01_diff_1k.jpg
+Fra:122 Mem:1020.16M (Peak 1020.16M) | Time:00:01.40 | Mem:497.14M, Peak:497.14M | Scene, ViewLayer | Updating Images | Loading island_tree_01_leaves_alpha_1k.png
+Fra:122 Mem:1022.16M (Peak 1022.16M) | Time:00:01.41 | Mem:499.14M, Peak:499.14M | Scene, ViewLayer | Updating Images | Loading island_tree_01_leaves_nor_gl_1k.png
+Fra:122 Mem:1030.16M (Peak 1030.16M) | Time:00:01.44 | Mem:507.14M, Peak:507.14M | Scene, ViewLayer | Updating Images | Loading island_tree_01_leaves_diff_1k.png
+Fra:122 Mem:1038.16M (Peak 1038.16M) | Time:00:01.48 | Mem:515.14M, Peak:515.14M | Scene, ViewLayer | Updating Images | Loading island_tree_02_branches_rough_1k.png
+Fra:122 Mem:1040.16M (Peak 1040.16M) | Time:00:01.48 | Mem:523.14M, Peak:523.14M | Scene, ViewLayer | Updating Images | Loading island_tree_01_leaves_rough_1k.png
+Fra:122 Mem:1042.16M (Peak 1042.16M) | Time:00:01.49 | Mem:525.14M, Peak:525.14M | Scene, ViewLayer | Updating Images | Loading island_tree_01_rough_1k.exr
+Fra:122 Mem:1044.16M (Peak 1044.16M) | Time:00:01.50 | Mem:527.14M, Peak:527.14M | Scene, ViewLayer | Updating Images | Loading island_tree_02_leaves_rough_1k.png
+Fra:122 Mem:1046.16M (Peak 1046.16M) | Time:00:01.50 | Mem:529.14M, Peak:529.14M | Scene, ViewLayer | Updating Images | Loading island_tree_01_branches_diff_1k.png
+Fra:122 Mem:1054.16M (Peak 1054.16M) | Time:00:01.50 | Mem:537.14M, Peak:537.14M | Scene, ViewLayer | Updating Images | Loading island_tree_01_branches_rough_1k.png
+Fra:122 Mem:1056.16M (Peak 1056.16M) | Time:00:01.51 | Mem:539.14M, Peak:539.14M | Scene, ViewLayer | Updating Images | Loading island_tree_02_leaves_diff_1k.png
+Fra:122 Mem:1064.16M (Peak 1064.16M) | Time:00:01.52 | Mem:541.14M, Peak:541.14M | Scene, ViewLayer | Updating Images | Loading island_tree_01_branches_nor_gl_1k.png
+Fra:122 Mem:1072.16M (Peak 1072.16M) | Time:00:01.58 | Mem:549.14M, Peak:549.14M | Scene, ViewLayer | Updating Images | Loading island_tree_02_leaves_nor_gl_1k.png
+Fra:122 Mem:1080.16M (Peak 1080.16M) | Time:00:01.59 | Mem:557.14M, Peak:557.14M | Scene, ViewLayer | Updating Images | Loading island_tree_02_diff_1k.jpg
+Fra:122 Mem:1084.16M (Peak 1084.16M) | Time:00:01.60 | Mem:561.14M, Peak:561.14M | Scene, ViewLayer | Updating Images | Loading island_tree_02_rough_1k.exr
+Fra:122 Mem:1086.16M (Peak 1086.16M) | Time:00:01.61 | Mem:563.14M, Peak:563.14M | Scene, ViewLayer | Updating Images | Loading island_tree_01_nor_gl_1k.exr
+Fra:122 Mem:1094.16M (Peak 1094.16M) | Time:00:01.61 | Mem:571.14M, Peak:571.14M | Scene, ViewLayer | Updating Images | Loading island_tree_02_leaves_alpha_1k.png
+Fra:122 Mem:1096.16M (Peak 1096.16M) | Time:00:01.62 | Mem:573.14M, Peak:573.14M | Scene, ViewLayer | Updating Images | Loading island_tree_02_nor_gl_1k.exr
+Fra:122 Mem:1104.16M (Peak 1104.16M) | Time:00:01.67 | Mem:597.14M, Peak:597.14M | Scene, ViewLayer | Updating Camera Volume
+Fra:122 Mem:1104.16M (Peak 1104.16M) | Time:00:01.67 | Mem:597.14M, Peak:597.14M | Scene, ViewLayer | Updating Lookup Tables
+Fra:122 Mem:1104.16M (Peak 1104.16M) | Time:00:01.67 | Mem:597.23M, Peak:597.23M | Scene, ViewLayer | Updating Lights
+Fra:122 Mem:1104.16M (Peak 1104.16M) | Time:00:01.67 | Mem:597.23M, Peak:597.23M | Scene, ViewLayer | Updating Lights | Computing tree
+Fra:122 Mem:1109.10M (Peak 1112.38M) | Time:00:01.72 | Mem:602.17M, Peak:602.17M | Scene, ViewLayer | Updating Integrator
+Fra:122 Mem:1109.10M (Peak 1112.38M) | Time:00:01.72 | Mem:602.17M, Peak:602.17M | Scene, ViewLayer | Updating Film
+Fra:122 Mem:1109.10M (Peak 1112.38M) | Time:00:01.72 | Mem:602.09M, Peak:602.17M | Scene, ViewLayer | Updating Lookup Tables
+Fra:122 Mem:1109.10M (Peak 1112.38M) | Time:00:01.72 | Mem:602.17M, Peak:602.17M | Scene, ViewLayer | Updating Baking
+Fra:122 Mem:1109.10M (Peak 1112.38M) | Time:00:01.72 | Mem:602.17M, Peak:602.17M | Scene, ViewLayer | Updating Device | Writing constant memory
+Fra:122 Mem:1109.14M (Peak 1112.38M) | Time:00:01.72 | Mem:602.17M, Peak:602.17M | Scene, ViewLayer | Loading denoising kernels (may take a few minutes the first time)
+Fra:122 Mem:1109.14M (Peak 1112.38M) | Time:00:01.72 | Mem:602.17M, Peak:602.17M | Scene, ViewLayer | Sample 0/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:00:46.48 | Remaining:58:56.00 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 1/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:01:31.31 | Remaining:58:13.85 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 2/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:02:17.92 | Remaining:58:15.75 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 3/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:03:04.77 | Remaining:57:57.98 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 4/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:03:51.38 | Remaining:57:24.96 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 5/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:04:39.19 | Remaining:57:02.16 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 6/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:05:26.29 | Remaining:56:24.75 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 7/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:06:11.71 | Remaining:55:29.86 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 8/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:06:58.33 | Remaining:54:46.57 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 9/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:07:45.71 | Remaining:54:07.91 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 10/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:08:31.76 | Remaining:53:19.35 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 11/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:09:18.51 | Remaining:52:35.15 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 12/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:10:04.88 | Remaining:51:48.61 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 13/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:10:53.14 | Remaining:51:10.97 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 14/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:11:38.80 | Remaining:50:20.66 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 15/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:12:23.88 | Remaining:49:28.65 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 16/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:13:09.69 | Remaining:48:40.12 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 17/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:13:54.80 | Remaining:47:49.50 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 18/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:14:39.59 | Remaining:46:58.42 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 19/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:15:25.56 | Remaining:46:11.51 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 20/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:16:10.38 | Remaining:45:21.47 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 21/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:16:56.00 | Remaining:44:34.01 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 22/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:17:42.34 | Remaining:43:48.50 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 23/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:18:26.36 | Remaining:42:57.49 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 24/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:19:10.79 | Remaining:42:07.95 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 25/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:19:57.12 | Remaining:41:22.74 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 26/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:20:42.31 | Remaining:40:35.22 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 27/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:21:28.27 | Remaining:39:49.30 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 28/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:22:14.72 | Remaining:39:04.24 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 29/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:23:03.59 | Remaining:38:23.12 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 30/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:23:49.93 | Remaining:37:37.48 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 31/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:24:36.09 | Remaining:36:51.55 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 32/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:25:21.59 | Remaining:36:04.65 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 33/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:26:06.50 | Remaining:35:17.04 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 34/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:26:52.60 | Remaining:34:31.12 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 35/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:27:38.88 | Remaining:33:45.41 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 36/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:28:23.93 | Remaining:32:58.24 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 37/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:29:10.03 | Remaining:32:12.34 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 38/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:30:02.53 | Remaining:31:33.16 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 39/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:30:52.60 | Remaining:30:50.87 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 40/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:31:39.08 | Remaining:30:04.80 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 41/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:32:23.97 | Remaining:29:17.27 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 42/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:33:09.78 | Remaining:28:30.65 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 43/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:33:56.90 | Remaining:27:45.14 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 44/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:34:41.88 | Remaining:26:57.89 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 45/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:35:27.50 | Remaining:26:11.22 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 46/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:36:12.98 | Remaining:25:24.50 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 47/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:36:57.18 | Remaining:24:36.97 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 48/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:37:42.24 | Remaining:23:50.12 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 49/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:38:25.80 | Remaining:23:02.44 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 50/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:39:09.98 | Remaining:22:15.28 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 51/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:39:55.46 | Remaining:21:28.93 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 52/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:40:39.24 | Remaining:20:41.75 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 53/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:41:24.08 | Remaining:19:55.21 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 54/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:42:09.91 | Remaining:19:09.17 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 55/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:42:54.94 | Remaining:18:22.80 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 56/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:43:41.10 | Remaining:17:36.94 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 57/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:44:25.61 | Remaining:16:50.44 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 58/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:45:10.26 | Remaining:16:04.05 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 59/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:45:57.02 | Remaining:15:18.43 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 60/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:46:45.24 | Remaining:14:33.22 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 61/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:47:32.72 | Remaining:13:47.70 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 62/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:48:17.37 | Remaining:13:01.36 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 63/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:49:02.03 | Remaining:12:15.07 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 64/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:49:46.42 | Remaining:11:28.77 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 65/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:50:32.89 | Remaining:10:42.97 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 66/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:51:21.50 | Remaining:09:57.56 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 67/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:52:10.67 | Remaining:09:12.16 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 68/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:52:55.51 | Remaining:08:25.96 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 69/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:53:39.99 | Remaining:07:39.75 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 70/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:54:24.26 | Remaining:06:53.56 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 71/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:55:08.68 | Remaining:06:07.44 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 72/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:55:53.87 | Remaining:05:21.43 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 73/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:56:38.68 | Remaining:04:35.42 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 74/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:57:23.71 | Remaining:03:49.46 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 75/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:58:09.08 | Remaining:03:03.54 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 76/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:58:53.83 | Remaining:02:17.61 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 77/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:59:39.48 | Remaining:01:31.73 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 78/80
+Fra:122 Mem:1259.45M (Peak 1259.45M) | Time:01:00:24.80 | Remaining:00:45.86 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 79/80
+Fra:122 Mem:1322.73M (Peak 1417.65M) | Time:01:01:32.76 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Sample 80/80
+Fra:122 Mem:1322.73M (Peak 1417.65M) | Time:01:01:32.76 | Mem:752.48M, Peak:752.48M | Scene, ViewLayer | Finished
+Fra:122 Mem:1322.74M (Peak 1417.65M) | Time:01:01:32.78 | Compositing
+Fra:122 Mem:1322.74M (Peak 1417.65M) | Time:01:01:32.78 | Compositing | Initializing execution
+Fra:122 Mem:1354.44M (Peak 1417.65M) | Time:01:01:32.80 | Compositing | Operation 2-7
+Fra:122 Mem:1386.08M (Peak 1417.65M) | Time:01:01:32.81 | Compositing | Operation 3-7
+Fra:122 Mem:1386.08M (Peak 1417.72M) | Time:01:01:33.10 | Compositing | Operation 4-7
+Fra:122 Mem:1386.08M (Peak 1417.72M) | Time:01:01:33.10 | Compositing | Operation 5-7
+Fra:122 Mem:1386.08M (Peak 1417.72M) | Time:01:01:33.10 | Compositing | Operation 6-7
+Fra:122 Mem:1354.44M (Peak 1417.72M) | Time:01:01:33.10 | Compositing | Operation 7-7
+Fra:122 Mem:1354.44M (Peak 1417.72M) | Time:01:01:33.11 | Compositing | Operation 8-7
+Saved: '/workspace/Bloedjungle-godot/tests/m47_photoreal_vfx5_1/renders/M47_Impact_Hero_Cycles_5_2.png'
+Time: 01:01:33.90 (Saving: 00:00.79)
+
+[M47-IMPACT-5.2] metrics {"version": "M-47 Photoreal Impact Hero Still 5.2", "blender": "4.3.2", "engine": "CYCLES", "resolution": [1920, 1080], "samples": 80, "adaptive_threshold": 0.006000000052154064, "frame": 122, "approved_m47_glb": "docs/assets/m47-muurbreker-1.0/M47_Muurbreker_1.0_animated.glb", "approved_m47_sha256": "4031e935c5ef19a96a10257334a3cc99db92410a01389ef708259d887cf89872", "m47_lod0_triangles": 50000, "scene": "blender/M47_Impact_Hero_5_2.blend", "render": "renders/M47_Impact_Hero_Cycles_5_2.png", "smoke_and_dust_objects": 70, "plasma_filaments": 16, "added_concrete_fragments": 280, "render_sha256": "8a953ecd19d9ac8394f4f506da99b26f7f0fdcb99662b435af3e83320721b553", "render_bytes": 10259795, "scene_sha256": "46aef419dd423cc83448cd0393bbd1b2408bd3c2a42a21003ab3fe64b68ffa15", "scene_bytes": 89446040}
+
+Blender quit

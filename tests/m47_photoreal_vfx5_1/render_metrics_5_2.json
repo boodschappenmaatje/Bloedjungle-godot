@@ -1,0 +1,47 @@
+{
+  "version": "M-47 Photoreal Impact Hero Still 5.2",
+  "blender": "4.3.2",
+  "engine": "CYCLES",
+  "resolution": [
+    1920,
+    1080
+  ],
+  "samples": 80,
+  "adaptive_threshold": 0.006000000052154064,
+  "frame": 122,
+  "approved_m47_glb": "docs/assets/m47-muurbreker-1.0/M47_Muurbreker_1.0_animated.glb",
+  "approved_m47_sha256": "4031e935c5ef19a96a10257334a3cc99db92410a01389ef708259d887cf89872",
+  "m47_lod0_triangles": 50000,
+  "scene": "blender/M47_Impact_Hero_5_2.blend",
+  "render": "renders/M47_Impact_Hero_Cycles_5_2.png",
+  "smoke_and_dust_objects": 70,
+  "plasma_filaments": 16,
+  "added_concrete_fragments": 302,
+  "render_sha256": "8a953ecd19d9ac8394f4f506da99b26f7f0fdcb99662b435af3e83320721b553",
+  "render_bytes": 10259795,
+  "scene_sha256": "46aef419dd423cc83448cd0393bbd1b2408bd3c2a42a21003ab3fe64b68ffa15",
+  "scene_bytes": 89446040,
+  "comparison_sha256": "c3be7f43e893fccfbffca3f7189612b2af57905a6315f64e9b780d5573bbbda7",
+  "comparison_bytes": 1171000,
+  "approved_m47_glb_sha256": "4031e935c5ef19a96a10257334a3cc99db92410a01389ef708259d887cf89872",
+  "approved_m47_glb_bytes": 12974144,
+  "render_time": "01:01:33.90",
+  "comparison": "renders/impact_5_1_5_2_vs_target.png",
+  "m47_materials": [
+    "M47_Mechanism_Steel",
+    "Material_0"
+  ],
+  "m47_actions": [
+    "Idle_M47_Mechanism_Rig",
+    "Equip_M47_Mechanism_Rig",
+    "Aim_M47_Mechanism_Rig",
+    "Fire_M47_Mechanism_Rig",
+    "Reload_M47_Mechanism_Rig"
+  ],
+  "m47_lod1_hidden_from_render": true,
+  "m47_lod2_hidden_from_render": true,
+  "packed_image_count": 50,
+  "scene_validation_log": "logs/blender_scene_validation_5_2.log",
+  "reference_sha256": "0933401a1289f353164193f542e909cc85b377f679a62026aba301641318baee",
+  "original_5_1_render_sha256": "db247891ed42612d6624eebbebf095db3376852b0fe816b1ecada1cbbacf8a4a"
+}

@@ -171,6 +171,26 @@ class Card:
 				_ell(r, 20, 33, 3, 3, Color("c9a227"))
 
 
+## De kaartjes onderin. De MCV-start zet Data.mcv_mode pas als je op START MISSIE drukt, ná het laden van dit scherm: daarom bouwt _enter() ze opnieuw
+## als de modus sindsdien veranderde (anders zie je de oude Betonmuur in plaats van Kampmuur, Poort en Wachttoren).
+var _cards_mcv := false
+
+
+func _build_cards() -> void:
+	for c in _cards:
+		if is_instance_valid(c):
+			c.queue_free()
+	_cards.clear()
+	_cards_mcv = Data.mcv_mode
+	for k in (ORDER_MCV if Data.mcv_mode else ORDER):
+		var c := Card.new()
+		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		c.kind = k
+		c.title = Buildings.DEFS[k].name if Buildings.DEFS.has(k) else k
+		_ui.add_child(c)
+		_cards.append(c)
+
+
 func _ready() -> void:
 	add_to_group("build_mode")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -198,13 +218,7 @@ func _ready() -> void:
 	_panel.custom_minimum_size.x = 250
 	_panel.visible = false
 	_ui.add_child(_panel)
-	for k in (ORDER_MCV if Data.mcv_mode else ORDER):
-		var c := Card.new()
-		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		c.kind = k
-		c.title = Buildings.DEFS[k].name if Buildings.DEFS.has(k) else k
-		_ui.add_child(c)
-		_cards.append(c)
+	_build_cards()
 	for z in ["+", "−", "⌂"]:
 		var b := Button.new()
 		b.add_to_group("hud_button")
@@ -277,6 +291,9 @@ func _enter() -> void:
 	if Game.player.elev > 0.5:
 		Game.banner.emit("KOM EERST VAN DE TOREN", "", 1.4)
 		return
+	if _cards_mcv != Data.mcv_mode:
+		_build_cards()
+		_layout()
 	Game.build_mode = true
 	_airfield_armed = false
 	Game.airfield_build_view = false

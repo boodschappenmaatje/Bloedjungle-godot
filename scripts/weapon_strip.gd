@@ -128,17 +128,25 @@ func _render_icons() -> void:
 	var meshy_holder := (load(MESHY_M1911_PAD) as PackedScene).instantiate() as Node3D
 	vp.add_child(meshy_holder)
 	meshy_holder.visible = false
-	var m47_holder := (load(M47_PAD) as PackedScene).instantiate() as Node3D
-	vp.add_child(m47_holder)
-	m47_holder.visible = false
-	for lod in ["M47_LOD1", "M47_LOD2"]:
-		(m47_holder.find_child(lod, true, false) as Node3D).visible = false   # alleen LOD0 in het plaatje
+	var m47_scene := load(M47_PAD) as PackedScene if ResourceLoader.exists(M47_PAD) else null   # zware OTA-bestand: kan ontbreken (bv. in CI zonder LFS)
+	var m47_holder: Node3D = null
+	if m47_scene != null:
+		m47_holder = m47_scene.instantiate() as Node3D
+		vp.add_child(m47_holder)
+		m47_holder.visible = false
+		for lod in ["M47_LOD1", "M47_LOD2"]:
+			var lod_node := m47_holder.find_child(lod, true, false) as Node3D
+			if lod_node != null:
+				lod_node.visible = false   # alleen LOD0 in het plaatje
 	for i in IDS.size():
 		var id: String = IDS[i]
+		if id == "m47" and m47_holder == null:
+			continue
 		var meshy := id == "m1911" or id == "m47"
 		holder.visible = not meshy
 		meshy_holder.visible = id == "m1911"
-		m47_holder.visible = id == "m47"
+		if m47_holder != null:
+			m47_holder.visible = id == "m47"
 		var source: Node3D = meshy_holder if id == "m1911" else (m47_holder if id == "m47" else holder)
 		var node := source.find_child("M47_Mechanism_Rig" if id == "m47" else SoldierModel.GUN_OF[id], true, false) as Node3D
 		if node == null:

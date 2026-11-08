@@ -56,14 +56,16 @@ const PLAYER_COLOR := Color("4b5a2c")
 const BASE_HP := 1000.0
 const START_POINTS := 2000
 
-## MCV-start (Dennis, 7 november 2026, docs/GENERALS_PLAN.md "Stap MCV"): je begint in een bouwwagen en klapt hem uit als hoofdkwartier.
-## Staat dit aan, dan bestaat het vaste kamp op de oorsprong niet (muur, poorten, torens, wachtposten, generator, patrouilles, bunker)
-## en gaat alles uit van Game.base_pos. Uit = het oude spel, dat de bestaande tests nog gebruiken tot het vaste kamp is opgeruimd.
-static var mcv_mode := false
+## De MCV-start (Dennis, 7 november 2026, docs/GENERALS_PLAN.md "Stap MCV"): je begint in een bouwwagen en klapt hem uit als hoofdkwartier; alles gaat uit
+## van Game.base_pos. Sinds stap 4b is dit de enige manier om te spelen: het vaste kamp op de oorsprong (muur, poorten, torens, wachthuisjes, generator, oude
+## patrouilles) bestaat niet meer.
+## Tests (headless) klappen de wagen meteen uit op de oorsprong, waar het oude kamp stond, zodat ze een hoofdkwartier en een speler ernaast hebben. De MCV-tests
+## zetten dit uit om zelf te rijden en uit te klappen. In het echte spel (nooit headless) klapt de speler zelf uit.
+static var mcv_autodeploy := DisplayServer.get_name() == "headless"
 const MCV_RUST := 600.0  # s rust voor de eerste aanvalsgroep, geteld vanaf het uitklappen (Dennis: 10 minuten)
 
-const COMPOUND := 28.0   # halve breedte van de betonmuur rond de basis
-const GATE_GAP := 3.4    # halve breedte van de twee poortopeningen (noord en zuid)
+const START_ROAD_HALF := 3.4   # halve breedte van de kale strook (het vroegere pad van de poort) in de jungle rond de startplek; blijft leeg zodat de kaart gelijk blijft
+const START_CLEAR := 28.0   # halve breedte van de kale open startplek op de oorsprong waar je begint (er staan daar geen bomen; vroeger de vaste basis)
 const WALL_H := 1.55
 const BASE_WALL_H := 3.0
 const WALL_T := 0.4

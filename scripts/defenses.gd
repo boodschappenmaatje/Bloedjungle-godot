@@ -109,7 +109,7 @@ func _spot(k: String) -> Vector3:
 
 
 func can_place(k: String, at: Vector3) -> bool:
-	if Vector2(at.x, at.z).length() > Data.WORLD_R - 1.0:
+	if not Mcv.in_play_area(at, 2.0) or not Mcv.dry_side(at, 1.0):
 		return false
 	if _blocked(k, at):
 		return false
@@ -127,9 +127,6 @@ func _blocked(k: String, at: Vector3) -> bool:
 	if k == "mine":
 		return false
 	var sz: Vector3 = GHOST_SIZE[k]
-	# de poort zelf: de weg erdoorheen blijft vrij
-	if absf(at.x) < Data.GATE_GAP + 1.5 and absf(absf(at.z) - Data.COMPOUND) < 2.0:
-		return true
 	var shape := BoxShape3D.new()
 	shape.size = Vector3(sz.x, 1.0, sz.z)
 	var q := PhysicsShapeQueryParameters3D.new()

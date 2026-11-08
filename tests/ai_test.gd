@@ -38,15 +38,9 @@ func _process(_dt: float) -> bool:
 	if frames == 3:
 		main.begin()
 		game.build_credit = 5000
-		game.builds.place("muur", Vector3(-8, 0, -14), 0.0)
+		game.builds.place("zandzak", Vector3(-8, 0, -14), 0.0)
 		game.player.global_position = Vector3(-8, 0, -4)
-		# 1. spreiding: schutters nemen om beurten de noord- en zuidpoort
-		var zs := {}
-		for i in 8:
-			var e := _spawn("assault", Vector3(50, 0, 50 + i))
-			zs[signf(e.get("gate_z"))] = true
-			e.queue_free()
-		_check(zs.size() == 2, "schutters kiezen niet allebei de poorten")
+		# (1. de spreiding over de vaste noord- en zuidpoort van het oude kamp bestaat niet meer sinds de MCV-start)
 		# 2. dekking: een geraakte schutter loopt naar een plek achter het gebouw
 		a = _spawn("assault", Vector3(-4, 0, -16))
 		assault_model = a.get_node("Model") as SoldierModel

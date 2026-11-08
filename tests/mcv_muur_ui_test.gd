@@ -17,7 +17,7 @@ func _initialize() -> void:
 	D = load("res://scripts/data.gd")
 	M = load("res://scripts/mcv.gd")
 	K = load("res://scripts/kampmuur.gd")
-	D.set("mcv_mode", true)
+	D.set("mcv_autodeploy", false)
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 
@@ -147,7 +147,37 @@ func _process(_d: float) -> bool:
 		var tap := _screen(K.edge_center(k2) + Vector3(1.2, 0, 0))
 		bm._down(10, tap)
 		bm._up(10)
-		_check("een tik op een muurstuk maakt er een poort van", g.gates.list.size() == 1 and K.count() == 1)
+		_check("een tik op een muurstuk plaatst de poort nog niet, maar toont een voorbeeld", g.gates.list.is_empty() and bm._gate_pending != null and bm._wall_ghost != null)
+		var ptxt: Array = []
+		var pbtn: Array = []
+		bm._fill_panel()
+		_buttons(bm.get("_panel"), pbtn)
+		for bt in pbtn:
+			ptxt.append(bt.text.replace("\n", " "))
+		print("poortpaneel: ", ptxt)
+		var heeft_plaats := false
+		var heeft_annuleer := false
+		for t in ptxt:
+			if t.begins_with("Plaats"):
+				heeft_plaats = true
+			if t.begins_with("Annuleer"):
+				heeft_annuleer = true
+		_check("het paneel vraagt om bevestiging (Plaats en Annuleer)", heeft_plaats and heeft_annuleer)
+		# Annuleer: er komt niets
+		for bt in pbtn:
+			if bt.text.begins_with("Annuleer"):
+				bt.pressed.emit()
+		_check("Annuleer: geen poort en het voorbeeld is weg", g.gates.list.is_empty() and bm._gate_pending == null and bm._wall_ghost == null)
+		# opnieuw tikken en bevestigen
+		bm._down(10, tap)
+		bm._up(10)
+		var pbtn2: Array = []
+		bm._fill_panel()
+		_buttons(bm.get("_panel"), pbtn2)
+		for bt in pbtn2:
+			if bt.text.begins_with("Plaats"):
+				bt.pressed.emit()
+		_check("Plaats: de poort staat er en is gemaakt van twee muurstukken", g.gates.list.size() == 1 and K.count() == 1)
 	if frames == 142:
 		bm._gate_armed = false
 		var gp: Vector3 = g.gates.list[0].at
@@ -166,6 +196,51 @@ func _process(_d: float) -> bool:
 			if b.text.begins_with("Verkoop"):
 				b.pressed.emit()
 		_check("verkopen haalt de poort weg", g.gates.list.is_empty())
+	if frames == 150:
+		# een rechte muur: je vinger dwaalt zijwaarts af (rij 11 -> +2,5 stuk omlaag), de muur blijft recht langs rij 11
+		bm._wall_armed = true
+		bm._wall_mode = "lijn"
+		var n0: int = K.count()
+		var row := 11
+		for r in [11, 12, 13, 10, 9]:   # een vat of dergelijks kan een plek blokkeren: kies een rij die vrij is
+			if int(K.plan(K.line_path(Vector2i(6, r), Vector2i(9, r))).built) == 3:
+				row = r
+				break
+		var a0 := _screen(K.vertex(Vector2i(6, row)))
+		var a1 := _screen(K.vertex(Vector2i(9, row))) + Vector2(0, 38)
+		bm._down(12, a0)
+		bm._move(12, a0.lerp(a1, 0.5))
+		bm._move(12, a1)
+		var rows := {}
+		for e in bm._wall_plan.edges:
+			rows[Vector2i(e.key.y, e.key.w)] = true
+		_check("de muur blijft recht ondanks een afdwalende vinger (%s)" % str(rows.keys()), rows.size() == 1 and bm._wall_plan.edges.size() == 3)
+		var states := []
+		for e in bm._wall_plan.edges:
+			states.append(e.state)
+		print("rij 11 stukken: ", states, " ", bm._wall_plan.get("reason", ""))
+		bm._up(12)
+		_check("drie rechte muurstukken gebouwd (%d -> %d)" % [n0, K.count()], K.count() == n0 + 3)
+		# aansluiten: een nieuwe lijn begint aan het eind van de vorige, ook als je er 1,5 m naast tikt
+		var end: Vector3 = K.vertex(Vector2i(9, row))
+		_check("een nieuwe muur sluit aan op het eind van een bestaande", K.snap_start(end + Vector3(1.4, 0, 1.0)) == Vector2i(9, row))
+	if frames == 156:
+		# vierkant: één sleep van hoek naar hoek = vier muren
+		bm._wall_mode = "vierkant"
+		var n1: int = K.count()
+		var o := 3
+		for cand in [3, 2, 1, 4]:   # idem: een vierkant waarvan alle 12 stukken kunnen
+			if int(K.plan(K.rect_path(Vector2i(cand, cand), Vector2i(cand + 3, cand + 3))).built) == 12:
+				o = cand
+				break
+		var c0 := _screen(K.vertex(Vector2i(o, o)))
+		var c1 := _screen(K.vertex(Vector2i(o + 3, o + 3)))
+		bm._down(13, c0)
+		bm._move(13, c0.lerp(c1, 0.5))
+		bm._move(13, c1)
+		_check("voorbeeld van een vierkant: 12 stukken", int(bm._wall_plan.built) == 12)
+		bm._up(13)
+		_check("het vierkant staat er (12 stukken)", K.count() == n1 + 12)
 		print("klaar, fouten: ", fails)
 		quit(1 if fails > 0 else 0)
 	return false

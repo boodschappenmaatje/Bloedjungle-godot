@@ -35,7 +35,7 @@ var base_max := Data.BASE_HP
 var hq_level := 1   # niveau van het hoofdkwartier (1..3)
 var artillery_cd := 0.0   # s tot het artilleriecommando (HK niveau 3) weer klaar is; loopt in HqPerks
 var prep_t := 0.0
-var mcv_deployed := false   # MCV-start: de wagen is uitgeklapt, het hoofdkwartier staat en de klok loopt (Data.mcv_mode)
+var mcv_deployed := false   # MCV-start: de wagen is uitgeklapt, het hoofdkwartier staat en de klok loopt
 var base_pos := Vector3.ZERO   # midden van het hoofdkwartier; in het oude spel de oorsprong
 var free_wall := true          # MCV-start: de eerste complete omheining rond het hoofdkwartier is gratis (Kampmuur); false zodra hij af is
 var free_towers := 0          # MCV-start: gratis wachttorens die je nog mag neerzetten (4 na het uitklappen), daarna 100 per stuk
@@ -87,7 +87,7 @@ var streak_bank: Array = []     # ids uit Streak.LADDER die klaarstaan, oudste e
 var streak_given := {}          # id -> true: deze streak al uitgereikt
 var streak_t := -100.0          # tijd (s) van de laatste streak-kill: de teller komt dan even in beeld
 var streak_air := {"truck": 0, "napalm": 0}  # beloningen die je dit spel hebt gebruikt (voor de samenvatting)
-var power := true:   # stroom in de basis en de straatlantaarns; valt uit als de generator kapot is (Generator)
+var power := true:   # stroom in de basis en de straatlantaarns (de generator komt later terug als gebouw: Generals-plan A4)
 	set(v):
 		if v != power:
 			power = v
@@ -118,16 +118,6 @@ func note_blast(at: Vector3, radius: float) -> void:
 			var d: float = e.global_position.distance_to(at)
 			if d > radius + 0.5 and d < radius * 2.4 + 3.0:
 				e.flinch(at)
-
-
-## Wat het kost om de generator te repareren (0 = heel).
-func generator_cost() -> int:
-	return Generator.inst.repair_cost() if Generator.inst != null else 0
-
-
-## Wat het kost om de wachthuisjes en slagbomen te repareren (0 = alles heel).
-func wachtpost_cost() -> int:
-	return Wachtpost.inst.total_repair_cost() if Wachtpost.inst != null else 0
 
 
 ## Was er net (binnen een kwart seconde) een explosie waar iemand op deze plek binnen de straal viel? Geeft {at, r} of een leeg woordenboek.

@@ -33,7 +33,6 @@ var cover_pt := Vector3.ZERO
 var hurt_t := 99.0
 var alert_t := 0.0
 var flank_left := 7.0
-var gate_z := 0.0  # voorkeurspoort (z) om de bunker van twee kanten te nemen; 0 = klaar of niet van toepassing
 var retreated := false
 var path: Array = []  # vaste aanvalsroute (aanval_routes.gd): deze punten eerst aflopen
 var path_i := 0
@@ -66,8 +65,6 @@ func setup(kind: String, wave: int) -> void:
 	slot = Game.next_slot()
 	if kind in ["rifle", "assault"] and slot % 3 == 1:
 		role = "flank"
-	if not t.get("melee", false) and not Data.mcv_mode:
-		gate_z = Route.OUT if slot % 2 == 0 else -Route.OUT
 
 
 func _ready() -> void:
@@ -189,13 +186,6 @@ func _physics_process(delta: float) -> void:
 		flanking = true
 	elif not at_player and rb == null and _route_goal() != null:
 		move_goal = _route_goal()
-	elif not at_player and rb == null and gate_z != 0.0:
-		# om beurten de noord- en zuidpoort nemen, zodat niet iedereen door dezelfde opening komt
-		var gp := Vector3(0.0, 0.0, gate_z)
-		if _flat(gp - global_position).length() < 4.0 or _inside_wall(global_position):
-			gate_z = 0.0
-		else:
-			move_goal = gp
 	var hold := 1.0 if melee else 0.65 + 0.1 * float(slot % 4)  # schutters houden verschillende afstanden aan (gelaagd, niet in een kluitje)
 	var cover_look := 0.0
 	if tactical:
@@ -268,7 +258,7 @@ func _physics_process(delta: float) -> void:
 					_start_assault_reload()
 
 	# MCV-start: een muur (of poort) van het kamp in de weg: erop slaan of schieten tot hij kapot is, net als bij de poort van het oude kamp
-	var wall: Variant = _wall_ahead(move_goal, delta) if want_move and Data.mcv_mode else null
+	var wall: Variant = _wall_ahead(move_goal, delta) if want_move else null
 	if wall != null:
 		want_move = false
 		var wall_at: Vector3 = wall.at
@@ -527,10 +517,6 @@ func _wall_ahead(goal: Vector3, delta: float) -> Variant:
 		if not ref.is_empty() and Game.buildings.has(ref) and (ref.kind == "kampmuur" or ref.kind == "poort"):
 			_wall_cache = ref
 	return _wall_cache
-
-
-static func _inside_wall(p: Vector3) -> bool:
-	return absf(p.x) < Data.COMPOUND and absf(p.z) < Data.COMPOUND
 
 
 func _bunker_dist() -> float:

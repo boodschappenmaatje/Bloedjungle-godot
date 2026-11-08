@@ -7,8 +7,7 @@ extends Control
 
 const CARD_H := 78.0
 const GAP := 8.0
-const ORDER := ["depot", "kazerne", "garage", "helipad", "airfield", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "muur"]
-const ORDER_MCV := ["depot", "kazerne", "garage", "helipad", "airfield", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "kampmuur", "poort", "wachttoren"]   # MCV-start: de kampmuur trek je met je vinger
+const ORDER := ["depot", "kazerne", "garage", "helipad", "airfield", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "kampmuur", "poort", "wachttoren"]
 const ORDERS := {"follow": "Volgen", "hold": "Posten"}
 
 var _ui: Control
@@ -25,6 +24,8 @@ var _airfield_rotate_btn: Button
 var _sel: Variant = null
 var _gate_armed := false   # MCV-start: het kaartje POORT is gekozen; tik op een muurstuk om er een poort van te maken
 var _gate_sel: Variant = null   # MCV-start: de aangetikte poort (paneel met repareren en verkopen)
+var _wall_mode := "lijn"   # "lijn": een rechte muur (de richting blijft vast, zijwaarts schuiven van je vinger doet niets) of "vierkant": een rechthoek in één sleep
+var _gate_pending: Variant = null   # MCV-start: [muurstuk, buurstuk, middelpunt] waar de poort komt zodra je bevestigt
 var _wall_armed := false   # MCV-start: de kampmuur is gekozen; slepen over de grond trekt een muur
 var _wall_plan: Dictionary = {}
 var _wall_ghost: Node3D
@@ -117,7 +118,7 @@ class Card:
 			"zandzak":
 				for p in [[14, 36], [32, 36], [50, 36], [23, 27], [41, 27], [32, 18]]:
 					_ell(r, p[0], p[1], 9, 5, Color("8a7a50"))
-			"muur", "kampmuur":
+			"kampmuur":
 				_rc(r, 4, 40, 56, 3, Color("5e5e58"))
 				for x in [6, 24, 42]:
 					_rc(r, x, 14, 16, 26, Color("9a978c"))
@@ -171,18 +172,13 @@ class Card:
 				_ell(r, 20, 33, 3, 3, Color("c9a227"))
 
 
-## De kaartjes onderin. De MCV-start zet Data.mcv_mode pas als je op START MISSIE drukt, ná het laden van dit scherm: daarom bouwt _enter() ze opnieuw
-## als de modus sindsdien veranderde (anders zie je de oude Betonmuur in plaats van Kampmuur, Poort en Wachttoren).
-var _cards_mcv := false
-
-
+## De kaartjes onderin.
 func _build_cards() -> void:
 	for c in _cards:
 		if is_instance_valid(c):
 			c.queue_free()
 	_cards.clear()
-	_cards_mcv = Data.mcv_mode
-	for k in (ORDER_MCV if Data.mcv_mode else ORDER):
+	for k in ORDER:
 		var c := Card.new()
 		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		c.kind = k
@@ -291,9 +287,6 @@ func _enter() -> void:
 	if Game.player.elev > 0.5:
 		Game.banner.emit("KOM EERST VAN DE TOREN", "", 1.4)
 		return
-	if _cards_mcv != Data.mcv_mode:
-		_build_cards()
-		_layout()
 	Game.build_mode = true
 	_airfield_armed = false
 	Game.airfield_build_view = false
@@ -328,6 +321,7 @@ func _exit() -> void:
 	_wall_armed = false
 	_gate_armed = false
 	_gate_sel = null
+	_gate_pending = null
 	_wall_clear_ghost()
 	_flag_for = null
 	if _ghost:
@@ -473,8 +467,10 @@ func _wall_show(plan: Dictionary) -> void:
 		mi.visible = true
 		mi.position = Vector3(e.at.x, 0.3, e.at.z)
 		mi.rotation.y = e.yaw
-		var col: Color = {"ok": Color(0.2, 0.9, 0.3, 0.55), "slecht": Color(0.95, 0.2, 0.15, 0.6), "duur": Color(1.0, 0.65, 0.15, 0.6)}.get(e.state, Color.WHITE)
+		var col: Color = {"ok": Color(0.2, 0.9, 0.3, 0.55), "slecht": Color(0.95, 0.2, 0.15, 0.6), "duur": Color(1.0, 0.65, 0.15, 0.6), "poort": Color(1.0, 0.82, 0.2, 0.7)}.get(e.state, Color.WHITE)
 		(mi.material_override as StandardMaterial3D).albedo_color = col
+	if plan.has("quiet"):
+		return
 	var n := int(plan.built)
 	var cost := int(plan.cost)
 	_say(("%d stukken · %s" % [n, "GRATIS" if cost == 0 else "%d pt" % cost]) if n > 0 else "Sleep verder om een muur te trekken", UI.INK_DIM, 1.2)
@@ -582,6 +578,92 @@ func _fill_hq_panel() -> void:
 			Game.changed.emit())
 
 
+## Voorbeeld van de poort (goud): de twee muurstukken die hij vervangt.
+func _gate_preview(pair: Array) -> void:
+	var edges: Array = []
+	for k in [pair[0], pair[1]]:
+		edges.append({"key": k, "at": Kampmuur.edge_center(k), "yaw": Kampmuur.edge_yaw(k), "state": "poort"})
+	_wall_show({"edges": edges, "cost": Kampmuur.GATE_COST, "built": 2, "quiet": true})
+
+
+## Het paneel van een poort die je nog moet bevestigen: zo komt hij nooit ergens waar je hem niet wilt.
+func _fill_gate_pending_panel() -> void:
+	_panel.visible = true
+	if _ring:
+		_ring.visible = false
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 6)
+	_panel.add_child(vb)
+	var head := HBoxContainer.new()
+	vb.add_child(head)
+	head.add_child(UI.label("POORT HIER?", UI.display(1), 18, UI.INK))
+	var info := Label.new()
+	info.add_theme_font_override("font", UI.body(600, 0))
+	info.add_theme_font_size_override("font_size", 13)
+	info.add_theme_color_override("font_color", UI.INK_DIM)
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.custom_minimum_size.x = 226
+	info.text = "De poort vervangt de twee gouden muurstukken (7 m). Tik op een ander muurstuk om hem te verplaatsen."
+	vb.add_child(info)
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 6)
+	vb.add_child(row)
+	var pair: Array = _gate_pending
+	_act(row, "Plaats", "%d pt" % Kampmuur.GATE_COST, Game.can_afford_build(Kampmuur.GATE_COST), func():
+		var r: Dictionary = Kampmuur.place_gate(pair[0], pair[2])
+		_gate_pending = null
+		_wall_clear_ghost()
+		if r.ok:
+			_gate_armed = false
+		_say("POORT GEPLAATST" if r.ok else String(r.reason).to_upper(), UI.INK_DIM if r.ok else Color("ff7a6a"), 2.0)
+		Game.changed.emit())
+	_act(row, "Annuleer", "", true, func():
+		_gate_pending = null
+		_wall_clear_ghost()
+		Game.changed.emit())
+
+
+## Het paneel van de kampmuur: rechte lijn of vierkant, en wat er nog gratis is.
+func _fill_wall_panel() -> void:
+	_panel.visible = true
+	if _ring:
+		_ring.visible = false
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 6)
+	_panel.add_child(vb)
+	var head := HBoxContainer.new()
+	vb.add_child(head)
+	head.add_child(UI.label("KAMPMUUR", UI.display(1), 18, UI.INK))
+	var info := Label.new()
+	info.add_theme_font_override("font", UI.body(600, 0))
+	info.add_theme_font_size_override("font_size", 13)
+	info.add_theme_color_override("font_color", UI.INK_DIM)
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.custom_minimum_size.x = 226
+	var left := Kampmuur.free_left()
+	var price := "Gratis: nog %d stukken tot je omheining compleet is." % left if left > 0 else "Elk stuk kost %d." % Kampmuur.COST
+	info.text = ("LIJN: sleep een rechte muur; de richting blijft vast, je vinger mag afdwalen." if _wall_mode == "lijn" else "VIERKANT: sleep van hoek naar hoek en je krijgt vier muren in één keer.") + " " + price
+	vb.add_child(info)
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 6)
+	vb.add_child(row)
+	for m in [["lijn", "Lijn"], ["vierkant", "Vierkant"]]:
+		var mode: String = m[0]
+		var b := Button.new()
+		b.add_to_group("hud_button")
+		b.text = ("✓ " if _wall_mode == mode else "") + String(m[1])
+		UI.style_button(b, "buy" if _wall_mode == mode else "pause")
+		b.add_theme_font_size_override("font_size", 13)
+		b.custom_minimum_size = Vector2(100, 44)
+		b.pressed.connect(func():
+			_wall_mode = mode
+			Sfx.play("click")
+			Game.changed.emit())
+		row.add_child(b)
+
+
 func _fill_panel() -> void:
 	for ch in _panel.get_children():
 		ch.queue_free()
@@ -596,6 +678,12 @@ func _fill_panel() -> void:
 			return
 	if _hq_open:
 		_fill_hq_panel()
+		return
+	if _gate_pending != null and _sel == null:
+		_fill_gate_pending_panel()
+		return
+	if _wall_armed and _sel == null:
+		_fill_wall_panel()
 		return
 	var st: Variant = _sel
 	_panel.visible = st != null
@@ -669,6 +757,8 @@ func _fill_panel() -> void:
 		vb.add_child(rij)
 		vb.move_child(rij, row.get_index())
 		_act(row, "Schutter", "%d pt" % Buildings.TRAIN_COST, Game.builds.room(b) > 0 and b.queue < Buildings.RIJ_MAX and Game.points >= Buildings.TRAIN_COST, func(): Game.builds.recruit(b))
+		var nw: int = Game.builds.wachten_of(b).size()
+		_act(row, "Wacht", "%d pt · %d/%d" % [Wachten.COST, nw, Wachten.MAX_PER_KAZERNE], Game.builds.can_buy_wacht(b), func(): Game.builds.buy_wacht(b))
 		_act(row, "Vlag", "zet punt", true, func():
 			_flag_for = b
 			_say("Tik op de grond voor het verzamelpunt", UI.INK_DIM, 3.0))
@@ -866,13 +956,17 @@ func _down(id: int, pos: Vector2) -> void:
 				Game.airfield_build_view = false
 				_wall_armed = false
 				_gate_armed = not _gate_armed
+				_gate_pending = null
+				_wall_clear_ghost()
 				_hq_open = false
 				_gate_sel = null
 				_sel = null
 				_fill_panel()
-				_say("Tik op een muurstuk om er samen met zijn buur een poort van te maken · tik weer op POORT om te stoppen" if _gate_armed else "Poort plaatsen uit", UI.INK_DIM, 5.0)
+				_say("Tik op het muurstuk waar de poort moet komen; je ziet eerst een voorbeeld en bevestigt zelf · tik weer op POORT om te stoppen" if _gate_armed else "Poort plaatsen uit", UI.INK_DIM, 5.0)
 			elif c.kind == "kampmuur":
 				_gate_armed = false
+				_gate_pending = null
+				_wall_clear_ghost()
 				_airfield_armed = false
 				Game.airfield_build_view = false
 				_wall_armed = not _wall_armed
@@ -915,13 +1009,13 @@ func _down(id: int, pos: Vector2) -> void:
 		_fill_panel()
 		return
 	var st = _struct_at(g)
-	var gate_hit: Variant = Game.gates.gate_at(g) if (Data.mcv_mode and Game.gates != null) else null
+	var gate_hit: Variant = Game.gates.gate_at(g) if Game.gates != null else null
 	if _gate_armed and st != null and st.kind == "kampmuur":
 		_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id, "gate_make": st, "at": g}   # tik = poort maken, slepen = kaart
 	elif gate_hit != null and not _wall_armed:
 		_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id, "gate_tap": gate_hit}
 	elif _wall_armed and (st == null or st.kind == "kampmuur"):
-		_drag = {"wall": true, "st": st, "sp": pos, "moved": false, "id": id, "path": [Kampmuur.snap(g)]}   # tik = muurstuk selecteren, slepen = muur trekken
+		_drag = {"wall": true, "st": st, "sp": pos, "moved": false, "id": id, "path": [Kampmuur.snap_start(g)], "axis": ""}   # tik = muurstuk selecteren, slepen = muur trekken
 	elif st != null and st.kind == "kampmuur":
 		_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id, "wall_tap": st}   # een muurstuk zit vast op het rooster: alleen tikken (selecteren), slepen = kaart
 	elif st != null:
@@ -977,8 +1071,31 @@ func _move(id: int, pos: Vector2) -> void:
 		if gw == null:
 			return
 		var vtx := Kampmuur.snap(gw)
-		if vtx != _drag.path[_drag.path.size() - 1]:
-			Kampmuur.extend(_drag.path, vtx)
+		var start: Vector2i = _drag.path[0]
+		var new_path: Array
+		if _wall_mode == "vierkant":
+			new_path = Kampmuur.rect_path(start, vtx)
+		else:
+			# een rechte lijn: de richting wordt vastgelegd zodra je meer dan een stuk weg bent van het begin, en je vinger mag daarna zijwaarts afdwalen
+			var d := vtx - start
+			var axis: String = _drag.get("axis", "")
+			if absi(d.x) < 1 and absi(d.y) < 1:
+				axis = ""
+			elif axis == "":
+				axis = "x" if absi(d.x) >= absi(d.y) else "y"
+			elif axis == "x" and absi(d.y) >= absi(d.x) + 3:
+				axis = "y"   # je gaat duidelijk een andere kant op
+			elif axis == "y" and absi(d.x) >= absi(d.y) + 3:
+				axis = "x"
+			_drag["axis"] = axis
+			var end := start
+			if axis == "x":
+				end = Vector2i(vtx.x, start.y)
+			elif axis == "y":
+				end = Vector2i(start.x, vtx.y)
+			new_path = Kampmuur.line_path(start, end)
+		if new_path != _drag.path:
+			_drag.path = new_path
 			_wall_plan = Kampmuur.plan(_drag.path)
 			_wall_show(_wall_plan)
 		return
@@ -1045,9 +1162,17 @@ func _up(id: int) -> void:
 		return
 	if d.get("pan", false):
 		if not d.moved and d.get("gate_make") != null:
-			var r: Dictionary = Kampmuur.place_gate(d.gate_make.edge, d.at)
-			_say("POORT GEPLAATST" if r.ok else String(r.reason).to_upper(), UI.INK_DIM if r.ok else Color("ff7a6a"), 2.0)
-			Game.changed.emit()
+			_sel = null
+			_sell_arm = null
+			var pair: Variant = Kampmuur.gate_pair(d.gate_make.edge, d.at)
+			if pair == null:
+				_gate_pending = null
+				_wall_clear_ghost()
+				_say("EEN POORT HEEFT TWEE MUURSTUKKEN NAAST ELKAAR NODIG")
+			else:
+				_gate_pending = pair   # eerst een voorbeeld; pas bij Plaats komt de poort er echt
+				_gate_preview(pair)
+			_fill_panel()
 		elif not d.moved and d.get("gate_tap") != null:
 			_sel = null
 			_hq_open = false
@@ -1170,16 +1295,8 @@ func _clamp_pan() -> void:
 		Game.bcam.x = (min_x + max_x) * 0.5 if min_x > max_x else clampf(Game.bcam.x, min_x, max_x)
 		Game.bcam.y = (min_z + max_z) * 0.5 if min_z > max_z else clampf(Game.bcam.y, min_z, max_z)
 		return
-	if Data.mcv_mode:
-		Game.bcam.x = clampf(Game.bcam.x, -Data.WORLD_X + 6.0, Data.WORLD_X - 6.0)
-		Game.bcam.y = clampf(Game.bcam.y, -Data.WORLD_Z_N + 6.0, Data.WORLD_Z_S - 6.0)
-		return
-	var m := Data.WORLD_R - 6.0
-	var v := Vector2(Game.bcam.x, Game.bcam.y)
-	if v.length() > m:
-		v = v.normalized() * m
-		Game.bcam.x = v.x
-		Game.bcam.y = v.y
+	Game.bcam.x = clampf(Game.bcam.x, -Data.WORLD_X + 6.0, Data.WORLD_X - 6.0)
+	Game.bcam.y = clampf(Game.bcam.y, -Data.WORLD_Z_N + 6.0, Data.WORLD_Z_S - 6.0)
 
 
 # ---------------------------------------------------------------- spookbeeld en selectiering

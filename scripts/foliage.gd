@@ -273,8 +273,8 @@ static func collider_is_clearable(collider: Object) -> bool:
 		return false
 	if collider.has_meta("clearable_vegetation") and bool(collider.get_meta("clearable_vegetation")):
 		return true
-	# MCV-start (Dennis, 7 nov): bij het uitklappen en bouwen verdwijnt alles wat er staat, ook rotsen
-	return Data.mcv_mode and collider.has_meta("vegetation_kind") and String(collider.get_meta("vegetation_kind")) == "rock"
+	# bij het uitklappen en bouwen verdwijnt alles wat er staat, ook rotsen
+	return collider.has_meta("vegetation_kind") and String(collider.get_meta("vegetation_kind")) == "rock"
 
 
 static func _register_vegetation(entry: Dictionary) -> Dictionary:
@@ -342,7 +342,7 @@ static func _entries_for_build_regions(regions: Array, at: Vector3, yaw: float, 
 
 
 static func count_clearable_in_regions(regions: Array, at: Vector3, yaw: float, margin := BUILD_CLEAR_MARGIN) -> int:
-	return _entries_for_build_regions(regions, at, yaw, margin, Data.mcv_mode).size()
+	return _entries_for_build_regions(regions, at, yaw, margin, true).size()
 
 
 ## rocks = true: ook rotsen verdwijnen (de wegen van de voorraadtrucks, voorraad.gd).
@@ -705,27 +705,27 @@ static func _scatter(rng: RandomNumberGenerator, count: int, r_min: float, r_max
 		var r := sqrt(rng.randf_range(r_min * r_min, r_max * r_max))
 		var a := rng.randf() * TAU
 		var p := Vector3(cos(a) * r, 0, sin(a) * r)
-		if maxf(absf(p.x), absf(p.z)) < Data.COMPOUND + 1.8:
+		if maxf(absf(p.x), absf(p.z)) < Data.START_CLEAR + 1.8:
 			continue
-		if absf(p.x) < 4.6 and absf(p.z) > Data.COMPOUND and absf(p.z) < 70.0:
-			continue  # pad vanaf de poorten
-		if p.x > Data.COMPOUND and p.x < Data.COMPOUND + 11.5 and absf(p.z) < 23.0:
-			continue  # tankbaan langs de oostmuur
+		if absf(p.x) < 4.6 and absf(p.z) > Data.START_CLEAR and absf(p.z) < 70.0:
+			continue  # kale strook noord en zuid van de startplek (het vroegere pad van de poorten)
+		if p.x > Data.START_CLEAR and p.x < Data.START_CLEAR + 11.5 and absf(p.z) < 23.0:
+			continue  # kale strook ten oosten van de startplek (de vroegere tankbaan)
 		if _in_river(p):
 			continue
 		_add(rng, out, cols, p, s_min, s_max, tilt)
 
 
-## Added southern jungle on the already-rendered 440 m terrain plate. The gate exit stays clear.
+## Added southern jungle on the already-rendered 440 m terrain plate.
 static func _south_scatter(rng: RandomNumberGenerator, kind: String, count: int, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
 	var added := 0
 	var tries := 0
-	var min_z := Data.COMPOUND + 48.0
+	var min_z := Data.START_CLEAR + 48.0
 	var max_z := Data.WORLD_Z_S - 9.0
 	while added < count and tries < count * 50:
 		tries += 1
 		var p := Vector3(rng.randf_range(-Data.WORLD_X + 10.0, Data.WORLD_X - 10.0), 0.0, rng.randf_range(min_z, max_z))
-		if absf(p.x) < Data.GATE_GAP + 3.0 or _in_river(p):
+		if absf(p.x) < Data.START_ROAD_HALF + 3.0 or _in_river(p):
 			continue
 		if kind == "rock":
 			var reserved := false
@@ -777,7 +777,7 @@ static func _strip(rng: RandomNumberGenerator, kind: String, count: int, out: Ar
 		var x := rng.randf_range(-Data.WORLD_X + 2.0, Data.WORLD_X - 2.0)
 		var north := rng.randf() < 0.3
 		var zr := Data.river_z(x)
-		var z := rng.randf_range(-Data.FOLIAGE_Z_N + 3.0, zr - Data.RIVER_HALF - 1.2) if north else rng.randf_range(zr + Data.RIVER_HALF + 1.2, -Data.COMPOUND - 2.0)
+		var z := rng.randf_range(-Data.FOLIAGE_Z_N + 3.0, zr - Data.RIVER_HALF - 1.2) if north else rng.randf_range(zr + Data.RIVER_HALF + 1.2, -Data.START_CLEAR - 2.0)
 		var p := Vector3(x, 0, z)
 		if _in_river(p):
 			continue
@@ -811,7 +811,7 @@ static func logs(parent: Node3D, seed_ := 41) -> void:
 	while xf.size() < 30 and tries < 800:
 		tries += 1
 		var x := rng.randf_range(-Data.WORLD_X + 3.0, Data.WORLD_X - 3.0)
-		var p := Vector3(x, 0.32, rng.randf_range(Data.river_z(x) + 5.0, -Data.COMPOUND - 3.0))
+		var p := Vector3(x, 0.32, rng.randf_range(Data.river_z(x) + 5.0, -Data.START_CLEAR - 3.0))
 		if absf(x) < 6.0 or _in_river(p) or Data.strip_zone(x) == "moeras" and rng.randf() < 0.5:
 			continue
 		var len_ := rng.randf_range(3.5, 7.0)

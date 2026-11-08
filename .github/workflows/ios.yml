@@ -81,7 +81,7 @@ jobs:
           set -euo pipefail
           # Check required regression-test files before starting Godot. Godot can
           # report missing -s scripts without a failing process exit code.
-          for required in tests/base_wall_hq2_test.gd tests/surface_filtering_test.gd tests/bunker_hq_replacement_test.gd tests/bunker_hq_replacement_test.tscn tests/soldaat_vq2_test.gd; do
+          for required in tests/surface_filtering_test.gd tests/bunker_hq_replacement_test.gd tests/bunker_hq_replacement_test.tscn tests/soldaat_vq2_test.gd; do
             if [[ ! -f "$required" ]]; then
               echo "::error::Missing required regression test: $required" >&2
               exit 1
@@ -92,17 +92,6 @@ jobs:
           "$GODOT_BIN" --headless --path . -s tests/surface_filtering_test.gd --quit-after 600 2>&1 | tee "$RUNNER_TEMP/surface_filtering_test.log"
           grep -Fq 'SURFACE FILTERING TEST PASS' "$RUNNER_TEMP/surface_filtering_test.log"
           if grep -Eq 'SCRIPT ERROR:|ERROR:' "$RUNNER_TEMP/surface_filtering_test.log"; then exit 1; fi
-          "$GODOT_BIN" --headless --path . -s tests/base_wall_hq2_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/base_wall_hq2_test.log"
-          "$GODOT_BIN" --headless --path . -s tests/wall_diagnostics_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/wall_diagnostics_test.log"
-          grep -Fq "WALL DIAGNOSTICS TEST PASS" "$RUNNER_TEMP/wall_diagnostics_test.log"
-          if ! grep -Fq 'BASE WALL HQ2 TEST PASS' "$RUNNER_TEMP/base_wall_hq2_test.log"; then
-            echo "::error::Base Wall HQ 2.0 regression did not reach PASS" >&2
-            exit 1
-          fi
-          if grep -Eq 'SCRIPT ERROR:|ERROR:' "$RUNNER_TEMP/base_wall_hq2_test.log"; then
-            echo "::error::Base Wall HQ 2.0 regression emitted a Godot error" >&2
-            exit 1
-          fi
           # Watchdogs avoid spending the entire 45-minute runner budget on a
           # GDScript exception that strands an awaited test before its quit().
           "$GODOT_BIN" --headless --path . res://tests/bunker_hq_replacement_test.tscn --fixed-fps 60 --quit-after 1800 2>&1 | tee "$RUNNER_TEMP/bunker_hq_replacement_test.log"
@@ -156,8 +145,6 @@ jobs:
             ${{ runner.temp }}/import.log
             ${{ runner.temp }}/startup.log
             ${{ runner.temp }}/surface_filtering_test.log
-            ${{ runner.temp }}/base_wall_hq2_test.log
-            ${{ runner.temp }}/wall_diagnostics_test.log
             ${{ runner.temp }}/bunker_hq_replacement_test.log
             ${{ runner.temp }}/soldaat_vq2_test.log
             ${{ runner.temp }}/m1911_ammo_reload_test.log

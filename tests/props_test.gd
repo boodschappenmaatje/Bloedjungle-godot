@@ -37,14 +37,8 @@ func _process(_d: float) -> bool:
 			for n in ["Zandzak1", "Zandzak2", "Zandzak3"]:
 				if mm.multimesh.mesh == kit.call("prop_mesh", n):
 					bags += mm.multimesh.instance_count
-		_check(crates >= 8, "de voorraadhoek heeft kisten nodig (%d)" % crates)
-		_check(bags >= 20, "de zandzakrijen langs de muur gebruiken de nieuwe zakken (%d)" % bags)
-		# je loopt er niet doorheen
-		var game := root.get_node("Game")
-		var p: CharacterBody3D = game.player
-		var c: float = (load("res://scripts/data.gd") as GDScript).get("COMPOUND")
-		var at := Vector3(-c + 6.5, 0.0, -c + 5.5)
-		_check(p.test_move(Transform3D(Basis.IDENTITY, at + Vector3(-3.0, 0.0, 0.0)), Vector3(6.0, 0, 0)), "speler loopt dwars door de kisten")
+		# (de voorraadhoek en de zandzakrijen langs de vaste muur van het oude kamp bestaan niet meer; de zandzakken rond het hoofdkwartier wel)
+		_check(bags >= 4, "de zandzakring rond het hoofdkwartier gebruikt de nieuwe zakken (%d)" % bags)
 		print("props: kisten %d zandzakken %d" % [crates, bags])
 		print("PROPS TEST ", "OK" if fails == 0 else "FOUT")
 		quit(1 if fails > 0 else 0)

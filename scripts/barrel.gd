@@ -243,15 +243,13 @@ static func area_damage(at: Vector3, radius: float, dmg: float) -> void:
 				e.hit(dmg * (1.0 - d / radius * 0.7), (e.global_position - at).normalized(), true)
 	if Game.builds:
 		Game.builds.blast(at, radius, dmg, true)
-	Wachtpost.blast(at, radius, dmg)
-	Generator.blast(at, radius, dmg)
 	VijandHk.blast(at, radius, dmg)
 	VijandM2Toren.blast(at, radius, dmg)
 	if Game.gates:
 		for i in Game.gates.list.size():
 			var gt: Dictionary = Game.gates.list[i]
 			var gp: Vector3 = Game.gates.pos_of(gt)
-			var gd: float = maxf(0.0, Vector2(gp.x - at.x, gp.z - at.z).length() - Data.GATE_GAP)
+			var gd: float = maxf(0.0, Vector2(gp.x - at.x, gp.z - at.z).length() - Gates.G)
 			if not gt.broken and gd < radius:
 				Game.gates.damage(i, dmg * 0.35 * (1.0 - gd / radius), "explosive")
 	var p = Game.player

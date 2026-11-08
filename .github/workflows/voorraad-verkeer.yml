@@ -12,6 +12,8 @@ on:
       - "tests/voorraad_verkeer_test.gd"
       - "tests/voorraad_kort_test.gd"
       - "tests/voorraad_uitrit_test.gd"
+      - "tests/voorraad_weg_test.gd"
+      - "scripts/build_mode.gd"
       - "scripts/buildings.gd"
       - ".github/workflows/voorraad-verkeer.yml"
   workflow_dispatch:
@@ -44,7 +46,7 @@ jobs:
       - name: Baan- en voorraadtests
         run: |
           set -e
-          for script in tests/voorraad_baan_test.gd tests/voorraad_test.gd tests/voorraad_kort_test.gd tests/voorraad_uitrit_test.gd; do
+          for script in tests/voorraad_baan_test.gd tests/voorraad_test.gd tests/voorraad_kort_test.gd tests/voorraad_uitrit_test.gd tests/voorraad_weg_test.gd; do
             timeout 360 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script "$script" --fixed-fps 60
           done
       - name: Verkeerstest (drie trucks, stad, gekochte truck)

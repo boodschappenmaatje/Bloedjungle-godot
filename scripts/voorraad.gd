@@ -414,14 +414,32 @@ func route(d: Dictionary, slot: int) -> Array:
 ## overkant van de rivier (de stad), dan eerst naar de brug en door de stadsstraat (dezelfde knooppunten als altijd).
 func _route_free(d: Dictionary, slot: int) -> Array:
 	var site: Dictionary = stapels[slot].site
+	var mids := _route_mids(site)
+	var goal: Vector2 = mids[0] if not mids.is_empty() else site.pos
+	var out: Array = _route_head(d, goal)
+	var prev: Vector2 = out[out.size() - 1] if out.size() > 2 else out[1]
+	if not mids.is_empty():
+		prev = mids[mids.size() - 1]
+	for m in mids:
+		out.append(m)
+	out.append(stop_point(site, prev))
+	return _merge_close(out)
+
+
+## De tussenpunten naar een stapel: bij een stapel aan de overkant van de rivier eerst naar de brug en door de stadsstraat, anders geen.
+func _route_mids(site: Dictionary) -> Array:
 	var sp: Vector2 = site.pos
-	var out: Array = [dock_point(d), pre_dock_point(d)]
 	var mids: Array = []
 	if sp.y < Data.river_z(sp.x) - Data.RIVER_HALF:
 		mids.append(Vector2(Data.BRIDGE_X, Data.river_z(Data.BRIDGE_X) + 10.0))
 		for id in _astar.get_id_path(_ids["brug"], _ids[site.via]):
 			mids.append(_astar.get_point_position(id))
-	var goal: Vector2 = mids[0] if not mids.is_empty() else sp
+	return mids
+
+
+## Het begin van elke route: het dock, het eind van de uitrit, een eventuele lus en (bij een omheining) de weg door de poort. `goal`: het eerste punt daarna.
+func _route_head(d: Dictionary, goal: Vector2) -> Array:
+	var out: Array = [dock_point(d), pre_dock_point(d)]
 	# wijst de uitrit van de bestemming af, dan maakt de weg aan het eind een ruime lus (anders draaien heen en terug in dezelfde bocht om elkaar heen)
 	var front := Vector2(sin(float(d.yaw)), cos(float(d.yaw)))
 	var turn := front.angle_to((goal - (out[1] as Vector2)).normalized())
@@ -433,13 +451,7 @@ func _route_free(d: Dictionary, slot: int) -> Array:
 	# staat er een muur tussen (je hebt een omheining), dan door de poort
 	for pt in _gate_detour(out[out.size() - 1], goal):
 		out.append(pt)
-	var prev: Vector2 = out[out.size() - 1] if out.size() > 2 else out[1]
-	if not mids.is_empty():
-		prev = mids[mids.size() - 1]
-	for m in mids:
-		out.append(m)
-	out.append(stop_point(site, prev))
-	return _merge_close(out)
+	return out
 
 
 ## Muurstukken (geen poorten) als lijnstukken (x, z) -> (x, z).
@@ -673,8 +685,10 @@ func set_dest(b: Dictionary, slot: int) -> void:
 
 # ---------------------------------------------------------------- het wegdek van de uitrit
 
-## Elk depot krijgt zijn uitrit als wegdek (donker asfalt met een onderbroken middenstreep en randlijnen), zodat je ziet waar de trucks rijden en waar niets mag staan.
-## Het wegdek verdwijnt met het depot en wordt korter als er een muur voor komt.
+const ROAD_TAIL := 8.0          # m: het wegdek loopt zoveel voorbij het laatste punt (de poort of het eind van de uitrit) in de richting van de bestemming
+
+## Elk depot krijgt zijn wegdek (donker asfalt met een onderbroken middenstreep en randlijnen): de uitrit en, per bestemming, de weg tot en door de poort.
+## Zo zie je waar de trucks rijden en waar niets mag staan. Het wegdek verdwijnt met het depot en past zich aan als de muren, poorten of het depot veranderen.
 func _sync_stems() -> void:
 	var live := {}
 	for b in depots():
@@ -682,25 +696,29 @@ func _sync_stems() -> void:
 			continue
 		var key := depot_key(b)
 		live[key] = true
-		var dock := dock_point(b)
-		var length := dock.distance_to(stem_end(dock, float(b.yaw)))
+		var branches := road_branches(b)
+		var sig := str(float(b.yaw)) + "|" + str(branches.map(func(br): return (br as Array).map(func(q): return Vector2(snappedf(q.x, 0.1), snappedf(q.y, 0.1)))))
 		var cur: Variant = _stems.get(key)
-		if cur != null and is_instance_valid(cur.node) and absf(float(cur.length) - length) < 0.3 and absf(float(cur.yaw) - float(b.yaw)) < 0.001:
+		if cur != null and is_instance_valid(cur.node) and String(cur.sig) == sig:
 			continue
 		if cur != null and is_instance_valid(cur.node):
 			(cur.node as Node).queue_free()
-		var node := _stem_node(length)
-		node.position = Vector3(dock.x, 0.0, dock.y)
-		node.rotation.y = float(b.yaw)
+		var node := _road_node(b, branches)
 		add_child(node)
-		_stems[key] = {"node": node, "length": length, "yaw": float(b.yaw)}
-		if b.has("node") and is_instance_valid(b.node):   # bomen, struiken en rotsen op de uitrit verdwijnen (samen met het stuk onder het depot zelf)
+		_stems[key] = {"node": node, "sig": sig}
+		if b.has("node") and is_instance_valid(b.node):   # bomen, struiken en rotsen op het wegdek verdwijnen (samen met het stuk onder het depot zelf)
 			var sz: Vector3 = Buildings.DEFS["depot"].size
-			var half := sz.z * 0.5 + DOCK_OFFSET
-			Foliage.clear_for_building((b.node as Node).get_instance_id(), [
-				{"name": "depot", "center": Vector2.ZERO, "size": Vector2(sz.x, sz.z), "yaw": 0.0},
-				{"name": "uitrit", "center": Vector2(0.0, half + length * 0.5 - 1.0), "size": Vector2(STEM_W + 1.0, length + 6.0), "yaw": 0.0}],
-				Vector3(b.at.x, 0.0, b.at.z), float(b.yaw), Foliage.BUILD_CLEAR_MARGIN, true)
+			var regions: Array = [{"name": "depot", "center": Vector2.ZERO, "size": Vector2(sz.x, sz.z), "yaw": 0.0}]
+			var world_regions: Array = []
+			for br: Array in branches:
+				for i in range(0, br.size() - 1):
+					var p0: Vector2 = br[i]
+					var p1: Vector2 = br[i + 1]
+					if p0.distance_to(p1) < 0.5:
+						continue
+					world_regions.append({"name": "weg", "center": (p0 + p1) * 0.5, "size": Vector2(p0.distance_to(p1) + 2.0, STEM_W + 1.0), "yaw": -atan2((p1 - p0).y, (p1 - p0).x)})
+			Foliage.clear_for_building((b.node as Node).get_instance_id(), regions, Vector3(b.at.x, 0.0, b.at.z), float(b.yaw), Foliage.BUILD_CLEAR_MARGIN, true)
+			Foliage.clear_for_building(node.get_instance_id(), world_regions, Vector3.ZERO, 0.0, 0.25, true)
 	for key in _stems.keys().duplicate():
 		if not live.has(key):
 			var gone: Variant = _stems[key]
@@ -709,20 +727,70 @@ func _sync_stems() -> void:
 			_stems.erase(key)
 
 
-## Het wegdek: plaatsing in het dock (z = 0 is het dock, +z de weg uit), zo lang als de uitrit plus een stuk onder de truck.
-func _stem_node(length: float) -> MeshInstance3D:
+## De wegen van een depot als lijsten punten (Vector2, wereld): elke lijst begint bij het dock en loopt over de uitrit, een eventuele lus en de poort naar een
+## bestemming. Bestemmingen met dezelfde weg staan er één keer in; geblokkeerde bestemmingen niet. Zonder bestemming: alleen de uitrit.
+func road_branches(d: Dictionary) -> Array:
+	var out: Array = []
+	var seen := {}
+	for i in SLOTS:
+		if stapels[i] == null or blocked_by(d, i) != "":
+			continue
+		var site: Dictionary = stapels[i].site
+		var mids := _route_mids(site)
+		var goal: Vector2 = mids[0] if not mids.is_empty() else site.pos
+		var pts: Array = _route_head(d, goal)
+		var last: Vector2 = pts[pts.size() - 1]
+		var dir := (goal - last)
+		if dir.length() > 0.5:
+			pts.append(last + dir.normalized() * ROAD_TAIL)
+		var sig := str(pts.map(func(q): return Vector2(snappedf(q.x, 0.1), snappedf(q.y, 0.1))))
+		if not seen.has(sig):
+			seen[sig] = true
+			out.append(pts)
+	if out.is_empty():
+		var front := Vector2(sin(float(d.yaw)), cos(float(d.yaw)))
+		var k := pre_dock_point(d)
+		out.append([dock_point(d), k, k + front * 3.0])
+	return out
+
+
+## Het wegdek: een lint langs de (afgeronde) weg, breed STEM_W, met randlijnen en een onderbroken middenstreep. Het gedeelde stuk (de uitrit) wordt maar één
+## keer getekend. Alles staat op wereldcoördinaten.
+func _road_node(d: Dictionary, branches: Array) -> MeshInstance3D:
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var z0 := -DOCK_OFFSET - 0.4
-	var z1 := length + 3.0
-	_quad(st, -STEM_W * 0.5, z0, STEM_W * 0.5, z1, 0.035, Color(0.17, 0.17, 0.16))
-	var e := STEM_W * 0.5 - 0.45
-	for sx in [-1.0, 1.0]:   # randlijnen
-		_quad(st, sx * e - 0.07, z0, sx * e + 0.07, z1, 0.045, Color(0.62, 0.6, 0.55))
-	var z := z0 + 1.0
-	while z + 1.6 < z1:   # onderbroken middenstreep
-		_quad(st, -0.07, z, 0.07, z + 1.6, 0.045, Color(0.78, 0.7, 0.4))
-		z += 3.4
+	var front := Vector2(sin(float(d.yaw)), cos(float(d.yaw)))
+	var start: Vector2 = (branches[0][0] as Vector2) - front * (DOCK_OFFSET + 0.4)   # een stuk onder de voorkant van het depot
+	var stem_len := start.distance_to(branches[0][1])
+	for bi in branches.size():
+		var raw: Array = [start]
+		raw.append_array(branches[bi])
+		var poly: Array = VoorraadBaan._clean(raw[0], raw.slice(1))
+		if poly.size() < 2:
+			continue
+		var leg: VoorraadBaan.Leg = VoorraadBaan._bochten(poly)
+		if leg == null or leg.length < 1.0:
+			continue
+		var u0 := 0.0 if bi == 0 else stem_len + 1.0   # de volgende wegen delen de uitrit met de eerste
+		var u := u0
+		var prev_c := Vector2.ZERO
+		var prev_n := Vector2.ZERO
+		var have_prev := false
+		while u <= leg.length:
+			var pc: Vector2 = leg.pos(u)
+			var h: float = leg.head(u)
+			var n := Vector2(cos(h), -sin(h))   # rechts van de rijrichting
+			if have_prev:
+				_band(st, prev_c, prev_n, pc, n, -STEM_W * 0.5, STEM_W * 0.5, 0.035, Color(0.17, 0.17, 0.16))
+				var e := STEM_W * 0.5 - 0.45
+				for sg in [-1.0, 1.0]:   # randlijnen
+					_band(st, prev_c, prev_n, pc, n, sg * e - 0.07, sg * e + 0.07, 0.045, Color(0.62, 0.6, 0.55))
+				if fmod(u, 3.4) < 1.6:   # onderbroken middenstreep
+					_band(st, prev_c, prev_n, pc, n, -0.07, 0.07, 0.045, Color(0.78, 0.7, 0.4))
+			prev_c = pc
+			prev_n = n
+			have_prev = true
+			u += 0.7
 	var mat := StandardMaterial3D.new()
 	mat.vertex_color_use_as_albedo = true
 	mat.roughness = 0.96
@@ -735,11 +803,16 @@ func _stem_node(length: float) -> MeshInstance3D:
 	return mi
 
 
-func _quad(st: SurfaceTool, x0: float, z0: float, x1: float, z1: float, y: float, c: Color) -> void:
-	st.set_color(c)
+## Een band langs de weg tussen twee punten (met hun rechterkant n): van x0 tot x1 dwars op de weg (negatief = links), op hoogte y.
+func _band(st: SurfaceTool, c0: Vector2, n0: Vector2, c1: Vector2, n1: Vector2, x0: float, x1: float, y: float, col: Color) -> void:
+	st.set_color(col)
 	st.set_normal(Vector3.UP)
-	for v in [Vector3(x0, y, z0), Vector3(x1, y, z0), Vector3(x1, y, z1), Vector3(x0, y, z0), Vector3(x1, y, z1), Vector3(x0, y, z1)]:
-		st.add_vertex(v)
+	var a := c0 + n0 * x0   # begin, links
+	var b := c0 + n0 * x1   # begin, rechts
+	var c := c1 + n1 * x1   # eind, rechts
+	var d := c1 + n1 * x0   # eind, links
+	for v in [a, b, c, a, c, d]:
+		st.add_vertex(Vector3(v.x, y, v.y))
 
 
 # ---------------------------------------------------------------- vijanden schieten op trucks

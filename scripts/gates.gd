@@ -32,53 +32,102 @@ func _ready() -> void:
 				b.state = ""
 				_beacon_state(b, st))
 	for sz in [-1.0, 1.0]:
-		var g := {"name": "noord" if sz < 0.0 else "zuid", "sz": sz, "open": 0.0, "hold": 0.0, "user_open": false, "locked": false,
-			"hp": HP, "max_hp": HP, "broken": false, "moving": false}
-		var root := Node3D.new()
-		root.position = Vector3(0, 0, sz * C)
-		root.rotation.y = 0.0 if sz < 0.0 else PI  # de buitenkant van het model is -Z
-		add_child(root)
-		var model: Node = (load("res://assets/poort.glb") as PackedScene).instantiate()
-		Kit.skin(model, "poort")
-		root.add_child(model)
-		var ap: AnimationPlayer = model.find_child("AnimationPlayer", true, false)
-		ap.play("Paneel")
-		ap.pause()
-		ap.seek(0.0, true)
-		g.anim = ap
-		g.panel = model.find_child("Paneel", true, false)
-		# The approved slider is 1.5 m tall. Add an animated upper leaf so the
-		# closed portal seals the new 3 m wall while retaining the same movement.
-		var upper_leaf := MeshInstance3D.new()
-		upper_leaf.name = "FortificationUpperGateLeaf"
-		var leaf_mesh := BoxMesh.new()
-		leaf_mesh.size = Vector3(G * 2.0, Data.BASE_WALL_H - EXISTING_GATE_PANEL_H, 0.12)
-		upper_leaf.mesh = leaf_mesh
-		upper_leaf.position = Vector3(0.0, (Data.BASE_WALL_H + EXISTING_GATE_PANEL_H) * 0.5, -0.63)
-		upper_leaf.material_override = Kit.photo("buildings/metal", 1.4, Color("737454"))
-		upper_leaf.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
-		(g.panel as Node3D).add_child(upper_leaf)
-		var body := GateBody.new()
-		body.index = list.size()
-		body.collision_layer = Kit.LAYER_WALL | Kit.LAYER_FORTIFICATION
-		body.collision_mask = 0
-		var cs := CollisionShape3D.new()
-		var bs := BoxShape3D.new()
-		bs.size = Vector3(G * 2.0, Data.BASE_WALL_H, 0.3)
-		cs.shape = bs
-		cs.position = Vector3(0, Data.BASE_WALL_H * 0.5, 0)
-		body.add_child(cs)
-		root.add_child(body)
-		g.root = root
-		g.body = body
-		g.shape = cs
-		g.wreck = _wreck(root)
-		g.beacons = [_beacon(Vector3(-(G + 0.3), Data.BASE_WALL_H + 0.16, sz * C)), _beacon(Vector3(G + 0.3, Data.BASE_WALL_H + 0.16, sz * C))]
-		g.bar = HpBar.new()
-		add_child(g.bar)
-		g.bar.position = Vector3(0, Data.BASE_WALL_H + 0.9, sz * C)
-		list.append(g)
+		_make_gate("noord" if sz < 0.0 else "zuid", sz, Vector3(0, 0, sz * C), 0.0 if sz < 0.0 else PI)
 	_apply_all()
+
+
+## Maakt één poort (model, paneel, botsblok, zwaailampen en levensbalk) op `at` met draaiing `yaw`. `sz` is alleen voor het oude kamp (noord/zuid); `posts`
+## zet er poortposten bij (poorten die je zelf in een muur zet, MCV-start).
+func _make_gate(label: String, sz: float, at: Vector3, yaw: float, posts := false) -> Dictionary:
+	var g := {"name": label, "sz": sz, "at": at, "yaw": yaw, "open": 0.0, "hold": 0.0, "user_open": false, "locked": false,
+		"hp": HP, "max_hp": HP, "broken": false, "moving": false}
+	var root := Node3D.new()
+	root.position = at
+	root.rotation.y = yaw   # de buitenkant van het model is -Z
+	add_child(root)
+	var model: Node = (load("res://assets/poort.glb") as PackedScene).instantiate()
+	Kit.skin(model, "poort")
+	root.add_child(model)
+	var ap: AnimationPlayer = model.find_child("AnimationPlayer", true, false)
+	ap.play("Paneel")
+	ap.pause()
+	ap.seek(0.0, true)
+	g.anim = ap
+	g.panel = model.find_child("Paneel", true, false)
+	# The approved slider is 1.5 m tall. Add an animated upper leaf so the
+	# closed portal seals the new 3 m wall while retaining the same movement.
+	var upper_leaf := MeshInstance3D.new()
+	upper_leaf.name = "FortificationUpperGateLeaf"
+	var leaf_mesh := BoxMesh.new()
+	leaf_mesh.size = Vector3(G * 2.0, Data.BASE_WALL_H - EXISTING_GATE_PANEL_H, 0.12)
+	upper_leaf.mesh = leaf_mesh
+	upper_leaf.position = Vector3(0.0, (Data.BASE_WALL_H + EXISTING_GATE_PANEL_H) * 0.5, -0.63)
+	upper_leaf.material_override = Kit.photo("buildings/metal", 1.4, Color("737454"))
+	upper_leaf.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	(g.panel as Node3D).add_child(upper_leaf)
+	var body := GateBody.new()
+	body.index = list.size()
+	body.collision_layer = Kit.LAYER_WALL | Kit.LAYER_FORTIFICATION
+	body.collision_mask = 0
+	var cs := CollisionShape3D.new()
+	var bs := BoxShape3D.new()
+	bs.size = Vector3(G * 2.0, Data.BASE_WALL_H, 0.3)
+	cs.shape = bs
+	cs.position = Vector3(0, Data.BASE_WALL_H * 0.5, 0)
+	body.add_child(cs)
+	root.add_child(body)
+	g.root = root
+	g.body = body
+	g.shape = cs
+	g.wreck = _wreck(root)
+	var turn := Basis(Vector3.UP, yaw)
+	g.beacons = [_beacon(at + turn * Vector3(-(G + 0.3), Data.BASE_WALL_H + 0.16, 0.0)), _beacon(at + turn * Vector3(G + 0.3, Data.BASE_WALL_H + 0.16, 0.0))]
+	g.bar = HpBar.new()
+	add_child(g.bar)
+	g.bar.position = at + Vector3(0, Data.BASE_WALL_H + 0.9, 0)
+	if posts:
+		for px in [-(G + 0.3), G + 0.3]:   # poortposten, zoals bij het oude kamp (base_props.gd)
+			Kit.box(root, Vector3(px, 0.0, 0.0), Vector3(0.7, Data.BASE_WALL_H, 0.7), Kit.concrete_dark(), 0.0, Kit.LAYER_WALL)
+			Kit.box(root, Vector3(px, Data.BASE_WALL_H, 0.0), Vector3(0.9, 0.16, 0.9), Kit.concrete())
+	list.append(g)
+	return g
+
+
+
+## MCV-start: een poort in de muur van het kamp. `edge` en `edge2` zijn de twee roosterranden (Kampmuur) die hij vervangt.
+func add_gate(at: Vector3, yaw: float, edge: Vector4i, edge2: Vector4i) -> Dictionary:
+	var g := _make_gate("kamp", 0.0, at, yaw, true)
+	g["kind"] = "poort"
+	g["edge"] = edge
+	g["edge2"] = edge2
+	_apply(g)
+	Game.changed.emit()
+	return g
+
+
+## MCV-start: haalt een zelf geplaatste poort weg (de plek blijft open).
+func remove_gate(g: Dictionary) -> void:
+	for k in ["root", "bar"]:
+		var n: Variant = g.get(k)
+		if n != null and is_instance_valid(n):
+			n.queue_free()
+	for b in g.get("beacons", []):
+		var br: Variant = b.get("root")
+		if br != null and is_instance_valid(br):
+			br.queue_free()
+	list.erase(g)
+	for i in list.size():
+		list[i].body.index = i   # de botsblokken wijzen met hun plek in de lijst naar hun poort
+	Game.changed.emit()
+
+
+## De poort waar dit wereldpunt op valt (de opening plus een rand voor je vinger), of null. Voor de tik in het bouwscherm.
+func gate_at(p: Vector3) -> Variant:
+	for g in list:
+		var rel: Vector3 = Basis(Vector3.UP, -float(g.yaw)) * (p - Vector3(g.at))
+		if absf(rel.x) <= G + 0.6 and absf(rel.z) <= 1.2:
+			return g
+	return null
 
 
 ## MCV-start: de twee poorten van het vaste kamp bestaan niet (de knoop blijft, andere code kijkt naar Game.gates en zijn wereld).
@@ -161,18 +210,18 @@ func _wreck(root: Node3D) -> Node3D:
 
 
 func pos_of(g: Dictionary) -> Vector3:
-	return Vector3(0, 0, g.sz * C)
+	return g.at
 
 
 ## De poort die voor deze soldaat dicht zit: hij staat er vlakbij, aan de andere kant van de muur dan zijn doel.
 func blocking(from: Vector3, goal: Vector3) -> Variant:
-	if _inside(from) == _inside(goal):
+	if not Data.mcv_mode and _inside(from) == _inside(goal):
 		return null
 	for g in list:
 		if g.broken or g.open > 0.6:
 			continue
-		var p := pos_of(g)
-		if absf(from.x - p.x) < G + 0.6 and absf(from.z - p.z) < 1.9:
+		var rel: Vector3 = Basis(Vector3.UP, -float(g.yaw)) * (from - Vector3(g.at))   # in het stelsel van de poort (de oude poorten staan recht)
+		if absf(rel.x) < G + 0.6 and absf(rel.z) < 1.9:
 			return g
 	return null
 

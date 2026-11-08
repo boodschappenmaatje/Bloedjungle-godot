@@ -486,11 +486,68 @@ func _route_free(d: Dictionary, slot: int) -> Array:
 		mids.append(Vector2(Data.BRIDGE_X, Data.river_z(Data.BRIDGE_X) + 10.0))
 		for id in _astar.get_id_path(_ids["brug"], _ids[site.via]):
 			mids.append(_astar.get_point_position(id))
-	var prev: Vector2 = mids[mids.size() - 1] if not mids.is_empty() else out[1]
+	# staat er een muur tussen (je hebt een omheining), dan door de poort
+	for pt in _gate_detour(out[1], mids[0] if not mids.is_empty() else sp):
+		out.append(pt)
+	var prev: Vector2 = out[out.size() - 1] if out.size() > 2 else out[1]
+	if not mids.is_empty():
+		prev = mids[mids.size() - 1]
 	for m in mids:
 		out.append(m)
 	out.append(stop_point(site, prev))
 	return _merge_close(out)
+
+
+## Muurstukken (geen poorten) als lijnstukken (x, z) -> (x, z).
+func _wall_segments() -> Array:
+	var out: Array = []
+	var walls := Kampmuur.existing()
+	for k in walls:
+		var w: Dictionary = walls[k]
+		if str(w.get("kind", "")) != "kampmuur":
+			continue
+		var v1 := Kampmuur.vertex(Vector2i(k.x, k.y))
+		var v2 := Kampmuur.vertex(Vector2i(k.z, k.w))
+		out.append([Vector2(v1.x, v1.z), Vector2(v2.x, v2.z)])
+	return out
+
+
+## Kruist dit lijnstuk een muurstuk (een poort telt als opening)?
+func _crosses_wall(a: Vector2, b: Vector2, segs: Array) -> bool:
+	for s in segs:
+		if Geometry2D.segment_intersects_segment(a, b, s[0], s[1]) != null:
+			return true
+	return false
+
+
+## Staat er een muur tussen a en b, dan de punten van de weg door de dichtstbijzijnde poort (binnenkant, poort, buitenkant); anders niets.
+func _gate_detour(a: Vector2, b: Vector2) -> Array:
+	if Game.gates == null or not is_instance_valid(Game.gates):
+		return []
+	var segs := _wall_segments()
+	if segs.is_empty() or not _crosses_wall(a, b, segs):
+		return []
+	var best: Variant = null
+	var best_len := INF
+	for g in Game.gates.list:
+		if g.get("edge") == null or g.broken:
+			continue
+		var gp := Vector2(g.at.x, g.at.z)
+		var l := a.distance_to(gp) + gp.distance_to(b)
+		if l < best_len:
+			best_len = l
+			best = g
+	if best == null:
+		return []
+	var gp2 := Vector2(best.at.x, best.at.z)
+	var n := Vector2(sin(float(best.yaw)), cos(float(best.yaw)))
+	var p1 := gp2 - n * 8.0
+	var p2 := gp2 + n * 8.0
+	if a.distance_to(p2) < a.distance_to(p1):
+		var tmp := p1
+		p1 = p2
+		p2 = tmp
+	return [p1, gp2, p2]
 
 
 ## De rechthoeken (middelpunt, draaiing, halve maten, naam) die een weg niet mag doorsnijden: je gebouwen en het hoofdkwartier met zijn voorplein, met de
@@ -498,8 +555,8 @@ func _route_free(d: Dictionary, slot: int) -> Array:
 func _obstacles(skip: Dictionary) -> Array:
 	var out: Array = []
 	for b in Game.buildings:
-		if b == skip or b.down:
-			continue
+		if b == skip or b.down or b.kind == "kampmuur":
+			continue   # muren worden apart gecontroleerd (een weg kruist ze alleen via een poort)
 		var sz: Vector3 = Buildings.DEFS[b.kind].size
 		out.append([Vector2(b.at.x, b.at.z), float(b.yaw), Vector2(sz.x, sz.z) * 0.5 + Vector2.ONE * 3.2, String(Buildings.DEFS[b.kind].name)])
 	if Game.mcv_deployed:
@@ -515,6 +572,11 @@ func blocked_by(d: Dictionary, slot: int) -> String:
 	var pts := route(d, slot)
 	if pts.size() >= 2 and (pts[0] as Vector2).distance_to(stapels[slot].site.pos) < 20.0:
 		return "te dicht bij de stapel"
+	var segs := _wall_segments()
+	if not segs.is_empty():
+		for i in range(1, pts.size() - 1):
+			if _crosses_wall(pts[i], pts[i + 1], segs):
+				return "een muur zonder poort"
 	var obs := _obstacles(d)
 	for i in range(1, pts.size() - 1):
 		var a: Vector2 = pts[i]

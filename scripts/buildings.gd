@@ -162,6 +162,10 @@ func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null)
 		ex.append(me.node.get_rid())
 	if _hits(Vector3(sz.x - 0.2, 1.0, sz.z - 0.2) if piece else Vector3(sz.x + 0.4, 1.0, sz.z + 0.4), at, yaw, ex):
 		return _placement_result(false, "Te dicht bij bestaande gebouwen", 0)
+	if kind == "depot" and Game.supply != null and is_instance_valid(Game.supply):
+		var stem_why: String = Game.supply.stem_blocker(at, yaw, me)
+		if stem_why != "":
+			return _placement_result(false, "Uitrit geblokkeerd: " + stem_why, 0)
 	if piece or kind == "helipad":
 		var removable_piece := Foliage.count_clearable_in_regions(_clearance_regions(kind), at, yaw) if is_inside_tree() else 0
 		return _placement_result(true, "Bouwen mogelijk — begroeiing wordt verwijderd" if removable_piece > 0 else "Bouwen mogelijk", removable_piece)
@@ -280,6 +284,12 @@ func _first_protected_overlap(query: PhysicsShapeQueryParameters3D) -> Object:
 		var found_clearable := false
 		for hit: Dictionary in hits:
 			var collider: Object = hit.get("collider")
+			if collider is VoorraadTruck:   # een rijdende truck houdt geen gebouw tegen (hij rijdt weg)
+				var truck_rid: RID = hit.get("rid", RID())
+				if truck_rid.is_valid() and not excluded.has(truck_rid):
+					excluded.append(truck_rid)
+					found_clearable = true
+				continue
 			if Foliage.collider_is_clearable(collider):
 				var rid: RID = hit.get("rid", RID())
 				if rid.is_valid() and not excluded.has(rid):

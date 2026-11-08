@@ -61,7 +61,7 @@ func _process(_d: float) -> bool:
 	if frames > 4 and g.state == "prep":
 		g.prep_t = 1e9
 	if frames == 20:
-		var dp = g.builds.place("depot", Vector3(0.0, 0.0, -24.0), 0.0, true)
+		var dp = g.builds.place("depot", Vector3(-24.0, 0.0, -24.0), PI, true)
 		if dp != null:
 			dp.build_t = 0.05
 	if frames == 30:

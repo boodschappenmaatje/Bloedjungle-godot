@@ -75,7 +75,7 @@ func setup(sup_: Voorraad, depot_: Dictionary, number_: int) -> void:
 	_vk.take_key(sup.gate_key(depot), S.HEEN, sup.dock_point(depot), false, true)   # en het kruispunt tussen de depots, tot hij de poort uit is
 	name = "Voorraadtruck%d" % number
 	add_to_group("voorraadtruck")
-	collision_layer = Bullet.MASK_VEHICLE
+	collision_layer = Barrel.LAYER | Bullet.MASK_VEHICLE   # kogels botsen ertegen en je loopt er niet doorheen (net als auto's en bussen)
 	collision_mask = 0
 	var cs := CollisionShape3D.new()
 	var bs := BoxShape3D.new()

@@ -1,58 +1,53 @@
 # Bloedjungle — Visual Upgrade B 1.0
 
-**Branch:** `feature/visual-upgrade-b-1-0`
-
 **Draft PR:** [#237](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/237)
+**Branch:** `feature/visual-upgrade-b-1-0`
+**Codecommit in de nieuwste Godot-capture en iOS-export:** `ff1002deb27e081e53c426672bcf6851b2f445b4`
+**Gerichte kwaliteitspass:** `8d1ed47` — terreinshader en bestaande understoryplaatsing.
 
-**Laatste codecommit:** `6e7701a26332a6c3f9b4767d5ebd6934a45ae52a`
+De gebruiker heeft de C-afbeelding uit de chat als kwaliteitsrichting gekozen. De pass hergebruikt bestaande meshes en PBR-assets; plantenaantallen, grafische instellingen, gameplay, camera, HUD, besturing, collisions en schietlijnen zijn niet aangepast. De aanpassing voegt geen nieuwe modellen of plantmassa toe.
 
-De recente pass haalt de zware warme kleurzweem weg, maakt bladkleuren neutraler, verzacht de palmhulp-schaduw en houdt brede bladeren uit de start-zichtlijn. De echte bospadpreview toont nu een zichtbare speler en natuurlijker groen. De grote open graszone en de eenvoudiger silhouetten/materialen liggen nog duidelijk onder de premium, fotorealistische richting van afbeelding C. Visuele acceptatie blijft daarom open. De gebruiker test de iOS-build zelf op een iPhone; toestelprestaties zijn niet gemeten. Deze PR blijft Draft, is niet gemerged en heeft niets gepubliceerd.
+## Huidige pass
 
-## Richting en grenzen
+De terreinshader breekt de bestaande gras-, aarde-, mos- en grindlagen en de padschouders wat verder op, met subtielere world-space detailmapping. Bestaande jungle-understorygroepen zijn losser verdeeld en brede rozet-/varenmodellen iets verkleind; bestaande MultiMesh-, LOD- en afstandscullingstructuur blijft staan.
 
-De gebruiker heeft afbeelding C — “Lighting & Atmosphere Pass” — als huidige kwaliteitsrichting gekozen; de aangeleverde C-afbeelding staat in de chat, maar is nog niet als bestand in de repository opgeslagen. `reference/approved-b.jpg` en [de bestaande driebeeldvergelijking](captures/compare/three-way.jpg) zijn historische B-documentatie en mogen niet worden voorgesteld als C. De [oorspronkelijke gebruikersscreenshot](reference/user-before.jpg) bevat geen opslagpositie of vaste camera-instellingen, dus die oude vergelijking claimt geen identieke reconstructie.
+De visuele uitkomst is **een beperkte, zichtbare verbetering en nog geen acceptabel eindniveau**. De vier echte screenshots laten zien dat open bosgrond nog egaal blijft, het pad nog als vrij uniforme strook leest, en herhaalde lage rozetten/varens de jungle-rand nog te dicht en stilistisch uniform maken. Bij de rivier is het water vlak en een radiale plant dicht bij de speler trekt de aandacht. De beelden liggen nog duidelijk onder de rijke, premium C-richting. Daarom blijft visuele acceptatie open.
 
-De doelrichting is een rijk, natuurlijk junglegevechtsgebied met leesbare spelers en schietlijnen; details hoeven niet letterlijk met C overeen te komen. De huidige echte render houdt nog een groot, open grasvlak en mist een deel van C's fijne plant-, grond- en lichtdiepte. De PNG hieronder is een echte Godot-render, geen conceptbeeld. Er zijn geen AI-conceptbeelden als implementatiebewijs gebruikt.
+## Echte Godot-captures
 
-## Wat de upgrade aanpast
+Deze onbewerkte PNG's komen uit de bestaande `scenes/main.tscn`-gamecamera. Ze zijn in één actuele capturepass gemaakt na de gerichte shader-/plaatsingswijzigingen. Ze zijn geen conceptafbeeldingen.
 
-- Hergebruikt `assets/jungle.glb`, de bestaande grasvarianten en hun drie geometrische LOD's, foliage- en fernmeshes, en de bestaande PBR-texturen voor gras, bosgrond, aarde, modder, mos, grind en rivierzand.
-- De terreinshader mengt de bestaande albedo-, normal- en roughness-informatie op wereldvaste schaal. Het ingesleten pad gebruikt de bestaande gravel-rock PBR-set; randen zijn organischer en sporen blijven herkenbaar. Er is geen displacement, parallax of collisionwijziging.
-- `GrassField` en `JungleUnderstory` hergebruiken de bestaande CC0/PBR-soorten, LOD's, MultiMesh-batches, kwaliteitschalen en afstandsculling. Deze pass verhoogt het aantal planten niet; hij varieert de groepcontouren, verkleint brede bladeren licht en houdt zulke bladeren uit de start-zichtlijn.
-- De dagbelichting gebruikt nu een neutralere zonkleur, meer bruikbaar omgevingslicht, lagere contrast-/mistzwaarte en een subtiele neutrale vignette. De radiale palmbladprojectie op de grond is vervangen door de zachte mobiele hulp-schaduw; de bestaande instellingen en renderer blijven gelijk.
-- De bestaande bouw-clearance, routes, schietlijnen, bomen, collisions, camera, HUD, besturing, AI, wapens en voertuigen blijven behouden. Renderdetail krijgt geen nieuwe collisions.
+| Locatie | Echte Godot-render |
+| --- | --- |
+| Bospad | [PNG](captures/iterations/ff1002d/bospad.png) |
+| Rivier | [PNG](captures/iterations/ff1002d/rivier.png) |
+| Kamp | [PNG](captures/iterations/ff1002d/kamp.png) |
+| Combat — 80 vijanden | [PNG](captures/iterations/ff1002d/combat.png) |
+| Vier scènes naast elkaar | [Overzicht](captures/iterations/ff1002d/overzicht-4-scenes.jpg) |
 
-## Echte Godot-beelden
+Captureworkflow: [Godot Actions-run 42460199664](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42460199664), geslaagd op codecommit `ff1002d`; artifact-id `13609722999`. Godot 4.7.2 Mobile/Forward Mobile via Vulkan, 1280×720, 100% capture scale, High/day/clear, MSAA 2, FOV 45° en bestaande cameraregistratie/pitch. Locaties en alle instellingen staan in [CAPTURE.md](captures/iterations/ff1002d/CAPTURE.md).
 
-De nieuwe snelle capture is [GitHub Actions-run 42425169412](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42425169412), geslaagd op commit `6e7701a`. Hij start de echte `scenes/main.tscn` en bestaande hoofdgamecamera op vaste bospadpositie, Godot 4.7.2 Mobile/Vulkan, High/day/clear en output 1280×720 met 100% capture scale. Het is bewust één preview, geen volledige benchmarkreeks.
+De adapter is **llvmpipe-software-rendering** op Linux, niet een telefoon of fysieke GPU. De ingebrande `1 FPS` op de captures en de metrics horen uitsluitend bij die softwarebackend. Dit is geen iPhone-, Metal- of GPU-prestatieclaim.
 
-De echte Godot-preview staat in [captures/iterations/6e7701a/bospad.png](captures/iterations/6e7701a/bospad.png); metadata staat naast de PNG. De vorige echte bospadbeelden blijven onder `captures/after/` als eerdere pass, maar tonen andere capture scale. De nieuwe screenshot toont geen radiale palmster meer en de speler blijft vrij. Hij toont ook dat de open graszone nog te groot en te eenvoudig is tegenover C.
+## Software-renderdiagnostiek
 
-De PNG is een echte Mobile/Vulkan-gamecapture via **llvmpipe-software-rendering** op Linux. De ingebrande `1 FPS` hoort bij die softwarebackend en zegt niets over een iPhone. Renderresolutie is niet de visuele kwaliteitslat. Er is op deze commit geen iPhone-, Metal- of Windows-runtime-test gedaan.
+De workflow verzamelde 60 frametimingsamples per scène, 100 voor combat, plus gemiddelde draw calls en primitives. Deze waarden zijn van llvmpipe en niet representatief voor iPhone. Ze zijn alleen opgenomen voor reproduceerbaarheid; vergelijk ze niet rechtstreeks met de oude 60%-capture of met hardwaremetingen.
 
-**Beoordeling van deze pass:** de kleur is aantoonbaar minder amber en bladgroen blijft zichtbaar; de speler staat niet meer onder een radiale kunstschaduw. De preview is een gerichte winst voor idee 2 en 3, maar nog geen visuele acceptatie: de grote grasopening, beperkte kleine blad-/bodemdetails en eenvoudige scènecompositie blijven verder van C dan gewenst.
-
-## Softwaremetingen
-
-De laatste volledige ruwe resultaten in `results/after-metrics.json` horen bij de oudere codecommit `69d3f43`, niet bij `6e7701a`. Deze snelle preview heeft geen GPU-/frametimebenchmark uitgevoerd. De eerdere Godot 4.7.2 Mobile/Vulkan-llvmpipe waarden hieronder zijn alleen software-renderdiagnostiek; ze zijn geen telefoonbenchmark.
-
-| Scène | Gemiddelde ms | P99 ms | 1%-low FPS | Draw calls | Primitives |
+| Scène | Gemiddelde frame ms | P99 ms | Software 1%-low FPS | Draw calls gem. | Primitives gem. |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Bospad | 2.053 | 3.399 | 0,294 | 514 | 2.922.663 |
-| Rivier | 1.220 | 1.274 | 0,785 | 365 | 2.026.194 |
-| Kamp | 5.096 | 5.220 | 0,192 | 393 | 1.778.068 |
-| Combat, 80 vijanden | 3.747 | 13.547 | 0,074 | 1.371 | 3.761.680 |
+| Bospad | 3217,5 | 3768,5 | 0,265 | 527 | 4.087.995 |
+| Rivier | 1345,3 | 1392,6 | 0,718 | 424 | 3.614.767 |
+| Kamp | 4518,4 | 4852,4 | 0,206 | 463 | 1.673.251 |
+| Combat — 80 vijanden | 3477,3 | 8393,6 | 0,119 | 1439 | 4.939.503 |
 
-De oude voor-meting gebruikte eveneens Godot Mobile/Vulkan, maar **llvmpipe LLVM 19.1.7** in plaats van LLVM 20.1.2. Daarom zijn de oude en nieuwe frametijden en 1%-lows niet rechtstreeks vergelijkbaar. De softwaretijden hierboven zijn seconden per frame door de gedeelde CI-renderer en mogen niet als iPhone-FPS worden gelezen. De ruwe voor/na-structurele tellers staan in [comparison.json](results/comparison.json); ze laten de extra scènegeometrie zien, geen telefoonprestatie.
-
-De 1%-low uit die oudere test is één langzaamste sample en geen hardwareacceptatie. Op iPhone zijn frametimes, 1%-lows, shimmer, langdurige gevechten en thermiek **niet gemeten**.
+Ruwe bron: [metrics.json](captures/iterations/ff1002d/metrics.json). De exacte testsoftware en adapter zijn vastgesteld; de lage waarden tonen vooral dat deze Linux-run geen bruikbare hardwarebenchmark is. iPhone-frametimes, 1%-lows, shimmer, gevechtsperformance en thermiek zijn **niet gemeten**.
 
 ## Validatie en iPhone-test
 
-- GitHub op `6e7701a`: Godot 4.7.2 projectimport en visuele integratietest PASS, bospadcapture PASS, vijandbasisregressie PASS, GLB-importmetadata PASS en OTA-patchpreview PASS. OTA-publicatie is niet uitgevoerd.
-- Lokaal met Godot 4.6.3: `visual_b_test.tscn` PASS (0 failures; batches, LOD's, collisions, zichtlijn-pocket en neutrale bladgrade gecontroleerd). Er zijn gebruikelijke headless SSAO/resource-cleanupmeldingen; geen script-/shaderfout.
-- iOS unsigned export: [run 42425169497](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42425169497) PASS voor codecommit `6e7701a`. Artifact **`bloedjungle-ios-unsigned-b2753d6f6c9d058891cbef18aab7033d0cf1ef97`**, id **`13596000239`**, 1.156.345.676 bytes; downloadbaar t/m 7 december 2026. Onderteken met je Apple-account vóór installatie. Dit artifact bewijst geen fysieke iPhone-uitvoering.
-- Een oudere unsigned iOS-export bestaat voor commit `69d3f43` (run 42315505684, artifact-id `13551276722`); die is niet deze codeversie. Wacht op run `42425169497` voor de test-IPA die bij `6e7701a` hoort.
-- De export bewijst geen ondertekening, installatie, Metal-rendering of iPhone-uitvoering. Er is geen fysieke iPhone-test of Windows-runtime-test uitgevoerd. De [iPhone-testlijst](IPHONE_TEST_PLAN.md) bevat vaste stappen voor stilstaand beeld, shimmer/pop-in, een groot gevecht, terreinranden, frametimes, 1%-lows en thermiek. Laat die velden op **niet gemeten** staan tot je de tests uitvoert.
+- Godot 4.7.2 workflow op `ff1002d`: projectimport, Visual B-terrein-/foliage-integratietest en alle vier captures PASS. Bekende waarschuwing: SSAO wordt niet ondersteund door de ingestelde Mobile-renderer; capture meldt geen script-/shaderfout.
+- Unsigned iOS-export: [run 42460949217](https://github.com/boodschappenmaatje/Bloedjungle-godot/actions/runs/42460949217), PASS op dezelfde codecommit `ff1002d` en gekoppeld aan PR #237.
+- Testartifact: `bloedjungle-ios-unsigned-ff1002deb27e081e53c426672bcf6851b2f445b4`, id **`13609419743`**, 1.156.344.069 bytes, downloadbaar t/m 8 december 2026. Download via de tab **Artifacts** in de iOS-run. Het is unsigned: onderteken met je eigen Apple-account vóór installatie.
+- De export maakt de build beschikbaar voor de gebruiker, maar bewijst geen installatie, iPhone-uitvoering, Metal-rendering of prestaties. Geen fysieke iPhone- of Windows-runtime-test is uitgevoerd.
+- Zie [IPHONE_TEST_PLAN.md](IPHONE_TEST_PLAN.md) voor de teststappen. Houd shimmer, grote gevechten, frametimes/1%-lows en warmte op **niet gemeten** tot ze fysiek zijn getest.
 
-Visuele acceptatie blijft open door het resterende vlakke speelveld en de afstand tot C. Mobiele acceptatie blijft open totdat de gebruiker de nieuwe build op een echte iPhone heeft getest. De C-referentieafbeelding moet nog als repositorybestand worden toegevoegd voor een blijvende side-by-side vergelijking.
+Visuele en mobiele acceptatie blijven open. PR #237 blijft **Draft**, wordt niet gemerged en er is niets via OTA gepubliceerd.

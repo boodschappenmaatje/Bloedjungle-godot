@@ -318,6 +318,7 @@ func _start_park() -> void:
 	remove_from_group("mcv")
 	remove_from_group("voertuigen")
 	add_to_group("mcv_wagen")
+	collision_layer = 0   # tijdens het wegrijden staat de speler bij het hoofdkwartier: de wagen mag hem niet wegduwen
 	for n in [_layer, _ghost]:
 		if n != null and is_instance_valid(n):
 			n.queue_free()

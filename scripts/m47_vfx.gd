@@ -11,8 +11,8 @@ signal klaar
 
 const FLIGHT_SPEED := 26.0
 const SPARKS := 32
-const TRAIL := 16
-const DUST := 12
+const TRAIL := 26
+const DUST := 14
 const BLAUW := Color(0.15, 0.58, 1.0)
 const WIT := Color(0.8, 0.94, 1.0)
 
@@ -170,9 +170,9 @@ func _build() -> void:
 	_light.light_energy = 0.0
 	add_child(_light)
 	for i in TRAIL:
-		_trail.append(_flip_sprite(t["sliert"], Color(0.55, 0.74, 1.0, 0.0), 1.7))
+		_trail.append(_flip_sprite(t["sliert"], Color(0.7, 0.86, 1.0, 0.0), 2.2))
 	for i in DUST:
-		_dust.append(_flip_sprite(t["stof"], Color(0.62, 0.6, 0.57, 0.0), 2.6))
+		_dust.append(_flip_sprite(t["stof"], Color(0.62, 0.62, 0.64, 0.0), 3.0))
 	var spm := QuadMesh.new()
 	spm.size = Vector2(0.05, 0.05)
 	for i in SPARKS:
@@ -266,19 +266,19 @@ func _process(delta: float) -> void:
 	# Spoorrook: kaartjes blijven achter op de baan en draaien er in een spiraal omheen.
 	for i in TRAIL:
 		var ph := float(i) / TRAIL
-		var leeftijd := t - 0.05 - ph * 0.55 * minf(1.0, _flight * 2.6)
+		var leeftijd := t - 0.05 - ph * _flight   # elk kaartje blijft achter op de plek waar het projectiel was
 		var s := _trail[i]
-		var baan := clampf(leeftijd / _flight, 0.0, 1.0)
-		var ok := leeftijd > 0.0 and leeftijd < 1.3
+		var baan := ph
+		var ok := leeftijd > 0.0 and leeftijd < 2.0
 		s.visible = ok
 		if ok:
 			var hoek := leeftijd * 14.0 + i * 0.9
 			var zij := _dir.cross(Vector3.UP).normalized()
 			var op := zij * cos(hoek) + Vector3.UP * sin(hoek)
-			var uitslag := 0.16 + leeftijd * 0.28
+			var uitslag := 0.22 + leeftijd * 0.42
 			s.global_position = _from.lerp(_to, baan) + op * uitslag
-			s.frame = mini(15, int(leeftijd * 13.0))
-			s.modulate.a = 0.5 * clampf(leeftijd * 8.0, 0.0, 1.0) * clampf((1.3 - leeftijd) / 0.7, 0.0, 1.0)
+			s.frame = mini(15, 3 + int(leeftijd * 6.0))
+			s.modulate.a = 0.95 * clampf(leeftijd * 8.0, 0.0, 1.0) * clampf((2.0 - leeftijd) / 1.0, 0.0, 1.0)
 	# 3. Inslag
 	if t >= 0.05 + _flight and not _impacted:
 		_impacted = true
@@ -297,7 +297,7 @@ func _process(delta: float) -> void:
 		var zij2 := _dir.cross(Vector3.UP).normalized()
 		for i in DUST:
 			var d := _dust[i]
-			d.global_position = Vector3(_to.x, 0.0, _to.z) + wn * randf_range(0.2, 1.6) + zij2 * randf_range(-1.8, 1.8) + Vector3(0, randf_range(0.2, 1.0), 0)
+			d.global_position = Vector3(_to.x, 0.0, _to.z) + wn * randf_range(0.2, 2.2) + zij2 * randf_range(-2.2, 2.2) + Vector3(0, randf_range(0.6, 1.9), 0)
 	if _impacted:
 		var a := t - (0.05 + _flight)
 		_light.global_position = _to - _dir * 0.5
@@ -326,12 +326,12 @@ func _process(delta: float) -> void:
 		for i in DUST:
 			var da := a - i * 0.03
 			var d := _dust[i]
-			d.visible = da > 0.0 and da < 2.6
+			d.visible = da > 0.0 and da < 3.4
 			if d.visible:
-				d.frame = mini(15, int(da * 7.0))
+				d.frame = mini(15, int(da * 5.0))
 				d.global_position += (Vector3(-_dir.x, 0.25, -_dir.z) * 0.55 + Vector3(sin(i * 2.1), 0, cos(i * 2.1)) * 0.35) * delta
-				d.modulate.a = 0.5 * clampf(da * 5.0, 0.0, 1.0) * clampf((2.6 - da) / 1.3, 0.0, 1.0)
-		if a > 2.7:
+				d.modulate.a = 0.55 * clampf(da * 5.0, 0.0, 1.0) * clampf((3.4 - da) / 1.6, 0.0, 1.0)
+		if a > 3.5:
 			_t = -1.0
 			_light.light_energy = 0.0
 			set_process(false)

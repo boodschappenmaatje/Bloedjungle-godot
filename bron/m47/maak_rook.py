@@ -50,23 +50,23 @@ def frames(kind, seed):
         t = i / 15.0
         if kind == "sliert":
             # lange, golvende sliert die uitdijt en wegtrekt (as horizontaal)
-            rx = 44 + 52 * np.sqrt(t)
-            ry = 18 + 30 * np.sqrt(t)
+            rx = 40 + 34 * np.sqrt(t)
+            ry = 36 + 30 * np.sqrt(t)
             ox = (t - 0.4) * 18
             wob = np.sin(xx * 0.07 + t * 5.0) * (4 + 10 * t)
             d = np.sqrt(((xx - cx - ox) / rx) ** 2 + ((yy - cy - wob) / ry) ** 2)
             kern = 1.0 - smooth(0.25, 1.0, d)
-            strength = 1.0 - smooth(0.45, 1.0, t)
+            strength = 1.0 - smooth(0.6, 1.0, t)
             dens_noise = warp(base, wx * 90, wy * 90 + t * 25, 1.0)
         else:
             # ronde stofwolk: rolt omhoog en uit elkaar
-            r = 40 + 50 * np.sqrt(t)
+            r = 52 + 36 * np.sqrt(t)
             d = np.sqrt(((xx - cx) / r) ** 2 + ((yy - cy + 14 * t) / (r * 0.82)) ** 2)
             kern = 1.0 - smooth(0.3, 1.0, d)
-            strength = 1.0 - smooth(0.55, 1.0, t)
+            strength = 1.0 - smooth(0.7, 1.0, t)
             dens_noise = warp(base, wx * 70 * (0.4 + t), wy * 70 * (0.4 + t) - t * 30, 1.0)
-        n = np.clip((dens_noise - 0.5) * 3.4 + 0.5 - 0.35 * t, 0, 1)      # veel contrast: pluimen en gaten
-        dens = np.clip(kern * (0.10 + 0.95 * n), 0, 1) * strength * 0.9
+        n = np.clip((dens_noise - 0.5) * 3.0 + 0.62 - 0.22 * t, 0, 1)      # veel contrast: pluimen en gaten
+        dens = np.clip(kern * (0.22 + 1.1 * n), 0, 1) * np.clip(strength * 1.15, 0, 1)
         # belichting uit de ruis zelf: zijlicht van linksboven, blauw randlicht rechtsonder
         gy, gx = np.gradient(dens_noise * kern)
         lit = np.clip(0.7 - (gx + gy) * 9.0, 0.3, 1.0)

@@ -26,6 +26,7 @@ on:
       - "scripts/voorraad_truck.gd"
       - "scripts/voorraad_verkeer.gd"
       - "tests/mcv_voorraad_test.gd"
+      - "tests/mcv_draai_test.gd"
       - "tests/voorraad_test.gd"
       - "shaders/ground.gdshader"
       - "tests/mcv_test.gd"
@@ -78,6 +79,14 @@ jobs:
           timeout 300 "$GODOT" --headless --path . --script tests/mcv_voorraad_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/mcv2.log"
           grep -Fq "klaar, fouten: 0" "$RUNNER_TEMP/mcv2.log"
           if grep -Eq 'SCRIPT ERROR:|Parse Error:|^FOUT' "$RUNNER_TEMP/mcv2.log"; then exit 1; fi
+      - name: MCV hoofdkwartier draaien in het bouwscherm
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 200 "$GODOT" --headless --path . --script tests/mcv_draai_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/mcv3.log"
+          grep -Fq "klaar, fouten: 0" "$RUNNER_TEMP/mcv3.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|^FOUT' "$RUNNER_TEMP/mcv3.log"; then exit 1; fi
       - name: Oud voorraadsysteem blijft werken (vast kamp)
         shell: bash
         run: |

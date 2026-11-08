@@ -20,6 +20,11 @@ on:
       - "scripts/build_mode.gd"
       - "scripts/pause_menu.gd"
       - "scripts/kampmuur.gd"
+      - "scripts/ally.gd"
+      - "scripts/bullet.gd"
+      - "scripts/enemy.gd"
+      - "scripts/data.gd"
+      - "tests/soldaten_test.gd"
       - "scripts/foliage.gd"
       - "scripts/wachten.gd"
       - "scripts/gate_body.gd"
@@ -139,6 +144,14 @@ jobs:
           timeout 300 "$GODOT" --headless --path . --script tests/mcv_wacht_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/mcv9.log"
           grep -Fq "klaar, fouten: 0" "$RUNNER_TEMP/mcv9.log"
           if grep -Eq 'SCRIPT ERROR:|Parse Error:|^FOUT' "$RUNNER_TEMP/mcv9.log"; then exit 1; fi
+      - name: Soldatensoorten en steen-papier-schaar
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 250 "$GODOT" --headless --path . --script tests/soldaten_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/soldaten.log"
+          grep -Fq "klaar, fouten: 0" "$RUNNER_TEMP/soldaten.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|^FOUT' "$RUNNER_TEMP/soldaten.log"; then exit 1; fi
       - name: MCV omheining (stam weg, alles binnen de muren weg)
         shell: bash
         run: |

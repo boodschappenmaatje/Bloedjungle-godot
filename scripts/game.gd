@@ -92,6 +92,7 @@ var power := true:   # stroom in de basis en de straatlantaarns (de generator ko
 		if v != power:
 			power = v
 			power_changed.emit()
+var hit_class := ""          # soort schade van de kogel of raket die nu raakt (Data.ARMOR_MULT); "" = neutraal
 var hit_src := "speler"         # wie schiet er nu: speler, soldaat of lucht; alleen speler-kills tellen voor de streak
 
 var player  # de speler (player.gd)

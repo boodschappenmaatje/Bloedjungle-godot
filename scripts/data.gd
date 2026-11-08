@@ -44,8 +44,33 @@ const ETYPES := {
 	# Canonical standard rifle enemy. `rifle` remains accepted as a compatibility alias for existing tests/tools.
 	"assault": {"hp": 65.0, "speed": 3.2, "r": 0.44, "scale": 1.0, "range": 12.0, "dmg": 7.0, "rate": 1.6, "spread": 0.08, "pts": 60, "color": Color("8c7b52"), "gun": "garand"},
 	"rocket": {"hp": 85.0, "speed": 2.7, "r": 0.46, "scale": 1.0, "range": 19.0, "dmg": 55.0, "rate": 4.2, "spread": 0.035, "pts": 160, "color": Color("5a4a3a"), "rocket": true, "gun": "rocket"},
-	"heavy": {"hp": 280.0, "speed": 2.2, "r": 0.58, "scale": 1.28, "range": 11.0, "dmg": 6.0, "rate": 0.11, "burst": 9, "pause": 1.9, "spread": 0.13, "pts": 180, "color": Color("3e4a2b")},
+	"heavy": {"armor": "zwaar", "hp": 280.0, "speed": 2.2, "r": 0.58, "scale": 1.28, "range": 11.0, "dmg": 6.0, "rate": 0.11, "burst": 9, "pause": 1.9, "spread": 0.13, "pts": 180, "color": Color("3e4a2b")},
 }
+
+# Soldatensoorten van de kazerne (Generals-plan C2/C3, Dennis 8 november 2026): kosten, trainingstijd (maal de gewone), gezondheid (maal het niveau), wapen en rol.
+# wclass = het soort schade voor het steen-papier-schaar (ARMOR_MULT); "" = neutraal. Waarden zijn voorstellen om te testen.
+const SOLDIER_ORDER := ["geweer", "raket", "sluip", "hospik", "ingenieur"]
+const SOLDIER_TYPES := {
+	"geweer": {"name": "Schutter", "short": "Schutter", "cost": 250, "time": 1.0, "hp": 1.0, "dmg": 1.0, "color": Color("5a6a36"), "gun": "thompson", "wep": "thompson", "range": 16.0, "rate": 0.5, "wclass": "kogel", "desc": "Geweerschutter: gewoon, goedkoop, goed tegen mensen."},
+	"raket": {"name": "Raketsoldaat", "short": "Raket", "cost": 400, "time": 1.5, "hp": 0.9, "dmg": 4.4, "color": Color("5a4a3a"), "gun": "rocket", "wep": "bazooka", "range": 22.0, "rate": 3.4, "wclass": "raket", "desc": "Raketsoldaat: zware raket, vooral goed tegen pantser en zware vijanden, traag en slecht tegen losse mensen."},
+	"sluip": {"name": "Sluipschutter", "short": "Sluip", "cost": 450, "time": 1.6, "hp": 0.7, "dmg": 5.2, "color": Color("3e5a2b"), "gun": "garand", "wep": "garand", "range": 34.0, "rate": 2.2, "wclass": "scherp", "desc": "Sluipschutter: schiet ver en doodt mensen met \u00e9\u00e9n kogel, doet weinig tegen pantser."},
+	"hospik": {"name": "Hospik", "short": "Hospik", "cost": 300, "time": 1.2, "hp": 1.0, "dmg": 0.0, "color": Color("c4c4ae"), "gun": "m1911", "wep": "m1911", "range": 0.0, "rate": 0.0, "wclass": "", "heal": 9.0, "desc": "Hospik: schiet niet, maar heelt jou en je soldaten die dichtbij zijn."},
+	"ingenieur": {"name": "Ingenieur", "short": "Ingen.", "cost": 350, "time": 1.4, "hp": 1.0, "dmg": 0.0, "color": Color("9a7a3a"), "gun": "m1911", "wep": "m1911", "range": 0.0, "rate": 0.0, "wclass": "", "repair": 14.0, "desc": "Ingenieur: schiet niet, maar repareert je gebouwen en trucks als er niets te doen is."},
+}
+# Steen-papier-schaar: schade-vermenigvuldiger per soort schade (wclass van de kogel of raket) tegen het pantser van de vijand ("licht" of "zwaar").
+const ARMOR_MULT := {
+	"kogel": {"licht": 1.0, "zwaar": 0.5},
+	"scherp": {"licht": 2.2, "zwaar": 0.8},
+	"raket": {"licht": 0.7, "zwaar": 2.0},
+}
+
+
+## De vermenigvuldiger voor deze soort schade tegen dit pantser; 1.0 voor schade zonder soort (alles wat er al was).
+static func counter(wclass: String, armor: String) -> float:
+	if wclass == "" or not ARMOR_MULT.has(wclass):
+		return 1.0
+	return float((ARMOR_MULT[wclass] as Dictionary).get(armor, 1.0))
+
 
 const PLAYER_SPEED := 6.2
 const PLAYER_HP := 100.0

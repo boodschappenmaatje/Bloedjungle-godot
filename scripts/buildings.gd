@@ -67,8 +67,24 @@ static func time_factor() -> float:
 
 
 ## Seconden per rekruut in deze kazerne, met de bonus van het hoofdkwartier.
+## Seconden training voor de soldaat die nu vooraan in de rij staat (of een gewone schutter als de rij leeg is): per soort een eigen tijd (Data.SOLDIER_TYPES).
 static func train_time(b: Dictionary) -> float:
-	return float(LEVELS[b.lv].time) * time_factor()
+	var q: Array = b.get("queue_kinds", [])
+	var mult := float(Data.SOLDIER_TYPES[q[0]].time) if not q.is_empty() and Data.SOLDIER_TYPES.has(q[0]) else 1.0
+	return float(LEVELS[b.lv].time) * time_factor() * mult
+
+
+static func soldier_cost(kind: String) -> int:
+	return int(Data.SOLDIER_TYPES[kind].cost) if Data.SOLDIER_TYPES.has(kind) else TRAIN_COST
+
+
+## Wat de soldaten in de rij samen kostten (voor het terugkrijgen bij verkopen).
+static func queue_value(b: Dictionary) -> int:
+	var v := 0
+	var q: Array = b.get("queue_kinds", [])
+	for i in int(b.queue):
+		v += soldier_cost(String(q[i])) if i < q.size() else TRAIN_COST
+	return v
 
 
 func count(kind: String) -> int:
@@ -431,7 +447,7 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 	node.position = at
 	node.rotation.y = yaw
 	add_child(node)
-	var b := {"kind": kind, "node": node, "at": at, "yaw": yaw, "lv": 1, "queue": 0, "train_t": 0.0,
+	var b := {"kind": kind, "node": node, "at": at, "yaw": yaw, "lv": 1, "queue": 0, "queue_kinds": [], "train_t": 0.0,
 		"hp": DEFS[kind].hp, "max_hp": DEFS[kind].hp, "down": false, "cracked": false, "fx": null, "bar": null,
 		"rij": null, "rally": Vector3.ZERO, "has_rally": false, "rally_mode": "volgen", "flag": null}
 	node.ref = b
@@ -718,7 +734,7 @@ func sell_value(b: Dictionary) -> int:
 	if b.kind == "kazerne":
 		for l in range(2, b.lv + 1):
 			spent += LEVELS[l].cost
-	return roundi(spent * (0.25 if b.down else 0.5)) + b.queue * TRAIN_COST
+	return roundi(spent * (0.25 if b.down else 0.5)) + queue_value(b)
 
 
 func sell(b: Dictionary) -> void:
@@ -769,12 +785,18 @@ func room(b: Dictionary) -> int:
 	return LEVELS[b.lv].max - soldiers_alive() - queued()
 
 
-func recruit(b: Dictionary) -> void:
-	if b.down or under_construction(b) or room(b) <= 0 or b.queue >= RIJ_MAX or not Game.pay_points(TRAIN_COST):
+## Zet een soldaat van deze soort (Data.SOLDIER_TYPES) in de bouwrij van de kazerne.
+func recruit(b: Dictionary, kind := "geweer") -> void:
+	if not Data.SOLDIER_TYPES.has(kind):
 		return
-	if b.queue == 0:
-		b.train_t = train_time(b)
+	if b.down or under_construction(b) or room(b) <= 0 or b.queue >= RIJ_MAX or not Game.pay_points(soldier_cost(kind)):
+		return
+	if not b.has("queue_kinds"):
+		b["queue_kinds"] = []
+	(b.queue_kinds as Array).append(kind)
 	b.queue += 1
+	if b.queue == 1:
+		b.train_t = train_time(b)
 	Game.changed.emit()
 
 
@@ -824,7 +846,9 @@ func cancel_recruit(b: Dictionary) -> void:
 	if b.queue <= 0:
 		return
 	b.queue -= 1
-	Game.points += TRAIN_COST
+	var kinds: Array = b.get("queue_kinds", [])
+	var gone: String = String(kinds.pop_back()) if not kinds.is_empty() else "geweer"
+	Game.points += soldier_cost(gone)
 	if b.queue == 0:
 		b.train_t = 0.0
 	Sfx.play("ping", 0.5)
@@ -879,9 +903,10 @@ func upgrade(b: Dictionary) -> void:
 	Game.changed.emit()
 
 
-func _spawn(b: Dictionary) -> void:
+func _spawn(b: Dictionary, kind := "geweer") -> void:
 	var lv: Dictionary = LEVELS[b.lv]
 	var a := Ally.new()
+	a.kind = kind
 	add_child(a)
 	a.global_position = door_of(b)
 	a.face = b.yaw
@@ -890,7 +915,7 @@ func _spawn(b: Dictionary) -> void:
 	if b.rally_mode == "vlag" and b.has_rally:
 		a.set_command("defend", b.rally)
 	Sfx.play("reload")
-	Game.banner.emit("NIEUWE REKRUUT", "", 1.0)
+	Game.banner.emit("NIEUWE REKRUUT" if kind == "geweer" else "NIEUW: " + String(Data.SOLDIER_TYPES[kind].name).to_upper(), "", 1.0)
 	radio.say("eenheid_klaar")
 	Game.changed.emit()
 
@@ -938,8 +963,10 @@ func _physics_process(delta: float) -> void:
 		if b.kind == "kazerne" and not b.down and not under_construction(b) and b.queue > 0:
 			b.train_t -= delta
 			if b.train_t <= 0.0:
+				var kinds: Array = b.get("queue_kinds", [])
+				var kind: String = String(kinds.pop_front()) if not kinds.is_empty() else "geweer"
 				b.queue -= 1
-				_spawn(b)
+				_spawn(b, kind)
 				b.train_t = train_time(b)
 
 

@@ -41,6 +41,7 @@ var ground_direct_fire := false  # ground-level direct fire cannot arc over the 
 var visual_weapon := ""
 var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
 var feedback_source := ""  # optional confirmed-hit channel (e.g. player-driven jeep MG)
+var wclass := ""    # soort schade voor het steen-papier-schaar (Data.ARMOR_MULT); "" = neutraal, zoals alles wat er al was
 var src := "speler"  # wie schoot: "speler" of "soldaat" (alleen kills van de speler tellen voor de killstreak)
 
 
@@ -357,7 +358,9 @@ func _physics_process(delta: float) -> void:
 			var can_confirm := from_player and feedback_source in ["jeep", "infantry"] and c is Node3D and (Game.enemies.has(c) or (c as Node).is_in_group("vijand_verdediger"))
 			var hp_before := float(c.get("hp")) if can_confirm else 0.0
 			Game.hit_src = src
+			Game.hit_class = wclass
 			c.hit(dmg, dir, from_player)
+			Game.hit_class = ""
 			Game.hit_src = "speler"
 			if can_confirm and is_instance_valid(c):
 				var dealt := CombatAimFeedback.actual_damage(hp_before, float(c.get("hp")))
@@ -434,7 +437,11 @@ func _explode(at: Vector3) -> void:
 		if is_instance_valid(e):
 			var d: float = e.global_position.distance_to(at)
 			if d < explosive and not BaseWallRules.blocks_blast(at, e.global_position):
+				Game.hit_class = wclass
+				Game.hit_src = src   # een raket van een soldaat telt niet voor jouw killstreak
 				e.hit(dmg * (1.0 - d / explosive * 0.7), (e.global_position - at).normalized(), true)
+				Game.hit_src = "speler"
+				Game.hit_class = ""
 
 
 ## Ontploffing van een vijandelijke raket (explode() in 15-combat.js met fromPlayer = false).

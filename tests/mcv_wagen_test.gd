@@ -6,6 +6,8 @@ extends SceneTree
 var M: GDScript
 var main: Node
 var frames := 0
+var raw := 0
+var started := false
 var fails := 0
 var mcv: Node
 var model
@@ -20,6 +22,7 @@ var steer_max := 0.0
 
 func _initialize() -> void:
 	load("res://scripts/data.gd").set("mcv_mode", true)
+	load("res://scripts/data.gd").set("mcv_autodeploy", false)
 	M = load("res://scripts/mcv.gd")
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
@@ -32,12 +35,18 @@ func _check(name: String, ok: bool) -> void:
 
 
 func _process(_d: float) -> bool:
-	frames += 1
 	var g = root.get_node("Game")
-	if frames == 2:
-		main.get_node("Hud/Sticks").set_process(false)
-	if frames == 4:
-		main.begin()
+	if not started:
+		raw += 1
+		if raw == 2:
+			main.get_node("Hud/Sticks").set_process(false)
+		if raw == 4:
+			main.begin()
+		if get_nodes_in_group("mcv").is_empty():
+			return false   # de wereld (met vijandbasis) wordt gefaseerd gebouwd: wacht op de wagen
+		started = true
+		frames = 9
+	frames += 1
 	if frames == 10:
 		mcv = get_nodes_in_group("mcv")[0]
 		model = mcv.get_node("Model")

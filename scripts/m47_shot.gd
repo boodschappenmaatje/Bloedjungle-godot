@@ -63,7 +63,7 @@ static func _blast(at: Vector3, r: float, dmg: float) -> void:
 	if Game.gates:
 		for i in Game.gates.list.size():
 			var g: Dictionary = Game.gates.list[i]
-			var gd: float = maxf(0.0, Vector2(Game.gates.pos_of(g).x - at.x, Game.gates.pos_of(g).z - at.z).length() - Data.GATE_GAP)
+			var gd: float = maxf(0.0, Vector2(Game.gates.pos_of(g).x - at.x, Game.gates.pos_of(g).z - at.z).length() - Gates.G)
 			if not g.broken and gd < r:
 				Game.gates.damage(i, dmg * 3.0 * (1.0 - gd / r), "explosive")
 	for e in Game.enemies.duplicate():

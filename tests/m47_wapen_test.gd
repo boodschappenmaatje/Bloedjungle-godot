@@ -58,7 +58,6 @@ func _process(_d: float) -> bool:
 		# eigen kampmuur: stukken zetten en schieten; vijandelijke basismuur: schieten op de westmuur
 		var b = game.builds
 		var wall_nodes := []
-		Data.mcv_mode = true
 		game.mcv_deployed = true
 		var base_at: Vector3 = player.global_position + Vector3(14.0, 0, 14.0)
 		for i in 3:

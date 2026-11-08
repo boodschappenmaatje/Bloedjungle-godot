@@ -33,6 +33,13 @@ func run() -> void:
 	print("FERN TRIAL world built")
 	game_main.set_process(false)
 	game_main.get_node("Hud").hide()
+	# PauseMenu is its own CanvasLayer, so hiding Hud alone does not hide the
+	# intro sheet in this harness (the normal button flow closes it first).
+	for menu in get_tree().get_nodes_in_group("menus"):
+		if menu is CanvasLayer:
+			menu.visible = false
+		elif menu is CanvasItem:
+			menu.hide()
 	var player: Node3D = Game.player
 	var camera: Camera3D = game_main.get_node("Camera")
 	camera.set_process(false)

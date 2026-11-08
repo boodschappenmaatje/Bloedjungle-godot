@@ -78,19 +78,25 @@ func _process(_d: float) -> bool:
 		_check("de wagen is geen bestuurbaar voertuig meer", get_nodes_in_group("mcv").is_empty() and get_nodes_in_group("mcv_wagen").size() == 1)
 		_check("het hoofdkwartier staat op de wagenplek", g.base_pos.distance_to(hq_at) < 0.01)
 		var opb := main.find_child("Opbouw", true, false)
-		_check("er is een bouwplaats (steigers) en het gebouw is nog laag", opb != null and vis.scale.y < vis_scale.y * 0.5)
+		_check("de bouw wacht op het uitklappen: gebouw en voorplein nog verborgen", opb != null and not opb.begonnen and not vis.visible and not main.find_child("Voorplein", true, false).visible)
 	if frames == 420:
 		# na ~4,5 s: de wagen staat 9,6 m voor het hoofdkwartier en de clip speelt
 		var want: Vector3 = hq_at + Basis(Vector3.UP, yaw) * Vector3(0.0, 0.0, M.PARK_Z)
 		_check("de wagen is uit het kamp gereden en geparkeerd (%.1f m van de plek)" % mcv.global_position.distance_to(want), mcv.global_position.distance_to(want) < 0.3)
 		_check("de clip Uitklappen speelt", not model.uitklappen_klaar())
-	if frames == 1000:
-		# 16 s: de clip is klaar (6 s) en het gebouw is halverwege
+	if frames == 830:
+		# de clip (6 s) is klaar en de bouw is net begonnen: het voorplein komt omhoog en de steiger staat er
+		var opb1 = main.find_child("Opbouw", true, false)
 		_check("de clip Uitklappen is klaar", model.uitklappen_klaar())
 		_check("het schild staat omhoog", absf((model.find_child("Schild", true, false) as Node3D).rotation.x - 0.56) < 0.02)
-		_check("het gebouw groeit (tussen laag en hoog)", vis.scale.y > vis_scale.y * 0.3 and vis.scale.y < vis_scale.y * 0.999)
-	if frames == 1700:
-		# na 28 s: klaar
+		_check("de bouw is begonnen met steiger en gebouw", opb1.begonnen and vis.visible and main.find_child("Steiger", true, false).visible)
+		var plein1: Node3D = main.find_child("Voorplein", true, false)
+		_check("het voorplein komt omhoog uit de grond", plein1.visible and plein1.position.y < -0.5)
+	if frames == 1300:
+		_check("het gebouw groeit (tussen laag en hoog)", vis.scale.y > vis_scale.y * 0.1 and vis.scale.y < vis_scale.y * 0.999)
+		_check("het voorplein staat op de grond", absf((main.find_child("Voorplein", true, false) as Node3D).position.y) < 0.01)
+	if frames == 2150:
+		# na ~33 s: klaar
 		var opb2 = main.find_child("Opbouw", true, false)
 		_check("het hoofdkwartier is klaar en op volle hoogte", opb2.klaar and is_equal_approx(vis.scale.y, vis_scale.y))
 		_check("de steigers zijn weg", main.find_child("Steiger", true, false) == null)

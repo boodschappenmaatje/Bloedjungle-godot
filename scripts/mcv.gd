@@ -38,6 +38,7 @@ var _park_to := Vector3.ZERO
 var _park_t := -1.0          # s sinds het wegrijden (-1 = niet bezig)
 var _park_len := 1.0
 var _park_play := false
+var _opbouw   # McvOpbouw
 var _park_last := 0.0
 
 
@@ -288,7 +289,8 @@ func deploy_now() -> void:
 	BaseProps.build_hq(holder)
 	# de wagen blijft als commandokern voor het hoofdkwartier staan: ook die strook wordt vrijgemaakt
 	removed += Foliage.clear_for_building(get_instance_id(), [PARK_REGION], at, yaw, Foliage.BUILD_CLEAR_MARGIN, true)
-	McvOpbouw.new().start(holder)   # het hoofdkwartier groeit in 20 s met steigers (de wagen rijdt eerst weg)
+	_opbouw = McvOpbouw.new()
+	_opbouw.start(holder)   # het hoofdkwartier groeit in 20 s met steigers, nadat de wagen is weggereden en uitgeklapt
 	Game.base_pos = at
 	Game.base_yaw = yaw
 	Game.mcv_deployed = true
@@ -306,7 +308,7 @@ func deploy_now() -> void:
 		p.home = Game.base_home()
 		p.global_position = p.home
 		p.face = yaw
-	Game.banner.emit("HOOFDKWARTIER WORDT GEBOUWD", "Bouw via BOUW je gratis depot, muren en 4 gratis torens · eerste groep over %d min" % roundi(Data.MCV_RUST / 60.0), 5.0)
+	Game.banner.emit("DE WAGEN KLAPT UIT", "Bouw via BOUW je gratis depot, muren en 4 gratis torens · eerste groep over %d min" % roundi(Data.MCV_RUST / 60.0), 5.0)
 	Sfx.play("buy")
 	Game.changed.emit()
 	PerfMonitor.note("mcv uitgeklapt: %d planten weggehaald" % removed)
@@ -329,6 +331,8 @@ func _start_park() -> void:
 	_park_t = 0.0
 	_park_play = false
 	_model.set_schild_omhoog(true)
+	if _opbouw != null:
+		_opbouw.wagen = self
 
 
 func _park_step(delta: float) -> void:
@@ -347,5 +351,7 @@ func _park_step(delta: float) -> void:
 		_model.play_uitklappen()
 		Sfx.play("spuit", 0.9)
 	if _park_play and _model.uitklappen_klaar():
+		if _opbouw != null and is_instance_valid(_opbouw):
+			_opbouw.begin()
 		_park_t = -1.0
 		collision_layer = 32

@@ -8,6 +8,7 @@ extends Control
 const CARD_H := 78.0
 const GAP := 8.0
 const ORDER := ["depot", "kazerne", "garage", "helipad", "airfield", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "muur"]
+const ORDER_MCV := ["depot", "kazerne", "garage", "helipad", "airfield", "Ziekenboeg", "Munitiedepot", "Werkplaats", "Radiopost", "zandzak", "kampmuur", "poort", "wachttoren"]   # MCV-start: de kampmuur trek je met je vinger
 const ORDERS := {"follow": "Volgen", "hold": "Posten"}
 
 var _ui: Control
@@ -22,6 +23,11 @@ var _cards: Array = []
 var _zoom_btns: Array = []
 var _airfield_rotate_btn: Button
 var _sel: Variant = null
+var _gate_armed := false   # MCV-start: het kaartje POORT is gekozen; tik op een muurstuk om er een poort van te maken
+var _gate_sel: Variant = null   # MCV-start: de aangetikte poort (paneel met repareren en verkopen)
+var _wall_armed := false   # MCV-start: de kampmuur is gekozen; slepen over de grond trekt een muur
+var _wall_plan: Dictionary = {}
+var _wall_ghost: Node3D
 var _hq_open := false  # MCV-start: het hoofdkwartier is aangetikt in het bouwscherm (paneel om het te draaien)
 var _build_info: Label = null  # label van "In aanbouw" dat live aftelt
 var _build_b: Variant = null
@@ -111,11 +117,24 @@ class Card:
 			"zandzak":
 				for p in [[14, 36], [32, 36], [50, 36], [23, 27], [41, 27], [32, 18]]:
 					_ell(r, p[0], p[1], 9, 5, Color("8a7a50"))
-			"muur":
+			"muur", "kampmuur":
 				_rc(r, 4, 40, 56, 3, Color("5e5e58"))
 				for x in [6, 24, 42]:
 					_rc(r, x, 14, 16, 26, Color("9a978c"))
 				_rc(r, 6, 30, 52, 2, Color("c9a227"))
+			"wachttoren":
+				_rc(r, 22, 6, 20, 5, Color("8a6a3c"))
+				_rc(r, 20, 12, 24, 4, Color("6a4a2a"))
+				_rc(r, 24, 16, 3, 24, Color("7a5a32"))
+				_rc(r, 37, 16, 3, 24, Color("7a5a32"))
+				_rc(r, 26, 24, 12, 2, Color("7a5a32"))
+				_rc(r, 26, 32, 12, 2, Color("7a5a32"))
+			"poort":
+				_rc(r, 4, 40, 56, 3, Color("5e5e58"))
+				_rc(r, 4, 14, 12, 26, Color("9a978c"))
+				_rc(r, 48, 14, 12, 26, Color("9a978c"))
+				_rc(r, 18, 22, 28, 18, Color("5a5f48"))
+				_rc(r, 18, 22, 28, 3, Color("c9a227"))
 			"garage":
 				_rc(r, 6, 12, 52, 28, Color("7a786c"))
 				_rc(r, 4, 9, 56, 4, Color("4a4a42"))
@@ -179,7 +198,7 @@ func _ready() -> void:
 	_panel.custom_minimum_size.x = 250
 	_panel.visible = false
 	_ui.add_child(_panel)
-	for k in ORDER:
+	for k in (ORDER_MCV if Data.mcv_mode else ORDER):
 		var c := Card.new()
 		c.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		c.kind = k
@@ -289,6 +308,10 @@ func _exit() -> void:
 	_pinch = {}
 	_sel = null
 	_hq_open = false
+	_wall_armed = false
+	_gate_armed = false
+	_gate_sel = null
+	_wall_clear_ghost()
 	_flag_for = null
 	if _ghost:
 		_ghost.visible = false
@@ -393,6 +416,9 @@ func _refresh() -> void:
 			var cost: int = Buildings.cost_of(c.kind)
 			c.off = built or need != "" or (c.kind != "airfield" and not Game.can_afford_build(cost))
 			c.sub = ("gebouwd" if not Game.builds.is_piece(c.kind) else "max") if built else ("eerst " + String(Buildings.DEFS[need].name) if need != "" else ("GRATIS" if cost == 0 else UI.nl(cost) + " pt"))
+		elif c.kind == "poort":
+			c.off = not Game.mcv_deployed or not Game.can_afford_build(Kampmuur.GATE_COST)
+			c.sub = UI.nl(Kampmuur.GATE_COST) + " pt"
 		else:
 			c.off = true
 			c.sub = "binnenkort"
@@ -401,6 +427,96 @@ func _refresh() -> void:
 		return
 	_airfield_preview_dirty = true
 	_fill_panel()
+
+
+## MCV-start: voorbeeld van de muur die je trekt: groen = komt er, rood = kan niet, oranje = te weinig punten, bestaande stukken blijven zoals ze zijn.
+func _wall_show(plan: Dictionary) -> void:
+	if _wall_ghost == null or not is_instance_valid(_wall_ghost):
+		_wall_ghost = Node3D.new()
+		_wall_ghost.name = "Muurvoorbeeld"
+		Game.builds.add_child(_wall_ghost)
+	var edges: Array = plan.edges
+	while _wall_ghost.get_child_count() < edges.size():
+		var mi := MeshInstance3D.new()
+		var bm := BoxMesh.new()
+		bm.size = Vector3(Kampmuur.STEP - 0.2, 0.4, Kampmuur.THICK + 0.3)
+		mi.mesh = bm
+		var mat := StandardMaterial3D.new()
+		mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		mi.material_override = mat
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		_wall_ghost.add_child(mi)
+	for i in _wall_ghost.get_child_count():
+		var mi := _wall_ghost.get_child(i) as MeshInstance3D
+		if i >= edges.size() or edges[i].state == "bestaat":
+			mi.visible = false
+			continue
+		var e: Dictionary = edges[i]
+		mi.visible = true
+		mi.position = Vector3(e.at.x, 0.3, e.at.z)
+		mi.rotation.y = e.yaw
+		var col: Color = {"ok": Color(0.2, 0.9, 0.3, 0.55), "slecht": Color(0.95, 0.2, 0.15, 0.6), "duur": Color(1.0, 0.65, 0.15, 0.6)}.get(e.state, Color.WHITE)
+		(mi.material_override as StandardMaterial3D).albedo_color = col
+	var n := int(plan.built)
+	var cost := int(plan.cost)
+	_say(("%d stukken · %s" % [n, "GRATIS" if cost == 0 else "%d pt" % cost]) if n > 0 else "Sleep verder om een muur te trekken", UI.INK_DIM, 1.2)
+
+
+func _wall_clear_ghost() -> void:
+	_wall_plan = {}
+	if _wall_ghost != null and is_instance_valid(_wall_ghost):
+		_wall_ghost.queue_free()
+	_wall_ghost = null
+
+
+## MCV-start: het paneel van een poort die je zelf in de muur zette: repareren en verkopen.
+func _fill_gate_panel() -> void:
+	var g: Dictionary = _gate_sel
+	_panel.visible = true
+	if _ring:
+		_ring.visible = false
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 6)
+	_panel.add_child(vb)
+	var head := HBoxContainer.new()
+	vb.add_child(head)
+	head.add_child(UI.label("POORT", UI.display(1), 18, UI.INK))
+	var sp := Control.new()
+	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(sp)
+	var status := "KAPOT" if g.broken else "%d%%" % roundi(g.hp / g.max_hp * 100.0)
+	head.add_child(UI.label(status, UI.body(700, 0), 13, UI.BRASS))
+	var x := Button.new()
+	x.add_to_group("hud_button")
+	x.text = "✕"
+	UI.style_button(x, "pause")
+	x.custom_minimum_size = Vector2(30, 30)
+	x.pressed.connect(func():
+		_gate_sel = null
+		_fill_panel())
+	head.add_child(x)
+	var info := Label.new()
+	info.add_theme_font_override("font", UI.body(600, 0))
+	info.add_theme_font_size_override("font_size", 13)
+	info.add_theme_color_override("font_color", UI.INK_DIM)
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.custom_minimum_size.x = 226
+	info.text = "Gaat vanzelf open voor jou, je soldaten en je trucks. Vijanden slaan of schieten hem kapot."
+	vb.add_child(info)
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 6)
+	vb.add_child(row)
+	var fix: int = Game.gates.repair_cost(g)
+	if fix > 0:
+		_act(row, "Herbouw" if g.broken else "Repareer", "%d pt" % fix, Game.can_afford_build(fix), func():
+			if Game.pay_build(fix):
+				Game.gates.repair(g)
+			Game.changed.emit())
+	_act(row, "Verkoop", "+%d tegoed" % (Kampmuur.GATE_COST / 2), true, func():
+		_gate_sel = null
+		Kampmuur.sell_gate(g))
 
 
 ## MCV-start: het paneel van het hoofdkwartier. Draaien in stappen van 90° of 15°, het voorplein en de deur draaien mee.
@@ -454,6 +570,13 @@ func _fill_panel() -> void:
 		ch.queue_free()
 	if _sel != null:
 		_hq_open = false
+		_gate_sel = null
+	if _gate_sel != null:
+		if Game.gates == null or not Game.gates.list.has(_gate_sel):
+			_gate_sel = null
+		else:
+			_fill_gate_panel()
+			return
 	if _hq_open:
 		_fill_hq_panel()
 		return
@@ -596,10 +719,11 @@ func _fill_panel() -> void:
 		_act(row, "Herbouw" if b.down else "Repareer", "%d pt" % fix, Game.can_afford_build(fix), func():
 			Game.builds.repair(b)
 			Game.changed.emit())
-	_act(row, "Draai", "", true, func():
-		if not Game.builds.turn(b):
-			_say("GEEN RUIMTE")
-		Game.changed.emit())
+	if b.kind != "kampmuur":   # een muurstuk zit vast op het rooster
+		_act(row, "Draai", "", true, func():
+			if not Game.builds.turn(b):
+				_say("GEEN RUIMTE")
+			Game.changed.emit())
 	var armed: bool = _sell_arm == b
 	_act(row, "Zeker?" if armed else "Verkoop", "+%d tegoed" % Game.builds.sell_value(b), true, func():
 		if armed:
@@ -708,7 +832,7 @@ func _down(id: int, pos: Vector2) -> void:
 		var map_pointers: Array = _pointer_map.values()
 		if map_pointers.size() == 2 and bool(map_pointers[0]) and bool(map_pointers[1]):
 			var v: Array = _ptrs.values()
-			_pinch = {"d": maxf(1.0, (v[0] - v[1]).length()), "zoom": Game.bcam.z}
+			_pinch = {"d": maxf(1.0, (v[0] - v[1]).length()), "zoom": Game.bcam.z, "mid": (v[0] + v[1]) * 0.5}
 		else:
 			_pinch = {"blocked": true}
 		return
@@ -720,7 +844,29 @@ func _down(id: int, pos: Vector2) -> void:
 				Sfx.play("ping", 0.5)
 				if not Buildings.DEFS.has(c.kind):
 					_say(c.kind.to_upper() + " KOMT LATER")
+			elif c.kind == "poort":
+				_airfield_armed = false
+				Game.airfield_build_view = false
+				_wall_armed = false
+				_gate_armed = not _gate_armed
+				_hq_open = false
+				_gate_sel = null
+				_sel = null
+				_fill_panel()
+				_say("Tik op een muurstuk om er samen met zijn buur een poort van te maken · tik weer op POORT om te stoppen" if _gate_armed else "Poort plaatsen uit", UI.INK_DIM, 5.0)
+			elif c.kind == "kampmuur":
+				_gate_armed = false
+				_airfield_armed = false
+				Game.airfield_build_view = false
+				_wall_armed = not _wall_armed
+				_hq_open = false
+				_gate_sel = null
+				_sel = null
+				_fill_panel()
+				_say("Sleep over de grond om een muur te trekken · tik op een muurstuk om hem te verkopen · twee vingers verschuiven de kaart · tik weer op KAMPMUUR om te stoppen" if _wall_armed else "Muur trekken uit", UI.INK_DIM, 5.0)
 			elif c.kind == "airfield":
+				_wall_armed = false
+				_gate_armed = false
 				_airfield_armed = true
 				_airfield_yaw = 0.0
 				Game.airfield_build_view = true
@@ -732,6 +878,8 @@ func _down(id: int, pos: Vector2) -> void:
 				_clamp_pan()
 				_say("Versleep de kaart met één vinger. Tik op een geldige plek om te bouwen.", UI.INK_DIM, 3.0)
 			else:
+				_wall_armed = false
+				_gate_armed = false
 				_airfield_armed = false
 				Game.airfield_build_view = false
 				_drag = {"kind": c.kind, "yaw": 0.0, "ox": 0.0, "oz": 0.0, "sp": pos, "moved": false, "id": id, "st": null}
@@ -750,7 +898,16 @@ func _down(id: int, pos: Vector2) -> void:
 		_fill_panel()
 		return
 	var st = _struct_at(g)
-	if st != null:
+	var gate_hit: Variant = Game.gates.gate_at(g) if (Data.mcv_mode and Game.gates != null) else null
+	if _gate_armed and st != null and st.kind == "kampmuur":
+		_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id, "gate_make": st, "at": g}   # tik = poort maken, slepen = kaart
+	elif gate_hit != null and not _wall_armed:
+		_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id, "gate_tap": gate_hit}
+	elif _wall_armed and (st == null or st.kind == "kampmuur"):
+		_drag = {"wall": true, "st": st, "sp": pos, "moved": false, "id": id, "path": [Kampmuur.snap(g)]}   # tik = muurstuk selecteren, slepen = muur trekken
+	elif st != null and st.kind == "kampmuur":
+		_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id, "wall_tap": st}   # een muurstuk zit vast op het rooster: alleen tikken (selecteren), slepen = kaart
+	elif st != null:
 		_drag = {"kind": st.kind, "st": st, "yaw": st.yaw, "ox": st.at.x - g.x, "oz": st.at.z - g.z, "sp": pos, "moved": false, "id": id}
 	elif _airfield_armed:
 		_drag = {"kind": "airfield", "sp": pos, "last": pos, "moved": false, "id": id, "st": null}
@@ -768,6 +925,10 @@ func _over_card(pos: Vector2) -> bool:
 
 
 func _cancel_drag() -> void:
+	if _drag.get("wall", false):
+		_wall_clear_ghost()
+		_drag = {}
+		return
 	if _drag.has("st") and _drag.st != null:
 		_drag.st.node.visible = true
 	_drag = {}
@@ -783,9 +944,26 @@ func _move(id: int, pos: Vector2) -> void:
 			return
 		var v: Array = _ptrs.values()
 		_set_zoom(_pinch.zoom * _pinch.d / maxf(1.0, (v[0] - v[1]).length()))
+		var mid: Vector2 = (v[0] + v[1]) * 0.5   # twee vingers verschuiven de kaart ook (nodig als je met één vinger muren trekt)
+		if _pinch.has("mid"):
+			_pan_by_screen_drag(_pinch.mid, mid)
+		_pinch["mid"] = mid
 		_airfield_preview_dirty = true
 		return
 	if _drag.is_empty() or id != _drag.id:
+		return
+	if _drag.get("wall", false):
+		if not _drag.moved and pos.distance_to(_drag.sp) < DRAG_THRESHOLD:
+			return
+		_drag.moved = true
+		var gw: Variant = _ground(pos)
+		if gw == null:
+			return
+		var vtx := Kampmuur.snap(gw)
+		if vtx != _drag.path[_drag.path.size() - 1]:
+			Kampmuur.extend(_drag.path, vtx)
+			_wall_plan = Kampmuur.plan(_drag.path)
+			_wall_show(_wall_plan)
 		return
 	if _drag.get("kind", "") == "airfield" and _drag.get("st") == null and not _drag.moved:
 		if pos.distance_to(_drag.sp) < DRAG_THRESHOLD:
@@ -831,17 +1009,51 @@ func _up(id: int) -> void:
 	_drag = {}
 	if _ghost:
 		_ghost.visible = false
+	if d.get("wall", false):
+		_wall_clear_ghost()
+		if not d.moved:
+			if d.st != null:
+				_sel = null if _sel == d.st else d.st
+				_sell_arm = null
+				_hq_open = false
+				Game.changed.emit()
+			return
+		var r: Dictionary = Kampmuur.build(d.path)
+		if int(r.built) > 0:
+			_say("%d MUURSTUKKEN GEBOUWD" % int(r.built) if int(r.built) != 1 else "1 MUURSTUK GEBOUWD", UI.INK_DIM, 2.0)
+		if int(r.poor) > 0:
+			_say("ONVOLDOENDE PUNTEN VOOR %d STUKKEN" % int(r.poor))
+		elif int(r.skipped) > 0 and int(r.built) == 0:
+			_say("HIER KAN GEEN MUUR (%s)" % String(r.reason).to_upper())
+		return
 	if d.get("pan", false):
-		if not d.moved and d.get("hq", false):
+		if not d.moved and d.get("gate_make") != null:
+			var r: Dictionary = Kampmuur.place_gate(d.gate_make.edge, d.at)
+			_say("POORT GEPLAATST" if r.ok else String(r.reason).to_upper(), UI.INK_DIM if r.ok else Color("ff7a6a"), 2.0)
+			Game.changed.emit()
+		elif not d.moved and d.get("gate_tap") != null:
+			_sel = null
+			_hq_open = false
+			_gate_sel = null if _gate_sel == d.gate_tap else d.gate_tap
+			Sfx.play("click")
+			_fill_panel()
+		elif not d.moved and d.get("wall_tap") != null:
+			_sel = null if _sel == d.wall_tap else d.wall_tap
+			_sell_arm = null
+			_hq_open = false
+			Sfx.play("click")
+			_fill_panel()
+		elif not d.moved and d.get("hq", false):
 			_sel = null
 			_sell_arm = null
 			_hq_open = true
 			Sfx.play("click")
 			_fill_panel()
-		elif not d.moved and (_sel != null or _hq_open):
+		elif not d.moved and (_sel != null or _hq_open or _gate_sel != null):
 			_sel = null
 			_sell_arm = null
 			_hq_open = false
+			_gate_sel = null
 			_fill_panel()
 		return
 	if d.get("kind", "") == "airfield" and d.get("st") == null:

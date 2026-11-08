@@ -267,6 +267,27 @@ func _physics_process(delta: float) -> void:
 				if type == "assault" and _assault_ammo <= 0:
 					_start_assault_reload()
 
+	# MCV-start: een muur (of poort) van het kamp in de weg: erop slaan of schieten tot hij kapot is, net als bij de poort van het oude kamp
+	var wall: Variant = _wall_ahead(move_goal, delta) if want_move and Data.mcv_mode else null
+	if wall != null:
+		want_move = false
+		var wall_at: Vector3 = wall.at
+		look = _angle_to(wall_at)
+		if fire_t <= 0.0 and t.get("rocket", false):
+			_shoot_rocket(look, wall_at)
+		elif fire_t <= 0.0:
+			if type != "assault" or _consume_assault_round():
+				fire_t = t.rate if melee else maxf(t.rate, 0.45)
+				if melee:
+					model.play("steken", 0.08, 1.7)
+					Sfx.play("knife", 1.0, global_position)
+				else:
+					Sfx.play("ping", 0.8, global_position)
+				Game.mark_attack(global_position)
+				Game.builds.damage(wall, t.dmg * (0.5 if melee else 0.25))
+				if type == "assault" and _assault_ammo <= 0:
+					_start_assault_reload()
+
 	var vel := Vector3.ZERO
 	if want_move:
 		var wp := Route.waypoint(global_position, move_goal)
@@ -481,6 +502,31 @@ func _find_cover(threat: Vector3) -> Variant:
 		bd = d
 		best = pt
 	return best
+
+
+var _wall_t := 0.0
+var _wall_cache: Variant = null
+
+
+## Staat er een muurstuk of poort van het kamp vlak voor hem op weg naar zijn doel? (Een straal van 2,6 m, vijf keer per seconde.) Geeft het bouwstuk of null.
+func _wall_ahead(goal: Vector3, delta: float) -> Variant:
+	_wall_t -= delta
+	if _wall_t > 0.0:
+		return _wall_cache if _wall_cache != null and Game.buildings.has(_wall_cache) else null
+	_wall_t = 0.2
+	_wall_cache = null
+	var dir := _flat(goal - global_position)
+	if dir.length() < 0.5:
+		return null
+	dir = dir.normalized()
+	var from := global_position + Vector3.UP
+	var q := PhysicsRayQueryParameters3D.create(from, from + Vector3(dir.x, 0.0, dir.y) * 2.6, Kit.LAYER_FORTIFICATION)
+	var h := get_world_3d().direct_space_state.intersect_ray(q)
+	if not h.is_empty() and h.collider is BuildingBody:
+		var ref: Dictionary = (h.collider as BuildingBody).ref
+		if not ref.is_empty() and Game.buildings.has(ref) and (ref.kind == "kampmuur" or ref.kind == "poort"):
+			_wall_cache = ref
+	return _wall_cache
 
 
 static func _inside_wall(p: Vector3) -> bool:

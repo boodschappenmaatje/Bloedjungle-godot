@@ -11,6 +11,8 @@ const DEFS := {
 	"helipad": {"name": "Heliplatform", "cost": 1000, "size": Vector3(12.8, 2.0, 12.8), "max": 1, "hp": 1200.0},
 	"airfield": {"name": "Vliegveld", "cost": AirfieldHQ23.BUILD_COST, "size": AirfieldHQ23.FOOTPRINT, "max": 1, "hp": 3000.0},
 	"zandzak": {"name": "Zandzakken", "cost": 150, "size": Vector3(3.1, 0.95, 0.8), "max": 40, "hp": 380.0, "piece": true},
+	"wachttoren": {"name": "Wachttoren", "cost": 100, "size": Vector3(1.9, 5.0, 1.9), "max": 40, "hp": 800.0},   # MCV-start: dezelfde klimbare toren als in het oude kamp (wachttoren.glb), alleen bij je hoofdkwartier
+	"kampmuur": {"name": "Kampmuur", "cost": 50, "size": Vector3(3.5, 3.0, 0.7), "max": 800, "hp": 1500.0, "piece": true},   # MCV-start (kampmuur.gd): met je vinger getrokken, op een rooster van 3,5 m
 	"muur": {"name": "Betonmuur", "cost": 300, "size": Vector3(3.0, 1.55, 0.7), "max": 30, "hp": 1100.0, "piece": true},
 }
 # kaartjes die in de lijst staan maar nog geen model hebben (komen later)
@@ -24,12 +26,14 @@ const HELI_COST := 500
 const GARAGE_RIJ_MAX := 3  # wagens die tegelijk in de garagerij mogen staan; van elk type mag je er zoveel kopen als je wilt
 # Generals-plan stap 1 (docs/GENERALS_PLAN.md): bouwtijd in seconden en wat je eerst nodig hebt (techboom).
 # Muren en zandzakken staan er meteen. Tests en code die place() zonder bouwtijd aanroepen bouwen direct.
-const BUILD_TIME := {"depot": 12.0, "kazerne": 12.0, "garage": 15.0, "helipad": 20.0, "airfield": 30.0}
+const BUILD_TIME := {"wachttoren": 8.0, "depot": 12.0, "kazerne": 12.0, "garage": 15.0, "helipad": 20.0, "airfield": 30.0}
 const REQUIRES := {"garage": "kazerne", "helipad": "garage", "airfield": "helipad"}
 const PAD_T := 4.5  # seconden dat de luiken en de lift nodig hebben (de clips Open en Dicht)
 const INFO := {
 	"zandzak": "Lage dekking: kogels stoppen erop, jij schiet eroverheen.",
 	"muur": "Hoge betonblokken: niemand schiet of loopt erdoorheen.",
+	"wachttoren": "Klim erop (loop tegen de trap) en schiet over de muur. Alleen bij je hoofdkwartier.",
+	"kampmuur": "Hoge muur: niemand schiet of loopt erdoorheen. Vijanden schieten hem stuk; verkopen en repareren kan.",
 }
 # per niveau: soldaten tegelijk, seconden per rekruut, gezondheid, schade en wat het niveau kost
 const LEVELS := [null,
@@ -39,6 +43,7 @@ const LEVELS := [null,
 const TRAIN_COST := 250
 const RIJ_MAX := 5  # soldaten tegelijk in de bouwrij van een kazerne (Generals-plan stap 2)
 const DOOR := 2.5  # afstand van het midden tot het punt voor de deur
+const TOWER_RANGE := 45.0  # m: een wachttoren mag alleen zo dicht bij het hoofdkwartier staan (Dennis: "alleen bij de basis")
 const HQ_SPEEDUP := 0.75  # hoofdkwartier niveau 2: alle bouw- en opleidingstijden 25% korter (Generals-plan stap 3)
 const DOOR_U := -0.04   # midden van de garagepoort (assets/garage.glb, poort 3,7 x 4,4 m)
 const FRONT := 1.93     # afstand van het midden van de garage tot de voorkant van de poort
@@ -47,6 +52,7 @@ const C := Data.COMPOUND
 
 
 var radio: Radio
+var batch := false   # tijdens het bouwen van een hele muur: geen geluid en geen verversing per stuk (kampmuur.gd)
 
 
 func _ready() -> void:
@@ -133,6 +139,10 @@ func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null)
 				return _placement_result(false, _overlap_message(blocker), 0)
 		var removable := Foliage.count_clearable_in_regions(_clearance_regions(kind), at, yaw)
 		return _placement_result(true, "Bouwen mogelijk — begroeiing wordt verwijderd" if removable > 0 else "Bouwen mogelijk", removable)
+	if kind == "kampmuur":
+		return _kampmuur_status(at, yaw, me)
+	if kind == "wachttoren":
+		return _tower_status(at, yaw, me)
 	var d: Dictionary = DEFS[kind]
 	var sz: Vector3 = d.size
 	var piece := is_piece(kind)
@@ -198,6 +208,60 @@ func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null)
 	if door_blocker != null:
 		return _placement_result(false, "Te dicht bij bestaande gebouwen", 0)
 	var removable := Foliage.count_clearable_in_regions(_clearance_regions(kind), at, yaw) if is_inside_tree() else 0
+	return _placement_result(true, "Bouwen mogelijk — begroeiing wordt verwijderd" if removable > 0 else "Bouwen mogelijk", removable)
+
+
+## Een muurstuk van de MCV-start: aan jouw kant van de rivier, niet in iets massiefs (andere muurstukken raken elkaar bij de hoeken en tellen niet mee).
+func _kampmuur_status(at: Vector3, yaw: float, me: Variant) -> Dictionary:
+	if not Data.mcv_mode or not Game.mcv_deployed:
+		return _placement_result(false, "Klap eerst je wagen uit", 0)
+	if full("kampmuur") and me == null:
+		return _placement_result(false, "Je hebt het maximum aan muurstukken", 0)
+	var sz: Vector3 = DEFS["kampmuur"].size
+	for u in [-0.5, 0.0, 0.5]:
+		var p := _pt(at, yaw, u * sz.x, 0.0)
+		if not Mcv.in_play_area(p, 4.0):
+			return _placement_result(false, "Buiten speelbaar gebied", 0)
+		if not Mcv.dry_side(p, 3.0):
+			return _placement_result(false, "Kan niet in of voorbij de rivier bouwen", 0)
+	if not is_inside_tree():
+		return _placement_result(true, "Bouwen mogelijk", 0)
+	var ex: Array[RID] = []
+	for b in Game.buildings:
+		if b.kind == "kampmuur" and is_instance_valid(b.node):
+			ex.append((b.node as CollisionObject3D).get_rid())
+	if me != null and is_instance_valid(me.node):
+		ex.append((me.node as CollisionObject3D).get_rid())
+	# iets korter dan het stuk: de uiteinden raken de buurstukken
+	if _hits(Vector3(sz.x - 0.9, 1.0, sz.z - 0.1), at, yaw, ex):
+		return _placement_result(false, "Er staat iets in de weg", 0)
+	var removable := Foliage.count_clearable_in_regions(_clearance_regions("kampmuur"), at, yaw)
+	return _placement_result(true, "Bouwen mogelijk — begroeiing wordt verwijderd" if removable > 0 else "Bouwen mogelijk", removable)
+
+
+## Een wachttoren van de MCV-start: aan jouw kant van de rivier, hooguit TOWER_RANGE van het hoofdkwartier, niet in iets massiefs, en de voet van de trap vrij.
+func _tower_status(at: Vector3, yaw: float, me: Variant) -> Dictionary:
+	if not Data.mcv_mode or not Game.mcv_deployed:
+		return _placement_result(false, "Klap eerst je wagen uit", 0)
+	if full("wachttoren") and me == null:
+		return _placement_result(false, "Je hebt het maximum aan torens", 0)
+	if Vector2(at.x - Game.base_pos.x, at.z - Game.base_pos.z).length() > TOWER_RANGE:
+		return _placement_result(false, "Alleen bij het hoofdkwartier", 0)
+	if not Mcv.in_play_area(at, 4.0) or not Mcv.dry_side(at, 3.0):
+		return _placement_result(false, "Kan niet in of voorbij de rivier bouwen", 0)
+	if not is_inside_tree():
+		return _placement_result(true, "Bouwen mogelijk", 0)
+	var sz: Vector3 = DEFS["wachttoren"].size
+	var ex: Array[RID] = []
+	if me != null and is_instance_valid(me.node):
+		ex.append((me.node as CollisionObject3D).get_rid())
+	if _hits(Vector3(sz.x + 0.4, 1.0, sz.z + 0.4), at, yaw, ex):
+		return _placement_result(false, "Er staat iets in de weg", 0)
+	# de voet van de trap (aan de lokale +x-kant) moet vrij zijn, anders kom je er niet op
+	var foot := at + Basis(Vector3.UP, yaw) * Vector3(1.8, 0.0, 0.0)
+	if _hits(Vector3(1.4, 1.0, 1.4), foot, yaw, ex):
+		return _placement_result(false, "De trap kan hier niet staan", 0)
+	var removable := Foliage.count_clearable_in_regions(_clearance_regions("wachttoren"), at, yaw)
 	return _placement_result(true, "Bouwen mogelijk — begroeiing wordt verwijderd" if removable > 0 else "Bouwen mogelijk", removable)
 
 
@@ -296,6 +360,15 @@ func make_node(kind: String) -> StaticBody3D:
 			var model: Node = (load("res://assets/kazerne.glb") as PackedScene).instantiate()
 			Kit.skin(model, "kazerne")
 			body.add_child(model)
+		"wachttoren":
+			body.add_to_group("tower")   # de speler klimt erop (player.gd), de radar tekent hem
+			var tower_model: Node = (load("res://assets/wachttoren.glb") as PackedScene).instantiate()
+			Kit.skin(tower_model, "toren")
+			body.add_child(tower_model)
+		"kampmuur":
+			body.collision_layer = Kit.LAYER_WALL | Kit.LAYER_FORTIFICATION   # kogels van de grond en ontploffingen worden door hem tegengehouden (BaseWallRules)
+			body.set_meta("nocam", true)   # de camera loopt er dwars doorheen in plaats van tegen de muur aan te schuiven
+			Kampmuur.add_visual(body)
 		"muur":
 			Kit.box(body, Vector3.ZERO, Vector3(sz.x, sz.y, sz.z), Kit.concrete())
 			Kit.box(body, Vector3(0, sz.y, 0), Vector3(sz.x + 0.1, 0.14, sz.z + 0.14), Kit.concrete_dark())
@@ -354,6 +427,10 @@ static func under_construction(b: Dictionary) -> bool:
 static func cost_of(kind: String) -> int:
 	if kind == "depot" and Game.free_depot > 0:
 		return 0
+	if kind == "kampmuur":
+		return Kampmuur.next_cost()
+	if kind == "wachttoren" and Game.free_towers > 0:
+		return 0
 	return int(DEFS[kind].cost)
 
 
@@ -367,7 +444,9 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 	if kind == "airfield" and node == null:
 		return null
 	var gratis := not free and kind == "depot" and Game.free_depot > 0   # het gratis depot van de MCV-start (en daarmee de eerste truck gratis)
-	if not free and not gratis and not Game.pay_build(DEFS[kind].cost):
+	var gratis_muur := not free and kind == "kampmuur" and Kampmuur.free_left() > 0   # een stuk van de gratis eerste omheining
+	var gratis_toren := not free and kind == "wachttoren" and Game.free_towers > 0   # een van de vier gratis torens
+	if not free and not gratis and not gratis_muur and not gratis_toren and not Game.pay_build(DEFS[kind].cost):
 		if node != null:
 			node.free()
 		return null
@@ -380,6 +459,13 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 		"hp": DEFS[kind].hp, "max_hp": DEFS[kind].hp, "down": false, "cracked": false, "fx": null, "bar": null,
 		"rij": null, "rally": Vector3.ZERO, "has_rally": false, "rally_mode": "volgen", "flag": null}
 	node.ref = b
+	if gratis_toren:
+		Game.free_towers -= 1
+		b["gratis"] = true   # verkopen levert niets op
+	if kind == "kampmuur":
+		b["edge"] = Kampmuur.edge_of(at, yaw)
+		if gratis_muur:
+			b["gratis"] = true   # verkopen levert niets op
 	if gratis:
 		Game.free_depot -= 1
 		b["gratis"] = true         # verkopen levert niets op
@@ -405,8 +491,9 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 	Foliage.clear_for_building(node.get_instance_id(), _clearance_regions(kind), at, yaw, Foliage.BUILD_CLEAR_MARGIN, Data.mcv_mode)
 	_push_out(b)
 	_cut_pad()
-	Sfx.play("thud")
-	Game.changed.emit()
+	if not batch:
+		Sfx.play("thud")
+		Game.changed.emit()
 	return b
 
 

@@ -727,12 +727,21 @@ func sell(b: Dictionary) -> void:
 	Sfx.play("buy")
 
 
+var last_turn_why := ""   # waarom het draaien niet lukte (de reden van de eerste stand), voor de melding
+
+
+## Draait een gebouw een kwartslag; kan die stand niet (bijvoorbeeld door de uitrit van een depot), dan de eerstvolgende die wel kan.
 func turn(b: Dictionary) -> bool:
-	var ny: float = fposmod(b.yaw + PI / 2.0, TAU)
-	if not can_place(b.kind, b.at, ny, b):
-		return false
-	move_to(b, b.at, ny)
-	return true
+	last_turn_why = ""
+	for i in range(1, 4):
+		var ny: float = fposmod(b.yaw + float(i) * PI / 2.0, TAU)
+		var st: Dictionary = placement_status(b.kind, b.at, ny, b)
+		if bool(st.valid):
+			move_to(b, b.at, ny)
+			return true
+		if last_turn_why == "":
+			last_turn_why = String(st.reason)
+	return false
 
 
 # ---------------------------------------------------------------- kazerne

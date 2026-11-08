@@ -829,7 +829,7 @@ func _fill_panel() -> void:
 	if b.kind != "kampmuur":   # een muurstuk zit vast op het rooster
 		_act(row, "Draai", "", true, func():
 			if not Game.builds.turn(b):
-				_say("GEEN RUIMTE")
+				_say("GEEN RUIMTE" if Game.builds.last_turn_why == "" else Game.builds.last_turn_why.to_upper())
 			Game.changed.emit())
 	var armed: bool = _sell_arm == b
 	_act(row, "Zeker?" if armed else "Verkoop", "+%d tegoed" % Game.builds.sell_value(b), true, func():

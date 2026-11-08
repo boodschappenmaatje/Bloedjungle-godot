@@ -37,6 +37,7 @@ var artillery_cd := 0.0   # s tot het artilleriecommando (HK niveau 3) weer klaa
 var prep_t := 0.0
 var mcv_deployed := false   # MCV-start: de wagen is uitgeklapt, het hoofdkwartier staat en de klok loopt (Data.mcv_mode)
 var base_pos := Vector3.ZERO   # midden van het hoofdkwartier; in het oude spel de oorsprong
+var free_depot := 0            # MCV-start: gratis voorraaddepots die je nog mag neerzetten (1 na het uitklappen); met een gratis eerste truck
 var base_yaw := 0.0            # draaiing van het hoofdkwartier (rotation.y); zijn deur (terugkomplek) ligt op +Z
 var routes: Array = []  # vaste aanvalsroutes van de groep die nu uitrukt, of anders van de komende groep (AanvalRoutes): de rode pijlen
 var next_routes: Array = []  # routes van de komende groep: staan er al tijdens het aftellen op de golfplaat
@@ -174,6 +175,7 @@ func reset() -> void:
 	hq_level = 1
 	artillery_cd = 0.0
 	mcv_deployed = false
+	free_depot = 0
 	base_pos = Vector3.ZERO
 	base_yaw = 0.0
 	enemies.clear()

@@ -273,6 +273,7 @@ func _idle() -> void:
 		return   # hij wacht in het depot tot er een stapel vrij is (en houdt de plek bezet: een truck naast zijn depot kan er niet langs)
 	slot = pick
 	site_id = sup.stapels[pick].site.id
+	sup.prepare_trip(depot, pick)   # MCV-start: weg vrijmaken en de stapel naar de truck draaien
 	path = sup.route(depot, pick)
 	_route_pts = path.duplicate()
 	if not path.is_empty():

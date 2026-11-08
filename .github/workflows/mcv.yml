@@ -22,6 +22,11 @@ on:
       - "scripts/patrouille.gd"
       - "scripts/build_mode.gd"
       - "scripts/pause_menu.gd"
+      - "scripts/voorraad.gd"
+      - "scripts/voorraad_truck.gd"
+      - "scripts/voorraad_verkeer.gd"
+      - "tests/mcv_voorraad_test.gd"
+      - "tests/voorraad_test.gd"
       - "shaders/ground.gdshader"
       - "tests/mcv_test.gd"
       - "tests/respawn_test.gd"
@@ -65,6 +70,19 @@ jobs:
           timeout 240 "$GODOT" --headless --path . --script tests/mcv_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/mcv.log"
           grep -Fq "klaar, fouten: 0" "$RUNNER_TEMP/mcv.log"
           if grep -Eq 'SCRIPT ERROR:|Parse Error:|^FOUT' "$RUNNER_TEMP/mcv.log"; then exit 1; fi
+      - name: MCV stap 2 (gratis depot, eerste truck, vrije route, rit levert geld)
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 300 "$GODOT" --headless --path . --script tests/mcv_voorraad_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/mcv2.log"
+          grep -Fq "klaar, fouten: 0" "$RUNNER_TEMP/mcv2.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|^FOUT' "$RUNNER_TEMP/mcv2.log"; then exit 1; fi
+      - name: Oud voorraadsysteem blijft werken (vast kamp)
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 400 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voorraad_test.gd --fixed-fps 60
       - name: Oud spel blijft werken (terugkomen bij de bunker)
         shell: bash
         run: |

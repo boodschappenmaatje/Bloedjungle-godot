@@ -250,6 +250,7 @@ func deploy_now() -> void:
 	Game.base_yaw = yaw
 	Game.mcv_deployed = true
 	Game.prep_t = Data.MCV_RUST   # de klok van de eerste vijandelijke groep begint nu
+	Game.free_depot = 1           # een gratis voorraaddepot (met eerste truck) om zelf neer te zetten
 	Game.bcam = Vector3(at.x, at.z, 1.0)
 	var p = Game.player
 	if p != null and is_instance_valid(p):
@@ -260,7 +261,7 @@ func deploy_now() -> void:
 		p.home = Game.base_home()
 		p.global_position = p.home
 		p.face = yaw
-	Game.banner.emit("HOOFDKWARTIER STAAT", "De eerste vijandelijke groep komt over %d minuten" % roundi(Data.MCV_RUST / 60.0), 4.0)
+	Game.banner.emit("HOOFDKWARTIER STAAT", "Zet je gratis voorraaddepot neer via BOUW · eerste groep over %d min" % roundi(Data.MCV_RUST / 60.0), 5.0)
 	Sfx.play("buy")
 	Game.changed.emit()
 	PerfMonitor.note("mcv uitgeklapt: %d planten weggehaald" % removed)

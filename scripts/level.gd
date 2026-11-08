@@ -20,8 +20,6 @@ func build_now() -> void:
 	for c in get_children():
 		c.free()
 	_ground()
-	if not Data.mcv_mode:
-		BaseProps.build(self)   # MCV-start: geen vast kamp, het hoofdkwartier komt uit de wagen (mcv.gd)
 	River.build(self)
 	Stad.build(self)
 	VijandBasis.build(self)
@@ -40,8 +38,6 @@ func build_stepped(progress: Callable) -> void:
 	await tick.call(0.02, "Grond leggen...")
 	_ground()
 	await tick.call(0.1, "Basis bouwen...")
-	if not Data.mcv_mode:
-		BaseProps.build(self)
 	await tick.call(0.2, "Rivier en brug...")
 	River.build(self)
 	Stad.build(self)
@@ -80,9 +76,6 @@ func _ground() -> void:
 	mat.set_shader_parameter("mud_tex", load("res://assets/textures/terrain/gravel_rock/base_color.jpg"))
 	mat.set_shader_parameter("dirt_height", load("res://assets/textures/terrain/dry_earth/roughness.jpg"))
 	mat.set_shader_parameter("dirt_normal", load("res://assets/textures/terrain/dry_earth/normal_gl.jpg"))
-	mat.set_shader_parameter("compound", Data.COMPOUND)
-	mat.set_shader_parameter("gate_gap", Data.GATE_GAP)
-	mat.set_shader_parameter("base_ground", 0.0 if Data.mcv_mode else 1.0)   # geen aangestampte kampbodem en poortpad zonder vast kamp
 	mesh.material_override = mat
 	body.add_child(mesh)
 	body.add_to_group("ground")

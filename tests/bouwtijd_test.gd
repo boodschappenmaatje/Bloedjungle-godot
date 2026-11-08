@@ -32,7 +32,7 @@ func _process(_d: float) -> bool:
 		g.points = 100000
 		g.build_credit = 100000
 		_check("garage zonder kazerne geweigerd", b.missing("garage") == "kazerne" and b.place("garage", Vector3(16, 0, 2), 0.0, true) == null)
-		_check("muur heeft geen eisen", b.missing("muur") == "")
+		_check("muur heeft geen eisen", b.missing("zandzak") == "")
 		kz = b.place("kazerne", Vector3(-6, 0, -8), PI, true)
 		_check("kazerne geplaatst in aanbouw", kz != null and b.under_construction(kz) and kz.build_t > 11.0)
 		_check("steiger aanwezig", kz.site != null and kz.node.get_node_or_null("Steiger") != null)

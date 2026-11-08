@@ -103,7 +103,7 @@ static func rotate_hq(tree: SceneTree, delta_yaw: float) -> Dictionary:
 
 ## Valt dit wereldpunt op het uitgeklapte hoofdkwartier (met voorplein)? Voor de tik in het bouwscherm.
 static func hq_hit(g: Vector3) -> bool:
-	if not Data.mcv_mode or not Game.mcv_deployed:
+	if not Game.mcv_deployed:
 		return false
 	var local := Vector2(g.x - Game.base_pos.x, g.z - Game.base_pos.z).rotated(Game.base_yaw)
 	return absf(local.x) <= FOOT_SIZE.x * 0.5 and absf(local.y - FOOT_CENTER.y) <= FOOT_SIZE.y * 0.5

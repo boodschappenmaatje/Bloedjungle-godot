@@ -60,6 +60,10 @@ func _process(_d: float) -> bool:
 			m._show("")
 	if frames > 4 and g.state == "prep":
 		g.prep_t = 1e9
+	if frames == 20:
+		var dp = g.builds.place("depot", Vector3(0.0, 0.0, -24.0), 0.0, true)
+		if dp != null:
+			dp.build_t = 0.05
 	if frames == 30:
 		_pure()
 	if frames == 40:
@@ -143,7 +147,6 @@ func _end_phase_b() -> void:
 
 func _pure() -> void:
 	var v = load("res://scripts/voorraad_verkeer.gd")
-	var cmp: float = load("res://scripts/data.gd").COMPOUND
 	# vakken en overlap
 	var a = v.box(Vector2(0, 0), 0.0, 3.3, 1.1)
 	_check("vak: twee trucks achter elkaar met 1 m ertussen botsen niet", not v.overlap(a, v.box(Vector2(0, 7.6), 0.0, 3.3, 1.1)))
@@ -151,11 +154,7 @@ func _pure() -> void:
 	_check("vak: naast elkaar met 0,5 m ertussen botsen niet", not v.overlap(a, v.box(Vector2(2.7, 0), 0.0, 3.3, 1.1)))
 	_check("vak: dwars over elkaar botst", v.overlap(a, v.box(Vector2(0, 0), PI / 2.0, 3.3, 1.1)))
 	_check("vak: schuin (45 graden) naast elkaar op 4 m botst niet, op 2 m wel", not v.overlap(a, v.box(Vector2(4.5, 0), PI / 4.0, 3.3, 1.1)) and v.overlap(a, v.box(Vector2(2.0, 1.0), PI / 4.0, 3.3, 1.1)))
-	# poort: de noordpoort ligt op (0, -COMPOUND)
-	_check("poort: een truck in de poort staat in het poortvak", v.in_gate(Vector2(0, -cmp), 0.0))
-	_check("poort: een truck 12 m voor de poort niet", not v.in_gate(Vector2(0, -cmp - 12.0), 0.0))
-	_check("poort: ook de zuidpoort heeft een vak", v.in_gate(Vector2(0, cmp), 0.0))
-	_check("poort: een truck dwars op de weg met zijn zijkant in het poortvak wordt ook gezien", v.in_gate(Vector2(0, -cmp - 3.0), PI / 2.0) and not v.in_gate(Vector2(0, -cmp - 5.0), PI / 2.0))
+	_check("poort: zonder poorten is er geen poortvak", not v.in_gate(Vector2(0, -28.0), 0.0))
 	# smal stuk
 	_check("smal: de brug is smal", v.in_smal(Vector2(0, -130)))
 	_check("smal: het bospad niet", not v.in_smal(Vector2(0, -60)))

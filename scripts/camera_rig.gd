@@ -26,7 +26,6 @@ var _group_weight := 0.0  # 0..1, glijdt in en uit i.p.v. per scan te verspringe
 var _look := Vector3.ZERO  # zacht gevolgd kijkpunt, zodat de camera nooit in één frame draait
 var _group_hold := 0.0
 var _group_scan := 0.0
-var _wall_occluded_spans: Array[String] = []
 const GROUP_HOLD_SECONDS := 2.0
 
 
@@ -111,7 +110,7 @@ func _build_cam(delta: float, portrait: bool) -> void:
 		global_transform = Transform3D(Basis(Vector3.RIGHT, Vector3(0, 0, -1), Vector3.UP), target + Vector3(0, distance, 0))
 		far = maxf(220.0, distance + 80.0)
 		return
-	var k := (20.0 if Game.airfield_build_view else Data.COMPOUND / 14.0 * 1.1) * Game.bcam.z
+	var k := (20.0 if Game.airfield_build_view else 2.2) * Game.bcam.z
 	# liggend ~71 graden neerwaarts op ~48 m (richtwaarde 70); staand blijft steiler zodat de smalle breedte past
 	var goal := Vector3(Game.bcam.x, (83.0 if portrait else 46.0) * k, Game.bcam.y + (16.0 if portrait else 19.2) * k)
 	var look := Vector3(Game.bcam.x, 0.0, Game.bcam.y + 3.4 * k)
@@ -150,7 +149,6 @@ func _process(delta: float) -> void:
 	var portrait := size.x < size.y
 	var env := get_world_3d().environment
 	if Game.build_mode:
-		_wall_occluded_spans.clear()
 		if env and _fog0 < 0.0:
 			_fog0 = env.fog_density
 		if env:
@@ -164,7 +162,6 @@ func _process(delta: float) -> void:
 		# geen bladdithering in het overzicht: de fade loopt rustig naar 0
 		Foliage.update_visibility_focus(p.global_position, global_position, delta, false)
 		Foliage.update_pushers(p, get_tree(), false)
-		_apply_wall_occlusion(delta)
 		return
 	_editor_active = false
 	if _fog0 >= 0.0 and env:
@@ -216,7 +213,6 @@ func _process(delta: float) -> void:
 	focus = target + Vector3(0.0, 0.0, -dist * (0.05 if portrait else 0.07))
 	var goal: Vector3 = focus + Vector3(0.0, h, back)
 	goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)
-	_apply_wall_occlusion(delta)
 	var follow := 1.0 - exp(-(8.0 if plane != null else 5.0) * delta)
 	global_position = goal if _snap else global_position.lerp(goal, follow)
 	# Kijkpunt en positie volgen met dezelfde snelheid: de kijkhoek blijft gelijk en draait niet abrupt.
@@ -285,7 +281,6 @@ func _nearby_enemies(p: Node3D) -> Array:
 
 
 func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vector3:
-	_wall_occluded_spans.clear()
 	# Alleen statische bouwstukken en de bunker blokkeren de camera; het grote grondvlak
 	# ligt onder de zichtlijn en wordt niet iedere frame onnodig meegenomen.
 	var query := PhysicsRayQueryParameters3D.create(origin, desired, Kit.LAYER_WALL | Kit.LAYER_BUNKER)
@@ -300,23 +295,7 @@ func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vect
 		if hit.is_empty():
 			return desired
 		var c: Object = hit.collider
-		if c is Node and c.is_in_group("base_high_wall"):
-			var at: Vector3 = hit.position
-			if absf(absf(at.x) - absf(at.z)) < 1.0:
-				var north_south := "north" if at.z < 0.0 else "south"
-				var east_west := "east" if at.x >= 0.0 else "west"
-				_wall_occluded_spans.append(north_south + "_" + east_west)
-				_wall_occluded_spans.append("east" if at.x >= 0.0 else "west")
-			elif absf(at.z) > absf(at.x):
-				_wall_occluded_spans.append(("north" if at.z < 0.0 else "south") + ("_east" if at.x >= 0.0 else "_west"))
-			else:
-				_wall_occluded_spans.append("east" if at.x >= 0.0 else "west")
-			# The perimeter wall is intentionally hidden on Mobile when it blocks the view.
-			# Do not move the camera onto the wall collision surface: that causes sudden
-			# zoom/clipping and can expose dark wall bands while the player moves.
-			# Continue the ray beyond the wall so real obstacles still stop the camera.
-			skip.append(hit.rid)
-		elif c is HouseBody and not (c.seg.heel.is_visible_in_tree() or c.seg.kapot.is_visible_in_tree()):
+		if c is HouseBody and not (c.seg.heel.is_visible_in_tree() or c.seg.kapot.is_visible_in_tree()):
 			skip.append(hit.rid)
 		elif c is Node and c.has_meta("nocam"):
 			skip.append(hit.rid)
@@ -324,18 +303,3 @@ func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vect
 			break
 	return hit.position + hit.normal * 0.35
 
-
-## Een verdedigingsmuur is geen wegwerpdecor: de speler moet de muur zien als hij
-## er tegenaan loopt. Alleen een expliciete diagnosekeuze mag het beeld verbergen.
-## Ook op Mobile: geen spans wegschakelen, geen transparantie/fade, geen popping.
-## _avoid_obstacles blijft de camera verder van muurcolliders af houden.
-func _apply_wall_occlusion(_delta: float) -> void:
-	for node in get_tree().get_nodes_in_group("base_wall_visual"):
-		var visual := node as GeometryInstance3D
-		visual.visible = true
-		visual.transparency = 0.0
-	# Apply visual-only diagnostics AFTER the normal camera occlusion pass.
-	# Default settings leave every wall collider, shot ray and camera behavior intact.
-	var wall_diag_mode := GameSettings.get_value("wall_diag")
-	var wall_lod_mode := GameSettings.get_value("wall_lod")
-	WallDiagnostics.apply(get_tree(), wall_lod_mode if wall_lod_mode != "auto" else wall_diag_mode)

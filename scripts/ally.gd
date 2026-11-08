@@ -19,7 +19,7 @@ var _shooting := false
 var _shot_sequence := 0
 var recall = null    # Vector3 als de versterking naar de truck terug moet lopen
 var helper := false  # versterking uit de luchtsteun: volgt altijd de speler en blijft los van de kazerne
-var guard := false   # wacht van de basis (Patrouille): loopt in de pauze heen en weer langs de muur, rent bij het alarm naar zijn post
+var guard := false   # wacht van de kazerne (Wachten): loopt in de pauze zijn ronde langs de muur, rent bij het alarm naar de poort
 var wacht_slot := 0  # MCV-start: welke van de (hooguit 4) wachten van de kazerne (Wachten); bepaalt waar op de ronde hij begint en waar hij bij de poort staat
 var _leg := 0        # welk eindpunt van de wandellijn hij nu heeft
 var _wait_t := -1.0  # blijft even staan op het eindpunt (en kijkt rond)
@@ -127,8 +127,6 @@ func _physics_process(delta: float) -> void:
 	if _detour_t > 0.0:
 		_detour_t -= delta
 		want = want.rotated(Vector3.UP, _detour_side * 1.1)
-	if guard and idx == Patrouille.HUT_GUARD:
-		collision_mask = (_full_mask & ~Kit.LAYER_WALL) if Wachtpost.hut_alive(Wachtpost.GUARD_SZ) else _full_mask
 	velocity = want
 	move_and_slide()
 	if moving and get_real_velocity().length() < want.length() * 0.3:
@@ -244,15 +242,8 @@ func _march_goal() -> Vector3:
 func _goal() -> Vector3:
 	if recall != null:
 		return recall
-	if guard and Data.mcv_mode:
-		return Wachten.goal(self)   # MCV-start: ronde langs de binnenkant van de muur, bij een aanval naar de poort
 	if guard:
-		if idx == Patrouille.HUT_GUARD and Wachtpost.hut_alive(Wachtpost.GUARD_SZ):
-			return Wachtpost.guard_spot(Wachtpost.GUARD_SZ)   # hij blijft in het wachthuisje en schiet door het raam
-		if Game.state == "play":   # alarm: naar de post langs de muur
-			var q: Vector2 = POSTS[(idx * 4 + 1) % POSTS.size()] * (Data.COMPOUND / 14.0)
-			return Game.base_pos + Vector3(q.x, 0, q.y)
-		return Patrouille.line(idx)[_leg % 2]
+		return Wachten.goal(self)   # ronde langs de binnenkant van de muur, bij een aanval naar de poort
 	if command == "basis" and not helper:
 		return _march_goal()
 	if not helper and command in ["hold", "defend", "move", "attack"]:
@@ -261,7 +252,7 @@ func _goal() -> Vector3:
 		var follow_position: Vector3 = Game.player.global_position + Vector3(cos(float(idx) * 2.4 + 0.6), 0.0, sin(float(idx) * 2.4 + 0.6)) * 2.8
 		return TeamOrderRules.soldier_goal(command, command_target, enemy_position, enemy_valid, idx, command_hold_position, follow_position)
 	if Game.troop_mode == "hold" and not helper and command == "follow":
-		var p: Vector2 = POSTS[idx % POSTS.size()] * (Data.COMPOUND / 14.0)
+		var p: Vector2 = POSTS[idx % POSTS.size()] * 2.0
 		return Game.base_pos + Vector3(p.x, 0, p.y)
 	var a := float(idx) * 2.4 + 0.6
 	var base: Vector3 = Game.player.global_position

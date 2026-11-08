@@ -17,9 +17,6 @@ on:
       - "scripts/hud_extra.gd"
       - "scripts/hq_perks.gd"
       - "scripts/gates.gd"
-      - "scripts/wachtpost.gd"
-      - "scripts/generator.gd"
-      - "scripts/patrouille.gd"
       - "scripts/build_mode.gd"
       - "scripts/pause_menu.gd"
       - "scripts/kampmuur.gd"
@@ -35,10 +32,8 @@ on:
       - "tests/mcv_muur_ui_test.gd"
       - "tests/mcv_poort_test.gd"
       - "tests/mcv_wacht_test.gd"
-      - "tests/patrouille_test.gd"
       - "tests/mcv_kaarten_test.gd"
       - "tests/mcv_toren_test.gd"
-      - "tests/poort_test.gd"
       - "tests/voorraad_test.gd"
       - "shaders/ground.gdshader"
       - "tests/mcv_test.gd"
@@ -150,12 +145,7 @@ jobs:
           timeout 200 "$GODOT" --headless --path . --script tests/mcv_toren_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/mcv7.log"
           grep -Fq "klaar, fouten: 0" "$RUNNER_TEMP/mcv7.log"
           if grep -Eq 'SCRIPT ERROR:|Parse Error:|^FOUT' "$RUNNER_TEMP/mcv7.log"; then exit 1; fi
-      - name: Oude poorten blijven werken (vast kamp)
-        shell: bash
-        run: |
-          set -euo pipefail
-          timeout 200 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/poort_test.gd --fixed-fps 60
-      - name: Oud voorraadsysteem blijft werken (vast kamp)
+      - name: Voorraadsysteem: rit, wrak, paneel
         shell: bash
         run: |
           set -euo pipefail

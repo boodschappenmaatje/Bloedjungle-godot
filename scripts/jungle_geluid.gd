@@ -112,7 +112,7 @@ func _mix() -> Dictionary:
 
 ## Hoeveel jungle er hoorbaar is waar de speler staat: 1 in het bos, een klein beetje op de basis, niets in de stad.
 func zone(p: Vector3) -> float:
-	var out := maxf(absf(p.x), absf(p.z)) - Data.COMPOUND   # meters buiten de basismuur
+	var out := maxf(absf(p.x - Game.base_pos.x), absf(p.z - Game.base_pos.z)) - Data.START_CLEAR   # meters buiten je kamp
 	var base := lerpf(BASE_ZONE, 1.0, clampf(out / 12.0, 0.0, 1.0))
 	var past := (Data.river_z(p.x) - Data.RIVER_HALF) - p.z   # meters voorbij de rivier, de stad in
 	return base * (1.0 - clampf(past / 6.0, 0.0, 1.0))

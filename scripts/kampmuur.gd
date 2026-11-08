@@ -202,7 +202,7 @@ static func cell_center(c: Vector2i) -> Vector3:
 
 ## Na het bouwen of verkopen: is de eerste omheining nu compleet? Dan blijft alles wat tot nu toe gratis was gratis en kost elk volgend stuk 50.
 static func check_enclosure() -> void:
-	if Data.mcv_mode and Game.free_wall and Game.mcv_deployed and enclosed():
+	if Game.free_wall and Game.mcv_deployed and enclosed():
 		Game.free_wall = false
 		Game.banner.emit("OMHEINING COMPLEET", "Die was gratis · elk volgend muurstuk kost %d" % COST, 3.5)
 		Sfx.play("buy")
@@ -347,7 +347,7 @@ static func gate_pair(k: Vector4i, toward: Vector3) -> Variant:
 
 ## Zet een poort op de plek van twee muurstukken naast elkaar. Geeft {ok, reason}.
 static func place_gate(k: Vector4i, toward: Vector3) -> Dictionary:
-	if not Data.mcv_mode or not Game.mcv_deployed or Game.gates == null:
+	if not Game.mcv_deployed or Game.gates == null:
 		return {"ok": false, "reason": "Klap eerst je wagen uit"}
 	var pair: Variant = gate_pair(k, toward)
 	if pair == null:

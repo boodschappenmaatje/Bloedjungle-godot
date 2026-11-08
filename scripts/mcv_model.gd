@@ -32,6 +32,7 @@ var _module: Node3D             # de container: komt los van de wagen (top_level
 var _anker := Transform3D.IDENTITY
 var _los := false
 var _lift := 0.0                # m: hoogte van de container boven de laadbak (negatief = op de grond)
+const CONTAINER_HALF := 1.86    # m: halve lengte van de container (de achterrand is het draaipunt bij het kantelen)
 const BAK_HOOGTE := 1.41        # m: de container staat op de laadbak; zo ver zakt hij naar de grond
 
 const T_POTEN := 1.97           # s in de clip: de poten staan op de grond
@@ -97,6 +98,20 @@ func zet_lift(y: float) -> void:
 	_lift = y
 	if _los and _module != null:
 		_module.global_transform = Transform3D(_anker.basis, _anker.origin + Vector3(0.0, y, 0.0))
+
+
+## Kantelen en van de laadbak glijden: de achterrand van de container is het draaipunt. theta = kanteling (rad, de voorkant omhoog),
+## zakking = hoeveel de achterrand onder de laadbak hangt (m, 0 = op de laadbak, BAK_HOOGTE = op de grond).
+func zet_kantel(theta: float, zakking: float) -> void:
+	if not _los or _module == null:
+		return
+	var basis := _anker.basis
+	var base := Transform3D(basis, _anker.origin + Vector3(0.0, -zakking, 0.0))
+	var r := base.origin + basis * Vector3(0.0, 0.0, CONTAINER_HALF)
+	var t1 := Transform3D(Basis.IDENTITY, -r)
+	var rot := Transform3D(Basis(basis.x.normalized(), theta), Vector3.ZERO)
+	var t2 := Transform3D(Basis.IDENTITY, r)
+	_module.global_transform = t2 * rot * t1 * base
 
 
 func container_pos() -> Vector3:

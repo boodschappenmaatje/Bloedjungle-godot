@@ -79,8 +79,8 @@ func _process(_d: float) -> bool:
 		_check("het hoofdkwartier staat op de wagenplek", g.base_pos.distance_to(hq_at) < 0.01)
 		var opb := main.find_child("Opbouw", true, false)
 		_check("de bouw wacht op het uitklappen: gebouw en voorplein nog verborgen", opb != null and not opb.begonnen and not vis.visible and not main.find_child("Voorplein", true, false).visible)
-		_check("de container is los van de wagen en hangt iets boven de laadbak", model.container_los() and model.container_pos().y > 1.41 and model.container_pos().y < 2.2)
-	if frames == 500:
+		_check("de container is los van de wagen (kantelt op de laadbak)", model.container_los() and model.container_pos().y > 1.4 and model.container_pos().y < 2.6)
+	if frames == 525:
 		# deploy + 1,3 s tillen + ~4 s wegrijden: de wagen staat 9,6 m voor het hoofdkwartier, de container staat op de grond en de clip speelt
 		var want: Vector3 = hq_at + Basis(Vector3.UP, yaw) * Vector3(0.0, 0.0, M.PARK_Z)
 		_check("de wagen is uit het kamp gereden en geparkeerd (%.1f m van de plek)" % mcv.global_position.distance_to(want), mcv.global_position.distance_to(want) < 0.3)
@@ -113,6 +113,7 @@ func _process(_d: float) -> bool:
 		_check("het hoofdkwartier is klaar en op volle hoogte", opb2.klaar and is_equal_approx(vis.scale.y, vis_scale.y))
 		_check("het baken is groen als alles klaar is", model._baken_modus == 2)
 		_check("alle acht platen zijn geplaatst", opb2._geland == 7)
+		_check("de haak bereikte elk doel (grootste afwijking %.2f m)" % opb2.max_fout, opb2.max_fout < 0.6)
 		_check("de wagen blijft staan", is_instance_valid(mcv) and mcv.is_inside_tree())
 	if frames == 3400:
 		_check("de container is weggezakt en de bouwers zijn naar binnen", not (model._module as Node3D).visible and get_nodes_in_group("mcv_bouwer").is_empty())

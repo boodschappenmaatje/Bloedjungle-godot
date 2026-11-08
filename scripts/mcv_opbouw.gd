@@ -34,6 +34,8 @@ var _start_haak := Vector3.ZERO
 var _plaat := -1                # index van de plaat in de haak (-1 = geen)
 var _geland := -1               # aantal geplaatste platen - 1
 var _werkers: Array = []
+var max_fout := 0.0              # grootste afstand tussen haak en doel (m), voor de test
+var _zakkend: Array = []         # [plaat, tijd van plaatsen, hoogte]
 var _na_t := -1.0               # s sinds het gebouw klaar is (container weg, bouwers naar binnen)
 var _weg := false
 
@@ -128,6 +130,7 @@ func _process(delta: float) -> void:
 		return
 	_apply(_t)
 	_kraan_werk(delta)
+	_zakken()
 	_werkers_stap(delta)
 	_effecten(delta)
 	if _t > BOUWTIJD - T_AF + 0.6:
@@ -144,8 +147,22 @@ func _process(delta: float) -> void:
 func _drop(i: int) -> Vector3:
 	var hq := get_parent() as Node3D
 	var top := _hoogte * (GRONDLAAG + (1.0 - GRONDLAAG) * float(i) / 8.0)
-	var lokaal := Vector3(-1.0 + 2.0 * float(i % 2), top + 0.1 + McvKraan.HAAK_NAAR_PLAAT, -1.2)
+	var lokaal := Vector3(-0.9 + 1.8 * float(i % 2), top + 0.1 + McvKraan.HAAK_NAAR_PLAAT, -0.8)
 	return hq.global_transform * lokaal
+
+
+## Tussen twee punten zwaaien om de kraan: hoek en afstand tot de kraanvoet gaan geleidelijk (geen rechte lijn over de kraan heen), de hoogte ook.
+func _boog(a: Vector3, b: Vector3, u: float) -> Vector3:
+	var la: Vector3 = _kraan.kraan.to_local(a) * McvKraan.SCHAAL
+	var lb: Vector3 = _kraan.kraan.to_local(b) * McvKraan.SCHAAL
+	var ha := atan2(la.x, la.z)
+	var hb := atan2(lb.x, lb.z)
+	var ra := Vector2(la.x, la.z).length()
+	var rb := Vector2(lb.x, lb.z).length()
+	var h := lerp_angle(ha, hb, u)
+	var r := lerpf(ra, rb, u)
+	var l := Vector3(sin(h) * r, lerpf(la.y, lb.y, u), cos(h) * r)
+	return _kraan.kraan.to_global(l / McvKraan.SCHAAL)
 
 
 func _kraan_werk(delta: float) -> void:
@@ -180,10 +197,14 @@ func _kraan_werk(delta: float) -> void:
 		var a: Array = w[j]
 		var b: Array = w[j + 1]
 		if tc <= float(b[0]):
-			var u := clampf((tc - float(a[0])) / maxf(0.001, float(b[0]) - float(a[0])), 0.0, 1.0)
-			doel = (a[1] as Vector3).lerp(b[1] as Vector3, smoothstep(0.0, 1.0, u))
+			var u := smoothstep(0.0, 1.0, clampf((tc - float(a[0])) / maxf(0.001, float(b[0]) - float(a[0])), 0.0, 1.0))
+			doel = _boog(a[1] as Vector3, b[1] as Vector3, u)
 			break
 	_kraan.haak_naar(doel)
+	if c > 0 or tc > 1.0:   # de eerste zwaai vanuit de rustpositie telt niet mee
+		max_fout = maxf(max_fout, _kraan.haak_wereld().distance_to(doel))   # voor de test: de haak moet het doel echt bereiken
+	_kraan.uitlijn = smoothstep(0.0, 1.0, clampf((tc - 1.6) / 1.3, 0.0, 1.0)) if tc < T_LAND else 1.0
+	_kraan.uitlijn_yaw = (get_parent() as Node3D).global_rotation.y
 	if tc >= 1.6 and _kraan.in_haak() != _plaat and tc < T_LAND:
 		_kraan.hang(_plaat)
 		Sfx.play("click", 0.8)
@@ -205,15 +226,25 @@ func _plaat_pos0(i: int) -> Vector3:
 func _plaat_geland(i: int) -> void:
 	var p := _kraan.laat_los()
 	if p != null:
-		p.visible = false
+		_zakkend.append([p, _t, p.global_position.y])   # de plaat zakt in het groeiende gebouw
 	var hq := get_parent() as Node3D
 	var top := _hoogte * (GRONDLAAG + (1.0 - GRONDLAAG) * float(i) / 8.0)
-	var at := hq.global_transform * Vector3(-1.0 + 2.0 * float(i % 2), top + 0.1, -1.2)
+	var at := hq.global_transform * Vector3(-0.9 + 1.8 * float(i % 2), top + 0.1, -0.8)
 	Sfx.play("thud", 0.9)
 	Sfx.play("click", 1.0)
 	for k in 3:
 		Fx.spark(hq, at + Vector3(randf_range(-0.6, 0.6), 0.1, randf_range(-0.5, 0.5)), Vector3.UP)
 	McvFx.puff(hq, at, 1.0, Color(0.6, 0.57, 0.5), 7, 0.8)
+
+
+func _zakken() -> void:
+	for e in _zakkend.duplicate():
+		var p: Node3D = e[0]
+		var u := clampf((_t - float(e[1])) / T_GROEI, 0.0, 1.0)
+		p.global_position.y = float(e[2]) - _hoogte * (1.0 - GRONDLAAG) / 8.0 * smoothstep(0.0, 1.0, u)
+		if u >= 1.0:
+			p.visible = false
+			_zakkend.erase(e)
 
 
 func _effecten(delta: float) -> void:
@@ -259,6 +290,9 @@ func _maak_werkers() -> void:
 		n.add_child(m)
 		m.setup(Color("5a6a36"), "thompson")
 		m.scale = Vector3.ONE * Data.SOLDIER_SCALE
+		for c in m.get_children():
+			if c is SoldierMark:
+				(c as Node3D).visible = false   # bouwers hebben geen team-ring nodig
 		var kist: MeshInstance3D = null
 		if r[2]:
 			kist = MeshInstance3D.new()
@@ -283,8 +317,8 @@ func _werkers_stap(delta: float) -> void:
 		if w.wacht > 0.0:
 			w.wacht -= delta
 			m.play("stil")
-			if w.a == w.b and _kraan != null and is_instance_valid(_kraan):
-				_kijk(n, _kraan.haak_wereld())   # de voorman volgt de last met zijn blik
+			if w.a == w.b:
+				n.rotation.y = lerp_angle(n.rotation.y, atan2(n.position.x, n.position.z), 3.0 * delta)   # de voorman kijkt naar het gebouw
 			continue
 		var doel: Vector3 = w.b if w.naar_b else w.a
 		var d := doel - n.position
@@ -298,11 +332,6 @@ func _werkers_stap(delta: float) -> void:
 		m.play("lopen")
 		n.position += d.normalized() * 1.5 * delta
 		n.rotation.y = lerp_angle(n.rotation.y, atan2(-d.x, -d.z), 8.0 * delta)
-
-
-func _kijk(n: Node3D, wereld: Vector3) -> void:
-	var l := n.to_local(wereld)
-	n.rotation.y = lerp_angle(n.rotation.y, n.rotation.y + atan2(-l.x, -l.z), 0.1)
 
 
 # ---------------------------------------------------------------- klaar
@@ -319,7 +348,6 @@ func _klaar() -> void:
 		return
 	klaar = true
 	_na_t = 0.0
-	remove_from_group("mcv_opbouw")
 	if _vis != null:
 		_vis.visible = true
 		_vis.scale = _vis_scale
@@ -370,6 +398,7 @@ func _na(delta: float) -> void:
 		wagen._model.zet_lift(-McvModel.BAK_HOOGTE - 2.4 * smoothstep(0.0, 1.0, u))
 		if u >= 1.0:
 			_weg = true
+			remove_from_group("mcv_opbouw")   # de camera mag nu terug naar de speler
 			wagen._model.container_weg()
 			Sfx.play("thud", 0.7)
 			McvFx.puff(get_parent(), wagen._model.container_pos() + Vector3(0, 0.2, 0), 1.6, Color(0.6, 0.54, 0.43), 10, 1.0)

@@ -1,6 +1,28 @@
 name: Visual Upgrade B Godot captures
 
 on:
+  push:
+    branches: [feature/visual-upgrade-b-1-0]
+    paths:
+      - "assets/textures/terrain/**"
+      - "assets/textures/foliage/depth_pass/**"
+      - "assets/textures/foliage/polyhaven/**"
+      - "assets/jungle_depth_foliage.glb"
+      - "bron/jungle_foliage_depth/**"
+      - "scripts/atmosphere.gd"
+      - "scripts/foliage.gd"
+      - "scripts/grass_field.gd"
+      - "scripts/jungle_understory.gd"
+      - "scripts/level.gd"
+      - "shaders/foliage.gdshader"
+      - "shaders/foliage_depth_pbr.gdshader"
+      - "shaders/grass_3d.gdshader"
+      - "shaders/ground.gdshader"
+      - "shaders/water.gdshader"
+      - "tests/visual_b_capture.gd"
+      - "tests/visual_b_test.tscn"
+      - "tests/visual_b_test.gd"
+      - ".github/workflows/visual-b-capture.yml"
   pull_request:
     branches: [main]
     paths:

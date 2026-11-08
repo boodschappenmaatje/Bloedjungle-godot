@@ -34,17 +34,20 @@ func _run() -> void:
 	get_tree().root.add_child(main)
 	await get_tree().process_frame
 	main.begin()
-	for _i in 10:
+	for _i in 200:
 		await get_tree().process_frame
 	game.points = 5000
 	game.owned["m47"] = {"up": {"dmg": 0, "rate": 0, "mag": 0, "rel": 0}, "ammo": 3}
 	game.take_weapon("m47")
-	game.state = "play"
 	var p: Node3D = game.player
 	print("STATE ", game.state, " weapon ", p.weapon, " cur ", game.cur)
-	p.call("equip", "m47")
+	game.cur = "m47"
+	game.changed.emit()
+	for _i in 10:
+		await get_tree().process_frame
 	print("NA EQUIP ", p.weapon, " ", game.state)
-	var h: Node3D = load("res://scripts/woonhuis.gd").call("place", main, p.global_position + Vector3(0, 0, 14.0), 0.0, "woonhuis")
+	if "--huis" in OS.get_cmdline_user_args():
+		load("res://scripts/woonhuis.gd").call("place", main, p.global_position + Vector3(0, 0, 12.0), 0.0, "woonhuis")
 	for _i in 90:
 		await get_tree().process_frame
 	await _snap("0_klaar")
@@ -52,11 +55,11 @@ func _run() -> void:
 	for _i in 20:
 		await get_tree().process_frame
 	await _snap("0_balk")
-	p.set("face", 0.0)
+	p.set("face", 0.0 if "--huis" in OS.get_cmdline_user_args() else PI * 0.5)
 	p.call("_shoot", game.wstat("m47"))
 	var t0 := Time.get_ticks_msec()
-	for k in 12:
-		for _i in 3:
+	for k in 16:
+		for _i in 2:
 			await get_tree().process_frame
 		await _snap("1_schot_%d" % k)
 	get_tree().quit(0)

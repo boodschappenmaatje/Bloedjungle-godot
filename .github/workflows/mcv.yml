@@ -23,6 +23,7 @@ on:
       - "scripts/build_mode.gd"
       - "scripts/pause_menu.gd"
       - "scripts/kampmuur.gd"
+      - "scripts/wachten.gd"
       - "scripts/gate_body.gd"
       - "scripts/building_body.gd"
       - "scripts/voorraad.gd"
@@ -33,6 +34,8 @@ on:
       - "tests/mcv_muur_test.gd"
       - "tests/mcv_muur_ui_test.gd"
       - "tests/mcv_poort_test.gd"
+      - "tests/mcv_wacht_test.gd"
+      - "tests/patrouille_test.gd"
       - "tests/mcv_kaarten_test.gd"
       - "tests/mcv_toren_test.gd"
       - "tests/poort_test.gd"
@@ -131,6 +134,14 @@ jobs:
           timeout 400 "$GODOT" --headless --path . --script tests/mcv_poort_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/mcv6.log"
           grep -Fq "klaar, fouten: 0" "$RUNNER_TEMP/mcv6.log"
           if grep -Eq 'SCRIPT ERROR:|Parse Error:|^FOUT' "$RUNNER_TEMP/mcv6.log"; then exit 1; fi
+      - name: MCV wachten bij de kazerne (ronde langs de muur, naar de poort bij een aanval)
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 300 "$GODOT" --headless --path . --script tests/mcv_wacht_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/mcv9.log"
+          grep -Fq "klaar, fouten: 0" "$RUNNER_TEMP/mcv9.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|^FOUT' "$RUNNER_TEMP/mcv9.log"; then exit 1; fi
       - name: MCV wachttorens (4 gratis, klimmen)
         shell: bash
         run: |

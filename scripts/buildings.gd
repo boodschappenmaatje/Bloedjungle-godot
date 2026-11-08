@@ -462,6 +462,8 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 	if gratis_toren:
 		Game.free_towers -= 1
 		b["gratis"] = true   # verkopen levert niets op
+	if kind == "kazerne":
+		b["wachten"] = []   # MCV-start: de wachten van deze kazerne (Wachten)
 	if kind == "kampmuur":
 		b["edge"] = Kampmuur.edge_of(at, yaw)
 		if gratis_muur:
@@ -633,6 +635,10 @@ func _push_out_of_airfield(b: Dictionary) -> void:
 
 
 func remove(b: Dictionary) -> void:
+	Wachten.invalidate()   # de ronde van de wachten volgt muren en gebouwen
+	for w in b.get("wachten", []):
+		if is_instance_valid(w):
+			w.queue_free()   # de wachten van een verkochte kazerne gaan mee
 	_clear_fx(b)
 	if b.kind == "airfield" or b.kind in DEFS:
 		Foliage.release_building_clearance(b.node.get_instance_id())
@@ -793,6 +799,47 @@ func recruit(b: Dictionary) -> void:
 		b.train_t = train_time(b)
 	b.queue += 1
 	Game.changed.emit()
+
+
+## MCV-start: de levende wachten van deze kazerne (Wachten): soldaten die zelf patrouilleren en niet bij je team horen.
+func wachten_of(b: Dictionary) -> Array:
+	var out: Array = []
+	for w in b.get("wachten", []):
+		if is_instance_valid(w):
+			out.append(w)
+	b["wachten"] = out
+	return out
+
+
+func can_buy_wacht(b: Dictionary) -> bool:
+	return Data.mcv_mode and b.kind == "kazerne" and not b.down and not under_construction(b) and wachten_of(b).size() < Wachten.MAX_PER_KAZERNE and Game.points >= Wachten.COST
+
+
+## Koopt een wacht (250): hij komt uit de deur van de kazerne en begint zijn ronde. Geeft de soldaat of null.
+func buy_wacht(b: Dictionary) -> Variant:
+	if not can_buy_wacht(b) or not Game.pay_points(Wachten.COST):
+		return null
+	var used := {}
+	for w in wachten_of(b):
+		used[w.wacht_slot] = true
+	var slot := 0
+	while used.has(slot):
+		slot += 1
+	var lv: Dictionary = LEVELS[b.lv]
+	var a := Ally.new()
+	a.guard = true
+	a.wacht_slot = slot
+	add_child(a)
+	a.global_position = door_of(b)
+	a.face = b.yaw
+	a.setup(lv.hp, lv.dmg, 10 + slot)
+	a.add_to_group("wacht")
+	b["wachten"].append(a)
+	Sfx.play("reload")
+	Game.banner.emit("NIEUWE WACHT", "Hij loopt zelf langs de muur", 1.2)
+	radio.say("eenheid_klaar")
+	Game.changed.emit()
+	return a
 
 
 ## Haal de laatste soldaat uit de rij en geef de punten terug.

@@ -84,7 +84,9 @@ func _ready() -> void:
 	add_to_group("mcv")
 	add_to_group("voertuigen")
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
-	collision_layer = Kit.LAYER_BUNKER   # een vast ding voor gewone mensen; vijanden en kogels zijn er in deze fase niet
+	# Voertuiglaag (32), niet de bunkerlaag: de camera schiet elke beeld een straal (muur + bunker, ook van binnenuit) en zou anders tegen de wagen botsen
+	# en vlak boven hem komen te hangen (zichtbaar in de iPhone-opname van 8 november). Vijanden en kogels zijn er voor het uitklappen niet.
+	collision_layer = 32
 	collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_NATURE | Kit.LAYER_WATER | 32
 	var cs := CollisionShape3D.new()
 	var bs := BoxShape3D.new()

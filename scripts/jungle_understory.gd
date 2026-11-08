@@ -106,8 +106,8 @@ static func litter_mesh() -> ArrayMesh:
 	# Keep debris low, but broad enough to resolve as individual leaves at the
 	# game camera instead of subpixel flecks. Instance count and triangle budget
 	# remain unchanged.
-	var leaf_lengths: Array[float] = [0.55,0.49,0.62]
-	var leaf_widths: Array[float] = [0.18,0.16,0.20]
+	var leaf_lengths: Array[float] = [0.48,0.43,0.54]
+	var leaf_widths: Array[float] = [0.145,0.13,0.16]
 	for leaf_index in 3:
 		var yaw := TAU * leaf_index / 3.0 + 0.31 * leaf_index
 		var direction := Vector3(cos(yaw),0.0,sin(yaw))
@@ -238,20 +238,23 @@ static func spawn(parent: Node3D) -> void:
 			colony_kinds.append("floor_twig")
 	var plant_colony_centers: Array[Vector2] = []
 	var attempts := 0
-	while plant_colony_centers.size() < 68 and attempts < 900:
+	while plant_colony_centers.size() < 68 and attempts < 1200:
 		attempts += 1
 		var center := Vector2(rng.randf_range(-13.0,30.0),rng.randf_range(-74.0,-49.0))
 		if absf(center.x-Data.path_x(center.y)) < 5.0 or Vector2(center.x-7.0,center.y+57.0).length() < 7.0: continue
-		if plant_colony_centers.any(func(other: Vector2) -> bool: return other.distance_to(center) < 5.2): continue
+		if plant_colony_centers.any(func(other: Vector2) -> bool: return other.distance_to(center) < 6.0): continue
 		plant_colony_centers.append(center)
 		var choice := rng.randf()
 		var primary := "rosette" if choice<0.44 else ("arch_fern" if choice<0.80 else "red_bloom")
 		# Spread the same instances over looser, asymmetric colonies so nearby
 		# silhouettes read as plants with individual spacing rather than one fan.
-		var radius := rng.randf_range(2.2,3.6)
+		var radius := rng.randf_range(2.0,3.2)
 		var axis := rng.randf_range(0.0,TAU)
-		var aspect := rng.randf_range(0.48,0.88)
-		for i in rng.randi_range(14,21):
+		var aspect := rng.randf_range(0.52,1.02)
+		# Keep larger silhouettes in separated, irregular colonies. The same mobile
+		# instance budget remains capped; wider gaps stop the jungle edge reading as
+		# a continuous hedge and preserve combat sightlines.
+		for i in rng.randi_range(10,17):
 			var offset := _colony_offset(rng,radius,aspect,axis)
 			var p := Vector3(center.x+offset.x,0.012,center.y+offset.y)
 			if absf(p.x-Data.path_x(p.z))<3.2 or not allowed(p): continue
@@ -438,15 +441,15 @@ static func _add_candidate(groups: Dictionary, counts: Dictionary, rng: RandomNu
 		var footprint_x := rng.randf_range(1.40,1.74)
 		var footprint_z := rng.randf_range(1.18,1.55)
 		size_ = Vector3(s*footprint_x,s*rng.randf_range(0.92,1.12),s*footprint_z)
-	if kind=="rosette": size_ *= rng.randf_range(0.64,0.82)
-	if kind=="arch_fern": size_ *= rng.randf_range(0.60,0.78)
-	if kind=="red_bloom": size_ *= rng.randf_range(0.68,0.86)
+	if kind=="rosette": size_ *= rng.randf_range(0.56,0.73)
+	if kind=="arch_fern": size_ *= rng.randf_range(0.54,0.70)
+	if kind=="red_bloom": size_ *= rng.randf_range(0.62,0.78)
 	# Fallen blades need roughly half-metre tips to resolve from the game camera;
 	# keep them on the ground and spend the existing litter budget at this scale.
-	if kind=="litter": size_=Vector3.ONE*rng.randf_range(1.02,1.52)
+	if kind=="litter": size_=Vector3.ONE*rng.randf_range(0.84,1.22)
 	if kind=="stone": size_=Vector3.ONE*rng.randf_range(0.08,0.17) if tiny_pebble else Vector3.ONE*rng.randf_range(0.22,0.48)
 	if kind=="twig": size_=Vector3(0.045+0.025*s,rng.randf_range(0.35,0.85),0.045+0.025*s)
-	var tilt := rng.randf_range(0.06,0.20) if kind in ["rosette","arch_fern","red_bloom","groundcover"] else 0.0
+	var tilt := rng.randf_range(0.09,0.28) if kind in ["rosette","arch_fern","red_bloom","groundcover"] else 0.0
 	var basis := Basis.from_euler(Vector3(rng.randf_range(-tilt,tilt),rng.randf()*TAU,rng.randf_range(-tilt,tilt)))
 	if kind=="twig": basis *= Basis(Vector3.RIGHT,PI*0.5)
 	groups[key].xf.append(Transform3D(basis * Basis.from_scale(size_),p))

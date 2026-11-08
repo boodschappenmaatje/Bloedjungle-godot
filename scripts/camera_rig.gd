@@ -173,7 +173,7 @@ func _process(delta: float) -> void:
 		if absf(env.fog_density - _fog0) < _fog0 * 0.02:
 			env.fog_density = _fog0
 			_fog0 = -1.0
-	attributes.dof_blur_far_enabled = GameSettings.get_value("quality") == "ultra" and GameSettings.get_value("t_post") == "on"  # scherptediepte kost veel op mobiel
+	attributes.dof_blur_far_enabled = Upscaling.effective_quality() == "ultra" and GameSettings.get_value("t_post") == "on"  # scherptediepte kost veel op mobiel
 	_blook = Vector3.ZERO
 	far = lerpf(far, 220.0, minf(1.0, delta * 3.0))
 	# Houd het personage leesbaar; alleen nabije teamleden en voertuigen vragen meer ruimte.

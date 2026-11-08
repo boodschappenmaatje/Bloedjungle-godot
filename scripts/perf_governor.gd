@@ -12,6 +12,7 @@ const DOWN_RATIO := 0.93  # van het doel; 56 bij 60 fps, 112 bij 120
 const UP_RATIO := 0.98
 
 var _cap := 0.8
+var _floor := MIN_SCALE
 var _quality := ""
 var _acc := 0.0
 var _frames := 0
@@ -31,7 +32,7 @@ func _process(delta: float) -> void:
 	if paused:
 		return
 	var vp := get_viewport()
-	var q: String = GameSettings.get_value("quality")
+	var q: String = GameSettings.get_value("quality") + "|" + GameSettings.get_value("upscaling")
 	if q != _quality:
 		_quality = q
 		_frozen = false
@@ -41,9 +42,11 @@ func _process(delta: float) -> void:
 			var atm0 := get_tree().get_first_node_in_group("atmosphere")
 			if atm0 != null:
 				atm0.apply_settings()
-		var table: Dictionary = (load("res://scripts/atmosphere.gd") as GDScript).get("QUALITY")
-		_cap = table[q].scale
-		vp.scaling_3d_scale = _cap
+		var band := Upscaling.band()
+		_cap = band.max
+		_floor = band.min
+		Upscaling.apply_mode(vp)
+		vp.scaling_3d_scale = band.start
 	if GameSettings.get_value("t_res") == "small":
 		vp.scaling_3d_scale = 0.3   # test: helpt dit, dan is de GPU het knelpunt; helpt het niet, dan de processor
 		get_tree().root.set_meta("res_scale", 0.3)
@@ -65,7 +68,7 @@ func _process(delta: float) -> void:
 	var target := GameSettings.target_fps()
 	# op de laagste resolutie en nog steeds te traag: de duurste onderdelen uit (trap voor trap, nooit terug omhoog)
 	_tier_wait -= 0.5
-	if s <= MIN_SCALE + 0.01 and fps < target * TIER_RATIO:
+	if s <= _floor + 0.01 and fps < target * TIER_RATIO:
 		_low += 0.5
 		if _low >= TIER_AFTER and _tier_wait <= 0.0 and not _frozen:
 			_low = 0.0
@@ -84,7 +87,7 @@ func _process(delta: float) -> void:
 		_low = 0.0
 	if fps < target * DOWN_RATIO:
 		_good = 0.0
-		vp.scaling_3d_scale = maxf(MIN_SCALE, s - (0.08 if fps < target * 0.75 else 0.04))
+		vp.scaling_3d_scale = maxf(_floor, s - (0.08 if fps < target * 0.75 else 0.04))
 		_hold = 8.0
 	elif fps >= target * UP_RATIO and s < _cap and _hold <= 0.0:
 		_good += 0.5

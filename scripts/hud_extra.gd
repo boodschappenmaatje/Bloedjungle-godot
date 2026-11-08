@@ -652,7 +652,7 @@ func _process(delta: float) -> void:
 	# alleen de instelling telt; vroeger ook StadEditor.debug_enabled (F3), en die kun je op de iPhone niet aanzetten
 	_fps.visible = GameSettings.get_value("fps") == "on" and not Game.editing
 	if _fps.visible:
-		_fps.text = "%d FPS · %d%%%s · %s" % [Engine.get_frames_per_second(), roundi(get_viewport().scaling_3d_scale * 100.0), (" · T%d" % Atmosphere.tier) if Atmosphere.tier > 0 else "", HUD_SCRIPT.VERSION]
+		_fps.text = "%d FPS · %d%%%s%s · %s" % [Engine.get_frames_per_second(), roundi(get_viewport().scaling_3d_scale * 100.0), (" · T%d" % Atmosphere.tier) if Atmosphere.tier > 0 else "", Upscaling.overlay_tag(), HUD_SCRIPT.VERSION]
 	var main := get_parent().get_parent()
 	var left: int = Game.enemies.size() + (main.queue.size() if "queue" in main else 0)
 	# tijdens een groep: aantal vijanden en het aftellen naar de volgende groep (de plaat boven in beeld is dan weg)

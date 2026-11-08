@@ -138,7 +138,7 @@ func _populate(existing: Array) -> void:
 				slots.append({"multimesh": node.multimesh, "index": instance_index})
 			Foliage.register_grass_instance(data.xf[instance_index].origin, slots)
 	_update_lods()
-	apply_quality(GameSettings.get_value("quality"), GameSettings.get_value("quality") == "ultra")
+	apply_quality(Upscaling.effective_quality(), Upscaling.effective_quality() == "ultra")
 
 
 func apply_quality(level: String, shadows: bool) -> void:

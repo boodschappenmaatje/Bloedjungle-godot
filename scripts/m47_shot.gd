@@ -56,10 +56,29 @@ static func _blast(at: Vector3, r: float, dmg: float) -> void:
 	Barrel.catch_blast(at, r)
 	VijandHk.blast(at, r, dmg)
 	VijandM2Toren.blast(at, r, dmg)
+	VijandBasis.blast(at, r, dmg)   # muur van de vijandelijke basis: stukken breken weg
 	if Game.builds:
 		Game.builds.blast(at, r, dmg, true)   # inclusief Woonhuis.blast_all: huizen en muren gaan stuk
+		_kampmuren(at, r)
+	if Game.gates:
+		for i in Game.gates.list.size():
+			var g: Dictionary = Game.gates.list[i]
+			var gd: float = maxf(0.0, Vector2(Game.gates.pos_of(g).x - at.x, Game.gates.pos_of(g).z - at.z).length() - Data.GATE_GAP)
+			if not g.broken and gd < r:
+				Game.gates.damage(i, dmg * 3.0 * (1.0 - gd / r), "explosive")
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e) and not e.dead:
 			var d: float = e.global_position.distance_to(at)
 			if d < r and not BaseWallRules.blocks_blast(at, e.global_position):
 				e.hit(dmg * (1.0 - d / r * 0.7), (e.global_position - at).normalized(), true)
+
+
+## Eigen kampmuren (bouwstukken van 1500 sterkte): het M-47 breekt ze veel sneller dan een gewone ontploffing (die doet maar de helft).
+## Alles binnen ongeveer de halve straal gaat in één schot weg, dus ook je eigen basismuur kan kapot.
+static func _kampmuren(at: Vector3, r: float) -> void:
+	for b in Game.buildings.duplicate():
+		if b.kind != "kampmuur" or b.down or not is_instance_valid(b.node):
+			continue
+		var d: float = maxf(0.0, Vector2(b.at.x - at.x, b.at.z - at.z).length() - Kampmuur.STEP * 0.5)
+		if d < r:
+			Game.builds.damage(b, 3000.0 * (1.0 - d / r))

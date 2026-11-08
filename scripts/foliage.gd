@@ -261,7 +261,7 @@ static var _root: Node3D  # waar de jungle in hangt (de vallende bomen komen er 
 static var _reg := {}  # vak (36 m) -> palmen en bomen die nog kunnen omvallen (zie fell_near)
 const VEG_CELL := 36.0
 const BUILD_CLEAR_MARGIN := 0.75
-const CLEARABLE_KINDS := ["palm", "bush", "fern", "grass"]
+const CLEARABLE_KINDS := ["palm", "bush", "fern", "grass", "log"]
 const SOUTH_COUNTS := {"palm": 150, "bush": 260, "fern": 220, "grass": 1100, "rock": 32}
 static var _vegetation_cells := {}  # 36 m spatial index; each item points at one actual MultiMesh instance
 static var _vegetation_serial := 0
@@ -338,6 +338,11 @@ static func _entries_for_build_regions(regions: Array, at: Vector3, yaw: float, 
 						continue
 					if _point_in_build_region(entry.world_position, at, yaw, region, margin):
 						found[entry.vegetation_id] = entry
+					else:
+						for extra: Vector3 in entry.get("extra_points", []):   # een lange stam: ook zijn uiteinden tellen
+							if _point_in_build_region(extra, at, yaw, region, margin):
+								found[entry.vegetation_id] = entry
+								break
 	return found.values()
 
 
@@ -349,6 +354,14 @@ static func count_clearable_in_regions(regions: Array, at: Vector3, yaw: float, 
 static func clear_for_building(building_id: int, regions: Array, at: Vector3, yaw: float, margin := BUILD_CLEAR_MARGIN, rocks := false) -> int:
 	_building_clearings[building_id] = {"regions": regions.duplicate(true), "at": at, "yaw": yaw, "margin": margin, "rocks": rocks}
 	return _clear_regions_now(regions, at, yaw, margin, rocks)
+
+
+## Alles wat binnen deze vlakken (x, z in de wereld; {center, size}) staat verdwijnt: bomen, struiken, varens, gras, stammen en rotsen.
+static func clear_world_rects(rects: Array, margin := 0.0) -> int:
+	var regions: Array = []
+	for r: Rect2 in rects:
+		regions.append({"name": "binnen", "center": r.get_center(), "size": r.size, "yaw": 0.0})
+	return _clear_regions_now(regions, Vector3.ZERO, 0.0, margin, true)
 
 
 static func release_building_clearance(building_id: int) -> void:
@@ -802,10 +815,13 @@ static func logs(parent: Node3D, seed_ := 41) -> void:
 	cyl.rings = 1
 	var mat := Kit.photo("nature/tree_bark", 1.5, Color(0.7, 0.62, 0.52))
 	var xf: Array = []
+	var log_shapes: Array = []
+	var log_ends: Array = []
 	var body := StaticBody3D.new()
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
 	body.set_meta("impact_material", "wood")
+	body.set_meta("clearable_vegetation", true)   # een liggende stam verdwijnt als je er een muur of gebouw neerzet, hij blokkeert niets
 	parent.add_child(body)
 	var tries := 0
 	while xf.size() < 30 and tries < 800:
@@ -824,4 +840,22 @@ static func logs(parent: Node3D, seed_ := 41) -> void:
 		cs.shape = bs
 		cs.transform = Transform3D(Basis.from_euler(Vector3(0, yaw, 0)), p)
 		body.add_child(cs)
-	Kit.scatter(parent, cyl, mat, xf, [], true)
+		log_shapes.append(cs)
+		var along := Vector3(sin(yaw), 0.0, cos(yaw)) * (len_ * 0.5)
+		log_ends.append([p + along, p - along])
+	var inst := Kit.scatter(parent, cyl, mat, xf, [], true)
+	for i in xf.size():
+		var t: Transform3D = xf[i]
+		var entry := _register_vegetation({"kind": "log", "xf": t, "slots": [{"multimesh": inst.multimesh, "index": i}], "shapes": [log_shapes[i]]})
+		var extra: Array = []
+		for end: Vector3 in log_ends[i]:
+			extra.append(_root.to_global(end) if is_instance_valid(_root) else end)
+		extra.append(entry.world_position)
+		entry["extra_points"] = extra
+		for end: Vector3 in extra:   # ook in de vakken van de uiteinden, zodat een muur naast een lange stam hem vindt
+			var cell := Vector2i(floori(end.x / VEG_CELL), floori(end.z / VEG_CELL))
+			if cell != entry.vegetation_cell:
+				if not _vegetation_cells.has(cell):
+					_vegetation_cells[cell] = []
+				if not (_vegetation_cells[cell] as Array).has(entry):
+					_vegetation_cells[cell].append(entry)

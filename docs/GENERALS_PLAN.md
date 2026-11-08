@@ -279,3 +279,7 @@ Naar de vier keuzes hierboven. Alleen in MCV-modus.
 ### Vrachtwagenverkeer bij een depot dichtbij een stapel (8 november 2026)
 - **Gevonden:** een depot op bijvoorbeeld (24, -24) met de voorkant naar het noorden ligt 22 m van stapel Bosrand. De terugkerende truck hield de stapel nog vast (minder dan 11 m ervan af) en de vertrekkende truck hield de uitrit vast: ze wachtten eeuwig op elkaar. Nu geldt de vrijgave-afstand als hooguit 40% van de rit (`voorraad_verkeer.gd`, `release_check`). Test: `tests/voorraad_kort_test.gd`.
 - **Nog open:** staat een depot zo dat de trucks bij het depot een eind moeten omrijden (bijvoorbeeld de voorkant van de bestemming af), dan wachten terugkerende trucks soms midden op de uitgaande route en komen de dozen even in elkaar (zonder vastlopen; ze rijden achteruit en lossen het zelf op). Oorzaak: de wachtplek (15 m voor het depot) ligt op de route van de vertrekkende truck. Een verder weg gelegen wachtplek helpt niet overal (probeerd met 24 en 26 m).
+
+### Omheining en begroeiing (8 november 2026, wens van Dennis na zijn test)
+- **Probleem:** een vierkant om het hoofdkwartier kreeg gaten: liggende boomstammen waren een obstakel dat nergens weg kon.
+- **Nu:** stammen zijn wegneembaar zoals bomen en struiken (ook als alleen het uiteinde in de weg ligt), en zodra de omheining compleet is verdwijnt alles binnen de muren automatisch: bomen, struiken, varens, gras, stammen en rotsen (`Kampmuur.clear_inside`). Test: `tests/mcv_omheining_test.gd`.

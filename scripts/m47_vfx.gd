@@ -134,8 +134,8 @@ func _flip_sprite(tex: Texture2D, tint: Color, size: float) -> Sprite3D:
 
 func _build() -> void:
 	var t := textures()
-	_flash = _sprite(t["flare"], Color(0.7, 0.9, 1.0, 1.0), 1.5)
-	_flash2 = _sprite(t["glow"], Color(0.1, 0.45, 1.0, 1.0), 1.5)
+	_flash = _sprite(t["flare"], Color(0.7, 0.9, 1.0, 1.0), 1.1)
+	_flash2 = _sprite(t["glow"], Color(0.1, 0.45, 1.0, 1.0), 0.8)
 	_projectile = Node3D.new()
 	_projectile.visible = false
 	add_child(_projectile)
@@ -246,12 +246,12 @@ func _process(delta: float) -> void:
 	var fl := clampf(1.0 - t / 0.16, 0.0, 1.0)
 	_flash.visible = fl > 0.0
 	_flash.global_position = _from
-	_flash.scale = Vector3.ONE * (0.55 + 0.9 * (1.0 - fl))
+	_flash.scale = Vector3.ONE * (0.45 + 0.6 * (1.0 - fl))
 	_flash.modulate.a = fl
 	_flash.rotation.z = t * 6.0
 	_flash2.visible = fl > 0.0
 	_flash2.global_position = _from
-	_flash2.modulate.a = fl * 0.8
+	_flash2.modulate.a = fl * 0.55
 	# 2. Projectiel (vanaf 0.05 s)
 	var f := clampf((t - 0.05) / _flight, 0.0, 1.0)
 	var vliegt := t >= 0.05 and not _impacted

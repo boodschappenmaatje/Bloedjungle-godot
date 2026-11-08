@@ -6,6 +6,7 @@ extends Resource
 @export var mount_position := Vector3(-0.14, 1.42, 0.05)
 @export var mount_rotation := Vector3(0.0, PI, 0.0)
 @export var model_scale := Vector3.ONE
+@export var model_offset := Vector3.ZERO   # verschuift het model zodat de rechterhandgreep op de aansluiting valt
 @export var left_hand_grip := Vector3(-0.06, -0.02, -0.35)
 @export var muzzle_local := Vector3(0.0, 0.07, -1.08)
 @export var casing_local := Vector3(0.035, 0.11, -0.16)

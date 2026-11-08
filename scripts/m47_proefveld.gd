@@ -295,9 +295,14 @@ func _process(delta: float) -> void:
 
 const CAPS := [0.05, 0.12, 0.28, 0.55, 0.9, 1.4, 2.2, 3.0, 4.2]
 var _t_fire := -1.0
+var _charge_shot := false
 
 
 func _auto_capture() -> void:
+	if _phase == "laden" and _timer > 1.15 and not _charge_shot:
+		_charge_shot = true
+		DirAccess.make_dir_recursive_absolute(shots_dir)
+		get_viewport().get_texture().get_image().save_png("%s/m47_charge.png" % shots_dir)
 	if _phase == "vuurt" and _t_fire < 0.0:
 		_t_fire = _t
 	if _t_fire >= 0.0 and _shot_i < CAPS.size() and _t - _t_fire >= CAPS[_shot_i]:

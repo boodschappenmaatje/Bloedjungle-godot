@@ -6,7 +6,7 @@ import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 const $=id=>document.getElementById(id), stage=$('stage'), canvas=$('canvas');
 const names={vijand_m2_toren:'Vijandelijke M2HB-toren · goedgekeurde Meshy-vorm',voorraaddepot:'Voorraaddepot · schuur, rolpoort en portaalkraan (Intendance)',voorraadtruck:'Voorraadtruck · Meshy-kraanwagen met telescoopgiek en grijper (V1 = vorige procedurele truck)',voorraadtruck_wrak:'Voorraadtruck · wrak',voorraadstapel:'Voorraadstapel · vol, half en leeg (Intendance)',hoofdkwartier:'Hoofdkwartier · radar, pantserdeur, 3 niveaus, schade',hoofdkwartier_omgeving:'Voorplein · omgeving van het hoofdkwartier (platen, lichtmasten, afzetblokken, vaten, kisten)',verzamelvlag:'Verzamelvlag · wapperend doek, zandzakken en lamp',airfield_hq:'Airfield HQ 2.2 · vergelijking met 2.1',m1911:'M1911 Meshy',kazerne:'Kazerne',wachttoren:'Wachttoren',legerjeep:'Legerjeep',jeep:'Speelbare jeep',auto:'Personenauto',bus:'Stadsbus',straaljager:'Straaljager F-16 (napalm)',soldaat:'Soldaat (mannetjes)',wapens:'Wapens (bewegende delen)',jungle:'Jungle (palmen en rotsen)',props:'Props (zandzakken en kisten)',wachtpost:'Poortwachtpost (slagboom en wachthuis)',generator:'Generator (heel en wrak)',munitiekist:'Munitiekist (Meshy-test)',tank:'Tiger-tank (Meshy, speelbaar)',garage:'Garage (Meshy-motorpool)'};
 const NEW_ONLY=['vijand_m2_toren','voorraaddepot','voorraadstapel','hoofdkwartier','hoofdkwartier_omgeving','verzamelvlag','jeep','auto','bus','wapens','jungle','props','wachtpost','generator'];
-names.jungle_depth_foliage='Jungle dieptepass · Poly Haven-ondergroei';
+names.jungle_depth_foliage='Jungle dieptepass · Poly Haven-ondergroei + review-only varenproef';
 NEW_ONLY.push('jungle_depth_foliage');
 $('asset').add(new Option(names.jungle_depth_foliage,'jungle_depth_foliage'),8);
 // wapens: alle wapens staan in één glb op dezelfde plek (oorsprong = rechterhand); de keuzelijst laat er één zien. Clips heten <wapen>_schot / <wapen>_leeg.
@@ -29,8 +29,8 @@ function applyJungle(){
  bounds.makeEmpty();slots.v2.root.traverse(o=>{if(o.isMesh&&o.visible&&isUnder(o,g))bounds.expandByObject(o);});
  setCamera(false);stats();dirty=true;
 }
-const JUNGLE_DEPTH_SPECIES=['rosette','arch_fern','red_bloom'];
-const JUNGLE_DEPTH_NODES=JUNGLE_DEPTH_SPECIES.flatMap(s=>[0,1,2].flatMap(v=>[0,1,2].map(l=>`HQ_${s}_V${v}_LOD${l}`)));
+const JUNGLE_DEPTH_SPECIES=['rosette','arch_fern','red_bloom','fern_trial'];
+const JUNGLE_DEPTH_NODES=['rosette','arch_fern','red_bloom'].flatMap(s=>[0,1,2].flatMap(v=>[0,1,2].map(l=>`HQ_${s}_V${v}_LOD${l}`))).concat([0,1,2].map(l=>`HQ_fern_trial_LOD${l}`));
 async function loadJungleDepthMaterials(){
  const loader=new THREE.TextureLoader(),sets={rosette:'rosette',arch_fern:'arch_fern',red_bloom:'shrub'},result={};
  const loadMap=(name,kind,colorSpace)=>new Promise((resolve,reject)=>loader.load(`../../assets/textures/foliage/polyhaven/${name}_${kind}.png`,texture=>{
@@ -46,14 +46,17 @@ async function loadJungleDepthMaterials(){
   ]);
   result[species]=new THREE.MeshStandardMaterial({name:`Poly Haven ${species} · 1K PBR`,map,normalMap,roughnessMap,roughness:1,metalness:0,normalScale:new THREE.Vector2(.8,.8),alphaTest:.42,transparent:false,depthWrite:true,side:THREE.DoubleSide,color:0xf4f2e9});
  }));
+ result.fern_trial=result.arch_fern;
  return result;
 }
 function prepareJungleDepthMaterials(root,materials){
- root.traverse(o=>{const match=o.isMesh&&o.name.match(/^HQ_(rosette|arch_fern|red_bloom)_V[0-2]_LOD[0-2]$/);if(!match)return;o.material=materials[match[1]];o.userData.original=o.material;});
+ root.traverse(o=>{if(!o.isMesh)return;const match=o.name.match(/^HQ_(rosette|arch_fern|red_bloom)_V[0-2]_LOD[0-2]$/);const trial=o.name.match(/^HQ_fern_trial_LOD[0-2]$/);if(!match&&!trial)return;o.material=materials[trial?'fern_trial':match[1]];o.userData.original=o.material;});
 }
 function applyJungleDepth(){
  if($('asset').value!=='jungle_depth_foliage'||!slots.v2)return;
- const node=`HQ_${$('jungle-depth-species').value}_V${$('jungle-depth-variant').value}_LOD${$('jungle-depth-lod').value}`;
+ const species=$('jungle-depth-species').value,trial=species==='fern_trial';
+ $('jungle-depth-variant').disabled=trial;
+ const node=trial?`HQ_fern_trial_LOD${$('jungle-depth-lod').value}`:`HQ_${species}_V${$('jungle-depth-variant').value}_LOD${$('jungle-depth-lod').value}`;
  slots.v2.root.traverse(o=>{if(JUNGLE_DEPTH_NODES.includes(o.name))o.visible=o.name===node;});
  bounds.makeEmpty();slots.v2.root.traverse(o=>{if(o.isMesh&&o.visible&&isUnder(o,node))bounds.expandByObject(o);});
  setCamera(false);stats();dirty=true;
@@ -223,6 +226,8 @@ async function load(){
   for(const file of EXTRA_CLIPS[asset]||[]){const g=await loader.loadAsync(`../../assets/${file}`);for(const [,slot] of loaded){for(const c of g.animations){slot.clips=slot.clips.filter(x=>x.name!==c.name);slot.clips.push(c);}}}
   const next=Object.fromEntries(loaded);
   if(asset==='jungle_depth_foliage'){
+   const trial=await loader.loadAsync('../../assets/jungle_fern_trial.glb');
+   next.v2.root.add(trial.scene);
    const materials=await loadJungleDepthMaterials();prepareJungleDepthMaterials(next.v2.root,materials);
    if(current!==request){disposeSlots(next);return;}
   }

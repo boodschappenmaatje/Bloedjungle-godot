@@ -1,0 +1,46 @@
+{
+  "asset": "jungle_fern_trial",
+  "purpose": "Review-only bospad field trial; not added to the live foliage scatter.",
+  "source_blend": "bron/jungle_foliage_depth/fern_trial.blend",
+  "generator": "bron/jungle_foliage_depth/make_fern_trial.py",
+  "provider": "Poly Haven",
+  "license": "CC0 1.0 Universal",
+  "license_url": "https://polyhaven.com/license",
+  "polyhaven_asset_id": "fern_02",
+  "source_objects": [
+    "fern_02_a",
+    "fern_02_c"
+  ],
+  "pbr": {
+    "runtime_material": "Shared Godot depth_arch_fern alpha-cutout material; no blended transparency.",
+    "runtime_maps": [
+      "assets/textures/foliage/polyhaven/arch_fern_base_color.png",
+      "assets/textures/foliage/polyhaven/arch_fern_normal_gl.png",
+      "assets/textures/foliage/polyhaven/arch_fern_roughness.png"
+    ],
+    "runtime_map_size": "1024x1024 each; reused, no new texture payload",
+    "normal": "OpenGL tangent normal"
+  },
+  "geometry": {
+    "components": 2,
+    "dimensions_m_lod0": [
+      1.5331,
+      1.5125,
+      0.68
+    ],
+    "triangles_lod0_lod1_lod2": [
+      3032,
+      1637,
+      545
+    ],
+    "lod_distances_m": [
+      20.0,
+      48.0
+    ],
+    "surfaces_per_lod": 1,
+    "collisions": 0,
+    "material_blend_transparency": false
+  },
+  "placement": "The trial capture temporarily hides one existing arch_fern variant-0 MultiMesh batch in one bounded 24 m bospad cell; live placement and counts are unchanged.",
+  "apple_quicklook": "Not generated in this Linux Blender 4.3.2 environment; the trial deliverable is the Godot comparison capture."
+}

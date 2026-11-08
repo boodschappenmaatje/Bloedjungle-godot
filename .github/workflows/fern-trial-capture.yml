@@ -1,0 +1,106 @@
+name: Bospad fern field trial
+
+on:
+  push:
+    branches: [feature/visual-upgrade-b-1-0]
+    paths:
+      - "assets/jungle_fern_trial.glb"
+      - "bron/jungle_foliage_depth/FERN_TRIAL_SPEC.md"
+      - "bron/jungle_foliage_depth/fern_trial.blend"
+      - "bron/jungle_foliage_depth/fern_trial_manifest.json"
+      - "bron/jungle_foliage_depth/make_fern_trial.py"
+      - "scripts/jungle_understory.gd"
+      - "tests/fern_trial_*.gd"
+      - "tests/fern_trial_*.tscn"
+      - "tools/blender-vq2-viewer/index.html"
+      - "tools/blender-vq2-viewer/src.js"
+      - "tools/blender-vq2-viewer/viewer.js"
+      - "tools/blender-vq2-viewer/test-jungle-depth.mjs"
+      - ".github/workflows/fern-trial-capture.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "assets/jungle_fern_trial.glb"
+      - "bron/jungle_foliage_depth/FERN_TRIAL_SPEC.md"
+      - "bron/jungle_foliage_depth/fern_trial.blend"
+      - "bron/jungle_foliage_depth/fern_trial_manifest.json"
+      - "bron/jungle_foliage_depth/make_fern_trial.py"
+      - "scripts/jungle_understory.gd"
+      - "tests/fern_trial_*.gd"
+      - "tests/fern_trial_*.tscn"
+      - "tools/blender-vq2-viewer/index.html"
+      - "tools/blender-vq2-viewer/src.js"
+      - "tools/blender-vq2-viewer/viewer.js"
+      - "tools/blender-vq2-viewer/test-jungle-depth.mjs"
+      - ".github/workflows/fern-trial-capture.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  proof:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+      - name: Install pinned Godot 4.7.2
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 3 \
+            https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip \
+            --output "$RUNNER_TEMP/godot.zip"
+          unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
+          chmod +x "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64"
+          "$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" --version | grep -F "4.7.2.stable"
+          echo "GODOT_BIN=$RUNNER_TEMP/godot/Godot_v4.7.2-stable_linux.x86_64" >> "$GITHUB_ENV"
+      - name: Install Xvfb and software Vulkan
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends xvfb libvulkan1 mesa-vulkan-drivers vulkan-tools
+          if [[ -f /usr/share/vulkan/icd.d/lvp_icd.x86_64.json ]]; then
+            echo "VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.x86_64.json" >> "$GITHUB_ENV"
+          fi
+          vulkaninfo --summary > "$RUNNER_TEMP/fern-vulkan-summary.log" 2>&1 || true
+      - name: Import project and run the focused asset/material gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          "$GODOT_BIN" --headless --editor --path . --import 2>&1 | tee "$RUNNER_TEMP/fern-import.log"
+          "$GODOT_BIN" --headless --path . res://tests/fern_trial_material_test.tscn 2>&1 | tee "$RUNNER_TEMP/fern-material-test.log"
+          grep -Fq "FERN TRIAL MATERIAL PASS" "$RUNNER_TEMP/fern-material-test.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|SHADER ERROR:|Shader compilation failed' "$RUNNER_TEMP/fern-import.log" "$RUNNER_TEMP/fern-material-test.log"; then exit 1; fi
+      - name: Make one real main-scene Godot camera comparison
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/fern-trial"
+          timeout 720 xvfb-run -a -s "-screen 0 1280x720x24" env \
+            GODOT_SILENCE_ROOT_WARNING=1 BJ_INSTANT=1 BJ_TOUCH=1 \
+            BJ_FERN_TRIAL_OUT="$RUNNER_TEMP/fern-trial" \
+            "$GODOT_BIN" --path . res://tests/fern_trial_capture.tscn --resolution 1280x720 --fixed-fps 60 \
+            2>&1 | tee "$RUNNER_TEMP/fern-capture.log"
+          grep -Fq "FERN TRIAL CAPTURE PASS" "$RUNNER_TEMP/fern-capture.log"
+          grep -Fq "FERN TRIAL renderer=" "$RUNNER_TEMP/fern-capture.log"
+          test -s "$RUNNER_TEMP/fern-trial/comparison.png"
+          test -s "$RUNNER_TEMP/fern-trial/comparison.json"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|SHADER ERROR:|Shader compilation failed' "$RUNNER_TEMP/fern-capture.log"; then exit 1; fi
+      - name: Upload the one capture and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bloedjungle-fern-trial-${{ github.sha }}
+          path: |
+            ${{ runner.temp }}/fern-trial/comparison.png
+            ${{ runner.temp }}/fern-trial/comparison.json
+            ${{ runner.temp }}/fern-import.log
+            ${{ runner.temp }}/fern-material-test.log
+            ${{ runner.temp }}/fern-capture.log
+            ${{ runner.temp }}/fern-vulkan-summary.log
+          if-no-files-found: warn
+          retention-days: 14

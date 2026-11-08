@@ -5,6 +5,7 @@ const CELL := 24.0
 const CAPS := {"fern":2178,"bush":2737,"groundcover":14500,"rosette":1900,"arch_fern":1450,"red_bloom":850,"litter":15000,"stone":1900,"twig":700}
 static var _depth_lod_meshes: Dictionary = {}
 static var _depth_source_meshes: Dictionary = {}
+static var _fern_trial_mesh: ArrayMesh
 
 
 static func _depth_key(kind: String, variant: int) -> String:
@@ -42,6 +43,27 @@ static func _load_depth_assets() -> void:
 				_depth_lod_meshes[key] = _merge_native_lods(sources, kind, variant)
 
 
+## The isolated field-trial asset is loaded only by its review harness, never by
+## the live world/spawn path, so it adds no startup or residency cost in play.
+static func fern_trial_mesh() -> ArrayMesh:
+	if _fern_trial_mesh != null:
+		return _fern_trial_mesh
+	var packed := load("res://assets/jungle_fern_trial.glb") as PackedScene
+	if packed == null:
+		return null
+	var root := packed.instantiate()
+	var sources: Array = [null, null, null]
+	for node: MeshInstance3D in root.find_children("*", "MeshInstance3D", true, false):
+		for lod in 3:
+			if node.name == "HQ_fern_trial_LOD%d" % lod:
+				sources[lod] = node.mesh
+	root.free()
+	if not sources.all(func(mesh): return mesh is Mesh):
+		return null
+	_fern_trial_mesh = _merge_native_lods(sources, "fern_trial", 0)
+	return _fern_trial_mesh
+
+
 static func _merge_native_lods(sources: Array, kind: String, variant: int) -> ArrayMesh:
 	var arrays_by_lod: Array = []
 	for source: Mesh in sources:
@@ -66,7 +88,8 @@ static func _merge_native_lods(sources: Array, kind: String, variant: int) -> Ar
 	merged[Mesh.ARRAY_INDEX] = base_indices
 	var result := ArrayMesh.new()
 	result.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, merged, [], lod_indices)
-	result.surface_set_material(0, Foliage.material("depth_%s" % kind))
+	var material_kind := "arch_fern" if kind == "fern_trial" else kind
+	result.surface_set_material(0, Foliage.material("depth_%s" % material_kind))
 	result.resource_name = "JungleDepth_%s_V%d_LOD0_1_2" % [kind, variant]
 	result.set_meta("depth_lod_distances_m", [8.0, 22.0] if kind == "microcover" else [20.0, 48.0])
 	result.set_meta("depth_lod_triangles", triangle_counts)

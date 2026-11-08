@@ -697,10 +697,89 @@
           }
         }
       }
+    },
+    "fern_trial": {
+      "lods": {
+        "0": {
+          "name": "HQ_fern_trial_LOD0",
+          "visible": true,
+          "triangles": 3032,
+          "groups": 0,
+          "material": "Poly Haven arch_fern · 1K PBR",
+          "alphaTest": 0.42,
+          "maps": {
+            "base": true,
+            "normal": true,
+            "roughness": true,
+            "baseSize": [
+              1024,
+              1024
+            ],
+            "normalSize": [
+              1024,
+              1024
+            ],
+            "roughnessSize": [
+              1024,
+              1024
+            ]
+          }
+        },
+        "1": {
+          "name": "HQ_fern_trial_LOD1",
+          "visible": true,
+          "triangles": 1637,
+          "groups": 0,
+          "material": "Poly Haven arch_fern · 1K PBR",
+          "alphaTest": 0.42,
+          "maps": {
+            "base": true,
+            "normal": true,
+            "roughness": true,
+            "baseSize": [
+              1024,
+              1024
+            ],
+            "normalSize": [
+              1024,
+              1024
+            ],
+            "roughnessSize": [
+              1024,
+              1024
+            ]
+          }
+        },
+        "2": {
+          "name": "HQ_fern_trial_LOD2",
+          "visible": true,
+          "triangles": 545,
+          "groups": 0,
+          "material": "Poly Haven arch_fern · 1K PBR",
+          "alphaTest": 0.42,
+          "maps": {
+            "base": true,
+            "normal": true,
+            "roughness": true,
+            "baseSize": [
+              1024,
+              1024
+            ],
+            "normalSize": [
+              1024,
+              1024
+            ],
+            "roughnessSize": [
+              1024,
+              1024
+            ]
+          }
+        }
+      }
     }
   },
   "errors": [],
   "loading": "Echte GLB-materialen laden…",
-  "status": "Jungle dieptepass · Poly Haven-ondergroei · VQ2 export · 360° draaien en zoomen actief.",
+  "status": "Jungle dieptepass · Poly Haven-ondergroei + review-only varenproef · VQ2 export · 360° draaien en zoomen actief.",
   "ok": true
 }

@@ -318,6 +318,7 @@ func show_menu() -> void:
 
 func _start_game() -> void:
 	_show("")
+	Data.mcv_mode = true   # het echte spel begint in de bouwwagen (Generals-plan "Stap MCV"); tests die het oude kamp nodig hebben laten dit uit
 	get_tree().current_scene.begin()
 
 
@@ -328,6 +329,7 @@ func _open_stad_editor() -> void:
 		return
 	if Game.state == "menu":
 		_show("")
+		Data.mcv_mode = true   # zelfde wereld als het spel zelf: zonder vast kamp
 		await get_tree().current_scene.begin()
 	else:
 		if Game.state != "prep":

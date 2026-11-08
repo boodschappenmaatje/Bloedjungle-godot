@@ -16,6 +16,7 @@ uniform sampler2D dirt_normal : hint_normal, repeat_enable, filter_linear_mipmap
 uniform float detail_mip_bias : hint_range(0.0, 2.0) = 0.5;
 uniform float compound = 14.0;
 uniform float gate_gap = 2.4;
+uniform float base_ground = 1.0;   // 0 = geen aangestampte kampbodem en poortpad (MCV-start, zonder vast kamp)
 uniform vec4 pits[8];  // loopgraven: x, z, cos, sin
 uniform int pit_n = 0;
 uniform vec4 pad = vec4(0.0, 0.0, 1.0, 0.0);  // schacht van het helikopterplatform: x, z, cos, sin
@@ -83,7 +84,7 @@ void fragment() {
 		* smoothstep(compound - 2.0, compound + 1.5, abs(p.y))
 		* (1.0 - smoothstep(30.0, 52.0, abs(p.y)));
 	float patches = smoothstep(0.68, 0.92, n1 + 0.12 * n2);
-	float dm = clamp(max(max(inside, path), patches * 0.56), 0.0, 1.0);
+	float dm = clamp(max(max(inside, path) * base_ground, patches * 0.56), 0.0, 1.0);
 	dm = max(dm, 1.0 - smoothstep(2.9, 5.0 + n2 * 1.6, river_off));  // modderige oevers
 	// moeras: in het bos ten westen van x = -22, natte donkere bodem
 	float swamp = (1.0 - smoothstep(-38.0, -22.0, p.x + n2 * 6.0)) * (1.0 - smoothstep(-70.0, -40.0, p.y)) * smoothstep(-84.0, -70.0, p.y);

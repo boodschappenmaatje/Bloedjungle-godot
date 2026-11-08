@@ -36,6 +36,12 @@ static func build(root: Node3D) -> void:
 	_crates(root, Vector3(-C + 6.5, 0, -C + 5.5))  # voorraadhoek bij de noordwesthoek
 
 
+## MCV-start: het hoofdkwartier (bunkerbody met schadescript, HK-model, zandzakkenring en voorplein) onder `root`, dat al op de plek en
+## in de draaiing van de uitgeklapte wagen staat. Alles staat in de lokale coordinaten van `root` (deur naar +Z).
+static func build_hq(root: Node3D) -> void:
+	_bunker(root)
+
+
 ## Build shared local transforms once; keep the placement math testable without GPU readback.
 static func _wall_module_transforms(a: Vector3, b: Vector3, yaw: float) -> Array[Transform3D]:
 	var direction := (b - a).normalized()

@@ -66,7 +66,7 @@ func setup(kind: String, wave: int) -> void:
 	slot = Game.next_slot()
 	if kind in ["rifle", "assault"] and slot % 3 == 1:
 		role = "flank"
-	if not t.get("melee", false):
+	if not t.get("melee", false) and not Data.mcv_mode:
 		gate_z = Route.OUT if slot % 2 == 0 else -Route.OUT
 
 
@@ -169,7 +169,7 @@ func _physics_process(delta: float) -> void:
 	if melee and player and player.elev > 1.0:
 		at_player = false  # een mes reikt niet tot op een toren
 	_tgt_y = player.global_position.y if at_player else 0.0
-	var goal: Vector3 = player.global_position if at_player else Vector3.ZERO
+	var goal: Vector3 = player.global_position if at_player else Game.base_pos
 	var dist := to_player if at_player else _bunker_dist()
 	if rb != null:
 		at_player = false
@@ -239,7 +239,7 @@ func _physics_process(delta: float) -> void:
 				if at_player:
 					if not BaseWallRules.blocks_blast(global_position, player.global_position):
 						player.hit(t.dmg, Vector3(sin(look), 0, cos(look)), false)
-				elif not BaseWallRules.blocks_blast(global_position, Vector3.ZERO):
+				elif not BaseWallRules.blocks_blast(global_position, Game.base_pos):
 					Game.damage_base(t.dmg)
 	elif not flanking and dist < range_ * hold and (rb != null or _clear_shot(aim_at, not at_player)):
 		want_move = false
@@ -321,7 +321,7 @@ func _is_far(player: Variant) -> bool:
 	if player == null or player.dead or slow_t > 0.0:
 		return false
 	var d2: float = _flat(player.global_position - global_position).length_squared()
-	var from_base := maxf(absf(global_position.x), absf(global_position.z))
+	var from_base := maxf(absf(global_position.x - Game.base_pos.x), absf(global_position.z - Game.base_pos.z))
 	var lim := 55.0 if _far else 62.0  # kleine marge tegen heen en weer schakelen
 	return d2 > lim * lim and from_base > 48.0
 
@@ -342,7 +342,7 @@ func _far_step(delta: float) -> void:
 	if _far_n % 4 != 0:
 		return
 	var rg: Variant = _route_goal()
-	var wp := Route.waypoint(global_position, rg if rg != null else Vector3.ZERO)
+	var wp := Route.waypoint(global_position, rg if rg != null else Game.base_pos)
 	var d := _flat(wp - global_position)
 	if d.length() > 0.05:
 		var v: Vector2 = d.normalized() * float(t.speed) * speed_mul * _far_acc
@@ -488,7 +488,9 @@ static func _inside_wall(p: Vector3) -> bool:
 
 
 func _bunker_dist() -> float:
-	var p := global_position
+	var p := global_position - Game.base_pos
+	if Game.base_yaw != 0.0:
+		p = Basis(Vector3.UP, -Game.base_yaw) * p   # het hoofdkwartier kan gedraaid staan
 	return maxf(absf(p.x), absf(p.z)) - Data.BUNKER_HALF
 
 

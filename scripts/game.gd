@@ -35,6 +35,9 @@ var base_max := Data.BASE_HP
 var hq_level := 1   # niveau van het hoofdkwartier (1..3)
 var artillery_cd := 0.0   # s tot het artilleriecommando (HK niveau 3) weer klaar is; loopt in HqPerks
 var prep_t := 0.0
+var mcv_deployed := false   # MCV-start: de wagen is uitgeklapt, het hoofdkwartier staat en de klok loopt (Data.mcv_mode)
+var base_pos := Vector3.ZERO   # midden van het hoofdkwartier; in het oude spel de oorsprong
+var base_yaw := 0.0            # draaiing van het hoofdkwartier (rotation.y); zijn deur (terugkomplek) ligt op +Z
 var routes: Array = []  # vaste aanvalsroutes van de groep die nu uitrukt, of anders van de komende groep (AanvalRoutes): de rode pijlen
 var next_routes: Array = []  # routes van de komende groep: staan er al tijdens het aftellen op de golfplaat
 var bonus := 0  # bonus van de laatste overleefde golf, getoond in de wapenkamer
@@ -170,6 +173,9 @@ func reset() -> void:
 	base_max = Data.BASE_HP
 	hq_level = 1
 	artillery_cd = 0.0
+	mcv_deployed = false
+	base_pos = Vector3.ZERO
+	base_yaw = 0.0
 	enemies.clear()
 	barrels.clear()
 	if is_inside_tree():
@@ -204,6 +210,16 @@ func reset() -> void:
 	streak_given.clear()
 	streak_t = -100.0
 	hit_src = "speler"
+
+
+## Een punt in het hoofdkwartier-stelsel (x = rechts, z = naar de deur) als wereldpunt. In het oude spel is dat gewoon het punt zelf.
+func base_point(local: Vector3) -> Vector3:
+	return base_pos + Basis(Vector3.UP, base_yaw) * local
+
+
+## Waar de speler terugkomt na sneuvelen: 4 m voor de deur van het hoofdkwartier (de oude bunkerstart was (0, 0, 4)).
+func base_home() -> Vector3:
+	return base_point(Vector3(0.0, 0.0, 4.0))
 
 
 ## Een vijand is door jou (of jouw voertuig) gevallen: de streak loopt op en een beloning kan klaarstaan.

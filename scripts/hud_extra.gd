@@ -381,7 +381,7 @@ func _draw_map_content(map: Rect2) -> void:
 	_cv.draw_line(Vector2(mid_x, map.position.y), Vector2(mid_x, map.end.y), Color(0.42, 0.52, 0.38, 0.2), 1.0 * _k)
 	_cv.draw_line(Vector2(map.position.x, mid_y), Vector2(map.end.x, mid_y), Color(0.42, 0.52, 0.38, 0.2), 1.0 * _k)
 	var wall_color := Color(0.56, 0.64, 0.42, 0.8)
-	for side in [-1.0, 1.0]:
+	for side in ([] if Data.mcv_mode else [-1.0, 1.0]):   # MCV-start: geen vaste muur
 		_cv.draw_line(_radar_point(Vector3(side * Data.COMPOUND, 0, -Data.COMPOUND), map), _radar_point(Vector3(side * Data.COMPOUND, 0, Data.COMPOUND), map), wall_color, 1.4 * _k)
 		for span in [[-Data.COMPOUND, -Data.GATE_GAP], [Data.GATE_GAP, Data.COMPOUND]]:
 			_cv.draw_line(_radar_point(Vector3(span[0], 0, side * Data.COMPOUND), map), _radar_point(Vector3(span[1], 0, side * Data.COMPOUND), map), wall_color, 1.4 * _k)
@@ -392,10 +392,11 @@ func _draw_map_content(map: Rect2) -> void:
 	_cv.draw_polyline(river, Color(0.2, 0.55, 0.65, 0.65), 1.5 * _k, true)
 	_draw_vijand_basis(map)
 	# De bunker staat op het echte wereldnulpunt; overige markers volgen de huidige bouwdata.
-	var base := _radar_point(Vector3.ZERO, map)
-	if Game.hq_level >= 2:
-		_draw_hq_radar(map, base)
-	_cv.draw_rect(Rect2(base - Vector2(3.5, 3.5) * _k, Vector2(7, 7) * _k), Color(1.0, 0.74, 0.28), true)
+	var base := _radar_point(Game.base_pos, map)
+	if not Data.mcv_mode or Game.mcv_deployed:   # MCV-start: pas een hoofdkwartier als de wagen is uitgeklapt
+		if Game.hq_level >= 2:
+			_draw_hq_radar(map, base)
+		_cv.draw_rect(Rect2(base - Vector2(3.5, 3.5) * _k, Vector2(7, 7) * _k), Color(1.0, 0.74, 0.28), true)
 	for tower in get_tree().get_nodes_in_group("tower"):
 		if is_instance_valid(tower) and tower is Node3D:
 			var tp := _radar_point(tower.global_position, map)
@@ -452,22 +453,24 @@ func _draw_hq_radar(map: Rect2, base: Vector2) -> void:
 	var ring := PackedVector2Array()
 	for i in 41:
 		var a := TAU * float(i) / 40.0
-		ring.append(_radar_point(Vector3(cos(a), 0.0, sin(a)) * HqPerks.RADAR_RANGE, map))
+		ring.append(_radar_point(Game.base_pos + Vector3(cos(a), 0.0, sin(a)) * HqPerks.RADAR_RANGE, map))
 	_cv.draw_polyline(ring, Color(0.45, 0.92, 0.55, 0.32), 1.0 * _k, true)
 	var sweep := fmod(Time.get_ticks_msec() / 8000.0, 1.0) * TAU   # zelfde 8 s als de Radar-loop van het model
-	var tip := _radar_point(Vector3(cos(sweep), 0.0, sin(sweep)) * HqPerks.RADAR_RANGE, map)
+	var tip := _radar_point(Game.base_pos + Vector3(cos(sweep), 0.0, sin(sweep)) * HqPerks.RADAR_RANGE, map)
 	_cv.draw_line(base, tip, Color(0.45, 0.92, 0.55, 0.5), 1.2 * _k, true)
 
 
 ## Wie ziet dit punt: de speler, de basis, een toren, een soldaat of een eigen gebouw.
 func _in_friendly_sight(pos: Vector3) -> bool:
-	if Game.hq_level >= 2 and Vector2(pos.x, pos.z).length() <= HqPerks.RADAR_RANGE:
+	if Game.hq_level >= 2 and Vector2(pos.x - Game.base_pos.x, pos.z - Game.base_pos.z).length() <= HqPerks.RADAR_RANGE:
 		return true   # hoofdkwartier niveau 2: de radar ziet alles binnen 85 m
 	var player: Node3D = Game.player
 	if player != null and is_instance_valid(player) and Vector2(pos.x - player.global_position.x, pos.z - player.global_position.z).length() <= RADAR_SIGHT:
 		return true
 	var edge := Data.COMPOUND + RADAR_BASE_MARGIN
-	if absf(pos.x) <= edge and absf(pos.z) <= edge:
+	if not Data.mcv_mode and absf(pos.x) <= edge and absf(pos.z) <= edge:
+		return true
+	if Data.mcv_mode and Game.mcv_deployed and absf(pos.x - Game.base_pos.x) <= edge and absf(pos.z - Game.base_pos.z) <= edge:
 		return true
 	for tower in get_tree().get_nodes_in_group("tower"):
 		if is_instance_valid(tower) and tower is Node3D and Vector2(pos.x - tower.global_position.x, pos.z - tower.global_position.z).length() <= RADAR_POST_SIGHT:

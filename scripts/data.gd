@@ -53,6 +53,12 @@ const PLAYER_COLOR := Color("4b5a2c")
 const BASE_HP := 1000.0
 const START_POINTS := 2000
 
+## MCV-start (Dennis, 7 november 2026, docs/GENERALS_PLAN.md "Stap MCV"): je begint in een bouwwagen en klapt hem uit als hoofdkwartier.
+## Staat dit aan, dan bestaat het vaste kamp op de oorsprong niet (muur, poorten, torens, wachtposten, generator, patrouilles, bunker)
+## en gaat alles uit van Game.base_pos. Uit = het oude spel, dat de bestaande tests nog gebruiken tot het vaste kamp is opgeruimd.
+static var mcv_mode := false
+const MCV_RUST := 600.0  # s rust voor de eerste aanvalsgroep, geteld vanaf het uitklappen (Dennis: 10 minuten)
+
 const COMPOUND := 28.0   # halve breedte van de betonmuur rond de basis
 const GATE_GAP := 3.4    # halve breedte van de twee poortopeningen (noord en zuid)
 const WALL_H := 1.55

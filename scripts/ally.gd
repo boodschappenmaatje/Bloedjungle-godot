@@ -168,7 +168,7 @@ func _is_far() -> bool:
 	if p == null or not is_instance_valid(p) or p.dead:
 		return false
 	var d2 := Vector2(p.global_position.x - global_position.x, p.global_position.z - global_position.z).length_squared()
-	var from_base := maxf(absf(global_position.x), absf(global_position.z))
+	var from_base := maxf(absf(global_position.x - Game.base_pos.x), absf(global_position.z - Game.base_pos.z))
 	var lim := 55.0 if _far else 62.0   # kleine marge tegen heen en weer schakelen
 	return d2 > lim * lim and from_base > 48.0
 
@@ -248,7 +248,7 @@ func _goal() -> Vector3:
 			return Wachtpost.guard_spot(Wachtpost.GUARD_SZ)   # hij blijft in het wachthuisje en schiet door het raam
 		if Game.state == "play":   # alarm: naar de post langs de muur
 			var q: Vector2 = POSTS[(idx * 4 + 1) % POSTS.size()] * (Data.COMPOUND / 14.0)
-			return Vector3(q.x, 0, q.y)
+			return Game.base_pos + Vector3(q.x, 0, q.y)
 		return Patrouille.line(idx)[_leg % 2]
 	if command == "basis" and not helper:
 		return _march_goal()
@@ -259,7 +259,7 @@ func _goal() -> Vector3:
 		return TeamOrderRules.soldier_goal(command, command_target, enemy_position, enemy_valid, idx, command_hold_position, follow_position)
 	if Game.troop_mode == "hold" and not helper and command == "follow":
 		var p: Vector2 = POSTS[idx % POSTS.size()] * (Data.COMPOUND / 14.0)
-		return Vector3(p.x, 0, p.y)
+		return Game.base_pos + Vector3(p.x, 0, p.y)
 	var a := float(idx) * 2.4 + 0.6
 	var base: Vector3 = Game.player.global_position
 	base.y = 0.0

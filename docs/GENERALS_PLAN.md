@@ -174,3 +174,52 @@ Na de voltooide jeep-MG en infanterie-uitbreiding is gekozen voor de bazooka als
 ### Granaatbesturing 2.0 — UITRUSTING apart, rechterstick richten/loslaten (6 november 2026)
 
 De native iPhone-test toonde onbedoelde wielkeuzes doordat de knop GEBRUIK tegelijk granaatknop en uitrustingswiel was. **Gekozen optie B:** UITRUSTING als aparte keuzeknop boven/links van de wapenbalk; GRANAAT kiezen sluit het wiel zonder te gooien; een **nieuwe** rechterstick-aanraking richt met de bestaande boog en landingscirkel; rechterstick loslaten gooit **exact eenmaal**; terug naar het midden annuleert. In deze modus schiet de rechterstick nooit kogels. Bestaande granaatfysica, schietschade, range, touch-left-stick en waarschuwingen blijven intact. Zie [GRANAAT_BESTURING_2_0.md](GRANAAT_BESTURING_2_0.md). **Draft PR, nog niet mergen of OTA publiceren** totdat Godot- en iOS-testresultaten én een afzonderlijke toestemming binnen zijn.
+
+## Stap MCV — uitklapbare bouwwagen als start van je basis (keuzes van Dennis, 7 november 2026)
+**Idee:** zoals in Command & Conquer begin je met een grote bouwwagen (MCV). Je kiest een plek, klapt de wagen uit, en dat wordt je hoofdkwartier (B3) en het hart van je kamp. **Er is nog niets gebouwd.** Past bij Fase 1 (B3, B1, B4); bouw niets voordat Dennis "ga door" zegt, Draft PR, niet mergen of OTA zonder apart ja.
+
+| Vraag | Keuze van Dennis |
+|---|---|
+| 1 Waar mag je uitklappen? | **Overal, behalve bij water en in de stad.** Altijd aan dezelfde kant van de rivier als de huidige basis (`Data.river_z`), links (west) of rechts (oost) maakt niet uit. **Bomen, struiken, varens en rotsen verdwijnen** op de plek waar je uitklapt (zelfde aanpak als de vrijgemaakte stroken voor de voorraadtrucks). |
+| 2 Inklappen? | **Nee.** Is het spel eenmaal begonnen en is de wagen uitgeklapt, dan kun je niet meer inklappen of verhuizen. Begin je een nieuw potje, of heb je verloren, dan kies je opnieuw. |
+| 3 Muur en torens | **Zelf bouwen via het bouwmenu.** **Muur:** je trekt hem met je vinger; de eerste keer kost het niets, daarna **50 per muur**. **Torens:** je krijgt er **4 gratis aan het begin**, daarna **100 per stuk**. |
+
+**Open punten om bij de start van deze stap te bepalen (nog niet beslist):**
+- Wat "per muur" is: per segment, per tik of per getrokken lijn.
+- Wat de "eerste keer gratis" precies omvat: één getrokken omheining, of een vast aantal segmenten.
+- Of de 4 gratis torens overal geplaatst mogen worden, of binnen een straal van het hoofdkwartier.
+- Hoe ver de plek van het water, de stad en de vijandbasis moet blijven (rood/groen voetafdrukspook bij het kiezen).
+- Waar de speler en het eerste depot met truck verschijnen als de basis niet meer op de oorsprong staat; wat er met het vaste kamp (`Data.COMPOUND`, 56 x 56 m, poort, vier torens) gebeurt.
+
+**Wat mee moet verhuizen van de vaste basis naar het hoofdkwartier:** terugkomen na sneuvelen (H1), eerste depot en truck, radar en teamwiel, startplek van de speler, en de aanvalsroutes van de vijand (doel wordt het nieuwe hoofdkwartier). Eerst speelbaar met blokken (wagen en hoofdkwartier als blokken), daarna de modellen via een Asset Design Specification. Native iPhone-test: NIET GETEST.
+
+### MCV — aanvullende keuzes van Dennis (7 november 2026, tweede ronde)
+- **Muur trekken:** zoals je in de stad een weg trekt (zelfde bediening als de stadseditor). "Per muur" = zoals die bediening dat telt; vastgelegd: **een complete omheining is gratis** (de eerste keer), daarna 50 per muur.
+- **Torens:** de 4 gratis torens (en latere van 100) mogen **alleen bij de basis** staan.
+- **Het huidige vaste kamp vervalt.** De wagen is het nieuwe begin: muur, poort, torens, wachtposten en bijbehorende vaste props op de oorsprong (`Data.COMPOUND`-code: `gates.gd`, `base_props.gd`, `wachtpost.gd`, `patrouille.gd`, `generator.gd`, `route.gd`, `voorraad.gd`, enz.) moeten dynamisch worden of vervallen.
+- **Gebouwen blijven bouwbaar** (kazerne, garage, enz.) via de bestaande bouwmodus, rond het hoofdkwartier.
+- Nog te beslissen: zie de vragenlijst in het gesprek van 7 november (afstand tot water/stad/vijandbasis, startplek en eerste depot/truck, bunker, HK-gebied, radar, aanvalsdoel van de vijand, wat er met bestaande wachten gebeurt).
+
+### MCV — derde ronde, antwoorden op de tien vragen (Dennis, 7 november 2026)
+1. **Start:** je begint *in* de wagen, rijdt hem naar een plek, klapt hem uit, en dan komt de speler eruit.
+2. **Hoofdkwartier:** blijft bestaan (is al vervangen); het komt uit de wagen geklapt.
+3. **Terugkomen:** na 8 s bij het kamp (het HK). **Is het HK vernield, dan is het spel voorbij.**
+4. **De wagen is het HK** (geen apart gebouw ernaast).
+5. **Depot en eerste truck gratis**, maar je plaatst het depot zelf in je nieuwe kamp, en je kiest zelf naar welke voorraadstapel de truck rijdt.
+6. **Startgeld: 2000** (ongewijzigd).
+7. **Afstand tot water/stad/vijandbasis:** door Claude in te vullen (voorstel: zie PR/stap); **geen vast kader, het kamp mag zo groot worden als je zelf wilt.**
+8. **Poort:** je plaatst de poort zelf in de muur.
+9. **Rust voor de eerste vijandelijke groep: 10 minuten** (was 3, `Data.GROEP_RUST`). Aanname, nog te bevestigen: de klok start bij het uitklappen.
+10. **Wachten/patrouilles:** je koopt ze als mannetjes bij de kazerne en zij lopen patrouille; de vaste wachtposten van het oude kamp vervallen.
+
+**Gevolgen om rekening mee te houden:** geen vast kader betekent dat muur, poorten, patrouillelijnen, `Route`, voorraadroutes, radar en vijandige aanvalsdoelen allemaal van de wagenplek moeten uitgaan en niet van een vast vierkant; prestaties op iPhone met een groot kamp NIET GEMETEN. De bunker als doel vervalt: het HK (de wagen) is het doel.
+
+### MCV stap 1 gebouwd (8 november 2026, Draft PR): bouwwagen, uitklappen, hoofdkwartier
+Gebouwd volgens de keuzes hierboven; **alleen in de nieuwe MCV-modus** (`Data.mcv_mode`, aan via START MISSIE en de stadseditor in het hoofdmenu; uit voor het oude spel en de bestaande tests, tot het vaste kamp in stap 4 is opgeruimd).
+- **Wagen** (`scripts/mcv.gd`, een blok als model): je begint erin op de kale open plek (0, 6), rijdt met de linkerstick (7 m/s, palmen en jungle-bomen vallen om), een spookbeeld van 14 x 16 m is groen (kan) of rood (kan niet), knop **UITKLAPPEN**.
+- **Plekcontrole:** minstens 12 m van het water, alleen aan jouw kant van de rivier (de stad ligt aan de overkant), 14 m van de kaartrand, niets massiefs (muur, gebouw, vat) in de weg. Bomen, struiken, varens, gras en rotsen zijn geen bezwaar en verdwijnen (`Foliage.clear_for_building` met rotsen). Dit geldt ook voor alle gebouwen en muren die je later bouwt (rotsen tellen in MCV-modus ook mee).
+- **Uitklappen** (na 1,4 s): de wagen verdwijnt, het hoofdkwartier (bunkerbody, HK-model, zandzakken, voorplein) staat op zijn plek met dezelfde draaiing (deur naar de achterkant van de wagen), de speler stapt eruit en `home` = 4 m voor de deur. `Game.base_pos`/`base_yaw`/`base_point()`/`base_home()`. **De klok van 10 minuten (`Data.MCV_RUST`) begint bij het uitklappen**; ervoor staat hij stil, er zijn geen vijanden en bouwen kan niet.
+- **Alles volgt het hoofdkwartier:** vijanden lopen en mikken op `Game.base_pos` (afstand rekent met de draaiing van het HK mee), `Route.waypoint` kent in MCV-modus alleen nog de rivier (brug/ondiepte) en verder rechtdoor, radar (geen vaste muur, HK-stip pas na het uitklappen, radarring en zicht rond het HK), HK-radar (`HqPerks`), wachtposten van soldaten (`Ally`), bouwcamera, bouwregels (`Buildings.placement_status`: overal aan jouw kant van de rivier, geen vast kader, geen muurafstand meer). Sneuvelen: na 8 s terug bij het HK; HK vernield = spel voorbij.
+- **Weg in MCV-modus:** vaste muur, poorten, torens, hut, zandzakken en kisten van het oude kamp (`BaseProps.build` wordt niet aangeroepen), wachtposten, generator, patrouilles, aangestampte kampbodem en poortpad (shader `base_ground`), het eerste depot, de eerste truck en de voorraadstapels (komen terug in stap 2).
+- **Bekende beperkingen van stap 1:** geen muren trekken, torens of poort (stap 3); wagen is een blok; geen depot of inkomen (je hebt 2000 punten en 1000 bouwtegoed om kazerne en garage te bouwen); rotsen en vaten worden pas bij het uitklappen/bouwen verwijderd (vaten blokkeren het uitklappen); verdwijnen van het oude kamp-gras op (0,0) is niet nodig (daar wordt niet geplant).
+- **Test:** `tests/mcv_test.gd` (rijden, water/overkant/kaartrand verboden, drukste plek met 185 planten uitklappen en wegruimen, bunker op de wagenplek, klok, bouwen na het uitklappen, terugkomen, vijand/route, HK vernield = spel voorbij), workflow `.github/workflows/mcv.yml`. **Niet getest:** native iPhone (sturen, tikken, beeld, FPS), visuele opnames (de omgeving heeft geen GPU; alleen logica draait headless).

@@ -1,0 +1,72 @@
+name: MCV-start regressie
+
+on:
+  pull_request:
+    paths:
+      - "scripts/mcv.gd"
+      - "scripts/main.gd"
+      - "scripts/game.gd"
+      - "scripts/data.gd"
+      - "scripts/level.gd"
+      - "scripts/base_props.gd"
+      - "scripts/route.gd"
+      - "scripts/enemy.gd"
+      - "scripts/ally.gd"
+      - "scripts/buildings.gd"
+      - "scripts/foliage.gd"
+      - "scripts/hud_extra.gd"
+      - "scripts/hq_perks.gd"
+      - "scripts/gates.gd"
+      - "scripts/wachtpost.gd"
+      - "scripts/generator.gd"
+      - "scripts/patrouille.gd"
+      - "scripts/build_mode.gd"
+      - "scripts/pause_menu.gd"
+      - "shaders/ground.gdshader"
+      - "tests/mcv_test.gd"
+      - "tests/respawn_test.gd"
+      - ".github/workflows/mcv.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: mcv-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+
+jobs:
+  mcv:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false
+      - name: Download Godot 4.7.2
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 3 --connect-timeout 30 --max-time 600 \
+            "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
+            -o godot.zip || \
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 3 --connect-timeout 30 --max-time 600 \
+            "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
+            -o godot.zip
+          test -s godot.zip
+          unzip -tq godot.zip
+          unzip -q godot.zip -d .godot-runner
+          chmod +x .godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --version
+      - name: Import project
+        run: timeout 900 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --import
+      - name: MCV-start (wagen, uitklappen, hoofdkwartier, bomen weg, klok, vijand)
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 240 "$GODOT" --headless --path . --script tests/mcv_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/mcv.log"
+          grep -Fq "klaar, fouten: 0" "$RUNNER_TEMP/mcv.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|^FOUT' "$RUNNER_TEMP/mcv.log"; then exit 1; fi
+      - name: Oud spel blijft werken (terugkomen bij de bunker)
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 120 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/respawn_test.gd --fixed-fps 60

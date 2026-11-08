@@ -878,6 +878,10 @@ func _clamp_pan() -> void:
 		Game.bcam.x = (min_x + max_x) * 0.5 if min_x > max_x else clampf(Game.bcam.x, min_x, max_x)
 		Game.bcam.y = (min_z + max_z) * 0.5 if min_z > max_z else clampf(Game.bcam.y, min_z, max_z)
 		return
+	if Data.mcv_mode:
+		Game.bcam.x = clampf(Game.bcam.x, -Data.WORLD_X + 6.0, Data.WORLD_X - 6.0)
+		Game.bcam.y = clampf(Game.bcam.y, -Data.WORLD_Z_N + 6.0, Data.WORLD_Z_S - 6.0)
+		return
 	var m := Data.WORLD_R - 6.0
 	var v := Vector2(Game.bcam.x, Game.bcam.y)
 	if v.length() > m:

@@ -30,7 +30,9 @@ var _last_state := "menu"
 var _spawned := false
 
 
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
+	if Data.mcv_mode:
+		return   # MCV-start: de wachten van het vaste kamp vervallen; patrouilles koop je bij de kazerne
 	var st: String = Game.state
 	if not _spawned and (st == "prep" or st == "play"):
 		_spawned = true

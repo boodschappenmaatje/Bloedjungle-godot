@@ -1,0 +1,31 @@
+{
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "assets": {
+  "mcv": {
+   "clips": {
+    "Uitklappen": {
+     "duration": 6,
+     "moved": [
+      "Schild",
+      "PootOnder_MR",
+      "Dak_L",
+      "Dak_R",
+      "Mast",
+      "Schotel"
+     ]
+    }
+   },
+   "nodes": {
+    "Wiel_A1L": true,
+    "Wiel_A4R": true,
+    "Stuur_A1L": true,
+    "Module": true,
+    "Poot_ML": true
+   },
+   "stats": "Bouwwagen (MCV) (spelversie): 99.576 driehoeken · 23 meshes · 3 materialen · 9 texturen · clips: Uitklappen. Bron: drie Meshy-modellen van Dennis (wagen 3,08M, module 1,07M, poot 0,32M driehoeken, niet in de repo); spelversie op 2K gebakken. De wagen blijft na het uitklappen als commandokern voor het hoofdkwartier staan. Geen iPhone-FPS gemeten.",
+   "status": "Bouwwagen (MCV) · Meshy-wagen, module, poten en uitklappen (nieuw) · Bouwwagen (Meshy, 8x8 met dozerschild) met de module op de laadbak: echte clip Uitklappen (6 s: schild omhoog, vier steunpoten zakken, dakpanelen schuiven uit, mast rijst, schotel kantelt); acht wielen los voor Godot (de voorste vier sturen), 2K-PBR (geen V1) · 360° draaien en zoomen actief."
+  }
+ },
+ "errors": [],
+ "ok": true
+}

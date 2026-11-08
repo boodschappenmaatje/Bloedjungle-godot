@@ -57,6 +57,8 @@ func begin() -> void:
 func _start_world() -> void:
 	for n in get_tree().get_nodes_in_group("mcv"):
 		n.queue_free()
+	for n in get_tree().get_nodes_in_group("mcv_wagen"):
+		n.queue_free()   # de geparkeerde bouwwagen van een vorig spel
 	for n in get_tree().get_nodes_in_group("mcv_hq"):
 		n.queue_free()   # het hoofdkwartier van een vorig spel
 	Game.supply.start_game()   # MCV-start: alleen de voorraadstapels; het depot is gratis maar zet je zelf neer

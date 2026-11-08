@@ -52,15 +52,26 @@ static func apply_mode(vp: Viewport) -> void:
 	vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_METALFX_SPATIAL if active() else Viewport.SCALING_3D_MODE_BILINEAR
 
 
-## Korte aanduiding voor de fps-teller, bijvoorbeeld " · MFX K".
+## Waarom MetalFX wel of niet beschikbaar is (voor de melding in Instellingen en het prestatierapport).
+static func status() -> String:
+	var rd := RenderingServer.get_rendering_device()
+	return "driver %s, renderer %s, rendering-device %s, MetalFX Spatial %s" % [
+		RenderingServer.get_current_rendering_driver_name(), RenderingServer.get_current_rendering_method(),
+		"ja" if rd != null else "nee (null)",
+		("ja" if rd.has_feature(RenderingDevice.SUPPORTS_METALFX_SPATIAL) else "nee") if rd != null else "onbekend"]
+
+
+## Korte aanduiding voor de fps-teller: " · MFX K" als het echt werkt, " · MFX ?" als een stand gekozen is maar MetalFX niet beschikbaar is.
 static func overlay_tag() -> String:
-	return (" · MFX %s" % STANDS[GameSettings.get_value("upscaling")].tag) if active() else ""
+	if active():
+		return " · MFX %s" % STANDS[GameSettings.get_value("upscaling")].tag
+	return " · MFX ?" if STANDS.has(GameSettings.get_value("upscaling")) else ""
 
 
 static func note() -> String:
 	var u := GameSettings.get_value("upscaling")
 	if not metalfx_supported():
-		return "Upscaling: dit toestel heeft geen MetalFX (alleen iPhone/iPad/Mac), dus de stand doet hier niets."
+		return "Upscaling: MetalFX is hier niet beschikbaar, dus de stand doet niets (%s)." % status()
 	if u == "off":
 		return "Upscaling uit: de 3D-wereld op de resolutie van de grafiekstand, gewoon vergroot."
 	var s: Dictionary = STANDS[u]

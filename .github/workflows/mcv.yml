@@ -64,6 +64,9 @@ jobs:
             -o godot.zip || \
           curl --fail --location --retry 6 --retry-all-errors --retry-delay 3 --connect-timeout 30 --max-time 600 \
             "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
+            -o godot.zip || \
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 3 --connect-timeout 30 --max-time 600 \
+            "https://downloads.godotengine.org/?version=4.7.2&flavor=stable&slug=linux.x86_64.zip&platform=linux.64" \
             -o godot.zip
           test -s godot.zip
           unzip -tq godot.zip

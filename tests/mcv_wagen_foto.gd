@@ -56,24 +56,26 @@ func _process(_d: float) -> bool:
 		cam = Camera3D.new()
 		main.add_child(cam)
 		cam.fov = 42.0
-		cam.global_position = Vector3(40.0 + 17.0, 21.0, 40.0 + 11.0)
-		cam.look_at(Vector3(40.0, 1.2, 35.0), Vector3.UP)
+		cam.global_position = Vector3(40.0 + 15.0, 15.0, 35.3 + 15.0)
+		cam.look_at(Vector3(40.0, 1.5, 35.3), Vector3.UP)
 		cam.make_current()
 		for c in main.get_children():
 			if c is CanvasLayer:
 				c.visible = false
-	if fr == 70 + 90:
-		_shot("2_wegrijden")
-	if fr == 70 + 330:
-		_shot("3_uitklappen_midden")
-	if fr == 70 + 480:
-		_shot("4_uitgeklapt")
-	if fr == 70 + 481:
-		main.find_child("Opbouw", true, false)._t = 3.5 + 11.0   # spoel door: het gebouw staat halverwege
-	if fr == 70 + 520:
-		_shot("5_gebouw_half")
-		main.find_child("Opbouw", true, false).maak_klaar()
-	if fr == 70 + 560:
-		_shot("6_gebouw_klaar")
+	# na deploy_now: 1,3 s container omhoog, ~4,3 s wegrijden (container zakt vanaf 45 %), clip 6 s, dan 35 s bouwen, dan 4 s container weg
+	var na := fr - 70
+	var sec := float(na) / 60.0
+	var BEGIN := 1.3 + 4.3 + 6.0 + 0.3    # s tot de bouw begint
+	var lijst := [
+		[0.9, "01_tillen"], [3.0, "02_wegrijden"], [5.2, "03_zakken"], [6.6, "04_staat"], [8.5, "05_poten_neer"], [10.8, "06_panelen"],
+		[BEGIN + 1.0, "07_kraan_op"], [BEGIN + 4.5, "08_voorplein"], [BEGIN + 7.5, "09_pakken"], [BEGIN + 10.0, "10_zwenken"], [BEGIN + 11.2, "11_plaatsen"],
+		[BEGIN + 18.0, "12_laag4"], [BEGIN + 26.0, "13_laag7"], [BEGIN + 33.0, "14_afwerking"], [BEGIN + 37.5, "15_klaar"], [BEGIN + 40.5, "16_container_zakt"], [BEGIN + 44.0, "17_weg"],
+	]
+	if cam != null and sec > 4.0 and cam.global_position.y > 10.0 and sec < BEGIN - 1.0:
+		pass
+	for e in lijst:
+		if na == int(float(e[0]) * 60.0):
+			_shot(String(e[1]))
+	if na == int((BEGIN + 44.5) * 60.0):
 		quit()
 	return false

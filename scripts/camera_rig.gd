@@ -187,6 +187,11 @@ func _process(delta: float) -> void:
 	# Bouwwagen kiest een plek: ver genoeg weg om het hele voorterrein en de omgeving te zien waar het hoofdkwartier komt.
 	if not get_tree().get_nodes_in_group("mcv").is_empty():
 		wanted_distance = maxf(wanted_distance, MCV_DISTANCE)
+	# Wegrijden, uitklappen en bouwen van het hoofdkwartier: ruim beeld, midden tussen hoofdkwartier en wagen.
+	var opbouw := get_tree().get_first_node_in_group("mcv_opbouw")
+	if opbouw != null:
+		wanted_distance = maxf(wanted_distance, MCV_DISTANCE)
+	_opbouw_weight = lerpf(_opbouw_weight, 1.0 if opbouw != null else 0.0, 1.0 - exp(-1.5 * delta))
 	# Alleen automatische tank-/groepskadrering kan de vaste speelcamera tijdelijk verruimen.
 	if _group_hold > 0.0:
 		wanted_distance = maxf(wanted_distance, _group_distance)
@@ -211,6 +216,10 @@ func _process(delta: float) -> void:
 	_group_weight = lerpf(_group_weight, 1.0 if _group_hold > 0.0 else 0.0, group_f)
 	_group_offset = _group_offset.lerp(_group_shift, group_f)
 	var target: Vector3 = p.global_position + _lead + _group_offset * _group_weight
+	if opbouw != null:
+		_opbouw_focus = opbouw.camera_focus()
+	if _opbouw_weight > 0.001:
+		target = target.lerp(Vector3(_opbouw_focus.x, 0.0, _opbouw_focus.z), _opbouw_weight)
 	# De speler staat iets onder het midden van het beeld: de camera kijkt een stukje voorbij hem
 	# De ingestelde kijkhoek blijft behouden; de uitsnede houdt ruimte voor de schietrichting.
 	focus = target + Vector3(0.0, 0.0, -dist * (0.05 if portrait else 0.07))
@@ -235,6 +244,8 @@ func _process(delta: float) -> void:
 	Foliage.update_pushers(p, get_tree())
 
 
+var _opbouw_weight := 0.0
+var _opbouw_focus := Vector3.ZERO
 const MCV_DISTANCE := 38.0   # camera-afstand terwijl de bouwwagen een plek zoekt (normaal 22,5)
 var _camera_distance := 0.0
 

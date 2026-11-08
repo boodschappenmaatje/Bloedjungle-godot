@@ -17,6 +17,9 @@ const RIVER_MARGIN := 12.0   # zo ver moet je minstens van het water blijven om 
 const EDGE_MARGIN := 14.0    # en van de rand van de kaart
 const DEPLOY_TIME := 1.4     # s tussen "UITKLAPPEN" en het staan van het hoofdkwartier
 const PARK_Z := -9.6         # m: de wagen rijdt na het uitklappen zo ver naar voren (lokaal -Z) en blijft daar als commandokern staan
+const LIFT_T := 1.3           # s: de container komt omhoog van de laadbak
+const LIFT_H := 0.4           # m: zo ver tilt de hydrauliek hem op, zodat de wagen eronderuit kan
+const NEER_T := 1.7           # s: de container zakt op de grond
 const PARK_SPEED := 3.2      # m/s (met zachte start en stop)
 const PARK_REGION := {"name": "wagen", "center": Vector2(0.0, -9.6), "size": Vector2(4.8, 9.6), "yaw": 0.0}
 const START_POS := Vector3(0.0, 0.0, 6.0)   # de kale open plek op de oorsprong (er worden daar geen bomen geplant)
@@ -38,6 +41,9 @@ var _park_to := Vector3.ZERO
 var _park_t := -1.0          # s sinds het wegrijden (-1 = niet bezig)
 var _park_len := 1.0
 var _park_play := false
+var _pre := 0.0               # s: de container wordt opgetild
+var _neer_t := -1.0           # s sinds de container zakt (-1 = nog niet)
+var _opbouw   # McvOpbouw
 var _park_last := 0.0
 
 
@@ -288,7 +294,8 @@ func deploy_now() -> void:
 	BaseProps.build_hq(holder)
 	# de wagen blijft als commandokern voor het hoofdkwartier staan: ook die strook wordt vrijgemaakt
 	removed += Foliage.clear_for_building(get_instance_id(), [PARK_REGION], at, yaw, Foliage.BUILD_CLEAR_MARGIN, true)
-	McvOpbouw.new().start(holder)   # het hoofdkwartier groeit in 20 s met steigers (de wagen rijdt eerst weg)
+	_opbouw = McvOpbouw.new()
+	_opbouw.start(holder)   # het hoofdkwartier groeit in 20 s met steigers, nadat de wagen is weggereden en uitgeklapt
 	Game.base_pos = at
 	Game.base_yaw = yaw
 	Game.mcv_deployed = true
@@ -306,7 +313,7 @@ func deploy_now() -> void:
 		p.home = Game.base_home()
 		p.global_position = p.home
 		p.face = yaw
-	Game.banner.emit("HOOFDKWARTIER WORDT GEBOUWD", "Bouw via BOUW je gratis depot, muren en 4 gratis torens · eerste groep over %d min" % roundi(Data.MCV_RUST / 60.0), 5.0)
+	Game.banner.emit("DE WAGEN KLAPT UIT", "Bouw via BOUW je gratis depot, muren en 4 gratis torens · eerste groep over %d min" % roundi(Data.MCV_RUST / 60.0), 5.0)
 	Sfx.play("buy")
 	Game.changed.emit()
 	PerfMonitor.note("mcv uitgeklapt: %d planten weggehaald" % removed)
@@ -328,11 +335,33 @@ func _start_park() -> void:
 	_park_len = _park_from.distance_to(_park_to)
 	_park_t = 0.0
 	_park_play = false
+	_pre = 0.0
+	_neer_t = -1.0
+	_model.los_container()
+	Sfx.play("spuit", 0.9)
+	Sfx.play("gate", 0.8)
 	_model.set_schild_omhoog(true)
+	if _opbouw != null:
+		_opbouw.wagen = self
+
+
+func _container_staat() -> void:
+	Sfx.play("thud", 1.0)
+	Sfx.play("boom", 0.3)
+	var c := _model.container_pos()
+	var b := Basis(Vector3.UP, rotation.y)
+	for dx in [-1.0, 1.0]:
+		for dz in [-1.8, 1.8]:
+			McvFx.puff(get_parent(), c + b * Vector3(dx, 0.15, dz), 1.2, Color(0.6, 0.53, 0.42), 9, 1.0)
 
 
 func _park_step(delta: float) -> void:
 	if _park_t < 0.0:
+		return
+	if _pre < LIFT_T:
+		# de hydrauliek tilt de container van de laadbak, de wagen wacht
+		_pre = minf(_pre + delta, LIFT_T)
+		_model.zet_lift(LIFT_H * smoothstep(0.0, 1.0, _pre / LIFT_T))
 		return
 	_park_t += delta
 	var dur := _park_len / PARK_SPEED * 1.35
@@ -342,10 +371,20 @@ func _park_step(delta: float) -> void:
 	var v := (_park_len / dur) * (6.0 * k * (1.0 - k))   # afgeleide van smoothstep
 	_model.drive(v, 0.0, delta)
 	Foliage.ram(self, v, 3.0, 5.0)
-	if k >= 1.0 and not _park_play:
+	if k > 0.45 and _neer_t < 0.0:
+		_neer_t = 0.0   # de wagen is vrij van de container: die zakt op de grond
+		Sfx.play("spuit", 0.8)
+	if _neer_t >= 0.0 and _neer_t < NEER_T:
+		_neer_t = minf(_neer_t + delta, NEER_T)
+		_model.zet_lift(lerpf(LIFT_H, -McvModel.BAK_HOOGTE, smoothstep(0.0, 1.0, _neer_t / NEER_T)))
+		if _neer_t >= NEER_T:
+			_container_staat()
+	if k >= 1.0 and not _park_play and _neer_t >= NEER_T:
 		_park_play = true
 		_model.play_uitklappen()
 		Sfx.play("spuit", 0.9)
 	if _park_play and _model.uitklappen_klaar():
+		if _opbouw != null and is_instance_valid(_opbouw):
+			_opbouw.begin()
 		_park_t = -1.0
 		collision_layer = 32

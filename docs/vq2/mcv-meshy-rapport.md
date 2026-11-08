@@ -27,3 +27,18 @@ Afspraak met Dennis: **A** (de container blijft als commandokern), de wagen **bl
 - De geparkeerde wagen heeft alleen de voertuiglaag (32): bouwen kan er nog overheen (plek wordt niet geweigerd) en vijanden schieten er niet op.
 - De dakpanelen schuiven plat naar buiten en de mast rijst weinig: eerste versie van de animatie, te verfijnen na Dennis' oordeel.
 - Het uitgeklapte hoofdkwartier is het bestaande HK-model; de container is een apart commandokern naast het gebouw, niet er een onderdeel van.
+
+## Opbouw v197 (feedback Dennis, 8 november)
+Volgorde nu: wagen rijdt 4 s weg, klapt 6 s uit, daarna 20 s bouwen in vier fasen (fundering, wanden, dak, afwerking; banner per fase).
+- Voorplein en gebouw zijn verborgen tot de bouw begint; het voorplein komt in de fundering uit de grond omhoog, het gebouw groeit per fase, de steiger volgt de hoogte.
+- Poten: stofwolkjes op de vier voeten, een schokje en een dreun als ze de grond raken. Dakpanelen: Godot-scharnier (180 graden om de buitenrand, in plaats van de zijwaartse schuif uit de clip). Baken op de container: knippert oranje tijdens het werk, groen bij klaar, met toeter.
+- Lasvonken en stof tijdens de bouw, hamerslagen en hydrauliek per fase. De camera blijft ruim (38 m) en kijkt naar het midden tussen hoofdkwartier en wagen.
+- Het scharnier en de effecten zitten in Godot (scripts/mcv_model.gd, mcv_opbouw.gd, mcv_fx.gd), niet in de glb-clip; de viewer toont dus nog de oorspronkelijke zijwaartse schuif.
+- Opnames: docs/vq2/renders/mcv-opbouw-*.png (software-Vulkan). Native iPhone: NIET GETEST. Geluiden zijn bestaande Sfx-effecten, geen nieuwe opnamen.
+
+## Opbouw v198: container, kraan en bouwers
+- De wagen tilt de container (hydrauliek 0,4 m), rijdt eronderuit en de container zakt op de bouwplek (stof, dreun). De steunpoten horen bij de wagen; de clip Uitklappen klapt de container open (panelen, mast, schotel).
+- Nieuw model `assets/mcv_kraan.glb` (bron `bron/mcv_meshy/stap6_kraan.py`): kraan met giek/uitschuifdeel/kabel/haak + twee stapels van 4 prefab-platen, ca. 1.250 driehoeken, PBR-factoren (geen texturen), clip Werken (8 s, alleen voor de viewer; in het spel stuurt Godot de kraan).
+- Bouw ca. 35 s: voorplein 5 s, daarna 8 cycli van 3,4 s (pakken, zwenken, plaatsen; het gebouw groeit een laag per plaat), afwerking 3 s. Drie bouwers dragen kisten; na afloop lopen ze naar binnen en zakt de container weg. Steigers zijn vervallen.
+- Tests: mcv_wagen_test (29 controles), mcv_test, mcv_wacht_test, jeep_respawn_feedback_test: 0 fouten. Renders: `docs/vq2/renders/mcv-v198-*.png`.
+- Open: kraan nog niet in `tools/blender-vq2-viewer`, geen .usdz, iPhone NIET GETEST.

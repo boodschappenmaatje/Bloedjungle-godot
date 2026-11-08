@@ -22,6 +22,7 @@ var _cards: Array = []
 var _zoom_btns: Array = []
 var _airfield_rotate_btn: Button
 var _sel: Variant = null
+var _hq_open := false  # MCV-start: het hoofdkwartier is aangetikt in het bouwscherm (paneel om het te draaien)
 var _build_info: Label = null  # label van "In aanbouw" dat live aftelt
 var _build_b: Variant = null
 var _flag_for: Variant = null  # kazerne die op een tik op de grond een verzamelvlag krijgt
@@ -287,6 +288,7 @@ func _exit() -> void:
 	_drag = {}
 	_pinch = {}
 	_sel = null
+	_hq_open = false
 	_flag_for = null
 	if _ghost:
 		_ghost.visible = false
@@ -401,9 +403,60 @@ func _refresh() -> void:
 	_fill_panel()
 
 
+## MCV-start: het paneel van het hoofdkwartier. Draaien in stappen van 90° of 15°, het voorplein en de deur draaien mee.
+func _fill_hq_panel() -> void:
+	_panel.visible = true
+	if _ring:
+		_ring.visible = false
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 6)
+	_panel.add_child(vb)
+	var head := HBoxContainer.new()
+	vb.add_child(head)
+	head.add_child(UI.label("HOOFDKWARTIER", UI.display(1), 18, UI.INK))
+	var sp := Control.new()
+	sp.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	head.add_child(sp)
+	var x := Button.new()
+	x.add_to_group("hud_button")
+	x.text = "✕"
+	UI.style_button(x, "pause")
+	x.custom_minimum_size = Vector2(30, 30)
+	x.pressed.connect(func():
+		_hq_open = false
+		_fill_panel())
+	head.add_child(x)
+	var info := Label.new()
+	info.add_theme_font_override("font", UI.body(600, 0))
+	info.add_theme_font_size_override("font_size", 13)
+	info.add_theme_color_override("font_color", UI.INK_DIM)
+	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.custom_minimum_size.x = 226
+	info.text = "Draai het hoofdkwartier zoals jij wilt. De deur en het voorplein draaien mee; je komt na sneuvelen weer voor de deur terug."
+	vb.add_child(info)
+	var row := HFlowContainer.new()
+	row.add_theme_constant_override("h_separation", 6)
+	row.add_theme_constant_override("v_separation", 6)
+	vb.add_child(row)
+	for turn_def in [["⟲ 90°", PI / 2.0], ["⟲ 15°", deg_to_rad(15.0)], ["15° ⟳", -deg_to_rad(15.0)], ["90° ⟳", -PI / 2.0]]:
+		var amount: float = turn_def[1]
+		_act(row, str(turn_def[0]), "", true, func():
+			var r: Dictionary = Mcv.rotate_hq(get_tree(), amount)
+			if not r.ok:
+				_say(String(r.reason).to_upper() if String(r.reason) != "Er staat iets in de weg" else "GEEN RUIMTE")
+			else:
+				Sfx.play("click")
+			Game.changed.emit())
+
+
 func _fill_panel() -> void:
 	for ch in _panel.get_children():
 		ch.queue_free()
+	if _sel != null:
+		_hq_open = false
+	if _hq_open:
+		_fill_hq_panel()
+		return
 	var st: Variant = _sel
 	_panel.visible = st != null
 	if _ring:
@@ -701,6 +754,8 @@ func _down(id: int, pos: Vector2) -> void:
 		_drag = {"kind": st.kind, "st": st, "yaw": st.yaw, "ox": st.at.x - g.x, "oz": st.at.z - g.z, "sp": pos, "moved": false, "id": id}
 	elif _airfield_armed:
 		_drag = {"kind": "airfield", "sp": pos, "last": pos, "moved": false, "id": id, "st": null}
+	elif Mcv.hq_hit(g):
+		_drag = {"pan": true, "hq": true, "last": pos, "sp": pos, "moved": false, "id": id}   # tik = paneel om het hoofdkwartier te draaien, slepen = kaart verschuiven
 	else:
 		_drag = {"pan": true, "last": pos, "sp": pos, "moved": false, "id": id}
 
@@ -777,9 +832,16 @@ func _up(id: int) -> void:
 	if _ghost:
 		_ghost.visible = false
 	if d.get("pan", false):
-		if not d.moved and _sel != null:
+		if not d.moved and d.get("hq", false):
 			_sel = null
 			_sell_arm = null
+			_hq_open = true
+			Sfx.play("click")
+			_fill_panel()
+		elif not d.moved and (_sel != null or _hq_open):
+			_sel = null
+			_sell_arm = null
+			_hq_open = false
 			_fill_panel()
 		return
 	if d.get("kind", "") == "airfield" and d.get("st") == null:

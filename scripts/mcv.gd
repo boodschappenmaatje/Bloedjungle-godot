@@ -78,6 +78,37 @@ static func site_status(at: Vector3, yaw: float, world: World3D = null, exclude:
 	return {"valid": true, "reason": "", "vegetation": Foliage.count_clearable_in_regions(footprint_regions(), at, yaw)}
 
 
+## Draait het uitgeklapte hoofdkwartier (met voorplein en deur) om zijn midden: `delta_yaw` radialen erbij. Lukt alleen als de nieuwe voetafdruk vrij is
+## van gebouwen en andere massieve dingen (de eigen delen tellen niet mee). Begroeiing en rotsen in de nieuwe voetafdruk verdwijnen. Geeft {ok, reason}.
+static func rotate_hq(tree: SceneTree, delta_yaw: float) -> Dictionary:
+	var holder := tree.get_first_node_in_group("mcv_hq") as Node3D
+	if holder == null or not Game.mcv_deployed:
+		return {"ok": false, "reason": "Er staat nog geen hoofdkwartier"}
+	var new_yaw := wrapf(Game.base_yaw + delta_yaw, -PI, PI)
+	var ex: Array[RID] = []
+	for c in holder.find_children("*", "CollisionObject3D", true, false):
+		ex.append((c as CollisionObject3D).get_rid())
+	var st := site_status(Game.base_pos, new_yaw, holder.get_world_3d(), ex)
+	if not st.valid:
+		return {"ok": false, "reason": str(st.reason)}
+	holder.rotation.y = new_yaw
+	Game.base_yaw = new_yaw
+	Foliage.clear_for_building(holder.get_instance_id(), footprint_regions(), Game.base_pos, new_yaw, Foliage.BUILD_CLEAR_MARGIN, true)
+	var p = Game.player
+	if p != null and is_instance_valid(p):
+		p.home = Game.base_home()   # je komt na sneuvelen weer voor de deur terug
+	Game.changed.emit()
+	return {"ok": true, "reason": ""}
+
+
+## Valt dit wereldpunt op het uitgeklapte hoofdkwartier (met voorplein)? Voor de tik in het bouwscherm.
+static func hq_hit(g: Vector3) -> bool:
+	if not Data.mcv_mode or not Game.mcv_deployed:
+		return false
+	var local := Vector2(g.x - Game.base_pos.x, g.z - Game.base_pos.z).rotated(Game.base_yaw)
+	return absf(local.x) <= FOOT_SIZE.x * 0.5 and absf(local.y - FOOT_CENTER.y) <= FOOT_SIZE.y * 0.5
+
+
 # ---------------------------------------------------------------- de wagen zelf
 
 func _ready() -> void:

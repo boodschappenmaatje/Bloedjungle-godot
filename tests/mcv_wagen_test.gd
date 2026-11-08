@@ -89,6 +89,9 @@ func _process(_d: float) -> bool:
 		var opb1 = main.find_child("Opbouw", true, false)
 		_check("de clip Uitklappen is klaar", model.uitklappen_klaar())
 		_check("het schild staat omhoog", absf((model.find_child("Schild", true, false) as Node3D).rotation.x - 0.56) < 0.02)
+		var dak := model.find_child("Dak_L", true, false) as Node3D
+		_check("de dakpanelen zijn open geklapt (180 graden om het scharnier)", absf(dak.transform.basis.x.x + 1.0) < 0.05)
+		_check("het baken knippert oranje tijdens de bouw", model._baken_modus == 1)
 		_check("de bouw is begonnen met steiger en gebouw", opb1.begonnen and vis.visible and main.find_child("Steiger", true, false).visible)
 		var plein1: Node3D = main.find_child("Voorplein", true, false)
 		_check("het voorplein komt omhoog uit de grond", plein1.visible and plein1.position.y < -0.5)
@@ -99,6 +102,7 @@ func _process(_d: float) -> bool:
 		# na ~33 s: klaar
 		var opb2 = main.find_child("Opbouw", true, false)
 		_check("het hoofdkwartier is klaar en op volle hoogte", opb2.klaar and is_equal_approx(vis.scale.y, vis_scale.y))
+		_check("het baken is groen als alles klaar is", model._baken_modus == 2)
 		_check("de steigers zijn weg", main.find_child("Steiger", true, false) == null)
 		_check("de wagen blijft staan", is_instance_valid(mcv) and mcv.is_inside_tree())
 		print("klaar, fouten: ", fails)

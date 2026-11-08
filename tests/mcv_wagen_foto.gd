@@ -56,24 +56,35 @@ func _process(_d: float) -> bool:
 		cam = Camera3D.new()
 		main.add_child(cam)
 		cam.fov = 42.0
-		cam.global_position = Vector3(40.0 + 17.0, 21.0, 40.0 + 11.0)
-		cam.look_at(Vector3(40.0, 1.2, 35.0), Vector3.UP)
+		cam.global_position = Vector3(40.0 + 17.0, 20.0, 35.0 + 15.0)
+		cam.look_at(Vector3(40.0, 1.0, 35.5), Vector3.UP)
 		cam.make_current()
 		for c in main.get_children():
 			if c is CanvasLayer:
 				c.visible = false
-	if fr == 70 + 90:
+	# wagen rijdt 4 s weg, klaptuit (6 s: poten t=2, panelen 1,8-4,2, mast 3,6, schotel 4,9), dan 20 s bouwen
+	var na := fr - 70
+	if na == 150:
 		_shot("2_wegrijden")
-	if fr == 70 + 330:
-		_shot("3_uitklappen_midden")
-	if fr == 70 + 480:
-		_shot("4_uitgeklapt")
-	if fr == 70 + 481:
-		main.find_child("Opbouw", true, false)._t = 3.5 + 11.0   # spoel door: het gebouw staat halverwege
-	if fr == 70 + 520:
-		_shot("5_gebouw_half")
-		main.find_child("Opbouw", true, false).maak_klaar()
-	if fr == 70 + 560:
-		_shot("6_gebouw_klaar")
+	if na == 60 * 4 + 60 * 5 + 30:
+		cam.global_position = Vector3(40.0 + 6.5, 4.2, 30.4 + 6.5)
+		cam.look_at(Vector3(40.0, 1.6, 30.4), Vector3.UP)
+	if na == 60 * 4 + 60 * 6 + 50:
+		_shot("10_wagen_nah")
+		quit()
+	if na == 60 * 4 + 60 * 2 + 20:
+		_shot("3_poten_neer")
+	if na == 60 * 4 + 60 * 4 + 20:
+		_shot("4_panelen_open")
+	if na == 60 * 4 + 60 * 6 + 60 * 3:
+		_shot("5_fundering")
+	if na == 60 * 4 + 60 * 6 + 60 * 9:
+		_shot("6_wanden")
+	if na == 60 * 4 + 60 * 6 + 60 * 14:
+		_shot("7_dak")
+	if na == 60 * 4 + 60 * 6 + 60 * 18:
+		_shot("8_afwerking")
+	if na == 60 * 4 + 60 * 6 + 60 * 22:
+		_shot("9_klaar")
 		quit()
 	return false

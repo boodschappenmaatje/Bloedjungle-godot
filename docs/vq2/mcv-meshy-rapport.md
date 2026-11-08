@@ -27,3 +27,11 @@ Afspraak met Dennis: **A** (de container blijft als commandokern), de wagen **bl
 - De geparkeerde wagen heeft alleen de voertuiglaag (32): bouwen kan er nog overheen (plek wordt niet geweigerd) en vijanden schieten er niet op.
 - De dakpanelen schuiven plat naar buiten en de mast rijst weinig: eerste versie van de animatie, te verfijnen na Dennis' oordeel.
 - Het uitgeklapte hoofdkwartier is het bestaande HK-model; de container is een apart commandokern naast het gebouw, niet er een onderdeel van.
+
+## Opbouw v197 (feedback Dennis, 8 november)
+Volgorde nu: wagen rijdt 4 s weg, klapt 6 s uit, daarna 20 s bouwen in vier fasen (fundering, wanden, dak, afwerking; banner per fase).
+- Voorplein en gebouw zijn verborgen tot de bouw begint; het voorplein komt in de fundering uit de grond omhoog, het gebouw groeit per fase, de steiger volgt de hoogte.
+- Poten: stofwolkjes op de vier voeten, een schokje en een dreun als ze de grond raken. Dakpanelen: Godot-scharnier (180 graden om de buitenrand, in plaats van de zijwaartse schuif uit de clip). Baken op de container: knippert oranje tijdens het werk, groen bij klaar, met toeter.
+- Lasvonken en stof tijdens de bouw, hamerslagen en hydrauliek per fase. De camera blijft ruim (38 m) en kijkt naar het midden tussen hoofdkwartier en wagen.
+- Het scharnier en de effecten zitten in Godot (scripts/mcv_model.gd, mcv_opbouw.gd, mcv_fx.gd), niet in de glb-clip; de viewer toont dus nog de oorspronkelijke zijwaartse schuif.
+- Opnames: docs/vq2/renders/mcv-opbouw-*.png (software-Vulkan). Native iPhone: NIET GETEST. Geluiden zijn bestaande Sfx-effecten, geen nieuwe opnamen.

@@ -71,6 +71,38 @@ static func extend(path: Array, to: Vector2i) -> void:
 			path.append(nxt)
 
 
+## Een rechte lijn van a naar b (a en b liggen op dezelfde rij of kolom; anders alleen het stuk langs de x-as).
+static func line_path(a: Vector2i, b: Vector2i) -> Array:
+	var path: Array = [a]
+	var end := Vector2i(b.x, a.y) if a.y != b.y and a.x != b.x else b
+	extend(path, end)
+	return path
+
+
+## Een gesloten vierkant (rechthoek) met a en b als overstaande hoeken: vier zijden in één keer.
+static func rect_path(a: Vector2i, b: Vector2i) -> Array:
+	if a.x == b.x or a.y == b.y:
+		return line_path(a, b)
+	var path: Array = [a]
+	for c in [Vector2i(b.x, a.y), b, Vector2i(a.x, b.y), a]:
+		extend(path, c)
+	return path
+
+
+## Het roosterpunt waar een nieuwe muur begint: een eindpunt van een bestaande muur of poort binnen anderhalf stuk van de vinger (zo sluit een nieuwe lijn
+## aan zonder dat je het punt precies moet raken), anders het dichtstbijzijnde roosterpunt.
+static func snap_start(p: Vector3) -> Vector2i:
+	var best := snap(p)
+	var best_d := STEP * 1.5
+	for k in existing():
+		for v in [Vector2i(k.x, k.y), Vector2i(k.z, k.w)]:
+			var d := vertex(v).distance_to(Vector3(p.x, 0.0, p.z))
+			if d < best_d:
+				best_d = d
+				best = v
+	return best
+
+
 ## De randen van een pad.
 static func path_edges(path: Array) -> Array:
 	var out: Array = []

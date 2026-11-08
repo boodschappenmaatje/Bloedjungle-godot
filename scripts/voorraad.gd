@@ -137,6 +137,8 @@ func start_game() -> void:
 	for i in SLOTS:
 		if i < SITES.size():
 			_spawn_stapel(i, SITES[i])
+	if Data.mcv_mode:
+		return   # MCV-start: het depot zet de speler zelf neer (gratis); de eerste truck verschijnt als het klaar is
 	var d: Variant = Game.builds.place_start_depot()
 	if d != null:
 		_spawn_truck(d)
@@ -154,6 +156,11 @@ func reset() -> void:
 	_claims.clear()
 	_owners.clear()
 	_pending.clear()
+	if Data.mcv_mode:
+		for k in _roads.keys():
+			if is_instance_valid(_roads[k]):
+				_roads[k].queue_free()
+		_roads.clear()
 
 
 func _spawn_stapel(slot: int, site: Dictionary) -> void:
@@ -162,7 +169,8 @@ func _spawn_stapel(slot: int, site: Dictionary) -> void:
 	s.setup(site, slot, STACK, _face_of(site))
 	stapels[slot] = s
 	_used[site.id] = true
-	_make_road(site)
+	if not Data.mcv_mode:
+		_make_road(site)   # MCV-start: de weg wordt pas vrijgemaakt als er een truck heen rijdt (ensure_road)
 	Game.changed.emit()
 
 
@@ -281,6 +289,11 @@ func dock_lead(b: Dictionary, gate_name: String) -> Vector2:
 
 ## De richting (x, z) van een stapel naar de kant waar de truck vandaan komt: de voorkant van de stapel.
 func _face_of(site: Dictionary) -> Vector2:
+	if Data.mcv_mode:
+		# naar je kamp (of de startplek van de wagen); zodra een truck een rit begint draait de stapel naar zijn kant (prepare_trip)
+		var t := Vector2(Game.base_pos.x, Game.base_pos.z) if Game.mcv_deployed else Vector2(Mcv.START_POS.x, Mcv.START_POS.z)
+		var dd: Vector2 = t - (site.pos as Vector2)
+		return dd.normalized() if dd.length() > 0.1 else Vector2(0, 1)
 	var via: Vector2 = _pos[site.via]
 	var d: Vector2 = via - site.pos
 	return d.normalized() if d.length() > 0.1 else Vector2(0, 1)
@@ -363,6 +376,8 @@ func dock_free(b: Dictionary) -> bool:
 ## Sleutel van de poort die dit depot gebruikt: het stuk tussen de depots en de poort (het kruispunt waar de trucks van de depots elkaar tegenkomen)
 ## is voor één truck tegelijk.
 func gate_key(b: Dictionary) -> String:
+	if Data.mcv_mode:
+		return "uitrit:" + depot_key(b)   # geen poorten: het stuk voor het depot is voor één truck tegelijk
 	var dock := dock_point(b)
 	return "poort:n" if dock.distance_to(_pos["poort_n_in"]) <= dock.distance_to(_pos["poort_z_in"]) else "poort:z"
 
@@ -420,13 +435,15 @@ func _cleanup_trucks() -> void:
 func pick_slot(truck: VoorraadTruck) -> int:
 	var d: Dictionary = truck.depot
 	var want: int = int(d.get("dest", -1))
-	if want >= 0 and want < SLOTS and stapels[want] != null and stapels[want].left > 0:
+	if want >= 0 and want < SLOTS and stapels[want] != null and stapels[want].left > 0 and (not Data.mcv_mode or blocked_by(d, want) == ""):
 		return want
 	var best := -1
 	var bs := INF
 	for i in SLOTS:
 		if stapels[i] == null or stapels[i].left <= 0:
 			continue
+		if Data.mcv_mode and blocked_by(d, i) != "":
+			continue   # de weg erheen is versperd door een gebouw
 		if int(_claims.get(i, 0)) >= QUEUE_MAX:
 			continue   # er laadt er al een en er wacht er een: een derde zou op de weg moeten blijven staan
 		var score := route_length(d, i) + 40.0 * float(_claims.get(i, 0))
@@ -444,6 +461,8 @@ func claim(slot: int, delta: int) -> void:
 
 ## De route van het depot naar een stapel: punten (x, z) van het depot via de poort en het net tot het stoppunt bij de stapel.
 func route(d: Dictionary, slot: int) -> Array:
+	if Data.mcv_mode:
+		return _route_free(d, slot)
 	var site: Dictionary = stapels[slot].site
 	var dock := dock_point(d)
 	var gate := "poort_n_in" if gate_key(d) == "poort:n" else "poort_z_in"
@@ -452,6 +471,92 @@ func route(d: Dictionary, slot: int) -> Array:
 		if out[out.size() - 1].distance_to(p) > 0.3:
 			out.append(p)
 	return _merge_close(out)
+
+
+# ---------------------------------------------------------------- MCV-start: vrije wegen zonder vast wegennet
+
+## De weg van het depot naar een stapel zonder vaste poorten en wegen: recht vooruit het depot uit, dan rechtdoor naar de stapel. Ligt de stapel aan de
+## overkant van de rivier (de stad), dan eerst naar de brug en door de stadsstraat (dezelfde knooppunten als altijd).
+func _route_free(d: Dictionary, slot: int) -> Array:
+	var site: Dictionary = stapels[slot].site
+	var sp: Vector2 = site.pos
+	var out: Array = [dock_point(d), pre_dock_point(d)]
+	var mids: Array = []
+	if sp.y < Data.river_z(sp.x) - Data.RIVER_HALF:
+		mids.append(Vector2(Data.BRIDGE_X, Data.river_z(Data.BRIDGE_X) + 10.0))
+		for id in _astar.get_id_path(_ids["brug"], _ids[site.via]):
+			mids.append(_astar.get_point_position(id))
+	var prev: Vector2 = mids[mids.size() - 1] if not mids.is_empty() else out[1]
+	for m in mids:
+		out.append(m)
+	out.append(stop_point(site, prev))
+	return _merge_close(out)
+
+
+## De rechthoeken (middelpunt, draaiing, halve maten, naam) die een weg niet mag doorsnijden: je gebouwen en het hoofdkwartier met zijn voorplein, met de
+## halve wegbreedte en een marge erbij. `skip` is het depot waar de weg begint.
+func _obstacles(skip: Dictionary) -> Array:
+	var out: Array = []
+	for b in Game.buildings:
+		if b == skip or b.down:
+			continue
+		var sz: Vector3 = Buildings.DEFS[b.kind].size
+		out.append([Vector2(b.at.x, b.at.z), float(b.yaw), Vector2(sz.x, sz.z) * 0.5 + Vector2.ONE * 3.2, String(Buildings.DEFS[b.kind].name)])
+	if Game.mcv_deployed:
+		var c: Vector3 = Game.base_point(Vector3(0, 0, 3.0))
+		out.append([Vector2(c.x, c.z), Game.base_yaw, Vector2(6.5, 6.0) + Vector2.ONE * 3.2, "het hoofdkwartier"])
+	return out
+
+
+## Welk gebouw versperrt de weg van dit depot naar deze stapel (naam), of "" als hij vrij is? Alleen in de MCV-modus (zonder vast net rijden trucks rechtdoor).
+func blocked_by(d: Dictionary, slot: int) -> String:
+	if slot < 0 or slot >= SLOTS or stapels[slot] == null:
+		return ""
+	var pts := route(d, slot)
+	if pts.size() >= 2 and (pts[0] as Vector2).distance_to(stapels[slot].site.pos) < 20.0:
+		return "te dicht bij de stapel"
+	var obs := _obstacles(d)
+	for i in range(1, pts.size() - 1):
+		var a: Vector2 = pts[i]
+		var b: Vector2 = pts[i + 1]
+		var n := maxi(1, int(a.distance_to(b) / 1.5))
+		for k in n + 1:
+			var p: Vector2 = a.lerp(b, float(k) / float(n))
+			for o in obs:
+				var local: Vector2 = (p - (o[0] as Vector2)).rotated(float(o[1]))
+				var half: Vector2 = o[2]
+				if absf(local.x) <= half.x and absf(local.y) <= half.y:
+					return String(o[3])
+	return ""
+
+
+## Maakt de weg vrij voor een rit (bomen, struiken, varens, gras en rotsen langs de route) en draait de stapel naar de kant waar de truck vandaan komt.
+## Doet niets buiten de MCV-modus (daar liggen vaste wegen) en maar één keer per weg.
+func prepare_trip(d: Dictionary, slot: int) -> void:
+	if not Data.mcv_mode or slot < 0 or stapels[slot] == null:
+		return
+	var s: VoorraadStapel = stapels[slot]
+	var pts := route(d, slot)
+	if pts.size() >= 2 and _owner_of("stapel:" + String(s.site.id)) == null:
+		var from: Vector2 = pts[pts.size() - 2]
+		var f: Vector2 = from - (s.site.pos as Vector2)
+		if f.length() > 0.1:
+			s.rotation.y = atan2(f.x, f.y)
+	var key := "mcv:%s:%s" % [depot_key(d), String(s.site.id)]
+	if _roads.has(key) and is_instance_valid(_roads[key]):
+		return
+	var holder := Node3D.new()
+	holder.name = "Weg_" + key.replace(":", "_")
+	add_child(holder)
+	_roads[key] = holder
+	var regions: Array = []
+	for i in range(0, pts.size() - 1):
+		var a: Vector2 = pts[i]
+		var b: Vector2 = pts[i + 1]
+		if a.distance_to(b) < 0.5:
+			continue
+		regions.append({"name": "weg", "center": (a + b) * 0.5, "size": Vector2(a.distance_to(b) + 2.0, ROAD_W), "yaw": -atan2((b - a).y, (b - a).x)})
+	holder.set_meta("cleared", Foliage.clear_for_building(holder.get_instance_id(), regions, Vector3.ZERO, 0.0, 0.5, true))
 
 
 ## Twee wegpunten die vlak bij elkaar liggen (bv. het eind van de poortas en het begin van het bospad, 1,5 m) worden één punt, in het midden. Zo is de
@@ -551,6 +656,11 @@ func truck_lost(_t: VoorraadTruck) -> void:
 
 
 func set_dest(b: Dictionary, slot: int) -> void:
+	if Data.mcv_mode and slot >= 0 and slot < SLOTS and stapels[slot] != null:
+		var why := blocked_by(b, slot)
+		if why != "":
+			Game.banner.emit("WEG VERSPERD", why, 2.4)
+			return
 	b["dest"] = slot
 	Game.changed.emit()
 
@@ -558,6 +668,11 @@ func set_dest(b: Dictionary, slot: int) -> void:
 # ---------------------------------------------------------------- vijanden schieten op trucks
 
 func _physics_process(delta: float) -> void:
+	if Data.mcv_mode:
+		for b in depots():
+			if b.get("gratis_truck", false) and not Buildings.under_construction(b) and not b.down:
+				b["gratis_truck"] = false   # het gratis depot van de MCV-start is klaar: de eerste truck is gratis
+				_pending.append(b)
 	if not _pending.is_empty():
 		_service_pending()
 	_tick -= delta

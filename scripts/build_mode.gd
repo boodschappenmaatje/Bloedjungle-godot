@@ -388,8 +388,9 @@ func _refresh() -> void:
 			var d: Dictionary = Buildings.DEFS[c.kind]
 			var built := Game.builds.full(c.kind)
 			var need: String = Game.builds.missing(c.kind)
-			c.off = built or need != "" or (c.kind != "airfield" and not Game.can_afford_build(d.cost))
-			c.sub = ("gebouwd" if not Game.builds.is_piece(c.kind) else "max") if built else ("eerst " + String(Buildings.DEFS[need].name) if need != "" else UI.nl(d.cost) + " pt")
+			var cost: int = Buildings.cost_of(c.kind)
+			c.off = built or need != "" or (c.kind != "airfield" and not Game.can_afford_build(cost))
+			c.sub = ("gebouwd" if not Game.builds.is_piece(c.kind) else "max") if built else ("eerst " + String(Buildings.DEFS[need].name) if need != "" else ("GRATIS" if cost == 0 else UI.nl(cost) + " pt"))
 		else:
 			c.off = true
 			c.sub = "binnenkort"
@@ -815,7 +816,7 @@ func _up(id: int) -> void:
 			_sel = d.st
 		else:
 			_say(String(d.get("status", {}).get("reason", "Ongeldige locatie")))
-	elif d.moved and d.get("ok", false) and Game.can_afford_build(Buildings.DEFS[d.kind].cost):
+	elif d.moved and d.get("ok", false) and Game.can_afford_build(Buildings.cost_of(d.kind)):
 		_sel = Game.builds.place(d.kind, Vector3(d.x, 0, d.z), d.yaw, true)
 	elif d.moved:
 		var status: Dictionary = d.get("status", {})

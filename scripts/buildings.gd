@@ -350,6 +350,13 @@ static func under_construction(b: Dictionary) -> bool:
 
 
 ## with_time = true (bouwmodus): het gebouw groeit op in BUILD_TIME seconden met steigers en een voortgangsbalk.
+## Wat een gebouw nu kost: het gratis eerste voorraaddepot van de MCV-start kost niets (Game.free_depot).
+static func cost_of(kind: String) -> int:
+	if kind == "depot" and Game.free_depot > 0:
+		return 0
+	return int(DEFS[kind].cost)
+
+
 func place(kind: String, at: Vector3, yaw: float, with_time := false, free := false) -> Variant:
 	var status := placement_status(kind, at, yaw)
 	if full(kind) or not status.valid:
@@ -359,7 +366,8 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 	var node: StaticBody3D = make_node(kind) if kind == "airfield" else null
 	if kind == "airfield" and node == null:
 		return null
-	if not free and not Game.pay_build(DEFS[kind].cost):
+	var gratis := not free and kind == "depot" and Game.free_depot > 0   # het gratis depot van de MCV-start (en daarmee de eerste truck gratis)
+	if not free and not gratis and not Game.pay_build(DEFS[kind].cost):
 		if node != null:
 			node.free()
 		return null
@@ -372,6 +380,10 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 		"hp": DEFS[kind].hp, "max_hp": DEFS[kind].hp, "down": false, "cracked": false, "fx": null, "bar": null,
 		"rij": null, "rally": Vector3.ZERO, "has_rally": false, "rally_mode": "volgen", "flag": null}
 	node.ref = b
+	if gratis:
+		Game.free_depot -= 1
+		b["gratis"] = true         # verkopen levert niets op
+		b["gratis_truck"] = true   # Voorraad zet de eerste truck neer zodra het depot klaar is
 	b.bar = HpBar.new()
 	add_child(b.bar)
 	if kind == "kazerne":
@@ -641,7 +653,7 @@ func repair(b: Dictionary) -> void:
 
 ## Verkopen geeft de helft van wat erin zit terug als bouwtegoed.
 func sell_value(b: Dictionary) -> int:
-	var spent: int = DEFS[b.kind].cost
+	var spent: int = 0 if b.get("gratis", false) else int(DEFS[b.kind].cost)
 	if b.kind == "kazerne":
 		for l in range(2, b.lv + 1):
 			spent += LEVELS[l].cost

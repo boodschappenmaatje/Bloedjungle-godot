@@ -59,8 +59,8 @@ func _start_world() -> void:
 		n.queue_free()
 	for n in get_tree().get_nodes_in_group("mcv_hq"):
 		n.queue_free()   # het hoofdkwartier van een vorig spel
+	Game.supply.start_game()   # MCV-start: alleen de voorraadstapels; het depot is gratis maar zet je zelf neer
 	if not Data.mcv_mode:
-		Game.supply.start_game()
 		return
 	if Game.gates != null and is_instance_valid(Game.gates):
 		Game.gates.clear_for_mcv()

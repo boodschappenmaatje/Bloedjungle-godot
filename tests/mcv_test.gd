@@ -44,6 +44,11 @@ func _process(_d: float) -> bool:
 		_check("geen vast kamp: geen bunker", main.find_child("Bunker", true, false) == null)
 		_check("geen vaste muur: geen poorten", g.gates.list.is_empty())
 		_check("speler zit in de wagen", p.driving and not p.visible)
+		_check("de wagen staat niet op een laag die de camera tegenhoudt", (mcv.collision_layer & (2 | 16)) == 0)
+		# precies wat de camera doet (camera_rig._avoid_obstacles): een straal van de speler naar achteren/boven, muur + bunker, ook van binnenuit
+		var ray := PhysicsRayQueryParameters3D.create(mcv.global_position + Vector3(0, 1, 0), mcv.global_position + Vector3(0, 20, 15.5), 2 | 16)
+		ray.hit_from_inside = true
+		_check("de camerastraal blijft vrij van de wagen", mcv.get_world_3d().direct_space_state.intersect_ray(ray).is_empty())
 		_check("klok staat stil voor het uitklappen", is_equal_approx(g.prep_t, 600.0))
 		_check("oud spel: bouwen kan nog niet", not main.get_node("Level").get_parent().get_node("Level").is_queued_for_deletion())
 		var b: Variant = g.builds.placement_status("kazerne", Vector3(0, 0, 20), 0.0)

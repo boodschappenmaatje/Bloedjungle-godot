@@ -52,7 +52,7 @@ func _process(_d: float) -> bool:
 		model = mcv.get_node("Model")
 		_check("het model heeft 8 wielen", model.find_children("Wiel_*", "Node3D", true, false).size() == 8)
 		_check("de voorwielen sturen (4 stuurknopen)", model.find_children("Stuur_*", "Node3D", true, false).size() == 4)
-		_check("de module en vier poten zijn er", model.find_child("Module", true, false) != null and model.find_children("Poot_*", "Node3D", true, false).size() == 4)
+		_check("de module en vier poten zijn er", model.find_child("Module", true, false) != null and model._poten.size() == 4)
 		var ap := model.find_child("AnimationPlayer", true, false) as AnimationPlayer
 		_check("clip Uitklappen is 6 s", ap != null and ap.has_animation("Uitklappen") and absf(ap.get_animation("Uitklappen").length - 6.0) < 0.05)
 		wheel = model.find_child("Wiel_A3R", true, false)
@@ -79,6 +79,7 @@ func _process(_d: float) -> bool:
 		_check("het hoofdkwartier staat op de wagenplek", g.base_pos.distance_to(hq_at) < 0.01)
 		var opb := main.find_child("Opbouw", true, false)
 		_check("de bouw wacht op het uitklappen: gebouw en voorplein nog verborgen", opb != null and not opb.begonnen and not vis.visible and not main.find_child("Voorplein", true, false).visible)
+		_check("de kraan zit vast op de wagen en staat in transportstand (stempels in, platen in het rek)", model.kraan != null and model.kraan.is_inside_tree() and model.kraan.platen.size() == 8 and (model.kraan._stempels[0].balk as Node3D).scale.x < 0.1 and model.kraan.in_haak() == -1)
 		_check("de container is los van de wagen (kantelt op de laadbak)", model.container_los() and model.container_pos().y > 1.4 and model.container_pos().y < 2.6)
 	if frames == 525:
 		# deploy + 1,3 s tillen + ~4 s wegrijden: de wagen staat 9,6 m voor het hoofdkwartier, de container staat op de grond en de clip speelt
@@ -101,6 +102,7 @@ func _process(_d: float) -> bool:
 		_check("de kraan staat op de wagen", mcv.find_child("Kraan", true, false) != null and mcv.find_child("Plaat8", true, false) != null)
 		_check("er zijn bouwers aan het werk", get_nodes_in_group("mcv_bouwer").size() == 3)
 	if frames == 1500:
+		_check("de stempels staan uit en de poten op de grond", absf((model.kraan._stempels[0].balk as Node3D).scale.x - 1.0) < 0.01 and absf((model.kraan._stempels[0].poot as Node3D).scale.z - McvKraan.POOT_LENGTE) < 0.01)
 		var opb3 = main.find_child("Opbouw", true, false)
 		_check("de kraan heeft de eerste plaat geplaatst en het gebouw groeit", opb3._geland >= 0 and vis.scale.y > vis_scale.y * 0.1 and vis.scale.y < vis_scale.y * 0.999)
 	if frames == 2200:

@@ -20,6 +20,7 @@ const diff=(a,b)=>Object.keys(a).filter(k=>JSON.stringify(a[k])!==JSON.stringify
 async function open(page,asset){await page.selectOption('#asset',asset);await page.waitForFunction(a=>window.__VQ2_TEST__.ready()&&window.__VQ2_TEST__.loaded().asset===a,asset);await page.waitForTimeout(500);}
 const PLAN={
  mcv:{clips:{Uitklappen:['Schild','Dak_L','Dak_R','Mast','Schotel','PootOnder_MR']},nodes:['Wiel_A1L','Wiel_A4R','Stuur_A1L','Module','Poot_ML']},
+ mcv_kraan:{clips:{Kraan_uitklappen:['Draaikrans','GiekA','GiekB','GiekC','Balk','Poot']},nodes:['Kraan','Stapel','Plaat1','Plaat8','Haak']},
 };
 try{
  const page=await browser.newPage({viewport:{width:1280,height:1050}});page.setDefaultTimeout(150000);

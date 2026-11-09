@@ -48,3 +48,10 @@ Volgorde nu: wagen rijdt 4 s weg, klapt 6 s uit, daarna 20 s bouwen in vier fase
 - Kraan: 1,9x groter (bereik over het hele gebouw), stapels verder van de kraanvoet, de kabel hangt nu altijd recht omlaag, de haak zwaait in een boog om de kraan en volgt het doel binnen 0,2 m (test). Platen draaien mee naar de stand van het gebouw, landen binnen de plattegrond en zakken in het groeiende gebouw.
 - Camera: tijdens wegrijden, uitklappen en bouwen 27 m i.p.v. 38 m, geen obstakelcheck (de bouwplek hield de camera in de wagen), en terug naar de speler pas als de container weg is. Bouwers zonder team-ring.
 - NIET GETEST op iPhone. Camera niet in headless beeld gecontroleerd (de fotoscript gebruikt een eigen camera).
+
+## v200: kraan vast op de wagen
+- Nieuw `assets/mcv_kraan.glb` (bron `bron/mcv_meshy/stap7_kraan_vast.py`, 1.604 driehoeken, PBR-factoren in het grijsolijf van de wagen, gedempt geel alleen als accent): kolomkraan met driedelige telescoopgiek achter de cabine, vier stempels, acht platen in een rek met spanbanden op het cabinedak, clip Kraan_uitklappen (alleen viewer).
+- Onderweg: giek ligt naar voren over het cabinedak, stempels in, platen vastgebonden. De container staat 0,45 m verder naar achteren om ruimte te maken.
+- Uitklappen als onderdeel van de bouw: zwaailamp aan, stempels uit, poten naar de grond, banden eraf, giek zwenkt naar de eerste plaat. Daarna hijst de kraan de acht platen van het rek op het voorste deel van het gebouw (haakafwijking max 0,10 m in de test).
+- Tests: mcv_wagen_test (31 controles), mcv_test, mcv_wacht_test 0 fouten. Viewer: asset `mcv_kraan`, test-mcv.mjs ok. Renders `mcv-v200-*.png`.
+- Niet gedaan: zijwaarts parkeren (de wagen rijdt recht naar voren), gesplitste clip, .usdz-preview. NIET GETEST op iPhone.

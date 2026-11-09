@@ -50,7 +50,18 @@ func _process(_d: float) -> bool:
 	var fr := frames - t0
 	if fr == 60:
 		_shot("1_wagen")
+	if fr == 61:
+		cam = Camera3D.new()
+		main.add_child(cam)
+		cam.fov = 40.0
+		cam.global_position = Vector3(40.0 + 7.5, 4.8, 40.0 - 4.5)
+		cam.look_at(Vector3(40.0, 2.4, 40.0 - 1.4), Vector3.UP)
+		cam.make_current()
+	if fr == 64:
+		_shot("0_transport")
 	if fr == 70:
+		if cam != null:
+			cam.queue_free()
 		mcv.deploy_now()
 		game.player.global_position = Vector3(40.0, 0.0, 34.0)
 		cam = Camera3D.new()
@@ -68,7 +79,7 @@ func _process(_d: float) -> bool:
 	var BEGIN := 1.8 + 4.1 + 6.0 + 0.4    # s tot de bouw begint
 	var lijst := [
 		[1.0, "01_kantelen"], [2.4, "02_glijden"], [3.2, "03_glijden2"], [4.0, "04_achterrand"], [4.8, "05_voorkant_neer"], [6.2, "06_staat"], [9.0, "07_poten"],
-		[BEGIN + 1.0, "08_kraan_op"], [BEGIN + 6.4, "09_pakken"], [BEGIN + 7.2, "10_hijsen"], [BEGIN + 8.4, "11_zwenken"], [BEGIN + 9.4, "12_boven_hk"], [BEGIN + 10.5, "13_geplaatst"],
+		[BEGIN + 0.9, "08_stempels"], [BEGIN + 2.4, "08b_banden_af"], [BEGIN + 4.0, "08c_giek_op"], [BEGIN + 6.4, "09_pakken"], [BEGIN + 7.2, "10_hijsen"], [BEGIN + 8.4, "11_zwenken"], [BEGIN + 9.4, "12_boven_hk"], [BEGIN + 10.5, "13_geplaatst"],
 		[BEGIN + 16.5, "14_laag3"], [BEGIN + 23.5, "15_laag6"], [BEGIN + 33.0, "16_afwerking"], [BEGIN + 38.0, "17_klaar"], [BEGIN + 40.5, "18_container_zakt"],
 	]
 	if na == int((BEGIN - 0.5) * 60.0):

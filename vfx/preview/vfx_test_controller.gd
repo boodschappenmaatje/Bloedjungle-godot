@@ -6,7 +6,7 @@ extends Node3D
 const RATE := 9.5
 const MUZZLE_HEIGHT := 1.4
 const TARGET_Z := 9.0
-const M2_PREVIEW_WEAPON := "mg42" # Existing rapid-fire FX baseline; NOT a new gameplay weapon.
+const M2_PREVIEW_FX = preload("res://vfx/weapons/m2_preview_fx.gd")
 const MATERIALS := ["dirt", "concrete", "metal", "wood", "vehicle"]
 const PROFILES := ["Laag", "Hoog", "Ultra"]
 
@@ -78,10 +78,6 @@ func _build_world() -> void:
 	# Purposefully modest test stands: no high-polygon or unlicensed weapon asset.
 	for i in 12:
 		var x := (float(i) - 5.5) * 1.55
-		var root := Node3D.new()
-		root.name = "M2 Preview Stand %02d" % (i + 1)
-		root.position = Vector3(x, 0, -4)
-		_world.add_child(root)
 		var receiver := _make_box("M2 proxy receiver", Vector3(x, 1.3, -4), Vector3(0.72, 0.35, 1.25), Color(0.19, 0.23, 0.21))
 		var barrel := _make_box("M2 proxy barrel", Vector3(x, MUZZLE_HEIGHT, -2.85), Vector3(0.13, 0.13, 1.3), Color(0.24, 0.28, 0.25))
 		receiver.visible = i == 0
@@ -216,9 +212,9 @@ func _fire_salvo() -> void:
 	for i in _active_guns:
 		var muzzle := _muzzle_nodes[i]
 		var pos := muzzle.global_position
-		# Reuse the canonical, already pooled FX implementation.
+		# Preview-only M2 flame/smoke; regular gameplay Fx remains untouched.
 		if _profile > 0 or i % 3 == 0:
-			Fx.muzzle(_world, pos, M2_PREVIEW_WEAPON, 0.0)
+			M2_PREVIEW_FX.fire(_world, pos, 0.0, _profile, _shots + i)
 		if (_shots + i) % (6 if _profile == 0 else 4) == 0:
 			_spawn_tracer(pos, _target_nodes[pos_index].global_position + Vector3.UP * 0.2)
 		if (_shots + i) % (5 if _profile == 0 else 3) == 0:
@@ -231,7 +227,7 @@ func _fire_salvo() -> void:
 func _spawn_tracer(start: Vector3, hit: Vector3) -> void:
 	var tracer: MeshInstance3D
 	while not _tracer_pool.is_empty() and tracer == null:
-		var candidate := _tracer_pool.pop_back()
+		var candidate: MeshInstance3D = _tracer_pool.pop_back()
 		if is_instance_valid(candidate):
 			tracer = candidate
 	if tracer == null:
@@ -272,16 +268,17 @@ func _refresh_hud() -> void:
 		return
 	_status.text = "Modus: %s  |  MG: %d  |  Doel: %s  |  VFX: %s" % [_mode, _active_guns, MATERIALS[_material_index], PROFILES[_profile]]
 	var stats: Dictionary = Fx.combat_counts()
-	var sorted := Array(_frame_times)
+	var sorted: Array = Array(_frame_times)
 	sorted.sort()
 	var p99 := 0.0
 	if sorted.size() >= 120:
 		p99 = float(sorted[clampi(int(ceil(float(sorted.size()) * 0.99)) - 1, 0, sorted.size() - 1)])
 	var fps_low := (1000.0 / p99) if p99 > 0.0 else 0.0
-	_hud.text = "FPS: %d | 1%% low: %s | Drawcalls: %d | Objecten: %d | RAM: %.1f MiB | Shots: %d | Tracers: %d/%d | FX pool: %s" % [
+	var m2_stats: Dictionary = M2_PREVIEW_FX.counts()
+	_hud.text = "FPS: %d | 1%% low: %s | Drawcalls: %d | Objecten: %d | RAM: %.1f MiB | Shots: %d | Tracers: %d/%d | M2: %s | FX: %s" % [
 		Engine.get_frames_per_second(), ("%.1f" % fps_low) if p99 > 0 else "meting loopt",
 		int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
 		int(Performance.get_monitor(Performance.OBJECT_COUNT)),
 		float(Performance.get_monitor(Performance.MEMORY_STATIC)) / 1048576.0,
-		_shots, _tracer_live, _tracer_created, str(stats)
+		_shots, _tracer_live, _tracer_created, str(m2_stats), str(stats)
 	]

@@ -24,6 +24,30 @@
    },
    "stats": "Bouwwagen (MCV) (spelversie): 99.576 driehoeken · 23 meshes · 3 materialen · 9 texturen · clips: Uitklappen. Bron: drie Meshy-modellen van Dennis (wagen 3,08M, module 1,07M, poot 0,32M driehoeken, niet in de repo); spelversie op 2K gebakken. De wagen blijft na het uitklappen als commandokern voor het hoofdkwartier staan. Geen iPhone-FPS gemeten.",
    "status": "Bouwwagen (MCV) · Meshy-wagen, module, poten en uitklappen (nieuw) · Bouwwagen (Meshy, 8x8 met dozerschild) met de module op de laadbak: echte clip Uitklappen (6 s: schild omhoog, vier steunpoten zakken, dakpanelen schuiven uit, mast rijst, schotel kantelt); acht wielen los voor Godot (de voorste vier sturen), 2K-PBR (geen V1) · 360° draaien en zoomen actief."
+  },
+  "mcv_kraan": {
+   "clips": {
+    "Kraan_uitklappen": {
+     "duration": 4,
+     "moved": [
+      "Balk",
+      "Poot",
+      "Draaikrans",
+      "GiekA",
+      "GiekB",
+      "GiekC"
+     ]
+    }
+   },
+   "nodes": {
+    "Kraan": true,
+    "Stapel": true,
+    "Plaat1": true,
+    "Plaat8": true,
+    "Haak": true
+   },
+   "stats": "Bouwkraan en platenrek (vast op de MCV-wagen) (spelversie): 1.852 driehoeken · 112 meshes · 9 materialen · 0 texturen · clips: Kraan_uitklappen. Bron: bron/mcv_meshy/stap7_kraan_vast.py (Blender, procedureel, PBR-factoren). Op de wagen in transportstand: giek over het cabinedak, stempels in, platen in het rek met spanbanden; Godot stuurt draaikrans, giek, telescoop, kabel en stempels. Geen iPhone-FPS gemeten.",
+   "status": "Bouwkraan en platenrek (vast op de MCV-wagen) · telescoopgiek, stempels, 8 platen · Bouwkraan met platenrek (zit vast op de wagen): echte clip Kraan_uitklappen (stempels uit, poten neer, draaikrans, giek omhoog en uitgeschoven; kabel en haak stuurt Godot) · 360° draaien en zoomen actief."
   }
  },
  "errors": [],

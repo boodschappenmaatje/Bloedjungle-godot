@@ -15,6 +15,8 @@ const PLEIN_DIEP := 7.0         # m: het voorplein komt omhoog uit de grond
 const GRONDLAAG := 0.04         # deel van de hoogte dat er staat voor de eerste plaat
 const WEG_WACHT := 1.6          # s: groen baken, dan zakt de container weg
 const WEG_ZAK := 1.8            # s: de container zakt in de grond
+const DROP_Z := -3.0            # m (hoofdkwartier-lokaal): de platen komen op het voorste deel, binnen het bereik van de kraan
+const BEREIK_HOOGTE := 0.65     # deel van de gebouwhoogte tot waar de platen gehesen worden
 const DEUR := Vector3(0.0, 0.0, -3.0)   # de ingang van het hoofdkwartier (lokaal): daar lopen de bouwers naar binnen
 
 var _vis: Node3D
@@ -38,6 +40,8 @@ var max_fout := 0.0              # grootste afstand tussen haak en doel (m), voo
 var _zakkend: Array = []         # [plaat, tijd van plaatsen, hoogte]
 var _na_t := -1.0               # s sinds het gebouw klaar is (container weg, bouwers naar binnen)
 var _weg := false
+var _unfold_start := Vector3.ZERO
+var _banden_af := false
 
 ## De bouwfasen: [begin (s), naam, ondertitel]
 const FASEN := [
@@ -90,8 +94,7 @@ func begin() -> void:
 	if _plein != null:
 		_plein.visible = true
 	if wagen != null and is_instance_valid(wagen):
-		_kraan = McvKraan.new()
-		wagen.add_child(_kraan)
+		_kraan = wagen._model.kraan   # de kraan zit vast op de wagen
 	_maak_werkers()
 
 
@@ -143,11 +146,16 @@ func _process(delta: float) -> void:
 
 # ---------------------------------------------------------------- kraan
 
+## Hoogte (m) waarop plaat i neerkomt: de platen gaan op het voorste deel van het groeiende gebouw (binnen het bereik van de kraan).
+func _plaat_top(i: int) -> float:
+	return _hoogte * BEREIK_HOOGTE * (GRONDLAAG + (1.0 - GRONDLAAG) * float(i) / 8.0)
+
+
 ## Wereldpunt boven het gebouw waar plaat i neerkomt (de haak hangt HAAK_NAAR_PLAAT boven het midden van de plaat).
 func _drop(i: int) -> Vector3:
 	var hq := get_parent() as Node3D
-	var top := _hoogte * (GRONDLAAG + (1.0 - GRONDLAAG) * float(i) / 8.0)
-	var lokaal := Vector3(-0.9 + 1.8 * float(i % 2), top + 0.1 + McvKraan.HAAK_NAAR_PLAAT, -0.8)
+	var top := _plaat_top(i)
+	var lokaal := Vector3(-0.9 + 1.8 * float(i % 2), top + 0.1 + McvKraan.HAAK_NAAR_PLAAT, DROP_Z)
 	return hq.global_transform * lokaal
 
 
@@ -168,11 +176,21 @@ func _boog(a: Vector3, b: Vector3, u: float) -> Vector3:
 func _kraan_werk(delta: float) -> void:
 	if _kraan == null or not is_instance_valid(_kraan):
 		return
-	# de kraan komt tot leven: de laadbak is leeg, de stapels en de kraan rijzen uit de bak
-	var op := smoothstep(0.0, 1.0, clampf(_t / 1.6, 0.0, 1.0))
-	_kraan.position.y = McvKraan.LAADBAK_Y - 1.7 * (1.0 - op)
-	_kraan.visible = _t > 0.05
+	# de kraan klapt uit: stempels naar buiten, poten naar de grond, banden eraf, dan zwenkt de giek naar de eerste plaat
 	if _t < T_VOOR:
+		if _unfold_start == Vector3.ZERO:
+			_unfold_start = _kraan.haak_wereld()
+			_kraan.lamp(true)
+			Sfx.play("spuit", 0.9)
+		_kraan.stempels(smoothstep(0.0, 1.0, clampf(_t / 1.2, 0.0, 1.0)), smoothstep(0.0, 1.0, clampf((_t - 1.2) / 0.8, 0.0, 1.0)))
+		if _t > 2.0 and not _banden_af:
+			_banden_af = true
+			_kraan.banden_af()
+			Sfx.play("thud", 0.8)
+		if _t > 2.0:
+			var u := smoothstep(0.0, 1.0, clampf((_t - 2.0) / (T_VOOR - 2.0), 0.0, 1.0))
+			var eerste := _plaat_pos0(McvKraan.PLAAT_VOLGORDE[0]) + Vector3(0.0, McvKraan.HAAK_NAAR_PLAAT + 1.1, 0.0)
+			_kraan.haak_naar(_boog(_unfold_start, eerste, u))
 		return
 	var c := mini(int((_t - T_VOOR) / CYCLE), 7)
 	var tc := _t - T_VOOR - float(c) * CYCLE
@@ -228,8 +246,8 @@ func _plaat_geland(i: int) -> void:
 	if p != null:
 		_zakkend.append([p, _t, p.global_position.y])   # de plaat zakt in het groeiende gebouw
 	var hq := get_parent() as Node3D
-	var top := _hoogte * (GRONDLAAG + (1.0 - GRONDLAAG) * float(i) / 8.0)
-	var at := hq.global_transform * Vector3(-0.9 + 1.8 * float(i % 2), top + 0.1, -0.8)
+	var top := _plaat_top(i)
+	var at := hq.global_transform * Vector3(-0.9 + 1.8 * float(i % 2), top + 0.1, DROP_Z)
 	Sfx.play("thud", 0.9)
 	Sfx.play("click", 1.0)
 	for k in 3:
@@ -241,7 +259,7 @@ func _zakken() -> void:
 	for e in _zakkend.duplicate():
 		var p: Node3D = e[0]
 		var u := clampf((_t - float(e[1])) / T_GROEI, 0.0, 1.0)
-		p.global_position.y = float(e[2]) - _hoogte * (1.0 - GRONDLAAG) / 8.0 * smoothstep(0.0, 1.0, u)
+		p.global_position.y = float(e[2]) - _hoogte * BEREIK_HOOGTE * (1.0 - GRONDLAAG) / 8.0 * smoothstep(0.0, 1.0, u)
 		if u >= 1.0:
 			p.visible = false
 			_zakkend.erase(e)
@@ -358,7 +376,7 @@ func _klaar() -> void:
 		if is_instance_valid(c):
 			(c as Node3D).visible = true
 	if _kraan != null and is_instance_valid(_kraan):
-		_kraan.rust()
+		_kraan.lamp(false)
 	for w in _werkers:
 		if w.kist != null:
 			(w.kist as MeshInstance3D).visible = false

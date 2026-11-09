@@ -28,11 +28,13 @@ var _baken_licht: OmniLight3D
 var _baken_mat: StandardMaterial3D
 var _baken_modus := 0           # 0 uit, 1 knipperend oranje (bezig), 2 groen (klaar)
 var _baken_t := 0.0
+var kraan: McvKraan             # de vaste bouwkraan en het platenrek
 var _module: Node3D             # de container: komt los van de wagen (top_level) en blijft op de bouwplek staan
 var _anker := Transform3D.IDENTITY
 var _los := false
 var _lift := 0.0                # m: hoogte van de container boven de laadbak (negatief = op de grond)
 const CONTAINER_HALF := 1.86    # m: halve lengte van de container (de achterrand is het draaipunt bij het kantelen)
+const MODULE_NAAR_ACHTER := 0.45  # m: de container staat verder naar achteren op de laadbak
 const BAK_HOOGTE := 1.41        # m: de container staat op de laadbak; zo ver zakt hij naar de grond
 
 const T_POTEN := 1.97           # s in de clip: de poten staan op de grond
@@ -56,8 +58,12 @@ func _ready() -> void:
 	for n in m.find_children("Poot_*", "Node3D", false, false):
 		_poten.append(n as Node3D)
 	_module = m.find_child("Module", true, false) as Node3D
+	if _module != null:
+		_module.position.z += MODULE_NAAR_ACHTER   # achter de cabine komt ruimte voor de kraan
 	_maak_daken(m)
 	_maak_baken(m)
+	kraan = McvKraan.new()
+	add_child(kraan)
 	for mi in m.find_children("*", "MeshInstance3D", true, false):
 		var g := mi as MeshInstance3D
 		var n := String(g.name)

@@ -195,6 +195,7 @@ func _process(_d: float) -> bool:
 		allies = allies.filter(func(a): return is_instance_valid(a) and not a.is_queued_for_deletion())
 		hk_hp2 = _hk().hp
 		# 5. jij komt dichtbij: de rest verschijnt en schiet echt
+		p.hp = 10000.0   # deze routetest meet geen spelergevecht; vier nieuwe MG's mogen de omschakeling niet afbreken
 		p.global_position = P + Vector3(0, 0, 14)
 	if frames == STAP_BUNKER_KLAAR + 405:
 		var all_near := true

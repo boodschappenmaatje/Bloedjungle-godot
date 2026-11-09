@@ -2,6 +2,8 @@ extends Node
 ## Spelstatus (autoload "Game"): golf, punten, bunker en de besturing die de sticks doorgeven.
 
 signal changed
+## Real damage confirmation for player-driven shots; not emitted by aim previews.
+signal combat_hit_confirmed(world_pos: Vector3, amount: float, source: String)
 signal banner(big: String, small: String, time: float)
 signal power_changed
 signal over(reason: String)
@@ -33,6 +35,12 @@ var base_max := Data.BASE_HP
 var hq_level := 1   # niveau van het hoofdkwartier (1..3)
 var artillery_cd := 0.0   # s tot het artilleriecommando (HK niveau 3) weer klaar is; loopt in HqPerks
 var prep_t := 0.0
+var mcv_deployed := false   # MCV-start: de wagen is uitgeklapt, het hoofdkwartier staat en de klok loopt
+var base_pos := Vector3.ZERO   # midden van het hoofdkwartier; in het oude spel de oorsprong
+var free_wall := true          # MCV-start: de eerste complete omheining rond het hoofdkwartier is gratis (Kampmuur); false zodra hij af is
+var free_towers := 0          # MCV-start: gratis wachttorens die je nog mag neerzetten (4 na het uitklappen), daarna 100 per stuk
+var free_depot := 0            # MCV-start: gratis voorraaddepots die je nog mag neerzetten (1 na het uitklappen); met een gratis eerste truck
+var base_yaw := 0.0            # draaiing van het hoofdkwartier (rotation.y); zijn deur (terugkomplek) ligt op +Z
 var routes: Array = []  # vaste aanvalsroutes van de groep die nu uitrukt, of anders van de komende groep (AanvalRoutes): de rode pijlen
 var next_routes: Array = []  # routes van de komende groep: staan er al tijdens het aftellen op de golfplaat
 var bonus := 0  # bonus van de laatste overleefde golf, getoond in de wapenkamer
@@ -79,11 +87,12 @@ var streak_bank: Array = []     # ids uit Streak.LADDER die klaarstaan, oudste e
 var streak_given := {}          # id -> true: deze streak al uitgereikt
 var streak_t := -100.0          # tijd (s) van de laatste streak-kill: de teller komt dan even in beeld
 var streak_air := {"truck": 0, "napalm": 0}  # beloningen die je dit spel hebt gebruikt (voor de samenvatting)
-var power := true:   # stroom in de basis en de straatlantaarns; valt uit als de generator kapot is (Generator)
+var power := true:   # stroom in de basis en de straatlantaarns (de generator komt later terug als gebouw: Generals-plan A4)
 	set(v):
 		if v != power:
 			power = v
 			power_changed.emit()
+var hit_class := ""          # soort schade van de kogel of raket die nu raakt (Data.ARMOR_MULT); "" = neutraal
 var hit_src := "speler"         # wie schiet er nu: speler, soldaat of lucht; alleen speler-kills tellen voor de streak
 
 var player  # de speler (player.gd)
@@ -110,16 +119,6 @@ func note_blast(at: Vector3, radius: float) -> void:
 			var d: float = e.global_position.distance_to(at)
 			if d > radius + 0.5 and d < radius * 2.4 + 3.0:
 				e.flinch(at)
-
-
-## Wat het kost om de generator te repareren (0 = heel).
-func generator_cost() -> int:
-	return Generator.inst.repair_cost() if Generator.inst != null else 0
-
-
-## Wat het kost om de wachthuisjes en slagbomen te repareren (0 = alles heel).
-func wachtpost_cost() -> int:
-	return Wachtpost.inst.total_repair_cost() if Wachtpost.inst != null else 0
 
 
 ## Was er net (binnen een kwart seconde) een explosie waar iemand op deze plek binnen de straal viel? Geeft {at, r} of een leeg woordenboek.
@@ -168,6 +167,12 @@ func reset() -> void:
 	base_max = Data.BASE_HP
 	hq_level = 1
 	artillery_cd = 0.0
+	mcv_deployed = false
+	free_wall = true
+	free_towers = 0
+	free_depot = 0
+	base_pos = Vector3.ZERO
+	base_yaw = 0.0
 	enemies.clear()
 	barrels.clear()
 	if is_inside_tree():
@@ -202,6 +207,16 @@ func reset() -> void:
 	streak_given.clear()
 	streak_t = -100.0
 	hit_src = "speler"
+
+
+## Een punt in het hoofdkwartier-stelsel (x = rechts, z = naar de deur) als wereldpunt. In het oude spel is dat gewoon het punt zelf.
+func base_point(local: Vector3) -> Vector3:
+	return base_pos + Basis(Vector3.UP, base_yaw) * local
+
+
+## Waar de speler terugkomt na sneuvelen: 4 m voor de deur van het hoofdkwartier (de oude bunkerstart was (0, 0, 4)).
+func base_home() -> Vector3:
+	return base_point(Vector3(0.0, 0.0, 4.0))
 
 
 ## Een vijand is door jou (of jouw voertuig) gevallen: de streak loopt op en een beloning kan klaarstaan.

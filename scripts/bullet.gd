@@ -40,6 +40,8 @@ var rocket := false  # vijandelijke raket: ontploft op de plek waar hij gemikt w
 var ground_direct_fire := false  # ground-level direct fire cannot arc over the high base wall
 var visual_weapon := ""
 var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
+var feedback_source := ""  # optional confirmed-hit channel (e.g. player-driven jeep MG)
+var wclass := ""    # soort schade voor het steen-papier-schaar (Data.ARMOR_MULT); "" = neutraal, zoals alles wat er al was
 var src := "speler"  # wie schoot: "speler" of "soldaat" (alleen kills van de speler tellen voor de killstreak)
 
 
@@ -62,6 +64,14 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.visual_weapon = visual_weapon
 	if visual_weapon == "bazooka":
 		b._add_rocket_visual()
+	elif visual_weapon == "jeep_m2":
+		# Reuse one pooled bright tracer mesh for every MG round (no extra
+		# projectile or hitbox). Its actual bullet physics stays unchanged.
+		if not _weapon_glows.has("jeep_m2:player"):
+			_weapon_glows["jeep_m2:player"] = _glow(Color(1.0, 0.94, 0.54, 0.98), Color(1.0, 0.50, 0.12, 0.0), 1.4, 0.055, 0.18, 0.035)
+		b.mesh = _weapon_glows["jeep_m2:player"]
+		b._trail_len = 1.4
+		b.scale.z = TRAIL_START
 	elif Data.WEAPON_VISUALS.has(visual_weapon):
 		b.mesh = _weapon_glow(visual_weapon, not by_player)
 		b._trail_len = float(Data.WEAPON_VISUALS[visual_weapon].trail_length)
@@ -285,6 +295,29 @@ func _physics_process(delta: float) -> void:
 	# inside either can still leave it; the dedicated fortification ray below
 	# catches muzzle clipping into the new high perimeter wall.
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
+	# Allies have no physics collision layer. M2 rounds test their swept path explicitly,
+	# and only hit when closer than the first wall/building collision.
+	if src == "m2" and step.length_squared() > 0.0001:
+		var nearest: Ally = null
+		var nearest_distance := INF
+		for soldier in Game.allies:
+			if not is_instance_valid(soldier) or soldier.beleg_bezig():
+				continue
+			var center: Vector3 = soldier.global_position + Vector3.UP * 1.2
+			var fraction := clampf((center - global_position).dot(step) / step.length_squared(), 0.0, 1.0)
+			var point := global_position + step * fraction
+			var distance := global_position.distance_to(point)
+			if point.distance_to(center) < 0.55 and distance < nearest_distance:
+				nearest = soldier
+				nearest_distance = distance
+		if nearest != null and (hit.is_empty() or nearest_distance < global_position.distance_to(hit.position)):
+			nearest.hp -= dmg
+			if nearest.hp <= 0.0:
+				Game.allies.erase(nearest)
+				nearest.queue_free()
+				Game.changed.emit()
+			queue_free()
+			return
 	if ground_direct_fire and Vector2(step.x, step.z).length_squared() > 0.0001:
 		var flat_from := Vector3(global_position.x, 1.5, global_position.z)
 		var flat_to := Vector3(global_position.x + step.x, 1.5, global_position.z + step.z)
@@ -320,9 +353,19 @@ func _physics_process(delta: float) -> void:
 			var target_handles_impact := target_script_path in ["res://scripts/enemy.gd", "res://scripts/player.gd"] or c is Barrel or c is Pomp or c is Brandkraan
 			if not target_handles_impact and hit.normal.length_squared() > 0.001:
 				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
+			# Only a real HP reduction may trigger the player's hit marker.
+			# Shields, cover, misses, friendly AI and non-player explosions stay silent.
+			var can_confirm := from_player and feedback_source in ["jeep", "infantry"] and c is Node3D and (Game.enemies.has(c) or (c as Node).is_in_group("vijand_verdediger"))
+			var hp_before := float(c.get("hp")) if can_confirm else 0.0
 			Game.hit_src = src
+			Game.hit_class = wclass
 			c.hit(dmg, dir, from_player)
+			Game.hit_class = ""
 			Game.hit_src = "speler"
+			if can_confirm and is_instance_valid(c):
+				var dealt := CombatAimFeedback.actual_damage(hp_before, float(c.get("hp")))
+				if dealt > 0.0:
+					Game.combat_hit_confirmed.emit(hit.position, dealt, feedback_source)
 			if pierce > 0 and c.collision_layer == MASK_ENEMY:
 				pierce -= 1
 				dmg *= 0.85
@@ -387,13 +430,18 @@ func _explode(at: Vector3) -> void:
 	Fx.explosion(get_parent(), at, 1.4)
 	Barrel.catch_blast(at, explosive)
 	VijandHk.blast(at, explosive, dmg)   # de bazooka tegen het vijandelijke hoofdkwartier
+	VijandM2Toren.blast(at, explosive, dmg)
 	if Game.builds:
 		Game.builds.blast(at, explosive, dmg, true)  # eigen raketten doen een beetje schade aan je eigen bouwwerk
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e):
 			var d: float = e.global_position.distance_to(at)
 			if d < explosive and not BaseWallRules.blocks_blast(at, e.global_position):
+				Game.hit_class = wclass
+				Game.hit_src = src   # een raket van een soldaat telt niet voor jouw killstreak
 				e.hit(dmg * (1.0 - d / explosive * 0.7), (e.global_position - at).normalized(), true)
+				Game.hit_src = "speler"
+				Game.hit_class = ""
 
 
 ## Ontploffing van een vijandelijke raket (explode() in 15-combat.js met fromPlayer = false).
@@ -404,12 +452,10 @@ func _boom_enemy(at: Vector3) -> void:
 	Barrel.catch_blast(at, r)
 	if Game.builds:
 		Game.builds.blast(at, r, dmg, false)
-	Wachtpost.blast(at, r, dmg)
-	Generator.blast(at, r, dmg)
 	if Game.gates:
 		for i in Game.gates.list.size():
 			var g: Dictionary = Game.gates.list[i]
-			var gd: float = maxf(0.0, Vector2(Game.gates.pos_of(g).x - at.x, Game.gates.pos_of(g).z - at.z).length() - Data.GATE_GAP)
+			var gd: float = maxf(0.0, Vector2(Game.gates.pos_of(g).x - at.x, Game.gates.pos_of(g).z - at.z).length() - Gates.G)
 			if not g.broken and gd < r:
 				Game.gates.damage(i, dmg * 1.2 * (1.0 - gd / r), "explosive")
 	var p = Game.player

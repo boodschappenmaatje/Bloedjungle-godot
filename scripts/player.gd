@@ -44,6 +44,8 @@ var _reload_was_empty := false
 var _dust_t := 0.0
 var _shot_sequence := 0
 var _fire_was_down := false
+var _infantry_preview_t := 0.0
+const INFANTRY_PREVIEW_INTERVAL := 0.085  # ~12 world-space aim rays/sec, no extra rays for other units
 const M1911_ASSIST_MIN_INTERVAL := 0.5
 const M1911_EMPTY_RELOAD_IDLE := 0.55  # brief slide-lock pause, not 1.4 seconds of stalled audio
 var _m1911_empty_click_latched := false
@@ -108,9 +110,11 @@ func _physics_process(delta: float) -> void:
 		if respawn_t <= 0.0:
 			respawn()
 	if dead or Game.state == "shop" or Game.state == "menu":
+		_clear_infantry_preview()
 		model.set_shoot_pose(false, weapon, Game.wstat(weapon).rate)
 		return
 	if driving:
+		_clear_infantry_preview()
 		return
 	if weapon != Game.cur:
 		equip(Game.cur)
@@ -121,10 +125,12 @@ func _physics_process(delta: float) -> void:
 	dodge_cd = maxf(0.0, dodge_cd - delta)
 	grenade_cd = maxf(0.0, grenade_cd - delta)
 	if climb >= 0.0:
+		_clear_infantry_preview()
 		model.set_shoot_pose(false, weapon, w.rate)
 		_climb_step(delta)
 		return
 	if dodge_t > 0.0:
+		_clear_infantry_preview()
 		model.set_shoot_pose(false, weapon, w.rate)
 		_dodge_step(delta)
 		return
@@ -165,12 +171,17 @@ func _physics_process(delta: float) -> void:
 
 	var moving := mv.length()
 	var aim := face
+	var combat := get_tree().get_first_node_in_group("combat_buttons")
+	var grenade_mode := combat != null and bool(combat.get("grenade_stick_armed"))
 	if not is_nan(Game.aim):
-		aim = _aim_assist(Game.aim)
+		# Grenades use the EXACT stick direction; firearm aim assist may not
+		# magnetize the throw preview to a nearby enemy.
+		aim = Game.aim if grenade_mode else _aim_assist(Game.aim)
 	elif moving > 0.15:
 		aim = atan2(mv.x, mv.y)
 	face += angle_difference(face, aim) * minf(1.0, delta * 18.0)
 	rotation.y = face
+	_update_infantry_preview(delta, w)
 
 	fire_t -= delta
 	if reload_t > 0.0:
@@ -209,6 +220,42 @@ func _physics_process(delta: float) -> void:
 		model.ensure_weapon_idle()
 	model.set_shoot_pose((Game.fire if weapon != "m1911" else trigger_pressed) and reload_t <= 0.0, weapon, w.rate)
 	_animate(mv, moving)
+
+
+## On-foot aiming uses the *actual current* body facing and the same muzzle,
+## over-wall option and range as ordinary bullets. A preview never deals damage.
+## Rocket/grenade arcs remain outside this straight-bullet pilot.
+func _update_infantry_preview(delta: float, w: Dictionary) -> void:
+	var hud := get_tree().get_first_node_in_group("combat_target_hud") as CombatTargetHud
+	if hud == null:
+		return
+	var combat := get_tree().get_first_node_in_group("combat_buttons")
+	if not _can_act() or Game.editing or is_nan(Game.aim) or (combat != null and bool(combat.get("grenade_stick_armed"))):
+		_clear_infantry_preview()
+		return
+	_infantry_preview_t -= delta
+	if _infantry_preview_t > 0.0:
+		return
+	_infantry_preview_t = INFANTRY_PREVIEW_INTERVAL
+	var muzzle: Vector3 = model.muzzle_position()
+	var facing := Vector3(sin(face), 0.0, cos(face))
+	var over := _hugging_wall(facing)
+	var distance := float(w.speed) * float(w.life)
+	var result: Dictionary
+	if weapon == "bazooka":
+		# Do not draw a guaranteed blast at maximum lifetime: player rockets
+		# do not explode on timeout. This preview never alters Bullet.fire().
+		result = BazookaAimFeedback.predict(get_world_3d().direct_space_state, muzzle, face, distance, over, float(w.get("explosive", 0.0)))
+	else:
+		result = CombatAimFeedback.predict_infantry(get_world_3d().direct_space_state, muzzle, face, distance, over)
+	hud.set_prediction(result, "infantry")
+
+
+func _clear_infantry_preview() -> void:
+	var hud := get_tree().get_first_node_in_group("combat_target_hud") as CombatTargetHud
+	if hud != null:
+		hud.clear_prediction("infantry")
+	_infantry_preview_t = 0.0
 
 
 ## Besturing van knoppen en toetsen: herladen, sprint, rol en granaat.
@@ -505,7 +552,11 @@ func _shoot(w: Dictionary) -> void:
 	for i in w.pellets:
 		var a: float = face + (randf() - 0.5) * w.spread * 2.0
 		var projectile_visual := tracer_weapon if weapon != "trench" or i == 0 else ""
-		Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0), 0.28 if elev > 1.0 else 0.0, 0.0, projectile_visual)
+		var projectile := Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0), 0.28 if elev > 1.0 else 0.0, 0.0, projectile_visual)
+		# Presentation-only source tag: actual HP loss remains the sole hit signal.
+		# Explosive bazooka damage uses a separate path; do not claim bullet hits.
+		if weapon != "bazooka":
+			projectile.feedback_source = "infantry"
 	if weapon == "bazooka":
 		Fx.rocket_launch(get_parent(), muzzle, face)
 	else:
@@ -770,6 +821,11 @@ func respawn() -> void:
 	respawn_t = 0.0
 	hp = Game.max_hp()
 	in_tank = false
+	driving = false
+	airborne = false
+	visible = true
+	collision_mask = _mask0
+	velocity = Vector3.ZERO
 	tower = null
 	elev = 0.0
 	climb = -1.0
@@ -777,6 +833,11 @@ func respawn() -> void:
 	stance = 0
 	global_position = home
 	shield_t = RESPAWN_SHIELD
+	# Teleporting home must reset camera smoothing; otherwise the view can
+	# remain over the enemy camp while the soldier has already respawned.
+	var camera := get_parent().get_node_or_null("Camera")
+	if camera != null and camera.has_method("snap_to_player"):
+		camera.call("snap_to_player")
 	model.play("stil")
 	get_tree().call_group("hq", "open_door")
 	Game.banner.emit("JE BENT TERUG", "", 1.4)

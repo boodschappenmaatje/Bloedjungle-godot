@@ -69,7 +69,7 @@ func _run() -> void:
 	await main.call("begin")
 	await _frames(3)
 	game.player.global_position = Vector3(10, 0, 40)
-	var hq: Node = main.find_child("Hoofdkwartier", true, false)
+	var hq: Node = get_first_node_in_group("hq")
 	var perks: Node = hq.get_node_or_null("Voordelen")
 	_check(perks != null, "het hoofdkwartier heeft een Voordelen-knoop")
 	var hud: Node = main.get_node("Hud")

@@ -9,6 +9,7 @@ extends CharacterBody3D
 
 var type := "knife"
 var t: Dictionary
+var armor := "licht"   # pantser voor het steen-papier-schaar (Data.ARMOR_MULT): "licht" of "zwaar"
 var hp := 45.0
 var max_hp := 45.0
 var face := 0.0
@@ -33,7 +34,6 @@ var cover_pt := Vector3.ZERO
 var hurt_t := 99.0
 var alert_t := 0.0
 var flank_left := 7.0
-var gate_z := 0.0  # voorkeurspoort (z) om de bunker van twee kanten te nemen; 0 = klaar of niet van toepassing
 var retreated := false
 var path: Array = []  # vaste aanvalsroute (aanval_routes.gd): deze punten eerst aflopen
 var path_i := 0
@@ -56,6 +56,7 @@ var _detour_side := 1.0
 func setup(kind: String, wave: int) -> void:
 	type = kind
 	t = Data.ETYPES[kind]
+	armor = String(t.get("armor", "licht"))
 	max_hp = t.hp * (1.0 + (maxi(1, wave) - 1) * 0.11)
 	hp = max_hp
 	fire_t = randf_range(0.8, 1.8)
@@ -66,8 +67,6 @@ func setup(kind: String, wave: int) -> void:
 	slot = Game.next_slot()
 	if kind in ["rifle", "assault"] and slot % 3 == 1:
 		role = "flank"
-	if not t.get("melee", false):
-		gate_z = Route.OUT if slot % 2 == 0 else -Route.OUT
 
 
 func _ready() -> void:
@@ -169,7 +168,7 @@ func _physics_process(delta: float) -> void:
 	if melee and player and player.elev > 1.0:
 		at_player = false  # een mes reikt niet tot op een toren
 	_tgt_y = player.global_position.y if at_player else 0.0
-	var goal: Vector3 = player.global_position if at_player else Vector3.ZERO
+	var goal: Vector3 = player.global_position if at_player else Game.base_pos
 	var dist := to_player if at_player else _bunker_dist()
 	if rb != null:
 		at_player = false
@@ -189,13 +188,6 @@ func _physics_process(delta: float) -> void:
 		flanking = true
 	elif not at_player and rb == null and _route_goal() != null:
 		move_goal = _route_goal()
-	elif not at_player and rb == null and gate_z != 0.0:
-		# om beurten de noord- en zuidpoort nemen, zodat niet iedereen door dezelfde opening komt
-		var gp := Vector3(0.0, 0.0, gate_z)
-		if _flat(gp - global_position).length() < 4.0 or _inside_wall(global_position):
-			gate_z = 0.0
-		else:
-			move_goal = gp
 	var hold := 1.0 if melee else 0.65 + 0.1 * float(slot % 4)  # schutters houden verschillende afstanden aan (gelaagd, niet in een kluitje)
 	var cover_look := 0.0
 	if tactical:
@@ -239,7 +231,7 @@ func _physics_process(delta: float) -> void:
 				if at_player:
 					if not BaseWallRules.blocks_blast(global_position, player.global_position):
 						player.hit(t.dmg, Vector3(sin(look), 0, cos(look)), false)
-				elif not BaseWallRules.blocks_blast(global_position, Vector3.ZERO):
+				elif not BaseWallRules.blocks_blast(global_position, Game.base_pos):
 					Game.damage_base(t.dmg)
 	elif not flanking and dist < range_ * hold and (rb != null or _clear_shot(aim_at, not at_player)):
 		want_move = false
@@ -264,6 +256,27 @@ func _physics_process(delta: float) -> void:
 					Sfx.play("ping", 0.8, global_position)
 				Game.mark_attack(global_position)
 				Game.gates.damage(Game.gates.list.find(gate), t.dmg, "melee" if melee else "bullet")
+				if type == "assault" and _assault_ammo <= 0:
+					_start_assault_reload()
+
+	# MCV-start: een muur (of poort) van het kamp in de weg: erop slaan of schieten tot hij kapot is, net als bij de poort van het oude kamp
+	var wall: Variant = _wall_ahead(move_goal, delta) if want_move else null
+	if wall != null:
+		want_move = false
+		var wall_at: Vector3 = wall.at
+		look = _angle_to(wall_at)
+		if fire_t <= 0.0 and t.get("rocket", false):
+			_shoot_rocket(look, wall_at)
+		elif fire_t <= 0.0:
+			if type != "assault" or _consume_assault_round():
+				fire_t = t.rate if melee else maxf(t.rate, 0.45)
+				if melee:
+					model.play("steken", 0.08, 1.7)
+					Sfx.play("knife", 1.0, global_position)
+				else:
+					Sfx.play("ping", 0.8, global_position)
+				Game.mark_attack(global_position)
+				Game.builds.damage(wall, t.dmg * (0.5 if melee else 0.25))
 				if type == "assault" and _assault_ammo <= 0:
 					_start_assault_reload()
 
@@ -321,7 +334,7 @@ func _is_far(player: Variant) -> bool:
 	if player == null or player.dead or slow_t > 0.0:
 		return false
 	var d2: float = _flat(player.global_position - global_position).length_squared()
-	var from_base := maxf(absf(global_position.x), absf(global_position.z))
+	var from_base := maxf(absf(global_position.x - Game.base_pos.x), absf(global_position.z - Game.base_pos.z))
 	var lim := 55.0 if _far else 62.0  # kleine marge tegen heen en weer schakelen
 	return d2 > lim * lim and from_base > 48.0
 
@@ -342,7 +355,7 @@ func _far_step(delta: float) -> void:
 	if _far_n % 4 != 0:
 		return
 	var rg: Variant = _route_goal()
-	var wp := Route.waypoint(global_position, rg if rg != null else Vector3.ZERO)
+	var wp := Route.waypoint(global_position, rg if rg != null else Game.base_pos)
 	var d := _flat(wp - global_position)
 	if d.length() > 0.05:
 		var v: Vector2 = d.normalized() * float(t.speed) * speed_mul * _far_acc
@@ -483,12 +496,35 @@ func _find_cover(threat: Vector3) -> Variant:
 	return best
 
 
-static func _inside_wall(p: Vector3) -> bool:
-	return absf(p.x) < Data.COMPOUND and absf(p.z) < Data.COMPOUND
+var _wall_t := 0.0
+var _wall_cache: Variant = null
+
+
+## Staat er een muurstuk of poort van het kamp vlak voor hem op weg naar zijn doel? (Een straal van 2,6 m, vijf keer per seconde.) Geeft het bouwstuk of null.
+func _wall_ahead(goal: Vector3, delta: float) -> Variant:
+	_wall_t -= delta
+	if _wall_t > 0.0:
+		return _wall_cache if _wall_cache != null and Game.buildings.has(_wall_cache) else null
+	_wall_t = 0.2
+	_wall_cache = null
+	var dir := _flat(goal - global_position)
+	if dir.length() < 0.5:
+		return null
+	dir = dir.normalized()
+	var from := global_position + Vector3.UP
+	var q := PhysicsRayQueryParameters3D.create(from, from + Vector3(dir.x, 0.0, dir.y) * 2.6, Kit.LAYER_FORTIFICATION)
+	var h := get_world_3d().direct_space_state.intersect_ray(q)
+	if not h.is_empty() and h.collider is BuildingBody:
+		var ref: Dictionary = (h.collider as BuildingBody).ref
+		if not ref.is_empty() and Game.buildings.has(ref) and (ref.kind == "kampmuur" or ref.kind == "poort"):
+			_wall_cache = ref
+	return _wall_cache
 
 
 func _bunker_dist() -> float:
-	var p := global_position
+	var p := global_position - Game.base_pos
+	if Game.base_yaw != 0.0:
+		p = Basis(Vector3.UP, -Game.base_yaw) * p   # het hoofdkwartier kan gedraaid staan
 	return maxf(absf(p.x), absf(p.z)) - Data.BUNKER_HALF
 
 
@@ -528,6 +564,7 @@ func _animate(spd: float, moving: bool) -> void:
 func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	if not from_player or dead:
 		return
+	dmg *= Data.counter(Game.hit_class, armor)   # steen-papier-schaar: raketten tegen zwaar, sluipschutters tegen mensen
 	hp -= dmg
 	hurt_t = 0.0
 	model.flash(Color(1.0, 0.38, 0.07))

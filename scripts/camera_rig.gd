@@ -26,13 +26,21 @@ var _group_weight := 0.0  # 0..1, glijdt in en uit i.p.v. per scan te verspringe
 var _look := Vector3.ZERO  # zacht gevolgd kijkpunt, zodat de camera nooit in één frame draait
 var _group_hold := 0.0
 var _group_scan := 0.0
-var _wall_occluded_spans: Array[String] = []
 const GROUP_HOLD_SECONDS := 2.0
-const BASE_WALL_CAMERA_TRANSPARENCY := 0.58
 
 
 func toggle_view() -> void:
 	combat_view = not combat_view
+
+
+## One-frame snap after a respawn/teleport, not a camera flyover across the
+## entire city. Existing follow and combat camera parameters stay unchanged.
+func snap_to_player() -> void:
+	_snap = true
+	_lead = Vector3.ZERO
+	_group_offset = Vector3.ZERO
+	_group_weight = 0.0
+	_group_hold = 0.0
 
 ## Kleine, korte camerakick voor zware wapens en nabije explosies.
 func combat_impulse(strength: float) -> void:
@@ -102,7 +110,7 @@ func _build_cam(delta: float, portrait: bool) -> void:
 		global_transform = Transform3D(Basis(Vector3.RIGHT, Vector3(0, 0, -1), Vector3.UP), target + Vector3(0, distance, 0))
 		far = maxf(220.0, distance + 80.0)
 		return
-	var k := (20.0 if Game.airfield_build_view else Data.COMPOUND / 14.0 * 1.1) * Game.bcam.z
+	var k := (20.0 if Game.airfield_build_view else 2.2) * Game.bcam.z
 	# liggend ~71 graden neerwaarts op ~48 m (richtwaarde 70); staand blijft steiler zodat de smalle breedte past
 	var goal := Vector3(Game.bcam.x, (83.0 if portrait else 46.0) * k, Game.bcam.y + (16.0 if portrait else 19.2) * k)
 	var look := Vector3(Game.bcam.x, 0.0, Game.bcam.y + 3.4 * k)
@@ -141,7 +149,6 @@ func _process(delta: float) -> void:
 	var portrait := size.x < size.y
 	var env := get_world_3d().environment
 	if Game.build_mode:
-		_wall_occluded_spans.clear()
 		if env and _fog0 < 0.0:
 			_fog0 = env.fog_density
 		if env:
@@ -155,7 +162,6 @@ func _process(delta: float) -> void:
 		# geen bladdithering in het overzicht: de fade loopt rustig naar 0
 		Foliage.update_visibility_focus(p.global_position, global_position, delta, false)
 		Foliage.update_pushers(p, get_tree(), false)
-		_apply_wall_occlusion(delta)
 		return
 	_editor_active = false
 	if _fog0 >= 0.0 and env:
@@ -164,7 +170,7 @@ func _process(delta: float) -> void:
 		if absf(env.fog_density - _fog0) < _fog0 * 0.02:
 			env.fog_density = _fog0
 			_fog0 = -1.0
-	attributes.dof_blur_far_enabled = GameSettings.get_value("quality") == "ultra" and GameSettings.get_value("t_post") == "on"  # scherptediepte kost veel op mobiel
+	attributes.dof_blur_far_enabled = Upscaling.effective_quality() == "ultra" and GameSettings.get_value("t_post") == "on"  # scherptediepte kost veel op mobiel
 	_blook = Vector3.ZERO
 	far = lerpf(far, 220.0, minf(1.0, delta * 3.0))
 	# Houd het personage leesbaar; alleen nabije teamleden en voertuigen vragen meer ruimte.
@@ -178,6 +184,14 @@ func _process(delta: float) -> void:
 	var plane = VLIEGTUIG.driven_plane if is_instance_valid(VLIEGTUIG.driven_plane) else null
 	if plane != null:
 		wanted_distance += plane.camera_extra()   # hoger en sneller vliegen: de tactische camera zoomt rustig mee uit
+	# Bouwwagen kiest een plek: ver genoeg weg om het hele voorterrein en de omgeving te zien waar het hoofdkwartier komt.
+	if not get_tree().get_nodes_in_group("mcv").is_empty():
+		wanted_distance = maxf(wanted_distance, MCV_DISTANCE)
+	# Wegrijden, uitklappen en bouwen van het hoofdkwartier: ruim beeld, midden tussen hoofdkwartier en wagen.
+	var opbouw := get_tree().get_first_node_in_group("mcv_opbouw")
+	if opbouw != null:
+		wanted_distance = maxf(wanted_distance, OPBOUW_DISTANCE)
+	_opbouw_weight = lerpf(_opbouw_weight, 1.0 if opbouw != null else 0.0, 1.0 - exp(-1.5 * delta))
 	# Alleen automatische tank-/groepskadrering kan de vaste speelcamera tijdelijk verruimen.
 	if _group_hold > 0.0:
 		wanted_distance = maxf(wanted_distance, _group_distance)
@@ -202,12 +216,16 @@ func _process(delta: float) -> void:
 	_group_weight = lerpf(_group_weight, 1.0 if _group_hold > 0.0 else 0.0, group_f)
 	_group_offset = _group_offset.lerp(_group_shift, group_f)
 	var target: Vector3 = p.global_position + _lead + _group_offset * _group_weight
+	if opbouw != null:
+		_opbouw_focus = opbouw.camera_focus()
+	if _opbouw_weight > 0.001:
+		target = target.lerp(Vector3(_opbouw_focus.x, 0.0, _opbouw_focus.z), _opbouw_weight)
 	# De speler staat iets onder het midden van het beeld: de camera kijkt een stukje voorbij hem
 	# De ingestelde kijkhoek blijft behouden; de uitsnede houdt ruimte voor de schietrichting.
 	focus = target + Vector3(0.0, 0.0, -dist * (0.05 if portrait else 0.07))
 	var goal: Vector3 = focus + Vector3(0.0, h, back)
-	goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)
-	_apply_wall_occlusion(delta)
+	if opbouw == null and _opbouw_weight < 0.05:
+		goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)   # tijdens de opbouw telt de bouwplek zelf niet als obstakel
 	var follow := 1.0 - exp(-(8.0 if plane != null else 5.0) * delta)
 	global_position = goal if _snap else global_position.lerp(goal, follow)
 	# Kijkpunt en positie volgen met dezelfde snelheid: de kijkhoek blijft gelijk en draait niet abrupt.
@@ -227,6 +245,10 @@ func _process(delta: float) -> void:
 	Foliage.update_pushers(p, get_tree())
 
 
+var _opbouw_weight := 0.0
+var _opbouw_focus := Vector3.ZERO
+const OPBOUW_DISTANCE := 27.0   # camera-afstand tijdens wegrijden, uitklappen en bouwen (dichterbij: je ziet de kraan en de bouwers)
+const MCV_DISTANCE := 38.0   # camera-afstand terwijl de bouwwagen een plek zoekt (normaal 22,5)
 var _camera_distance := 0.0
 
 
@@ -276,7 +298,6 @@ func _nearby_enemies(p: Node3D) -> Array:
 
 
 func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vector3:
-	_wall_occluded_spans.clear()
 	# Alleen statische bouwstukken en de bunker blokkeren de camera; het grote grondvlak
 	# ligt onder de zichtlijn en wordt niet iedere frame onnodig meegenomen.
 	var query := PhysicsRayQueryParameters3D.create(origin, desired, Kit.LAYER_WALL | Kit.LAYER_BUNKER)
@@ -291,19 +312,7 @@ func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vect
 		if hit.is_empty():
 			return desired
 		var c: Object = hit.collider
-		if c is Node and c.is_in_group("base_high_wall"):
-			var at: Vector3 = hit.position
-			if absf(absf(at.x) - absf(at.z)) < 1.0:
-				var north_south := "north" if at.z < 0.0 else "south"
-				var east_west := "east" if at.x >= 0.0 else "west"
-				_wall_occluded_spans.append(north_south + "_" + east_west)
-				_wall_occluded_spans.append("east" if at.x >= 0.0 else "west")
-			elif absf(at.z) > absf(at.x):
-				_wall_occluded_spans.append(("north" if at.z < 0.0 else "south") + ("_east" if at.x >= 0.0 else "_west"))
-			else:
-				_wall_occluded_spans.append("east" if at.x >= 0.0 else "west")
-			break
-		elif c is HouseBody and not (c.seg.heel.is_visible_in_tree() or c.seg.kapot.is_visible_in_tree()):
+		if c is HouseBody and not (c.seg.heel.is_visible_in_tree() or c.seg.kapot.is_visible_in_tree()):
 			skip.append(hit.rid)
 		elif c is Node and c.has_meta("nocam"):
 			skip.append(hit.rid)
@@ -311,11 +320,3 @@ func _avoid_obstacles(origin: Vector3, desired: Vector3, player: Node3D) -> Vect
 			break
 	return hit.position + hit.normal * 0.35
 
-
-## Fade only the wall span between the player and camera; its StaticBody3D and combat masks stay active.
-func _apply_wall_occlusion(delta: float) -> void:
-	var blend := 1.0 - exp(-8.0 * delta)
-	for node in get_tree().get_nodes_in_group("base_wall_visual"):
-		var visual := node as GeometryInstance3D
-		var wanted := BASE_WALL_CAMERA_TRANSPARENCY if _wall_occluded_spans.has(str(visual.get_meta("wall_span", ""))) else 0.0
-		visual.transparency = lerpf(visual.transparency, wanted, blend)

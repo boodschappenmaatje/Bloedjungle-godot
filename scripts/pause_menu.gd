@@ -11,6 +11,7 @@ const ROWS := [
 	["ragdoll", "Doodsval vijanden", [["on", "Ragdoll"], ["off", "Animatie"]]],
 	["markeringen", "Markeringen soldaten", [["on", "Aan"], ["tact", "Alleen Tactisch"], ["off", "Uit"]]],
 	["quality", "Grafiek", [["low", "Laag"], ["high", "Hoog"], ["ultra", "Ultra"]]],
+	["upscaling", "Upscaling (MetalFX)", [["off", "Uit"], ["quality", "Kwaliteit"], ["balanced", "Gebalanceerd"], ["performance", "Prestatie"]]],
 	["time", "Tijd", [["day", "Dag"], ["dusk", "Avond"], ["night", "Nacht"]]],
 	["weather", "Weer", [["clear", "Helder"], ["rain", "Regen"], ["mist", "Mist"]]],
 	["wind", "Bomen bewegen", [["off", "Uit"], ["on", "Aan"]]],
@@ -491,6 +492,7 @@ func _refresh() -> void:
 		for b in _segs[key]:
 			UI.seg_state(b, GameSettings.get_value(key) == b.get_meta("v"))
 	_note.text = NOTES[GameSettings.get_value("quality")] + "\n" + NOTES[GameSettings.get_value("buildshadow") + "_b"]
+	_note.text += "\n" + Upscaling.note()
 	if GameSettings.get_value("hz") == "120":
 		_note.text += "\n" + NOTES["120"]
 

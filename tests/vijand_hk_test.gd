@@ -106,8 +106,8 @@ func _model_en_schema(g) -> void:
 	_check("onderkant op de grond, hoogte 7,3 m: %.2f .. %.2f" % [bb.position.y, bb.end.y], absf(bb.position.y) < 0.05 and absf(bb.end.y - 7.25) < 0.2)
 	# schema van de groepen
 	_check("begin: state prep en nog geen groep gestuurd", g.state == "prep" and g.wave == 0)
-	_check("eerste rust is 3 minuten (%.0f s)" % g.prep_t, g.prep_t > 170.0 and g.prep_t <= D.GROEP_RUST)
-	_check("constanten: 180 s rust, 90 s tussen groepen", D.GROEP_RUST == 180.0 and D.GROEP_TUSSEN == 90.0)
+	_check("eerste rust is 10 minuten (%.0f s)" % g.prep_t, g.prep_t > 590.0 and g.prep_t <= D.MCV_RUST)
+	_check("constanten: 600 s rust (vanaf het uitklappen), 90 s tussen groepen", D.MCV_RUST == 600.0 and D.GROEP_TUSSEN == 90.0)
 	_check("de komende routes staan al klaar", not g.next_routes.is_empty())
 	var alle_stad := true
 	for n in range(1, 25):

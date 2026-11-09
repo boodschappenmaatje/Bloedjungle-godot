@@ -130,3 +130,192 @@ Keuzekaart: https://claude.ai/artifact/WEMBbr3H3zrHtBYQnqxAdn (ingevuld 2026-11-
 - **Grote kaart en commandowiel boven je duim (v191, Draft PR, 2026-11-04, op verzoek van Dennis na zijn test van v190):** een tik op de kleine radar rechtsboven opent een **grote kaart** (`scripts/grote_kaart.gd`, kaartvlak met de verhouding van de wereld, liggend: titel en uitleg links en een legenda rechts, staand: kop boven de kaart; dezelfde tekenroutine als de radar via `HudExtra.draw_map_on`, op de grote kaart ook je soldaten als blauwe stippen). Zonder commandokeuze is het een overzicht (tik ergens of SLUIT om te sluiten). **Wacht het commandowiel op een doel (Aanvallen, Verplaatsen, Verdedigen)**, dan opent een tik op de radar de kaart in doelstand: tik op het rode vlak (Aanvallen = bevel `basis`, `TeamCommands.pick_from_map`) of op de grond (een punt in de wereld); Verplaatsen/Verdedigen in de vijandbasis kan niet (de kaart blijft open met een melding). SLUIT of een tik naast het paneel sluit de kaart; het bevel blijft dan wachten. Het spel loopt door achter de kaart, lopen en schieten staan stil (`TouchSticks` kijkt naar de groep `kaart_open`) en de kaart gaat vanzelf dicht bij pauze, bouwen of game over. De tik op het rode vlak rechtstreeks op de kleine radar is vervangen door deze kaart (`HudExtra.base_hit` is weg, `radar_hit` blijft). **Commandowiel:** bij vasthouden van BOUW / TEAM hing het wiel naast je duim, waardoor je duim op VERDEDIGEN lag en je hand over VERPLAATSEN; het middelpunt hangt nu `WheelArt.OUTER + 8` boven je duim (`TeamCommands._wheel_center`), en zolang je vinger binnen 24 punten van waar hij begon blijft, is er nog geen keuze (`TeamCommandController.move`, zoals bij loslaten). **Route-fix:** wie nog binnen de muur van de bunker staat en naar buiten moet, loopt eerst door de poort (`Route.waypoint`); daarvoor liep hij rechtstreeks naar de brug en schuurde langs de muur tot hij de poortopening vond (soldaten die naar de vijandbasis vertrokken verloren zo seconden). Tests: `tests/grote_kaart_test.gd` (aanrakingen via `push_input`: openen, overzicht, doelstand, tik op het vlak, grondpunt, SLUIT, geen sticks achter de kaart, wiel boven de duim), `tests/aanval_basis_test.gd` bijgewerkt (4x gedraaid, steeds 0 fouten), foto's in `/mnt/project-files/vijandbasis/grote-kaart/`. Native iPhone NIET GETEST (duim, tikken en schaal).
 - Kaart 60 m groter naar het noorden: terrein (grondplaat 440 m), camera- en speelgrenzen, kaart/minimap, rivier en stadsroutes erbij trekken; iPhone-prestaties NIET gemeten.
 - Spelfeiten die hierbij horen: jouw basis 56 x 56 m op de oorsprong (`Data.COMPOUND` 28), rivier z ≈ -92 (`Data.river_z`), brug x = 0, stad x -62..72 en z ≈ -96..-158, `ETYPES` zijn nu alleen infanterie (mes, geweer, raket, zwaar), `Voorraad.SITES` heeft 8 stapelplekken.
+
+
+## Stap 5a-3b — gerichte naverbetering jeep-MG en schutterdekking (5 november 2026)
+
+Tijdens de eerste native iPhone-test van de vier Browning M2HB-torens schoten de torens wel, maar kon de speler vanuit de bestuurbare jeep de torenschutters niet uitschakelen. Bestaande `scripts/jeep.gd` vuurde de .50-MG uitsluitend horizontaal; de aparte Assault-capsule van de schutter staat op het platform op ca. 4,4 m hoogte. De afschermende constructie stond ook als één 5 m hoge box-collider in de wereld.
+
+**Reparatie in eigen Draft PR (geen wijziging van goedgekeurde modellen/waarden):**
+- Wanneer de bestuurder met de rechterstick binnen **3,7°** op een levende, zichtbare torenschutter richt, geeft de jeep uitsluitend voor die opname een **beperkte verticale richthulp** tot 29° en binnen 39 m. Het eigenlijke vuren blijft handmatig. Kogels gebruiken een echte 3D-baan vanaf de Jeep-Monding.
+- Richting/schietlijn wordt via fysiek raycast gecontroleerd op de bestaande schutter-capsule en muur-, natuur-, bunker- en fortificatie-colliders; **geen schieten door muren of schild**. Buiten de smalle richtkegel blijft het oude gedrag intact.
+- De bestaande beton-/onderbouwcollider blijft. Het werkelijke bewegende metalen MG-schild krijgt een **dunne, meedraaiende** aparte fysieke collider; de bestaande Assault-schutter heeft zelfstandig 90 HP. De toren zelf behoudt 650 HP en verandert niet in uiterlijk.
+- Verlies van de schutter stopt MG-vuur onmiddellijk. Alleen een van de twee bestaande reserves kan na de al gebouwde route en ladder weer bemannen. Aantallen 4/4/2/2 wijzigen niet.
+- Contracttest `tests/jeep_m2_schutter_test.gd` controleert kogelcontact via de echte Bullet-physics, afscherming, blokkade door een muur, overlijden en stilvallen MG; `tests/auto_wapens_test.gd` bewaakt bestaande jeep/voertuigwapens. De basisregressie blijft vereist.
+- **Status is pas geslaagd als CI/Godot en later fysieke native iPhone-OTA-test dit bevestigen.** Geen automatische merge naar `main` en geen OTA-publicatie vanuit deze Draft PR.
+
+**Afzonderlijke vervolgstap ná de jeepreparatie:** tactische bewaking en korte patrouilles voor de vier poortbewakers, twee HK-bewakers en twee reserves binnen het kamp, als aanvulling op de reeds goedgekeurde dekking, flankeren en postbezetting. Geen extra vijanden of nieuw model zonder aparte keuze.
+
+
+### Vervolg 5a-3b — bevestigde schuttertreffers en jeep-respawn (05-11-2026)
+
+Na native iPhone-test is gekozen voor **trefferfeedback B**: bij echte schade aan een M2-schutter een korte wereldmarker, iets grotere zichtbare gezondheidsbalk en gedempte bevestigingsklik; bij overlijden tijdelijk **MG UIT**. Betonnen toren en stalen schild geven géén schutterhitmarker. Bestaande bloed, getroffen houding, sterfanimatie en torenovername blijven intact. De kleine effecten hebben geen nieuwe assets nodig.
+
+**Vastgestelde respawnbug:** `jeep.gd` riep `_toggle()` bij overlijden aan, maar `_toggle()` retourneert voortijdig voor `p.dead`. `driven` bleef daardoor aan en overschreef de respawnpositie; camera bleef bij het voertuig. Correctie: sterfte dwingt uitstappen af, `player.respawn()` herstelt voertuig-/zichtbaarheids-/collisionstatus, en de camera springt na respawn direct naar de eigen basis. De jeep blijft achter.
+
+**Acceptatietests**: `tests/jeep_respawn_feedback_test.gd`, bestaande `tests/respawn_test.gd` en `tests/jeep_m2_schutter_test.gd` plus vijandbasis-/voertuigregressie, iOS-export en OTA-simulatie. Nieuwe featurebranch/Draft PR; geen merge naar main of OTA-publicatie zonder afzonderlijk akkoord. Fysieke iPhone-weergave en FPS blijven pas bewezen na de native test.
+
+## Schietsysteem 2.0 — Tactisch richten en trefferfeedback (optie B, 5 november 2026)
+
+**Gebruikerskeuze:** optie B, met een klein richtkruis op het voorspelde **wereldpunt**, subtiele doelmarkering en HP voor één geselecteerde vijand, zichtbare bestaande kogeltracers en een **bevestigde** trefferindicator. De eerste proef is de bestuurbare jeep-M2 tegen een vijandelijke torenschutter; dezelfde presentatielaag wordt daarna uitgebreid naar de individuele spelerwapens, zonder hun schietregels te wijzigen.
+
+**Technisch contract:** niet meer richthulp dan de huidige 0,065 rad (~3,7°), 39 m en 0,56 stijging bij de jeep; schieten blijft handmatig. Een rode hitmarker verschijnt uitsluitend bij echt vastgestelde schade, nooit op een metalen schild of een gemist schot. Doel-HUD mag bestaande markeringen, joystick, kaart of teamwiel niet blokkeren. De fix voor de zwarte bermstreep en zichtbare basismuur blijft intact.
+
+**Uitvoerbaar bouwplan en tests:** [Schietsysteem 2.0 — optie B](SCHIETSYSTEEM_2_0_BOUWPLAN.md). **Status:** jeep-MG verticale proef in Draft PR #230 geïmplementeerd (wereldrichtpunt, doelherkenning, contextuele HP, fysiek bevestigde treffers, duidelijkere tracers); Godot/iOS-regressies nog als releasepoort, handwapens volgen na de jeep-proef. Niet mergen of OTA-publiceren zonder expliciete toestemming (op 5 nov gegeven voor merge **na groene tests**).
+
+### Schietsysteem 2.0 — vervolg handvuurwapens (6 november 2026)
+
+Na geslaagde native iPhone-test van de jeep-MG koos Dennis voor voortzetting van Schietsysteem 2.0 vóór de geplande patrouilles. Doel: dezelfde tactische wereldindicator en uitsluitend **echt bevestigde** schadefeedback voor M1911, Thompson, Garand, shotgun en MG42. Het bestaande schieten, herladen, richthulp, ammo en spreiding blijven ongewijzigd. Bazooka/explosies volgen pas na een afzonderlijke keuze. Bouw in een eigen Draft PR; voer gameplay, Colt-munitie en iOS/OTA-preview tests uit. **Geen merge naar main zonder apart akkoord**. Zie [SCHIETSYSTEEM_2_0_BOUWPLAN.md](SCHIETSYSTEEM_2_0_BOUWPLAN.md).
+
+### Schietsysteem 2.0 — Fase 3A bazooka-richtpreview (6 november 2026)
+
+Na de voltooide jeep-MG en infanterie-uitbreiding is gekozen voor de bazooka als afzonderlijke stap. Een voorspelde fysieke inslagplek met een subtiele ring van de bestaande explosiestraal (**4,8 m**) verschijnt alleen als de centrale raketbaan vóór de nominale maximale afstand een object raakt. Muren, hoge basismuur en voertuig-colliders tellen mee. Vrije banen geven geen misleidende explosiecirkel omdat de bestaande raket bij levensduureinde niet ontploft. **Geen** wijzigingen aan de bazookaschade (**240** basis), snelheid (**32 m/s**), vuurritme (**1,0 s**), ammo, raket-FX, explosielogica of granaten. Volgende aparte stap: bevestigde explosieschade (3B), daarna granaten (3C). Werk in een **Draft PR**, testen vóór merge, geen automatische OTA-publicatie. Zie [SCHIETSYSTEEM_2_0_BOUWPLAN.md](SCHIETSYSTEEM_2_0_BOUWPLAN.md).
+
+### Granaatbesturing 2.0 — UITRUSTING apart, rechterstick richten/loslaten (6 november 2026)
+
+De native iPhone-test toonde onbedoelde wielkeuzes doordat de knop GEBRUIK tegelijk granaatknop en uitrustingswiel was. **Gekozen optie B:** UITRUSTING als aparte keuzeknop boven/links van de wapenbalk; GRANAAT kiezen sluit het wiel zonder te gooien; een **nieuwe** rechterstick-aanraking richt met de bestaande boog en landingscirkel; rechterstick loslaten gooit **exact eenmaal**; terug naar het midden annuleert. In deze modus schiet de rechterstick nooit kogels. Bestaande granaatfysica, schietschade, range, touch-left-stick en waarschuwingen blijven intact. Zie [GRANAAT_BESTURING_2_0.md](GRANAAT_BESTURING_2_0.md). **Draft PR, nog niet mergen of OTA publiceren** totdat Godot- en iOS-testresultaten én een afzonderlijke toestemming binnen zijn.
+
+## Stap MCV — uitklapbare bouwwagen als start van je basis (keuzes van Dennis, 7 november 2026)
+**Idee:** zoals in Command & Conquer begin je met een grote bouwwagen (MCV). Je kiest een plek, klapt de wagen uit, en dat wordt je hoofdkwartier (B3) en het hart van je kamp. **Er is nog niets gebouwd.** Past bij Fase 1 (B3, B1, B4); bouw niets voordat Dennis "ga door" zegt, Draft PR, niet mergen of OTA zonder apart ja.
+
+| Vraag | Keuze van Dennis |
+|---|---|
+| 1 Waar mag je uitklappen? | **Overal, behalve bij water en in de stad.** Altijd aan dezelfde kant van de rivier als de huidige basis (`Data.river_z`), links (west) of rechts (oost) maakt niet uit. **Bomen, struiken, varens en rotsen verdwijnen** op de plek waar je uitklapt (zelfde aanpak als de vrijgemaakte stroken voor de voorraadtrucks). |
+| 2 Inklappen? | **Nee.** Is het spel eenmaal begonnen en is de wagen uitgeklapt, dan kun je niet meer inklappen of verhuizen. Begin je een nieuw potje, of heb je verloren, dan kies je opnieuw. |
+| 3 Muur en torens | **Zelf bouwen via het bouwmenu.** **Muur:** je trekt hem met je vinger; de eerste keer kost het niets, daarna **50 per muur**. **Torens:** je krijgt er **4 gratis aan het begin**, daarna **100 per stuk**. |
+
+**Open punten om bij de start van deze stap te bepalen (nog niet beslist):**
+- Wat "per muur" is: per segment, per tik of per getrokken lijn.
+- Wat de "eerste keer gratis" precies omvat: één getrokken omheining, of een vast aantal segmenten.
+- Of de 4 gratis torens overal geplaatst mogen worden, of binnen een straal van het hoofdkwartier.
+- Hoe ver de plek van het water, de stad en de vijandbasis moet blijven (rood/groen voetafdrukspook bij het kiezen).
+- Waar de speler en het eerste depot met truck verschijnen als de basis niet meer op de oorsprong staat; wat er met het vaste kamp (`Data.COMPOUND`, 56 x 56 m, poort, vier torens) gebeurt.
+
+**Wat mee moet verhuizen van de vaste basis naar het hoofdkwartier:** terugkomen na sneuvelen (H1), eerste depot en truck, radar en teamwiel, startplek van de speler, en de aanvalsroutes van de vijand (doel wordt het nieuwe hoofdkwartier). Eerst speelbaar met blokken (wagen en hoofdkwartier als blokken), daarna de modellen via een Asset Design Specification. Native iPhone-test: NIET GETEST.
+
+### MCV — aanvullende keuzes van Dennis (7 november 2026, tweede ronde)
+- **Muur trekken:** zoals je in de stad een weg trekt (zelfde bediening als de stadseditor). "Per muur" = zoals die bediening dat telt; vastgelegd: **een complete omheining is gratis** (de eerste keer), daarna 50 per muur.
+- **Torens:** de 4 gratis torens (en latere van 100) mogen **alleen bij de basis** staan.
+- **Het huidige vaste kamp vervalt.** De wagen is het nieuwe begin: muur, poort, torens, wachtposten en bijbehorende vaste props op de oorsprong (`Data.COMPOUND`-code: `gates.gd`, `base_props.gd`, `wachtpost.gd`, `patrouille.gd`, `generator.gd`, `route.gd`, `voorraad.gd`, enz.) moeten dynamisch worden of vervallen.
+- **Gebouwen blijven bouwbaar** (kazerne, garage, enz.) via de bestaande bouwmodus, rond het hoofdkwartier.
+- Nog te beslissen: zie de vragenlijst in het gesprek van 7 november (afstand tot water/stad/vijandbasis, startplek en eerste depot/truck, bunker, HK-gebied, radar, aanvalsdoel van de vijand, wat er met bestaande wachten gebeurt).
+
+### MCV — derde ronde, antwoorden op de tien vragen (Dennis, 7 november 2026)
+1. **Start:** je begint *in* de wagen, rijdt hem naar een plek, klapt hem uit, en dan komt de speler eruit.
+2. **Hoofdkwartier:** blijft bestaan (is al vervangen); het komt uit de wagen geklapt.
+3. **Terugkomen:** na 8 s bij het kamp (het HK). **Is het HK vernield, dan is het spel voorbij.**
+4. **De wagen is het HK** (geen apart gebouw ernaast).
+5. **Depot en eerste truck gratis**, maar je plaatst het depot zelf in je nieuwe kamp, en je kiest zelf naar welke voorraadstapel de truck rijdt.
+6. **Startgeld: 2000** (ongewijzigd).
+7. **Afstand tot water/stad/vijandbasis:** door Claude in te vullen (voorstel: zie PR/stap); **geen vast kader, het kamp mag zo groot worden als je zelf wilt.**
+8. **Poort:** je plaatst de poort zelf in de muur.
+9. **Rust voor de eerste vijandelijke groep: 10 minuten** (was 3, `Data.GROEP_RUST`). Aanname, nog te bevestigen: de klok start bij het uitklappen.
+10. **Wachten/patrouilles:** je koopt ze als mannetjes bij de kazerne en zij lopen patrouille; de vaste wachtposten van het oude kamp vervallen.
+
+**Gevolgen om rekening mee te houden:** geen vast kader betekent dat muur, poorten, patrouillelijnen, `Route`, voorraadroutes, radar en vijandige aanvalsdoelen allemaal van de wagenplek moeten uitgaan en niet van een vast vierkant; prestaties op iPhone met een groot kamp NIET GEMETEN. De bunker als doel vervalt: het HK (de wagen) is het doel.
+
+### MCV stap 1 gebouwd (8 november 2026, Draft PR): bouwwagen, uitklappen, hoofdkwartier
+Gebouwd volgens de keuzes hierboven; **alleen in de nieuwe MCV-modus** (`Data.mcv_mode`, aan via START MISSIE en de stadseditor in het hoofdmenu; uit voor het oude spel en de bestaande tests, tot het vaste kamp in stap 4 is opgeruimd).
+- **Wagen** (`scripts/mcv.gd`, een blok als model): je begint erin op de kale open plek (0, 6), rijdt met de linkerstick (7 m/s, palmen en jungle-bomen vallen om), een spookbeeld van 14 x 16 m is groen (kan) of rood (kan niet), knop **UITKLAPPEN**.
+- **Plekcontrole:** minstens 12 m van het water, alleen aan jouw kant van de rivier (de stad ligt aan de overkant), 14 m van de kaartrand, niets massiefs (muur, gebouw, vat) in de weg. Bomen, struiken, varens, gras en rotsen zijn geen bezwaar en verdwijnen (`Foliage.clear_for_building` met rotsen). Dit geldt ook voor alle gebouwen en muren die je later bouwt (rotsen tellen in MCV-modus ook mee).
+- **Uitklappen** (na 1,4 s): de wagen verdwijnt, het hoofdkwartier (bunkerbody, HK-model, zandzakken, voorplein) staat op zijn plek met dezelfde draaiing (deur naar de achterkant van de wagen), de speler stapt eruit en `home` = 4 m voor de deur. `Game.base_pos`/`base_yaw`/`base_point()`/`base_home()`. **De klok van 10 minuten (`Data.MCV_RUST`) begint bij het uitklappen**; ervoor staat hij stil, er zijn geen vijanden en bouwen kan niet.
+- **Alles volgt het hoofdkwartier:** vijanden lopen en mikken op `Game.base_pos` (afstand rekent met de draaiing van het HK mee), `Route.waypoint` kent in MCV-modus alleen nog de rivier (brug/ondiepte) en verder rechtdoor, radar (geen vaste muur, HK-stip pas na het uitklappen, radarring en zicht rond het HK), HK-radar (`HqPerks`), wachtposten van soldaten (`Ally`), bouwcamera, bouwregels (`Buildings.placement_status`: overal aan jouw kant van de rivier, geen vast kader, geen muurafstand meer). Sneuvelen: na 8 s terug bij het HK; HK vernield = spel voorbij.
+- **Weg in MCV-modus:** vaste muur, poorten, torens, hut, zandzakken en kisten van het oude kamp (`BaseProps.build` wordt niet aangeroepen), wachtposten, generator, patrouilles, aangestampte kampbodem en poortpad (shader `base_ground`), het eerste depot, de eerste truck en de voorraadstapels (komen terug in stap 2).
+- **Bekende beperkingen van stap 1:** geen muren trekken, torens of poort (stap 3); wagen is een blok; geen depot of inkomen (je hebt 2000 punten en 1000 bouwtegoed om kazerne en garage te bouwen); rotsen en vaten worden pas bij het uitklappen/bouwen verwijderd (vaten blokkeren het uitklappen); verdwijnen van het oude kamp-gras op (0,0) is niet nodig (daar wordt niet geplant).
+- **Test:** `tests/mcv_test.gd` (rijden, water/overkant/kaartrand verboden, drukste plek met 185 planten uitklappen en wegruimen, bunker op de wagenplek, klok, bouwen na het uitklappen, terugkomen, vijand/route, HK vernield = spel voorbij), workflow `.github/workflows/mcv.yml`. **Niet getest:** native iPhone (sturen, tikken, beeld, FPS), visuele opnames (de omgeving heeft geen GPU; alleen logica draait headless).
+
+### MCV stap 2 gebouwd (8 november 2026): gratis depot, eerste truck, vrije routes
+Naar de keuzes van Dennis (derde ronde, punt 5): depot en eerste truck zijn gratis, je zet het depot zelf neer en kiest zelf naar welke stapel de truck rijdt. Alleen in MCV-modus; het oude spel met vast kamp werkt nog zoals voorheen (`tests/voorraad_test.gd`).
+- **Gratis depot:** na het uitklappen is `Game.free_depot` 1. In het bouwmenu staat het depot als **GRATIS** (`Buildings.cost_of`); het heeft de gewone bouwtijd met steigers en kan overal staan waar bouwen kan. Verkopen levert niets op. Is het depot klaar, dan verschijnt de eerste truck gratis (`b.gratis_truck`, `Voorraad._physics_process`); extra depots (800) en trucks (600) zijn gewoon te koop.
+- **Stapels:** de eerste vier voorraadstapels liggen er al vanaf het begin van het spel (Bosrand, Zuidveld, Stad, Oostveld), ook voor het uitklappen. Jij kiest in het depotpaneel naar welke stapel de truck rijdt (of laat het automatisch).
+- **Routes zonder vast net:** de truck rijdt recht vooruit het depot uit en dan rechtdoor naar de stapel (`Voorraad._route_free`); ligt de stapel aan de overkant van de rivier (Stad), dan via de brug en de stadsstraat. Een gebouw (of het hoofdkwartier met voorplein) op die lijn **versperd de weg** (`blocked_by`): de bestemming wordt geweigerd met de melding WEG VERSPERD en de automatische keuze slaat die stapel over. Een stapel dichter dan 20 m bij het depot wordt ook geweigerd.
+- **Weg vrijmaken:** zodra een truck een rit begint, verdwijnen bomen, struiken, varens, gras en rotsen langs de route (6 m breed, `prepare_trip`), en de stapel draait zijn voorkant naar de kant waar de truck vandaan komt (zodat de grijper de afhaalkist pakt).
+- **Verkeer zonder poorten:** geen poortvakken; het stuk voor het depot is voor één truck tegelijk (`uitrit:`-sleutel, vrij als de truck 16 m weg is).
+- **Test:** `tests/mcv_voorraad_test.gd` (stapels, nog geen depot, gratis depot en truck, geen kosten, verkoopwaarde 0, route eindigt voor de stapel, brugroute naar de stad, versperring, wegen vrij, stapel draait mee, een rit levert +120 punten), workflow `mcv.yml`. **Niet getest:** iPhone en visueel (de truck die door een rij bomen rijdt voordat die weg zijn, kranen en de grijper op een willekeurige plek).
+
+### MCV: hoofdkwartier draaien in het bouwscherm (8 november 2026, wens van Dennis na zijn test van stap 1 en 2)
+In het bouwscherm tik je op het hoofdkwartier (of zijn voorplein): er opent een paneel **HOOFDKWARTIER** met vier knoppen: **⟲ 90°, ⟲ 15°, 15° ⟳, 90° ⟳**. Het voorplein, de deur en het botsblok draaien mee (`Mcv.rotate_hq`); je komt na sneuvelen voor de nieuwe deur terug en vijanden, trucks en routes gebruiken de nieuwe draaiing (`Game.base_yaw`). Draaien lukt alleen als de nieuwe voetafdruk (14 x 16 m) vrij is van gebouwen en andere massieve dingen (anders melding GEEN RUIMTE); begroeiing en rotsen in de nieuwe voetafdruk verdwijnen. Slepen op het hoofdkwartier verschuift gewoon de kaart. Alleen in MCV-modus. Test: `tests/mcv_draai_test.gd`. **NIET GETEST:** iPhone (tikken, knoppen, beeld).
+
+### MCV stap 3 gebouwd (8 november 2026): muren trekken, poort en wachttorens
+Naar de keuzes van Dennis (muur "zoals een weg in de stad", complete omheining gratis, 4 gratis torens daarna 100, torens alleen bij de basis, poort zelf plaatsen). Alleen in MCV-modus.
+- **Muur trekken** (`scripts/kampmuur.gd`): kaartje **KAMPMUUR** in het bouwscherm, daarna sleep je met één vinger over de grond (zoals de lijn in de stadseditor). Muren staan op een **rooster van 3,5 m** en lopen alleen noord-zuid of oost-west; een schuine veeg wordt een trapje; terugvegen haalt het laatste stuk weer weg. Groen voorbeeld = komt er, rood = kan daar niet (iets in de weg, rivier), oranje = te weinig punten. Elk stuk is een eigen bouwstuk (Meshy-muurmodule, 3 m hoog, 1500 sterkte): vijanden schieten het kapot, tik erop om te verkopen of te repareren; een stuk sleep je niet los (het zit vast op het rooster). **Twee vingers verschuiven de kaart** (nodig omdat één vinger muren trekt); tik weer op KAMPMUUR om te stoppen.
+- **Kosten:** 50 per stuk. **De eerste complete omheining is gratis:** zolang het hoofdkwartier niet omsloten is, zijn de eerste 150 stukken gratis (`Game.free_wall`, `Kampmuur.FREE_CAP`); omsluit je het hoofdkwartier (zoeken vanuit het HK over het rooster, `Kampmuur.enclosed`), dan meldt het spel OMHEINING COMPLEET en kost elk volgend stuk 50. Gratis stukken leveren bij verkopen niets op, betaalde 25.
+- **Poort zelf plaatsen:** kaartje **POORT** (100 pt, voorstel: Dennis noemde nog geen prijs), tik op een muurstuk: de poort vervangt dat stuk en zijn buur in dezelfde lijn (7 m). Hij is de bestaande schuifpoort (`Gates`, nu met `add_gate`/`remove_gate`/`gate_at`): gaat vanzelf open voor jou, je soldaten en je trucks, vijanden slaan of schieten hem kapot, repareren en verkopen (+50) via zijn paneel. Een poort telt als muur voor de omheining.
+- **Wachttorens:** kaartje **WACHTTOREN**: de eerste 4 zijn gratis (`Game.free_towers`), daarna 100; alleen binnen 45 m van het hoofdkwartier (`Buildings.TOWER_RANGE`); dezelfde klimbare toren als in het oude kamp (trap aan de lokale +x-kant; loop er tegenaan om te klimmen), bouwtijd 8 s.
+- **Vijanden en muren:** een muurstuk of poort recht voor een vijand op weg naar het hoofdkwartier houdt hem tegen; hij slaat of schiet erop tot het kapot is (`Enemy._wall_ahead`). Grondvuur gaat niet door een muur (`LAYER_FORTIFICATION`, `BaseWallRules`).
+- **Trucks:** staat er een muur tussen depot en stapel, dan rijdt de route door de dichtstbijzijnde poort (`Voorraad._gate_detour`); zonder poort meldt het spel WEG VERSPERD ("een muur zonder poort").
+- **Camera:** muurstukken staan op `nocam` (de camera loopt er dwars doorheen in plaats van naar de speler te schuiven).
+- **Tests:** `tests/mcv_muur_test.gd`, `mcv_muur_ui_test.gd`, `mcv_poort_test.gd`, `mcv_toren_test.gd`; workflow `mcv.yml`. **NIET GETEST:** iPhone (slepen, tikken, beeld, FPS met veel muurstukken: elk stuk is een eigen bouwstuk met 3 detailniveaus, 150+ stukken zijn niet gemeten), visuele opnames.
+
+**Reparatie na Dennis' eerste test van stap 3 (8 november 2026):** in het bouwmenu stond nog de oude Betonmuur (300 pt) en misten Kampmuur, Poort en Wachttoren. Oorzaak: de bouwkaartjes werden bij het laden van het scherm gemaakt, vóór START MISSIE `Data.mcv_mode` aanzet; mijn tests zetten de modus al vooraf en zagen het niet. Nu bouwt `BuildMode._enter()` de kaartjes opnieuw als de modus sindsdien veranderde. Test: `tests/mcv_kaarten_test.gd` (laadt eerst zonder MCV-modus, zet hem dan aan, zoals het hoofdmenu; faalt zonder de reparatie).
+
+### MCV stap 3, verbeteringen na Dennis' test (8 november 2026)
+- **Poort bevestigen:** tik je op POORT en daarna op een muurstuk, dan komt de poort er nog niet. Je ziet een gouden voorbeeld van de twee muurstukken die hij vervangt en een paneel **POORT HIER?** met **Plaats (100 pt)** en **Annuleer**. Tik je op een ander muurstuk, dan verschuift het voorbeeld. Zo komt de poort nooit ergens waar je hem niet wilt (`BuildMode._gate_pending`).
+- **Muur trekken makkelijker:** het paneel **KAMPMUUR** heeft twee standen. **Lijn** (standaard): een rechte muur; de richting wordt vastgelegd zodra je meer dan een stuk van het begin bent en je vinger mag daarna zijwaarts afdwalen (pas als je duidelijk 3 stukken een andere kant op gaat, wisselt de richting). **Vierkant**: sleep van hoek naar hoek en je krijgt vier muren in één keer (handig voor de gratis omheining). Een nieuwe muur begint vanzelf aan het eind van een bestaande muur of poort als je er binnen 5 m van begint (`Kampmuur.snap_start`). Het paneel toont ook hoeveel stukken er nog gratis zijn.
+- **Tests:** `tests/mcv_muur_ui_test.gd` uitgebreid (voorbeeld, Plaats en Annuleer, rechte lijn bij afdwalende vinger, aansluiten, vierkant). **NIET GETEST:** iPhone.
+
+## Stap 4 (keuzes van Dennis, 8 november 2026): patrouilles bij de kazerne (4a), daarna het oude kamp opruimen (4b)
+**4a nu, 4b pas na zijn test van 4a.**
+1. **Route:** een wacht loopt aan de **binnenkant van de gemaakte muur** (langs de omheining rond het hoofdkwartier). Is er nog geen complete omheining, dan een cirkel van ongeveer 14 m rond het hoofdkwartier.
+2. **Prijs en aantal:** **250 per wacht, maximaal 4 per kazerne.** Gekocht bij de kazerne, zonder wachtrij met rekruten; een wacht telt niet mee bij je team en volgt je niet.
+3. **Bij een aanval** rennen ze naar de **dichtstbijzijnde poort waar de aanval vandaan komt** en verdedigen daar: over of door een muur kun je niet schieten, dus de poort is de plek waar het gevecht is. Zonder poort: naar de binnenkant van de muur aan de kant van de aanval.
+4. **Volgorde:** eerst 4a testen; 4b (het oude vaste kamp opruimen: vaste muur, poorten, torens, wachthuisjes, generator, oude patrouilles, kampbodem, de MCV-schakelaar, en de oude tests omzetten of verwijderen) komt daarna.
+
+### Stap 4a gebouwd (8 november 2026): wachten bij de kazerne
+Naar de vier keuzes hierboven. Alleen in MCV-modus.
+- **Kopen:** in het kazernepaneel de knop **Wacht** (250 pt, `n/4`), hooguit 4 per kazerne; hij komt uit de deur en begint meteen zijn ronde. Een wacht telt niet mee bij je team (niet in `Game.allies`, dus ook niet voor Volgen, Posten en het teamwiel) en volgt je niet. Verkoop je de kazerne, dan gaan zijn wachten mee. Code: `Buildings.buy_wacht`, `scripts/wachten.gd`; hergebruikt `Ally` met `guard = true` en `wacht_slot`.
+- **Ronde:** langs de **binnenkant van de omheining**: de cellen van het rooster die een muur of poort raken, op volgorde, iedere derde cel (ongeveer 10 m tussen twee punten); elke wacht begint op een eigen plek van de ronde, blijft op elk punt 3 tot 6 s staan en loopt dan door. Zonder complete omheining: een cirkel van 14 m rond het hoofdkwartier. De ronde wordt opnieuw uitgerekend zodra je muren, poorten of gebouwen verandert.
+- **Aanval:** bij een aanvalsgroep rennen ze naar de **poort die het dichtst bij de aanvallers ligt**, 4,5 m aan de binnenkant, naast elkaar (1,8 m ertussen). Een kapotte poort telt ook (dat is een gat in de muur). Zonder poort: aan de binnenkant van de muur aan de kant van de aanval; zonder omheining: 8 m voor het hoofdkwartier. Door een muur schieten ze niet (`Ally._nearest_enemy` kijkt al naar `BaseWallRules`).
+- **Bekend:** gebouwen op de ronde (bijvoorbeeld een depot tegen de muur) blokkeren een wacht; hij loopt er met de bestaande omloop-logica omheen. Wachten zijn (zoals rekruten) niet te doden: vijanden schieten er nog niet op.
+- **Test:** `tests/mcv_wacht_test.gd` (kopen, 250, maximum 4, verschillende plekken, ronde binnen en langs de muur, lopen en binnen blijven, post bij de noord- en zuidpoort, zonder poort, verkochte kazerne, knop in het paneel), workflow `mcv.yml`. **NIET GETEST:** iPhone.
+
+### Stap 4b gebouwd (8 november 2026): MCV is de enige modus, het oude vaste kamp is weg
+- **Weg:** de schakelaar `Data.mcv_mode`, het vaste kamp (muur, vier hoektorens, vaste poorten, wachthuisjes en slagbomen, generator, oude patrouilles, kampbodem en -rekwisieten) en de bijbehorende oude tests.
+- **Blijft:** het hoofdkwartier (bunkerlichaam, HK-model, voorplein, zandzakkenring), de gekochte wachttoren (4 gratis, daarna 100), je eigen muren en poorten, de kazerne met wachten, depot en trucks.
+- **Generator:** weg; komt later terug als bouwwerk (plan A4, "stroom die echt telt"). `Game.power` blijft tot dan altijd aan.
+- **Test:** in headless start de wagen automatisch uitgeklapt op de oorsprong (`Data.mcv_autodeploy`); de MCV-tests zetten dat uit. `voorraad_test` en `voorraad_verkeer_test` plaatsen hun eigen gratis depot.
+- **Bekend:** bij een depot op andere plekken (bijvoorbeeld (24, -24)) rijden trucks op de brug en in de stad soms door elkaar (verkeerstest); de test gebruikt (0, -24). Nog uit te zoeken.
+
+### Vrachtwagenverkeer bij een depot dichtbij een stapel (8 november 2026)
+- **Gevonden:** een depot op bijvoorbeeld (24, -24) met de voorkant naar het noorden ligt 22 m van stapel Bosrand. De terugkerende truck hield de stapel nog vast (minder dan 11 m ervan af) en de vertrekkende truck hield de uitrit vast: ze wachtten eeuwig op elkaar. Nu geldt de vrijgave-afstand als hooguit 40% van de rit (`voorraad_verkeer.gd`, `release_check`). Test: `tests/voorraad_kort_test.gd`.
+- **Nog open:** staat een depot zo dat de trucks bij het depot een eind moeten omrijden (bijvoorbeeld de voorkant van de bestemming af), dan wachten terugkerende trucks soms midden op de uitgaande route en komen de dozen even in elkaar (zonder vastlopen; ze rijden achteruit en lossen het zelf op). Oorzaak: de wachtplek (15 m voor het depot) ligt op de route van de vertrekkende truck. Een verder weg gelegen wachtplek helpt niet overal (probeerd met 24 en 26 m).
+
+### Omheining en begroeiing (8 november 2026, wens van Dennis na zijn test)
+- **Probleem:** een vierkant om het hoofdkwartier kreeg gaten: liggende boomstammen waren een obstakel dat nergens weg kon.
+- **Nu:** stammen zijn wegneembaar zoals bomen en struiken (ook als alleen het uiteinde in de weg ligt), en zodra de omheining compleet is verdwijnt alles binnen de muren automatisch: bomen, struiken, varens, gras, stammen en rotsen (`Kampmuur.clear_inside`). Test: `tests/mcv_omheining_test.gd`.
+
+### Vaste uitrit voor het depot en trucks als vaste objecten (8 november 2026, keuzes 1, 2, 3, 6 en 7 van Dennis)
+- **1 Uitrit:** elk depot heeft een rechte weg van 20 m recht voor zich (`Voorraad.PRE_DOCK`, `pre_dock_point`). Alle routes beginnen en eindigen aan het eind ervan; wijst de bestemming van de uitrit af, dan maakt de weg daar een ruime lus (`SWING_*`).
+- **2 Wachthaven:** de truck die terugkomt en moet wachten, staat 15 m voor het dock in zijn eigen rijstrook binnen de uitrit, en houdt de rijbaan van de vertrekkende truck vrij. De rijstroken zijn breder (2,1 m) en de vrijgemaakte weg ook (7 m).
+- **3 Eén sleutel:** de `uitrit`-sleutel geldt voor het hele stuk, en wie een sleutel wil staat in een eerlijke wachtrij (`claim_resource`, `_wait_queue`): de truck die het eerst wacht, mag het eerst. Daarmee is de vastloper opgelost waarbij twee trucks achter elkaar in de rijstrook elkaars sleutel blokkeerden.
+- **6 Wegdek:** de uitrit krijgt donker wegdek met onderbroken middenstreep en randlijnen (`_sync_stems`); bomen en rotsen erop verdwijnen zodra het depot staat. Het wegdek verdwijnt met het depot.
+- **7 Poort:** staat er een muur zonder poort voor het depot, dan stopt de uitrit 2,5 m ervoor (minimaal 6 m) en loopt de weg vanaf daar door de dichtstbijzijnde poort. Een poort in de muur voor het depot is gewoon een opening.
+- **Plaatsen:** een depot kan niet meer worden gezet als de uitrit geblokkeerd is (hoofdkwartier, gebouw, rivier, rand van het gebied, muur binnen 6 m): "Uitrit geblokkeerd: ...".
+- **Trucks zijn vast:** de truck heeft de muurlaag (net als auto's en bussen); je loopt er niet doorheen. Een rijdende truck houdt het plaatsen van een gebouw niet tegen.
+- **Meting** (drie trucks, daarna allemaal naar de stad, op tien plekken en draairichtingen): vooraf vijf plekken met overlap (tot 4254 beelden), nu twee plekken kunnen niet meer worden gezet (naar het hoofdkwartier) en zes zijn schoon; drie hebben nog enkele seconden overlap: (20, 16) naar het zuiden (265 beelden, de weg maakt een lus), (24, -24) naar het zuiden (50) en (24, -24) naar het noorden, recht op een stapel 28 m verderop (437). Ze lossen het zelf op, zonder vastlopen. Tests: `tests/voorraad_uitrit_test.gd`, `voorraad_kort_test.gd`, `voorraad_verkeer_test.gd`.
+
+### Wegdek tot en door de poort, en Draai slaat geblokkeerde standen over (8 november 2026, naar Dennis' test)
+- **Gevonden (screenshot):** het wegdek was alleen de rechte uitrit van 20 m; de trucks rijden daarna door je omheining naar de poort, maar die route had geen wegdek. En "Draai" draait een kwartslag; was die stand door de nieuwe uitrit-regel geblokkeerd (een muur binnen 6 m voor het dock), dan probeerde elke volgende druk dezelfde stand en kwam je nooit verder.
+- **Nu:** het wegdek volgt per bestemming de hele weg van het depot over de uitrit, een eventuele lus en door de poort (`Voorraad.road_branches`, `_route_head`, `_road_node`), met afgeronde bochten zoals de trucks rijden, randlijnen en een onderbroken middenstreep; het gedeelde stuk (de uitrit) wordt één keer getekend; bomen en rotsen erop verdwijnen. Het wegdek past zich aan als de muren, poorten of het depot veranderen.
+- **Draai** probeert 90, 180 en 270 graden en neemt de eerste stand die kan; lukt geen enkele, dan staat in de melding de reden van de eerste stand (bijvoorbeeld "UITRIT GEBLOKKEERD: EEN MUUR VLAK VOOR HET DEPOT").
+- **Niet gedaan (optie C, door Dennis niet gekozen):** het depot laten kijken naar de poort. Een depot dat van de poort af kijkt, krijgt een weg die eerst van de poort af loopt en dan terugdraait.
+- Test: `tests/voorraad_weg_test.gd`.
+
+## Stap C2 + C3 (keuzes van Dennis, 8 november 2026): soldatensoorten en steen-papier-schaar
+**Keuzes:** alle vier de soorten tegelijk (raketsoldaat, sluipschutter, hospik, ingenieur), het bestaande soldatenmodel met eigen uitrusting en kleur (eigen Meshy-modellen kunnen later), en productie in de kazerne met een knop per soort.
+
+### Gebouwd (Draft PR): `Data.SOLDIER_TYPES`, `Ally.kind`, `tests/soldaten_test.gd`
+- **Soorten (voorstellen om te testen):**
+
+| Soort | Prijs | Training | Gezondheid | Wapen | Rol |
+|---|---|---|---|---|---|
+| Schutter | 250 | 1,0 x | 1,0 x | geweer, 16 m | zoals altijd |
+| Raketsoldaat | 400 | 1,5 x | 0,9 x | raket, 22 m, 3,4 s, ontploft (2,8 m) | tegen pantser en zware vijanden |
+| Sluipschutter | 450 | 1,6 x | 0,7 x | één kogel, 34 m, 2,2 s | tegen mensen, ver weg |
+| Hospik | 300 | 1,2 x | 1,0 x | geen | heelt jou en je soldaten binnen 8 m (9 per seconde) |
+| Ingenieur | 350 | 1,4 x | 1,0 x | geen | repareert beschadigde gebouwen en trucks bij het hoofdkwartier (14 per seconde) |
+
+- **Kazerne:** in het paneel staat een knop per soort met prijs; de bouwrij houdt de volgorde bij (elke soort een eigen trainingstijd), annuleren geeft de prijs van de laatste terug, het maximum aantal soldaten blijft gedeeld.
+- **Steen-papier-schaar (C3):** de schade van een soldaat krijgt een soort (`wclass`) en elke vijand een pantser (`armor`: licht, en zwaar voor de zware schutter). Vermenigvuldigers (`Data.ARMOR_MULT`): kogel 1,0 licht / 0,5 zwaar; sluipschutter 2,2 licht / 0,8 zwaar; raket 0,7 licht / 2,0 zwaar. Schade zonder soort (alles wat er al was, ook jouw wapens) blijft precies zoals hij was. Een raketsoldaat kiest liever een zware vijand; een raket van een soldaat telt niet voor jouw killstreak.
+- **Hospik en ingenieur** volgen je mee zoals de andere soldaten, lopen naar wie geheeld of wat gerepareerd moet worden, en schieten niet.
+- **Nog niet:** luchtafweer tegen lucht (C3 noemt dat; er zijn nog geen luchtvijanden), eigen Meshy-modellen en een zichtbaar EHBO-/gereedschapsmodel, de soorten in het teamwiel, schade aan voertuigen door de raketsoldaat, en eigen stemmen.

@@ -16,31 +16,29 @@ const TRUCK_COST := 600
 const TRUCKS_MAX := 3          # per depot
 const TRIP_BASE := 100         # punten per rit, plus TRIP_PER_M per meter enkele reis
 const TRIP_PER_M := 0.5
-const ROAD_W := 6.0            # breedte (m) van de vrijgemaakte weg
+const ROAD_W := 7.0            # breedte (m) van de vrijgemaakte weg
 const STOP_BEFORE := 7.70      # de truck stopt zoveel meter voor het midden van de stapel: zijn grijper (4,90 m voor de truck) staat dan op de afhaalkist (2,8 m voor de stapel)
 const DOCK_OFFSET := 3.65      # m voor de voorkant van het depot staat de truck bij het lossen: de grijper (4,90 m) zet de kist dan op de laadplaat (2 m in het depot)
-const PRE_DOCK := 9.0          # m voor het depot ligt een punt op de as, zodat de truck recht op het depot af komt
+const SWING_ANGLE := 1.75       # rad: wijst de bestemming meer dan dit van de uitrit af, dan maakt de weg een ruime lus
+const SWING_FWD := 6.0          # m: de lus gaat eerst zoveel voorbij het eind van de uitrit
+const SWING_SIDE := 11.0        # m: en zoveel opzij, naar de kant van de bestemming
+const PRE_DOCK := 20.0          # m: de vaste uitrit, een rechte weg van deze lengte recht voor het depot. Alle routes beginnen en eindigen aan het eind ervan
+const STEM_MIN := 6.0           # m: korter mag de uitrit niet worden (bijvoorbeeld door een muur ervoor): daar draait een truck niet meer om
+const STEM_W := 6.4             # m: breedte van het wegdek van de uitrit
 const FIRE_RANGE := 13.0       # vijanden schieten op trucks binnen dit bereik
 const FIRE_TAKE := 0.5         # en doen zoveel van hun normale schade (er is geen echt richten op een truck)
 const QUEUE_MAX := 1           # zoveel trucks tegelijk op weg naar (of aan het laden bij) één stapel: er staat dus nooit een rij op de weg; een volgende kiest een andere stapel of wacht in het depot
-const START_SPOTS := [         # waar het eerste depot komt (het eerste dat vrij is), met de voorkant naar de dichtstbijzijnde poort
-	[Vector3(13, 0, -17), -PI / 2.0],
-	[Vector3(-13, 0, -17), PI / 2.0],
-	[Vector3(13, 0, 17), -PI / 2.0],
-	[Vector3(-13, 0, 17), PI / 2.0],
-]
-
 ## Plekken voor een stapel. De eerste vier liggen er aan het begin; de rest komt erbij als een stapel leeg is (altijd verder weg).
-## "via" is het knooppunt van het wegennet waar de weg naar de stapel aftakt.
+## "via" (alleen de stad, aan de overkant van de rivier) is het knooppunt van de stadsstraat waar de weg naar de stapel eindigt.
 const SITES := [
-	{"id": "bos", "name": "Bosrand", "pos": Vector2(24, -60), "via": "pad-58"},
-	{"id": "zuid", "name": "Zuidveld", "pos": Vector2(-72, 88), "via": "poort_z_uit"},
+	{"id": "bos", "name": "Bosrand", "pos": Vector2(24, -60)},
+	{"id": "zuid", "name": "Zuidveld", "pos": Vector2(-72, 88)},
 	{"id": "stad", "name": "Stad", "pos": Vector2(51, -126), "via": "stad6", "smal": true},   # smal: de brug en de stadsstraat, één truck tegelijk
-	{"id": "oost", "name": "Oostveld", "pos": Vector2(128, 22), "via": "poort_z_uit"},
-	{"id": "west", "name": "Westveld", "pos": Vector2(-110, -4), "via": "west_m"},
-	{"id": "noordoost", "name": "Noordoost", "pos": Vector2(150, -50), "via": "poort_n_uit"},
-	{"id": "zuidoost", "name": "Zuidoost", "pos": Vector2(120, 110), "via": "poort_z_uit"},
-	{"id": "zuidwest", "name": "Zuidwest", "pos": Vector2(-120, 120), "via": "poort_z_uit"},
+	{"id": "oost", "name": "Oostveld", "pos": Vector2(128, 22)},
+	{"id": "west", "name": "Westveld", "pos": Vector2(-110, -4)},
+	{"id": "noordoost", "name": "Noordoost", "pos": Vector2(150, -50)},
+	{"id": "zuidoost", "name": "Zuidoost", "pos": Vector2(120, 110)},
+	{"id": "zuidwest", "name": "Zuidwest", "pos": Vector2(-120, 120)},
 ]
 
 var stapels: Array = []        # SLOTS stuks: VoorraadStapel of null
@@ -54,6 +52,8 @@ var _used := {}                # plek-id -> true: ligt er, of is leeg gegaan
 var _claims := {}              # slot -> aantal trucks onderweg
 var _roads := {}               # plek-id -> Node3D (eigenaar van de vrijgemaakte weg)
 var _owners := {}              # sleutel ("stapel:<plek>", "dock:<depot>") -> de truck die de laad-/losplek bezet houdt
+var _stems := {}     # depot_key -> {node, length, yaw}: het wegdek van de uitrit
+var _waiters := {}   # sleutel -> [{truck, ts}]: de rij wachtende trucks
 var _pending: Array = []       # depots waar een gekochte truck wacht tot de laadplek vrij is
 var _engine: AudioStreamWAV
 var _tick := 0.0
@@ -80,33 +80,9 @@ func _link(a: String, b: String) -> void:
 
 
 func _build_graph() -> void:
-	var c := Data.COMPOUND
-	_node("poort_n_in", Vector2(0, -c + 6.0))
-	_node("poort_n_uit", Vector2(0, -c - 6.0))
-	_node("poort_z_in", Vector2(0, c - 6.0))
-	_node("poort_z_uit", Vector2(0, c + 6.0))
-	_link("poort_n_in", "poort_n_uit")
-	_link("poort_z_in", "poort_z_uit")
-	# rond de muur aan de westkant: van de noordpoort naar de zuidpoort
-	_node("west_nw", Vector2(-c - 8.0, -c - 6.0))
-	_node("west_m", Vector2(-c - 8.0, 0.0))
-	_node("west_zw", Vector2(-c - 8.0, c + 6.0))
-	_link("poort_n_uit", "west_nw")
-	_link("west_nw", "west_m")
-	_link("west_m", "west_zw")
-	_link("west_zw", "poort_z_uit")
-	# het kronkelpad door het bos naar de brug (Data.path_x): hier staan geen bomen
-	var prev := "poort_n_uit"
-	var z := -c - 6.0
-	while z >= -90.0:
-		var n := "pad%d" % int(z)
-		_node(n, Vector2(Data.path_x(z), z))
-		_link(prev, n)
-		prev = n
-		z -= 8.0
+	# alleen de weg over de brug en door de stad (de stapel in de stad ligt aan de overkant van de rivier); alle andere wegen zijn vrije routes (_route_free)
 	_node("brug", Vector2(0, -93.0))
-	_link(prev, "brug")
-	# de stad achter de brug: de hoofdstraat (rond de wrakken en lantaarns) en de dwarsstraat naar het oosten
+	# de hoofdstraat (rond de wrakken en lantaarns) en de dwarsstraat naar het oosten
 	var stad := [Vector2(-1.6, -99.5), Vector2(-1.6, -119.5), Vector2(1.8, -122.0), Vector2(4.0, -126.0), Vector2(20.0, -126.0), Vector2(46.0, -126.0)]
 	var last := "brug"
 	for i in stad.size():
@@ -137,9 +113,7 @@ func start_game() -> void:
 	for i in SLOTS:
 		if i < SITES.size():
 			_spawn_stapel(i, SITES[i])
-	var d: Variant = Game.builds.place_start_depot()
-	if d != null:
-		_spawn_truck(d)
+	# het depot zet de speler zelf neer (gratis, Game.free_depot); de eerste truck verschijnt als het klaar is
 
 
 func reset() -> void:
@@ -154,6 +128,10 @@ func reset() -> void:
 	_claims.clear()
 	_owners.clear()
 	_pending.clear()
+	for k in _roads.keys():
+		if is_instance_valid(_roads[k]):
+			_roads[k].queue_free()
+	_roads.clear()
 
 
 func _spawn_stapel(slot: int, site: Dictionary) -> void:
@@ -162,77 +140,7 @@ func _spawn_stapel(slot: int, site: Dictionary) -> void:
 	s.setup(site, slot, STACK, _face_of(site))
 	stapels[slot] = s
 	_used[site.id] = true
-	_make_road(site)
 	Game.changed.emit()
-
-
-## Haalt bomen, struiken en rotsen weg langs de weg naar deze plek (vanaf de beide poorten, want het net is vast).
-func _make_road(site: Dictionary) -> void:
-	if _roads.has(site.id) and is_instance_valid(_roads[site.id]):
-		return
-	var holder := Node3D.new()
-	holder.name = "Weg_" + site.id
-	add_child(holder)
-	_roads[site.id] = holder
-	var cleared := Foliage.clear_for_building(holder.get_instance_id(), road_regions(site), Vector3.ZERO, 0.0, 0.5, true)
-	holder.set_meta("cleared", cleared)
-
-
-## De vlakken (voor Foliage) van de weg naar een plek, vanaf beide poorten: elk wegstuk is een rechthoek (middelpunt, hoek, lengte, breedte).
-func road_regions(site: Dictionary) -> Array:
-	var regions: Array = []
-	var seen := {}
-	for gate in ["poort_n_in", "poort_z_in"]:
-		var pts: Array = _polyline(gate, site)
-		for i in range(0, pts.size() - 1):
-			var a: Vector2 = pts[i]
-			var b: Vector2 = pts[i + 1]
-			if a.distance_to(b) < 0.5 or seen.has("%s>%s" % [a, b]):
-				continue
-			seen["%s>%s" % [a, b]] = true
-			var mid := (a + b) * 0.5
-			var ang := atan2((b - a).y, (b - a).x)
-			regions.append({"name": "weg", "center": mid, "size": Vector2(a.distance_to(b) + 2.0, ROAD_W), "yaw": -ang})
-	return regions
-
-
-## De punten van de weg van een poort (binnenkant) naar een plek, in volgorde.
-## Het knooppunt waar de weg naar de stapel aftakt ("via") ligt vaak opzij van de stapel, zodat de route er een scherpe haakse bocht om maakt.
-## Daarom buigt de weg eerder af: op het punt waar de lijn door via en de stapel het dichtst bij het vorige knooppunt komt, zodat de truck met één
-## ronde bocht op het laatste rechte stuk naar de stapel komt (dat stuk wijst nog steeds precies naar de stapel). Een poortas blijft recht.
-func _polyline(gate_in: String, site: Dictionary) -> Array:
-	var out: Array = []
-	var ids := _astar.get_id_path(_ids[gate_in], _ids[site.via])
-	for id in ids:
-		out.append(_astar.get_point_position(id))
-	var via: Vector2 = _pos[site.via]
-	var stop := stop_point(site, via)
-	if out.size() >= 2:
-		var prev: Vector2 = out[out.size() - 2]
-		var gate_axis: bool = absf(prev.x - via.x) < 0.01 and String(site.via).begins_with("poort_") and _name_of(ids[ids.size() - 2]).begins_with("poort_")
-		var dir: Vector2 = site.pos - via
-		if not gate_axis and dir.length() > 0.1:
-			dir = dir.normalized()
-			var t_join: float = (prev - via).dot(dir)
-			var t_stop: float = via.distance_to(site.pos) - STOP_BEFORE
-			var join: Vector2 = via + dir * t_join
-			var hoek: float = absf(angle_difference((via - prev).angle(), dir.angle()))
-			var zijwaarts: float = prev.distance_to(join)
-			# alleen bij een scherpe bocht bij via (of als het stoppunt vóór via ligt: dan zou de truck er voorbij rijden en terugkeren), en als de nieuwe
-			# aftakking niet vlak na het vorige knooppunt komt (dan zijn het twee bochten vlak achter elkaar)
-			if (hoek > 1.0 or t_stop < 0.0) and t_stop - t_join >= 6.0 and (zijwaarts < 0.5 or zijwaarts >= 8.0):
-				out.pop_back()   # via zelf valt weg
-				if zijwaarts >= 0.5:
-					out.append(join)
-	out.append(stop)
-	return out
-
-
-func _name_of(id: int) -> String:
-	for n in _ids:
-		if _ids[n] == id:
-			return n
-	return ""
 
 
 ## Waar de truck bij een plek stopt: STOP_BEFORE meter voor de stapel, aan de kant waar hij vandaan komt.
@@ -263,27 +171,55 @@ func dock_point(b: Dictionary) -> Vector2:
 
 ## Een punt PRE_DOCK meter vóór het depot op de as van de voorkant: de truck rijdt van daar recht op het depot af.
 func pre_dock_point(b: Dictionary) -> Vector2:
-	var front := Vector2(sin(float(b.yaw)), cos(float(b.yaw)))
-	return dock_point(b) + front * PRE_DOCK
+	return stem_end(dock_point(b), float(b.yaw))
 
 
-## Het punt waar de truck van de as van de voorkant van het depot afbuigt naar de poort: waar de as van de voorkant de as van de poort kruist
-## (dan rijdt hij met één ronde bocht van het depot naar de poort, zonder omweg). Kan dat niet, dan het punt PRE_DOCK meter voor het depot.
-func dock_lead(b: Dictionary, gate_name: String) -> Vector2:
-	var dock := dock_point(b)
-	var front := Vector2(sin(float(b.yaw)), cos(float(b.yaw)))
-	if absf(front.x) > 0.5:
-		var k: float = (float(_pos[gate_name].x) - dock.x) / front.x
-		if k >= 4.5 and k <= PRE_DOCK + 3.0:
-			return dock + front * k
-	return pre_dock_point(b)
+## Het eind van de uitrit: PRE_DOCK meter recht voor het dock, of korter als er een muur (zonder poort) voor staat (dan 2,5 m ervoor).
+func stem_end(dock: Vector2, yaw: float) -> Vector2:
+	var front := Vector2(sin(yaw), cos(yaw))
+	var far := dock + front * PRE_DOCK
+	var best := PRE_DOCK
+	for sg in _wall_segments():
+		var hit: Variant = Geometry2D.segment_intersects_segment(dock, far, sg[0], sg[1])
+		if hit != null:
+			best = minf(best, dock.distance_to(hit as Vector2) - 2.5)
+	return dock + front * maxf(best, 0.0)
+
+
+## Waarom kan de uitrit van een depot op `at` met voorkant `yaw` niet (naam van wat ervoor staat), of "" als hij vrij is? Voor het plaatsen van een depot
+## (`me`: het depot dat wordt verplaatst) en voor de weg van de trucks.
+func stem_blocker(at: Vector3, yaw: float, me: Variant = null) -> String:
+	var sz: Vector3 = Buildings.DEFS["depot"].size
+	var front := Vector2(sin(yaw), cos(yaw))
+	var dock := Vector2(at.x, at.z) + front * (sz.z * 0.5 + DOCK_OFFSET)
+	var k := stem_end(dock, yaw)
+	if dock.distance_to(k) < STEM_MIN:
+		return "een muur vlak voor het depot"
+	if Game.mcv_deployed:
+		for i in 5:
+			var p := dock.lerp(k, float(i) / 4.0)
+			var p3 := Vector3(p.x, 0.0, p.y)
+			if not Mcv.in_play_area(p3, 2.0):
+				return "buiten het speelbare gebied"
+			if not Mcv.dry_side(p3, 2.0):
+				return "de rivier"
+	var skip: Dictionary = me if me is Dictionary else {}
+	for o in _obstacles(skip):
+		for i in 11:
+			var p := dock.lerp(k, float(i) / 10.0)
+			var local: Vector2 = (p - (o[0] as Vector2)).rotated(float(o[1]))
+			var half: Vector2 = o[2]
+			if absf(local.x) <= half.x and absf(local.y) <= half.y:
+				return String(o[3])
+	return ""
 
 
 ## De richting (x, z) van een stapel naar de kant waar de truck vandaan komt: de voorkant van de stapel.
 func _face_of(site: Dictionary) -> Vector2:
-	var via: Vector2 = _pos[site.via]
-	var d: Vector2 = via - site.pos
-	return d.normalized() if d.length() > 0.1 else Vector2(0, 1)
+	# naar je kamp (of de startplek van de wagen); zodra een truck een rit begint draait de stapel naar zijn kant (prepare_trip)
+	var t := Vector2(Game.base_pos.x, Game.base_pos.z) if Game.mcv_deployed else Vector2(Mcv.START_POS.x, Mcv.START_POS.z)
+	var dd: Vector2 = t - (site.pos as Vector2)
+	return dd.normalized() if dd.length() > 0.1 else Vector2(0, 1)
 
 
 func trucks_of(b: Dictionary) -> Array:
@@ -360,11 +296,9 @@ func dock_free(b: Dictionary) -> bool:
 
 # ---------------------------------------------------------------- verkeer: laad- en losplekken
 
-## Sleutel van de poort die dit depot gebruikt: het stuk tussen de depots en de poort (het kruispunt waar de trucks van de depots elkaar tegenkomen)
-## is voor één truck tegelijk.
+## Sleutel van de uitrit van dit depot: het stuk vlak voor het depot is voor één truck tegelijk.
 func gate_key(b: Dictionary) -> String:
-	var dock := dock_point(b)
-	return "poort:n" if dock.distance_to(_pos["poort_n_in"]) <= dock.distance_to(_pos["poort_z_in"]) else "poort:z"
+	return "uitrit:" + depot_key(b)   # het stuk voor het depot is voor één truck tegelijk
 
 
 ## Sleutel van het depot (zijn plek): per depot kan één truck tegelijk lossen.
@@ -391,13 +325,38 @@ func resource_free(key: String) -> bool:
 	return _owner_of(key) == null
 
 
-## Pakt een laad- of losplek voor een truck: lukt als hij vrij is (of al van deze truck is).
+## Pakt een laad- of losplek voor een truck: lukt als hij vrij is (of al van deze truck is) en er niemand eerder op wacht. Wie niet kan, komt achteraan
+## in de rij van die sleutel (eerlijk: de truck die het eerst wachtte, staat ook voorop in de rijstrook, dus de ander kan er toch niet langs).
 func claim_resource(key: String, t: VoorraadTruck) -> bool:
 	var o: Variant = _owner_of(key)
-	if o != null and o != t:
+	var q := _wait_queue(key)
+	if (o != null and o != t) or (not q.is_empty() and q[0].truck != t and o != t):
+		var found := false
+		for e in q:
+			if e.truck == t:
+				e.ts = Time.get_ticks_msec()
+				found = true
+		if not found:
+			q.append({"truck": t, "ts": Time.get_ticks_msec()})
 		return false
+	for i in range(q.size() - 1, -1, -1):
+		if q[i].truck == t:
+			q.remove_at(i)
 	_owners[key] = t
 	return true
+
+
+## De rij trucks die op deze sleutel wacht (oudste voorop). Wie al een tijdje niet meer probeert, valt eruit.
+func _wait_queue(key: String) -> Array:
+	if not _waiters.has(key):
+		_waiters[key] = []
+	var q: Array = _waiters[key]
+	var now := Time.get_ticks_msec()
+	for i in range(q.size() - 1, -1, -1):
+		var tr: Variant = q[i].truck
+		if not is_instance_valid(tr) or (tr as VoorraadTruck).state == VoorraadTruck.S.WRAK or now - int(q[i].ts) > 400:
+			q.remove_at(i)
+	return q
 
 
 func release_resource(key: String, t: VoorraadTruck) -> void:
@@ -420,13 +379,15 @@ func _cleanup_trucks() -> void:
 func pick_slot(truck: VoorraadTruck) -> int:
 	var d: Dictionary = truck.depot
 	var want: int = int(d.get("dest", -1))
-	if want >= 0 and want < SLOTS and stapels[want] != null and stapels[want].left > 0:
+	if want >= 0 and want < SLOTS and stapels[want] != null and stapels[want].left > 0 and blocked_by(d, want) == "":
 		return want
 	var best := -1
 	var bs := INF
 	for i in SLOTS:
 		if stapels[i] == null or stapels[i].left <= 0:
 			continue
+		if blocked_by(d, i) != "":
+			continue   # de weg erheen is versperd door een gebouw
 		if int(_claims.get(i, 0)) >= QUEUE_MAX:
 			continue   # er laadt er al een en er wacht er een: een derde zou op de weg moeten blijven staan
 		var score := route_length(d, i) + 40.0 * float(_claims.get(i, 0))
@@ -444,14 +405,176 @@ func claim(slot: int, delta: int) -> void:
 
 ## De route van het depot naar een stapel: punten (x, z) van het depot via de poort en het net tot het stoppunt bij de stapel.
 func route(d: Dictionary, slot: int) -> Array:
+	return _route_free(d, slot)
+
+
+# ---------------------------------------------------------------- vrije wegen zonder vast wegennet
+
+## De weg van het depot naar een stapel zonder vaste poorten en wegen: recht vooruit het depot uit, dan rechtdoor naar de stapel. Ligt de stapel aan de
+## overkant van de rivier (de stad), dan eerst naar de brug en door de stadsstraat (dezelfde knooppunten als altijd).
+func _route_free(d: Dictionary, slot: int) -> Array:
 	var site: Dictionary = stapels[slot].site
-	var dock := dock_point(d)
-	var gate := "poort_n_in" if gate_key(d) == "poort:n" else "poort_z_in"
-	var out: Array = [dock, dock_lead(d, gate)]
-	for p in _polyline(gate, site):
-		if out[out.size() - 1].distance_to(p) > 0.3:
-			out.append(p)
+	var mids := _route_mids(site)
+	var goal: Vector2 = mids[0] if not mids.is_empty() else site.pos
+	var out: Array = _route_head(d, goal)
+	var prev: Vector2 = out[out.size() - 1] if out.size() > 2 else out[1]
+	if not mids.is_empty():
+		prev = mids[mids.size() - 1]
+	for m in mids:
+		out.append(m)
+	out.append(stop_point(site, prev))
 	return _merge_close(out)
+
+
+## De tussenpunten naar een stapel: bij een stapel aan de overkant van de rivier eerst naar de brug en door de stadsstraat, anders geen.
+func _route_mids(site: Dictionary) -> Array:
+	var sp: Vector2 = site.pos
+	var mids: Array = []
+	if sp.y < Data.river_z(sp.x) - Data.RIVER_HALF:
+		mids.append(Vector2(Data.BRIDGE_X, Data.river_z(Data.BRIDGE_X) + 10.0))
+		for id in _astar.get_id_path(_ids["brug"], _ids[site.via]):
+			mids.append(_astar.get_point_position(id))
+	return mids
+
+
+## Het begin van elke route: het dock, het eind van de uitrit, een eventuele lus en (bij een omheining) de weg door de poort. `goal`: het eerste punt daarna.
+func _route_head(d: Dictionary, goal: Vector2) -> Array:
+	var out: Array = [dock_point(d), pre_dock_point(d)]
+	# wijst de uitrit van de bestemming af, dan maakt de weg aan het eind een ruime lus (anders draaien heen en terug in dezelfde bocht om elkaar heen)
+	var front := Vector2(sin(float(d.yaw)), cos(float(d.yaw)))
+	var turn := front.angle_to((goal - (out[1] as Vector2)).normalized())
+	if absf(turn) > SWING_ANGLE:
+		var side := front.rotated(signf(turn) * PI * 0.5)
+		var swing: Vector2 = (out[1] as Vector2) + front * SWING_FWD + side * SWING_SIDE
+		if not _crosses_wall(out[1], swing, _wall_segments()):   # staat er een muur in de weg (je omheining), dan geen lus: de weg gaat dan via de poort
+			out.append(swing)
+	# staat er een muur tussen (je hebt een omheining), dan door de poort
+	for pt in _gate_detour(out[out.size() - 1], goal):
+		out.append(pt)
+	return out
+
+
+## Muurstukken (geen poorten) als lijnstukken (x, z) -> (x, z).
+func _wall_segments() -> Array:
+	var out: Array = []
+	var walls := Kampmuur.existing()
+	for k in walls:
+		var w: Dictionary = walls[k]
+		if str(w.get("kind", "")) != "kampmuur":
+			continue
+		var v1 := Kampmuur.vertex(Vector2i(k.x, k.y))
+		var v2 := Kampmuur.vertex(Vector2i(k.z, k.w))
+		out.append([Vector2(v1.x, v1.z), Vector2(v2.x, v2.z)])
+	return out
+
+
+## Kruist dit lijnstuk een muurstuk (een poort telt als opening)?
+func _crosses_wall(a: Vector2, b: Vector2, segs: Array) -> bool:
+	for s in segs:
+		if Geometry2D.segment_intersects_segment(a, b, s[0], s[1]) != null:
+			return true
+	return false
+
+
+## Staat er een muur tussen a en b, dan de punten van de weg door de dichtstbijzijnde poort (binnenkant, poort, buitenkant); anders niets.
+func _gate_detour(a: Vector2, b: Vector2) -> Array:
+	if Game.gates == null or not is_instance_valid(Game.gates):
+		return []
+	var segs := _wall_segments()
+	if segs.is_empty() or not _crosses_wall(a, b, segs):
+		return []
+	var best: Variant = null
+	var best_len := INF
+	for g in Game.gates.list:
+		if g.get("edge") == null or g.broken:
+			continue
+		var gp := Vector2(g.at.x, g.at.z)
+		var l := a.distance_to(gp) + gp.distance_to(b)
+		if l < best_len:
+			best_len = l
+			best = g
+	if best == null:
+		return []
+	var gp2 := Vector2(best.at.x, best.at.z)
+	var n := Vector2(sin(float(best.yaw)), cos(float(best.yaw)))
+	var p1 := gp2 - n * 8.0
+	var p2 := gp2 + n * 8.0
+	if a.distance_to(p2) < a.distance_to(p1):
+		var tmp := p1
+		p1 = p2
+		p2 = tmp
+	return [p1, gp2, p2]
+
+
+## De rechthoeken (middelpunt, draaiing, halve maten, naam) die een weg niet mag doorsnijden: je gebouwen en het hoofdkwartier met zijn voorplein, met de
+## halve wegbreedte en een marge erbij. `skip` is het depot waar de weg begint.
+func _obstacles(skip: Dictionary) -> Array:
+	var out: Array = []
+	for b in Game.buildings:
+		if b == skip or b.down or b.kind == "kampmuur":
+			continue   # muren worden apart gecontroleerd (een weg kruist ze alleen via een poort)
+		var sz: Vector3 = Buildings.DEFS[b.kind].size
+		out.append([Vector2(b.at.x, b.at.z), float(b.yaw), Vector2(sz.x, sz.z) * 0.5 + Vector2.ONE * 3.2, String(Buildings.DEFS[b.kind].name)])
+	if Game.mcv_deployed:
+		var c: Vector3 = Game.base_point(Vector3(0, 0, 3.0))
+		out.append([Vector2(c.x, c.z), Game.base_yaw, Vector2(6.5, 6.0) + Vector2.ONE * 3.2, "het hoofdkwartier"])
+	return out
+
+
+## Welk gebouw versperrt de weg van dit depot naar deze stapel (naam), of "" als hij vrij is? Alleen in de MCV-modus (zonder vast net rijden trucks rechtdoor).
+func blocked_by(d: Dictionary, slot: int) -> String:
+	if slot < 0 or slot >= SLOTS or stapels[slot] == null:
+		return ""
+	var pts := route(d, slot)
+	if pts.size() >= 2 and (pts[0] as Vector2).distance_to(stapels[slot].site.pos) < 20.0:
+		return "te dicht bij de stapel"
+	var segs := _wall_segments()
+	if not segs.is_empty():
+		for i in range(1, pts.size() - 1):
+			if _crosses_wall(pts[i], pts[i + 1], segs):
+				return "een muur zonder poort"
+	var obs := _obstacles(d)
+	for i in range(0, pts.size() - 1):   # ook de uitrit zelf (van het dock naar het eerste wegpunt)
+		var a: Vector2 = pts[i]
+		var b: Vector2 = pts[i + 1]
+		var n := maxi(1, int(a.distance_to(b) / 1.5))
+		for k in n + 1:
+			var p: Vector2 = a.lerp(b, float(k) / float(n))
+			for o in obs:
+				var local: Vector2 = (p - (o[0] as Vector2)).rotated(float(o[1]))
+				var half: Vector2 = o[2]
+				if absf(local.x) <= half.x and absf(local.y) <= half.y:
+					return String(o[3])
+	return ""
+
+
+## Maakt de weg vrij voor een rit (bomen, struiken, varens, gras en rotsen langs de route) en draait de stapel naar de kant waar de truck vandaan komt.
+## Doet niets buiten de MCV-modus (daar liggen vaste wegen) en maar één keer per weg.
+func prepare_trip(d: Dictionary, slot: int) -> void:
+	if slot < 0 or stapels[slot] == null:
+		return
+	var s: VoorraadStapel = stapels[slot]
+	var pts := route(d, slot)
+	if pts.size() >= 2 and _owner_of("stapel:" + String(s.site.id)) == null:
+		var from: Vector2 = pts[pts.size() - 2]
+		var f: Vector2 = from - (s.site.pos as Vector2)
+		if f.length() > 0.1:
+			s.rotation.y = atan2(f.x, f.y)
+	var key := "mcv:%s:%s" % [depot_key(d), String(s.site.id)]
+	if _roads.has(key) and is_instance_valid(_roads[key]):
+		return
+	var holder := Node3D.new()
+	holder.name = "Weg_" + key.replace(":", "_")
+	add_child(holder)
+	_roads[key] = holder
+	var regions: Array = []
+	for i in range(0, pts.size() - 1):
+		var a: Vector2 = pts[i]
+		var b: Vector2 = pts[i + 1]
+		if a.distance_to(b) < 0.5:
+			continue
+		regions.append({"name": "weg", "center": (a + b) * 0.5, "size": Vector2(a.distance_to(b) + 2.0, ROAD_W), "yaw": -atan2((b - a).y, (b - a).x)})
+	holder.set_meta("cleared", Foliage.clear_for_building(holder.get_instance_id(), regions, Vector3.ZERO, 0.0, 0.5, true))
 
 
 ## Twee wegpunten die vlak bij elkaar liggen (bv. het eind van de poortas en het begin van het bospad, 1,5 m) worden één punt, in het midden. Zo is de
@@ -551,19 +674,161 @@ func truck_lost(_t: VoorraadTruck) -> void:
 
 
 func set_dest(b: Dictionary, slot: int) -> void:
+	if slot >= 0 and slot < SLOTS and stapels[slot] != null:
+		var why := blocked_by(b, slot)
+		if why != "":
+			Game.banner.emit("WEG VERSPERD", why, 2.4)
+			return
 	b["dest"] = slot
 	Game.changed.emit()
+
+
+# ---------------------------------------------------------------- het wegdek van de uitrit
+
+const ROAD_TAIL := 8.0          # m: het wegdek loopt zoveel voorbij het laatste punt (de poort of het eind van de uitrit) in de richting van de bestemming
+
+## Elk depot krijgt zijn wegdek (donker asfalt met een onderbroken middenstreep en randlijnen): de uitrit en, per bestemming, de weg tot en door de poort.
+## Zo zie je waar de trucks rijden en waar niets mag staan. Het wegdek verdwijnt met het depot en past zich aan als de muren, poorten of het depot veranderen.
+func _sync_stems() -> void:
+	var live := {}
+	for b in depots():
+		if b.down or not Game.buildings.has(b):
+			continue
+		var key := depot_key(b)
+		live[key] = true
+		var branches := road_branches(b)
+		var sig := str(float(b.yaw)) + "|" + str(branches.map(func(br): return (br as Array).map(func(q): return Vector2(snappedf(q.x, 0.1), snappedf(q.y, 0.1)))))
+		var cur: Variant = _stems.get(key)
+		if cur != null and is_instance_valid(cur.node) and String(cur.sig) == sig:
+			continue
+		if cur != null and is_instance_valid(cur.node):
+			(cur.node as Node).queue_free()
+		var node := _road_node(b, branches)
+		add_child(node)
+		_stems[key] = {"node": node, "sig": sig}
+		if b.has("node") and is_instance_valid(b.node):   # bomen, struiken en rotsen op het wegdek verdwijnen (samen met het stuk onder het depot zelf)
+			var sz: Vector3 = Buildings.DEFS["depot"].size
+			var regions: Array = [{"name": "depot", "center": Vector2.ZERO, "size": Vector2(sz.x, sz.z), "yaw": 0.0}]
+			var world_regions: Array = []
+			for br: Array in branches:
+				for i in range(0, br.size() - 1):
+					var p0: Vector2 = br[i]
+					var p1: Vector2 = br[i + 1]
+					if p0.distance_to(p1) < 0.5:
+						continue
+					world_regions.append({"name": "weg", "center": (p0 + p1) * 0.5, "size": Vector2(p0.distance_to(p1) + 2.0, STEM_W + 1.0), "yaw": -atan2((p1 - p0).y, (p1 - p0).x)})
+			Foliage.clear_for_building((b.node as Node).get_instance_id(), regions, Vector3(b.at.x, 0.0, b.at.z), float(b.yaw), Foliage.BUILD_CLEAR_MARGIN, true)
+			Foliage.clear_for_building(node.get_instance_id(), world_regions, Vector3.ZERO, 0.0, 0.25, true)
+	for key in _stems.keys().duplicate():
+		if not live.has(key):
+			var gone: Variant = _stems[key]
+			if is_instance_valid(gone.node):
+				(gone.node as Node).queue_free()
+			_stems.erase(key)
+
+
+## De wegen van een depot als lijsten punten (Vector2, wereld): elke lijst begint bij het dock en loopt over de uitrit, een eventuele lus en de poort naar een
+## bestemming. Bestemmingen met dezelfde weg staan er één keer in; geblokkeerde bestemmingen niet. Zonder bestemming: alleen de uitrit.
+func road_branches(d: Dictionary) -> Array:
+	var out: Array = []
+	var seen := {}
+	for i in SLOTS:
+		if stapels[i] == null or blocked_by(d, i) != "":
+			continue
+		var site: Dictionary = stapels[i].site
+		var mids := _route_mids(site)
+		var goal: Vector2 = mids[0] if not mids.is_empty() else site.pos
+		var pts: Array = _route_head(d, goal)
+		var last: Vector2 = pts[pts.size() - 1]
+		var dir := (goal - last)
+		if dir.length() > 0.5:
+			pts.append(last + dir.normalized() * ROAD_TAIL)
+		var sig := str(pts.map(func(q): return Vector2(snappedf(q.x, 0.1), snappedf(q.y, 0.1))))
+		if not seen.has(sig):
+			seen[sig] = true
+			out.append(pts)
+	if out.is_empty():
+		var front := Vector2(sin(float(d.yaw)), cos(float(d.yaw)))
+		var k := pre_dock_point(d)
+		out.append([dock_point(d), k, k + front * 3.0])
+	return out
+
+
+## Het wegdek: een lint langs de (afgeronde) weg, breed STEM_W, met randlijnen en een onderbroken middenstreep. Het gedeelde stuk (de uitrit) wordt maar één
+## keer getekend. Alles staat op wereldcoördinaten.
+func _road_node(d: Dictionary, branches: Array) -> MeshInstance3D:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var front := Vector2(sin(float(d.yaw)), cos(float(d.yaw)))
+	var start: Vector2 = (branches[0][0] as Vector2) - front * (DOCK_OFFSET + 0.4)   # een stuk onder de voorkant van het depot
+	var stem_len := start.distance_to(branches[0][1])
+	for bi in branches.size():
+		var raw: Array = [start]
+		raw.append_array(branches[bi])
+		var poly: Array = VoorraadBaan._clean(raw[0], raw.slice(1))
+		if poly.size() < 2:
+			continue
+		var leg: VoorraadBaan.Leg = VoorraadBaan._bochten(poly)
+		if leg == null or leg.length < 1.0:
+			continue
+		var u0 := 0.0 if bi == 0 else stem_len + 1.0   # de volgende wegen delen de uitrit met de eerste
+		var u := u0
+		var prev_c := Vector2.ZERO
+		var prev_n := Vector2.ZERO
+		var have_prev := false
+		while u <= leg.length:
+			var pc: Vector2 = leg.pos(u)
+			var h: float = leg.head(u)
+			var n := Vector2(cos(h), -sin(h))   # rechts van de rijrichting
+			if have_prev:
+				_band(st, prev_c, prev_n, pc, n, -STEM_W * 0.5, STEM_W * 0.5, 0.035, Color(0.17, 0.17, 0.16))
+				var e := STEM_W * 0.5 - 0.45
+				for sg in [-1.0, 1.0]:   # randlijnen
+					_band(st, prev_c, prev_n, pc, n, sg * e - 0.07, sg * e + 0.07, 0.045, Color(0.62, 0.6, 0.55))
+				if fmod(u, 3.4) < 1.6:   # onderbroken middenstreep
+					_band(st, prev_c, prev_n, pc, n, -0.07, 0.07, 0.045, Color(0.78, 0.7, 0.4))
+			prev_c = pc
+			prev_n = n
+			have_prev = true
+			u += 0.7
+	var mat := StandardMaterial3D.new()
+	mat.vertex_color_use_as_albedo = true
+	mat.roughness = 0.96
+	mat.metallic_specular = 0.1
+	var mi := MeshInstance3D.new()
+	mi.mesh = st.commit()
+	mi.material_override = mat
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	mi.add_to_group("uitrit")
+	return mi
+
+
+## Een band langs de weg tussen twee punten (met hun rechterkant n): van x0 tot x1 dwars op de weg (negatief = links), op hoogte y.
+func _band(st: SurfaceTool, c0: Vector2, n0: Vector2, c1: Vector2, n1: Vector2, x0: float, x1: float, y: float, col: Color) -> void:
+	st.set_color(col)
+	st.set_normal(Vector3.UP)
+	var a := c0 + n0 * x0   # begin, links
+	var b := c0 + n0 * x1   # begin, rechts
+	var c := c1 + n1 * x1   # eind, rechts
+	var d := c1 + n1 * x0   # eind, links
+	for v in [a, b, c, a, c, d]:
+		st.add_vertex(Vector3(v.x, y, v.y))
 
 
 # ---------------------------------------------------------------- vijanden schieten op trucks
 
 func _physics_process(delta: float) -> void:
+	for b in depots():
+		if b.get("gratis_truck", false) and not Buildings.under_construction(b) and not b.down:
+			b["gratis_truck"] = false   # het gratis depot is klaar: de eerste truck is gratis
+			_pending.append(b)
 	if not _pending.is_empty():
 		_service_pending()
 	_tick -= delta
 	if _tick > 0.0:
 		return
 	_tick = 0.5
+	_sync_stems()
 	if Game.state != "play":
 		return
 	for t in get_tree().get_nodes_in_group("voorraadtruck"):

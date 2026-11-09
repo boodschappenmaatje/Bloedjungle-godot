@@ -1,7 +1,7 @@
 extends SceneTree
-## Test: granaat richten met slepen en loslaten op de granaatknop (echte touch-events, zoals op de iPhone).
+## Test: GRANAAT kiezen via uitrustingswiel, daarna rechterstick richten en bij loslaten gooien.
 ## - landt op de richtcirkel (2-12 m, 8 richtingen) en rolt nauwelijks door
-## - verder slepen dan het maximum blijft 12 m, terugslepen naar de knop breekt af, tikken gooit 7 m vooruit
+## - maximaal 12 m, terug naar stickmidden of tik zonder beweging annuleert zonder munitieverbruik
 ## - een auto in de baan maakt de cirkel rood en houdt de granaat tegen
 ## - in een gebouw blijft de cirkel binnen het gebouw
 ## Draaien: godot --headless --path . -s tests/granaat_richten_test.gd --fixed-fps 60
@@ -30,37 +30,63 @@ func _frames(n: int) -> void:
 		await physics_frame
 
 
-func _touch(pressed: bool, at: Vector2) -> void:
+func _touch_pointer(pointer: int, pressed: bool, at: Vector2) -> void:
 	var e := InputEventScreenTouch.new()
-	e.index = 0
+	e.index = pointer
 	e.position = root.get_final_transform() * at   # schermpunt: de HUD is geschaald (content_scale_factor)
 	e.pressed = pressed
 	root.push_input(e)
 
 
-func _drag(at: Vector2) -> void:
+func _drag_pointer(pointer: int, at: Vector2) -> void:
 	var e := InputEventScreenDrag.new()
-	e.index = 0
-	e.position = root.get_final_transform() * at   # schermpunt: de HUD is geschaald (content_scale_factor)
+	e.index = pointer
+	e.position = root.get_final_transform() * at
 	root.push_input(e)
 
 
-## Sleept van de knop naar d (in px) en laat los; geeft de nieuwe granaat terug.
+func _touch(pressed: bool, at: Vector2) -> void:
+	_touch_pointer(0, pressed, at)
+
+
+func _drag(at: Vector2) -> void:
+	_drag_pointer(0, at)
+
+
+## `d` gebruikt het bestaande AIM_FULL-bereik; de stick zelf is 56px.
+func _stick_center() -> Vector2:
+	return main.get_node("Hud/Sticks")._anchor(true)
+
+
+## Read live script constants only AFTER the game's autoloads are initialized.
+## Referencing class_name TouchSticks/WheelArt/ActionBtn in a SceneTree test
+## eagerly compiles dependent UI classes before Game/Sfx and breaks imports.
+func _stick_value(key: String) -> float:
+	var script: Script = main.get_node("Hud/Sticks").get_script()
+	return float(script.get_script_constant_map().get(key))
+
+
+func _wheel_value(key: String) -> float:
+	var script: Script = load("res://scripts/wheel_art.gd")
+	return float(script.get_script_constant_map().get(key))
+
+
 func _throw(d: Vector2, steps := 4):
-	var c: Vector2 = btn.get_global_rect().get_center()
+	cb._select_wheel("equipment", 0)
+	var c: Vector2 = _stick_center()
+	var offset: Vector2 = d.limit_length(float(cb.AIM_FULL)) * (_stick_value("STICK_R") / float(cb.AIM_FULL))
 	_touch(true, c)
 	await _frames(1)
 	for i in steps:
-		_drag(c + d * float(i + 1) / steps)
+		_drag(c + offset * float(i + 1) / steps)
 		await _frames(1)
 	var before: Array = _grenades()
-	_touch(false, c + d)
+	_touch(false, c + offset)
 	await _frames(1)
 	for g in _grenades():
 		if not before.has(g):
 			return g
 	return null
-
 
 func _grenades() -> Array:
 	var out := []
@@ -115,6 +141,58 @@ func _run() -> void:
 	game.equipment_sel = "grenade"
 	game.changed.emit()
 	await _frames(2)
+	# Tap the ACTUAL picker: this must open a wheel, never throw.
+	var initial: int = game.grenades
+	var button_center: Vector2 = btn.get_global_rect().get_center()
+	_touch(true, button_center)
+	await _frames(1)
+	_touch(false, button_center)
+	await _frames(2)
+	_check(cb.wheel_is_open(), "aparte UITRUSTING-knop opent het wiel")
+	_check(game.grenades == initial, "uitrustingswiel openen gooit niets")
+	var wc: Vector2 = cb._wheel_center()
+	var north := wc + Vector2(0, -(_wheel_value("INNER") + _wheel_value("OUTER")) * 0.5)
+	_touch(true, north)
+	await _frames(1)
+	_touch(false, north)
+	await _frames(1)
+	_check(not cb.wheel_is_open() and cb.grenade_stick_armed, "GRANAAT-keuze sluit wiel en activeert rechterstick")
+	_check(game.grenades == initial, "GRANAAT kiezen verbruikt geen granaat")
+	cb.cancel_grenade_stick()
+	var weapon_bar: Control = get_first_node_in_group("weapon_strip")
+	var right_anchor: Vector2 = _stick_center()
+	_check(btn.get_global_rect().end.y < (weapon_bar.get("_prev") as Control).get_global_rect().position.y, "UITRUSTING-knop staat boven wapenbalk")
+	_check(btn.get_global_rect().get_center().distance_to(right_anchor) > _stick_value("ANCHOR_R") + btn.size.x * 0.5, "UITRUSTING-knop raakt rechterstick niet")
+
+	# An already-held walking finger must keep working AND be released while
+	# the equipment wheel is open. In the previous code the wheel consumed
+	# this release, leaving the character walking with no finger on screen.
+	var sticks = main.get_node("Hud/Sticks")
+	var left_center: Vector2 = sticks._anchor(false)
+	_touch_pointer(3, true, left_center)
+	await _frames(1)
+	_drag_pointer(3, left_center + Vector2(35, -12))
+	await _frames(1)
+	_check(sticks.owns_touch(3), "linkervinger wordt door loopstick geregistreerd")
+	_touch(true, button_center)
+	await _frames(1)
+	_touch(false, button_center)
+	await _frames(1)
+	_check(cb.wheel_is_open(), "uitrustingswiel opent terwijl lopen vastgehouden wordt")
+	_drag_pointer(3, left_center + Vector2(30, -20))
+	await _frames(1)
+	sticks._process(1.0 / 60.0)
+	_check(sticks.owns_touch(3) and game.move.length() > 0.1, "lopen blijft bestuurbaar met geopend wiel")
+	_touch_pointer(3, false, left_center + Vector2(30, -20))
+	await _frames(1)
+	sticks._process(1.0 / 60.0)
+	_check(not sticks.owns_touch(3) and game.move.length() < 0.01, "loslaten tijdens open wiel stopt lopen zonder ghost-stick")
+	var dismiss: Vector2 = cb._wheel_center() + Vector2(_wheel_value("OUTER") + 32.0, 0)
+	_touch(true, dismiss)
+	await _frames(1)
+	_touch(false, dismiss)
+	await _frames(1)
+	_check(not cb.wheel_is_open() and game.grenades == initial, "wiel sluiten zonder ongewenste uitrustingskeuze")
 
 	# 1. raakt de richtcirkel, 8 richtingen, 2-12 m
 	var worst_land := 0.0
@@ -146,49 +224,57 @@ func _run() -> void:
 	var r2: Dictionary = await _follow(g2)
 	_check(absf(_flat(r2.land, spot) - 12.0) < 0.6, "maximaal bereik 12 m (landt op %.2f m)" % _flat(r2.land, spot))
 
-	# 3. terugslepen naar de knop breekt af
+	# 3. Drag from right stick then return to center: cancel, no inventory.
 	p.grenade_cd = 0.0
 	await _frames(2)
 	var n0: int = game.grenades
-	var c: Vector2 = btn.get_global_rect().get_center()
+	var c: Vector2 = _stick_center()
+	cb._select_wheel("equipment", 0)
 	_touch(true, c)
 	await _frames(1)
-	_drag(c + Vector2(-80, -40))
+	_drag(c + Vector2(-40, -20))
 	await _frames(1)
-	_check(cb._aim_vis != null and cb._aim_vis.visible, "tijdens slepen staat de boog met richtcirkel in beeld")
+	_check(cb._aim_vis != null and cb._aim_vis.visible, "rechterstick toont bestaande boog en explosiecirkel")
+	_check(not game.fire, "rechterstick in granaatmodus vuurt geen kogels af")
 	_drag(c + Vector2(4, 3))
 	await _frames(1)
 	_touch(false, c + Vector2(4, 3))
 	await _frames(2)
-	_check(game.grenades == n0 and _grenades().is_empty(), "terugslepen naar de knop gooit niet")
-	_check(cb._aim_vis == null, "na afbreken is de richthulp weg")
+	_check(game.grenades == n0 and _grenades().is_empty(), "stick naar midden annuleert zonder verbruik")
+	_check(cb._aim_vis == null and not cb.grenade_stick_armed, "annuleren herstelt normale besturing")
 
-	# 4. alleen tikken: 7 m recht vooruit
+	# 4. Only pressing/releasing at the center is NOT a 7m auto-throw.
 	p.global_position = spot
-	p.face = PI   # naar het noorden
+	p.face = PI
 	p.grenade_cd = 0.0
 	await _frames(2)
 	var g4 = await _throw(Vector2.ZERO, 0)
-	var r4: Dictionary = await _follow(g4)
-	_check(g4 != null and absf(_flat(r4.land, spot) - 7.0) < 0.8, "tikken gooit 7 m vooruit (%.2f m)" % _flat(r4.land, spot))
+	_check(g4 == null and game.grenades == n0, "stick-tik zonder richting gooit geen granaat")
+	_check(not cb.grenade_stick_armed, "stick-loslaten herstelt schietbesturing")
 
 	# 5. auto in de baan: rode cirkel en de granaat komt er niet overheen
 	var cp: Vector3 = car.global_position
 	p.global_position = cp + Vector3(-4.5, 0, 0)
 	p.grenade_cd = 0.0
 	await _frames(2)
+	cb._select_wheel("equipment", 0)
+	var drive: Vector2 = Vector2(_px_for(9.0), 0) * (_stick_value("STICK_R") / float(cb.AIM_FULL))
 	_touch(true, c)
 	await _frames(1)
-	_drag(c + Vector2(_px_for(9.0), 0))
+	_drag(c + drive)
 	await _frames(1)
-	_check(cb._aim_vis != null and cb._aim_vis.blocked, "auto tussen speler en doel: richtcirkel wordt rood")
+	_check(cb._aim_vis != null and cb._aim_vis.blocked, "auto in baan maakt bestaande richtcirkel rood")
 	var before: Array = _grenades()
-	_touch(false, c + Vector2(_px_for(9.0), 0))
+	_touch(false, c + drive)
 	await _frames(1)
 	var g5 = null
 	for g in _grenades():
 		if not before.has(g):
 			g5 = g
+	_check(g5 != null, "rechterstick loslaten gooit na gerichte beweging één granaat")
+	if g5 == null:
+		quit(1)
+		return
 	var r5: Dictionary = await _follow(g5)
 	_check(g5 != null and r5.rest.x < cp.x + 1.5, "granaat vliegt niet over de auto (x %.2f, auto %.2f)" % [r5.rest.x, cp.x])
 
@@ -208,6 +294,37 @@ func _run() -> void:
 			if not h._in_foot(h.to_local(aim.target), -0.3):
 				ok = false
 		_check(ok, "in een gebouw blijft de richtcirkel binnen het gebouw")
+
+	# 7. A non-owner finger must NEVER release/throw the armed grenade.
+	p.global_position = spot
+	p.grenade_cd = 0.0
+	await _frames(2)
+	cb._select_wheel("equipment", 0)
+	_touch(true, _stick_center())
+	await _frames(1)
+	_drag(_stick_center() + Vector2(25, 0))
+	await _frames(1)
+	var before_multi: int = game.grenades
+	var wrong := InputEventScreenTouch.new()
+	wrong.index = 3
+	wrong.position = root.get_final_transform() * (main.get_node("Hud/Sticks")._anchor(false))
+	wrong.pressed = false
+	root.push_input(wrong)
+	await _frames(1)
+	_check(cb.grenade_stick_armed and game.grenades == before_multi, "loslaten andere vinger gooit niets")
+	# A SECOND fresh finger in the same right-stick zone must not evict the
+	# original owner or leave the armed grenade gesture permanently stuck.
+	var second_right: Vector2 = _stick_center() + Vector2(-8, 8)
+	_touch_pointer(2, true, second_right)
+	await _frames(1)
+	_check(sticks.owns_touch(0) and not sticks.owns_touch(2) and cb.aim_finger == 0, "tweede rechtervinger verdringt originele werpvinger niet")
+	_touch_pointer(2, false, second_right)
+	await _frames(1)
+	_check(cb.grenade_stick_armed and game.grenades == before_multi, "tweede rechtervinger kan geen worp vrijgeven")
+	_touch(false, _stick_center() + Vector2(25, 0))
+	await _frames(2)
+	_check(game.grenades == before_multi - 1, "juiste rechterstickvinger gooit exact eenmaal")
+	_check(not cb.grenade_stick_armed, "na worp keert rechterstick naar schieten terug")
 
 	print("GRANAAT_RICHTEN_TEST fouten=", failures)
 	print("TEST OK" if failures == 0 else "TEST MISLUKT")

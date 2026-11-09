@@ -19,9 +19,30 @@ on:
       - "scripts/team_commands.gd"
       - "scripts/team_command_controller.gd"
       - "scripts/touch_sticks.gd"
+      - "scripts/combat_buttons.gd"
+      - "tests/granaat_richten_test.gd"
       - "scripts/grote_kaart.gd"
       - "scripts/route.gd"
       - "assets/vijand_hk.glb"
+      - "assets/vijand_m2_toren.glb"
+      - "scripts/vijand_m2_toren.gd"
+      - "scripts/jeep.gd"
+      - "scripts/player.gd"
+      - "scripts/camera_rig.gd"
+      - "scripts/vijand_verdediger.gd"
+      - "tests/jeep_m2_schutter_test.gd"
+      - "tests/combat_feedback_test.gd"
+      - "tests/combat_infantry_feedback_test.gd"
+      - "tests/combat_bazooka_aim_test.gd"
+      - "scripts/bazooka_aim_feedback.gd"
+      - "scripts/player.gd"
+      - "scripts/combat_target_hud.gd"
+      - "scripts/combat_aim_feedback.gd"
+      - "scripts/bullet.gd"
+      - "tests/jeep_respawn_feedback_test.gd"
+      - "scenes/vijand_verdediger.tscn"
+      - "tests/vijand_m2_toren_test.gd"
+      - "tests/vijand_m2_articulatie_test.gd"
       - "tests/vijand_basis_test.gd"
       - "tests/vijand_hk_test.gd"
       - "tests/aanval_basis_test.gd"
@@ -46,9 +67,16 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          curl --fail --location --retry 3 --connect-timeout 30 \
+          # GitHub's release asset CDN occasionally responds with 504 during CI.
+          # Both URLs are official Godot mirrors; retry each before aborting.
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 3 --connect-timeout 30 --max-time 600 \
+            "https://github.com/godotengine/godot/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
+            -o godot.zip || \
+          curl --fail --location --retry 6 --retry-all-errors --retry-delay 3 --connect-timeout 30 --max-time 600 \
             "https://github.com/godotengine/godot-builds/releases/download/4.7.2-stable/Godot_v4.7.2-stable_linux.x86_64.zip" \
             -o godot.zip
+          test -s godot.zip
+          unzip -tq godot.zip
           unzip -q godot.zip -d .godot-runner
           chmod +x .godot-runner/Godot_v4.7.2-stable_linux.x86_64
           .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --version
@@ -65,6 +93,48 @@ jobs:
           grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/vijand.log" | tail -n 40 || true
           tail -n 15 "$RUNNER_TEMP/vijand.log"
           exit "$RC"
+      - name: M2HB visuele pivots en bemanning
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 120 "$GODOT" --headless --path . --script tests/vijand_m2_articulatie_test.gd
+          timeout 120 "$GODOT" --headless --path . --script tests/vijand_m2_toren_test.gd --fixed-fps 60
+      - name: Jeep MG versus torenschutter (echt kogelcontact en dekking)
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 180 "$GODOT" --headless --path . --script tests/jeep_m2_schutter_test.gd --fixed-fps 60
+          timeout 180 "$GODOT" --headless --path . --script tests/combat_feedback_test.gd --fixed-fps 60
+          timeout 180 "$GODOT" --headless --path . --script tests/combat_infantry_feedback_test.gd --fixed-fps 60
+          timeout 180 "$GODOT" --headless --path . --script tests/combat_bazooka_aim_test.gd --fixed-fps 60
+      - name: Granaat via rechterstick — echte iPhone touch events
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 360 "$GODOT" --headless --path . --script tests/granaat_richten_test.gd --fixed-fps 60 --quit-after 15000 2>&1 | tee "$RUNNER_TEMP/granaat_richten_test.log"
+          grep -Fq "TEST OK" "$RUNNER_TEMP/granaat_richten_test.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|TEST MISLUKT' "$RUNNER_TEMP/granaat_richten_test.log"; then exit 1; fi
+      - name: Jeep sterfte respawn en torenschutter trefeffecten
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 180 "$GODOT" --headless --path . --script tests/jeep_respawn_feedback_test.gd --fixed-fps 60
+      - name: Bestaande speler respawn blijft werken
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 120 "$GODOT" --headless --path . --script tests/respawn_test.gd --fixed-fps 60
+      - name: Bestaande voertuigwapens blijven werken
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 240 "$GODOT" --headless --path . --script tests/auto_wapens_test.gd --fixed-fps 60
       - name: Vijand-hoofdkwartier- en groepentest
         shell: bash
         run: |

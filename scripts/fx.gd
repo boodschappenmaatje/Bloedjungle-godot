@@ -1208,11 +1208,8 @@ static func _crater_ok(pos: Vector3) -> bool:
 		return false
 	if absf(pos.z - Data.river_z(pos.x)) < Data.RIVER_HALF + 2.5:
 		return false  # rivier en brug
-	var c := Data.COMPOUND
-	if maxf(absf(pos.x), absf(pos.z)) < Data.BUNKER_HALF + 1.5:
-		return false  # de bunker
-	if absf(maxf(absf(pos.x), absf(pos.z)) - c) < 2.0 and minf(absf(pos.x), absf(pos.z)) < c + 1.0:
-		return false  # tegen de muur
+	if maxf(absf(pos.x - Game.base_pos.x), absf(pos.z - Game.base_pos.z)) < Data.BUNKER_HALF + 1.5:
+		return false  # het hoofdkwartier
 	if Game.builds != null:
 		for b in Game.buildings:
 			var sz: Vector3 = Game.builds.DEFS[b.kind].size

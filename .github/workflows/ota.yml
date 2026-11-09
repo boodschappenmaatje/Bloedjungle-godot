@@ -7,12 +7,20 @@ name: OTA update patch
 #    en laadt ze bij elke start (scripts/ota_keten.gd).
 #  - BRUG: een piepkleine patch met alleen het nieuwe updatescherm, voor apps met de oude updater in de IPA (die geeft downloads maar 30 s).
 # De splitsing staat in tools/ota_presets.py (twee extra exportpresets); zie ota/README.md.
+# OTA publication trigger: approved Base Wall HQ2 berm fix (PR #236, merged as 461a31fa).
 
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish verified OTA assets to the updates release"
+        type: boolean
+        required: true
+        default: false
   pull_request:
     paths:
       - "scripts/**"
+      - "assets/vijand_m2_toren.glb"
       - "tools/ota_*"
       - "tests/ota_*"
       - "export_presets.cfg"
@@ -43,7 +51,9 @@ jobs:
           set -euo pipefail
           VERSION=4.7.2
           curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 900 \
-            "https://github.com/godotengine/godot/releases/download/${VERSION}-stable/Godot_v${VERSION}-stable_linux.x86_64.zip" --output "$RUNNER_TEMP/godot.zip"
+            "https://github.com/godotengine/godot/releases/download/${VERSION}-stable/Godot_v${VERSION}-stable_linux.x86_64.zip" --output "$RUNNER_TEMP/godot.zip" || \
+          curl --fail --location --retry 5 --retry-all-errors --retry-delay 2 --connect-timeout 30 --max-time 900 \
+            "https://downloads.godotengine.org/?version=${VERSION}&flavor=stable&slug=linux.x86_64.zip&platform=linux.64" --output "$RUNNER_TEMP/godot.zip"
           unzip -tq "$RUNNER_TEMP/godot.zip"
           mkdir -p "$RUNNER_TEMP/godot"
           unzip -q "$RUNNER_TEMP/godot.zip" -d "$RUNNER_TEMP/godot"
@@ -207,14 +217,14 @@ jobs:
               f.write("\n".join([brug["naam"], licht["naam"]] + [p["naam"] for p in keten]) + "\n")
           PY
       - name: Preview the OTA files (PR only; never published)
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' || (github.event_name == 'workflow_dispatch' && !inputs.publish)
         uses: actions/upload-artifact@v4
         with:
           name: ota-preview-${{ github.sha }}
           path: out/
           retention-days: 7
       - name: Publish to the "updates" release
-        if: github.event_name != 'pull_request'
+        if: (github.event_name == 'push' && !contains(github.event.head_commit.message, '[skip-ota-publish]')) || (github.event_name == 'workflow_dispatch' && inputs.publish)
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}

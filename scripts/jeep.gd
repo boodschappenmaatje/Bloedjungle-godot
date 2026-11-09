@@ -19,6 +19,11 @@ const FIRE_RATE := 0.1      # s tussen kogels
 const DAMAGE := 9.0
 const BOARD_DIST := 4.5     # m: dichterbij dan dit toont de knop INSTAPPEN
 const RAM_DAMAGE := 40.0
+# Only when the driver puts the right stick on an exposed tower gunner.
+# Normal ground-level jeep fire remains manual and unchanged.
+const GUNNER_ASSIST_CONE := 0.065         # ~3.7 degrees, no wide auto-lock
+const GUNNER_ASSIST_RANGE := 39.0        # bullet travels 40.5 m horizontally
+const GUNNER_MAX_ELEVATION := 0.56       # ~= 29 degrees upward
 
 var driven := false
 var goals: Array = []  # Vector3-punten waar hij zelf naartoe rijdt (uit de garage); leeg = geparkeerd
@@ -30,6 +35,8 @@ var _t := 0.0
 var _cool := 0.0
 var _ram_cd := 0.0
 var _firing := false
+var _aim_preview_t := 0.0
+const AIM_PREVIEW_INTERVAL := 0.085  # ~12 ray previews/sec on native iPhone
 var _night := false
 var _head_mat: StandardMaterial3D
 var _tail_mat: StandardMaterial3D
@@ -114,19 +121,11 @@ func _build_button() -> void:
 
 func _toggle() -> void:
 	var p = Game.player
+	# Input must not let a dead player board or re-board the jeep.
 	if p == null or p.dead:
 		return
 	if driven:
-		driven = false
-		p.driving = false
-		p.visible = true
-		var side := global_transform.basis.x
-		p.global_position = global_position - side * 1.9
-		p.global_position.y = 0.0
-		p.collision_mask = p.get("_mask0")
-		_btn.kind = "enter"
-		_btn.set_caption("IN")
-		_btn.queue_redraw()
+		_disembark(p)
 	else:
 		driven = true
 		goals.clear()
@@ -139,13 +138,32 @@ func _toggle() -> void:
 		_btn.queue_redraw()
 
 
+## Death is not a manual button press. _toggle() refuses dead players, so
+## calling it from _physics_process left driven=true and pulled the player
+## back to the jeep every frame even after Player.respawn() moved them home.
+func _disembark(p) -> void:
+	driven = false
+	p.driving = false
+	p.visible = true
+	var side := global_transform.basis.x
+	p.global_position = global_position - side * 1.9
+	p.global_position.y = 0.0
+	p.collision_mask = p.get("_mask0")
+	p.velocity = Vector3.ZERO
+	_set_firing(false)
+	if _btn != null:
+		_btn.kind = "enter"
+		_btn.set_caption("IN")
+		_btn.queue_redraw()
+
+
 func _physics_process(delta: float) -> void:
 	_t += delta
 	_ram_cd -= delta
 	var p = Game.player
 	var live: bool = Game.state == "play" or Game.state == "prep"
 	if p != null and p.dead and driven:
-		_toggle()
+		_disembark(p)
 	if _btn:
 		var near: bool = p != null and not p.dead and live and (driven or p.global_position.distance_to(global_position) < BOARD_DIST)
 		_btn.visible = near
@@ -158,6 +176,7 @@ func _physics_process(delta: float) -> void:
 		_aim_driven(delta, live)
 		_ram()
 	else:
+		_clear_aim_preview()
 		_aim_auto(delta)
 
 
@@ -251,12 +270,52 @@ func _aim_driven(delta: float, live: bool) -> void:
 	var d := wrapf(local - _gun.rotation.y, -PI, PI)
 	_gun.rotation.y += clampf(d, -GUN_TURN_DRIVEN * delta, GUN_TURN_DRIVEN * delta)
 	_cool -= delta
+	_update_aim_preview(delta, live)
 	var shoot: bool = live and Game.fire and absf(d) < 0.35
 	if shoot and _cool <= 0.0:
 		_cool = FIRE_RATE
 		var fwd := -_gun.global_transform.basis.z
-		_shoot(atan2(fwd.x, fwd.z) + randf_range(-0.05, 0.05))
+		var angle := atan2(fwd.x, fwd.z)
+		var solution := _tower_gunner_solution(_monding.global_position, angle)
+		if not solution.is_empty():
+			# A narrow, line-of-sight-only correction. Never shoot through cover.
+			_shoot(float(solution.angle) + randf_range(-0.008, 0.008), float(solution.rise))
+		else:
+			_shoot(angle + randf_range(-0.05, 0.05))
 	_set_firing(shoot)
+
+
+## A non-authoritative preview of the SAME MG direction and existing narrow
+## gunner assist. Bullet._physics_process alone decides whether a hit occurred.
+func _update_aim_preview(delta: float, live: bool) -> void:
+	var hud := get_tree().get_first_node_in_group("combat_target_hud") as CombatTargetHud
+	if hud == null:
+		return
+	if not live or is_nan(Game.aim) or Game.build_mode:
+		hud.clear_prediction("jeep")
+		_aim_preview_t = 0.0
+		return
+	_aim_preview_t -= delta
+	if _aim_preview_t > 0.0:
+		return
+	_aim_preview_t = AIM_PREVIEW_INTERVAL
+	var from := _monding.global_position
+	var fwd := -_gun.global_transform.basis.z
+	var angle := atan2(fwd.x, fwd.z)
+	var rise := 0.0
+	var solution := _tower_gunner_solution(from, angle)
+	if not solution.is_empty():
+		angle = float(solution.angle)
+		rise = float(solution.rise)
+	var data := CombatAimFeedback.predict(get_world_3d().direct_space_state, from, angle, rise)
+	hud.set_prediction(data)
+
+
+func _clear_aim_preview() -> void:
+	var hud := get_tree().get_first_node_in_group("combat_target_hud") as CombatTargetHud
+	if hud != null:
+		hud.clear_prediction("jeep")
+	_aim_preview_t = 0.0
 
 
 ## Geparkeerd of zonder bestuurder schiet de schutter niet: schieten doe je zelf vanuit de jeep.
@@ -266,9 +325,49 @@ func _aim_auto(delta: float) -> void:
 	_set_firing(false)
 
 
-func _shoot(angle: float) -> void:
+## Called only on driver fire. Exposed tower gunners may receive modest 3D aim
+## assistance; all other shots keep the existing flat jeep ballistic path.
+func _tower_gunner_solution(from: Vector3, angle: float) -> Dictionary:
+	var best := INF
+	var result: Dictionary = {}
+	var cover_mask := Bullet.MASK_ENEMY | Bullet.MASK_WALL | Bullet.MASK_BUNKER | Bullet.MASK_NATURE | Bullet.MASK_FORTIFICATION
+	for candidate in get_tree().get_nodes_in_group("vijand_verdediger"):
+		if not is_instance_valid(candidate) or candidate.dead or candidate.post != "schutter":
+			continue
+		if not is_instance_valid(candidate.tower) or candidate.tower.destroyed:
+			continue
+		# Evaluate actual swept ray against the real character capsule and cover.
+		# The upper torso/head is the exposed zone above the 5m tower core.
+		for body_height in [1.55, 1.85]:
+			var point: Vector3 = candidate.global_position + Vector3.UP * body_height
+			var diff := point - from
+			var distance := Vector2(diff.x, diff.z).length()
+			if distance < 5.0 or distance > GUNNER_ASSIST_RANGE or diff.y <= 0.0:
+				continue
+			var rise := diff.y / distance
+			if rise > GUNNER_MAX_ELEVATION:
+				continue
+			var desired := atan2(diff.x, diff.z)
+			var error := absf(wrapf(desired - angle, -PI, PI))
+			if error > GUNNER_ASSIST_CONE:
+				continue
+			var ray := PhysicsRayQueryParameters3D.create(from, point, cover_mask)
+			var hit := get_world_3d().direct_space_state.intersect_ray(ray)
+			if hit.is_empty() or hit.collider != candidate:
+				continue
+			var score := error * 30.0 + distance * 0.005
+			if score < best:
+				best = score
+				result = {"target": candidate, "angle": desired, "rise": rise}
+	return result
+
+
+func _shoot(angle: float, rise := 0.0) -> void:
 	var from := _monding.global_position
-	Bullet.fire(get_parent(), from, angle, 90.0, DAMAGE, 0.45, true, true)
+	# Elevated shots must respect low wall colliders too. Flat fire retains
+	# the legacy over-wall behavior of the raised jeep MG.
+	var shot := Bullet.fire(get_parent(), from, angle, 90.0, DAMAGE, 0.45, true, is_zero_approx(rise), 0, 0.0, 0.0, rise, "jeep_m2")
+	shot.feedback_source = "jeep"
 	Fx.muzzle(get_parent(), from)
 	Fx.casing(get_parent(), from)
 	Sfx.play("mg", 0.4, global_position)

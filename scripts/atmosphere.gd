@@ -100,7 +100,7 @@ void fragment() {
 func apply_settings() -> void:
 	var t: Dictionary = TIMES[GameSettings.get_value("time")]
 	var weather := GameSettings.get_value("weather")
-	var quality := GameSettings.get_value("quality")
+	var quality := Upscaling.effective_quality()
 	var dim := 1.0 if weather == "clear" else (0.6 if weather == "rain" else 0.75)
 	_sun.rotation_degrees = t["rot"]
 	_sun.light_color = Color(t["col"])
@@ -238,8 +238,13 @@ func _apply_quality(q: String) -> void:
 	_env.glow_enabled = c.glow
 	_env.ssao_enabled = c.ssao
 	var vp := get_viewport()
-	vp.scaling_3d_mode = Viewport.SCALING_3D_MODE_BILINEAR  # FSR kan alleen in de zwaarste renderer
-	vp.scaling_3d_scale = c.scale
+	# FXAA alone misses thin Meshy edges at the reduced mobile render resolution.
+	# MSAA covers geometry samples; the terrain shader separately filters texture detail.
+	vp.msaa_3d = Viewport.MSAA_DISABLED if q == "low" else Viewport.MSAA_4X
+	Upscaling.apply_mode(vp)  # MetalFX Spatial op iPhone; FSR en MetalFX Temporal kunnen alleen in Forward+
+	vp.scaling_3d_scale = Upscaling.band().start if Upscaling.active() else c.scale
+	# SMAA is scherper dan FXAA en past bij MetalFX (keuze 5B); met upscaling uit blijft het beeld precies zoals het was
+	vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_SMAA if Upscaling.active() else Viewport.SCREEN_SPACE_AA_FXAA
 	var cam := vp.get_camera_3d()
 	if cam and cam.attributes is CameraAttributesPractical:
 		(cam.attributes as CameraAttributesPractical).dof_blur_far_enabled = c.dof

@@ -35,6 +35,14 @@ var uitlijn_yaw := 0.0
 var _vast: Array = []             # [plaat, index]: de plaat in de haak
 var _lamp_aan := false
 var _lamp_t := 0.0
+var _zwaai: OmniLight3D
+var _flood: SpotLight3D
+var _stof_neer := false
+var _swing := Vector2.ZERO        # kabelslinger (rad, wereldassen x en z)
+var _swing_v := Vector2.ZERO
+var _haak_vorig := Vector3.ZERO
+var _haak_v := Vector3.ZERO
+var _rust_t := 1.0
 
 
 func _ready() -> void:
@@ -70,6 +78,20 @@ func _ready() -> void:
 	for n in [kraan.find_child("Cabine", true, false), kraan.find_child("Onderbouw", true, false)]:
 		if n is MeshInstance3D:
 			(n as MeshInstance3D).cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	_zwaai = OmniLight3D.new()
+	_zwaai.omni_range = 6.0
+	_zwaai.light_color = Color(1.0, 0.55, 0.1)
+	_zwaai.light_energy = 0.0
+	_zwaai.shadow_enabled = false
+	_lamp.add_child(_zwaai)
+	_flood = SpotLight3D.new()
+	_flood.spot_range = 14.0
+	_flood.spot_angle = 50.0
+	_flood.light_color = Color(1.0, 0.93, 0.78)
+	_flood.light_energy = 0.0
+	_flood.shadow_enabled = false
+	_flood.rotation_degrees.x = -90.0
+	_kab.add_child(_flood)
 	transport()
 
 
@@ -80,6 +102,15 @@ func transport() -> void:
 	_gb.position.z = 0.3
 	_gc.position.z = 0.3
 	stempels(0.0, 0.0)
+	_kabel(0.35)
+
+
+## Alleen de giek terug in transportstand (de stempels bewegen apart).
+func transport_giek() -> void:
+	_dr.rotation.y = PI
+	_ga.rotation.x = deg_to_rad(-2.0)
+	_gb.position.z = 0.3
+	_gc.position.z = 0.3
 	_kabel(0.35)
 
 
@@ -97,6 +128,16 @@ func stempels(uit: float, neer: float) -> void:
 		balk.scale.x = maxf(0.05, uit)
 		poot.position.x = float(s.zij) * maxf(0.05, uit)
 		poot.scale.z = maxf(0.05, neer * POOT_LENGTE)
+	if neer >= 0.99 and not _stof_neer and is_inside_tree():
+		_stof_neer = true
+		Sfx.play("thud", 0.8)
+		var host: Node = get_parent().get_parent() if get_parent() != null and get_parent().get_parent() != null else self
+		var grond := global_position.y - BASIS_POS.y
+		for s2 in _stempels:
+			var at: Vector3 = (s2.poot as Node3D).global_position
+			McvFx.puff(host, Vector3(at.x, grond + 0.15, at.z), 1.0, Color(0.6, 0.53, 0.42), 8, 0.9)
+	elif neer < 0.5:
+		_stof_neer = false
 
 
 func _kabel(lengte: float) -> void:
@@ -181,7 +222,41 @@ func _process(delta: float) -> void:
 	if _lamp != null:
 		_lamp_t += delta
 		_lamp.visible = not _lamp_aan or fmod(_lamp_t, 0.8) < 0.4
+	_slinger(delta)
 	if not _vast.is_empty():
 		var p: Node3D = _vast[0]
 		p.global_position = _haak.global_position + Vector3(0.0, -HAAK_NAAR_PLAAT, 0.0)
 		p.global_rotation = Vector3(0.0, lerp_angle(global_rotation.y, uitlijn_yaw, uitlijn), 0.0)
+
+
+## Kabelslinger, werkverlichting en hydrauliekgeluid: reageren op de beweging van de haak.
+func _slinger(delta: float) -> void:
+	if delta <= 0.0 or _haak == null or not is_inside_tree():
+		return
+	var h := (_kab.global_position if _kab != null else _haak.global_position) + Vector3(0.0, _haak.position.y * SCHAAL, 0.0)   # zonder de slinger zelf
+	var v := (h - _haak_vorig) / delta if _haak_vorig != Vector3.ZERO else Vector3.ZERO
+	_haak_vorig = h
+	var a := (v - _haak_v) / delta
+	_haak_v = v
+	var ah := Vector2(clampf(a.x, -12.0, 12.0), clampf(a.z, -12.0, 12.0))
+	# gedempte slinger: de haak blijft een beetje achter bij het versnellen en veert uit
+	_swing_v += (-9.0 * _swing - 1.6 * _swing_v - 0.012 * ah) * delta
+	_swing += _swing_v * delta
+	_swing = _swing.limit_length(0.06)
+	if _kab != null:
+		var r := Vector3(-_swing.y, 0.0, _swing.x)
+		var rot := Basis(r.normalized(), r.length()) if r.length() > 0.00001 else Basis.IDENTITY
+		_kab.global_basis = rot * Basis.from_scale(Vector3.ONE * SCHAAL)
+	# verlichting en geluid
+	var aan := _lamp_aan
+	if _flood != null:
+		_flood.light_energy = lerpf(_flood.light_energy, 2.5 if aan else 0.0, 1.0 - exp(-4.0 * delta))
+	if _zwaai != null:
+		_zwaai.light_energy = 1.8 if (aan and _lamp != null and _lamp.visible) else 0.0
+	var snel := Vector2(v.x, v.z).length() + absf(v.y)
+	if snel > 0.6:
+		if _rust_t > 0.6 and aan:
+			Sfx.play("spuit", 0.35)   # hydrauliek: de giek komt in beweging
+		_rust_t = 0.0
+	else:
+		_rust_t += delta

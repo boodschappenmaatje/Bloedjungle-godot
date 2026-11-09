@@ -202,8 +202,8 @@ static func cell_center(c: Vector2i) -> Vector3:
 
 ## Na het bouwen of verkopen: is de eerste omheining nu compleet? Dan blijft alles wat tot nu toe gratis was gratis en kost elk volgend stuk 50.
 ## Alles binnen de omheining verdwijnt vanzelf (bomen, struiken, gras, stammen, rotsen), waar het ook staat: het vierkant is dan van jou.
-static func clear_inside() -> int:
-	var cells := region()
+static func clear_inside(walls: Dictionary = {}) -> int:
+	var cells := region(walls)
 	if cells.is_empty():
 		return 0
 	var rows := {}   # rij (z) -> de x-cellen in die rij
@@ -347,6 +347,13 @@ static func build(path: Array) -> Dictionary:
 		Sfx.play("thud")
 		Game.changed.emit()
 		check_enclosure()
+	# het getrokken vierkant is van jou: ook als een stuk is overgeslagen (te duur, in de weg) verdwijnt de begroeiing binnen de lijnen
+	if Game.mcv_deployed and path.size() >= 4:
+		var plan := existing()
+		for k in path_edges(path):
+			if not plan.has(k):
+				plan[k] = {"kind": "plan"}
+		clear_inside(plan)
 	return r
 
 

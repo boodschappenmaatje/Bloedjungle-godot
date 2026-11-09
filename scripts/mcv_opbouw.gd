@@ -15,8 +15,13 @@ const PLEIN_DIEP := 7.0         # m: het voorplein komt omhoog uit de grond
 const GRONDLAAG := 0.04         # deel van de hoogte dat er staat voor de eerste plaat
 const WEG_WACHT := 1.6          # s: groen baken, dan zakt de container weg
 const WEG_ZAK := 1.8            # s: de container zakt in de grond
-const DROP_Z := -3.0            # m (hoofdkwartier-lokaal): de platen komen op het voorste deel, binnen het bereik van de kraan
+const DROP_Z := -0.8            # m (hoofdkwartier-lokaal): de platen komen op de kant van de kraan van het gebouw
+const DROP_X := 1.4
 const BEREIK_HOOGTE := 0.65     # deel van de gebouwhoogte tot waar de platen gehesen worden
+const T_STOW := 2.6             # s: de giek zwenkt terug naar de transportstand
+const T_STEMPEL := 2.2          # s: poten omhoog en stempels in
+const VERTREK_ACC := 3.0        # m/s2
+const VERTREK_MAX := 7.0        # m/s
 const DEUR := Vector3(0.0, 0.0, -3.0)   # de ingang van het hoofdkwartier (lokaal): daar lopen de bouwers naar binnen
 
 var _vis: Node3D
@@ -40,6 +45,13 @@ var max_fout := 0.0              # grootste afstand tussen haak en doel (m), voo
 var _zakkend: Array = []         # [plaat, tijd van plaatsen, hoogte]
 var _na_t := -1.0               # s sinds het gebouw klaar is (container weg, bouwers naar binnen)
 var _weg := false
+var _vertrek_t := 0.0
+var _stow_start := Vector3.ZERO
+var _rijdt := false
+var _poten_in := false
+var _afstand := 0.0
+var _snelheid := 0.0
+var vertrokken := false          # de wagen is uit beeld gereden en weg
 var _unfold_start := Vector3.ZERO
 var _banden_af := false
 
@@ -155,7 +167,7 @@ func _plaat_top(i: int) -> float:
 func _drop(i: int) -> Vector3:
 	var hq := get_parent() as Node3D
 	var top := _plaat_top(i)
-	var lokaal := Vector3(-0.9 + 1.8 * float(i % 2), top + 0.1 + McvKraan.HAAK_NAAR_PLAAT, DROP_Z)
+	var lokaal := Vector3(DROP_X + 1.2 * float(i % 2), top + 0.1 + McvKraan.HAAK_NAAR_PLAAT, DROP_Z)
 	return hq.global_transform * lokaal
 
 
@@ -247,7 +259,7 @@ func _plaat_geland(i: int) -> void:
 		_zakkend.append([p, _t, p.global_position.y])   # de plaat zakt in het groeiende gebouw
 	var hq := get_parent() as Node3D
 	var top := _plaat_top(i)
-	var at := hq.global_transform * Vector3(-0.9 + 1.8 * float(i % 2), top + 0.1, DROP_Z)
+	var at := hq.global_transform * Vector3(DROP_X + 1.2 * float(i % 2), top + 0.1, DROP_Z)
 	Sfx.play("thud", 0.9)
 	Sfx.play("click", 1.0)
 	for k in 3:
@@ -409,7 +421,10 @@ func _na(delta: float) -> void:
 		(w.m as SoldierModel).play("lopen")
 		n.position += d.normalized() * 1.7 * delta
 		n.rotation.y = lerp_angle(n.rotation.y, atan2(-d.x, -d.z), 8.0 * delta)
-	if _weg or wagen == null or not is_instance_valid(wagen):
+	if wagen == null or not is_instance_valid(wagen):
+		return
+	if _weg:
+		_vertrek(delta)
 		return
 	if _na_t > WEG_WACHT:
 		var u := clampf((_na_t - WEG_WACHT) / WEG_ZAK, 0.0, 1.0)
@@ -424,3 +439,52 @@ func _na(delta: float) -> void:
 				if is_instance_valid(w.n):
 					(w.n as Node3D).queue_free()
 			_werkers.clear()
+
+
+## Na de bouw: de kraan klapt terug naar de transportstand, de poten gaan omhoog en de wagen rijdt uit beeld; pas dan verdwijnt hij.
+func _vertrek(delta: float) -> void:
+	if vertrokken:
+		return
+	var k: McvKraan = wagen._model.kraan
+	_vertrek_t += delta
+	var t := _vertrek_t
+	if t < T_STOW:
+		if _stow_start == Vector3.ZERO:
+			_stow_start = k.haak_wereld()
+			Sfx.play("spuit", 0.8)
+		var u := smoothstep(0.0, 1.0, t / T_STOW)
+		k.haak_naar(_boog(_stow_start, _unfold_start, u))
+		return
+	if t < T_STOW + T_STEMPEL:
+		if not _poten_in:
+			_poten_in = true
+			k.transport_giek()
+			Sfx.play("gate", 0.8)
+			wagen._model.terug_inklappen()
+		var v := (t - T_STOW) / T_STEMPEL
+		k.stempels(1.0 - smoothstep(0.0, 1.0, clampf((v - 0.4) / 0.6, 0.0, 1.0)), 1.0 - smoothstep(0.0, 1.0, clampf(v / 0.4, 0.0, 1.0)))
+		return
+	if not _rijdt:
+		_rijdt = true
+		k.transport()
+		k.lamp(false)
+		wagen._model.set_schild_omhoog(false)
+		wagen._model.set_baken(0)
+		wagen.collision_layer = 0
+		Sfx.play("thud", 0.8)
+	# de wagen rijdt vooruit (lokaal -Z) het beeld uit
+	_snelheid = minf(_snelheid + VERTREK_ACC * delta, VERTREK_MAX)
+	var dir: Vector3 = -wagen.global_transform.basis.z
+	wagen.global_position += dir * _snelheid * delta
+	_afstand += _snelheid * delta
+	wagen._model.drive(_snelheid, 0.0, delta)
+	Foliage.ram(wagen, _snelheid, 3.0, 5.0)
+	var cam := get_viewport().get_camera_3d()
+	var uit := _afstand > 70.0
+	if not uit and cam != null and _afstand > 8.0:
+		var kop: Vector3 = wagen.global_position + dir * 4.5
+		var staart: Vector3 = wagen.global_position - dir * 4.5
+		uit = not cam.is_position_in_frustum(kop) and not cam.is_position_in_frustum(wagen.global_position) and not cam.is_position_in_frustum(staart)
+	if uit:
+		vertrokken = true
+		wagen.queue_free()

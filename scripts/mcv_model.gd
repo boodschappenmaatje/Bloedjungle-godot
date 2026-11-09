@@ -55,7 +55,7 @@ func _ready() -> void:
 		_wheels.append(n as Node3D)
 	for n in m.find_children("Stuur_*", "Node3D", true, false):
 		_steer.append(n as Node3D)
-	for n in m.find_children("Poot_*", "Node3D", false, false):
+	for n in m.find_children("Poot_*", "Node3D", true, false):
 		_poten.append(n as Node3D)
 	_module = m.find_child("Module", true, false) as Node3D
 	if _module != null:
@@ -144,6 +144,15 @@ func play_uitklappen() -> void:
 		_t_vorig = 0.0
 		set_baken(1)
 		_anim.play("Uitklappen")
+
+
+## De steunpoten gaan weer omhoog (de clip achterstevoren; de container is dan al weg).
+func terug_inklappen() -> void:
+	if _anim != null and _anim.has_animation("Uitklappen"):
+		_gespeeld = true
+		_anim.play("Uitklappen")
+		_anim.seek(6.0, true)
+		_anim.play_backwards("Uitklappen")
 
 
 func uitklappen_klaar() -> bool:

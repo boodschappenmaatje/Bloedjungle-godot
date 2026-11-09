@@ -16,12 +16,18 @@ const FOOT_SIZE := Vector2(14.0, 16.0)
 const RIVER_MARGIN := 12.0   # zo ver moet je minstens van het water blijven om uit te klappen
 const EDGE_MARGIN := 14.0    # en van de rand van de kaart
 const DEPLOY_TIME := 1.4     # s tussen "UITKLAPPEN" en het staan van het hoofdkwartier
-const PARK_Z := -9.6         # m: de wagen rijdt na het uitklappen zo ver naar voren (lokaal -Z) en blijft daar als commandokern staan
+const PARK_X := 8.6          # m: de wagen parkeert zijwaarts naast het hoofdkwartier (lokaal +X), met de kraan op bereik van het gebouw
+const PARK_EIND_Z := -0.45   # m: eindplek van de wagen (lokaal z); de kraan staat dan ongeveer naast het midden van het gebouw
+const KEER_Z := -14.0        # m: de wagen rijdt eerst zo ver naar voren, zwenkt naar de zijkant en zet dan achteruit in
+const PARK_Z := KEER_Z       # voor de plaatscontrole: het verste punt van de route
 const LIFT_T := 1.8           # s: de laadbak kantelt de container omhoog
 const KANTEL := 0.45          # rad (26 graden): zo schuin staat de container als hij van de laadbak glijdt
 const SLIDE_D := 5.5          # m: zo ver rijdt de wagen door terwijl de container eraf glijdt en landt
 const PARK_SPEED := 3.2      # m/s (met zachte start en stop)
-const PARK_REGION := {"name": "wagen", "center": Vector2(0.0, -9.6), "size": Vector2(4.8, 9.6), "yaw": 0.0}
+const PARK_ACHTER := 2.6     # m/s achteruit
+const KEER_WACHT := 0.6      # s: stilstaan voor het achteruitzetten
+const WAGEN_L := 5.5         # m: wielbasis voor de stuurhoek
+const PARK_REGION := {"name": "wagen", "center": Vector2(4.3, -7.0), "size": Vector2(10.6, 16.0), "yaw": 0.0}
 const START_POS := Vector3(0.0, 0.0, 6.0)   # de kale open plek op de oorsprong (er worden daar geen bomen geplant)
 
 var deploying := false
@@ -39,7 +45,12 @@ var _steer := 0.0
 var _park_from := Vector3.ZERO
 var _park_to := Vector3.ZERO
 var _park_t := -1.0          # s sinds het wegrijden (-1 = niet bezig)
-var _park_len := 1.0
+var _park_basis := Basis.IDENTITY
+var _park_yaw := 0.0
+var _route: Array = []        # [{p: Vector2 (lokaal x, z), s: afstand}] voorwaarts: recht door, bocht naar de zijkant
+var _route_len := 1.0
+var _terug_len := 1.0
+var _heading := 0.0
 var _park_play := false
 var _pre := 0.0               # s: de container wordt opgetild
 var _geland := false          # de container staat op de grond
@@ -73,8 +84,10 @@ static func footprint_points(at: Vector3, yaw: float) -> Array:
 			var l := Vector3(FOOT_CENTER.x + (iu - 1) * FOOT_SIZE.x * 0.5, 0.0, FOOT_CENTER.y + (iv - 1) * FOOT_SIZE.y * 0.5)
 			out.append(at + basis * l)
 	# de wagen blijft na het uitklappen voor het hoofdkwartier staan: ook die plek moet droog zijn en binnen de kaart liggen
-	out.append(at + basis * Vector3(0.0, 0.0, PARK_Z - 4.4))
-	out.append(at + basis * Vector3(0.0, 0.0, PARK_Z))
+	out.append(at + basis * Vector3(0.0, 0.0, KEER_Z - 4.4))
+	out.append(at + basis * Vector3(PARK_X, 0.0, KEER_Z))
+	out.append(at + basis * Vector3(PARK_X, 0.0, PARK_EIND_Z))
+	out.append(at + basis * Vector3(PARK_X, 0.0, PARK_EIND_Z + 4.4))
 	return out
 
 
@@ -173,7 +186,7 @@ func _build_ghost() -> void:
 	pm.size = Vector3(4.2, 0.05, 8.8)
 	park.mesh = pm
 	park.material_override = _ghost_mat
-	park.position = Vector3(0.0, 0.01, PARK_Z - FOOT_CENTER.y)   # kind van de hoofdgrond: verdwijnt er samen mee
+	park.position = Vector3(PARK_X, 0.01, PARK_EIND_Z + 0.2 - FOOT_CENTER.y)   # kind van de hoofdgrond: verdwijnt er samen mee
 	park.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	_ghost.add_child(park)
 
@@ -332,8 +345,9 @@ func _start_park() -> void:
 			n.queue_free()
 	_speed = 0.0
 	_park_from = global_position
-	_park_to = global_position + global_transform.basis * Vector3(0.0, 0.0, PARK_Z)
-	_park_len = _park_from.distance_to(_park_to)
+	_park_basis = global_transform.basis
+	_park_yaw = rotation.y
+	_maak_route()
 	_park_t = 0.0
 	_park_play = false
 	_pre = 0.0
@@ -366,15 +380,44 @@ func _park_step(delta: float) -> void:
 		_model.zet_kantel(KANTEL * smoothstep(0.0, 1.0, _pre / LIFT_T), 0.0)
 		return
 	_park_t += delta
-	var dur := _park_len / PARK_SPEED * 1.35
-	var k := clampf(_park_t / dur, 0.0, 1.0)
-	var e := smoothstep(0.0, 1.0, k)
-	global_position = _park_from.lerp(_park_to, e)
-	var v := (_park_len / dur) * (6.0 * k * (1.0 - k))   # afgeleide van smoothstep
-	_model.drive(v, 0.0, delta)
+	var dur_v := _route_len / PARK_SPEED * 1.25
+	var dur_a := _terug_len / PARK_ACHTER * 1.25
+	var v := 0.0
+	var k := 0.0
+	var achteruit := false
+	var pos2: Vector2
+	var hoek := 0.0
+	if _park_t < dur_v:
+		var kv := _park_t / dur_v
+		var ev := smoothstep(0.0, 1.0, kv)
+		var r := _route_punt(ev * _route_len)
+		pos2 = r[0]
+		hoek = r[1]
+		v = (_route_len / dur_v) * (6.0 * kv * (1.0 - kv))
+		var stuur := clampf(atan(WAGEN_L * (hoek - _heading) / maxf(0.001, v * delta)), -McvModel.MAX_STEER, McvModel.MAX_STEER) if v > 0.2 and delta > 0.0 else 0.0
+		_heading = hoek
+		_model.drive(v, stuur, delta)
+		k = 0.5 * kv
+	elif _park_t < dur_v + KEER_WACHT:
+		pos2 = Vector2(PARK_X, KEER_Z)
+		hoek = 0.0
+		_model.drive(0.0, 0.0, delta)
+		k = 0.5
+	else:
+		var ka := clampf((_park_t - dur_v - KEER_WACHT) / dur_a, 0.0, 1.0)
+		var ea := smoothstep(0.0, 1.0, ka)
+		pos2 = Vector2(PARK_X, lerpf(KEER_Z, PARK_EIND_Z, ea))
+		hoek = 0.0
+		v = (_terug_len / dur_a) * (6.0 * ka * (1.0 - ka))
+		achteruit = true
+		_model.drive(-v, 0.0, delta)
+		k = 0.5 + 0.5 * ka
+	global_position = _park_from + _park_basis * Vector3(pos2.x, 0.0, pos2.y)
+	rotation.y = _park_yaw + hoek
 	Foliage.ram(self, v, 3.0, 5.0)
+	var dist := minf(Vector2(pos2.x, pos2.y).length(), 1e6)
 	# de wagen rijdt vooruit en de container glijdt van de laadbak: de achterrand raakt de grond, dan klapt de voorkant omlaag
-	var q := clampf(_park_from.distance_to(global_position) / SLIDE_D, 0.0, 1.0)
+	var q := clampf(dist / SLIDE_D, 0.0, 1.0) if not achteruit and _park_t < dur_v else 1.0
 	if not _geland:
 		var zak := McvModel.BAK_HOOGTE * smoothstep(0.0, 1.0, clampf((q - 0.3) / 0.45, 0.0, 1.0))
 		var kant := KANTEL * (1.0 - smoothstep(0.0, 1.0, clampf((q - 0.75) / 0.25, 0.0, 1.0)))
@@ -387,7 +430,7 @@ func _park_step(delta: float) -> void:
 		if q >= 1.0:
 			_geland = true
 			_container_staat()
-	if k >= 1.0 and not _park_play and _geland:
+	if k >= 1.0 and not _park_play and _geland and _park_t >= dur_v + KEER_WACHT + dur_a:
 		_park_play = true
 		_model.play_uitklappen()
 		Sfx.play("spuit", 0.9)
@@ -396,3 +439,44 @@ func _park_step(delta: float) -> void:
 			_opbouw.begin()
 		_park_t = -1.0
 		collision_layer = 32
+
+
+## De route: recht naar voren (de container glijdt eraf), dan een S-bocht naar de zijkant (lokaal +X) en achteruit inparkeren.
+func _maak_route() -> void:
+	_route.clear()
+	var s := 0.0
+	var vorig := Vector2.ZERO
+	var p0 := Vector2(0.0, -SLIDE_D)
+	_route.append({"p": Vector2.ZERO, "s": 0.0, "h": 0.0})
+	var n := 24
+	for i in range(1, n + 1):
+		var u := float(i) / float(n)
+		var p := Vector2(0.0, -SLIDE_D * u)
+		s += (p - vorig).length()
+		_route.append({"p": p, "s": s, "h": 0.0})
+		vorig = p
+	var p3 := Vector2(PARK_X, KEER_Z)
+	var c1 := p0 + Vector2(0.0, -4.5)
+	var c2 := p3 + Vector2(0.0, 4.5)
+	var m := 60
+	for i in range(1, m + 1):
+		var u := float(i) / float(m)
+		var w := (1.0 - u) * (1.0 - u) * (1.0 - u) * p0 + 3.0 * (1.0 - u) * (1.0 - u) * u * c1 + 3.0 * (1.0 - u) * u * u * c2 + u * u * u * p3
+		var d := 3.0 * (1.0 - u) * (1.0 - u) * (c1 - p0) + 6.0 * (1.0 - u) * u * (c2 - c1) + 3.0 * u * u * (p3 - c2)
+		s += (w - vorig).length()
+		_route.append({"p": w, "s": s, "h": atan2(-d.x, -d.y)})
+		vorig = w
+	_route_len = s
+	_terug_len = absf(PARK_EIND_Z - KEER_Z)
+	_heading = 0.0
+
+
+## Punt en stand (draaihoek om Y, t.o.v. de beginrichting) op afstand s langs de voorwaartse route.
+func _route_punt(s: float) -> Array:
+	var i := 1
+	while i < _route.size() - 1 and float(_route[i].s) < s:
+		i += 1
+	var a: Dictionary = _route[i - 1]
+	var b: Dictionary = _route[i]
+	var u := clampf((s - float(a.s)) / maxf(0.0001, float(b.s) - float(a.s)), 0.0, 1.0)
+	return [(a.p as Vector2).lerp(b.p as Vector2, u), lerp_angle(float(a.h), float(b.h), u)]

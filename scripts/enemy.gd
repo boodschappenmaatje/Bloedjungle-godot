@@ -9,6 +9,7 @@ extends CharacterBody3D
 
 var type := "knife"
 var t: Dictionary
+var armor := "licht"   # pantser voor het steen-papier-schaar (Data.ARMOR_MULT): "licht" of "zwaar"
 var hp := 45.0
 var max_hp := 45.0
 var face := 0.0
@@ -55,6 +56,7 @@ var _detour_side := 1.0
 func setup(kind: String, wave: int) -> void:
 	type = kind
 	t = Data.ETYPES[kind]
+	armor = String(t.get("armor", "licht"))
 	max_hp = t.hp * (1.0 + (maxi(1, wave) - 1) * 0.11)
 	hp = max_hp
 	fire_t = randf_range(0.8, 1.8)
@@ -562,6 +564,7 @@ func _animate(spd: float, moving: bool) -> void:
 func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	if not from_player or dead:
 		return
+	dmg *= Data.counter(Game.hit_class, armor)   # steen-papier-schaar: raketten tegen zwaar, sluipschutters tegen mensen
 	hp -= dmg
 	hurt_t = 0.0
 	model.flash(Color(1.0, 0.38, 0.07))

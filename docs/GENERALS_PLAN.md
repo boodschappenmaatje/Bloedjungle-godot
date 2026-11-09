@@ -300,3 +300,22 @@ Naar de vier keuzes hierboven. Alleen in MCV-modus.
 - **Draai** probeert 90, 180 en 270 graden en neemt de eerste stand die kan; lukt geen enkele, dan staat in de melding de reden van de eerste stand (bijvoorbeeld "UITRIT GEBLOKKEERD: EEN MUUR VLAK VOOR HET DEPOT").
 - **Niet gedaan (optie C, door Dennis niet gekozen):** het depot laten kijken naar de poort. Een depot dat van de poort af kijkt, krijgt een weg die eerst van de poort af loopt en dan terugdraait.
 - Test: `tests/voorraad_weg_test.gd`.
+
+## Stap C2 + C3 (keuzes van Dennis, 8 november 2026): soldatensoorten en steen-papier-schaar
+**Keuzes:** alle vier de soorten tegelijk (raketsoldaat, sluipschutter, hospik, ingenieur), het bestaande soldatenmodel met eigen uitrusting en kleur (eigen Meshy-modellen kunnen later), en productie in de kazerne met een knop per soort.
+
+### Gebouwd (Draft PR): `Data.SOLDIER_TYPES`, `Ally.kind`, `tests/soldaten_test.gd`
+- **Soorten (voorstellen om te testen):**
+
+| Soort | Prijs | Training | Gezondheid | Wapen | Rol |
+|---|---|---|---|---|---|
+| Schutter | 250 | 1,0 x | 1,0 x | geweer, 16 m | zoals altijd |
+| Raketsoldaat | 400 | 1,5 x | 0,9 x | raket, 22 m, 3,4 s, ontploft (2,8 m) | tegen pantser en zware vijanden |
+| Sluipschutter | 450 | 1,6 x | 0,7 x | één kogel, 34 m, 2,2 s | tegen mensen, ver weg |
+| Hospik | 300 | 1,2 x | 1,0 x | geen | heelt jou en je soldaten binnen 8 m (9 per seconde) |
+| Ingenieur | 350 | 1,4 x | 1,0 x | geen | repareert beschadigde gebouwen en trucks bij het hoofdkwartier (14 per seconde) |
+
+- **Kazerne:** in het paneel staat een knop per soort met prijs; de bouwrij houdt de volgorde bij (elke soort een eigen trainingstijd), annuleren geeft de prijs van de laatste terug, het maximum aantal soldaten blijft gedeeld.
+- **Steen-papier-schaar (C3):** de schade van een soldaat krijgt een soort (`wclass`) en elke vijand een pantser (`armor`: licht, en zwaar voor de zware schutter). Vermenigvuldigers (`Data.ARMOR_MULT`): kogel 1,0 licht / 0,5 zwaar; sluipschutter 2,2 licht / 0,8 zwaar; raket 0,7 licht / 2,0 zwaar. Schade zonder soort (alles wat er al was, ook jouw wapens) blijft precies zoals hij was. Een raketsoldaat kiest liever een zware vijand; een raket van een soldaat telt niet voor jouw killstreak.
+- **Hospik en ingenieur** volgen je mee zoals de andere soldaten, lopen naar wie geheeld of wat gerepareerd moet worden, en schieten niet.
+- **Nog niet:** luchtafweer tegen lucht (C3 noemt dat; er zijn nog geen luchtvijanden), eigen Meshy-modellen en een zichtbaar EHBO-/gereedschapsmodel, de soorten in het teamwiel, schade aan voertuigen door de raketsoldaat, en eigen stemmen.

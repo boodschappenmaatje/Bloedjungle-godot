@@ -135,6 +135,17 @@ const VIJAND_HALF := Vector2(32.0, 28.0)   # halve breedte (x) en halve diepte (
 const VIJAND_GATE := 3.4                   # halve breedte van de poortopening
 const GROUND_Z_MIN := -300.0               # noordrand van de grondplaat (level.gd); de zuidrand blijft z = 220
 
+## Wereld per start (W1, Generals-plan los onderdeel "wereld per start"): de jungle wordt elk nieuw spel met een ander
+## getal opnieuw neergezet. Blijft op WORLD_SEED_DEFAULT (de oude vaste 11) in de editor, headless/tests en zolang
+## randomize_world_seed() niet is aangeroepen, zodat bestaande tests en screenshots exact gelijk blijven.
+const WORLD_SEED_DEFAULT := 11
+static var world_seed := WORLD_SEED_DEFAULT
+
+## Kiest voor het volgende spel een nieuw willekeurig kaartgetal. Geen opslag en geen zichtbare code (Dennis koos
+## "elke start nieuw, onzichtbaar"): elke keer begin() een verse, niet te herhalen jungle.
+static func randomize_world_seed() -> void:
+	world_seed = 1 + (randi() % 999983)
+
 
 static func river_z(x: float) -> float:
 	return RIVER_Z0 + 5.0 * sin(x * 0.06) + 2.0 * sin(x * 0.15 + 1.0)

@@ -7,6 +7,7 @@ extends SceneTree
 
 var fails := 0
 var fol: GDScript
+var frames := 0
 
 
 func _check(ok: bool, msg: String) -> void:
@@ -38,6 +39,16 @@ func _initialize() -> void:
 	root.add_child(load("res://scenes/main.tscn").instantiate())   # registreert Game e.a. voor foliage.gd, net als jungle_test.gd
 	fol = load("res://scripts/foliage.gd")
 
+
+func _process(_d: float) -> bool:
+	frames += 1
+	if frames != 3:   # pas als de boom echt draait (zoals jungle_test.gd): anders is get_global_transform() nog niet geldig
+		return false
+	_run()
+	return true
+
+
+func _run() -> void:
 	# randomize_world_seed(): nooit de vaste standaard, en niet elke keer hetzelfde getal.
 	var seeds := {}
 	for i in 20:

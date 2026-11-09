@@ -97,8 +97,10 @@ const SPAWN_R := 58.0
 
 # Rivier over het noorden van de kaart (05-world.js), 14 m verder naar het noorden dan in de web-versie omdat de basis hier groter is.
 const RIVER_HALF := 2.6
+## De brug blijft op x=0: jouw eigen stadsstraten (StadData.ITEMS) sluiten daar precies op aan, dus die schuift niet mee.
 const BRIDGE_X := 0.0
-const FORD_X := 38.0
+## De doorwaadplaats schuift wel mee bij een willekeurige wereld-seed (W2); zie _randomize_river(). Vaste standaard: 38.0.
+static var FORD_X := 38.0
 
 
 ## Gebieden in de jungle-strook tussen basismuur en rivier: "moeras" (west), "open" (oost, met rotsen en stammen), anders "dicht".
@@ -145,10 +147,43 @@ static var world_seed := WORLD_SEED_DEFAULT
 ## "elke start nieuw, onzichtbaar"): elke keer begin() een verse, niet te herhalen jungle.
 static func randomize_world_seed() -> void:
 	world_seed = 1 + (randi() % 999983)
+	_randomize_river()
+
+
+## Wereld per start, stap W2: de rivier kronkelt elk spel anders en de doorwaadplaats schuift mee (Dennis koos 3B). Bij
+## de vaste WORLD_SEED_DEFAULT blijven deze precies de oude vaste waarden (zelfde kronkel, FORD_X = 38.0), dus editor,
+## headless en tests zijn ongewijzigd. De brug blijft altijd op x=0: StadData.ITEMS sluit daar met een vaste straat op aan.
+static var _river_amp1 := 5.0
+static var _river_freq1 := 0.06
+static var _river_phase1 := 0.0
+static var _river_amp2 := 2.0
+static var _river_freq2 := 0.15
+static var _river_phase2 := 1.0
+
+static func _randomize_river() -> void:
+	if world_seed == WORLD_SEED_DEFAULT:
+		_river_amp1 = 5.0
+		_river_freq1 = 0.06
+		_river_phase1 = 0.0
+		_river_amp2 = 2.0
+		_river_freq2 = 0.15
+		_river_phase2 = 1.0
+		FORD_X = 38.0
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = world_seed + 3001
+	_river_amp1 = rng.randf_range(3.5, 7.0)
+	_river_freq1 = rng.randf_range(0.045, 0.08)
+	_river_phase1 = rng.randf_range(0.0, TAU)
+	_river_amp2 = rng.randf_range(1.2, 3.2)
+	_river_freq2 = rng.randf_range(0.1, 0.22)
+	_river_phase2 = rng.randf_range(0.0, TAU)
+	var side := -1.0 if rng.randf() < 0.5 else 1.0
+	FORD_X = side * rng.randf_range(20.0, 65.0)   # ruim weg van de vaste brug (x=0) en van de kaartrand
 
 
 static func river_z(x: float) -> float:
-	return RIVER_Z0 + 5.0 * sin(x * 0.06) + 2.0 * sin(x * 0.15 + 1.0)
+	return RIVER_Z0 + _river_amp1 * sin(x * _river_freq1 + _river_phase1) + _river_amp2 * sin(x * _river_freq2 + _river_phase2)
 
 
 ## Kronkelpad van de noordpoort door het bos naar de brug (zelfde formule in ground.gdshader).

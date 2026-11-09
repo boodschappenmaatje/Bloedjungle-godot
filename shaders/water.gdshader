@@ -8,11 +8,18 @@ uniform vec3 deep : source_color = vec3(0.10, 0.30, 0.28);
 uniform vec3 shallow : source_color = vec3(0.26, 0.52, 0.44);
 uniform vec3 foam : source_color = vec3(0.85, 0.92, 0.88);
 uniform float speed = 1.6;
+// wereld per start (W2): rivier-kronkel per sessie, door river.gd gezet vanuit Data._river_* (Data.river_z() zelfde formule)
+uniform float river_amp1 = 5.0;
+uniform float river_freq1 = 0.06;
+uniform float river_phase1 = 0.0;
+uniform float river_amp2 = 2.0;
+uniform float river_freq2 = 0.15;
+uniform float river_phase2 = 1.0;
 
 varying vec3 wpos;
 
 float river_z(float x) {
-	return -92.0 + 5.0 * sin(0.06 * x) + 2.0 * sin(0.15 * x + 1.0);
+	return -92.0 + river_amp1 * sin(river_freq1 * x + river_phase1) + river_amp2 * sin(river_freq2 * x + river_phase2);
 }
 
 void vertex() {

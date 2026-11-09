@@ -18,6 +18,13 @@ uniform vec4 pits[8];  // loopgraven: x, z, cos, sin
 uniform int pit_n = 0;
 uniform vec4 pad = vec4(0.0, 0.0, 1.0, 0.0);  // schacht van het helikopterplatform: x, z, cos, sin
 uniform float pad_half = 0.0;
+// wereld per start (W2): rivier-kronkel per sessie, door level.gd gezet vanuit Data._river_* (Data.river_z() zelfde formule)
+uniform float river_amp1 = 5.0;
+uniform float river_freq1 = 0.06;
+uniform float river_phase1 = 0.0;
+uniform float river_amp2 = 2.0;
+uniform float river_freq2 = 0.15;
+uniform float river_phase2 = 1.0;
 
 varying vec3 wpos;
 
@@ -32,7 +39,7 @@ void fragment() {
 	float pixel_span = max(length(dFdx(p)), length(dFdy(p)));
 	float micro_detail = 1.0 - smoothstep(0.012, 0.075, pixel_span);
 	// de rivier is uit de grond gesneden (scripts/river.gd legt de bedding eronder; zelfde formule als Data.river_z)
-	float river_off = abs(p.y - (-92.0 + 5.0 * sin(p.x * 0.06) + 2.0 * sin(p.x * 0.15 + 1.0)));
+	float river_off = abs(p.y - (-92.0 + river_amp1 * sin(p.x * river_freq1 + river_phase1) + river_amp2 * sin(p.x * river_freq2 + river_phase2)));
 	if (river_off < 2.6) {
 		discard;
 	}

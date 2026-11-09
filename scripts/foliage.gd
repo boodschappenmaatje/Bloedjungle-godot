@@ -4,6 +4,13 @@ class_name Foliage
 
 static var _mats := {}
 static var _shadow_mats := {}  # soort -> nepschaduw-materiaal
+## Bosjes/open-plek-patroon (_grove): bij de vaste Data.WORLD_SEED_DEFAULT precies de oude vaste waarden, zodat de
+## editor, headless en tests exact dezelfde jungle houden. Bij een willekeurige wereld-seed (echt spel, "wereld per
+## start" W1) krijgt elke start een andere fase en frequentie, dus andere open plekken en bosjes.
+static var _grove_px := 1.3
+static var _grove_pz := 0.4
+static var _grove_fx := 0.075
+static var _grove_fz := 0.095
 const STRIP_EXTRA := {"palm": 70, "bush": 230, "fern": 330, "grass": 1300, "rock": 26}  # extra stuks in de strook tussen muur en rivier
 ## Hoeveel van de extra planten per gebied blijft staan: moeras = varens en gras, open plek = bijna kaal met rotsen, dicht = alles.
 const STRIP_KEEP := {
@@ -424,7 +431,22 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 	_vegetation_cells.clear()
 	_vegetation_serial = 0
 	_root = parent
-	logs(parent)
+	var varied := seed_ != Data.WORLD_SEED_DEFAULT
+	if varied:
+		var grove_rng := RandomNumberGenerator.new()
+		grove_rng.seed = seed_ + 7001   # eigen generator: raakt de telling van rng/south_rng hieronder niet
+		_grove_px = grove_rng.randf_range(0.0, TAU)
+		_grove_pz = grove_rng.randf_range(0.0, TAU)
+		_grove_fx = grove_rng.randf_range(0.05, 0.1)
+		_grove_fz = grove_rng.randf_range(0.07, 0.12)
+	else:
+		_grove_px = 1.3
+		_grove_pz = 0.4
+		_grove_fx = 0.075
+		_grove_fz = 0.095
+	logs(parent, 41 if not varied else seed_ + 4001)
+	if varied:
+		_crates(parent, seed_ + 8001)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
 	var south_rng := RandomNumberGenerator.new()
@@ -762,7 +784,7 @@ static func _add(rng: RandomNumberGenerator, out: Array, cols: Array, p: Vector3
 ## Bos tussen de basismuur en de rivier en daarachter: bosjes en open plekken wisselen elkaar af (rustige sinus-ruis),
 ## dus je kunt tussen de bomen door lopen en kijken. Het pad van de poort naar de brug blijft vrij.
 static func _grove(x: float, z: float) -> float:
-	return 0.5 + 0.5 * sin(x * 0.075 + 1.3) * sin(z * 0.095 + 0.4)
+	return 0.5 + 0.5 * sin(x * _grove_fx + _grove_px) * sin(z * _grove_fz + _grove_pz)
 
 
 static func _strip(rng: RandomNumberGenerator, kind: String, count: int, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
@@ -820,3 +842,37 @@ static func logs(parent: Node3D, seed_ := 41) -> void:
 		cs.transform = Transform3D(Basis.from_euler(Vector3(0, yaw, 0)), p)
 		body.add_child(cs)
 	Kit.scatter(parent, cyl, mat, xf, [], true)
+
+
+## Achtergelaten munitiekisten in de jungle-strook (wereld per start, W1): alleen bij een willekeurige wereld-seed,
+## nooit bij de vaste Data.WORLD_SEED_DEFAULT (editor/headless/tests blijven ongewijzigd). Zuiver decoratief, geen
+## botsing: ze staan altijd in de open jungle-strook, nooit in de rivier, op een weg, in de stad of op het vliegveld.
+const CRATE_COUNT := 7
+
+static func _crates(parent: Node3D, seed_: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	var placed := 0
+	var tries := 0
+	while placed < CRATE_COUNT and tries < 400:
+		tries += 1
+		var x := rng.randf_range(-Data.WORLD_X + 6.0, Data.WORLD_X - 6.0)
+		# zelfde strook als logs(): tussen de basismuur en de rivier, waar x zijn eigen rivierdiepte heeft
+		var z := rng.randf_range(Data.river_z(x) + 6.0, -Data.COMPOUND - 4.0)
+		var p := Vector3(x, 0.0, z)
+		if _in_river(p) or absf(x) < Data.GATE_GAP + 2.0:
+			continue
+		var reserved := false
+		for region in AirfieldHQ23.site_regions():
+			if _point_in_build_region(p, AirfieldHQ23.SUGGESTED_CENTER, 0.0, region, 1.0):
+				reserved = true
+				break
+		if reserved:
+			continue
+		if rng.randf() > 0.3 + 0.7 * _grove(x, z):
+			continue   # staan het liefst in een bosje, niet op een kale open plek
+		var group := 1 if rng.randf() < 0.7 else 2   # soms een los kratje, soms twee gestapeld
+		var yaw := rng.randf() * TAU
+		for g in group:
+			Kit.prop(parent, Kit.MUNITIEKIST, p + Vector3(0.0, g * 0.43, 0.0), 1.0, yaw + rng.randf_range(-0.3, 0.3))
+		placed += 1

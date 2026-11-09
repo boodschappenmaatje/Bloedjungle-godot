@@ -58,6 +58,8 @@ func _load_world() -> void:
 	if lvl.get("built"):
 		return
 	var instant := DisplayServer.get_name() == "headless" or OS.has_environment("BJ_INSTANT")
+	if not instant and not Engine.is_editor_hint():
+		Data.randomize_world_seed()   # wereld per start (W1): nieuwe jungle-seed, eenmaal per spelsessie; headless/tests/editor blijven op Data.WORLD_SEED_DEFAULT
 	var screen := Loading.new()
 	if not instant:
 		add_child(screen)

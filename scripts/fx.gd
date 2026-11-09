@@ -464,7 +464,50 @@ static func muzzle(parent: Node, pos: Vector3, weapon := "m1911", angle := 0.0) 
 	var v: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
 	if weapon == "bazooka" or float(v.flash_life) <= 0.0:
 		return
+	# Isolated visual test path. Sound, casing, projectiles and recoil remain in their
+	# existing callers; avoid layering the legacy flash over the atlas.
+	if weapon == "m1911" and OS.get_environment("M1911_VFX_TEST") == "1":
+		_show_m1911_flipbook(parent, pos, angle)
+		_muzzle_smoke(parent, pos - Vector3(sin(angle), 0.0, cos(angle)) * 0.05, weapon, angle)
+		if int(v.flash_particles) > 0:
+			_burst(parent, pos, Vector3.UP * 0.2, int(v.flash_particles), v.flash_color, 0.025, 4.8, Vector3(0.025, 0.035, 0.025))
+		return
 	_show_muzzle_flash(parent, pos, _muzzle_mesh(weapon, randi() % 3), angle, v.flash_life, v.flash_width * 0.28, weapon, v.flash_particles, v.flash_color, v.flash_energy, v.flash_range)
+
+
+const M1911_FLIPBOOK_SHADER := preload("res://assets/vfx/m1911/m1911_flipbook.gdshader")
+const M1911_FLIPBOOK_TEXTURE_PATH := "res://assets/vfx/m1911/m1911_muzzle_flash_4x4.png"
+static var _m1911_flipbook_quad: QuadMesh
+static var _m1911_flipbook_material: ShaderMaterial
+static var _m1911_flipbook_live := 0
+const MAX_M1911_FLIPBOOKS := 8
+
+
+static func _show_m1911_flipbook(parent: Node, pos: Vector3, angle: float) -> void:
+	if _m1911_flipbook_live >= MAX_M1911_FLIPBOOKS or not _near_camera(parent, pos, 38.0):
+		return
+	if _m1911_flipbook_quad == null:
+		_m1911_flipbook_quad = QuadMesh.new()
+		_m1911_flipbook_quad.size = Vector2(1.7, 1.05)
+	if _m1911_flipbook_material == null:
+		_m1911_flipbook_material = ShaderMaterial.new()
+		_m1911_flipbook_material.shader = M1911_FLIPBOOK_SHADER
+		_m1911_flipbook_material.set_shader_parameter("flipbook_atlas", load(M1911_FLIPBOOK_TEXTURE_PATH))
+		_m1911_flipbook_material.set_shader_parameter("intensity", 1.35)
+	var fx := MeshInstance3D.new()
+	fx.name = "M1911FlipbookTest"
+	fx.mesh = _m1911_flipbook_quad
+	fx.material_override = _m1911_flipbook_material
+	fx.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(fx)
+	fx.global_position = pos + Vector3.UP * 0.16
+	fx.rotation.y = angle
+	_m1911_flipbook_live += 1
+	var tw := fx.create_tween()
+	tw.tween_method(func(frame: float): _m1911_flipbook_material.set_shader_parameter("frame_index", frame), 0.0, 15.0, 0.075)
+	tw.tween_callback(func():
+		_m1911_flipbook_live = maxi(0, _m1911_flipbook_live - 1)
+		fx.queue_free())
 
 
 static func _show_muzzle_flash(parent: Node, pos: Vector3, flash_mesh: ArrayMesh, angle: float, life: float, glow_size: float, smoke_style: String, particles: int, color: Color, light_energy: float, light_range: float) -> void:

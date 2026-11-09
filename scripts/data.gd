@@ -229,10 +229,10 @@ static func build_group(n: int) -> Array:
 
 
 ## Voertuigen bij aanvalsgroep n (Dennis, keuze 1B van 9 november 2026): groep 3 t/m 5 een jeep, groep 6 t/m 8 een tank, vanaf groep 9 een tank en een jeep
-## samen. Nooit meer dan VOERTUIG_MAX tegelijk op de kaart (main.gd wacht met uitrukken). Zolang de tank er niet is (stap V2) rijdt er een jeep in zijn plaats.
+## samen. Nooit meer dan VOERTUIG_MAX tegelijk op de kaart (main.gd wacht met uitrukken). De tank (stap V2, vijand_tank.gd) is er sinds v203; zet TANK_KLAAR op false en er rijdt weer een jeep in zijn plaats.
 const VOERTUIG_VANAF := 3
 const VOERTUIG_MAX := 3
-const TANK_KLAAR := false
+const TANK_KLAAR := true
 
 
 static func groep_voertuigen(n: int) -> Array:

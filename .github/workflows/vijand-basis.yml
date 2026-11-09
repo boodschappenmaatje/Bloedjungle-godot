@@ -50,6 +50,9 @@ on:
       - "scripts/vijand_jeep.gd"
       - "assets/vijand_jeep.glb"
       - "tests/vijand_jeep_test.gd"
+      - "scripts/vijand_tank.gd"
+      - "assets/vijand_tank.glb"
+      - "tests/vijand_tank_test.gd"
       - ".github/workflows/vijand-basis.yml"
   workflow_dispatch:
 
@@ -61,7 +64,7 @@ concurrency:
 jobs:
   vijandbasis:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -181,4 +184,15 @@ jobs:
           echo "Godot exit code: $RC"
           grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/vijand_jeep.log" | tail -n 40 || true
           tail -n 15 "$RUNNER_TEMP/vijand_jeep.log"
+          exit "$RC"
+      - name: Vijandelijke tank (model, schade, wachtrij, beleg met granaten, rit over de brug)
+        shell: bash
+        run: |
+          set +e
+          timeout 1200 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/vijand_tank_test.gd --fixed-fps 60 > "$RUNNER_TEMP/vijand_tank.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/vijand_tank.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/vijand_tank.log"
           exit "$RC"

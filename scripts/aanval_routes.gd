@@ -62,6 +62,20 @@ static func pick_group(n: int) -> Array:
 	return city.slice(0, 2 if n < 8 else 3)
 
 
+## De weg van een vijandelijk voertuig (stap V1): uit de poort van de vijandbasis door de jungle naar de oostkant van de stad, door de Hoofdstraat en naar de
+## noordkant van de brug. Een voertuig is breed en draait ruim, dus hij gebruikt alleen de brede straat ("brug"), nooit de steegjes van de woonwijk. In de straat
+## rijdt hij langs de zuidkant en dan door de strook ten westen van de geparkeerde auto (x -6): daar is plek voor een jeep. De rivier steekt VijandJeep zelf over
+## (brug, of wacht als die omhoog staat). Dezelfde punten voor elk voertuig; de zijwaartse spreiding van de soldaten laat hij weg.
+const VOERTUIG_WEG := [Vector3(-30, 0, -190), Vector3(20, 0, -168), Vector3(54, 0, -146), Vector3(54, 0, -128), Vector3(30, 0, -127.5), Vector3(8, 0, -128.5),
+	Vector3(-3, 0, -128.5), Vector3(-6, 0, -124.5), Vector3(-6, 0, -118.5), Vector3(-6.2, 0, -112.5), Vector3(-5.5, 0, -108.5), Vector3(-1.5, 0, -106.5), Vector3(0, 0, -103)]
+
+
+static func voertuig_pad() -> Array:
+	var out := [VijandBasis.gate_outside()]
+	out.append_array(VOERTUIG_WEG)
+	return out
+
+
 ## Aftelklok "02:41": op de plaat boven in beeld en bij de vijandenteller.
 static func klok(t: float) -> String:
 	var s := maxi(0, ceili(t))

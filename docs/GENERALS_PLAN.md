@@ -57,6 +57,38 @@ Bloedjungle krijgt het ritme en de systemen van *Command & Conquer: Generals* (2
 **Fase 3 — verdieping (P2):** A2, A3, A4, B5, B6, C4, C5, E2, G2, G3, G4, H2, H3.
 **Fase 4 — later (P3):** A5, C6, D3, F4, G5.
 
+## Stand per 9 november 2026 (v201, vanaf `main` nagekeken)
+Dit is de actuele voortgang per plan-id. De uitgebreide beschrijvingen per stap staan verderop in dit document; "Huidige stand van het spel (v162)" hieronder is historisch. Wie een volgende stap pakt, werkt deze tabel bij. Alles wat op de iPhone draait is **NIET GETEST** tenzij Dennis het zelf bevestigd heeft; "gebouwd" betekent: headless tests en CI groen.
+
+| Id | Stand | Waar |
+|---|---|---|
+| A1 voorraaddepot + truck | ✓ af | v177–v186; in de MCV-modus een gratis depot en eerste truck, routes zonder vast net, vaste uitrit met wegdek (8 nov) |
+| B1 bouwtijd met steigers | ✓ af | v163 |
+| B3 hoofdkwartier | ✓ af | v173/174; sinds 8 nov komt het uit de MCV-bouwwagen (container, kraan, platen: v196–v201) |
+| B4 techboom | ✓ af | v163 |
+| C1 bouwrij + verzamelpunt | ✓ af | v164–v169 |
+| G1 radiomeldingen | ✓ af | v170/171 (Engelse regels, radiostem) |
+| H1 terugkomen na sneuvelen | ✓ af | v171; nu na 8 s bij het hoofdkwartier, HK vernield = spel voorbij |
+| C2 soldatensoorten | ✓ gebouwd | PR #262: raketsoldaat, sluipschutter, hospik, ingenieur (modellen zijn nog het gewone soldatenmodel met eigen uitrusting) |
+| C3 steen-papier-schaar | ◐ deels | pantser licht/zwaar met kogel, sluipschutter, raket; pantser "jeep" en "tank" met kogel, raket, explosie en brand (V1, Draft: de vijandelijke jeep); **mist** luchtafweer tegen lucht (er zijn nog geen vijandelijke vliegtuigen) en de tank (V2) |
+| D2 vijandelijke basis | ◐ deels | 5a-1 basis (v187), 5a-2 groepen + vijand-HK + winnen (v188/189), 5a-3a rood vlakje, Aanvallen, beleg op afstand (v190), grote kaart (v191), 5a-3b vier Browning M2-torens met schutters en 12 verdedigers (#227), jeep-MG en schietsysteem 2.0 (#228–#233). Vijandelijke jeep uit Dennis' eigen Meshy-model (V1, Draft PR, v202). **Mist:** vijandelijke tank (V2, wacht op Dennis' tankmodel; keuze G), keuzekaart voor de aanvals-AI (keuze F, onderzoek staat in `GENERALS_AANVAL_ONDERZOEK.md`), bewaking en patrouilles voor de poortbewakers, mortier (laatste onderdeel), poortmodel (5b), viewer-invoer en USDZ voor "Enemy hk" (eis uit `CLAUDE.md`) |
+| F2 garnizoen in stadsgebouwen | ○ niet begonnen | alleen de vijandbasis heeft verdedigers; stadsgebouwen nog niet |
+| E1 generaalsrang met krachten | ○ niet begonnen | killstreaks Versterking en Napalm bestaan (`streak.gd`) |
+| D4 facties met eigen kleur | ◐ deels | het vijand-HK en de M2-torens zijn eigen modellen; de kleuren van het model "assault" voegt Dennis via Codex toe, stand niet nagekeken |
+| A2 zelf voorraad halen, A3 olie | ○ | |
+| A4 stroom die telt | ○ | de generator is met het oude kamp weggehaald (stap 4b); `Game.power` staat altijd aan. Komt terug als bouwwerk |
+| B5 vier "binnenkort"-gebouwen, B6 verdedigingsbouw | ○ | alleen kampmuur, poort en wachttoren (MCV stap 3) |
+| C4 veteranen, C5 upgrades | ○ / ◐ | C5: alleen HK-niveaus en kazerneniveaus |
+| E2 meer krachten, G2 commandobalk, G3 kader slepen | ○ | |
+| G4 teamkleur-accenten, H2 leiderschap, H3 vertraging bij bevelen | ○ | soldaatmarkeringen (v147) zijn er wel |
+| Fase 4: A5, C6, D3, F4, G5 | ○ | D3 (vijand haalt zelf voorraad en bouwt) is door Dennis naar de vijandstap geschoven, pas na de eerste speelbare versie |
+
+**Niet in het oorspronkelijke plan, wel gebouwd of in behandeling:** MCV-start (7–8 nov: begin in een bouwwagen, muren trekken, poort, 4 gratis torens, wachten bij de kazerne), schietsysteem 2.0 en granaatbesturing 2.0, upscaling met MetalFX (v193/194; op de iPhone was MetalFX Spatial nog niet beschikbaar, de fix #251 staat als Draft), wereld per start (W1 gemerged, #265; W2 rivier, W3 vijandbasis en voorraad, W4 stad, W5 sfeer wachten op Dennis' seintje), M-47 Muurbreker (Draft #252), sneeuw (keuzekaart wacht).
+
+**Voorstel voor de volgorde hierna (wacht op Dennis' keuze, elke stap begint met een keuzekaart):** (1) vijandelijke tank (V2) en eigen voertuigen met levenspunten (V3), na de jeep (V1): maakt D2 af en geeft de raketsoldaten uit C3 echt werk; (2) E1 generaalsrang met krachten (P1); (3) F2 garnizoen in de stad (P1); (4) A4 stroom terug als bouwwerk. Mortier, poortmodel en aanvals-AI blijven later in D2.
+
+**Losse eindjes:** de Draft-PR #226 (Codex, 5 nov) met een eerdere stand-update is hiermee achterhaald; open Drafts die nog een besluit van Dennis vragen: #252 (M-47), #251 (MetalFX in de iOS-build), #237 (visual upgrade B), #199 (Kazerne HQ 2.0, werk in uitvoering).
+
 ## Hoe we werken (voor Claude én Codex)
 - **Begeleiding met keuzes (Dennis, 2026-11-01):** begin elke stap met een korte keuzekaart of keuzepagina over uiterlijk, gevoel, techniek en prestaties, met een aanbeveling. Bouw daarna de gekozen variant.
 - **Eén stap per keer.** Dennis test elke stap voordat de volgende begint. Begin geen volgende fase zonder zijn "ga door".
@@ -69,7 +101,7 @@ Bloedjungle krijgt het ritme en de systemen van *Command & Conquer: Generals* (2
 ## Hoe Generals het doet (korte referentie)
 Voorraad = geld (trucks tussen stapel en depot, stapels raken op); stroom door centrales; bouwer bouwt in een techboom; productie in wachtrij met verzamelpunt; steen-papier-schaar tussen eenheden; veteraanrangen; generaalsrang met krachten en afkoeltijd; garnizoen in gebouwen; teamkleuren en commandobalk onderaan; radiomeldingen.
 
-## Huidige stand van het spel (v162, 2026-11-01)
+## Historische stand van het spel (v162, 2026-11-01; de actuele stand staat hierboven)
 Wel: punten per kill + start-bouwkrediet; bouwmodus (kazerne, garage, helipad, vliegveld, zandzakken, muur; verkopen/repareren); kazerne traint rekruten (3 niveaus); garage jeep/tank/truck; helipad Apache; vliegveld P-47; generator met `Game.power`; teamwiel (aanvallen/verplaatsen/verdedigen/volgen); killstreaks Versterking en Napalm; tactische camera; wachten en patrouilles; sloopsysteem; golven met 7 vaste routes (gaan eruit). Niet: voorraad-economie, bouwtijd, techboom, hoofdkwartier, vijandelijke voertuigen of basis, veteranen, krachten per rang, fog of war.
 Het vliegveld op basismaat wordt in een aparte thread afgehandeld (`docs`/PR daarvan).
 
@@ -319,3 +351,8 @@ Naar de vier keuzes hierboven. Alleen in MCV-modus.
 - **Steen-papier-schaar (C3):** de schade van een soldaat krijgt een soort (`wclass`) en elke vijand een pantser (`armor`: licht, en zwaar voor de zware schutter). Vermenigvuldigers (`Data.ARMOR_MULT`): kogel 1,0 licht / 0,5 zwaar; sluipschutter 2,2 licht / 0,8 zwaar; raket 0,7 licht / 2,0 zwaar. Schade zonder soort (alles wat er al was, ook jouw wapens) blijft precies zoals hij was. Een raketsoldaat kiest liever een zware vijand; een raket van een soldaat telt niet voor jouw killstreak.
 - **Hospik en ingenieur** volgen je mee zoals de andere soldaten, lopen naar wie geheeld of wat gerepareerd moet worden, en schieten niet.
 - **Nog niet:** luchtafweer tegen lucht (C3 noemt dat; er zijn nog geen luchtvijanden), eigen Meshy-modellen en een zichtbaar EHBO-/gereedschapsmodel, de soorten in het teamwiel, schade aan voertuigen door de raketsoldaat, en eigen stemmen.
+
+## Stap V1 (keuzes van Dennis, 9 november 2026): vijandelijke jeep, daarna tank (V2) en eigen voertuigen met levenspunten (V3)
+**Keuzes:** 1B schema (groep 3 t/m 5 een jeep, groep 6 t/m 8 een tank, vanaf groep 9 tank en jeep, nooit meer dan drie tegelijk), 2C vast schema met garagedecor, **3A vervallen: Dennis maakt zelf een Meshy-tank en -jeep** (de eigen jeep en tank worden niet hergebruikt), 4A een voertuigroute over de weg (poort, jungle, oostkant van de stad, Hoofdstraat, brug, kamp), 5A de jeep jaagt met zijn MG op de dichtstbijzijnde soldaat (de tank belegert later), 6A pantser "voertuig" (jeep 220 levenspunten, tank 900; kogels 30% / 5%; raketten, granaten, napalm en ontploffingen 150% tot 250%; rook, vuur, wrak dat na ongeveer 30 s verdwijnt), 7B eigen voertuigen krijgen pas in V3 levenspunten, 8A groter rood teken op de radar, melding en motorgeluid (de Engelse radiozin is op 9 november door Dennis overgeslagen). Alle getallen zijn voorstellen om te testen.
+
+**V1 gebouwd (Draft PR, v202):** `scripts/vijand_jeep.gd` (`VijandJeep`), model `assets/vijand_jeep.glb` uit Dennis' Meshy-jeep (45.050 driehoeken, 2K, clips Rijden, Sturen en Vuren) met bestuurder en schutter uit de eigen jeep in vijandkleuren (gekozen op 9 november), bron `bron/vijand_jeep/`, rapport `docs/vq2/vijand-jeep-rapport.md`, viewer-asset `vijand_jeep`. Hij staat in `Game.enemies` en de groep `vijand_voertuig`, dus soldaten, torens, Apache, granaten, napalm en mijnen raken hem; schade volgt `Game.hit_class` en een ontploffingsvenster (`Data.ARMOR_MULT` kent nu "jeep", "tank", "explosie" en "brand"). Weg: `AanvalRoutes.voertuig_pad` (langs de zuidkant van de Hoofdstraat en ten westen van de geparkeerde auto, 6 m brede strook is vrij). Schema: `Data.groep_voertuigen(n)` (`TANK_KLAAR := false`: tot de tank er is rijdt er een jeep in zijn plaats), uitrukken in `main.gd` (voertuigen vooraan, maximaal drie). Radio-pool "voertuig_onderweg" staat klaar maar blijft stil: Dennis sloeg de radiozin over (9 november). Test: `tests/vijand_jeep_test.gd`. **Nog niet:** de tank (V2), eigen voertuigen met levenspunten (V3), garagedecor met het voertuig erin, native iPhone NIET GETEST.

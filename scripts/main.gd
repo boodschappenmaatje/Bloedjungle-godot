@@ -218,9 +218,14 @@ func _launch_group() -> void:
 	var routes: Array = Game.next_routes.duplicate()
 	if routes.is_empty():
 		routes = AanvalRoutes.pick_group(Game.wave)
+	var was_leeg := queue.is_empty()
 	for kind in Data.build_group(Game.wave):
 		queue.append({"kind": kind, "n": Game.wave, "routes": routes})
-	if queue.size() == Data.build_group(Game.wave).size():
+	# voertuigen (Dennis, keuze 1B): ze rukken uit voor de soldaten, en rijden hun eigen weg (AanvalRoutes.voertuig_pad)
+	var voertuigen := Data.groep_voertuigen(Game.wave)
+	for i in voertuigen.size():
+		queue.insert(i, {"kind": voertuigen[i], "n": Game.wave, "voertuig": true})
+	if was_leeg:
 		spawn_t = 0.5   # de enige wachtende groep: de eerste vijand komt snel
 	clear_t = -1.0
 	Game.routes = routes
@@ -242,7 +247,11 @@ func _process(delta: float) -> void:
 		if queue.size():
 			spawn_t -= delta
 			var max_alive := 22 + mini(18, Game.wave * 2)
-			if spawn_t <= 0.0 and Game.enemies.size() < max_alive:
+			var volgend: Variant = queue[0]
+			var wacht_op_plek: bool = volgend is Dictionary and volgend.get("voertuig", false) and get_tree().get_nodes_in_group("vijand_voertuig").size() >= Data.VOERTUIG_MAX
+			if wacht_op_plek and queue.size() > 1:
+				queue.push_back(queue.pop_front())   # er rijden al drie voertuigen: de soldaten gaan voor, het voertuig wacht achteraan
+			elif spawn_t <= 0.0 and Game.enemies.size() < max_alive and not wacht_op_plek:
 				_spawn(queue.pop_front())
 				spawn_t = maxf(0.25, 1.2 - Game.wave * 0.06) * randf_range(0.6, 1.3)
 				if queue.is_empty():
@@ -258,6 +267,9 @@ func _process(delta: float) -> void:
 ## Eén vijand uit de wachtrij laten uitrukken. Een kale soort ("rocket") mag ook (tests): dan gelden de routes van nu.
 func _spawn(item: Variant) -> void:
 	PerfMonitor.note("vijand gespawnd")
+	if item is Dictionary and item.get("voertuig", false):
+		_spawn_voertuig(item)
+		return
 	var entry: Dictionary = item if item is Dictionary else {"kind": String(item), "n": maxi(1, Game.wave), "routes": Game.routes if not Game.routes.is_empty() else AanvalRoutes.pick_group(1)}
 	# Resolve again at spawn time: the setting may change while a group
 	# is already queued. Never leave old, invisible attackers in the world.
@@ -280,6 +292,17 @@ func _spawn(item: Variant) -> void:
 	add_child(e)
 
 
+## Een vijandelijk voertuig rijdt uit de poort van de vijandbasis: de weg staat in AanvalRoutes.voertuig_pad. Nu alleen de jeep; de tank volgt in stap V2.
+func _spawn_voertuig(entry: Dictionary) -> void:
+	var j := VijandJeep.make(AanvalRoutes.voertuig_pad(), int(entry.n))
+	j.position = VijandBasis.gate_inside() + Vector3(0.0, 0.0, -2.0)
+	j.rotation.y = PI   # met de neus naar de poort (zuid)
+	add_child(j)
+	Game.banner.emit("VIJANDELIJKE JEEP ONDERWEG", "Hij rijdt door de stad naar je basis", 2.0)
+	if Game.builds != null and Game.builds.radio != null:
+		Game.builds.radio.say("voertuig_onderweg")   # Dennis neemt de zin nog op; zonder opname blijft het stil
+
+
 ## Applied by the Settings toggle, including while the mission is paused.
 ## Existing legacy enemies leave the combat list and are freed, never merely
 ## hidden while continuing to collide, shoot or damage the player.
@@ -287,10 +310,10 @@ func apply_enemy_model_filter() -> void:
 	if GameSettings.get_value("enemy_models") != "meshy":
 		return
 	for item in queue:
-		if item is Dictionary:
+		if item is Dictionary and not item.get("voertuig", false):
 			item["kind"] = "assault"
 	for enemy in Game.enemies.duplicate():
-		if not is_instance_valid(enemy) or str(enemy.get("type")) == "assault":
+		if not is_instance_valid(enemy) or str(enemy.get("type")) == "assault" or enemy.is_in_group("vijand_voertuig"):
 			continue
 		Game.enemies.erase(enemy)
 		enemy.visible = false

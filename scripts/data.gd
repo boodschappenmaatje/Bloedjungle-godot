@@ -58,10 +58,15 @@ const SOLDIER_TYPES := {
 	"ingenieur": {"name": "Ingenieur", "short": "Ingen.", "cost": 350, "time": 1.4, "hp": 1.0, "dmg": 0.0, "color": Color("9a7a3a"), "gun": "m1911", "wep": "m1911", "range": 0.0, "rate": 0.0, "wclass": "", "repair": 14.0, "desc": "Ingenieur: schiet niet, maar repareert je gebouwen en trucks als er niets te doen is."},
 }
 # Steen-papier-schaar: schade-vermenigvuldiger per soort schade (wclass van de kogel of raket) tegen het pantser van de vijand ("licht" of "zwaar").
+# Voertuigen (Dennis, 9 november 2026, keuze 6A): de jeep (pantser "jeep") en later de tank ("tank") zijn zwaar voor kogels en zwak voor raketten,
+# granaten en vuur. "explosie" (granaten, vaten, tankgranaten, de bazooka van de speler) en "brand" (napalm) bestaan alleen voor voertuigen; voor soldaten
+# blijft alles zoals het was. Alle getallen zijn voorstellen om te testen.
 const ARMOR_MULT := {
-	"kogel": {"licht": 1.0, "zwaar": 0.5},
-	"scherp": {"licht": 2.2, "zwaar": 0.8},
-	"raket": {"licht": 0.7, "zwaar": 2.0},
+	"kogel": {"licht": 1.0, "zwaar": 0.5, "jeep": 0.3, "tank": 0.05},
+	"scherp": {"licht": 2.2, "zwaar": 0.8, "jeep": 0.5, "tank": 0.1},
+	"raket": {"licht": 0.7, "zwaar": 2.0, "jeep": 1.5, "tank": 2.0},
+	"explosie": {"jeep": 1.5, "tank": 1.5},
+	"brand": {"jeep": 1.5, "tank": 1.5},
 }
 
 
@@ -221,6 +226,29 @@ static func build_group(n: int) -> Array:
 		for i in kinds.size():
 			kinds[i] = "assault"
 	return kinds
+
+
+## Voertuigen bij aanvalsgroep n (Dennis, keuze 1B van 9 november 2026): groep 3 t/m 5 een jeep, groep 6 t/m 8 een tank, vanaf groep 9 een tank en een jeep
+## samen. Nooit meer dan VOERTUIG_MAX tegelijk op de kaart (main.gd wacht met uitrukken). Zolang de tank er niet is (stap V2) rijdt er een jeep in zijn plaats.
+const VOERTUIG_VANAF := 3
+const VOERTUIG_MAX := 3
+const TANK_KLAAR := false
+
+
+static func groep_voertuigen(n: int) -> Array:
+	var out := []
+	if n < VOERTUIG_VANAF:
+		return out
+	if n < 6:
+		out = ["jeep"]
+	elif n < 9:
+		out = ["tank"]
+	else:
+		out = ["tank", "jeep"]
+	if not TANK_KLAAR:
+		for i in out.size():
+			out[i] = "jeep"
+	return out
 
 
 static func _mix(n: int, total: int) -> Array:

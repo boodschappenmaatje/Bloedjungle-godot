@@ -55,3 +55,11 @@ Volgorde nu: wagen rijdt 4 s weg, klapt 6 s uit, daarna 20 s bouwen in vier fase
 - Uitklappen als onderdeel van de bouw: zwaailamp aan, stempels uit, poten naar de grond, banden eraf, giek zwenkt naar de eerste plaat. Daarna hijst de kraan de acht platen van het rek op het voorste deel van het gebouw (haakafwijking max 0,10 m in de test).
 - Tests: mcv_wagen_test (31 controles), mcv_test, mcv_wacht_test 0 fouten. Viewer: asset `mcv_kraan`, test-mcv.mjs ok. Renders `mcv-v200-*.png`.
 - Niet gedaan: zijwaarts parkeren (de wagen rijdt recht naar voren), gesplitste clip, .usdz-preview. NIET GETEST op iPhone.
+
+## v201: inparkeren, kraan terug en wegrijden
+- Inparkeren: de wagen rijdt 5,5 m recht vooruit (de container glijdt eraf), maakt een S-bocht naar de zijkant (x 8,6 m) en zet achteruit in naast het hoofdkwartier. De kraan staat daardoor naast het gebouw; de platen komen op de kant van de kraan (x 1,4 / 2,6 m, z -0,8 m) en haak-afwijking blijft 0,10 m (test).
+- Na de bouw: giek zwenkt terug naar de transportstand, poten omhoog (clip achterstevoren) en stempels in, dan rijdt de wagen vooruit en wordt pas weggehaald als hij buiten beeld is (kop, midden en staart buiten het camerabeeld, of na 70 m).
+- Extra leven: kabel slingert na bewegen (gedempte slinger, max 0,06 rad), stofwolkjes bij de stempels, spot-werklicht aan de kabeltop en oranje zwaailamplicht, hydrauliekgeluid als de giek in beweging komt.
+- Bugfix: de steunpoten van de wagen werden niet gevonden (puffs bleven weg); nu wel.
+- Test mcv_wagen_test 0 fouten. NIET GETEST op iPhone.
+- Kampmuur: na het bouwen van een vierkant verdwijnt de begroeiing binnen de getrokken lijnen ook als een stuk is overgeslagen (v201).

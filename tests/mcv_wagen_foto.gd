@@ -67,8 +67,8 @@ func _process(_d: float) -> bool:
 		cam = Camera3D.new()
 		main.add_child(cam)
 		cam.fov = 42.0
-		cam.global_position = Vector3(40.0 + 15.0, 15.0, 35.3 + 15.0)
-		cam.look_at(Vector3(40.0, 1.5, 35.3), Vector3.UP)
+		cam.global_position = Vector3(44.0 + 16.0, 17.0, 38.0 + 16.0)
+		cam.look_at(Vector3(44.0, 1.0, 36.0), Vector3.UP)
 		cam.make_current()
 		for c in main.get_children():
 			if c is CanvasLayer:
@@ -76,18 +76,18 @@ func _process(_d: float) -> bool:
 	# na deploy_now: 1,3 s container omhoog, ~4,3 s wegrijden (container zakt vanaf 45 %), clip 6 s, dan 35 s bouwen, dan 4 s container weg
 	var na := fr - 70
 	var sec := float(na) / 60.0
-	var BEGIN := 1.8 + 4.1 + 6.0 + 0.4    # s tot de bouw begint
+	var BEGIN := 1.8 + 14.9 + 6.0 + 0.4    # s tot de bouw begint
 	var lijst := [
-		[1.0, "01_kantelen"], [2.4, "02_glijden"], [3.2, "03_glijden2"], [4.0, "04_achterrand"], [4.8, "05_voorkant_neer"], [6.2, "06_staat"], [9.0, "07_poten"],
+		[1.0, "01_kantelen"], [2.4, "02_glijden"], [3.2, "03_glijden2"], [4.0, "04_achterrand"], [4.8, "05_voorkant_neer"], [8.5, "06_bocht"], [13.0, "07_keren"], [17.5, "07b_achteruit"], [BEGIN - 1.0, "07c_geparkeerd"],
 		[BEGIN + 0.9, "08_stempels"], [BEGIN + 2.4, "08b_banden_af"], [BEGIN + 4.0, "08c_giek_op"], [BEGIN + 6.4, "09_pakken"], [BEGIN + 7.2, "10_hijsen"], [BEGIN + 8.4, "11_zwenken"], [BEGIN + 9.4, "12_boven_hk"], [BEGIN + 10.5, "13_geplaatst"],
-		[BEGIN + 16.5, "14_laag3"], [BEGIN + 23.5, "15_laag6"], [BEGIN + 33.0, "16_afwerking"], [BEGIN + 38.0, "17_klaar"], [BEGIN + 40.5, "18_container_zakt"],
+		[BEGIN + 16.5, "14_laag3"], [BEGIN + 23.5, "15_laag6"], [BEGIN + 33.0, "16_afwerking"], [BEGIN + 38.0, "17_klaar"], [BEGIN + 40.5, "18_container_zakt"], [BEGIN + 43.5, "19_kraan_terug"], [BEGIN + 47.0, "20_vertrek"], [BEGIN + 51.0, "21_uit_beeld"],
 	]
 	if na == int((BEGIN - 0.5) * 60.0):
-		cam.global_position = Vector3(40.0 + 11.0, 12.0, 35.3 + 11.0)
-		cam.look_at(Vector3(40.0, 2.0, 35.3), Vector3.UP)
+		cam.global_position = Vector3(44.0 + 12.0, 13.0, 39.0 + 12.0)
+		cam.look_at(Vector3(44.0, 2.5, 39.0), Vector3.UP)
 	for e in lijst:
 		if na == int(float(e[0]) * 60.0):
 			_shot(String(e[1]))
-	if na == int((BEGIN + 42.5) * 60.0):
+	if na == int((BEGIN + 56.0) * 60.0):
 		quit()
 	return false

@@ -81,14 +81,14 @@ func _process(_d: float) -> bool:
 		_check("de bouw wacht op het uitklappen: gebouw en voorplein nog verborgen", opb != null and not opb.begonnen and not vis.visible and not main.find_child("Voorplein", true, false).visible)
 		_check("de kraan zit vast op de wagen en staat in transportstand (stempels in, platen in het rek)", model.kraan != null and model.kraan.is_inside_tree() and model.kraan.platen.size() == 8 and (model.kraan._stempels[0].balk as Node3D).scale.x < 0.1 and model.kraan.in_haak() == -1)
 		_check("de container is los van de wagen (kantelt op de laadbak)", model.container_los() and model.container_pos().y > 1.4 and model.container_pos().y < 2.6)
-	if frames == 525:
+	if frames == 1225:
 		# deploy + 1,3 s tillen + ~4 s wegrijden: de wagen staat 9,6 m voor het hoofdkwartier, de container staat op de grond en de clip speelt
-		var want: Vector3 = hq_at + Basis(Vector3.UP, yaw) * Vector3(0.0, 0.0, M.PARK_Z)
+		var want: Vector3 = hq_at + Basis(Vector3.UP, yaw) * Vector3(M.PARK_X, 0.0, M.PARK_EIND_Z)
 		_check("de wagen is uit het kamp gereden en geparkeerd (%.1f m van de plek)" % mcv.global_position.distance_to(want), mcv.global_position.distance_to(want) < 0.3)
 		var c: Vector3 = model.container_pos()
 		_check("de container is achtergebleven op de bouwplek, op de grond (y %.2f)" % c.y, absf(c.y) < 0.05 and Vector2(c.x - hq_at.x, c.z - hq_at.z).length() < 2.2)
 		_check("de clip Uitklappen speelt", not model.uitklappen_klaar())
-	if frames == 1000:
+	if frames == 1700:
 		# de clip is klaar en de bouw is begonnen: het voorplein komt omhoog en de kraan staat op de laadbak
 		var opb1 = main.find_child("Opbouw", true, false)
 		_check("de clip Uitklappen is klaar", model.uitklappen_klaar())
@@ -101,24 +101,30 @@ func _process(_d: float) -> bool:
 		_check("het voorplein komt omhoog uit de grond", plein1.visible and plein1.position.y < -0.5)
 		_check("de kraan staat op de wagen", mcv.find_child("Kraan", true, false) != null and mcv.find_child("Plaat8", true, false) != null)
 		_check("er zijn bouwers aan het werk", get_nodes_in_group("mcv_bouwer").size() == 3)
-	if frames == 1500:
-		_check("de stempels staan uit en de poten op de grond", absf((model.kraan._stempels[0].balk as Node3D).scale.x - 1.0) < 0.01 and absf((model.kraan._stempels[0].poot as Node3D).scale.z - McvKraan.POOT_LENGTE) < 0.01)
+	if frames == 2200:
+		_check("de stempels staan uit en de poten op de grond", absf((model.kraan._stempels[0].balk as Node3D).scale.x - 1.0) < 0.01 and absf((model.kraan._stempels[0].poot as Node3D).scale.z - model.kraan.POOT_LENGTE) < 0.01)
 		var opb3 = main.find_child("Opbouw", true, false)
 		_check("de kraan heeft de eerste plaat geplaatst en het gebouw groeit", opb3._geland >= 0 and vis.scale.y > vis_scale.y * 0.1 and vis.scale.y < vis_scale.y * 0.999)
-	if frames == 2200:
+	if frames == 2900:
 		var opb4 = main.find_child("Opbouw", true, false)
 		_check("de kraan werkt door (laag %d)" % (opb4._geland + 1), opb4._geland >= 3 and not opb4.klaar)
 		_check("het voorplein staat op de grond", absf((main.find_child("Voorplein", true, false) as Node3D).position.y) < 0.01)
-	if frames == 3100:
+	if frames == 3800:
 		# na ~38 s: klaar
 		var opb2 = main.find_child("Opbouw", true, false)
 		_check("het hoofdkwartier is klaar en op volle hoogte", opb2.klaar and is_equal_approx(vis.scale.y, vis_scale.y))
 		_check("het baken is groen als alles klaar is", model._baken_modus == 2)
 		_check("alle acht platen zijn geplaatst", opb2._geland == 7)
 		_check("de haak bereikte elk doel (grootste afwijking %.2f m)" % opb2.max_fout, opb2.max_fout < 0.6)
-		_check("de wagen blijft staan", is_instance_valid(mcv) and mcv.is_inside_tree())
-	if frames == 3400:
+		_check("de wagen staat nog (hij vertrekt pas na de container)", is_instance_valid(mcv) and mcv.is_inside_tree())
+	if frames == 4100:
 		_check("de container is weggezakt en de bouwers zijn naar binnen", not (model._module as Node3D).visible and get_nodes_in_group("mcv_bouwer").is_empty())
+	if frames == 4600:
+		var opbv = main.find_child("Opbouw", true, false)
+		_check("de wagen is aan het vertrekken of al weg", opbv._rijdt or opbv.vertrokken)
+	if frames == 6300:
+		var opbw = main.find_child("Opbouw", true, false)
+		_check("de wagen is uit beeld gereden en dan pas weggehaald", opbw.vertrokken and not is_instance_valid(mcv))
 		print("klaar, fouten: ", fails)
 		quit(1 if fails > 0 else 0)
 	return false

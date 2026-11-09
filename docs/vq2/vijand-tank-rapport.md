@@ -22,7 +22,7 @@ Model van Dennis (Drive, "Oké dit is de tank"): één GLB met de hele tank (een
 - `tests/vijand_tank_test.gd` (in `.github/workflows/vijand-basis.yml`, Godot 4.7.2 headless): **86 controles, 0 fouten**. Het dekt: model (knopen, 22 wielen, clips Vuren, Rijden en Draaien met lus, 37.922 driehoeken, maat), schema per groep, schade per soort wapen, brand, kill en punten, wrak, wachtrij en maximum van drie voertuigen, ontploffing van een granaat (straal, afname, soldaat, speler, zandzak, hoofdkwartier), beleg van soldaat, speler en bouwwerk (stoppen op 38 m, koepel op het doel, granaten raken), de hele rit van de poort over de Hoofdstraat en de brug naar het kamp (4440 beeldjes), HQ-schade zodra het spel loopt, en wachten voor een opgehaalde brug.
 - Bestaand en opnieuw gedraaid zonder fouten: `tests/vijand_jeep_test.gd` (jeep houdt zijn eigen route `VOERTUIG_WEG`).
 - Lokaal Godot 4.6.3 headless is voor deze scène onbetrouwbaar (zie het jeeprapport); Godot 4.7.2 is de maatstaf.
-- Foto's in de gamecamera (software-Vulkan, `tests/vijand_tank_foto.gd`): `docs/vq2/renders/vijand_tank_*.png` (rijdt aan, schiet, rookt, brandt, wrak, radar, naast een jeep).
+- Foto's in de gamecamera (software-Vulkan, `tests/vijand_tank_foto.gd`): `docs/vq2/renders/vijand_tank_*.png` (rijdt aan, schiet een granaat, rookt, brandt, wrak, radar met rode ruit).
 
 ## Bekend en niet gemeten
 - **NIET GETEST:** native iPhone (FPS, touch, camera), Xogot, Quick Look. De tank kost 38k driehoeken; met drie voertuigen en soldaten tegelijk is dat nog niet gemeten.

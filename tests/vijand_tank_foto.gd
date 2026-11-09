@@ -1,6 +1,6 @@
 extends SceneTree
 ## Schermafbeeldingen van de vijandelijke tank in de gamecamera (Generals-plan stap V2): hij rijdt op de speler af, staat stil en schiet een granaat op een soldaat, rookt bij
-## halve levenspunten, brandt bij een kwart en ligt daarna als zwart wrak; plus de radar met de rode ruit en de tank naast een jeep (maatvergelijking).
+## halve levenspunten, brandt bij een kwart en ligt daarna als zwart wrak; plus de radar met de rode ruit.
 ## FOTO_DIR=/pad BJ_TOUCH=1 VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json xvfb-run -a -s "-screen 0 932x430x24" godot --rendering-driver vulkan --path . -s tests/vijand_tank_foto.gd --fixed-fps 60
 
 var main: Node
@@ -8,7 +8,6 @@ var frames := 0
 var game: Node
 var dir := OS.get_environment("FOTO_DIR") if OS.get_environment("FOTO_DIR") != "" else "/tmp"
 var jeeps: Array = []   # de tanks (naam uit de jeepfoto behouden)
-var jeep: Node
 var ally: Node
 
 
@@ -35,13 +34,6 @@ func _park(j: Node, pos: Vector3, rot: float) -> void:
 	j.global_position = pos
 	j.rotation.y = rot
 	j.set_physics_process(true)
-
-
-func jep_park() -> void:
-	jeep.global_position = Vector3(3.2, 0, -46)
-	jeep.rotation.y = PI
-	jeep.set_physics_process(false)
-	game.player.global_position = Vector3(0, 0, -38)
 
 
 func _process(_d: float) -> bool:
@@ -80,11 +72,6 @@ func _process(_d: float) -> bool:
 			main.add_child(j)
 			j.set_physics_process(false)
 			jeeps.append(j)
-		jeep = (load("res://scripts/vijand_jeep.gd") as GDScript).new()
-		jeep.route = []
-		jeep.position = Vector3(240, 0, 200)
-		main.add_child(jeep)
-		jeep.set_physics_process(false)
 		var ally_script: GDScript = load("res://scripts/ally.gd")
 		ally = ally_script.new()
 		game.player.get_parent().add_child(ally)
@@ -98,16 +85,16 @@ func _process(_d: float) -> bool:
 		_park(jeeps[0], Vector3(-3, 0, -72), PI)
 		_list(jeeps[0])
 	if frames > 30 and frames < 330 and is_instance_valid(jeeps[0]):
-		# de camera kijkt een stuk richting de jeep, zodat hij midden in beeld staat en niet achter de melding verdwijnt
+		# de camera kijkt een stuk richting de tank, zodat hij midden in beeld staat en niet achter de melding verdwijnt
 		var cam2 := root.get_viewport().get_camera_3d()
 		var d: Vector3 = jeeps[0].global_position - game.player.global_position
-		cam2.set("_lead", Vector3(d.x, 0.0, d.z) * 0.6)
+		cam2.set("_lead", Vector3(d.x, 0.0, d.z) * 0.88)
 	if frames == 150:
 		_shot("1_rijdt_aan")
 	if frames == 215:
 		_shot("2_schiet")
 	if frames == 205:
-		# tweede jeep: rookt bij halve levenspunten
+		# de tank rookt bij halve levenspunten
 		jeeps[0].hp = jeeps[0].max_hp * 0.4
 		jeeps[0]._take(1.0, Vector3.ZERO)
 	if frames == 240:
@@ -121,7 +108,7 @@ func _process(_d: float) -> bool:
 		game.hit_class = ""
 	if frames == 330:
 		_shot("5_wrak")
-		# de radar met een tweede jeep op de kaart
+		# de radar met een tweede tank op de kaart
 		_park(jeeps[1], Vector3(-14, 0, -62), PI)
 		_list(jeeps[1])
 		game.player.global_position = Vector3(0, 0, -30)
@@ -131,13 +118,4 @@ func _process(_d: float) -> bool:
 		var img := root.get_viewport().get_texture().get_image().get_region(Rect2i(800, 20, 120, 130))
 		img.resize(480, 520, Image.INTERPOLATE_NEAREST)
 		img.save_png("%s/vijand_tank_6b_radar_uitvergroot.png" % dir)
-		# maatvergelijking: de tank naast de jeep, beide stil
-		jeeps[1].set_physics_process(false)
-		jeeps[1].global_position = Vector3(300, 0, 300)
-		jeeps[2].global_position = Vector3(-3.5, 0, -46)
-		jeeps[2].rotation.y = PI
-		jeeps[2].set_physics_process(false)
-		jep_park()
-	if frames == 440:
-		_shot("7_naast_de_jeep")
-	return frames > 442
+	return frames > 402

@@ -47,6 +47,9 @@ on:
       - "tests/vijand_hk_test.gd"
       - "tests/aanval_basis_test.gd"
       - "tests/grote_kaart_test.gd"
+      - "scripts/vijand_jeep.gd"
+      - "assets/vijand_jeep.glb"
+      - "tests/vijand_jeep_test.gd"
       - ".github/workflows/vijand-basis.yml"
   workflow_dispatch:
 
@@ -58,7 +61,7 @@ concurrency:
 jobs:
   vijandbasis:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
         with:
@@ -167,4 +170,15 @@ jobs:
           echo "Godot exit code: $RC"
           grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/grote_kaart.log" | tail -n 40 || true
           tail -n 15 "$RUNNER_TEMP/grote_kaart.log"
+          exit "$RC"
+      - name: Vijandelijke jeep (model, schade, wachtrij, schieten, rit over de brug)
+        shell: bash
+        run: |
+          set +e
+          timeout 900 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/vijand_jeep_test.gd --fixed-fps 60 > "$RUNNER_TEMP/vijand_jeep.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/vijand_jeep.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/vijand_jeep.log"
           exit "$RC"

@@ -420,7 +420,14 @@ func _draw_map_content(map: Rect2) -> void:
 		if vis <= 0.0:
 			continue
 		var point := _radar_point(enemy.global_position, map)
-		_cv.draw_circle(point, 2.5 * _k, Color(1.0, 0.24, 0.16, 0.95 * vis))
+		if enemy.is_in_group("vijand_voertuig"):
+			# een voertuig is een groter teken (Dennis, keuze 8A): een rode ruit met een lichte rand, zodat je hem niet voor een soldaat aanziet
+			var r := 4.6 * _k
+			var ruit := PackedVector2Array([point + Vector2(0, -r), point + Vector2(r, 0), point + Vector2(0, r), point + Vector2(-r, 0)])
+			_cv.draw_colored_polygon(ruit, Color(1.0, 0.24, 0.16, 0.95 * vis))
+			_cv.draw_polyline(PackedVector2Array([ruit[0], ruit[1], ruit[2], ruit[3], ruit[0]]), Color(1.0, 0.92, 0.8, 0.9 * vis), 1.2 * _k)
+		else:
+			_cv.draw_circle(point, 2.5 * _k, Color(1.0, 0.24, 0.16, 0.95 * vis))
 	if _seen.size() > 64:  # oude contacten opruimen
 		var alive := {}
 		for e in Game.enemies:

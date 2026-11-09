@@ -8,8 +8,8 @@ This is the **first isolated review checkpoint**, not a production VFX integrati
 - Controller: `res://vfx/preview/vfx_test_controller.gd`
 - Controls: single shot, short burst, continuous fire, stop; 1/5/12 virtual gun emitters; target surface; preview-local low/high/ultra
 - Readouts: engine FPS, percentile-based approximate 1%-low FPS (after 120 samples), drawcalls, object count, static memory, preview tracer count, and existing `Fx.combat_counts()` pool statistics.
-- Gun stand geometry is **test proxy geometry** only, not a new WWII model. The `mg42` effect preset currently supplies a canonical rapid-fire baseline for M2 evaluation. An approved M2-specific emission profile and approved model attachment remain outstanding.
-- The scene uses only existing `Fx.muzzle`, `Fx.casing` and `Fx.impact` routines, plus pooled temporary tracer visuals. It **never** creates gameplay bullets or calls `Bullet.fire()`.
+- Gun stand geometry is **test proxy geometry** only, not a new WWII model. Dedicated preview-only procedural M2 flare and smoke are implemented in `vfx/weapons/m2_preview_fx.gd`; the production M2 model and existing combat logic are untouched. These are **technical prototype visuals**, not a photorealism approval. A final art-approved M2-specific effect and actual weapon-model socket integration remain outstanding.
+- The scene uses the bounded and pooled preview-only `M2PreviewFx.fire()` for the flash/smoke, existing `Fx.casing` and `Fx.impact` for shells and surface feedback, plus pooled temporary tracer visuals. It **never** creates gameplay bullets or calls `Bullet.fire()`. Preview M2 FX has a maximum of 18 live flashes, 16 live smoke sprites, and 2 warm lights.
 
 ## Repository inventory (initial, main branch)
 
@@ -27,6 +27,12 @@ This is the **first isolated review checkpoint**, not a production VFX integrati
 With Godot **4.7.2**, open the existing project, select the VFX preview scene, and use **Run Current Scene (F6)**. This does not start the regular game. Verify after import that no missing dependencies or GDScript errors occur.
 
 On iPhone, the next step is an *explicitly authorized* preview workflow (not a production OTA publication). A local desktop or cloud editor capture cannot establish native iPhone FPS.
+
+## Automated regression entry point
+
+`godot --headless --path . -s tests/vfx_studio_preview_test.gd --fixed-fps 60 --quit-after 900`
+
+Expected output: `VFX STUDIO PREVIEW TEST PASS`. This is a **planned command, not a confirmed passing test**. Run on Godot 4.7.2 after import. Verify the import and test stdout/stderr and save logs as CI artifacts.
 
 ## Repeatable acceptance scenarios
 
@@ -52,7 +58,7 @@ The project's local .game-dev adapter has not been installed or used. If using G
 
 ## Next stage, only after review
 
-- Replace the `mg42` baseline with a preview-only tuned M2 profile using the existing shared FX pools, preserving canonical gameplay presets.
+- Review and improve the new preview-only procedural M2 flare/smoke (color, scale, timings) against real Godot top-down captures, preserving all canonical gameplay presets.
 - Author original/licensed flame and smoke flipbooks if visual quality requires it. Record provenance, licenses and hashes.
 - Build reusable attachment sockets and material-based effect variants; then design tank cannon, vehicle dust and M47 modules.
 - Compare production assets and currently open PRs before ever merging the system.
@@ -60,4 +66,4 @@ The project's local .game-dev adapter has not been installed or used. If using G
 
 ## Status
 
-Implementation code submitted to draft branch. **Godot parsing, native screenshots, iOS export, OTA preview, visual acceptance and performance testing remain UNVERIFIED.**
+Dedicated M2 preview visuals, an isolated test arena, and an unexecuted headless regression test have been committed to the Draft PR. **Godot parsing, native screenshots, iOS export, OTA preview, visual acceptance and performance testing remain UNVERIFIED.**

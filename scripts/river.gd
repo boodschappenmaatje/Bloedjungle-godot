@@ -88,6 +88,13 @@ static func _water(root: Node3D) -> void:
 	var m := ShaderMaterial.new()
 	m.shader = preload("res://shaders/water.gdshader")
 	m.set_shader_parameter("noise", Kit.noise_tex(0.05, 17))
+	# wereld per start (W2): de waterrand moet de Data.river_z()-kronkel van deze sessie volgen, niet de oude vaste vorm
+	m.set_shader_parameter("river_amp1", Data._river_amp1)
+	m.set_shader_parameter("river_freq1", Data._river_freq1)
+	m.set_shader_parameter("river_phase1", Data._river_phase1)
+	m.set_shader_parameter("river_amp2", Data._river_amp2)
+	m.set_shader_parameter("river_freq2", Data._river_freq2)
+	m.set_shader_parameter("river_phase2", Data._river_phase2)
 	mi.material_override = m
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mi.gi_mode = GeometryInstance3D.GI_MODE_DISABLED

@@ -65,7 +65,7 @@ func _hud() -> Node:
 func _watch(a, tag: String) -> void:
 	var p: Vector3 = a.global_position
 	var in_river: bool = absf(p.z - dt.river_z(p.x)) < dt.get_script_constant_map()["RIVER_HALF"] - 0.2
-	var on_crossing: bool = absf(p.x - dt.get_script_constant_map()["BRIDGE_X"]) < 3.6 or absf(p.x - dt.get_script_constant_map()["FORD_X"]) < 4.5
+	var on_crossing: bool = absf(p.x - dt.get_script_constant_map()["BRIDGE_X"]) < 3.6 or absf(p.x - float(dt.get("FORD_X"))) < 4.5
 	if in_river and not on_crossing:
 		_check("%s loopt niet door de rivier (%s)" % [tag, str(p)], false)
 		allies.erase(a)   # één melding is genoeg

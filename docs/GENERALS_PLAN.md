@@ -5,6 +5,37 @@
 ## Doel
 Bloedjungle krijgt het ritme en de systemen van *Command & Conquer: Generals* (2003): voorraad ophalen, basis opbouwen in een techboom, eenheden produceren met tegen-eenheden (counters), een vijandelijke basis slopen, en generaalskrachten. **De eigen twist:** de speler is zelf een soldaat in het leger en loopt, schiet en bestuurt voertuigen terwijl hij ook de basis en het team commandeert. Visuele stijl blijft onze realistische militaire jungle (zie `referentie-stijl.png`), geen kopie van de Generals-look. Kopieer geen assets, namen, stemmen of teksten van het originele spel.
 
+## Actuele stand — 5 november 2026 (geverifieerd op GitHub `main`)
+
+> **Statusindex voor Claude Code en Codex.** De keuzes hieronder blijven gelden. Oudere regels bij de oorspronkelijke keuzeformulieren en v162-beschrijving zijn historische besluiten, geen actuele taken. De HUD-code toont **v192**; niet elke gerichte fix verhoogt dit nummer.
+
+| Generals-onderdeel | Status | Bewijs |
+|---|---|---|
+| **Fase 1, B1 + B4** — bouwtijd, steigers, techboom | **In main** | [PR #185](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/185) |
+| **C1** — kazernerij, verzamelvlag, garagerij | **In main** | [#186](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/186), [#188](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/188) |
+| **G1** — radiomeldingen | **In main, momenteel Engels** (oorspronkelijke voorkeur was Nederlands) | [#192](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/192) |
+| **H1** — terugkomen na sneuvelen | **In main** | [#193](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/193) |
+| **B3** — hoofdkwartier vervangt bunker | **In main** | [#194](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/194), [#195](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/195), [#197](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/197) |
+| **A1** — eindige voorraadstapels, depots, vrachtwagens, 3D-modellen, verbeterd verkeer | **In main** | [#198](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/198), [#201](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/201), [#205](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/205), [#206](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/206) |
+| **D2 / 5a-1** — kaart noordwaarts uitgebreid, eerste vijandbasis | **In main (v187)** | [#209](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/209) |
+| **D2 / 5a-2** — vijandelijke aanvalsgroepen in plaats van golven; vijandelijk HK vernietigen = winnen | **In main (v188–189)** | [#210](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/210), [#211](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/211) |
+| **D2 / 5a-3a** — radar en teambevel om vijandbasis aan te vallen, beleg op afstand | **In main (v190)** | [#213](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/213) |
+| **Tactische grote kaart** — tikbare kaart, hoger commandowiel | **In main (v191)**; niet gelijk aan volledige G2-commandobalk of G3-kaderselectie | [#214](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/214) |
+| **D2 / 5a-3b** — echte MG-wachttorens en garnizoen bij vijandbasis | **VOLGENDE STAP — nog niet gerealiseerd** | Keuzekaart en toestemming vereist |
+
+**Faseconclusie:** **fase 1 is functioneel gerealiseerd**. **Fase 2 is bezig**, de basis D2 is speelbaar maar niet af. De aparte doelen **C2** (soldatensoorten), **C3** (counters), **E1** (generaalsrang), **F2** (garnizoen in *stadsgebouwen*) blijven open; het voorlopige basisbeleg is geen vervanging van deze doelen. Na 5a-3b volgen de vijandelijke jeep/tank, keuze voor route-/aanvals-AI, mortier (laatste verdediging), mooiere 5b-vijandmodellen en pas later D3 (eigen vijandelijke economie).
+
+### Eerstvolgende ontwikkelstap: D2 / 5a-3b
+
+Maak **eerst een korte keuzekaart** voor echte MG-wachttorens en stationair basisgarnizoen: gedrag, doelkeuze, bereik, schade, posities, schiet-FX, audio en iPhone-prestatiebudget. **Niet bouwen zonder nieuw "ga door".** Na goedkeuring: aparte featurebranch, Draft PR en testen van doel-/zichtlijn, muurpenetratie, speler- en soldaatschade, behoud van post, samenhang met `scripts/beleg.gd`, winnen/respawn, botsingen en native iPhone-beleving. De huidige belegering gebruikt voorlopig een *berekende* hoeveelheid verdediging per toren, niet een volledig uitgevochten torengevecht. Verwijder die afhandeling niet zonder regressie- en balanscontrole.
+
+### Andere actuele wijzigingen en blokkades
+
+- De zwarte horizontale muurstreep kwam aantoonbaar van de **foutieve transformatie van de aarden berm** (lokale versus wereldas-schaling), hersteld in [#223](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/223) (**gemerged, v192**). Het verdwijnen van de hele muur bij ertegenaan lopen is apart opgelost door **de muur zichtbaar en ondoorzichtig te houden**, [#224](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/224) (**gemerged**). **Gebruiker bevestigt op 5 november dat de muurfix geregeld is.**
+- **Draft [#221](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/221) is achterhaald**: diens oplossing verbergt lokale muurmodules, in strijd met de inmiddels bevestigde eis dat de muur zichtbaar blijft. **Niet mergen**; herbeoordelen/afsluiten via apart besluit.
+- **Open, geen onderdeel van afgeronde Generals-stappen:** [#225](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/225), bewegende botsvorm voor slagboom, en [#199](https://github.com/boodschappenmaatje/Bloedjungle-godot/pull/199), Kazerne HQ2. Beide Draft: niet als voltooid rapporteren.
+- Headless Godot-/iOS-export-/OTA-previewtests bewijzen geen correcte native iPhone-weergave of FPS. **Deze document-PR wijzigt uitsluitend het plan; geen gameplay, graphics, merge naar main of OTA zonder aparte toestemming.**
+
 ## Beslissingen van Dennis
 1. **De huidige golven (waves) gaan eruit.** Ze passen niet meer bij de game. De tegenstander wordt een **vijandelijke basis** die je moet slopen (D2). Dennis wil daarvoor NIET de bestaande stad gebruiken: de basis komt ver in het noorden achter de stad (keuzes 2 november, zie "Stap D2" onderaan). Bestaande golfcode, golf-HUD en de gebieden/kaart-PR #69 worden dan herbruikt of verwijderd: overleg bij die stap eerst wat blijft (bijvoorbeeld routes, bezette gebieden, kaart).
 2. **Volgorde: de Generals-kern eerst** (fase 1 hieronder).
@@ -69,9 +100,12 @@ Bloedjungle krijgt het ritme en de systemen van *Command & Conquer: Generals* (2
 ## Hoe Generals het doet (korte referentie)
 Voorraad = geld (trucks tussen stapel en depot, stapels raken op); stroom door centrales; bouwer bouwt in een techboom; productie in wachtrij met verzamelpunt; steen-papier-schaar tussen eenheden; veteraanrangen; generaalsrang met krachten en afkoeltijd; garnizoen in gebouwen; teamkleuren en commandobalk onderaan; radiomeldingen.
 
-## Huidige stand van het spel (v162, 2026-11-01)
-Wel: punten per kill + start-bouwkrediet; bouwmodus (kazerne, garage, helipad, vliegveld, zandzakken, muur; verkopen/repareren); kazerne traint rekruten (3 niveaus); garage jeep/tank/truck; helipad Apache; vliegveld P-47; generator met `Game.power`; teamwiel (aanvallen/verplaatsen/verdedigen/volgen); killstreaks Versterking en Napalm; tactische camera; wachten en patrouilles; sloopsysteem; golven met 7 vaste routes (gaan eruit). Niet: voorraad-economie, bouwtijd, techboom, hoofdkwartier, vijandelijke voertuigen of basis, veteranen, krachten per rang, fog of war.
-Het vliegveld op basismaat wordt in een aparte thread afgehandeld (`docs`/PR daarvan).
+## Huidige stand van het spel (main, 2026-11-05; HUD v192)
+**Nu wel:** de bestaande speelbare soldaat, bouwmodus, voertuigen en P-47, hoofdkwartier, bouwtijd/steigers, techboom, bouw- en voertuigrijen, vlag/verzamelpunt, radiomeldingen, respawn, voorraadeconomie met trucks/depot en eindige stapels, teamwiel en tactische camera, grote kaart, noordelijke vijandbasis, groepen die uit die basis aanvallen, vijandelijk HK kapotmaken om te winnen, bevel om met het eigen leger de basis aan te vallen en abstract beleg op afstand.
+
+**Nog open volgens deze roadmap:** echte MG-wachttorens en garnizoen (5a-3b), vijandelijke voertuigen en slimme routekeuze, mortier, verdere 5b-modellen, C2/C3/E1/F2 en overige P2/P3-functies. De oude golven en golf-HUD zijn vervangen door groepen vanuit de vijandbasis. De grotere tactische kaart is niet hetzelfde als een volledige G2-commandobalk.
+
+**Historische nulmeting (1 november 2026, v162):** destijds had het spel nog killpunten als bouwkrediet, startbudget, bestaande gebouwen/voertuigen, generator, teamwiel, killstreaks, tactische camera, wachten/patrouilles en 7 vaste golf-routes, maar nog geen voorraad-economie, steigers/techboom, hoofdkwartier of vijandbasis. Deze oude "niet"-lijst is inmiddels achterhaald. Het vliegveld/compacte layout blijft een afzonderlijk projectonderdeel.
 
 ## Ruwe keuzes van Dennis (2026-11-01)
 Opmerking bij Tegenstander: "De golven (waves) zoals we nu hebben moet eruit dit past niet bij onze game meer."
@@ -90,7 +124,7 @@ Keuzepagina: https://claude.ai/artifact/VNoxTR8VvsKn44oDdD3Jq1
 - **Bomen:** voertuigen kunnen niet door bomen rijden (die vallen om). Oplossing: elke vaste truckroute krijgt een 6 m brede strook waar bomen, struiken, varens en rotsen worden weggehaald; trucks rijden kinematisch langs wegpunten en volgen de bestaande bospad- en straatroutes.
 - **Depot:** het eerste depot staat er vanaf het begin met één gratis truck; extra depots koop je (800, bouwtijd). Per depot 600 per extra truck, maximaal 3. Een kapotte truck wordt een wrak en de lading is kwijt.
 - **Geld:** kills geven geen geld meer (wel score); de killstreaks blijven. Geld komt uit voorraad (een rit levert 100 tot 400 op naar afstand), plus startgeld en golfbonus zoals voorheen.
-- **Geen** zwevende +150 en **geen** radiomelding bij aflevering; wel stofwolk en zacht motorgeluid.
+- **Geen** zwevende +150 en **geen** radiomelding bij aflevering; wel stofwolk en zacht motorgeluid. **Historische stap-4-keuze:** de toenmalige verwijzing naar een golfbonus hieronder verviel bij 5a-2 toen golven werden vervangen door vijandelijke aanvalsgroepen.
 - **Zelf meedoen** (A2) nu niet. **Modellen** volgen in stap 4b (depot minimaal 40.000 driehoeken, 2K-texturen, kranen en schuur; truck met kraan en grijper die zichtbaar kisten in de bak legt) na een goedgekeurde Asset Design Specification (`modellen/voorraad/ASSET_DESIGN_SPEC.md`).
 - **Volgorde:** 4a speelbaar met blokken (logica, wegen, paneel), daarna 4b de echte modellen.
 
@@ -103,7 +137,7 @@ Keuzepagina: https://claude.ai/artifact/VNoxTR8VvsKn44oDdD3Jq1
 - **Niet getest:** iPhone/native FPS (NIET GETEST), Safari/Xogot.
 
 ## Stap D2 (keuzes van Dennis, 2026-11-02): de vijandelijke basis, golven eruit
-Keuzekaart: https://claude.ai/artifact/WEMBbr3H3zrHtBYQnqxAdn (ingevuld 2026-11-02 20:13Z; opgeslagen in de kaart als `keuzes/generals-fase2-vijandbasis`). **Er is nog niets gebouwd.** Dennis wil de bestaande stad niet als vijandbasis gebruiken; de vijand krijgt een eigen basis.
+Keuzekaart: https://claude.ai/artifact/WEMBbr3H3zrHtBYQnqxAdn (ingevuld 2026-11-02 20:13Z; opgeslagen in de kaart als `keuzes/generals-fase2-vijandbasis`). **Historisch: op 2 november was deze stap nog niet gebouwd. Per 5 november zijn 5a-1, 5a-2 en 5a-3a in main; zie status bovenaan.** Dennis wil de bestaande stad niet als vijandbasis gebruiken; de vijand krijgt een eigen basis.
 
 | Onderdeel | Keuze van Dennis (werk) |
 |---|---|
@@ -122,7 +156,7 @@ Keuzekaart: https://claude.ai/artifact/WEMBbr3H3zrHtBYQnqxAdn (ingevuld 2026-11-
 | M Volgorde | **Eerst speelbaar met eenvoudige blokken (stap 5a), daarna de mooie modellen (5b).** |
 
 **Stand en open punten (voor Claude én Codex):**
-- Niets bouwen voordat Dennis "ga door" zegt; Draft PR, niet mergen of OTA zonder apart ja. Vraag bij de start van 5a wat 5a precies omvat als dat onduidelijk is.
+- **Actueel:** 5a-1, 5a-2 en 5a-3a zijn al gemerged, inclusief grote kaart v191. **Volgende keuze-/ontwikkelstap is 5a-3b**, niet opnieuw 5a beginnen. Niets nieuws bouwen voordat Dennis "ga door" zegt; Draft PR, niet mergen of OTA zonder apart ja.
 - Onderzoek hoe Generals de aanvallen kiest (keuze F): **gedaan op 2026-11-03**, zie [docs/GENERALS_AANVAL_ONDERZOEK.md](GENERALS_AANVAL_ONDERZOEK.md). Kort: Generals gebruikt genummerde golven langs vaste routes (Center, Flank, Backdoor) met doelprioriteit per objectsoort, geen echte "zwakste kant"; ons voorstel is een eenvoudige score per route plus leren van succes en falen. Wacht op Dennis' keuze voordat 5a begint (Dennis koos op 2026-11-03: eerst alleen onderzoek).
 - **Stap 5a-1 gebouwd (v187, Draft PR #209, 2026-11-03):** de kaart groeit tot z = -285 (grondplaat tot z = -300, `Data.WORLD_Z_N`, `Data.GROUND_Z_MIN`) en de vijandbasis van blokken staat op `Data.VIJAND_POS` (`scripts/vijand_basis.gd`: muur 64 x 56 m, poort in de zuidmuur, 4 hoektorens, hoofdkwartier, kazerne, garage, depot, generator; alles massief, nog geen schade, winnen, garnizoen of schietende torens). Test: `tests/vijand_basis_test.gd`. Volgende: 5a-2 (golven eruit, groepen vanaf zijn basis, hoofdkwartier slopen = winnen). Mooie modellen (5b): zie [VIJANDBASIS_MESHY_MODELLEN.md](VIJANDBASIS_MESHY_MODELLEN.md).
 - **Stap 5a-2 gebouwd (v188, Draft PR, 2026-11-04):** golven eruit, aanvalsgroepen uit de poort van de vijandbasis, hoofdkwartier slopen = winnen. **Schema:** 3 minuten rust (`Data.GROEP_RUST`), dan elke 90 s een groep (`Data.GROEP_TUSSEN`), ook als de vorige nog loopt; `Data.build_group(n)` (4 + 2,4 n vijanden, zelfde mix als een golf); alleen de stadsroutes (`AanvalRoutes.pick_group`, `path_from_base`: eerst de poort van de vijandbasis, dan de route); "prep" betekent nu "geen groep onderweg" (wapenkamer en stadseditor kunnen alleen dan; **bouwen kan altijd**, ook tijdens een groep, op Dennis' verzoek van 4 nov; het aftellen loopt dan door), "play" = een groep loopt; de golfplaat toont "EERSTE/VOLGENDE GROEP" met aftellen en de routes, tijdens een groep staat het aftellen bij de vijandenteller; geen bonuspunten meer per golf; killstreak begint opnieuw als een groep verslagen is. **Vijand-HK:** Dennis' eigen model "Enemy hk" (Meshy, 2 miljoen driehoeken) teruggebracht tot 44.891 driehoeken (minimaal 40.000 op zijn verzoek), 9 m breed zoals het oude blok, `assets/vijand_hk.glb`, bron en pijplijn in `bron/vijand_hk/`; `scripts/vijand_hk.gd`: 2.500 levenspunten, kogels van jou doen 10% (ook die van Apache en jeep), raketten, granaten, artillerie, tankgranaten en ontploffingen volle schade; rook bij 60%, vuur bij 30%, levensbalk boven het dak, instorten tot een zwart wrak, melding en eindscherm "MISSIE GESLAAGD" (`Game.win`, `Game.won`). Tests: `tests/vijand_hk_test.gd`, `tests/vijand_basis_test.gd`, `tests/hud_layout_test.gd`. Levenspunten, groepsgrootte en tempo zijn voorstellen om te testen; native iPhone NIET GETEST. Nog niet: garnizoen en schietende torens (5a-3b), rood vlakje op de tactische kaart en Aanvallen-knop (5a-3a, zie hieronder), keuzekaart voor de aanvals-AI, mortier.

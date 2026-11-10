@@ -22,6 +22,8 @@ uniform float pad_half = 0.0;
 uniform float g2_gold = 0.0;  // Graphics 2.0 gouden ochtend: helderder, warmer gras
 uniform vec3 g2_sky : source_color = vec3(0.9, 0.82, 0.6);  // kleur die de plassen weerspiegelen
 uniform float g2_wet = 0.0;  // Graphics 2.0: natte glans op modder, oevers en moeras
+uniform sampler2D burn_map : hint_default_black, filter_linear, repeat_disable;  // bosbrand (scripts/bosbrand.gd): waar het gebrand heeft
+uniform vec4 burn_rect = vec4(0.0, 0.0, 0.0, 0.0);  // x0, z0, 1/breedte, 1/diepte van de brandkaart in meters
 uniform float river_amp1 = 5.0;
 uniform float river_freq1 = 0.06;
 uniform float river_phase1 = 0.0;
@@ -155,6 +157,13 @@ void fragment() {
 	ROUGHNESS = mix(ROUGHNESS, 0.03, puddle);
 	SPECULAR = mix(SPECULAR, 0.55, puddle);
 	EMISSION = g2_sky * vec3(0.7, 0.85, 1.0) * puddle * 0.035;
+	// bosbrand: verbrande grond blijft zwart, met een rafelige rand en lichte asvlekken
+	float burn = texture(burn_map, (p - burn_rect.xy) * burn_rect.zw).r;
+	burn = smoothstep(0.22, 0.6, burn + (n3 - 0.5) * 0.35);
+	vec3 ash = mix(vec3(0.016, 0.014, 0.012), vec3(0.11, 0.105, 0.1), smoothstep(0.62, 0.8, n2) * 0.6);
+	ALBEDO = mix(ALBEDO, ash, burn * 0.9);
+	ROUGHNESS = mix(ROUGHNESS, 0.96, burn);
+	SPECULAR = mix(SPECULAR, 0.08, burn);
 	vec2 dirt_uv = pp * 0.095;
 	NORMAL_MAP = texture(dirt_normal, dirt_uv, detail_mip_bias).rgb;
 	// Vervaag bumpdetail zodra een pixel meerdere detailtexels beslaat; dit voorkomt

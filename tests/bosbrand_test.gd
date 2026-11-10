@@ -68,6 +68,8 @@ func _process(_d: float) -> bool:
 		_check(peak <= inst.MAX_BURNING, "meer brandende vakken dan het maximum")
 		_check(bb.call("is_burned_at", spot) and not bb.call("is_burning_at", spot), "het eerste vak hoort verbrand en gedoofd te zijn")
 		var scorched := 0
+		var gone := 0
+		var trees := 0
 		var far := 0.0
 		var data: GDScript = load("res://scripts/data.gd")
 		for k: Vector2i in inst._cells:
@@ -77,8 +79,16 @@ func _process(_d: float) -> bool:
 			for e: Dictionary in inst._index.get(k, []):
 				if e.get("scorched", false):
 					scorched += 1
+					if e.get("burned_away", false):
+						gone += 1
+						_check(e["kind"] != "palm", "een boom is weggebrand")
+					elif e["kind"] == "palm":
+						trees += 1
 		print("verschroeide planten: ", scorched, ", verste vak: ", snappedf(far, 0.1), " m")
+		print("weggebrand: ", gone, ", bomen die verschroeid bleven staan: ", trees)
 		_check(scorched > 0, "geen verschroeide planten")
+		_check(gone > 0, "geen planten weggebrand")
+		_check(gone + trees == scorched, "een plant is half weggebrand blijven hangen")
 		_check(far <= (inst.GEN + 2) * inst.CELL * 1.5, "het vuur kwam verder dan GEN stappen")
 		_check(inst._img.get_pixel(int((spot.x - inst.MAP_X0) / inst.MAP_TEXEL), int((spot.z - inst.MAP_Z0) / inst.MAP_TEXEL)).r > 0.9, "de grond is niet zwart op de brandkaart")
 		_check(bb.call("catch_blast", spot, 4.0) == 0, "verbrand gebied mag niet opnieuw branden")

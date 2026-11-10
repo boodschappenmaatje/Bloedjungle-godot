@@ -18,6 +18,8 @@ const MAX_LIGHTS := 3
 const MAX_SMOKES := 7
 const FLAME_RANGE := 70.0     # verder van de camera: geen vlam tekenen (het verschroeien loopt wel door)
 const FUEL := {"grass": 1.0, "fern": 1.5, "bush": 2.2, "palm": 3.0}
+const WILT_T := 3.6           # zo lang doet een plant erover om weg te branden (gras, varens, struiken; bomen blijven staan)
+const WILT_STEP := 0.2        # zo vaak wordt de plant een stukje kleiner gemaakt
 const DAMAGE_TICK := 0.4
 const ENEMY_DPS := 28.0
 const PLAYER_DPS := 14.0
@@ -150,7 +152,8 @@ func _light(k: Vector2i, gen: int) -> bool:
 			tall = true
 			break
 	var cell := {"state": 1, "t": 0.0, "burn": randf_range(BURN_T.x, BURN_T.y) + minf(fuel, 8.0) * 0.25,
-		"spread_t": randf_range(SPREAD_T.x, SPREAD_T.y), "gen": gen, "flame": null, "charred": false, "tall": tall, "smoke": null}
+		"spread_t": randf_range(SPREAD_T.x, SPREAD_T.y), "gen": gen, "flame": null, "charred": false, "tall": tall, "smoke": null,
+		"wilt": 0.0, "wilt_t": randf() * WILT_STEP}
 	_cells[k] = cell
 	_burning.append(k)
 	burned_total += 1
@@ -209,9 +212,15 @@ func _process(delta: float) -> void:
 		var k := _burning[i]
 		var cell: Dictionary = _cells[k]
 		cell.t += delta
-		if not cell.charred and cell.t > cell.burn * 0.45:
+		if not cell.charred and cell.t > cell.burn * 0.4:
 			cell.charred = true
 			_char(k)
+		if cell.charred and cell.wilt < 1.0:
+			cell.wilt_t += delta
+			if cell.wilt_t >= WILT_STEP:
+				cell.wilt = minf(1.0, cell.wilt + cell.wilt_t / WILT_T)
+				cell.wilt_t = 0.0
+				_wilt(k, cell.wilt)
 		if cell.spread_t > 0.0 and cell.t >= cell.spread_t:
 			cell.spread_t = -1.0
 			_spread(k, cell.gen, rain)
@@ -260,11 +269,15 @@ func _char(k: Vector2i) -> void:
 			continue
 		e["scorched"] = true
 		var col: Color = CHAR[e["kind"]]
+		var keep: Array = []   # de oorspronkelijke plek per instance, om hem straks te laten krimpen
 		for slot: Dictionary in e.get("slots", []):
 			var mm: MultiMesh = slot.get("multimesh")
+			keep.append(mm.get_instance_transform(int(slot.index)) if mm != null and int(slot.index) < mm.instance_count else Transform3D.IDENTITY)
 			if mm != null and mm.use_colors and int(slot.index) < mm.instance_count:
 				var v := randf_range(0.8, 1.15)
 				mm.set_instance_color(int(slot.index), Color(col.r * v, col.g * v, col.b * v, 1.0))
+		if e["kind"] != "palm":
+			e["burn_xf"] = keep
 	# de grond: het vak plus een rafelrand, zodat de vlek niet vierkant wordt
 	var mid := _mid(k)
 	var tx := int((mid.x - MAP_X0) / MAP_TEXEL)
@@ -281,14 +294,41 @@ func _char(k: Vector2i) -> void:
 	_dirty = true
 
 
+## Gras, varens en struiken branden weg: ze zakken in en krimpen tot niets (w loopt van 0 naar 1). Bomen blijven staan.
+func _wilt(k: Vector2i, w: float) -> void:
+	var side := 1.0 - w * w            # eerst zakt de plant in, dan pas wordt hij smaller
+	var up := maxf(0.0, 1.0 - w * 1.25)
+	for e: Dictionary in _index.get(k, []):
+		if not e.has("burn_xf") or e.get("cleared", false):
+			continue
+		var keep: Array = e["burn_xf"]
+		var slots: Array = e.get("slots", [])
+		for i in slots.size():
+			var mm: MultiMesh = slots[i].get("multimesh")
+			if mm == null or int(slots[i].index) >= mm.instance_count:
+				continue
+			var xf: Transform3D = keep[i]
+			if w >= 1.0:
+				xf.basis = Basis.from_scale(Vector3.ONE * 0.0001)
+			else:
+				xf.basis = xf.basis * Basis.from_scale(Vector3(side, up, side))
+			mm.set_instance_transform(int(slots[i].index), xf)
+		if w >= 1.0:
+			e.erase("burn_xf")
+			e["burned_away"] = true
+
+
 func _flush_map() -> void:
 	_tex.update(_img)
 	_dirty = false
 	_map_t = 0.0
 
 
-func _end(_k: Vector2i, cell: Dictionary) -> void:
+func _end(k: Vector2i, cell: Dictionary) -> void:
 	cell.state = 2
+	if cell.wilt < 1.0:
+		cell.wilt = 1.0
+		_wilt(k, 1.0)
 	var mi: MeshInstance3D = cell.flame
 	cell.flame = null
 	if mi != null and is_instance_valid(mi):

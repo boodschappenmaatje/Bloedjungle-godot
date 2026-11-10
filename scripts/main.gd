@@ -292,13 +292,15 @@ func _spawn(item: Variant) -> void:
 	add_child(e)
 
 
-## Een vijandelijk voertuig rijdt uit de poort van de vijandbasis: de weg staat in AanvalRoutes.voertuig_pad. Nu alleen de jeep; de tank volgt in stap V2.
+## Een vijandelijk voertuig rijdt uit de poort van de vijandbasis: de weg staat in AanvalRoutes.voertuig_pad. De jeep (stap V1) rijdt snel en schiet met zijn MG,
+## de tank (stap V2) rijdt langzaam, stopt op afstand van het eerste doel en beschiet het met granaten.
 func _spawn_voertuig(entry: Dictionary) -> void:
-	var j := VijandJeep.make(AanvalRoutes.voertuig_pad(), int(entry.n))
-	j.position = VijandBasis.gate_inside() + Vector3(0.0, 0.0, -2.0)
-	j.rotation.y = PI   # met de neus naar de poort (zuid)
-	add_child(j)
-	Game.banner.emit("VIJANDELIJKE JEEP ONDERWEG", "Hij rijdt door de stad naar je basis", 2.0)
+	var tank: bool = str(entry.kind) == "tank"
+	var v: Node3D = VijandTank.make(AanvalRoutes.voertuig_pad(true), int(entry.n)) if tank else VijandJeep.make(AanvalRoutes.voertuig_pad(), int(entry.n))
+	v.position = VijandBasis.gate_inside() + Vector3(0.0, 0.0, -2.0)
+	v.rotation.y = PI   # met de neus naar de poort (zuid)
+	add_child(v)
+	Game.banner.emit("VIJANDELIJKE TANK ONDERWEG" if tank else "VIJANDELIJKE JEEP ONDERWEG", "Hij rijdt door de stad naar je basis" if not tank else "Hij belegert alles binnen 38 m met granaten", 2.0)
 	if Game.builds != null and Game.builds.radio != null:
 		Game.builds.radio.say("voertuig_onderweg")   # Dennis neemt de zin nog op; zonder opname blijft het stil
 

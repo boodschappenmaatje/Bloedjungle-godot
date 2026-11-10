@@ -16,15 +16,17 @@ const TIMES := {
 	"night": {"rot": Vector3(-52, -38, 0), "col": "8fa8ff", "e": 0.9, "amb": 0.34, "top": "10182e", "hor": "2c3b5a", "gnd": "141c2a", "fog": "27324a", "exp": 0.95},
 }
 
-# Graphics 2.0: de zon staat lager en is warmer (lange schaduwen), de schaduwkant krijgt koel licht (ambc), de lucht is blauwer.
-# mist = kleur van de laaghangende nevel, ms = dichtheid ervan.
+# Graphics 2.0, dag = gouden ochtend (keuze 1A, 10 nov 2026): lage goudgele zon schuin van voren (tegenlicht, de schaduwen
+# vallen naar de camera toe), veel warm omgevingslicht zodat het beeld licht blijft, warme mist en nevel.
+# ambc = kleur van het omgevingslicht, mist/ms = kleur en dichtheid van de nevel, beam/bs = kleur en sterkte van de lichtbundels.
 const TIMES_G2 := {
-	"day": {"rot": Vector3(-25, -38, 0), "col": "ffcf94", "e": 2.5, "amb": 0.27, "ambc": "86a3c6", "top": "44668a", "hor": "b9bfa6", "gnd": "8e9c80", "fog": "93a08a", "exp": 0.98, "mist": "d2d9c4", "ms": 0.15},
-	"dusk": {"rot": Vector3(-9, -38, 0), "col": "ff8644", "e": 1.9, "amb": 0.32, "ambc": "7d7fb0", "top": "3a3f5c", "hor": "e0915a", "gnd": "8a6a50", "fog": "b0805e", "exp": 1.0, "mist": "e0a57c", "ms": 0.17},
+	"day": {"rot": Vector3(-23, -142, 0), "col": "ffcf8a", "e": 2.05, "amb": 0.6, "ambc": "a9b596", "top": "5f7f96", "hor": "ecd9ac", "gnd": "a59a70", "fog": "c9c19a", "exp": 1.0, "mist": "f1e2b8", "ms": 0.09, "beam": "ffd591", "bs": 0.12},
+	"dusk": {"rot": Vector3(-9, -38, 0), "col": "ff8644", "e": 1.9, "amb": 0.32, "ambc": "7d7fb0", "top": "3a3f5c", "hor": "e0915a", "gnd": "8a6a50", "fog": "b0805e", "exp": 1.0, "mist": "e0a57c", "ms": 0.13, "beam": "ff9a55", "bs": 0.16},
 	"night": {"rot": Vector3(-48, -38, 0), "col": "9db4ff", "e": 1.0, "amb": 0.34, "ambc": "3d5a96", "top": "10182e", "hor": "2c3b5a", "gnd": "141c2a", "fog": "27324a", "exp": 0.95, "mist": "5a6c8e", "ms": 0.16},
 }
 
 var _world: Graphics2Wereld
+var _fill: DirectionalLight3D   # zacht invullicht vanaf de camerakant, zodat soldaten in het tegenlicht niet zwart worden
 var _luts := {}
 
 
@@ -86,6 +88,14 @@ func _ready() -> void:
 	_sun = sun
 	_world = Graphics2Wereld.new()
 	add_child(_world)
+	_fill = DirectionalLight3D.new()
+	_fill.rotation_degrees = Vector3(-42.0, 30.0, 0.0)
+	_fill.light_color = Color("d6dde6")
+	_fill.light_energy = 0.55
+	_fill.light_specular = 0.0
+	_fill.shadow_enabled = false
+	_fill.visible = false
+	add_child(_fill)
 	apply_settings()
 	apply_settings.call_deferred()  # nog eens als de camera en de jungle er staan
 
@@ -148,8 +158,10 @@ const TIER_MAX := 4
 
 func _apply_tier() -> void:
 	if tier >= 1:
+		_fill.visible = false
 		if _world != null:
-			_world.apply(false, _world.shadow_on, _world.dust_on)   # Graphics 2.0: de nevel gaat als eerste uit
+			_world.apply(false, _world.shadow_on, _world.dust_on)   # Graphics 2.0: de nevel en de lichtbundels gaan als eerste uit
+			_world.apply_beams(false)
 		_env.fog_height_density = 0.0
 		_env.glow_enabled = false
 		_env.ssao_enabled = false
@@ -195,6 +207,7 @@ func _apply_diagnose() -> void:
 	if GameSettings.get_value("t_post") == "off":
 		if _world != null:
 			_world.apply(false, _world.shadow_on, _world.dust_on)
+			_world.apply_beams(false)
 		_env.fog_enabled = false
 		_env.glow_enabled = false
 		_env.ssao_enabled = false
@@ -293,31 +306,41 @@ func _apply_g2(q: String, t: Dictionary, weather: String) -> void:
 	_env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN if light else Environment.GLOW_BLEND_MODE_SOFTLIGHT
 	_env.adjustment_contrast = 1.18 if light else 1.2
 	_env.adjustment_color_correction = _lut(GameSettings.get_value("time")) if light else null
-	_sun.shadow_opacity = 0.84 if light else 0.72
+	_sun.shadow_opacity = 0.78 if light else 0.72
+	_fill.visible = light and GameSettings.get_value("time") == "day"
 	_sun.shadow_blur = 1.3 if light else 1.8
 	if light:
 		_env.ambient_light_color = Color(t["ambc"])
-		_env.adjustment_saturation = 1.16 if weather == "clear" else 0.9
+		_env.adjustment_saturation = 1.22 if weather == "clear" else 0.9
 		_env.glow_enabled = true
 		_sun.shadow_enabled = true
-		_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+		# Eén schaduwkaart in plaats van twee: op de iPhone kostte de tweede kaart (alle palmen nog een keer tekenen)
+		# te veel (v205: 89 fps bij 50% resolutie). Ultra houdt twee kaarten.
+		var two: bool = q == "ultra"
+		_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS if two else DirectionalLight3D.SHADOW_ORTHOGONAL
 		_sun.directional_shadow_split_1 = 0.28
 		_sun.directional_shadow_blend_splits = false
-		_sun.directional_shadow_max_distance = 64.0
-		RenderingServer.directional_shadow_atlas_set_size(4096 if q == "ultra" else 2048, true)
+		_sun.directional_shadow_max_distance = 64.0 if two else 46.0
+		RenderingServer.directional_shadow_atlas_set_size(4096 if two else 2048, true)
 	_env.fog_height = 2.4 if depth else 0.0
 	_env.fog_height_density = (0.035 if weather == "clear" else 0.07) if depth else 0.0
-	_env.fog_sun_scatter = 0.22 if depth else 0.0
+	_env.fog_sun_scatter = 0.3 if depth else 0.0
 	_env.fog_aerial_perspective = 0.18 if depth else 0.1
 	if depth:
-		_env.fog_density *= 0.7   # de hoogtemist neemt een deel van de dichtheid over
+		_env.fog_density *= 0.5   # de hoogtemist neemt een deel van de dichtheid over
 	for g in get_tree().get_nodes_in_group("ground"):
 		var mat: ShaderMaterial = g.get_meta("mat") if g.has_meta("mat") else null
 		if mat != null:
 			mat.set_shader_parameter("g2_wet", 1.0 if depth else 0.0)
+			mat.set_shader_parameter("g2_gold", 1.0 if light and GameSettings.get_value("time") == "day" else 0.0)
+			mat.set_shader_parameter("g2_sky", Color(t["hor"]))
 	var mist_col := Color(t.get("mist", "c9d3bd"))
 	var strength: float = float(t.get("ms", 0.26)) * (1.0 if weather == "clear" else 1.5)
 	_world.apply(depth, light, Graphics2.fx(), mist_col, strength)
+	# lichtbundels: alleen bij helder weer en als er een zon is die laag genoeg staat (dag en avond)
+	var beams: bool = light and depth and weather == "clear" and t.has("beam")
+	_world.apply_beams(beams, -_sun.global_transform.basis.z, Color(t.get("beam", "ffd591")), float(t.get("bs", 0.2)))
+	_world.apply_plants(depth)
 
 
 ## Kleurtabel per tijdstip: donkere tinten zakken iets weg naar koel groenblauw, lichte tinten worden warm. Eén kleine textuur.
@@ -331,7 +354,7 @@ func _lut(time: String) -> GradientTexture1D:
 			"night":
 				g.colors = PackedColorArray([Color(0.0, 0.008, 0.03), Color(0.21, 0.24, 0.29), Color(0.57, 0.6, 0.65), Color(0.94, 0.97, 1.0)])
 			_:
-				g.colors = PackedColorArray([Color(0.0, 0.004, 0.008), Color(0.195, 0.222, 0.225), Color(0.6, 0.6, 0.572), Color(1.0, 0.975, 0.9)])
+				g.colors = PackedColorArray([Color(0.002, 0.004, 0.002), Color(0.225, 0.235, 0.215), Color(0.615, 0.612, 0.565), Color(1.0, 0.975, 0.89)])
 		var tex := GradientTexture1D.new()
 		tex.gradient = g
 		tex.width = 256

@@ -205,9 +205,15 @@ jobs:
           SCHEME="$(/usr/bin/python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["project"]["schemes"][0])' build/xcode-list.json)"
           test -n "$SCHEME"
           echo "Building $XCODEPROJ with scheme $SCHEME"
-          xcodebuild -project "$XCODEPROJ" -scheme "$SCHEME" -configuration Release -sdk iphoneos -derivedDataPath build/derived CODE_SIGNING_ALLOWED=NO build
+          # Godot's exported Xcode project does not link MetalFX. Without it the Metal driver reports
+          # "MetalFX Spatial: no" on iPhone (class lookup returns nil) and upscaling cannot be used.
+          # Weak link keeps the app starting on iOS versions without MetalFX.
+          xcodebuild -project "$XCODEPROJ" -scheme "$SCHEME" -configuration Release -sdk iphoneos -derivedDataPath build/derived CODE_SIGNING_ALLOWED=NO 'OTHER_LDFLAGS=$(inherited) -weak_framework MetalFX' build
           APP="$(find build/derived/Build/Products/Release-iphoneos -maxdepth 1 -name '*.app' -type d -print -quit)"
           test -n "$APP"
+          EXE="$APP/$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$APP/Info.plist")"
+          otool -L "$EXE" | tee build/otool.txt
+          grep -q "MetalFX.framework" build/otool.txt || { echo "MetalFX is not linked into the app" >&2; exit 1; }
           /usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist"
           mkdir -p build/Payload
           cp -R "$APP" build/Payload/

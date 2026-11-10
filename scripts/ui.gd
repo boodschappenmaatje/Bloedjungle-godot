@@ -119,6 +119,22 @@ static func style_button(b: Button, kind: String) -> void:
 	var size := 15
 	var col := INK
 	match kind:
+		"field":
+			normal = box(Color(0.075, 0.085, 0.05, 0.92), Color("77704a"), 2, 3, 8)
+			pressed = box(Color(0.22, 0.20, 0.11, 0.98), BRASS, 2, 3, 8)
+			disabled = normal
+			font = display(0)
+			size = 18
+			col = INK
+			b.custom_minimum_size.y = 50.0
+		"field_primary":
+			normal = box(Color("9c762b"), Color("e2bf67"), 2, 3, 8)
+			pressed = box(Color("c09839"), Color("f0d17f"), 2, 3, 8)
+			disabled = normal
+			font = display(0)
+			size = 20
+			col = Color("17160d")
+			b.custom_minimum_size.y = 58.0
 		"buy":
 			normal = box(OLIVE, OLIVE_HI, 1, 4, 4)
 			pressed = box(OLIVE_HI, OLIVE_HI, 1, 4, 4)
@@ -169,7 +185,7 @@ static func style_button(b: Button, kind: String) -> void:
 			col = INK_DIM
 			font = body(700, 2)
 	# 3D-look: hogere kleuren en een dikke onderrand voor de knoppen die je indrukt
-	if kind in ["buy", "primary", "gold", "round", "secondary", "pause"]:
+	if kind in ["buy", "primary", "gold", "round", "secondary", "pause", "field", "field_primary"]:
 		var depth := 5 if kind == "primary" else 4
 		bevel(normal, depth)
 		bevel(pressed, depth, true)

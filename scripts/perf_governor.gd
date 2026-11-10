@@ -32,7 +32,7 @@ func _process(delta: float) -> void:
 	if paused:
 		return
 	var vp := get_viewport()
-	var q: String = GameSettings.get_value("quality") + "|" + GameSettings.get_value("upscaling")
+	var q: String = GameSettings.get_value("quality") + "|" + GameSettings.get_value("upscaling") + "|" + GameSettings.get_value("g2")
 	if q != _quality:
 		_quality = q
 		_frozen = false

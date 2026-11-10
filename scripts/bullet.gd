@@ -237,6 +237,8 @@ static func _glow(head: Color, tail: Color, tail_length := 2.0, width := 0.07, h
 	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	mat.vertex_color_use_as_albedo = true
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	if Graphics2.fx():
+		mat.albedo_color = Color(2.0, 2.0, 2.0)   # Graphics 2.0: fel genoeg om met de gloed op te lichten
 	m.surface_set_material(0, mat)
 	var ball := SphereMesh.new()
 	ball.radius = ball_size

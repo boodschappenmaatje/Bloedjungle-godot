@@ -16,6 +16,17 @@ const TIMES := {
 	"night": {"rot": Vector3(-52, -38, 0), "col": "8fa8ff", "e": 0.9, "amb": 0.34, "top": "10182e", "hor": "2c3b5a", "gnd": "141c2a", "fog": "27324a", "exp": 0.95},
 }
 
+# Graphics 2.0: de zon staat lager en is warmer (lange schaduwen), de schaduwkant krijgt koel licht (ambc), de lucht is blauwer.
+# mist = kleur van de laaghangende nevel, ms = dichtheid ervan.
+const TIMES_G2 := {
+	"day": {"rot": Vector3(-25, -38, 0), "col": "ffcf94", "e": 2.5, "amb": 0.27, "ambc": "86a3c6", "top": "44668a", "hor": "b9bfa6", "gnd": "8e9c80", "fog": "93a08a", "exp": 0.98, "mist": "d2d9c4", "ms": 0.15},
+	"dusk": {"rot": Vector3(-9, -38, 0), "col": "ff8644", "e": 1.9, "amb": 0.32, "ambc": "7d7fb0", "top": "3a3f5c", "hor": "e0915a", "gnd": "8a6a50", "fog": "b0805e", "exp": 1.0, "mist": "e0a57c", "ms": 0.17},
+	"night": {"rot": Vector3(-48, -38, 0), "col": "9db4ff", "e": 1.0, "amb": 0.34, "ambc": "3d5a96", "top": "10182e", "hor": "2c3b5a", "gnd": "141c2a", "fog": "27324a", "exp": 0.95, "mist": "5a6c8e", "ms": 0.16},
+}
+
+var _world: Graphics2Wereld
+var _luts := {}
+
 
 func _ready() -> void:
 	add_to_group("atmosphere")
@@ -73,6 +84,8 @@ func _ready() -> void:
 	_sky_mat = sky_mat
 	_env = env
 	_sun = sun
+	_world = Graphics2Wereld.new()
+	add_child(_world)
 	apply_settings()
 	apply_settings.call_deferred()  # nog eens als de camera en de jungle er staan
 
@@ -98,9 +111,10 @@ void fragment() {
 
 ## Past tijd, weer en grafiek uit GameSettings toe (ook midden in het spel, vanuit het menu).
 func apply_settings() -> void:
-	var t: Dictionary = TIMES[GameSettings.get_value("time")]
 	var weather := GameSettings.get_value("weather")
 	var quality := Upscaling.effective_quality()
+	var g2_light := Graphics2.light() and quality != "low"
+	var t: Dictionary = (TIMES_G2 if g2_light else TIMES)[GameSettings.get_value("time")]
 	var dim := 1.0 if weather == "clear" else (0.6 if weather == "rain" else 0.75)
 	_sun.rotation_degrees = t["rot"]
 	_sun.light_color = Color(t["col"])
@@ -114,6 +128,7 @@ func apply_settings() -> void:
 	_env.tonemap_exposure = t["exp"]
 	_env.adjustment_saturation = 1.1 if weather == "clear" else 0.85
 	_apply_quality(quality)
+	_apply_g2(quality, t, weather)
 	_apply_trees()
 	Woonhuis.apply_shadow_setting()
 	_set_rain(weather == "rain")
@@ -133,6 +148,9 @@ const TIER_MAX := 4
 
 func _apply_tier() -> void:
 	if tier >= 1:
+		if _world != null:
+			_world.apply(false, _world.shadow_on, _world.dust_on)   # Graphics 2.0: de nevel gaat als eerste uit
+		_env.fog_height_density = 0.0
 		_env.glow_enabled = false
 		_env.ssao_enabled = false
 		_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
@@ -141,6 +159,7 @@ func _apply_tier() -> void:
 		if cam and cam.attributes is CameraAttributesPractical:
 			(cam.attributes as CameraAttributesPractical).dof_blur_far_enabled = false
 	if tier >= 2:
+		Fx.g2_budget = 0.5   # Graphics 2.0: minder rook en licht per explosie
 		_sun.directional_shadow_max_distance = minf(_sun.directional_shadow_max_distance, 28.0)
 		for kind in ["bush", "fern", "palm", "rock"]:
 			for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("foliage_" + kind):
@@ -174,6 +193,8 @@ func _apply_diagnose() -> void:
 	if Stad.current != null and is_instance_valid(Stad.current):
 		Stad.current.visible = GameSettings.get_value("t_stad") == "on"
 	if GameSettings.get_value("t_post") == "off":
+		if _world != null:
+			_world.apply(false, _world.shadow_on, _world.dust_on)
 		_env.fog_enabled = false
 		_env.glow_enabled = false
 		_env.ssao_enabled = false
@@ -258,6 +279,66 @@ func _apply_quality(q: String) -> void:
 			n.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON if c.bush_shadow else GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
+## Graphics 2.0 bovenop de gekozen grafiekstand (niet bij Laag). Belichting: schaduw in twee delen tot 64 m (genoeg voor de
+## camera op 40 graden), gloed, koel omgevingslicht en een kleurtabel. Diepte: hoogtemist, zongloed in de mist en nevel.
+## Met de schakelaar op Klassiek zet dit alles terug naar de waarden van vóór v205.
+func _apply_g2(q: String, t: Dictionary, weather: String) -> void:
+	var light := Graphics2.light() and q != "low"
+	var depth := Graphics2.depth() and q != "low"
+	Fx.g2_budget = 1.0
+	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR if light else Environment.AMBIENT_SOURCE_SKY
+	_env.glow_intensity = 0.62 if light else 0.4
+	_env.glow_bloom = 0.06 if light else 0.02
+	_env.glow_hdr_threshold = 1.0 if light else 1.2
+	_env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN if light else Environment.GLOW_BLEND_MODE_SOFTLIGHT
+	_env.adjustment_contrast = 1.18 if light else 1.2
+	_env.adjustment_color_correction = _lut(GameSettings.get_value("time")) if light else null
+	_sun.shadow_opacity = 0.84 if light else 0.72
+	_sun.shadow_blur = 1.3 if light else 1.8
+	if light:
+		_env.ambient_light_color = Color(t["ambc"])
+		_env.adjustment_saturation = 1.16 if weather == "clear" else 0.9
+		_env.glow_enabled = true
+		_sun.shadow_enabled = true
+		_sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+		_sun.directional_shadow_split_1 = 0.28
+		_sun.directional_shadow_blend_splits = false
+		_sun.directional_shadow_max_distance = 64.0
+		RenderingServer.directional_shadow_atlas_set_size(4096 if q == "ultra" else 2048, true)
+	_env.fog_height = 2.4 if depth else 0.0
+	_env.fog_height_density = (0.035 if weather == "clear" else 0.07) if depth else 0.0
+	_env.fog_sun_scatter = 0.22 if depth else 0.0
+	_env.fog_aerial_perspective = 0.18 if depth else 0.1
+	if depth:
+		_env.fog_density *= 0.7   # de hoogtemist neemt een deel van de dichtheid over
+	for g in get_tree().get_nodes_in_group("ground"):
+		var mat: ShaderMaterial = g.get_meta("mat") if g.has_meta("mat") else null
+		if mat != null:
+			mat.set_shader_parameter("g2_wet", 1.0 if depth else 0.0)
+	var mist_col := Color(t.get("mist", "c9d3bd"))
+	var strength: float = float(t.get("ms", 0.26)) * (1.0 if weather == "clear" else 1.5)
+	_world.apply(depth, light, Graphics2.fx(), mist_col, strength)
+
+
+## Kleurtabel per tijdstip: donkere tinten zakken iets weg naar koel groenblauw, lichte tinten worden warm. Eén kleine textuur.
+func _lut(time: String) -> GradientTexture1D:
+	if not _luts.has(time):
+		var g := Gradient.new()
+		g.offsets = PackedFloat32Array([0.0, 0.25, 0.6, 1.0])
+		match time:
+			"dusk":
+				g.colors = PackedColorArray([Color(0.012, 0.01, 0.03), Color(0.23, 0.22, 0.26), Color(0.62, 0.59, 0.57), Color(1.0, 0.95, 0.86)])
+			"night":
+				g.colors = PackedColorArray([Color(0.0, 0.008, 0.03), Color(0.21, 0.24, 0.29), Color(0.57, 0.6, 0.65), Color(0.94, 0.97, 1.0)])
+			_:
+				g.colors = PackedColorArray([Color(0.0, 0.004, 0.008), Color(0.195, 0.222, 0.225), Color(0.6, 0.6, 0.572), Color(1.0, 0.975, 0.9)])
+		var tex := GradientTexture1D.new()
+		tex.gradient = g
+		tex.width = 256
+		_luts[time] = tex
+	return _luts[time]
+
+
 ## Bomen: wind aan/uit en schaduw (Vast = nepschaduw onder elke boom, Echt = schaduwkaart, Uit).
 func _apply_trees() -> void:
 	Foliage.set_wind(GameSettings.get_value("wind") == "on")
@@ -265,6 +346,8 @@ func _apply_trees() -> void:
 	Foliage.set_sun(Vector2(fwd.x, fwd.z), -_sun.rotation_degrees.x)
 	var mode := GameSettings.get_value("treeshadow")
 	var c: Dictionary = QUALITY[GameSettings.get_value("quality")]
+	if Graphics2.light() and c.shadow and mode != "off":
+		mode = "real"   # Graphics 2.0: palmen en rotsen werpen echte schaduw, de vaste vlek vervalt
 	for n in get_tree().get_nodes_in_group("treeshadow"):
 		n.visible = mode == "fake" and c.shadow
 	for kind in ["palm", "bush", "fern", "rock"]:

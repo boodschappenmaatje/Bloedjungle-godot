@@ -160,7 +160,7 @@ void fragment() {
 	// bosbrand: verbrande grond blijft zwart, met een rafelige rand en lichte asvlekken
 	float burn = texture(burn_map, (p - burn_rect.xy) * burn_rect.zw).r;
 	burn = smoothstep(0.22, 0.6, burn + (n3 - 0.5) * 0.35);
-	vec3 ash = mix(vec3(0.016, 0.014, 0.012), vec3(0.11, 0.105, 0.1), smoothstep(0.62, 0.8, n2) * 0.6);
+	vec3 ash = mix(vec3(0.016, 0.014, 0.012), vec3(0.11, 0.105, 0.1), smoothstep(0.7, 0.86, n2) * 0.3);
 	ALBEDO = mix(ALBEDO, ash, burn * 0.9);
 	ROUGHNESS = mix(ROUGHNESS, 0.96, burn);
 	SPECULAR = mix(SPECULAR, 0.08, burn);

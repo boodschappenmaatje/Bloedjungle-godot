@@ -61,15 +61,16 @@ func _process(_d: float) -> bool:
 		game.player.face = PI
 	if frames == 170:
 		_shot("0_voor")
-		spot = game.player.global_position + Vector3(5.0, 0.0, -5.0)
+		spot = game.player.global_position + Vector3(8.0, 0.0, -3.0)
 		load("res://scripts/fx.gd").explosion(game.player.get_parent(), spot, 1.0)
 		game.note_blast(spot, 4.0)
+		Engine.time_scale = 10.0   # software-Vulkan is traag: het vuur loopt hier tien keer zo snel als in het spel
+	if frames == 170 + 36:
+		_shot("1_aangestoken")   # 6 s
+	if frames == 170 + 84:
+		_shot("2_brandrand")     # 14 s
 	if frames == 170 + 150:
-		_shot("1_aangestoken")
-	if frames == 170 + 540:
-		_shot("2_brandrand")
-	if frames == 170 + 1100:
-		_shot("3_groot")
-	if frames == 170 + 3000:
-		_shot("4_na")
-	return frames > 170 + 3002
+		_shot("3_groot")         # 25 s
+	if frames == 170 + 400:
+		_shot("4_na")            # ruim een minuut: gedoofd
+	return frames > 170 + 402

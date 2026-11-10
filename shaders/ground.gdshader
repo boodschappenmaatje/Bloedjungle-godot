@@ -122,7 +122,7 @@ void fragment() {
 	// mos op de overgang van gras naar aarde, natte donkere modder in de lage stukken
 	float edge = clamp(4.0 * dm * (1.0 - dm), 0.0, 1.0);
 	dirt = mix(dirt, vec3(0.14, 0.2, 0.08) * (0.8 + 0.5 * n3), edge * 0.5);
-	dirt *= 1.0 - 0.25 * smoothstep(0.5, 0.2, n2) * dm;
+	dirt *= 1.0 - 0.25 * (1.0 - smoothstep(0.2, 0.5, n2)) * dm;
 	grass *= mix(vec3(1.0), vec3(0.9, 1.26, 0.6), g2_gold);  // dieper groen; het goud komt van de zon, niet van het gras
 	// Graphics 2.0: het bospad is warme roodbruine modder met losse steentjes
 	vec3 stones = texture(dirt_tex, p * 0.37 + 0.19, detail_mip_bias).rgb;
@@ -139,7 +139,7 @@ void fragment() {
 	ROUGHNESS = mix(1.0, dirt_roughness, dm * micro_detail);
 	SPECULAR = dm * 0.16;
 	// Graphics 2.0: plassen in moeras, langs de oever en op de laagste plekken van de modder glanzen in de zon
-	float wet = g2_wet * dm * clamp(max(swamp, 1.0 - smoothstep(2.9, 6.0, river_off)) + smoothstep(0.42, 0.2, n2) * 0.7, 0.0, 1.0);
+	float wet = g2_wet * dm * clamp(max(swamp, 1.0 - smoothstep(2.9, 6.0, river_off)) + (1.0 - smoothstep(0.2, 0.42, n2)) * 0.7, 0.0, 1.0);
 	ROUGHNESS = mix(ROUGHNESS, 0.3, wet * 0.8);
 	SPECULAR = mix(SPECULAR, 0.5, wet);
 	ALBEDO *= 1.0 - 0.28 * wet;

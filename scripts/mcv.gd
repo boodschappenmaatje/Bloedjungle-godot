@@ -313,7 +313,7 @@ func deploy_now() -> void:
 	Game.base_pos = at
 	Game.base_yaw = yaw
 	Game.mcv_deployed = true
-	Game.prep_t = Data.MCV_RUST   # de klok van de eerste vijandelijke groep begint nu
+	Game.prep_t = Progress.eerste_rust()   # de klok van de eerste vijandelijke groep begint nu
 	Game.free_depot = 1           # een gratis voorraaddepot (met eerste truck) om zelf neer te zetten
 	Game.free_towers = 4          # en vier gratis wachttorens (daarna 100 per stuk, alleen bij je hoofdkwartier)
 	Game.free_wall = true

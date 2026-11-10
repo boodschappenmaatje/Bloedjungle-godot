@@ -35,6 +35,16 @@ static var player_name := "Rambo"
 static var stats := {"bestWave": 0, "kills": 0, "games": 0, "boss": 0}
 static var sel := {"camo": "jungle", "band": "rood", "top": "jungle"}
 static var autostart := false  # na "Opnieuw" meteen spelen, zonder hoofdmenu
+## Testoptie uit het hoofdmenu (Dennis, 10 nov 2026): 0 = gewoon spel; N = de eerste aanvalsgroep is groep N (bv. 3 = jeep, 6 = tank),
+## met een korte rust (TEST_RUST) na het uitklappen. Een testspel telt niet mee voor "beste groep" of de scorelijst.
+## Blijft staan bij "Opnieuw" (zelfde test nog eens); START MISSIE zet het terug op 0.
+static var test_groep := 0
+const TEST_RUST := 20.0
+
+
+## Rust voor de eerste aanvalsgroep, vanaf het uitklappen van de bouwwagen.
+static func eerste_rust() -> float:
+	return TEST_RUST if test_groep > 0 else Data.MCV_RUST
 static var _loaded := false
 static var _bonus := {}
 

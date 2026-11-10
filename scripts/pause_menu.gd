@@ -83,6 +83,7 @@ func _ready() -> void:
 	add_child(_root)
 	_root.hide()
 	_build_menu()
+	_build_test()
 	_build_pause()
 	_build_settings()
 	# een nieuwe update meldt zich vanzelf, maar alleen in het hoofdmenu (nooit midden in het spel); de speler bevestigt zelf
@@ -272,6 +273,10 @@ func _build_menu() -> void:
 	row.add_child(_button("Stadseditor", "secondary", _open_stad_editor))
 	row.add_child(_button("Updates", "secondary", func(): UpdatePanel.open(self)))
 	left.add_child(row)
+	# testoptie (Dennis, 10 nov 2026): meteen beginnen bij een latere groep om jeep, tank enz. sneller te testen
+	var test_row := HBoxContainer.new()
+	test_row.add_child(_button("Test: start bij groep…", "secondary", func(): _show("test")))
+	left.add_child(test_row)
 	var right := VBoxContainer.new()
 	right.add_theme_constant_override("separation", 12)
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -316,6 +321,44 @@ func show_menu() -> void:
 
 
 func _start_game() -> void:
+	Progress.test_groep = 0
+	_show("")
+	get_tree().current_scene.begin()
+
+
+# ---------------------------------------------------------------- test: start bij groep
+
+const TEST_GROEPEN := 12
+
+## Wat er in aanvalsgroep n meekomt (aantal soldaten + voertuigen), voor de testknoppen en de banner.
+static func groep_inhoud(n: int) -> String:
+	var t := "%d soldaten" % (4 + int(n * 2.4))   # zelfde aantal als Data.build_group(n)
+	var vt := Data.groep_voertuigen(n)
+	if not vt.is_empty():
+		t += " + " + " + ".join(vt)
+	return t
+
+
+func _build_test() -> void:
+	var v := _scrolling(_centered("test", 620))
+	_head(v, "Test", "START BIJ GROEP")
+	v.add_child(_wrap("Kies een groep: het spel begint zoals altijd met de bouwwagen, maar de eerste aanvalsgroep is meteen de gekozen groep, %d s na het uitklappen (of eerder met Start nu). Een testspel telt niet mee voor je beste groep en de scorelijst." % int(Progress.TEST_RUST), 14, UI.INK_DIM, 560.0))
+	var g := GridContainer.new()
+	g.columns = 3
+	g.add_theme_constant_override("h_separation", 8)
+	g.add_theme_constant_override("v_separation", 8)
+	v.add_child(g)
+	for n in range(1, TEST_GROEPEN + 1):
+		var groep: int = n
+		var b := _button("Groep %d\n%s" % [n, groep_inhoud(n)], "secondary", func(): _start_test(groep))
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.custom_minimum_size = Vector2(170, 58)
+		g.add_child(b)
+	v.add_child(_button("TERUG", "primary", func(): _show("menu")))
+
+
+func _start_test(n: int) -> void:
+	Progress.test_groep = n
 	_show("")
 	get_tree().current_scene.begin()
 
@@ -749,6 +792,7 @@ func _build_over() -> void:
 	row.add_child(again)
 	row.add_child(_button("Menu", "secondary", func():
 		Progress.autostart = false
+		Progress.test_groep = 0
 		get_tree().paused = false
 		get_tree().reload_current_scene()))
 	v.add_child(row)
@@ -766,7 +810,7 @@ func _on_over(reason: String) -> void:
 	_over_stats.wave.text = str(Game.wave)
 	_over_stats.kills.text = str(Game.kills)
 	_over_name.text = Progress.player_name
-	_over_save_row.visible = Game.score > 0
+	_over_save_row.visible = Game.score > 0 and Progress.test_groep == 0   # testspel: geen score bewaren
 	_score_table(_over_scores)
 	if not fresh.is_empty():
 		var l := _wrap("Nieuw vrijgespeeld: " + ", ".join(fresh), 14, UI.BRASS)
@@ -794,6 +838,8 @@ func _unhandled_key_input(e: InputEvent) -> void:
 		match _cur:
 			"settings", "gear":
 				_show(_return)
+			"test":
+				_show("menu")
 			"wheel":
 				_close_wheel()
 			"pause":

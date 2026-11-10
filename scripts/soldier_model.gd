@@ -174,6 +174,7 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 		_setup_meshy_player(uniform, gun_kind)
 		play("stil")
 		SoldierMark.attach(self)
+		_licht_laag()
 		return
 	# de klim-animatie komt uit een eigen glb met hetzelfde skelet en wordt aan dit mannetje gehangen
 	var lib := anim.get_animation_library("")
@@ -209,6 +210,7 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 		_setup_pose()
 		play("stil")
 		SoldierMark.attach(self)
+		_licht_laag()
 		return
 	# eigen kopie van de materialen, zodat elk mannetje een eigen kleur en rode flits kan hebben
 	for mi: MeshInstance3D in model.find_children("*", "MeshInstance3D", true, false):
@@ -227,12 +229,20 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 	_setup_upper_body_animation()
 	play("stil")
 	SoldierMark.attach(self)
+	_licht_laag()
 
 
+const LICHT_LAAG := 1 << 10   # renderlaag 11: alleen het invullicht van Graphics 2.0 kijkt hiernaar
 var _parts := {}   # naam -> MeshInstance3D (VQ2)
 var pose: SoldierPose   # benen los van de romp draaien, treffers per richting en wapen vasthouden (alleen VQ2)
 var _palm_r := Vector3.ZERO   # midden van de rechterhandpalm in de ruimte van DEF-handR
 const HOLD_CLIPS := ["stil", "lopen", "rennen", "schieten", "geraakt"]   # hierin houdt hij het wapen met beide handen vast
+
+
+## Graphics 2.0: soldaten staan ook op een eigen lichtlaag, zodat Atmosphere ze in het tegenlicht apart kan aanlichten.
+func _licht_laag() -> void:
+	for mi in find_children("*", "MeshInstance3D", true, false):
+		(mi as MeshInstance3D).layers |= LICHT_LAAG
 
 
 ## Geeft SoldierPose het wapen en de stand van de wapenknoop in de hand door.

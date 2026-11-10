@@ -18,9 +18,10 @@ const FOOTPRINT := {"tank": Vector2(2.1, 3.9), "vijand_tank": Vector2(2.1, 3.9),
 	"voorraad_truck": Vector2(1.7, 4.3), "mcv": Vector2(1.9, 4.8)}
 const FOOT_DEFAULT := Vector2(1.35, 2.5)
 
-const BEAM_MAX := 26
-const BEAM_CELL := 8.0      # m: per vak van het raster hooguit één bundel
-const BEAM_RANGE := 5       # vakken rond de speler
+const BEAM_MAX := 16
+const BEAM_CELL := 8.0      # m: de bundels worden opnieuw gekozen als de speler een vak verder is
+const BEAM_REACH := 44.0    # m rond de speler
+const CANOPY_MAX := 700
 const PLANT_GROUP := "g2_begroeiing"
 
 var beams_on := false
@@ -29,6 +30,9 @@ var _beam_mat: ShaderMaterial
 var _beam_cell := Vector2i(99999, 99999)
 var _clear := Vector3.ZERO
 var _plants_built := false
+var canopy_on := false
+var _canopy: MultiMeshInstance3D
+var _canopy_trees := -1
 var mist_on := false
 var shadow_on := false
 var dust_on := false
@@ -68,7 +72,7 @@ func apply(mist: bool, shadows: bool, dust: bool, tint := Color(0.72, 0.78, 0.7)
 				var p := v.get_node_or_null("G2Stof") as CPUParticles3D
 				if p != null:
 					p.emitting = false
-	set_process(mist or shadows or dust or beams_on)
+	set_process(mist or shadows or dust or beams_on or canopy_on)
 
 
 ## Lichtbundels tussen de bomen (alleen overdag en bij avond): sun_dir = richting waarin het zonlicht reist.
@@ -82,7 +86,7 @@ func apply_beams(on: bool, sun_dir := Vector3(0.5, -0.5, 0.5), tint := Color(1.0
 		_beam_mat.set_shader_parameter("tint", tint)
 		_beam_mat.set_shader_parameter("strength", strength)
 		_beam_cell = Vector2i(99999, 99999)   # opnieuw neerzetten
-	set_process(mist_on or shadow_on or dust_on or beams_on)
+	set_process(mist_on or shadow_on or dust_on or beams_on or canopy_on)
 
 
 ## Bloemen, bladplanten, varens en keien langs het pad door het bos (keuze 3B). Eenmalig gebouwd, daarna aan of uit.
@@ -127,8 +131,8 @@ static func _hash(x: int, z: int, salt: int) -> float:
 	return float((h ^ (h >> 16)) & 0xffff) / 65535.0
 
 
-## De bundels staan op vaste plekken in de wereld (een raster met toeval per vak), dus ze verspringen niet als je loopt;
-## alleen de vakken rond de speler worden gevuld. Niet in het kamp en niet op het water.
+## De bundels horen bij vaste bomen (ze vallen vlak naast een stam door het bladerdak), dus ze verspringen niet als je
+## loopt en staan nooit op het open veld of in het kamp. Alleen de bomen rond de speler krijgen er een.
 func _place_beams(focus: Vector3) -> void:
 	var cell := Vector2i(floori(focus.x / BEAM_CELL), floori(focus.z / BEAM_CELL))
 	if cell == _beam_cell:
@@ -136,24 +140,98 @@ func _place_beams(focus: Vector3) -> void:
 	_beam_cell = cell
 	var mm := _beams.multimesh
 	var i := 0
-	for dz in range(-BEAM_RANGE, BEAM_RANGE + 1):
-		for dx in range(-BEAM_RANGE, BEAM_RANGE + 1):
-			if i >= BEAM_MAX:
-				break
-			var cx := cell.x + dx
-			var cz := cell.y + dz
-			if _hash(cx, cz, 1) < 0.72:
-				continue
-			var x := (cx + _hash(cx, cz, 2)) * BEAM_CELL
-			var z := (cz + _hash(cx, cz, 3)) * BEAM_CELL
-			if absf(x - _clear.x) < 26.0 and absf(z - _clear.z) < 26.0:
-				continue
-			if absf(z - Data.river_z(x)) < 5.0:
-				continue
-			mm.set_instance_transform(i, Transform3D(Basis.IDENTITY, Vector3(x, 0.0, z)))
-			mm.set_instance_custom_data(i, Color(2.2 + 2.6 * _hash(cx, cz, 4), 17.0 + 8.0 * _hash(cx, cz, 5), _hash(cx, cz, 6), 0.0))
-			i += 1
+	var trees := Foliage.trees
+	for k in trees.size():
+		if i >= BEAM_MAX:
+			break
+		var t := trees[k]
+		if absf(t.x - focus.x) > BEAM_REACH or absf(t.y - focus.z) > BEAM_REACH:
+			continue
+		var tx := roundi(t.x * 4.0)
+		var tz := roundi(t.y * 4.0)
+		if _hash(tx, tz, 1) < 0.8:
+			continue
+		var x := t.x + (_hash(tx, tz, 2) - 0.5) * 5.0
+		var z := t.y + (_hash(tx, tz, 3) - 0.5) * 5.0
+		if absf(x - _clear.x) < 26.0 and absf(z - _clear.z) < 26.0:
+			continue
+		if absf(z - Data.river_z(x)) < 5.0:
+			continue
+		mm.set_instance_transform(i, Transform3D(Basis.IDENTITY, Vector3(x, 0.0, z)))
+		mm.set_instance_custom_data(i, Color(1.3 + 1.5 * _hash(tx, tz, 4), 14.0 + 7.0 * _hash(tx, tz, 5), _hash(tx, tz, 6), 0.0))
+		i += 1
 	mm.visible_instance_count = i
+
+
+## Schaduwvlekken van het bladerdak: onzichtbare bladerkronen hoog boven de bomen die alleen schaduw werpen. De echte
+## palmkronen zijn te smal voor de grote lichte en donkere vlakken van een bos in laag zonlicht. Eén MultiMesh, alleen in
+## de schaduwkaart getekend; soldaten, voertuigen en planten lopen er echt doorheen.
+func apply_canopy(on: bool) -> void:
+	canopy_on = on
+	if on and (_canopy == null or _canopy_trees != Foliage.trees.size()):
+		_build_canopy()
+	if _canopy != null:
+		_canopy.visible = on
+	set_process(mist_on or shadow_on or dust_on or beams_on or canopy_on)
+
+
+static func _canopy_mesh() -> ArrayMesh:
+	# een rafelige kroon: bladlobben van wisselende lengte rond een dichte kern, met gaten ertussen voor lichtvlekjes
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 4107
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var n := 11
+	for k in n:
+		var a := TAU * k / n + rng.randf_range(-0.12, 0.12)
+		var w := TAU / n * rng.randf_range(0.34, 0.5)
+		var r := rng.randf_range(0.6, 1.0)
+		var mid := Vector3(cos(a), 0, sin(a))
+		var l := Vector3(cos(a - w), 0, sin(a - w))
+		var rr := Vector3(cos(a + w), 0, sin(a + w))
+		for v in [Vector3.ZERO, l * r * 0.62, mid * r, Vector3.ZERO, mid * r, rr * r * 0.62]:
+			st.add_vertex(v)
+	var mesh := st.commit()
+	var m := StandardMaterial3D.new()
+	m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mesh.surface_set_material(0, m)
+	return mesh
+
+
+func _build_canopy() -> void:
+	if _canopy != null:
+		_canopy.queue_free()
+		_canopy = null
+	var trees := Foliage.trees
+	_canopy_trees = trees.size()
+	if trees.is_empty():
+		return
+	var xf: Array[Transform3D] = []
+	for k in trees.size():
+		if xf.size() >= CANOPY_MAX:
+			break
+		var t := trees[k]
+		var tx := roundi(t.x * 4.0)
+		var tz := roundi(t.y * 4.0)
+		if _hash(tx, tz, 11) < 0.25:
+			continue   # een op de vier bomen laat het licht door
+		for j in (2 if _hash(tx, tz, 12) > 0.55 else 1):
+			var off := Vector3((_hash(tx, tz, 13 + j) - 0.5) * 5.0, 0.0, (_hash(tx, tz, 15 + j) - 0.5) * 5.0)
+			var sc := 2.6 + 2.8 * _hash(tx, tz, 17 + j)
+			var b := Basis(Vector3.UP, _hash(tx, tz, 19 + j) * TAU).scaled(Vector3(sc, 1.0, sc))
+			xf.append(Transform3D(b, Vector3(t.x, 6.5 + 3.0 * _hash(tx, tz, 21 + j), t.y) + off))
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = _canopy_mesh()
+	mm.instance_count = xf.size()
+	for i in xf.size():
+		mm.set_instance_transform(i, xf[i])
+	_canopy = MultiMeshInstance3D.new()
+	_canopy.multimesh = mm
+	_canopy.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY
+	_canopy.add_to_group("g2_bladerdak")
+	add_child(_canopy)
 
 
 func _build_plants() -> void:
@@ -309,6 +387,8 @@ func _rescan() -> void:
 		if hq != null:
 			c = hq.global_position
 		_mist_mat.set_shader_parameter("clear_zone", Vector4(c.x, c.z, 24.0, 24.0))
+	if canopy_on and _canopy_trees != Foliage.trees.size():
+		_build_canopy()
 	var hq2 := get_tree().get_first_node_in_group("mcv_hq") as Node3D
 	var c2 := hq2.global_position if hq2 != null else Vector3.ZERO
 	if c2.distance_to(_clear) > 1.0:

@@ -20,7 +20,7 @@ const TIMES := {
 # vallen naar de camera toe), veel warm omgevingslicht zodat het beeld licht blijft, warme mist en nevel.
 # ambc = kleur van het omgevingslicht, mist/ms = kleur en dichtheid van de nevel, beam/bs = kleur en sterkte van de lichtbundels.
 const TIMES_G2 := {
-	"day": {"rot": Vector3(-23, -142, 0), "col": "ffcf8a", "e": 2.05, "amb": 0.6, "ambc": "a9b596", "top": "5f7f96", "hor": "ecd9ac", "gnd": "a59a70", "fog": "c9c19a", "exp": 1.0, "mist": "f1e2b8", "ms": 0.09, "beam": "ffd591", "bs": 0.12},
+	"day": {"rot": Vector3(-23, -142, 0), "col": "ffc27a", "e": 2.8, "amb": 0.5, "ambc": "7e9888", "top": "5f7f96", "hor": "e6d2a6", "gnd": "8f8a66", "fog": "b3b08c", "exp": 1.06, "mist": "f1e2b8", "ms": 0.045, "beam": "ffd591", "bs": 0.1},
 	"dusk": {"rot": Vector3(-9, -38, 0), "col": "ff8644", "e": 1.9, "amb": 0.32, "ambc": "7d7fb0", "top": "3a3f5c", "hor": "e0915a", "gnd": "8a6a50", "fog": "b0805e", "exp": 1.0, "mist": "e0a57c", "ms": 0.13, "beam": "ff9a55", "bs": 0.16},
 	"night": {"rot": Vector3(-48, -38, 0), "col": "9db4ff", "e": 1.0, "amb": 0.34, "ambc": "3d5a96", "top": "10182e", "hor": "2c3b5a", "gnd": "141c2a", "fog": "27324a", "exp": 0.95, "mist": "5a6c8e", "ms": 0.16},
 }
@@ -90,8 +90,9 @@ func _ready() -> void:
 	add_child(_world)
 	_fill = DirectionalLight3D.new()
 	_fill.rotation_degrees = Vector3(-42.0, 30.0, 0.0)
-	_fill.light_color = Color("d6dde6")
-	_fill.light_energy = 0.55
+	_fill.light_color = Color("e6e2d6")
+	_fill.light_energy = 0.75
+	_fill.light_cull_mask = SoldierModel.LICHT_LAAG   # alleen soldaten: de wereld houdt zijn diepe schaduwen
 	_fill.light_specular = 0.0
 	_fill.shadow_enabled = false
 	_fill.visible = false
@@ -171,6 +172,8 @@ func _apply_tier() -> void:
 		if cam and cam.attributes is CameraAttributesPractical:
 			(cam.attributes as CameraAttributesPractical).dof_blur_far_enabled = false
 	if tier >= 2:
+		if _world != null:
+			_world.apply_canopy(false)
 		Fx.g2_budget = 0.5   # Graphics 2.0: minder rook en licht per explosie
 		_sun.directional_shadow_max_distance = minf(_sun.directional_shadow_max_distance, 28.0)
 		for kind in ["bush", "fern", "palm", "rock"]:
@@ -276,7 +279,7 @@ func _apply_quality(q: String) -> void:
 	# MSAA covers geometry samples; the terrain shader separately filters texture detail.
 	vp.msaa_3d = Viewport.MSAA_DISABLED if q == "low" else Viewport.MSAA_4X
 	Upscaling.apply_mode(vp)  # MetalFX Spatial op iPhone; FSR en MetalFX Temporal kunnen alleen in Forward+
-	vp.scaling_3d_scale = Upscaling.band().start if Upscaling.active() else c.scale
+	vp.scaling_3d_scale = Upscaling.band().start
 	# SMAA is scherper dan FXAA en past bij MetalFX (keuze 5B); met upscaling uit blijft het beeld precies zoals het was
 	vp.screen_space_aa = Viewport.SCREEN_SPACE_AA_SMAA if Upscaling.active() else Viewport.SCREEN_SPACE_AA_FXAA
 	var cam := vp.get_camera_3d()
@@ -304,14 +307,14 @@ func _apply_g2(q: String, t: Dictionary, weather: String) -> void:
 	_env.glow_bloom = 0.06 if light else 0.02
 	_env.glow_hdr_threshold = 1.0 if light else 1.2
 	_env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN if light else Environment.GLOW_BLEND_MODE_SOFTLIGHT
-	_env.adjustment_contrast = 1.18 if light else 1.2
+	_env.adjustment_contrast = 1.27 if light else 1.2
 	_env.adjustment_color_correction = _lut(GameSettings.get_value("time")) if light else null
-	_sun.shadow_opacity = 0.78 if light else 0.72
+	_sun.shadow_opacity = 0.86 if light else 0.72
 	_fill.visible = light and GameSettings.get_value("time") == "day"
 	_sun.shadow_blur = 1.3 if light else 1.8
 	if light:
 		_env.ambient_light_color = Color(t["ambc"])
-		_env.adjustment_saturation = 1.22 if weather == "clear" else 0.9
+		_env.adjustment_saturation = 1.2 if weather == "clear" else 0.9
 		_env.glow_enabled = true
 		_sun.shadow_enabled = true
 		# Eén schaduwkaart in plaats van twee: op de iPhone kostte de tweede kaart (alle palmen nog een keer tekenen)
@@ -323,8 +326,8 @@ func _apply_g2(q: String, t: Dictionary, weather: String) -> void:
 		_sun.directional_shadow_max_distance = 64.0 if two else 46.0
 		RenderingServer.directional_shadow_atlas_set_size(4096 if two else 2048, true)
 	_env.fog_height = 2.4 if depth else 0.0
-	_env.fog_height_density = (0.035 if weather == "clear" else 0.07) if depth else 0.0
-	_env.fog_sun_scatter = 0.3 if depth else 0.0
+	_env.fog_height_density = (0.018 if weather == "clear" else 0.07) if depth else 0.0
+	_env.fog_sun_scatter = 0.16 if depth else 0.0
 	_env.fog_aerial_perspective = 0.18 if depth else 0.1
 	if depth:
 		_env.fog_density *= 0.5   # de hoogtemist neemt een deel van de dichtheid over
@@ -341,6 +344,14 @@ func _apply_g2(q: String, t: Dictionary, weather: String) -> void:
 	var beams: bool = light and depth and weather == "clear" and t.has("beam")
 	_world.apply_beams(beams, -_sun.global_transform.basis.z, Color(t.get("beam", "ffd591")), float(t.get("bs", 0.2)))
 	_world.apply_plants(depth)
+	# schaduwvlekken van het bladerdak: alleen zinvol met een echte zonschaduw
+	_world.apply_canopy(light and _sun.shadow_enabled and GameSettings.get_value("time") != "night")
+	if light:
+		# er is ruimte op de iPhone (v206: 117 fps): meer grassprieten en varens dan de stand Hoog normaal toont
+		for kind in ["grass", "fern"]:
+			for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("foliage_" + kind):
+				if n.has_meta("full"):
+					n.multimesh.visible_instance_count = roundi(n.get_meta("full") * maxf(QUALITY[q][kind], 0.85))
 
 
 ## Kleurtabel per tijdstip: donkere tinten zakken iets weg naar koel groenblauw, lichte tinten worden warm. Eén kleine textuur.
@@ -354,7 +365,7 @@ func _lut(time: String) -> GradientTexture1D:
 			"night":
 				g.colors = PackedColorArray([Color(0.0, 0.008, 0.03), Color(0.21, 0.24, 0.29), Color(0.57, 0.6, 0.65), Color(0.94, 0.97, 1.0)])
 			_:
-				g.colors = PackedColorArray([Color(0.002, 0.004, 0.002), Color(0.225, 0.235, 0.215), Color(0.615, 0.612, 0.565), Color(1.0, 0.975, 0.89)])
+				g.colors = PackedColorArray([Color(0.0, 0.004, 0.006), Color(0.2, 0.222, 0.215), Color(0.612, 0.608, 0.56), Color(1.0, 0.97, 0.88)])
 		var tex := GradientTexture1D.new()
 		tex.gradient = g
 		tex.width = 256

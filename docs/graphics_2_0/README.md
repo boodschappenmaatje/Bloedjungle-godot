@@ -68,3 +68,24 @@ met gouden tegenlicht, zonnestralen, warme nevel, helder gras en een modderpad m
 - **Grond (3B):** bandensporen en plassen in het bospad, en langs het pad bloemen met rode pluimen, bladplanten, varens en
   kniehoge keien (zonder botsing). De planten zijn in code opgebouwd uit de bestaande bladvormen; geen nieuw Blender-model.
 - Kwaliteitstrap 1 zet ook de lichtbundels en het invullicht uit.
+
+## v207: stap A en B, licht en grond (10 november 2026)
+
+Dennis' iPhone haalde met v206 117 tot 120 fps bij 72% resolutie. Hij stelde zijn eis bij naar **minimaal 60 fps** en wil het
+beeld dichter bij zijn doelplaatje. Feedback op v206: gele waas, weinig contrast, geen grote schaduwvlekken, vlak gras,
+witte plassen en te grote lichtbundels.
+
+- **Licht (A):** minder mist en nevel, minder omgevingslicht, sterkere zon, meer contrast en diepere schaduw.
+- **Bladerdak (A):** onzichtbare bladerkronen boven de bomen (`Graphics2Wereld.apply_canopy`, groep `g2_bladerdak`) die alleen
+  in de schaduwkaart getekend worden. Zo liggen er grote schaduwvlekken over gras, pad, soldaten en voertuigen. Eén MultiMesh.
+  Kwaliteitstrap 2 zet ze uit.
+- **Lichtbundels (A):** hooguit 16, smaller, en alleen naast bomen (`Foliage.trees`), niet meer op het open veld.
+- **Soldaten (A):** het invullicht raakt alleen renderlaag 11 (`SoldierModel.LICHT_LAAG`). Soldaten blijven leesbaar in het
+  tegenlicht en de wereld houdt zijn donkere schaduwen.
+- **Resolutie (A):** de resolutieregelaar bewaakt hooguit 60 fps (`PerfGovernor.FLOOR_FPS`) en Hoog mag met Graphics 2.0 tot
+  100% resolutie. Er komen ook meer grassprieten en varens in beeld (85% in plaats van 45% en 70%).
+- **Grond (B):** dieper groen gras met sprietjes en pollen, bospad met steentjes, diepere bandensporen en een zachtere rand,
+  en een paar grotere plassen met een natte rand in plaats van spikkels.
+- Klassiek blijft het oude beeld, inclusief de oude resolutie van Hoog (80%).
+
+Niet gemeten op de iPhone: de beeldsnelheid bij 100% resolutie. De regelaar verlaagt de resolutie vanzelf als het onder 56 fps komt.

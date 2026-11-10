@@ -68,6 +68,20 @@ func _process(_d: float) -> bool:
 		_check(absf(_sun().directional_shadow_max_distance - 46.0) < 0.1, "aan: schaduw tot 46 m")
 		_check(absf(_sun().rotation_degrees.x + 23.0) < 0.1, "aan: lage zon op 23 graden, kreeg %.1f" % _sun().rotation_degrees.x)
 		_check((atm.get("_fill") as DirectionalLight3D).visible, "aan: invullicht overdag")
+		var fill := atm.get("_fill") as DirectionalLight3D
+		_check(fill.light_cull_mask == 1 << 10, "aan: het invullicht raakt alleen de soldatenlaag")
+		var pm: Array = game.player.find_children("*", "MeshInstance3D", true, false)
+		var op_laag := 0
+		for m in pm:
+			if ((m as MeshInstance3D).layers & (1 << 10)) != 0:
+				op_laag += 1
+		_check(op_laag > 0, "aan: de speler staat op de soldatenlaag")
+		var dak := get_nodes_in_group("g2_bladerdak")
+		_check(dak.size() == 1 and (dak[0] as MultiMeshInstance3D).visible and (dak[0] as MultiMeshInstance3D).multimesh.instance_count > 20, "aan: bladerdak dat schaduwvlekken werpt")
+		if dak.size() == 1:
+			_check((dak[0] as GeometryInstance3D).cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY, "aan: het bladerdak is zelf onzichtbaar")
+		_check(absf(root.get_viewport().scaling_3d_scale - 1.0) < 0.01, "aan: Hoog begint op volle resolutie, kreeg %.2f" % root.get_viewport().scaling_3d_scale)
+		_check(absf(_env().adjustment_contrast - 1.27) < 0.001 and _sun().shadow_opacity > 0.8, "aan: meer contrast en diepe schaduw")
 		# gouden stijl: lichtbundels, begroeiing langs het pad, plassen en helder gras
 		_check(world.beams_on, "aan: lichtbundels overdag bij helder weer")
 		_check(get_nodes_in_group("g2_begroeiing").size() == 4, "aan: bloemen, struiken, varens en keien langs het pad, kreeg %d groepen" % get_nodes_in_group("g2_begroeiing").size())
@@ -131,6 +145,9 @@ func _process(_d: float) -> bool:
 		for n in get_nodes_in_group("g2_begroeiing"):
 			_check(not (n as Node3D).visible, "klassiek: geen extra begroeiing")
 		_check(not (atm.get("_fill") as DirectionalLight3D).visible, "klassiek: geen invullicht")
+		for n in get_nodes_in_group("g2_bladerdak"):
+			_check(not (n as Node3D).visible, "klassiek: geen bladerdakschaduw")
+		_check(absf(root.get_viewport().scaling_3d_scale - 0.8) < 0.01, "klassiek: resolutie van Hoog (0,8)")
 		_check(_wet() < 0.5, "klassiek: geen glans")
 		for n in get_nodes_in_group("treeshadow"):
 			_check(n.visible, "klassiek: de vaste boomvlek is terug")

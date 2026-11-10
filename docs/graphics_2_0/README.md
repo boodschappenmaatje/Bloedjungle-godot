@@ -99,3 +99,22 @@ Op Dennis' iPhone-opname van v207 (80 tot 105 fps bij 79 tot 82%) was het diepe 
 - Gras en varens op 100% in plaats van 85%.
 
 Niet gemeten op de iPhone.
+
+
+## v209: Meshy-planten, -boom, -keien en -stammen (stap C)
+
+Dennis maakte modellen in Meshy; ze zijn verkleind (zie `bron/meshy_flora/README.md`) en staan in `assets/meshy_flora.glb`
+(8,6 MB, alle objecten samen). Wat er in het spel staat:
+
+| Model | Waar | Driehoeken (dichtbij / ver) |
+| --- | --- | --- |
+| Kokospalm (Palm4) | 2 van de 10 palmplekken, wind, verre versie | 5.000 / 1.800 |
+| Jungleboom (Boom3) | 1 van de 10 plekken, valt en botst als Boom1/2 | 27.700 / 1.000 |
+| Varen | elke 4e varen, zichtbaar tot 48 m | 2.500 |
+| Heliconia | elke 7e struik, zichtbaar tot 48 m | 6.000 |
+| Mosrots A en B | 2 van de 5 rotsvormen | 2.500 |
+| Gevallen stam A en B | vervangen de oude cilinders (botsing blijft) | 3.500 |
+
+Planten en bomen gebruiken `foliage.gdshader` (wind, zichtlijn-doorzichtigheid, wegbuigen); keien en stammen houden hun
+eigen PBR-materiaal. Beeld: `v209_meshy_jungle.jpg`. Niet gedaan: viewer-invoer (volgt als de rest van de modellen er is),
+iPhone-fps (NIET GETEST), bananenplant, brede bladplant, kleine keien en stronk (nog niet aangeleverd).

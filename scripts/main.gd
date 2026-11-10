@@ -194,13 +194,15 @@ static func _pipeline_compiles() -> int:
 func _start_prep() -> void:
 	Barrel.populate(self)  # opgeblazen vaten komen terug
 	queue.clear()
-	Game.wave = 0
-	Game.next_routes = AanvalRoutes.pick_group(1)
+	Game.wave = maxi(0, Progress.test_groep - 1)   # testoptie: de eerste groep die uitrukt is dan groep test_groep
+	Game.next_routes = AanvalRoutes.pick_group(Game.wave + 1)
 	Game.routes = Game.next_routes.duplicate()  # de pijlen tonen al tijdens de rust waar de eerste groep vandaan komt
 	Game.state = "prep"
-	Game.prep_t = Data.MCV_RUST
+	Game.prep_t = Progress.eerste_rust()
 	clear_t = -1.0
 	Game.changed.emit()
+	if Progress.test_groep > 0:
+		Game.banner.emit("TEST · START BIJ GROEP %d" % Progress.test_groep, PauseMenu.groep_inhoud(Progress.test_groep), 3.0)
 
 
 ## De volgende aanvalsgroep komt nu uit de poort van de vijandbasis ("Start nu", of het aftellen is op).
@@ -331,7 +333,8 @@ func _wave_cleared() -> void:
 	Game.routes = Game.next_routes.duplicate()
 	Barrel.populate(self)  # opgeblazen vaten komen terug
 	Game.streak_reset()
-	Progress.stats.bestWave = maxi(Progress.stats.bestWave, Game.wave)
-	Progress.save()
+	if Progress.test_groep == 0:   # een testspel (start bij groep N) telt niet mee als "beste groep"
+		Progress.stats.bestWave = maxi(Progress.stats.bestWave, Game.wave)
+		Progress.save()
 	Game.banner.emit("GROEP %d AFGESLAGEN" % Game.wave, "Volgende groep over %d s" % ceili(maxf(Game.prep_t, 0.0)), 3.0)
 	Game.changed.emit()

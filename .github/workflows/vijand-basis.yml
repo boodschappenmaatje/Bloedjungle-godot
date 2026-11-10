@@ -53,6 +53,10 @@ on:
       - "scripts/vijand_tank.gd"
       - "assets/vijand_tank.glb"
       - "tests/vijand_tank_test.gd"
+      - "scripts/pause_menu.gd"
+      - "scripts/progress.gd"
+      - "scripts/mcv.gd"
+      - "tests/test_groep_test.gd"
       - ".github/workflows/vijand-basis.yml"
   workflow_dispatch:
 
@@ -141,6 +145,11 @@ jobs:
           set -euo pipefail
           GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
           timeout 240 "$GODOT" --headless --path . --script tests/auto_wapens_test.gd --fixed-fps 60
+      - name: Testoptie start bij groep
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 300 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/test_groep_test.gd --fixed-fps 60
       - name: Vijand-hoofdkwartier- en groepentest
         shell: bash
         run: |

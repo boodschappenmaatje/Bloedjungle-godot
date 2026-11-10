@@ -525,6 +525,8 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 	rng.seed = seed_
 	var south_rng := RandomNumberGenerator.new()
 	south_rng.seed = seed_ + 1009
+	var fill_rng := RandomNumberGenerator.new()   # eigen generator: de bestaande plekken blijven precies waar ze waren
+	fill_rng.seed = seed_ + 3001
 	var sets := {"palm": [240, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [420, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [420, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [60, 18.0, 75.0, 0.7, 2.2, 0.15]}
 	var meshes := {"bush": bush(), "fern": fern(), "grass": grass()}
 	for kind in sets:
@@ -536,6 +538,7 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 		_scatter(rng, c[0], c[1], c[2], xf, cols, c[3], c[4], c[5])
 		_strip(rng, kind, xf.size() + STRIP_EXTRA[kind], xf, cols, c[3], c[4], c[5])
 		_south_scatter(south_rng, kind, SOUTH_COUNTS[kind], xf, cols, c[3], c[4], c[5])
+		_fill_scatter(fill_rng, kind, FILL_COUNTS[kind], xf, cols, c[3], c[4], c[5])
 		if kind == "grass":
 			# Keep the original RNG/placement sequence for palms, rocks and all gameplay.
 			# Only grass is replaced by Blender tufts with separate geometric LODs.
@@ -833,6 +836,42 @@ static func _south_scatter(rng: RandomNumberGenerator, kind: String, count: int,
 		_add(rng, out, cols, p, s_min, s_max, tilt)
 		added += 1
 
+
+
+## Vulling (v211): de gaten in de dichtheidskaart. Oost- en weststrook naast het kamp, het bos ten noorden van de rivier
+## en het zuiden, tot z = FOLIAGE_Z_N. Zelfde bosjes/open-plekkenpatroon als de rest; het pad en de rivier blijven vrij.
+const FILL_COUNTS := {"palm": 170, "bush": 260, "fern": 330, "grass": 1500, "rock": 45}
+static func _fill_scatter(rng: RandomNumberGenerator, kind: String, count: int, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
+	var added := 0
+	var tries := 0
+	while added < count and tries < count * 40:
+		tries += 1
+		var p := Vector3(rng.randf_range(-Data.WORLD_X + 6.0, Data.WORLD_X - 6.0), 0.0, rng.randf_range(-Data.FOLIAGE_Z_N + 4.0, Data.WORLD_Z_S - 9.0))
+		var gap := absf(p.x) > 80.0 and p.z > -30.0 and p.z < 80.0   # flanken naast het kamp
+		var north := p.z < Data.river_z(p.x) - 4.0
+		var south := p.z > 70.0
+		if not (gap or north or south):
+			continue
+		if maxf(absf(p.x), absf(p.z)) < Data.START_CLEAR + 1.8 or absf(p.x) < Data.START_ROAD_HALF + 3.0 and p.z > -Data.START_CLEAR:
+			continue
+		if _in_river(p):
+			continue
+		if kind == "palm" and p.z < Data.FOREST_Z0 and absf(p.x - Data.path_x(p.z)) < 7.5:
+			continue
+		if kind == "rock":
+			var reserved := false
+			for region in AirfieldHQ23.site_regions():
+				if _point_in_build_region(p, AirfieldHQ23.SUGGESTED_CENTER, 0.0, region, 1.0):
+					reserved = true
+					break
+			if reserved:
+				continue
+		if kind != "grass" and rng.randf() > 0.30 + 0.70 * _grove(p.x, p.z):
+			continue
+		if p.z < -30.0 and p.z < Data.river_z(p.x) and rng.randf() > STRIP_KEEP[Data.strip_zone(p.x)][kind]:
+			continue
+		_add(rng, out, cols, p, s_min, s_max, tilt)
+		added += 1
 
 
 ## In de rivier, op de oevers en op de open paden naar brug en ondiepte.

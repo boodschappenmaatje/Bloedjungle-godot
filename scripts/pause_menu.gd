@@ -134,7 +134,7 @@ func _ready() -> void:
 	_root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(_root)
 	_menu_background = TextureRect.new()
-	_menu_background.texture = preload("res://assets/ui/main_menu_bunker.jpg")
+	_menu_background.texture = load("res://assets/ui/main_menu_bunker.jpg") as Texture2D
 	_menu_background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	_menu_background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	_menu_background.mouse_filter = Control.MOUSE_FILTER_IGNORE

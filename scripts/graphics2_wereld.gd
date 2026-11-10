@@ -18,6 +18,17 @@ const FOOTPRINT := {"tank": Vector2(2.1, 3.9), "vijand_tank": Vector2(2.1, 3.9),
 	"voorraad_truck": Vector2(1.7, 4.3), "mcv": Vector2(1.9, 4.8)}
 const FOOT_DEFAULT := Vector2(1.35, 2.5)
 
+const BEAM_MAX := 26
+const BEAM_CELL := 8.0      # m: per vak van het raster hooguit één bundel
+const BEAM_RANGE := 5       # vakken rond de speler
+const PLANT_GROUP := "g2_begroeiing"
+
+var beams_on := false
+var _beams: MultiMeshInstance3D
+var _beam_mat: ShaderMaterial
+var _beam_cell := Vector2i(99999, 99999)
+var _clear := Vector3.ZERO
+var _plants_built := false
 var mist_on := false
 var shadow_on := false
 var dust_on := false
@@ -57,7 +68,161 @@ func apply(mist: bool, shadows: bool, dust: bool, tint := Color(0.72, 0.78, 0.7)
 				var p := v.get_node_or_null("G2Stof") as CPUParticles3D
 				if p != null:
 					p.emitting = false
-	set_process(mist or shadows or dust)
+	set_process(mist or shadows or dust or beams_on)
+
+
+## Lichtbundels tussen de bomen (alleen overdag en bij avond): sun_dir = richting waarin het zonlicht reist.
+func apply_beams(on: bool, sun_dir := Vector3(0.5, -0.5, 0.5), tint := Color(1.0, 0.82, 0.5), strength := 0.2) -> void:
+	beams_on = on
+	if on and _beams == null:
+		_build_beams()
+	if _beams != null:
+		_beams.visible = on
+		_beam_mat.set_shader_parameter("sun_dir", sun_dir.normalized())
+		_beam_mat.set_shader_parameter("tint", tint)
+		_beam_mat.set_shader_parameter("strength", strength)
+		_beam_cell = Vector2i(99999, 99999)   # opnieuw neerzetten
+	set_process(mist_on or shadow_on or dust_on or beams_on)
+
+
+## Bloemen, bladplanten, varens en keien langs het pad door het bos (keuze 3B). Eenmalig gebouwd, daarna aan of uit.
+func apply_plants(on: bool) -> void:
+	if on and not _plants_built:
+		_plants_built = true
+		_build_plants()
+	for n in get_tree().get_nodes_in_group(PLANT_GROUP):
+		(n as Node3D).visible = on
+
+
+func _build_beams() -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var pts := [Vector3(-0.5, 0, 0), Vector3(0.5, 0, 0), Vector3(0.5, 1, 0), Vector3(-0.5, 1, 0)]
+	var uvs := [Vector2(0, 0), Vector2(1, 0), Vector2(1, 1), Vector2(0, 1)]
+	for i in [0, 1, 2, 0, 2, 3]:
+		st.set_uv(uvs[i])
+		st.add_vertex(pts[i])
+	var mesh := st.commit()
+	_beam_mat = ShaderMaterial.new()
+	_beam_mat.shader = preload("res://shaders/g2_lichtbundel.gdshader")
+	_beam_mat.set_shader_parameter("noise", Kit.noise_tex(0.045, 8))
+	_beam_mat.render_priority = 3
+	mesh.surface_set_material(0, _beam_mat)
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_custom_data = true
+	mm.mesh = mesh
+	mm.instance_count = BEAM_MAX
+	mm.visible_instance_count = 0
+	_beams = MultiMeshInstance3D.new()
+	_beams.multimesh = mm
+	_beams.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_beams.custom_aabb = AABB(Vector3(-4000, -50, -4000), Vector3(8000, 200, 8000))
+	add_child(_beams)
+
+
+static func _hash(x: int, z: int, salt: int) -> float:
+	var h := (x * 73856093) ^ (z * 19349663) ^ (salt * 83492791)
+	h = (h ^ (h >> 13)) * 1274126177
+	return float((h ^ (h >> 16)) & 0xffff) / 65535.0
+
+
+## De bundels staan op vaste plekken in de wereld (een raster met toeval per vak), dus ze verspringen niet als je loopt;
+## alleen de vakken rond de speler worden gevuld. Niet in het kamp en niet op het water.
+func _place_beams(focus: Vector3) -> void:
+	var cell := Vector2i(floori(focus.x / BEAM_CELL), floori(focus.z / BEAM_CELL))
+	if cell == _beam_cell:
+		return
+	_beam_cell = cell
+	var mm := _beams.multimesh
+	var i := 0
+	for dz in range(-BEAM_RANGE, BEAM_RANGE + 1):
+		for dx in range(-BEAM_RANGE, BEAM_RANGE + 1):
+			if i >= BEAM_MAX:
+				break
+			var cx := cell.x + dx
+			var cz := cell.y + dz
+			if _hash(cx, cz, 1) < 0.72:
+				continue
+			var x := (cx + _hash(cx, cz, 2)) * BEAM_CELL
+			var z := (cz + _hash(cx, cz, 3)) * BEAM_CELL
+			if absf(x - _clear.x) < 26.0 and absf(z - _clear.z) < 26.0:
+				continue
+			if absf(z - Data.river_z(x)) < 5.0:
+				continue
+			mm.set_instance_transform(i, Transform3D(Basis.IDENTITY, Vector3(x, 0.0, z)))
+			mm.set_instance_custom_data(i, Color(2.2 + 2.6 * _hash(cx, cz, 4), 17.0 + 8.0 * _hash(cx, cz, 5), _hash(cx, cz, 6), 0.0))
+			i += 1
+	mm.visible_instance_count = i
+
+
+func _build_plants() -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2051
+	var lists := {"bloem": [], "struik": [], "varen": [], "kei": []}
+	var z := Data.FOREST_Z0 - 3.0
+	while z > Data.RIVER_Z0 + 6.0:
+		for side in [-1.0, 1.0]:
+			if rng.randf() < 0.3:
+				continue
+			var x: float = Data.path_x(z) + side * rng.randf_range(2.7, 6.5)
+			var pz := z + rng.randf_range(-0.9, 0.9)
+			if Foliage.has_tree_near(x, pz, 1.1):
+				continue
+			var r := rng.randf()
+			var kind := "bloem" if r < 0.36 else ("struik" if r < 0.64 else ("varen" if r < 0.85 else "kei"))
+			var sc := rng.randf_range(0.75, 1.15)
+			if kind == "kei":
+				sc = rng.randf_range(0.28, 0.5)   # kniehoog: je loopt eroverheen, de grote rotsen van de jungle blokkeren wel
+			elif kind == "struik":
+				sc = rng.randf_range(0.6, 0.95)
+			var b := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(sc, sc, sc))
+			lists[kind].append(Transform3D(b, Vector3(x, 0.0, pz)))
+		z -= 2.3
+	var meshes := {"bloem": _flower_mesh(), "struik": Foliage.bush(), "varen": Foliage.fern(), "kei": Foliage.jungle_mesh("Rots1")}
+	for kind in lists:
+		var xf: Array = lists[kind]
+		if xf.is_empty():
+			continue
+		var mm := MultiMesh.new()
+		mm.transform_format = MultiMesh.TRANSFORM_3D
+		mm.mesh = meshes[kind]
+		mm.instance_count = xf.size()
+		for i in xf.size():
+			mm.set_instance_transform(i, xf[i])
+		var inst := MultiMeshInstance3D.new()
+		inst.multimesh = mm
+		inst.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		if kind == "kei":
+			inst.material_override = Kit.rock()
+		inst.add_to_group(PLANT_GROUP)
+		add_child(inst)
+
+
+## Jungleplant met rode bloeiwijzen (heliconia-achtig): brede groene bladeren en een paar rode pluimen die omhoog steken.
+static func _flower_mesh() -> ArrayMesh:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 77
+	var leaves := SurfaceTool.new()
+	leaves.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for k in 9:
+		var yaw := TAU * k / 9.0 + rng.randf_range(-0.25, 0.25)
+		Foliage._frond(leaves, Vector3(0, 0.04, 0), yaw, rng.randf_range(0.75, 1.15), rng.randf_range(0.3, 0.42), rng.randf_range(0.55, 1.0), rng.randf_range(0.3, 0.7), Color(0.55, 0.7, 0.5), Color(1.0, 1.0, 0.9), 3)
+	var mesh := leaves.commit()
+	mesh.surface_set_material(0, Foliage.material("leaf"))
+	var red := SurfaceTool.new()
+	red.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for k in 8:
+		var yaw := TAU * k / 8.0 + rng.randf_range(-0.4, 0.4)
+		var o := Vector3(cos(yaw), 0, sin(yaw)) * rng.randf_range(0.1, 0.32) + Vector3.UP * rng.randf_range(0.3, 0.55)
+		Foliage._frond(red, o, yaw, rng.randf_range(0.15, 0.23), 0.085, rng.randf_range(0.8, 1.3), 0.25, Color(0.26, 0.01, 0.01), Color(0.56, 0.035, 0.025), 2)
+	red.commit(mesh)
+	var rm := StandardMaterial3D.new()
+	rm.vertex_color_use_as_albedo = true
+	rm.cull_mode = BaseMaterial3D.CULL_DISABLED
+	rm.roughness = 0.7
+	mesh.surface_set_material(1, rm)
+	return mesh
 
 
 func _build_mist() -> void:
@@ -124,6 +289,8 @@ func _process(delta: float) -> void:
 		_update_shadows(focus)
 	if dust_on:
 		_update_dust(focus, delta)
+	if beams_on and _beams != null:
+		_place_beams(focus)
 
 
 func _rescan() -> void:
@@ -142,6 +309,11 @@ func _rescan() -> void:
 		if hq != null:
 			c = hq.global_position
 		_mist_mat.set_shader_parameter("clear_zone", Vector4(c.x, c.z, 24.0, 24.0))
+	var hq2 := get_tree().get_first_node_in_group("mcv_hq") as Node3D
+	var c2 := hq2.global_position if hq2 != null else Vector3.ZERO
+	if c2.distance_to(_clear) > 1.0:
+		_clear = c2
+		_beam_cell = Vector2i(99999, 99999)
 
 
 static func footprint(n: Node) -> Vector2:

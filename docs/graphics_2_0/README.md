@@ -54,3 +54,17 @@ Graphics 2.0 werkt bovenop de grafiekstand Hoog of Ultra. In stand Laag doet het
 - `tests/graphics2_test.gd` (headless): schakelaar, testknoppen, bovengrenzen, kwaliteitstrap, klassiek = oude waarden.
 - `tests/graphics2_foto.gd`: voor-en-na-beelden vanuit de spelcamera op 40 graden (zie de kop van het bestand).
 - Native iPhone: **NIET GETEST**. De sandbox gebruikt software-Vulkan; die zegt niets over fps op de iPhone.
+
+## v206: gouden ochtend (keuze 1A 2A 3B, 10 november 2026)
+
+Dennis' iPhone haalde met v205 89 fps bij 50% resolutie en het beeld was te donker en te groen. Hij koos een doelbeeld
+met gouden tegenlicht, zonnestralen, warme nevel, helder gras en een modderpad met plassen.
+
+- **Snelheid:** in stand Hoog één schaduwkaart tot 46 m in plaats van twee tot 64 m (Ultra houdt twee). Niet gemeten op de iPhone.
+- **Licht (1A):** dag = gouden ochtend. Zon op 23 graden schuin van voren (tegenlicht), veel warm omgevingslicht, warme mist,
+  helderder gras, en een zacht invullicht vanaf de camerakant zodat soldaten niet zwart worden.
+- **Lichtbundels (2A):** hooguit 26 smalle vlakken langs de zonnestraal, op vaste plekken in de wereld rond de speler, niet in
+  het kamp. Eén MultiMesh, optellend, één ruismonster per pixel. Alleen overdag en bij avond, bij helder weer.
+- **Grond (3B):** bandensporen en plassen in het bospad, en langs het pad bloemen met rode pluimen, bladplanten, varens en
+  kniehoge keien (zonder botsing). De planten zijn in code opgebouwd uit de bestaande bladvormen; geen nieuw Blender-model.
+- Kwaliteitstrap 1 zet ook de lichtbundels en het invullicht uit.

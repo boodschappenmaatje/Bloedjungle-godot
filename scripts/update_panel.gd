@@ -91,9 +91,10 @@ func _ready() -> void:
 	v.add_child(_check)
 	_download = _knop("DOWNLOADEN EN INSTALLEREN", "field_primary", _download_met_lange_timeout)
 	v.add_child(_download)
-	_back = _knop("TERUG NAAR MENU", "field", func(): queue_free())
+	_back = _knop("TERUGDRAAIEN NAAR APP-VERSIE", "field", func(): Updater.terugdraaien())
 	v.add_child(_back)
-	_close = _back
+	_close = _knop("SLUITEN", "field", queue_free)
+	v.add_child(_close)
 	Updater.status_changed.connect(_ververs)
 	_ververs()
 

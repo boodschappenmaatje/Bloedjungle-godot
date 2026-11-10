@@ -10,6 +10,7 @@ const ROWS := [
 	["vliegtuig_hoogte", "Vliegtuig: hoogte (rechterstick)", [["normaal", "Normaal (omlaag = stijgen)"], ["omgekeerd", "Omgekeerd (omhoog = stijgen)"]]],
 	["ragdoll", "Doodsval vijanden", [["on", "Ragdoll"], ["off", "Animatie"]]],
 	["markeringen", "Markeringen soldaten", [["on", "Aan"], ["tact", "Alleen Tactisch"], ["off", "Uit"]]],
+	["sound", "Geluid", [["on", "Aan"], ["off", "Uit"]]],
 	["g2", "Graphics 2.0", [["on", "Aan"], ["off", "Klassiek"]]],
 	["quality", "Grafiek", [["low", "Laag"], ["high", "Hoog"], ["ultra", "Ultra"]]],
 	["upscaling", "Upscaling (MetalFX)", [["off", "Uit"], ["quality", "Kwaliteit"], ["balanced", "Gebalanceerd"], ["performance", "Prestatie"]]],
@@ -32,6 +33,15 @@ const ROWS := [
 	["t_streak", "Test: alle killstreaks, onbeperkt", [["off", "Uit"], ["on", "Aan"]]],
 	["diag", "Diagnose-run (30 s, start zelf in het spel)", [["off", "Uit"], ["on", "Aan"]]],
 ]
+const SETTINGS_GROUPS := [
+	{"title": "BEELD & PRESTATIES", "keys": ["quality", "upscaling", "hz", "perf", "fps", "treeshadow", "buildshadow", "g2"]},
+	{"title": "WERELD & SFEER", "keys": ["time", "weather", "wind"]},
+	{"title": "SOLDATEN & VIJANDEN", "keys": ["soldaat", "enemy_models", "ragdoll", "markeringen"]},
+	{"title": "AUDIO", "keys": ["sound"]},
+	{"title": "BESTURING & CAMERA", "keys": ["m1911_fire_mode", "vliegtuig_hoogte"]},
+	{"title": "GEAVANCEERD", "advanced": true, "keys": ["t_sun", "t_jungle", "t_stad", "t_post", "g2_fx", "g2_licht", "g2_diepte", "t_res", "t_streak", "diag"]},
+]
+
 const NOTES := {
 	"low": "Laag: geen schaduwen en een lichtere afbeelding, voor oudere telefoons.",
 	"high": "Hoog: schaduwen dichtbij en minder gras, blijft vloeiend op 60 beeld per seconde.",
@@ -54,6 +64,8 @@ var _pcs := {}  # naam -> het paneel zelf
 var _cur := ""
 var _return := "pause"
 var _mute_btn: Button
+var _advanced_settings: VBoxContainer
+var _advanced_settings_button: Button
 var _note: Label
 var _segs := {}
 var _camera_pitch_slider: HSlider
@@ -426,46 +438,93 @@ func _refresh_sound() -> void:
 # ---------------------------------------------------------------- instellingen
 
 func _build_settings() -> void:
-	var v := _scrolling(_centered("settings", 520))
-	_head(v, "Beeld en sfeer", "INSTELLINGEN")
-	for r in ROWS:
-		var row := HBoxContainer.new()
-		row.add_theme_constant_override("separation", 10)
-		var l := UI.label(r[1].to_upper(), UI.body(700, 1), 14, UI.INK_DIM)
-		l.custom_minimum_size.x = 110
-		l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		row.add_child(l)
-		var frame := PanelContainer.new()
-		frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		frame.add_theme_stylebox_override("panel", UI.box(Color(0, 0, 0, 0), UI.PANEL_LINE, 1, 4, 0))
-		var seg := HBoxContainer.new()
-		seg.add_theme_constant_override("separation", 1)
-		frame.add_child(seg)
-		_segs[r[0]] = []
-		for o in r[2]:
-			var key: String = r[0]
-			var val: String = o[0]
-			var b := _button(o[1], "seg", func():
-				GameSettings.set_value(key, val)
-				if key == "enemy_models" and Game.state in ["prep", "play"]:
-					var scene := get_tree().current_scene
-					if scene != null and scene.has_method("apply_enemy_model_filter"):
-						scene.call("apply_enemy_model_filter")
-				_apply()
-				_refresh())
-			b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			b.set_meta("v", val)
-			seg.add_child(b)
-			_segs[key].append(b)
-		row.add_child(frame)
-		v.add_child(row)
-	_build_camera_pitch_controls(v)
-	v.add_child(_wrap("Vijandmodellen: Alle types = normale mix. Alleen Meshy = uitsluitend nieuwe Assault-soldaten met M1 Garand; oude types worden niet gespawnd en verdwijnen bij omschakelen. De groepgrootte blijft gelijk.", 12, UI.INK_DIM, 440.0))
-	v.add_child(_wrap("Colt M1911: rechterstick licht bewegen = richten; buitenste ring = een schot. Rustig: vasthouden vuurt maximaal iedere 0,5 seconde een apart schot. Handmatig: opnieuw naar de schietring bewegen voor ieder schot.", 12, UI.INK_DIM, 440.0))
+	var v := _scrolling(_centered("settings", 560))
+	_head(v, "Commandopost", "INSTELLINGEN")
+	for section in SETTINGS_GROUPS:
+		var section_rows: VBoxContainer = v
+		if section.get("advanced", false):
+			_advanced_settings_button = _button("GEAVANCEERD  ·  TEST & DIAGNOSE  +", "secondary", _toggle_advanced_settings)
+			v.add_child(_advanced_settings_button)
+			_advanced_settings = VBoxContainer.new()
+			_advanced_settings.add_theme_constant_override("separation", 9)
+			_advanced_settings.visible = false
+			v.add_child(_advanced_settings)
+			section_rows = _advanced_settings
+		else:
+			v.add_child(_settings_section_header(section["title"]))
+		for key in section["keys"]:
+			var matches: Array = ROWS.filter(func(r): return r[0] == key)
+			if not matches.is_empty():
+				_add_setting_row(section_rows, matches[0])
+		if section["title"] == "SOLDATEN & VIJANDEN":
+			section_rows.add_child(_wrap("Alleen Meshy gebruikt de nieuwe Assault-soldaten met M1 Garand. Omschakelen verwijdert oude vijandtypes; de groepsgrootte blijft gelijk.", 12, UI.INK_DIM, 440.0))
+		if section["title"] == "BESTURING & CAMERA":
+			_build_camera_pitch_controls(section_rows)
+			section_rows.add_child(_wrap("Colt M1911: beweeg de rechterstick licht om te richten; de buitenste ring vuurt. Rustig vuurt maximaal iedere 0,5 seconde. Handmatig vraagt voor elk schot een nieuwe beweging naar de schietring.", 12, UI.INK_DIM, 440.0))
 	_note = _wrap("", 14, UI.INK_DIM, 440.0)
 	v.add_child(_note)
 	v.add_child(_button("KLAAR", "primary", func(): _show(_return)))
 	_refresh()
+
+
+func _settings_section_header(title: String) -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 9)
+	var accent := ColorRect.new()
+	accent.color = UI.BRASS
+	accent.custom_minimum_size = Vector2(3, 22)
+	row.add_child(accent)
+	var label := UI.label(title, UI.body(700, 2), 14, UI.BRASS)
+	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(label)
+	var line := ColorRect.new()
+	line.color = UI.PANEL_LINE
+	line.custom_minimum_size.y = 1
+	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(line)
+	return row
+
+
+func _add_setting_row(v: VBoxContainer, r: Array) -> void:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var l := UI.label(r[1].to_upper(), UI.body(700, 1), 14, UI.INK_DIM)
+	l.custom_minimum_size.x = 110
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	row.add_child(l)
+	var frame := PanelContainer.new()
+	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	frame.add_theme_stylebox_override("panel", UI.box(Color(0, 0, 0, 0), UI.PANEL_LINE, 1, 4, 0))
+	var seg := HBoxContainer.new()
+	seg.add_theme_constant_override("separation", 1)
+	frame.add_child(seg)
+	_segs[r[0]] = []
+	for o in r[2]:
+		var key: String = r[0]
+		var val: String = o[0]
+		var b := _button(o[1], "seg", func():
+			GameSettings.set_value(key, val)
+			if key == "enemy_models" and Game.state in ["prep", "play"]:
+				var scene := get_tree().current_scene
+				if scene != null and scene.has_method("apply_enemy_model_filter"):
+					scene.call("apply_enemy_model_filter")
+			if key == "sound":
+				_refresh_sound()
+			_apply()
+			_refresh())
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.set_meta("v", val)
+		seg.add_child(b)
+		_segs[r[0]].append(b)
+	row.add_child(frame)
+	v.add_child(row)
+
+
+func _toggle_advanced_settings() -> void:
+	_advanced_settings.visible = not _advanced_settings.visible
+	_advanced_settings_button.text = "GEAVANCEERD  ·  TEST & DIAGNOSE  " + ("−" if _advanced_settings.visible else "+")
+	_fit_sheets()
 
 
 

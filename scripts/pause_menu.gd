@@ -300,35 +300,6 @@ func _show(name: String) -> void:
 # ---------------------------------------------------------------- hoofdmenu
 
 func _menu_action_button(icon_name: String, label_text: String, kind: String, cb: Callable) -> Button:
-	var b := _button("", kind, cb)
-	b.custom_minimum_size.y = 58 if kind != "gold" else 66
-	var row := HBoxContainer.new()
-	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.offset_left = 16
-	row.offset_right = -14
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_theme_constant_override("separation", 12)
-	var icon := MenuIcon.new()
-	icon.icon_name = icon_name
-	icon.tint = UI.BRASS
-	icon.custom_minimum_size = Vector2(30, 30)
-	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(icon)
-	var divider := ColorRect.new()
-	divider.color = Color(UI.BRASS, 0.55)
-	divider.custom_minimum_size = Vector2(1, 28)
-	divider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(divider)
-	var label := UI.label(label_text, UI.body(700, 2), 17, UI.INK)
-	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(label)
-	b.add_child(row)
-	return b
-
-
-func _menu_action_button(icon_name: String, label_text: String, kind: String, cb: Callable) -> Button:
 	var style_kind := "field_primary" if kind == "gold" else "field"
 	var b := _button("", style_kind, cb)
 	b.custom_minimum_size = Vector2(0, 56 if kind != "gold" else 62)

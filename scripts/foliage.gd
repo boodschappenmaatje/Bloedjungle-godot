@@ -11,12 +11,12 @@ static var _grove_px := 1.3
 static var _grove_pz := 0.4
 static var _grove_fx := 0.075
 static var _grove_fz := 0.095
-const STRIP_EXTRA := {"palm": 70, "bush": 230, "fern": 330, "grass": 1300, "rock": 26}  # extra stuks in de strook tussen muur en rivier
+const STRIP_EXTRA := {"palm": 90, "bush": 300, "fern": 430, "grass": 1300, "rock": 32}  # extra stuks in de strook tussen muur en rivier
 ## Hoeveel van de extra planten per gebied blijft staan: moeras = varens en gras, open plek = bijna kaal met rotsen, dicht = alles.
 const STRIP_KEEP := {
 	"dicht": {"palm": 1.0, "bush": 1.0, "fern": 1.0, "grass": 1.0, "rock": 0.5},
-	"moeras": {"palm": 0.3, "bush": 0.35, "fern": 0.9, "grass": 1.0, "rock": 0.2},
-	"open": {"palm": 0.06, "bush": 0.12, "fern": 0.3, "grass": 0.45, "rock": 1.0},
+	"moeras": {"palm": 0.45, "bush": 0.5, "fern": 0.9, "grass": 1.0, "rock": 0.2},
+	"open": {"palm": 0.12, "bush": 0.2, "fern": 0.4, "grass": 0.45, "rock": 1.0},
 }
 ## Afstand (m, vanaf de camera, gemeten tot het midden van een vak van 36 m) waarboven een soort niet meer getekend wordt.
 const VIS_END := {"palm": 140.0, "bush": 95.0, "fern": 85.0, "grass": 55.0}
@@ -192,7 +192,7 @@ static func _frond(st: SurfaceTool, origin: Vector3, yaw: float, length: float, 
 ## verre variant, 3 rotsen. Stam = schors, kroon = palmblad, rots = steen met mos in de vertexkleuren.
 const PALMS := ["Palm1", "Palm2", "Palm3"]
 ## Wat er op een palmplek komt te staan: een op de vijf is een jungleboom (plankwortels, lianen), op 0,75 geschaald.
-const PALM_POOL := ["Palm1", "Palm2", "Palm3", "Palm4", "Boom1", "Palm2", "Palm3", "Boom2", "Boom3", "Palm4"]
+const PALM_POOL := ["Palm4", "Boom3", "Palm2", "Palm4", "Boom1", "Palm3", "Boom3", "Palm4", "Boom2", "Palm1"]
 const BOOM_SCALE := 0.75
 const LOGS := ["StamA", "StamB"]
 const ROCKS := ["Rots1", "Rots2", "Rots3", "KeiA", "KeiB"]
@@ -210,8 +210,8 @@ const MESHY_PLANT := {
 	"Meshy_Boom": [0.06, Vector3(1.85, 1.9, 1.5)], "Meshy_Boom_far": [0.06, Vector3(1.85, 1.9, 1.5)],
 	"Meshy_Varen": [0.1, Vector3(1.0, 1.0, 0.95)], "Meshy_Heli": [0.08, Vector3(1.0, 1.0, 1.0)]}
 ## Elke zoveelste plant van een soort is de Meshy-plant (zware modellen, dus ver weg niet getekend).
-const MESHY_MIX := {"fern": ["Varen", 4], "bush": ["Heli", 7]}
-const MESHY_NEAR_END := 48.0
+const MESHY_MIX := {"fern": ["Varen", 3], "bush": ["Heli", 4]}
+const MESHY_NEAR_END := 70.0
 static var _meshy := {}
 
 
@@ -325,7 +325,7 @@ static var _reg := {}  # vak (36 m) -> palmen en bomen die nog kunnen omvallen (
 const VEG_CELL := 36.0
 const BUILD_CLEAR_MARGIN := 0.75
 const CLEARABLE_KINDS := ["palm", "bush", "fern", "grass", "log"]
-const SOUTH_COUNTS := {"palm": 150, "bush": 260, "fern": 220, "grass": 1100, "rock": 32}
+const SOUTH_COUNTS := {"palm": 190, "bush": 340, "fern": 300, "grass": 1100, "rock": 40}
 static var _vegetation_cells := {}  # 36 m spatial index; each item points at one actual MultiMesh instance
 static var _vegetation_serial := 0
 static var _building_clearings := {}  # live placed building id -> regions reapplied after Level rebuild
@@ -525,7 +525,7 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 	rng.seed = seed_
 	var south_rng := RandomNumberGenerator.new()
 	south_rng.seed = seed_ + 1009
-	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
+	var sets := {"palm": [240, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [420, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [420, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [60, 18.0, 75.0, 0.7, 2.2, 0.15]}
 	var meshes := {"bush": bush(), "fern": fern(), "grass": grass()}
 	for kind in sets:
 		if step.is_valid():

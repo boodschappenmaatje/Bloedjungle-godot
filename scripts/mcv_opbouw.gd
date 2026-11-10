@@ -10,7 +10,9 @@ const CYCLE := 3.4              # s per plaat: pakken, zwenken, plaatsen en teru
 const T_LAND := 3.25            # s in de cyclus: de plaat zit op het gebouw
 const T_GROEI := 1.0            # s: het gebouw groeit een laag na het plaatsen
 const T_AF := 3.2               # s: afwerking na de laatste plaat
-const BOUWTIJD := T_VOOR + 8.0 * CYCLE + T_AF
+const BOUWTIJD := T_VOOR + 8.0 * CYCLE + T_AF   # s in "bouwtijd"; echt duurt het BOUW_ECHT door TEMPO
+const BOUW_ECHT := 20.0          # s: zo lang kijkt de speler naar de opbouw (Dennis: 35 s was veel te lang)
+const TEMPO := BOUWTIJD / BOUW_ECHT   # alle animatie loopt zoveel keer sneller
 const PLEIN_DIEP := 7.0         # m: het voorplein komt omhoog uit de grond
 const GRONDLAAG := 0.04         # deel van de hoogte dat er staat voor de eerste plaat
 const WEG_WACHT := 1.6          # s: groen baken, dan zakt de container weg
@@ -139,15 +141,17 @@ func _apply(t: float) -> void:
 func _process(delta: float) -> void:
 	if not begonnen:
 		return
-	_t += delta
 	if klaar:
+		_t += delta
 		_na(delta)
 		return
+	var d := delta * TEMPO
+	_t += d
 	_apply(_t)
-	_kraan_werk(delta)
+	_kraan_werk(d)
 	_zakken()
-	_werkers_stap(delta)
-	_effecten(delta)
+	_werkers_stap(d)
+	_effecten(d)
 	if _t > BOUWTIJD - T_AF + 0.6:
 		for c in _ring:
 			if is_instance_valid(c):

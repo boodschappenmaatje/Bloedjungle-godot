@@ -41,7 +41,7 @@ void fragment() {
 	float edge = smoothstep(1.7, 2.5, d);
 	float edgefoam = edge * smoothstep(0.42, 0.65, texture(noise, vec2(p.x * 0.3 - TIME * v * 0.12, p.y * 0.3)).r);
 	// diepte: donker in het midden, licht en doorzichtig bij de oever
-	float depth = smoothstep(2.6, 0.4, d);
+	float depth = 1.0 - smoothstep(0.4, 2.6, d);   // geen omgekeerde randen: dat is ongedefinieerd (NaN op Metal)
 	vec3 col = mix(deep, shallow * vec3(1.0, 1.15, 1.1), smoothstep(0.3, 0.75, streak) * 0.8 + (1.0 - depth) * 0.5);
 	col = mix(col, foam, clamp(flake * 0.55 + edgefoam * 0.8, 0.0, 1.0));
 	// rimpels die in twee richtingen schuiven: geven glinsteringen in het zonlicht en een bewegend oppervlak
@@ -54,10 +54,10 @@ void fragment() {
 	// spiegeling van de lucht onder een scheve kijkhoek
 	float fres = pow(1.0 - clamp(dot(normalize(NORMAL), normalize(VIEW)), 0.0, 1.0), 3.0);
 	col = mix(col, vec3(0.45, 0.78, 0.82), fres * 0.4);
-	ALBEDO = col;
+	ALBEDO = clamp(col, vec3(0.0), vec3(1.0));
 	EMISSION = vec3(1.0, 0.95, 0.8) * glint * 0.8 + foam * clamp(edgefoam, 0.0, 1.0) * 0.05;
 	ROUGHNESS = 0.08 + 0.25 * flake;
 	SPECULAR = 0.85;
 	METALLIC = 0.0;
-	ALPHA = mix(0.62, 0.94, depth);
+	ALPHA = clamp(mix(0.62, 0.94, depth), 0.0, 1.0);
 }

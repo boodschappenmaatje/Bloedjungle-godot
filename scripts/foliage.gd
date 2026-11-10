@@ -63,6 +63,10 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 	if _focus_mats.is_empty():
 		for key in ["palm", "leaf", "fern"]:
 			_focus_mats.append(material(key))
+		_meshy_mesh("Meshy_Boom")   # zorgt dat ook de Meshy-bladmaterialen bestaan
+		for key in _mats:
+			if String(key).begins_with("meshy_") and _mats[key] not in _focus_mats:
+				_focus_mats.append(_mats[key])
 	var on := _fade > 0.001
 	var e: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO, Vector4.ZERO]
 	for i in mini(extras.size(), 3):
@@ -188,13 +192,65 @@ static func _frond(st: SurfaceTool, origin: Vector3, yaw: float, length: float, 
 ## verre variant, 3 rotsen. Stam = schors, kroon = palmblad, rots = steen met mos in de vertexkleuren.
 const PALMS := ["Palm1", "Palm2", "Palm3"]
 ## Wat er op een palmplek komt te staan: een op de vijf is een jungleboom (plankwortels, lianen), op 0,75 geschaald.
-const PALM_POOL := ["Palm1", "Palm2", "Palm3", "Palm1", "Boom1", "Palm2", "Palm3", "Boom2", "Palm1", "Palm2"]
+const PALM_POOL := ["Palm1", "Palm2", "Palm3", "Palm4", "Boom1", "Palm2", "Palm3", "Boom2", "Boom3", "Palm4"]
 const BOOM_SCALE := 0.75
-const ROCKS := ["Rots1", "Rots2", "Rots3"]
+const LOGS := ["StamA", "StamB"]
+const ROCKS := ["Rots1", "Rots2", "Rots3", "KeiA", "KeiB"]
 static var _jungle := {}
+
+## Modellen die Dennis in Meshy maakte (assets/meshy_flora.glb, bron/meshy_flora/): een kokospalm (Palm4), een jungleboom
+## (Boom3, valt en botst als Boom1/2), een varen, een heliconia, twee mosrotsen en twee gevallen stammen. De namen zijn
+## de spelnamen; de waarde is de objectnaam in het glb. Planten krijgen het windmateriaal, rotsen en stammen houden
+## hun eigen (PBR-)materiaal.
+const MESHY := {"Palm4": "Meshy_Palm", "Palm4_far": "Meshy_Palm_far", "Boom3": "Meshy_Boom", "Boom3_far": "Meshy_Boom_far",
+	"Varen": "Meshy_Varen", "Heli": "Meshy_Heli", "KeiA": "Meshy_KeiA", "KeiB": "Meshy_KeiB", "StamA": "Meshy_StamA", "StamB": "Meshy_StamB"}
+## wind-meshes: objectnaam -> [zwaai, tint]; alles wat hier niet staat (keien, stammen) blijft een gewoon materiaal
+const MESHY_PLANT := {
+	"Meshy_Palm": [0.14, Vector3(1.0, 1.0, 0.95)], "Meshy_Palm_far": [0.14, Vector3(1.0, 1.0, 0.95)],
+	"Meshy_Boom": [0.06, Vector3(1.85, 1.9, 1.5)], "Meshy_Boom_far": [0.06, Vector3(1.85, 1.9, 1.5)],
+	"Meshy_Varen": [0.1, Vector3(1.0, 1.0, 0.95)], "Meshy_Heli": [0.08, Vector3(1.0, 1.0, 1.0)]}
+## Elke zoveelste plant van een soort is de Meshy-plant (zware modellen, dus ver weg niet getekend).
+const MESHY_MIX := {"fern": ["Varen", 4], "bush": ["Heli", 7]}
+const MESHY_NEAR_END := 48.0
+static var _meshy := {}
+
+
+static func _meshy_mesh(name: String) -> Mesh:
+	if _meshy.is_empty():
+		var root := (load("res://assets/meshy_flora.glb") as PackedScene).instantiate()
+		for mi in root.find_children("*", "MeshInstance3D", true, false):
+			var nm := String(mi.name)
+			var mesh := (mi as MeshInstance3D).mesh
+			if MESHY_PLANT.has(nm):
+				for i in mesh.get_surface_count():
+					var sm := mesh.surface_get_material(i) as BaseMaterial3D
+					var key := "meshy_" + nm.trim_suffix("_far")
+					if not _mats.has(key):
+						var m := ShaderMaterial.new()
+						m.shader = preload("res://shaders/foliage.gdshader")
+						m.set_shader_parameter("use_tex", true)
+						m.set_shader_parameter("tex", sm.albedo_texture)
+						if sm.normal_texture != null:
+							m.set_shader_parameter("nrm", sm.normal_texture)
+						m.set_shader_parameter("cut", 0.0)
+						m.set_shader_parameter("sway", MESHY_PLANT[nm][0])
+						m.set_shader_parameter("tint", MESHY_PLANT[nm][1])
+						m.set_shader_parameter("wind", 1.0 if GameSettings.get_value("wind") == "on" else 0.0)
+						_mats[key] = m
+					mesh.surface_set_material(i, _mats[key])
+			_meshy[nm] = mesh
+		root.free()
+	return _meshy[name]
+
+
+## Heeft dit model een Meshy-versie? (keien en stammen mogen niet het bladmateriaal van Kit.rock krijgen)
+static func is_meshy(name: String) -> bool:
+	return MESHY.has(name)
 
 
 static func jungle_mesh(name: String) -> Mesh:
+	if MESHY.has(name):
+		return _meshy_mesh(MESHY[name])
 	if _jungle.is_empty():
 		var root := (load("res://assets/jungle.glb") as PackedScene).instantiate()
 		for mi in root.find_children("*", "MeshInstance3D", true, false):
@@ -496,7 +552,7 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 				for i in range(v, xf.size(), ROCKS.size()):
 					vx.append(xf[i])
 					vc.append(cols[i])
-				var inst := Kit.scatter(parent, jungle_mesh(ROCKS[v]), rm, vx, vc)
+				var inst := Kit.scatter(parent, jungle_mesh(ROCKS[v]), null if is_meshy(ROCKS[v]) else rm, vx, vc)
 				inst.add_to_group("foliage_rock")
 				for k in vx.size():
 					var source_index := v + k * ROCKS.size()
@@ -518,6 +574,8 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 			var groups := {}
 			for i in cells[key][0].size():
 				var vn: String = PALM_POOL[i % PALM_POOL.size()] if kind == "palm" else ""
+				if MESHY_MIX.has(kind) and i % int(MESHY_MIX[kind][1]) == 0:
+					vn = MESHY_MIX[kind][0]   # elke zoveelste varen / struik is de Meshy-plant
 				if not groups.has(vn):
 					groups[vn] = [[], [], []]
 				var xt: Transform3D = cells[key][0][i]
@@ -530,13 +588,13 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 			for vn in groups:
 				var vx: Array = groups[vn][0]
 				var vc: Array = groups[vn][1]
-				var mesh: Mesh = jungle_mesh(vn) if kind == "palm" else meshes[kind]
+				var mesh: Mesh = jungle_mesh(vn) if vn != "" else meshes[kind]
 				var shapes: Array = []
 				if kind == "palm":
 					shapes = _collide(parent, vx, BOOM_COLLIDE_R if vn.begins_with("Boom") else COLLIDE_R["palm"], "wood", "palm")
 				var inst := Kit.scatter(parent, mesh, null, vx, vc)
 				inst.add_to_group("foliage_" + kind)
-				inst.visibility_range_end = VIS_END[kind]
+				inst.visibility_range_end = minf(VIS_END[kind], MESHY_NEAR_END) if vn != "" and kind != "palm" else VIS_END[kind]
 				inst.visibility_range_end_margin = 16.0
 				inst.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 				var far: MultiMeshInstance3D = null
@@ -829,13 +887,6 @@ static func _strip(rng: RandomNumberGenerator, kind: String, count: int, out: Ar
 static func logs(parent: Node3D, seed_ := 41) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = 0.34
-	cyl.bottom_radius = 0.4
-	cyl.height = 1.0
-	cyl.radial_segments = 8
-	cyl.rings = 1
-	var mat := Kit.photo("nature/tree_bark", 1.5, Color(0.7, 0.62, 0.52))
 	var xf: Array = []
 	var log_shapes: Array = []
 	var log_ends: Array = []
@@ -852,9 +903,9 @@ static func logs(parent: Node3D, seed_ := 41) -> void:
 		var p := Vector3(x, 0.32, rng.randf_range(Data.river_z(x) + 5.0, -Data.START_CLEAR - 3.0))
 		if absf(x) < 6.0 or _in_river(p) or Data.strip_zone(x) == "moeras" and rng.randf() < 0.5:
 			continue
-		var len_ := rng.randf_range(3.5, 7.0)
+		var len_ := rng.randf_range(3.0, 4.6)   # de Meshy-stam is 3 m lang, de schaal volgt de lengte
 		var yaw := rng.randf() * PI
-		var b: Basis = Basis.from_euler(Vector3(0, yaw, 0)) * Basis.from_euler(Vector3(PI / 2.0, 0, 0)) * Basis.from_scale(Vector3(1, len_, 1))
+		var b: Basis = Basis.from_euler(Vector3(0, yaw, 0)) * Basis.from_euler(Vector3(PI / 2.0, 0, 0)) * Basis.from_scale(Vector3.ONE * (len_ / 3.0))
 		xf.append(Transform3D(b, p))
 		var cs := CollisionShape3D.new()
 		var bs := BoxShape3D.new()
@@ -865,10 +916,20 @@ static func logs(parent: Node3D, seed_ := 41) -> void:
 		log_shapes.append(cs)
 		var along := Vector3(sin(yaw), 0.0, cos(yaw)) * (len_ * 0.5)
 		log_ends.append([p + along, p - along])
-	var inst := Kit.scatter(parent, cyl, mat, xf, [], true)
+	# twee Meshy-stammen, om en om
+	var parts: Array = []   # [multimesh-instance, xforms van die soort, indexen in xf]
+	for v in LOGS.size():
+		var vx: Array = []
+		var vi: Array = []
+		for i in range(v, xf.size(), LOGS.size()):
+			vx.append(xf[i])
+			vi.append(i)
+		parts.append([Kit.scatter(parent, jungle_mesh(LOGS[v]), null, vx, [], true), vi])
 	for i in xf.size():
 		var t: Transform3D = xf[i]
-		var entry := _register_vegetation({"kind": "log", "xf": t, "slots": [{"multimesh": inst.multimesh, "index": i}], "shapes": [log_shapes[i]]})
+		var part: Array = parts[i % LOGS.size()]
+		var inst: MultiMeshInstance3D = part[0]
+		var entry := _register_vegetation({"kind": "log", "xf": t, "slots": [{"multimesh": inst.multimesh, "index": (part[1] as Array).find(i)}], "shapes": [log_shapes[i]]})
 		var extra: Array = []
 		for end: Vector3 in log_ends[i]:
 			extra.append(_root.to_global(end) if is_instance_valid(_root) else end)

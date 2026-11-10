@@ -70,7 +70,7 @@ static func _decal_tex(kind: String) -> ImageTexture:
 				var a := rng.randf() * TAU
 				var d := rng.randf_range(0.0, 0.34) * n
 				blobs.append([n / 2.0 + cos(a) * d, n / 2.0 + sin(a) * d, rng.randf_range(0.06, 0.2) * n])
-		"hole":
+		"hole", "bark":
 			blobs.append([n / 2.0, n / 2.0, 0.34 * n])
 			blobs.append([n / 2.0, n / 2.0, 0.14 * n])
 		_:
@@ -88,6 +88,8 @@ static func _decal_tex(kind: String) -> ImageTexture:
 				var col := Color(0.22, 0.015, 0.015)
 				if kind == "hole":
 					col = Color(0.02, 0.02, 0.02)
+				elif kind == "bark":
+					col = Color(0.095, 0.052, 0.025)
 				elif kind == "scorch":
 					col = Color(0.03, 0.03, 0.025)
 				img.set_pixel(x, y, Color(col.r, col.g, col.b, clampf(a * 2.4, 0.0, 0.95)))
@@ -134,7 +136,10 @@ static func dust(parent: Node, pos: Vector3) -> void:
 
 
 ## Inslagreactie op aarde, hout, metaal of steen/beton.
-static func impact(parent: Node, pos: Vector3, normal: Vector3, material := "concrete") -> void:
+static func impact(parent: Node, pos: Vector3, normal: Vector3, material := "concrete", colt_shot := false) -> void:
+	if colt_shot and m1911_vfx_enabled() and material in ["wood", "concrete"]:
+		_colt_impact(parent, pos, normal, material)
+		return
 	match material:
 		"dirt":
 			_burst(parent, pos, normal, 11, Color(0.34, 0.24, 0.13), 0.055, 4.5, Vector3(0.05, 0.04, 0.05))
@@ -149,6 +154,21 @@ static func impact(parent: Node, pos: Vector3, normal: Vector3, material := "con
 			_burst(parent, pos, normal, 7, Color(0.46, 0.44, 0.4), 0.065, 3.8, Vector3(0.06, 0.05, 0.055))
 			_flash_quad(parent, pos + normal.normalized() * 0.03, 0.3, 0.06, Color(1.0, 0.82, 0.5, 0.9))
 			decal(parent, pos, normal, "hole", 0.42, 60.0)
+
+
+## Eén korte contactflits, materiaaldeeltjes en een spoor op het geraakte oppervlak.
+## Bestaande pools en de globale limiet van 70 decals blijven verantwoordelijk voor opruimen.
+static func _colt_impact(parent: Node, pos: Vector3, normal: Vector3, material: String) -> void:
+	var n := normal.normalized()
+	if material == "wood":
+		_burst(parent, pos, n, 9, Color(0.47, 0.29, 0.13), 0.055, 5.8, Vector3(0.025, 0.13, 0.025))
+		_burst(parent, pos, n, 6, Color(0.42, 0.34, 0.23, 0.68), 0.07, 2.0)
+		decal(parent, pos, n, "bark", 0.3, 120.0)
+	else:
+		_burst(parent, pos, n, 8, Color(0.55, 0.53, 0.47), 0.06, 4.6, Vector3(0.055, 0.04, 0.05))
+		_burst(parent, pos, n, 7, Color(0.51, 0.48, 0.42, 0.7), 0.085, 2.0)
+		decal(parent, pos, n, "hole", 0.34, 120.0)
+	_flash_quad(parent, pos + n * 0.035, 0.21, 0.05, Color(1.0, 0.72, 0.3, 0.72))
 
 
 ## Felle vonkjes met een korte flits: inslag in muur of bunker, en bij een raak op een mens.
@@ -464,7 +484,56 @@ static func muzzle(parent: Node, pos: Vector3, weapon := "m1911", angle := 0.0) 
 	var v: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
 	if weapon == "bazooka" or float(v.flash_life) <= 0.0:
 		return
+	# Isolated visual test path. Sound, casing, projectiles and recoil remain in their
+	# existing callers; avoid layering the legacy flash over the atlas.
+	if weapon == "m1911" and m1911_vfx_enabled():
+		_show_m1911_flipbook(parent, pos, angle)
+		_muzzle_smoke(parent, pos - Vector3(sin(angle), 0.0, cos(angle)) * 0.05, weapon, angle)
+		if int(v.flash_particles) > 0:
+			_burst(parent, pos, Vector3.UP * 0.2, int(v.flash_particles), v.flash_color, 0.025, 4.8, Vector3(0.025, 0.035, 0.025))
+		return
 	_show_muzzle_flash(parent, pos, _muzzle_mesh(weapon, randi() % 3), angle, v.flash_life, v.flash_width * 0.28, weapon, v.flash_particles, v.flash_color, v.flash_energy, v.flash_range)
+
+
+const M1911_FLIPBOOK_SHADER := preload("res://assets/vfx/m1911/m1911_flipbook.gdshader")
+const M1911_FLIPBOOK_TEXTURE_PATH := "res://assets/vfx/m1911/m1911_muzzle_flash_4x4.png"
+static var _m1911_flipbook_quad: QuadMesh
+static var _m1911_flipbook_live := 0
+const MAX_M1911_FLIPBOOKS := 8
+
+static func m1911_vfx_enabled() -> bool:
+	# De goedgekeurde Colt-effecten zijn standaard zichtbaar, ook in iOS/OTA.
+	# De bestaande testvlag kan de variant voor regressievergelijkingen uitzetten.
+	return OS.get_environment("M1911_VFX_TEST") != "0"
+
+
+static func _show_m1911_flipbook(parent: Node, pos: Vector3, angle: float) -> void:
+	if _m1911_flipbook_live >= MAX_M1911_FLIPBOOKS or not _near_camera(parent, pos, 38.0):
+		return
+	if _m1911_flipbook_quad == null:
+		_m1911_flipbook_quad = QuadMesh.new()
+		_m1911_flipbook_quad.size = Vector2(1.7, 1.05)
+	# Elke gelijktijdige flits krijgt zijn eigen frame; een gedeeld materiaal liet
+	# snelle schoten elkaars animatie overschrijven.
+	var material := ShaderMaterial.new()
+	material.shader = M1911_FLIPBOOK_SHADER
+	material.set_shader_parameter("flipbook_atlas", load(M1911_FLIPBOOK_TEXTURE_PATH))
+	material.set_shader_parameter("intensity", 1.65)
+	material.set_shader_parameter("frame_index", 0.0)
+	var fx := MeshInstance3D.new()
+	fx.name = "M1911FlipbookTest"
+	fx.set_meta("m1911_flipbook", true)
+	fx.mesh = _m1911_flipbook_quad
+	fx.material_override = material
+	fx.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(fx)
+	fx.global_position = pos + Vector3.UP * 0.16
+	fx.rotation.y = angle
+	_m1911_flipbook_live += 1
+	fx.tree_exiting.connect(func(): _m1911_flipbook_live = maxi(0, _m1911_flipbook_live - 1))
+	var tw := fx.create_tween()
+	tw.tween_method(func(frame: float): material.set_shader_parameter("frame_index", frame), 0.0, 15.0, 0.075)
+	tw.tween_callback(fx.queue_free)
 
 
 static func _show_muzzle_flash(parent: Node, pos: Vector3, flash_mesh: ArrayMesh, angle: float, life: float, glow_size: float, smoke_style: String, particles: int, color: Color, light_energy: float, light_range: float) -> void:

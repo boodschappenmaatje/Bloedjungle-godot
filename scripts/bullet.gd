@@ -74,7 +74,7 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 		b.scale.z = TRAIL_START
 	elif Data.WEAPON_VISUALS.has(visual_weapon):
 		b.mesh = _weapon_glow(visual_weapon, not by_player)
-		b._trail_len = float(Data.WEAPON_VISUALS[visual_weapon].trail_length)
+		b._trail_len = 2.2 if visual_weapon == "m1911" and by_player and Fx.m1911_vfx_enabled() else float(Data.WEAPON_VISUALS[visual_weapon].trail_length)
 		b.scale.z = TRAIL_START
 	elif by_player:
 		b.mesh = _plain_bullet_mesh()
@@ -206,9 +206,14 @@ func _add_rocket_part(parent: Node3D, part_mesh: Mesh, mat: Material, at: Vector
 ## Lichtspoor: een felle kop met een staart die uitdooft (twee kruislings gezette vlakken met een kleurverloop)
 ## en een kleine gloeiende bol als kop. Beide tellen op bij wat erachter ligt, dus het straalt zonder te vullen.
 static func _weapon_glow(weapon: String, enemy_tracer := false) -> ArrayMesh:
-	var key := "%s:%s" % [weapon, "enemy" if enemy_tracer else "player"]
+	var colt_test := weapon == "m1911" and not enemy_tracer and Fx.m1911_vfx_enabled()
+	var key := "%s:%s%s" % [weapon, "enemy" if enemy_tracer else "player", ":vfx" if colt_test else ""]
 	if _weapon_glows.has(key):
 		return _weapon_glows[key]
+	if colt_test:
+		var colt_trail := _glow(Color(1.0, 0.91, 0.65, 1.0), Color(1.0, 0.42, 0.08, 0.0), 2.2, 0.055, 0.18, 0.025)
+		_weapon_glows[key] = colt_trail
+		return colt_trail
 	var v: Dictionary = Data.WEAPON_VISUALS[weapon]
 	var head: Color = Color(1.0, 0.48, 0.28, 0.94) if enemy_tracer else v.trail_head
 	var tail: Color = Color(0.85, 0.12, 0.035, 0.0) if enemy_tracer else v.trail_tail
@@ -354,7 +359,7 @@ func _physics_process(delta: float) -> void:
 			var target_script_path := target_script.resource_path if target_script != null else ""
 			var target_handles_impact := target_script_path in ["res://scripts/enemy.gd", "res://scripts/player.gd"] or c is Barrel or c is Pomp or c is Brandkraan
 			if not target_handles_impact and hit.normal.length_squared() > 0.001:
-				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
+				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c), from_player and visual_weapon == "m1911")
 			# Only a real HP reduction may trigger the player's hit marker.
 			# Shields, cover, misses, friendly AI and non-player explosions stay silent.
 			var can_confirm := from_player and feedback_source in ["jeep", "infantry"] and c is Node3D and (Game.enemies.has(c) or (c as Node).is_in_group("vijand_verdediger"))
@@ -375,7 +380,7 @@ func _physics_process(delta: float) -> void:
 				return
 		else:
 			if hit.normal.length_squared() > 0.001:
-				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
+				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c), from_player and visual_weapon == "m1911")
 		queue_free()
 		return
 	global_position += step

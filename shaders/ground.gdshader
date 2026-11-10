@@ -19,6 +19,7 @@ uniform int pit_n = 0;
 uniform vec4 pad = vec4(0.0, 0.0, 1.0, 0.0);  // schacht van het helikopterplatform: x, z, cos, sin
 uniform float pad_half = 0.0;
 // wereld per start (W2): rivier-kronkel per sessie, door level.gd gezet vanuit Data._river_* (Data.river_z() zelfde formule)
+uniform float g2_wet = 0.0;  // Graphics 2.0: natte glans op modder, oevers en moeras
 uniform float river_amp1 = 5.0;
 uniform float river_freq1 = 0.06;
 uniform float river_phase1 = 0.0;
@@ -122,6 +123,11 @@ void fragment() {
 	float dirt_roughness = mix(0.98, 0.82, roughness_sample);
 	ROUGHNESS = mix(1.0, dirt_roughness, dm * micro_detail);
 	SPECULAR = dm * 0.16;
+	// Graphics 2.0: plassen in moeras, langs de oever en op de laagste plekken van de modder glanzen in de zon
+	float wet = g2_wet * dm * clamp(max(swamp, 1.0 - smoothstep(2.9, 6.0, river_off)) + smoothstep(0.42, 0.2, n2) * 0.7, 0.0, 1.0);
+	ROUGHNESS = mix(ROUGHNESS, 0.3, wet * 0.8);
+	SPECULAR = mix(SPECULAR, 0.5, wet);
+	ALBEDO *= 1.0 - 0.28 * wet;
 	vec2 dirt_uv = pp * 0.095;
 	NORMAL_MAP = texture(dirt_normal, dirt_uv, detail_mip_bias).rgb;
 	// Vervaag bumpdetail zodra een pixel meerdere detailtexels beslaat; dit voorkomt
@@ -129,5 +135,5 @@ void fragment() {
 	float normal_footprint = pixel_span * 0.095;
 	float normal_detail = 1.0 - smoothstep(0.001, 0.007, normal_footprint);
 	// Geen resterende bump op afstand: dat geeft mobiele shading-shimmer.
-	NORMAL_MAP_DEPTH = dm * 0.55 * normal_detail;
+	NORMAL_MAP_DEPTH = dm * 0.55 * normal_detail * (1.0 + 0.6 * g2_wet) * (1.0 - 0.6 * wet);
 }

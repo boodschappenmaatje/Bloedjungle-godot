@@ -741,22 +741,98 @@ static func explosion(parent: Node, pos: Vector3, scale := 1.0, chunks: Array = 
 		func(): return _spray(48, 1.2, Vector3(0.025, 0.24, 0.025), Color(1.0, 0.8, 0.35), 0.0, 0.0, 72.0, 16.0, true))
 	spray_once(parent, "aarde", pos + Vector3.UP * 0.3, 3.0 * scale, 8.0 * scale, 0.95, 1.4,
 		func(): return _spray(30, 1.3, Vector3(0.11, 0.11, 0.11), Color(0.2, 0.14, 0.09), 0.0, 0.0, 80.0, 18.0, false))
+	var g2 := Graphics2.fx()
+	if g2:
+		_g2_blast(parent, pos, scale)
 	# lichtflits: hooguit MAX_BLAST_LIGHTS tegelijk (elke extra lamp kost elk object eromheen een lichtberekening)
 	if _blast_lights < MAX_BLAST_LIGHTS:
 		_blast_lights += 1
 		var l := OmniLight3D.new()
 		l.light_color = Color(1.0, 0.6, 0.25)
-		l.light_energy = 9.0
-		l.omni_range = 15.0 * scale
+		l.light_energy = 16.0 if g2 else 9.0
+		l.omni_range = (22.0 if g2 else 15.0) * scale
 		l.shadow_enabled = false
 		l.tree_exited.connect(func(): _blast_lights = maxi(0, _blast_lights - 1))
 		parent.add_child(l)
 		l.global_position = pos + Vector3.UP * 1.2
 		var tw := l.create_tween()
-		tw.tween_property(l, "light_energy", 3.5, 0.12)
-		tw.tween_property(l, "light_energy", 0.0, 0.9)
+		tw.tween_property(l, "light_energy", 5.0 if g2 else 3.5, 0.12)
+		tw.tween_property(l, "light_energy", 0.0, 1.5 if g2 else 0.9)
 		tw.tween_callback(l.queue_free)
 	decal(parent, Vector3(pos.x, 0.0, pos.z), Vector3.UP, "scorch", 3.6 * scale, 80.0)
+
+
+## Graphics 2.0: wat een explosie erbij krijgt. Een korte felle flits, een schokgolf van stof over de grond, een stofring die
+## laag wegrolt en een rookzuil die een paar seconden blijft hangen. Alles uit pools of met een vaste bovengrens.
+const G2_SHOCK := preload("res://shaders/g2_schokgolf.gdshader")
+const G2_MAX_SHOCKS := 4
+const G2_MAX_SMOKE := 5
+static var g2_budget := 1.0   # Atmosphere zet dit lager als de kwaliteitstrap zakt
+static var _g2_shocks := 0
+static var _g2_smoke := 0
+static var _g2_shock_mesh: PlaneMesh
+
+
+## Deeltjesmateriaal dat de grootte van elk deeltje echt volgt (het gewone materiaal tekent elk deeltje als 1 m).
+static func g2_particle_mat() -> StandardMaterial3D:
+	if not _mats.has("g2_deeltje"):
+		var m: StandardMaterial3D = _particle_mat(Color.WHITE, false).duplicate()
+		m.billboard_keep_scale = true
+		_mats["g2_deeltje"] = m
+	return _mats["g2_deeltje"]
+
+
+static func _g2_blast(parent: Node, pos: Vector3, scale: float) -> void:
+	if not is_instance_valid(parent) or not parent.is_inside_tree():
+		return
+	_flash_quad(parent, pos + Vector3.UP * 1.3, 8.5 * scale, 0.1, Color(1.0, 0.86, 0.6, 0.9))
+	if pos.y < 1.0 and _g2_shocks < G2_MAX_SHOCKS:
+		_g2_shocks += 1
+		if _g2_shock_mesh == null:
+			_g2_shock_mesh = PlaneMesh.new()
+			_g2_shock_mesh.size = Vector2.ONE
+		var m := ShaderMaterial.new()
+		m.shader = G2_SHOCK
+		m.render_priority = 1
+		var ring := MeshInstance3D.new()
+		ring.mesh = _g2_shock_mesh
+		ring.material_override = m
+		ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var size := 17.0 * scale
+		ring.scale = Vector3(size, 1.0, size)
+		parent.add_child(ring)
+		ring.global_position = Vector3(pos.x, 0.07, pos.z)
+		var tw := ring.create_tween()
+		tw.tween_method(func(v: float): m.set_shader_parameter("t", v), 0.0, 1.0, 0.55).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+		tw.tween_callback(ring.queue_free)
+		ring.tree_exiting.connect(func(): _g2_shocks = maxi(0, _g2_shocks - 1))
+	# stofring: laag over de grond naar buiten, remt snel af
+	spray_once(parent, "g2_stofring", Vector3(pos.x, maxf(pos.y, 0.0) + 0.4, pos.z), 5.0 * scale, 10.0 * scale, 0.96, 2.2, func():
+		var d := _puff(20, 2.0, 2.8, false, _ramp([Color(0.72, 0.64, 0.5, 0.0), Color(0.72, 0.64, 0.5, 0.8), Color(0.78, 0.71, 0.6, 0.0)], [0.0, 0.12, 1.0]), Vector2(5.0, 10.0), 1.0)
+		d.direction = Vector3(1, 0.06, 0)
+		d.spread = 180.0
+		d.flatness = 0.92
+		d.damping_min = 5.0
+		d.damping_max = 8.0
+		d.gravity = Vector3(0, 0.2, 0)
+		d.mesh.material = g2_particle_mat()
+		d.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		return d)
+	# rookzuil die blijft hangen en traag met de wind meedrijft
+	if _g2_smoke < roundi(G2_MAX_SMOKE * g2_budget):
+		_g2_smoke += 1
+		parent.get_tree().create_timer(7.2).timeout.connect(func(): _g2_smoke = maxi(0, _g2_smoke - 1))
+		spray_once(parent, "g2_rookzuil", pos + Vector3.UP * 1.0, 0.5, 1.6, 0.6, 7.2, func():
+			var r := _puff(16, 6.5, 3.6, false, _ramp([Color(0.06, 0.05, 0.045, 0.0), Color(0.1, 0.09, 0.08, 0.95), Color(0.33, 0.31, 0.29, 0.75), Color(0.52, 0.5, 0.47, 0.0)], [0.0, 0.07, 0.5, 1.0]), Vector2(0.5, 1.6), 1.0)
+			r.spread = 30.0
+			r.damping_min = 0.5
+			r.damping_max = 0.9
+			r.gravity = Vector3(0.3, 0.3, 0.08)
+			r.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+			r.emission_sphere_radius = 1.0
+			r.mesh.material = g2_particle_mat()
+			r.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			return r)
 
 
 const MAX_BLAST_LIGHTS := 3
@@ -860,6 +936,8 @@ static func _fireball(parent: Node, pos: Vector3, scale: float) -> void:
 	m.set_shader_parameter("rows", def.rows)
 	m.set_shader_parameter("frames", def.frames)
 	m.set_shader_parameter("flip_x", randf() < 0.5)
+	if Graphics2.fx():
+		m.set_shader_parameter("bright", 1.25)   # met de gloed aan straalt de vuurbal
 	var mi := MeshInstance3D.new()
 	mi.mesh = _fire_quad[v]
 	mi.material_override = m

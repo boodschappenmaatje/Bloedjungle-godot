@@ -35,7 +35,7 @@ for(let i=0;i<5;i++){
  const root=new THREE.Mesh(new THREE.CylinderGeometry(.075,.17,.8,7),bark.material);
  root.rotation.z=(i-2)*.26;root.position.set((i-2)*.15,.13,0);roots.add(root);
 }
-const gunAnchor=new THREE.Group();gunAnchor.position.set(0,.84,-.86);gunAnchor.rotation.y=Math.PI/2;gunAnchor.scale.setScalar(2.5);scene.add(gunAnchor);
+const gunAnchor=new THREE.Group();gunAnchor.position.set(0,.84,-.86);gunAnchor.rotation.y=-Math.PI/2;gunAnchor.scale.setScalar(2.5);scene.add(gunAnchor);
 const muzzle=new THREE.Vector3(0,.86,-.43),hit=new THREE.Vector3(0,.86,1.2);
 const light=new THREE.PointLight(0xff9d31,0,1.5);light.position.copy(muzzle);scene.add(light);
 const flashMaterial=new THREE.SpriteMaterial({color:0xffc97b,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending});
@@ -84,6 +84,7 @@ function addMark(x=0,y=0){
 }
 function seedMarks(){clearMarks();addMark(-.28,.17);addMark(.26,-.15);}
 function chooseTarget(){const tree=$('target').value==='tree';bark.visible=tree;roots.visible=tree;concrete.visible=!tree;
+ hit.z=tree?.99:1.24;impactLight.position.copy(hit);
  const c=tree?0x735032:0x8a8174;for(const p of chips)p.material.color.setHex(c);
  seedMarks();setTime(0);
 }

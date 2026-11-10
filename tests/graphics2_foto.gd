@@ -68,7 +68,8 @@ func _process(_d: float) -> bool:
 		jeep.global_position = Vector3(-9.0 + (frames - 332) * 0.14, 0.0, -36.0)
 	if frames == 90:
 		_shot("open_veld")
-		game.player.global_position = Vector3(0.0, 0.0, -30.0)   # op het pad naar de brug, jungle rondom
+		var fz := float(OS.get_environment("G2_Z")) if OS.get_environment("G2_Z") != "" else -30.0
+		game.player.global_position = Vector3(load("res://scripts/data.gd").path_x(fz) + 2.5, 0.0, fz)   # naast het pad naar de brug, jungle rondom
 		game.player.face = PI
 	if frames == 170:
 		_shot("jungle")
@@ -82,4 +83,4 @@ func _process(_d: float) -> bool:
 		_shot("explosie_rook")
 	if frames == 420:
 		_shot("jeep_stof")
-	return frames > 422
+	return frames > (172 if OS.get_environment("G2_KORT") != "" else 422)

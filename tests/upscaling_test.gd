@@ -33,7 +33,12 @@ func _process(_d: float) -> bool:
 		atm.apply_settings()
 		_check(not U.call("active"), "zonder MetalFX niet actief")
 		_check(vp.scaling_3d_mode == Viewport.SCALING_3D_MODE_BILINEAR, "zonder MetalFX bilineair")
-		_check(absf(vp.scaling_3d_scale - 0.8) < 0.01, "zonder MetalFX schaal van Hoog (0,8), kreeg %.2f" % vp.scaling_3d_scale)
+		_check(absf(vp.scaling_3d_scale - 1.0) < 0.01, "zonder MetalFX met Graphics 2.0: Hoog op volle resolutie, kreeg %.2f" % vp.scaling_3d_scale)
+		GameSettings.set_value("g2", "off")
+		atm.apply_settings()
+		_check(absf(vp.scaling_3d_scale - 0.8) < 0.01, "zonder MetalFX, klassiek: schaal van Hoog (0,8), kreeg %.2f" % vp.scaling_3d_scale)
+		GameSettings.set_value("g2", "on")
+		atm.apply_settings()
 		_check(U.call("effective_quality") == "high", "zonder MetalFX grafiek Hoog")
 		# met MetalFX: Ultra-effecten, band van de stand, SMAA
 		U.set("force_support", 1)

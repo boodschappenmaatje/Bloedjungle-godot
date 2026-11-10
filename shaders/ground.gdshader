@@ -74,6 +74,10 @@ void fragment() {
 	vec3 grass = mix(g1, g2, smoothstep(0.28, 0.72, n1 * 0.6 + n2 * 0.4));
 	grass = grass * (0.77 + 0.46 * g3.g) * (0.84 + 0.32 * n3);
 	grass *= vec3(0.43, 0.47, 0.36);  // rustiger contrast en minder verzadigd groen
+	// Graphics 2.0: structuur in het gras. Fijne sprietjes dichtbij en donkere en lichte pollen op armlengte.
+	float blades = texture(grass_tex, p * 0.71 + 0.23, detail_mip_bias).g;
+	float clumps = texture(noise_b, p * 0.21 + 0.4).r;
+	grass *= mix(1.0, (0.62 + 0.95 * blades) * (0.74 + 0.55 * clumps), g2_gold * mix(0.45, 1.0, micro_detail));
 
 	// Houd de grondtexturen vast aan de wereld. View-dependent parallax op dit grote vlak
 	// verschoof de hoogfrequente albedo en normal map bij iedere camerabeweging en gaf shimmer.
@@ -94,7 +98,7 @@ void fragment() {
 	// kronkelpad van de noordpoort door het bos naar de brug (zelfde formule als Data.path_x)
 	float pt = clamp((-30.0 - p.y) / 60.2, 0.0, 1.0);
 	float ptx = 12.0 * sin(pt * 9.6) * sin(pt * 3.14159265);
-	float trail = (1.0 - smoothstep(1.4, 3.0 + n2 * 1.4, abs(p.x - ptx))) * step(0.001, pt) * step(pt, 0.999);
+	float trail = (1.0 - smoothstep(mix(1.4, 0.9, g2_wet), 3.0 + n2 * 1.4 + 0.9 * g2_wet, abs(p.x - ptx))) * step(0.001, pt) * step(pt, 0.999);
 	dm = max(dm, max(swamp * 0.9, trail * 0.9));
 	dm = smoothstep(0.12, 0.88, dm + (n3 - 0.5) * 0.12 + (hgt - 0.5) * 0.16);  // brede rand zonder kleine bruine uitschieters
 
@@ -119,11 +123,15 @@ void fragment() {
 	float edge = clamp(4.0 * dm * (1.0 - dm), 0.0, 1.0);
 	dirt = mix(dirt, vec3(0.14, 0.2, 0.08) * (0.8 + 0.5 * n3), edge * 0.5);
 	dirt *= 1.0 - 0.25 * smoothstep(0.5, 0.2, n2) * dm;
-	grass *= mix(vec3(1.0), vec3(1.22, 1.36, 0.92), g2_gold);
+	grass *= mix(vec3(1.0), vec3(0.9, 1.26, 0.6), g2_gold);  // dieper groen; het goud komt van de zon, niet van het gras
+	// Graphics 2.0: het bospad is warme roodbruine modder met losse steentjes
+	vec3 stones = texture(dirt_tex, p * 0.37 + 0.19, detail_mip_bias).rgb;
+	float gravel = g2_wet * smoothstep(0.3, 0.8, trail);
+	dirt = mix(dirt, dirt * (0.55 + 1.5 * stones.r) * vec3(0.84, 0.86, 0.84) * 0.74, mix(0.75, 0.9, micro_detail) * gravel);
 	// Graphics 2.0: twee bandensporen in het pad door het bos
 	float track_d = abs(abs(p.x - ptx) - 0.62);
 	float track = g2_wet * (1.0 - smoothstep(0.1, 0.3, track_d)) * smoothstep(0.55, 0.9, trail) * (0.6 + 0.4 * n2);
-	dirt *= 1.0 - 0.3 * track;
+	dirt *= 1.0 - 0.42 * track;
 	ALBEDO = mix(grass, dirt, dm);  // texturen zijn al lineair ingelezen (source_color)
 	// De droge-aarde roughnesskaart varieert subtiel binnen een matte band.
 	// Gras blijft volledig mat; op afstand vervaagt materiaalruis met albedo-detail.
@@ -136,12 +144,17 @@ void fragment() {
 	SPECULAR = mix(SPECULAR, 0.5, wet);
 	ALBEDO *= 1.0 - 0.28 * wet;
 	// Graphics 2.0: plassen in de modder en in de sporen: donker, spiegelglad, met een zweem van de lucht
-	float pud_n = texture(noise_a, p * 0.17 + 0.61).r;
-	float puddle = g2_wet * smoothstep(0.5, 0.95, dm) * clamp(smoothstep(0.725, 0.76, pud_n) + track * smoothstep(0.62, 0.68, pud_n), 0.0, 1.0);
-	ALBEDO = mix(ALBEDO, vec3(0.02, 0.024, 0.02), puddle * 0.92);
-	ROUGHNESS = mix(ROUGHNESS, 0.04, puddle);
-	SPECULAR = mix(SPECULAR, 0.9, puddle);
-	EMISSION = g2_sky * puddle * 0.02;
+	// Een paar grotere plassen op de laagste plekken (geen spikkels): natte donkere rand, glad water dat de lucht spiegelt.
+	float pud_n = texture(noise_a, p * 0.075 + 0.61).r + 0.05 * (n2 - 0.5);
+	float pud_zone = g2_wet * smoothstep(0.6, 0.95, dm) * max(smoothstep(0.5, 0.9, trail), swamp);
+	float pud_rim = pud_zone * smoothstep(0.69, 0.75, pud_n);
+	float puddle = pud_zone * smoothstep(0.745, 0.775, pud_n);
+	ALBEDO *= 1.0 - 0.45 * pud_rim;
+	ROUGHNESS = mix(ROUGHNESS, 0.35, pud_rim);
+	ALBEDO = mix(ALBEDO, vec3(0.035, 0.032, 0.026), puddle * 0.94);
+	ROUGHNESS = mix(ROUGHNESS, 0.03, puddle);
+	SPECULAR = mix(SPECULAR, 0.55, puddle);
+	EMISSION = g2_sky * vec3(0.7, 0.85, 1.0) * puddle * 0.035;
 	vec2 dirt_uv = pp * 0.095;
 	NORMAL_MAP = texture(dirt_normal, dirt_uv, detail_mip_bias).rgb;
 	// Vervaag bumpdetail zodra een pixel meerdere detailtexels beslaat; dit voorkomt
@@ -149,5 +162,5 @@ void fragment() {
 	float normal_footprint = pixel_span * 0.095;
 	float normal_detail = 1.0 - smoothstep(0.001, 0.007, normal_footprint);
 	// Geen resterende bump op afstand: dat geeft mobiele shading-shimmer.
-	NORMAL_MAP_DEPTH = dm * 0.55 * normal_detail * (1.0 + 0.6 * g2_wet) * (1.0 - 0.6 * wet) * (1.0 - puddle);
+	NORMAL_MAP_DEPTH = dm * 0.55 * normal_detail * (1.0 + 0.6 * g2_wet + 0.9 * gravel) * (1.0 - 0.6 * wet) * (1.0 - puddle);
 }

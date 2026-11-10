@@ -45,6 +45,8 @@ static func band() -> Dictionary:
 		return {"start": s.scale, "min": s.min, "max": s.max}
 	var table: Dictionary = (load("res://scripts/atmosphere.gd") as GDScript).get("QUALITY")
 	var cap: float = table[GameSettings.get_value("quality")].scale
+	if GameSettings.get_value("quality") == "high" and Graphics2.on():
+		cap = 1.0   # Graphics 2.0: Hoog mag tot volle resolutie; de regelaar zakt alleen als de 60 fps in gevaar komt
 	return {"start": cap, "min": PerfGovernor.MIN_SCALE, "max": cap}
 
 

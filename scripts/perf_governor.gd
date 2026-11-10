@@ -8,6 +8,7 @@ static var grace_until := 0  # ms; na het laden tellen de eerste paar seconden n
 static var paused := false   # de diagnose-run zet de regelaar even stil
 
 const MIN_SCALE := 0.5
+const FLOOR_FPS := 60.0
 const DOWN_RATIO := 0.93  # van het doel; 56 bij 60 fps, 112 bij 120
 const UP_RATIO := 0.98
 
@@ -65,7 +66,9 @@ func _process(delta: float) -> void:
 	# onthoud het hoogste tempo dat echt gehaald wordt (zakt langzaam terug), voor schermen die hun snelheid niet melden
 	GameSettings.observed_peak = maxf(60.0, maxf(fps, GameSettings.observed_peak - 0.5))
 	var s := vp.scaling_3d_scale
-	var target := GameSettings.target_fps()
+	# Dennis, 10 nov 2026: minimaal 60 fps, daarboven is meegenomen. De regelaar bewaakt dus hooguit 60, ook op een
+	# 120 Hz-scherm, en geeft de rest van de ruimte aan resolutie en beeldkwaliteit.
+	var target := minf(GameSettings.target_fps(), FLOOR_FPS)
 	# op de laagste resolutie en nog steeds te traag: de duurste onderdelen uit (trap voor trap, nooit terug omhoog)
 	_tier_wait -= 0.5
 	if s <= _floor + 0.01 and fps < target * TIER_RATIO:

@@ -1,5 +1,5 @@
 extends SceneTree
-## Opt-in Colt VFX: gelijktijdige atlasframes, verschillende inslagen en oudste sporen.
+## Colt VFX standaard aan: gelijktijdige atlasframes, materiaalinslagen en oudste sporen.
 ## godot --headless --path . -s tests/colt_vfx_test.gd --fixed-fps 60
 
 var failures: Array[String] = []
@@ -16,8 +16,10 @@ func _run() -> void:
 	var fx: Script = load("res://scripts/fx.gd")
 	var stage := Node3D.new()
 	root.add_child(stage)
+	OS.set_environment("M1911_VFX_TEST", "")
+	_check(fx.m1911_vfx_enabled(), "Colt VFX is niet standaard ingeschakeld voor de OTA")
 	OS.set_environment("M1911_VFX_TEST", "1")
-	_check(fx.m1911_vfx_enabled(), "Colt opt-in staat niet aan")
+	_check(fx.m1911_vfx_enabled(), "Colt testvariant staat niet aan")
 	fx.muzzle(stage, Vector3.ZERO, "m1911", 0.0)
 	fx.muzzle(stage, Vector3(2, 0, 0), "m1911", 0.0)
 	var flashes: Array[MeshInstance3D] = []
@@ -46,7 +48,7 @@ func _run() -> void:
 	await process_frame
 	_check(not is_instance_valid(oldest), "oudste kogelspoor is niet opgeruimd")
 	OS.set_environment("M1911_VFX_TEST", "0")
-	_check(not fx.m1911_vfx_enabled(), "normale instellingen zijn niet teruggezet")
+	_check(not fx.m1911_vfx_enabled(), "Colt testvariant kan niet worden uitgeschakeld")
 	stage.queue_free()
 	print("COLT VFX TEST: %s" % ("PASS" if failures.is_empty() else "FAIL: " + str(failures)))
 	quit(0 if failures.is_empty() else 1)

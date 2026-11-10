@@ -502,7 +502,9 @@ static var _m1911_flipbook_live := 0
 const MAX_M1911_FLIPBOOKS := 8
 
 static func m1911_vfx_enabled() -> bool:
-	return OS.get_environment("M1911_VFX_TEST") == "1"
+	# De goedgekeurde Colt-effecten zijn standaard zichtbaar, ook in iOS/OTA.
+	# De bestaande testvlag kan de variant voor regressievergelijkingen uitzetten.
+	return OS.get_environment("M1911_VFX_TEST") != "0"
 
 
 static func _show_m1911_flipbook(parent: Node, pos: Vector3, angle: float) -> void:

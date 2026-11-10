@@ -81,7 +81,7 @@ func _process(_d: float) -> bool:
 		if dak.size() == 1:
 			_check((dak[0] as GeometryInstance3D).cast_shadow == GeometryInstance3D.SHADOW_CASTING_SETTING_SHADOWS_ONLY, "aan: het bladerdak is zelf onzichtbaar")
 		_check(absf(root.get_viewport().scaling_3d_scale - 1.0) < 0.01, "aan: Hoog begint op volle resolutie, kreeg %.2f" % root.get_viewport().scaling_3d_scale)
-		_check(absf(_env().adjustment_contrast - 1.27) < 0.001 and _sun().shadow_opacity > 0.8, "aan: meer contrast en diepe schaduw")
+		_check(absf(_env().adjustment_contrast - 1.27) < 0.001 and _sun().shadow_opacity > 0.75, "aan: meer contrast en diepe schaduw")
 		# gouden stijl: lichtbundels, begroeiing langs het pad, plassen en helder gras
 		_check(world.beams_on, "aan: lichtbundels overdag bij helder weer")
 		_check(get_nodes_in_group("g2_begroeiing").size() == 4, "aan: bloemen, struiken, varens en keien langs het pad, kreeg %d groepen" % get_nodes_in_group("g2_begroeiing").size())

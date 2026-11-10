@@ -20,7 +20,7 @@ const TIMES := {
 # vallen naar de camera toe), veel warm omgevingslicht zodat het beeld licht blijft, warme mist en nevel.
 # ambc = kleur van het omgevingslicht, mist/ms = kleur en dichtheid van de nevel, beam/bs = kleur en sterkte van de lichtbundels.
 const TIMES_G2 := {
-	"day": {"rot": Vector3(-23, -142, 0), "col": "ffc27a", "e": 2.8, "amb": 0.5, "ambc": "7e9888", "top": "5f7f96", "hor": "e6d2a6", "gnd": "8f8a66", "fog": "b3b08c", "exp": 1.06, "mist": "f1e2b8", "ms": 0.045, "beam": "ffd591", "bs": 0.1},
+	"day": {"rot": Vector3(-23, -142, 0), "col": "ffc27a", "e": 2.8, "amb": 0.64, "ambc": "86a08e", "top": "5f7f96", "hor": "e6d2a6", "gnd": "8f8a66", "fog": "b3b08c", "exp": 1.06, "mist": "f1e2b8", "ms": 0.05, "beam": "ffd591", "bs": 0.075},
 	"dusk": {"rot": Vector3(-9, -38, 0), "col": "ff8644", "e": 1.9, "amb": 0.32, "ambc": "7d7fb0", "top": "3a3f5c", "hor": "e0915a", "gnd": "8a6a50", "fog": "b0805e", "exp": 1.0, "mist": "e0a57c", "ms": 0.13, "beam": "ff9a55", "bs": 0.16},
 	"night": {"rot": Vector3(-48, -38, 0), "col": "9db4ff", "e": 1.0, "amb": 0.34, "ambc": "3d5a96", "top": "10182e", "hor": "2c3b5a", "gnd": "141c2a", "fog": "27324a", "exp": 0.95, "mist": "5a6c8e", "ms": 0.16},
 }
@@ -309,7 +309,7 @@ func _apply_g2(q: String, t: Dictionary, weather: String) -> void:
 	_env.glow_blend_mode = Environment.GLOW_BLEND_MODE_SCREEN if light else Environment.GLOW_BLEND_MODE_SOFTLIGHT
 	_env.adjustment_contrast = 1.27 if light else 1.2
 	_env.adjustment_color_correction = _lut(GameSettings.get_value("time")) if light else null
-	_sun.shadow_opacity = 0.86 if light else 0.72
+	_sun.shadow_opacity = 0.78 if light else 0.72
 	_fill.visible = light and GameSettings.get_value("time") == "day"
 	_sun.shadow_blur = 1.3 if light else 1.8
 	if light:
@@ -351,7 +351,7 @@ func _apply_g2(q: String, t: Dictionary, weather: String) -> void:
 		for kind in ["grass", "fern"]:
 			for n: MultiMeshInstance3D in get_tree().get_nodes_in_group("foliage_" + kind):
 				if n.has_meta("full"):
-					n.multimesh.visible_instance_count = roundi(n.get_meta("full") * maxf(QUALITY[q][kind], 0.85))
+					n.multimesh.visible_instance_count = roundi(n.get_meta("full") * 1.0)
 
 
 ## Kleurtabel per tijdstip: donkere tinten zakken iets weg naar koel groenblauw, lichte tinten worden warm. Eén kleine textuur.

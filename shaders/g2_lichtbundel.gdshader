@@ -24,7 +24,7 @@ void vertex() {
 
 void fragment() {
 	float across = 1.0 - abs(UV.x * 2.0 - 1.0);
-	across = across * across * (3.0 - 2.0 * across);
+	across = across * across * across * (10.0 + across * (6.0 * across - 15.0));   // zachte rand: geen harde streep
 	// boven uitlopend (bladerdak), bij de grond zacht weg
 	float along = smoothstep(0.0, 0.22, UV.y) * (1.0 - smoothstep(0.55, 1.0, UV.y));
 	float n = texture(noise, vec2(UV.x * 0.9 + shimmer, UV.y * 0.25 + TIME * 0.012 + shimmer * 3.0)).r;

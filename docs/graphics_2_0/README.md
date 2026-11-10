@@ -89,3 +89,13 @@ witte plassen en te grote lichtbundels.
 - Klassiek blijft het oude beeld, inclusief de oude resolutie van Hoog (80%).
 
 Niet gemeten op de iPhone: de beeldsnelheid bij 100% resolutie. De regelaar verlaagt de resolutie vanzelf als het onder 56 fps komt.
+
+## v208: bos lichter, zachtere lichtbundels, meer gras (10 november 2026)
+
+Op Dennis' iPhone-opname van v207 (80 tot 105 fps bij 79 tot 82%) was het diepe bos te donker en zagen de lichtbundels eruit als dunne gele lijnen.
+
+- Meer omgevingslicht (0,5 naar 0,64) en iets lichtere schaduw (0,86 naar 0,78); minder en kleinere bladerdakvlakken.
+- Lichtbundels twee keer zo breed met een zachte rand en iets minder sterk.
+- Gras en varens op 100% in plaats van 85%.
+
+Niet gemeten op de iPhone.

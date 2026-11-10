@@ -158,7 +158,7 @@ func _place_beams(focus: Vector3) -> void:
 		if absf(z - Data.river_z(x)) < 5.0:
 			continue
 		mm.set_instance_transform(i, Transform3D(Basis.IDENTITY, Vector3(x, 0.0, z)))
-		mm.set_instance_custom_data(i, Color(1.3 + 1.5 * _hash(tx, tz, 4), 14.0 + 7.0 * _hash(tx, tz, 5), _hash(tx, tz, 6), 0.0))
+		mm.set_instance_custom_data(i, Color(3.6 + 3.2 * _hash(tx, tz, 4), 13.0 + 6.0 * _hash(tx, tz, 5), _hash(tx, tz, 6), 0.0))
 		i += 1
 	mm.visible_instance_count = i
 
@@ -214,11 +214,11 @@ func _build_canopy() -> void:
 		var t := trees[k]
 		var tx := roundi(t.x * 4.0)
 		var tz := roundi(t.y * 4.0)
-		if _hash(tx, tz, 11) < 0.25:
-			continue   # een op de vier bomen laat het licht door
+		if _hash(tx, tz, 11) < 0.42:
+			continue   # ruim een op de drie bomen laat het licht door
 		for j in (2 if _hash(tx, tz, 12) > 0.55 else 1):
 			var off := Vector3((_hash(tx, tz, 13 + j) - 0.5) * 5.0, 0.0, (_hash(tx, tz, 15 + j) - 0.5) * 5.0)
-			var sc := 2.6 + 2.8 * _hash(tx, tz, 17 + j)
+			var sc := 2.2 + 2.2 * _hash(tx, tz, 17 + j)
 			var b := Basis(Vector3.UP, _hash(tx, tz, 19 + j) * TAU).scaled(Vector3(sc, 1.0, sc))
 			xf.append(Transform3D(b, Vector3(t.x, 6.5 + 3.0 * _hash(tx, tz, 21 + j), t.y) + off))
 	var mm := MultiMesh.new()

@@ -6,6 +6,16 @@ pinch zoom, identical-camera comparison, the game's 58°/28 m/45° FOV camera,
 material-map inspection, and actual GLB clips with play/pause/restart/scrubbing.
 The unanimated models explicitly say **Geen animaties in dit model**.
 
+## Colt VFX-review (Draft PR #269)
+
+Open `colt-vfx.html` from the same viewer directory to see the actual
+`meshy_m1911.glb` shot clip together with the 4×4 Colt flash atlas and an
+animated bullet streak. Choose a concrete wall or tree, play/pause and scrub
+the effect, or rotate/zoom the 3D camera. Each replay leaves a mark; after
+12 marks the oldest disappears. The environment and debris are a browser
+approximation of the opt-in Godot effects, not a frame capture from Godot or
+a native iPhone performance measurement. No merge or OTA is implied.
+
 From the repository root:
 
 ```sh

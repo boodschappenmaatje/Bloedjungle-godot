@@ -11,12 +11,12 @@ static var _grove_px := 1.3
 static var _grove_pz := 0.4
 static var _grove_fx := 0.075
 static var _grove_fz := 0.095
-const STRIP_EXTRA := {"palm": 70, "bush": 230, "fern": 330, "grass": 1300, "rock": 26}  # extra stuks in de strook tussen muur en rivier
+const STRIP_EXTRA := {"palm": 90, "bush": 300, "fern": 430, "grass": 1300, "rock": 32}  # extra stuks in de strook tussen muur en rivier
 ## Hoeveel van de extra planten per gebied blijft staan: moeras = varens en gras, open plek = bijna kaal met rotsen, dicht = alles.
 const STRIP_KEEP := {
 	"dicht": {"palm": 1.0, "bush": 1.0, "fern": 1.0, "grass": 1.0, "rock": 0.5},
-	"moeras": {"palm": 0.3, "bush": 0.35, "fern": 0.9, "grass": 1.0, "rock": 0.2},
-	"open": {"palm": 0.06, "bush": 0.12, "fern": 0.3, "grass": 0.45, "rock": 1.0},
+	"moeras": {"palm": 0.45, "bush": 0.5, "fern": 0.9, "grass": 1.0, "rock": 0.2},
+	"open": {"palm": 0.12, "bush": 0.2, "fern": 0.4, "grass": 0.45, "rock": 1.0},
 }
 ## Afstand (m, vanaf de camera, gemeten tot het midden van een vak van 36 m) waarboven een soort niet meer getekend wordt.
 const VIS_END := {"palm": 140.0, "bush": 95.0, "fern": 85.0, "grass": 55.0}
@@ -192,7 +192,7 @@ static func _frond(st: SurfaceTool, origin: Vector3, yaw: float, length: float, 
 ## verre variant, 3 rotsen. Stam = schors, kroon = palmblad, rots = steen met mos in de vertexkleuren.
 const PALMS := ["Palm1", "Palm2", "Palm3"]
 ## Wat er op een palmplek komt te staan: een op de vijf is een jungleboom (plankwortels, lianen), op 0,75 geschaald.
-const PALM_POOL := ["Palm1", "Palm2", "Palm3", "Palm4", "Boom1", "Palm2", "Palm3", "Boom2", "Boom3", "Palm4"]
+const PALM_POOL := ["Palm4", "Boom3", "Palm2", "Palm4", "Boom1", "Palm3", "Boom3", "Palm4", "Boom2", "Palm1"]
 const BOOM_SCALE := 0.75
 const LOGS := ["StamA", "StamB"]
 const ROCKS := ["Rots1", "Rots2", "Rots3", "KeiA", "KeiB"]
@@ -210,8 +210,8 @@ const MESHY_PLANT := {
 	"Meshy_Boom": [0.06, Vector3(1.85, 1.9, 1.5)], "Meshy_Boom_far": [0.06, Vector3(1.85, 1.9, 1.5)],
 	"Meshy_Varen": [0.1, Vector3(1.0, 1.0, 0.95)], "Meshy_Heli": [0.08, Vector3(1.0, 1.0, 1.0)]}
 ## Elke zoveelste plant van een soort is de Meshy-plant (zware modellen, dus ver weg niet getekend).
-const MESHY_MIX := {"fern": ["Varen", 4], "bush": ["Heli", 7]}
-const MESHY_NEAR_END := 48.0
+const MESHY_MIX := {"fern": ["Varen", 3], "bush": ["Heli", 4]}
+const MESHY_NEAR_END := 70.0
 static var _meshy := {}
 
 
@@ -325,7 +325,7 @@ static var _reg := {}  # vak (36 m) -> palmen en bomen die nog kunnen omvallen (
 const VEG_CELL := 36.0
 const BUILD_CLEAR_MARGIN := 0.75
 const CLEARABLE_KINDS := ["palm", "bush", "fern", "grass", "log"]
-const SOUTH_COUNTS := {"palm": 150, "bush": 260, "fern": 220, "grass": 1100, "rock": 32}
+const SOUTH_COUNTS := {"palm": 190, "bush": 340, "fern": 300, "grass": 1100, "rock": 40}
 static var _vegetation_cells := {}  # 36 m spatial index; each item points at one actual MultiMesh instance
 static var _vegetation_serial := 0
 static var _building_clearings := {}  # live placed building id -> regions reapplied after Level rebuild
@@ -525,7 +525,9 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 	rng.seed = seed_
 	var south_rng := RandomNumberGenerator.new()
 	south_rng.seed = seed_ + 1009
-	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
+	var fill_rng := RandomNumberGenerator.new()   # eigen generator: de bestaande plekken blijven precies waar ze waren
+	fill_rng.seed = seed_ + 3001
+	var sets := {"palm": [240, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [420, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [420, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [60, 18.0, 75.0, 0.7, 2.2, 0.15]}
 	var meshes := {"bush": bush(), "fern": fern(), "grass": grass()}
 	for kind in sets:
 		if step.is_valid():
@@ -536,6 +538,7 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 		_scatter(rng, c[0], c[1], c[2], xf, cols, c[3], c[4], c[5])
 		_strip(rng, kind, xf.size() + STRIP_EXTRA[kind], xf, cols, c[3], c[4], c[5])
 		_south_scatter(south_rng, kind, SOUTH_COUNTS[kind], xf, cols, c[3], c[4], c[5])
+		_fill_scatter(fill_rng, kind, FILL_COUNTS[kind], xf, cols, c[3], c[4], c[5])
 		if kind == "grass":
 			# Keep the original RNG/placement sequence for palms, rocks and all gameplay.
 			# Only grass is replaced by Blender tufts with separate geometric LODs.
@@ -833,6 +836,42 @@ static func _south_scatter(rng: RandomNumberGenerator, kind: String, count: int,
 		_add(rng, out, cols, p, s_min, s_max, tilt)
 		added += 1
 
+
+
+## Vulling (v211): de gaten in de dichtheidskaart. Oost- en weststrook naast het kamp, het bos ten noorden van de rivier
+## en het zuiden, tot z = FOLIAGE_Z_N. Zelfde bosjes/open-plekkenpatroon als de rest; het pad en de rivier blijven vrij.
+const FILL_COUNTS := {"palm": 170, "bush": 260, "fern": 330, "grass": 1500, "rock": 45}
+static func _fill_scatter(rng: RandomNumberGenerator, kind: String, count: int, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
+	var added := 0
+	var tries := 0
+	while added < count and tries < count * 40:
+		tries += 1
+		var p := Vector3(rng.randf_range(-Data.WORLD_X + 6.0, Data.WORLD_X - 6.0), 0.0, rng.randf_range(-Data.FOLIAGE_Z_N + 4.0, Data.WORLD_Z_S - 9.0))
+		var gap := absf(p.x) > 80.0 and p.z > -30.0 and p.z < 80.0   # flanken naast het kamp
+		var north := p.z < Data.river_z(p.x) - 4.0
+		var south := p.z > 70.0
+		if not (gap or north or south):
+			continue
+		if maxf(absf(p.x), absf(p.z)) < Data.START_CLEAR + 1.8 or absf(p.x) < Data.START_ROAD_HALF + 3.0 and p.z > -Data.START_CLEAR:
+			continue
+		if _in_river(p):
+			continue
+		if kind == "palm" and p.z < Data.FOREST_Z0 and absf(p.x - Data.path_x(p.z)) < 7.5:
+			continue
+		if kind == "rock":
+			var reserved := false
+			for region in AirfieldHQ23.site_regions():
+				if _point_in_build_region(p, AirfieldHQ23.SUGGESTED_CENTER, 0.0, region, 1.0):
+					reserved = true
+					break
+			if reserved:
+				continue
+		if kind != "grass" and rng.randf() > 0.30 + 0.70 * _grove(p.x, p.z):
+			continue
+		if p.z < -30.0 and p.z < Data.river_z(p.x) and rng.randf() > STRIP_KEEP[Data.strip_zone(p.x)][kind]:
+			continue
+		_add(rng, out, cols, p, s_min, s_max, tilt)
+		added += 1
 
 
 ## In de rivier, op de oevers en op de open paden naar brug en ondiepte.

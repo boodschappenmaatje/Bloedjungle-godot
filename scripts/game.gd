@@ -110,6 +110,7 @@ func note_blast(at: Vector3, radius: float) -> void:
 	VoorraadTruck.catch_blast(at, radius)   # voorraadtrucks ook
 	Bus.catch_blast(at, radius)          # bussen ook (zwaarder: er is veel nodig)
 	Foliage.fell_near(at, radius)   # bomen vlakbij vallen om
+	Bosbrand.catch_blast(at, radius)   # planten vlakbij vatten vlam: het vuur loopt door het bos
 	blast_at = at
 	blast_r = radius
 	blast_t = Time.get_ticks_msec()

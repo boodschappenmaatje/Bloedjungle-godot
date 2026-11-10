@@ -24,6 +24,7 @@ func build_now() -> void:
 	Stad.build(self)
 	VijandBasis.build(self)
 	Foliage.plant(self, Data.world_seed)
+	Bosbrand.setup(self)
 	built = true
 
 
@@ -47,6 +48,7 @@ func build_stepped(progress: Callable) -> void:
 	var step := func(kind: String) -> void:
 		await tick.call(0.3 + 0.12 * order.find(kind), names[kind])
 	await Foliage.plant(self, Data.world_seed, step)
+	Bosbrand.setup(self)
 	built = true
 
 

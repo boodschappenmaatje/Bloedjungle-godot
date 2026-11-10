@@ -421,7 +421,7 @@ func _drive(delta: float) -> void:
 	rotation.y += _yaw_rate * delta
 	velocity = -global_transform.basis.z * _speed
 	move_and_slide()
-	Foliage.ram(self, absf(_speed), 8.0)   # tegen een boom aan: hij valt om
+	Foliage.ram(self, absf(_speed), 1.5, 2.5)   # tegen een boom aan: hij valt om (zelfde gewichtsklasse als jouw tank)
 	global_position.y = 0.0
 	if get_slide_collision_count() > 0:
 		_speed *= 0.6

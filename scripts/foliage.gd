@@ -626,7 +626,44 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 							_reg[key] = []
 						_reg[key].append(entry)
 					_register_vegetation(entry)
+	_clear_vehicle_roads()
 	reapply_building_clearings()
+
+
+## Vijandelijke voertuigen (AanvalRoutes.voertuig_pad) rijden van de vijandbasis door de jungle naar de brug en dan recht op
+## het kamp af. Een jeep velt geen jungleboom en niemand rijdt door een rots, dus op die baan staan geen stammen en rotsen
+## (struiken, varens en gras blijven). Nodig sinds het vollere bos van v211: daar liep de tank vast.
+const ROAD_HALF := 4.6
+static func _clear_vehicle_roads() -> int:
+	var pts: Array = [VijandBasis.gate_outside()]
+	pts.append_array(AanvalRoutes.TANK_WEG)
+	pts.append(Vector3(Data.BRIDGE_X, 0.0, -Data.START_CLEAR))   # van de brug recht naar de noordkant van het kamp
+	var lines: Array = [pts, AanvalRoutes.VOERTUIG_WEG]
+	var found: Array = []   # eerst verzamelen: weghalen verandert de lijsten waar we doorheen lopen
+	for cell in _vegetation_cells:
+		for e: Dictionary in _vegetation_cells[cell]:
+			var kind: String = e.get("kind", "")
+			if (kind != "palm" and kind != "rock") or e.get("cleared", false):
+				continue
+			var p: Vector3 = e["world_position"]
+			var q := Vector2(p.x, p.z)
+			var hit := false
+			for line: Array in lines:
+				for i in line.size() - 1:
+					var a := Vector2(line[i].x, line[i].z)
+					var b := Vector2(line[i + 1].x, line[i + 1].z)
+					if Geometry2D.get_closest_point_to_segment(q, a, b).distance_to(q) < ROAD_HALF:
+						hit = true
+						break
+				if hit:
+					break
+			if hit:
+				found.append(e)
+	var removed := 0
+	for e: Dictionary in found:
+		if _remove_vegetation_entry(e):
+			removed += 1
+	return removed
 
 
 ## Onzichtbare ronde zuilen op de plek van stammen en rotsen, per vak van 36 m één lichaam (goedkoop voor de natuurkunde).

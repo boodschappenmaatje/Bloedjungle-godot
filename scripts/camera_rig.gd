@@ -192,6 +192,9 @@ func _process(delta: float) -> void:
 	if opbouw != null:
 		wanted_distance = maxf(wanted_distance, OPBOUW_DISTANCE)
 	_opbouw_weight = lerpf(_opbouw_weight, 1.0 if opbouw != null else 0.0, 1.0 - exp(-1.5 * delta))
+	# Bevelstand (troepenbevel): iets verder weg, zodat je meer soldaten en de grond eromheen ziet.
+	if get_tree().get_first_node_in_group("bevelstand_actief") != null:
+		wanted_distance = maxf(wanted_distance, BevelStand.CAM_DISTANCE)
 	# Alleen automatische tank-/groepskadrering kan de vaste speelcamera tijdelijk verruimen.
 	if _group_hold > 0.0:
 		wanted_distance = maxf(wanted_distance, _group_distance)
@@ -216,6 +219,8 @@ func _process(delta: float) -> void:
 	_group_weight = lerpf(_group_weight, 1.0 if _group_hold > 0.0 else 0.0, group_f)
 	_group_offset = _group_offset.lerp(_group_shift, group_f)
 	var target: Vector3 = p.global_position + _lead + _group_offset * _group_weight
+	if get_tree().get_first_node_in_group("bevelstand_actief") != null:
+		target.z += BevelStand.CAM_SOUTH   # bevelstand: beeld iets naar het zuiden, zodat soldaten achter je boven de bevelbalk staan
 	if opbouw != null:
 		_opbouw_focus = opbouw.camera_focus()
 	if _opbouw_weight > 0.001:

@@ -79,7 +79,8 @@ Dit is de actuele voortgang per plan-id. De uitgebreide beschrijvingen per stap 
 | A4 stroom die telt | ○ | de generator is met het oude kamp weggehaald (stap 4b); `Game.power` staat altijd aan. Komt terug als bouwwerk |
 | B5 vier "binnenkort"-gebouwen, B6 verdedigingsbouw | ○ | alleen kampmuur, poort en wachttoren (MCV stap 3) |
 | C4 veteranen, C5 upgrades | ○ / ◐ | C5: alleen HK-niveaus en kazerneniveaus |
-| E2 meer krachten, G2 commandobalk, G3 kader slepen | ○ / ◐ | E2: artillerie, noodreparatie en spionagesatelliet zitten sinds E1 in de rang; Luchtaanval (P-47) en Parachutisten wachten op een eigen ontwerpkeuze |
+| G3 kader slepen en groepen + radar/kaart | ✓ gebouwd (Draft PR, v217) | Dennis koos 1A-11A (11 nov): commandoradar en grote kaart met luchtfoto, raster en tekens per partij; BEVEL-knop opent de bevelstand (tik, kader, dubbeltik, groepsvakjes 1-2-3, spel op 30 %); bevelbalk VERPLAATS, AANVAL, VERDEDIG, HOUD, BEWAAK, VOLG MIJ; ringen, markers en lijnen (`scripts/troep_selectie.gd`, `bevel_stand.gd`, `grote_kaart.gd`). Eigen voertuigen sturen is de volgende stap (keuze 10A) |
+| E2 meer krachten, G2 commandobalk | ○ / ◐ | E2: artillerie, noodreparatie en spionagesatelliet zitten sinds E1 in de rang; Luchtaanval (P-47) en Parachutisten wachten op een eigen ontwerpkeuze |
 | G4 teamkleur-accenten, H2 leiderschap, H3 vertraging bij bevelen | ○ | soldaatmarkeringen (v147) zijn er wel |
 | Fase 4: A5, C6, D3, F4, G5 | ○ | D3 (vijand haalt zelf voorraad en bouwt) is door Dennis naar de vijandstap geschoven, pas na de eerste speelbare versie |
 

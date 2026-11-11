@@ -262,7 +262,7 @@ func _physics_process(delta: float) -> void:
 		_status_t = 0.1
 		_status = site_status(global_position, rotation.y, get_world_3d(), [get_rid()])
 		_ghost_mat.albedo_color = Color(0.2, 0.9, 0.3, 0.28) if _status.valid else Color(0.95, 0.2, 0.15, 0.32)
-	_btn.visible = live
+	_btn.visible = live and get_tree().get_first_node_in_group("kaart_open") == null   # niet door de grote kaart of de bevelstand heen
 	_btn.disabled = not _status.valid
 	_btn.dock(2)
 

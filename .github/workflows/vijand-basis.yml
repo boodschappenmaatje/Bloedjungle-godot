@@ -69,6 +69,7 @@ on:
       - "scripts/action_btn.gd"
       - "scripts/wheel_art.gd"
       - "tests/rang_test.gd"
+      - "tests/kies_knop_test.gd"
       - "scripts/pause_menu.gd"
       - "scripts/progress.gd"
       - "scripts/mcv.gd"
@@ -253,4 +254,14 @@ jobs:
           echo "Godot exit code: $RC"
           grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/rang.log" | tail -n 40 || true
           tail -n 15 "$RUNNER_TEMP/rang.log"
+          exit "$RC"
+      - name: KIES-knop opent het kiesscherm bij een echte aanraking (volgorde van muisgebaar en aanraking)
+        shell: bash
+        run: |
+          set +e
+          BJ_TOUCH=1 timeout 300 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/kies_knop_test.gd --fixed-fps 60 > "$RUNNER_TEMP/kies_knop.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FAAL|KLAAR|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/kies_knop.log" | tail -n 40 || true
           exit "$RC"

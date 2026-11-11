@@ -276,8 +276,6 @@ func _destroy(dir: Vector3) -> void:
 	remove_from_group("vijand_voertuig")
 	Game.alert(global_position, 16.0, 5.0)
 	Game.kills += 1
-	if Game.hit_src == "speler":
-		Game.streak_kill()
 	Progress.stats.kills += 1
 	Game.add_score(POINTS)
 	collision_layer = 0

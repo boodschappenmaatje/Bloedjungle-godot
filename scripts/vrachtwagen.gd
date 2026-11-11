@@ -230,7 +230,7 @@ func _toggle() -> void:
 		_load()
 
 
-## Versterking uit de luchtsteun: de truck rijdt met draaiende motor naar een punt (versterking.gd regelt de rest).
+## Konvooi: de truck rijdt met draaiende motor naar een punt (was voor de killstreak-versterking, die er niet meer is).
 func start_convoy(goal: Vector3, speed: float) -> void:
 	goal_speed = speed
 	goals = [goal]

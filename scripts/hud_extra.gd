@@ -33,7 +33,7 @@ var _radar: Control
 var _map: Control   # de grote kaart (GroteKaart), opent bij een tik op de radar
 var _cv: Control    # het vlak waarop de kaart nu getekend wordt: de radar of de grote kaart
 var _k := 1.0       # schaal van de stippen en lijnen: 1 op de radar, groter op de grote kaart
-var _streak: StreakHud
+var _rang: RangHud
 var _radar_refresh := 0.0
 ## Contacten op de radar: alleen vijanden die je zelf, je torens, je soldaten of de basis kunnen zien.
 ## Een gezien contact blijft nog even (vervagend) staan.
@@ -74,9 +74,9 @@ func _ready() -> void:
 	_build_ammo()
 	_build_camera_controls()
 	_build_radar()
-	_streak = StreakHud.new()
-	_streak.name = "StreakHud"
-	add_child(_streak)
+	_rang = RangHud.new()
+	_rang.name = "RangHud"
+	add_child(_rang)
 	_menu = PauseMenu.new()
 	add_child(_menu)
 	_map = GroteKaart.new()
@@ -357,8 +357,12 @@ func _draw_radar() -> void:
 	var bounds := Rect2(Vector2.ZERO, _radar.size)
 	_cv.draw_style_box(UI.box(Color(0.025, 0.045, 0.035, 0.9), Color(UI.PANEL_LINE, 0.82), 1, 6, 0), bounds)
 	var head := 22.0 if _radar.size.x >= 110.0 else 16.0
+	var sat: bool = Game.satelliet_t > 0.0
+	if sat:
+		_cv.draw_rect(bounds.grow(-1.0), Color(0.4, 0.85, 1.0, 0.75 if int(Time.get_ticks_msec() / 400) % 2 == 0 else 0.4), false, 1.6)   # satelliet actief
 	if head > 6.0:
-		_cv.draw_string(UI.body(700, 0), Vector2(7, 14), "CONTACTEN" if _radar.size.x >= 110.0 else "RADAR", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK_DIM)
+		var kop := "SAT %d" % ceili(Game.satelliet_t) if sat else ("CONTACTEN" if _radar.size.x >= 110.0 else "RADAR")
+		_cv.draw_string(UI.body(700, 0), Vector2(7, 14), kop, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(0.5, 0.9, 1.0) if sat else UI.INK_DIM)
 	if _radar.size.x >= 88.0:
 		var north_x := _radar.size.x * 0.5
 		_cv.draw_string(UI.body(700, 0), Vector2(north_x - 4.0, 13.0), "N", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK)
@@ -466,6 +470,8 @@ func _draw_hq_radar(map: Rect2, base: Vector2) -> void:
 
 ## Wie ziet dit punt: de speler, de basis, een toren, een soldaat of een eigen gebouw.
 func _in_friendly_sight(pos: Vector3) -> bool:
+	if Game.satelliet_t > 0.0:
+		return true   # kracht SATELLIET (Rang): alle vijanden staan op de kaart
 	if Game.hq_level >= 2 and Vector2(pos.x - Game.base_pos.x, pos.z - Game.base_pos.z).length() <= HqPerks.RADAR_RANGE:
 		return true   # hoofdkwartier niveau 2: de radar ziet alles binnen 85 m
 	var player: Node3D = Game.player
@@ -605,11 +611,11 @@ func _layout() -> void:
 	_status_panel.size = Vector2(minf(size.x * 0.42, 190.0), 48.0)
 	_top_right.reset_size()
 	_camera_controls.position = Vector2(safe.x, safe.y + _status_panel.size.y + 7.0)
-	# killstreak-teller: liggend rechts naast de balken, staand eronder (daar staan de TACTISCH-knoppen niet)
+	# rang (sterren en balk): liggend rechts naast de balken, staand eronder (daar staan de TACTISCH-knoppen niet)
 	if size.x < size.y:
-		_streak.position = Vector2(safe.x + 2.0, safe.y + _status_panel.size.y + 5.0)
+		_rang.position = Vector2(safe.x + 2.0, safe.y + _status_panel.size.y + 5.0)
 	else:
-		_streak.position = Vector2(safe.x + _status_panel.size.x + 8.0, safe.y + 8.0)
+		_rang.position = Vector2(safe.x + _status_panel.size.x + 8.0, safe.y + 8.0)
 	_radar.position = Vector2(size.x - safe.z - _radar.size.x, safe.y + 8.0)
 	_menu_button.position = Vector2(_radar.size.x - 38.0, 4.0)
 	if size.x < size.y:

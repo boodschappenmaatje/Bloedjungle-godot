@@ -192,10 +192,10 @@ func _klaar_en_winnen(g) -> void:
 		if is_instance_valid(e):
 			e.queue_free()
 	g.enemies.clear()
-	g.streak = 3
+	g.rang = 2
 	main._wave_cleared()
 	_check("groep verslagen: weer prep", g.state == "prep")
-	_check("de killstreak begint opnieuw", g.streak == 0)
+	_check("je rang blijft staan na een afgeslagen groep", g.rang == 2)
 	_check("aftellen loopt door (%.0f s)" % g.prep_t, g.prep_t > 0.0 and g.prep_t < D.GROEP_TUSSEN + 0.1)
 	# slopen = winnen
 	var meldingen: Array = []

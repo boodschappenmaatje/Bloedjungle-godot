@@ -17,31 +17,31 @@ func _ready() -> void:
 	hud.call("_select_wheel", "equipment", 2)
 	_check(Game.equipment_sel == "mine", "unimplemented smoke does not become active")
 	hud.call("_select_wheel", "support", 0)
-	_check(Game.streak_sel == "truck", "existing truck streak is selectable")
-	hud.call("_select_wheel", "support", 3)
-	_check(Game.streak_sel == "napalm", "existing napalm streak is selectable")
+	_check(Game.kracht_sel == "artillerie", "an owned artillery power is selectable")
 	hud.call("_select_wheel", "support", 1)
-	_check(Game.streak_sel == "napalm", "unimplemented airstrike does not replace active support")
+	_check(Game.kracht_sel == "napalm", "an owned napalm power is selectable")
 	hud.call("_select_wheel", "support", 2)
-	_check(Game.streak_sel == "napalm", "unimplemented reinforcement does not replace active support")
+	_check(Game.kracht_sel == "napalm", "a satellite power you do not own does not replace the active one")
+	hud.call("_select_wheel", "support", 3)
+	_check(Game.kracht_sel == "napalm", "a repair power you do not own does not replace the active one")
 	get_tree().root.call_deferred("add_child", hud)
 	await get_tree().process_frame
 	hud._wheel_kind = "support"
 	hud._held_pointer = 4
 	hud._wheel_sector = 0
-	Game.streak_sel = "napalm"
+	Game.kracht_sel = "napalm"
 	var other_touch := InputEventScreenTouch.new()
 	other_touch.index = 5
 	other_touch.pressed = true
 	other_touch.position = Vector2(400, 200)
 	_check(hud.call("_wheel_input", other_touch), "radial claims the input stream while open")
-	_check(Game.streak_sel == "napalm", "another finger cannot select a support option")
+	_check(Game.kracht_sel == "napalm", "another finger cannot select a support option")
 	var owner_release := InputEventScreenTouch.new()
 	owner_release.index = 4
 	owner_release.pressed = false
 	owner_release.position = Vector2(400, 200)
 	_check(hud.call("_wheel_input", owner_release), "owning finger releases the wheel")
-	_check(Game.streak_sel == "truck", "owning finger selects the active sector")
+	_check(Game.kracht_sel == "artillerie", "owning finger selects the active sector")
 	print("HUD_WHEEL_TESTS: %d checks passed" % checks)
 	hud.free()
 	get_tree().quit(0 if checks == 16 else 1)

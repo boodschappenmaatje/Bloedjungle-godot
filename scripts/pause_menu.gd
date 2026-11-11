@@ -64,7 +64,7 @@ const ROWS := [
 	["g2_diepte", "Test: Graphics 2.0 diepte", [["on", "Aan"], ["off", "Uit"]]],
 	["t_res", "Test: 3D-beeld klein (30%)", [["auto", "Uit"], ["small", "Aan"]]],
 	["perf", "Prestatiemodus", [["off", "Uit"], ["on", "Aan"]]],
-	["t_streak", "Test: alle killstreaks, onbeperkt", [["off", "Uit"], ["on", "Aan"]]],
+	["t_krachten", "Test: alle krachten op niveau 3, geen afkoeling", [["off", "Uit"], ["on", "Aan"]]],
 	["diag", "Diagnose-run (30 s, start zelf in het spel)", [["off", "Uit"], ["on", "Aan"]]],
 ]
 const SETTINGS_GROUPS := [
@@ -73,7 +73,7 @@ const SETTINGS_GROUPS := [
 	{"title": "SOLDATEN & VIJANDEN", "keys": ["soldaat", "enemy_models", "ragdoll", "markeringen"]},
 	{"title": "AUDIO", "keys": ["sound"]},
 	{"title": "BESTURING & CAMERA", "keys": ["m1911_fire_mode", "vliegtuig_hoogte"]},
-	{"title": "GEAVANCEERD", "advanced": true, "keys": ["t_sun", "t_jungle", "t_stad", "t_post", "g2_fx", "g2_licht", "g2_diepte", "t_res", "t_streak", "diag"]},
+	{"title": "GEAVANCEERD", "advanced": true, "keys": ["t_sun", "t_jungle", "t_stad", "t_post", "g2_fx", "g2_licht", "g2_diepte", "t_res", "t_krachten", "diag"]},
 ]
 
 const NOTES := {

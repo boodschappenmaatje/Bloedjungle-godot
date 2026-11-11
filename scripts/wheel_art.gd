@@ -1,6 +1,6 @@
 class_name WheelArt
 extends RefCounted
-## HUD 3.0-wiel: vier segmenten rond een centrumknop (×), elk met een pictogram en een naam. Gebruikt door het
+## HUD 3.0-wiel: vier segmenten rond een centrumknop (×), elk met een pictogram, een naam en eventueel een regeltje eronder ("sub": niveau of afkoeling). Gebruikt door het
 ## commando-wiel (TeamCommands) en het steun- en uitrustingswiel (CombatButtons).
 
 const OUTER := 104.0
@@ -35,6 +35,10 @@ static func draw(ci: CanvasItem, center: Vector2, items: Array, first_angle: flo
 		var text: String = it.get("label", "")
 		var tw := f.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x
 		ci.draw_string(f, mid + Vector2(-tw * 0.5, 22), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 10, UI.INK if active else Color(UI.INK_DIM, 0.8))
+		var sub: String = it.get("sub", "")
+		if sub != "":
+			var sw := f.get_string_size(sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 9).x
+			ci.draw_string(f, mid + Vector2(-sw * 0.5, 33), sub, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.BRASS if active else Color(UI.INK_DIM, 0.6))
 	ci.draw_circle(center, INNER - 4.0, Color(0.02, 0.03, 0.025, 0.98))
 	ci.draw_arc(center, INNER - 4.0, 0.0, TAU, 28, Color(UI.BRASS, 0.9), 1.8, true)
 	ci.draw_line(center + Vector2(-6, -6), center + Vector2(6, 6), UI.INK, 2.2, true)
@@ -75,18 +79,8 @@ static func icon(ci: CanvasItem, kind: String, c: Vector2, col: Color) -> void:
 		"verplaatsen":
 			ci.draw_line(c + Vector2(-8, -13), c + Vector2(-8, 13), col, 2.6)
 			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-8, -13), c + Vector2(11, -8), c + Vector2(-8, -2)]), col)
-		"truck", "napalm":
-			Streak.draw_icon(ci, kind, c, 1.0, col)
-		"luchtaanval":
-			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -14), c + Vector2(3, -5), c + Vector2(14, 4), c + Vector2(14, 7), c + Vector2(3, 3), c + Vector2(2, 10),
-				c + Vector2(7, 13), c + Vector2(7, 15), c + Vector2(0, 13), c + Vector2(-7, 15), c + Vector2(-7, 13), c + Vector2(-2, 10), c + Vector2(-3, 3), c + Vector2(-14, 7),
-				c + Vector2(-14, 4), c + Vector2(-3, -5)]), col)
-		"versterking":
-			ci.draw_arc(c + Vector2(0, -3), 12.0, PI, TAU, 14, col, 3.0, true)
-			ci.draw_line(c + Vector2(-12, -3), c + Vector2(-2, 9), col, 1.6)
-			ci.draw_line(c + Vector2(12, -3), c + Vector2(2, 9), col, 1.6)
-			ci.draw_line(c + Vector2(0, -3), c + Vector2(0, 9), col, 1.6)
-			ci.draw_rect(Rect2(c + Vector2(-3, 9), Vector2(6, 5)), col)
+		"artillerie", "napalm", "satelliet", "reparatie":
+			Rang.teken_icoon(ci, kind, c, 1.0, col)
 		"granaat":
 			ci.draw_circle(c + Vector2(0, 3), 10.0, col)
 			ci.draw_rect(Rect2(c + Vector2(-3, -12), Vector2(6, 6)), col)

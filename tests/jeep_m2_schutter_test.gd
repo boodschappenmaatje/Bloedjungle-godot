@@ -77,6 +77,7 @@ func _run() -> void:
 	jeep.global_position = tower.global_position + Vector3(0.0, 0.0, 21.0)
 	jeep.rotation.y = 0.0
 	jeep.set_physics_process(false)
+	jeep.set_process(false)   # de eigen voertuigen rijden sinds v214 per beeld
 	await _frames(3)
 	_check("toren heeft los schietend bemanningslid", tower.operational())
 	_check("toren heeft echte MG-articulatie", tower.has_articulated_m2())

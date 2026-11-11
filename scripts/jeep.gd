@@ -18,6 +18,7 @@ const GUN_TURN_DRIVEN := 7.0
 const FIRE_RATE := 0.1      # s tussen kogels
 const DAMAGE := 9.0
 const BOARD_DIST := 4.5     # m: dichterbij dan dit toont de knop INSTAPPEN
+const MAX_STAP := 1.0 / 30.0   # s: een grotere beeldsprong (app terug uit de achtergrond) rekent hij als een kleinere stap
 const RAM_DAMAGE := 40.0
 # Only when the driver puts the right stick on an exposed tower gunner.
 # Normal ground-level jeep fire remains manual and unchanged.
@@ -28,6 +29,7 @@ const GUNNER_MAX_ELEVATION := 0.56       # ~= 29 degrees upward
 var driven := false
 var goals: Array = []  # Vector3-punten waar hij zelf naartoe rijdt (uit de garage); leeg = geparkeerd
 var _speed := 0.0
+var _stap_k := 1.0          # (gekapte stap) / (beeldstap): 1 behalve bij een beeldsprong
 var _steer := 0.0
 var _yaw_rate := 0.0
 var _accel := 0.0
@@ -174,10 +176,17 @@ func on_vernield() -> void:
 	_set_firing(false)
 	if _btn != null:
 		_btn.hide()
-	set_physics_process(false)
+	set_process(false)
 
 
-func _physics_process(delta: float) -> void:
+## Rijden gebeurt per beeld, niet per natuurkundige tik. De camera volgt per beeld; reed de jeep per tik (60 per seconde)
+## terwijl de iPhone 90 beelden per seconde tekent, dan kreeg het ene beeld een stap en het volgende geen: hij hapert.
+## move_and_slide rekent in _process met de beeld-delta van de motor, dus afstand = snelheid x delta.
+func _process(raw_delta: float) -> void:
+	if raw_delta <= 0.0:
+		return
+	var delta := minf(raw_delta, MAX_STAP)
+	_stap_k = delta / raw_delta
 	_t += delta
 	_ram_cd -= delta
 	var p = Game.player
@@ -241,7 +250,7 @@ func _drive(delta: float, live: bool) -> void:
 	if absf(_speed) < 0.01:
 		return
 	rotation.y += _yaw_rate * delta
-	velocity = -global_transform.basis.z * _speed
+	velocity = -global_transform.basis.z * _speed * _stap_k   # bij een beeldsprong (> 1/30 s) rijdt hij niet door een muur heen
 	move_and_slide()
 	Foliage.ram(self, absf(_speed), 6.0)   # tegen een boom aan: hij valt om
 	global_position.y = 0.0

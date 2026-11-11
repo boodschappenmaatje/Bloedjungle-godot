@@ -622,17 +622,23 @@ func _add_meshy_idle(lib: AnimationLibrary, skel: Skeleton3D) -> void:
 	idle.resource_name = "Idle"
 	idle.length = 2.4
 	idle.loop_mode = Animation.LOOP_LINEAR
-	for bone in ["mixamorig_Spine2", "mixamorig_Neck", "mixamorig_Head"]:
-		var index := skel.find_bone(bone)
-		if index < 0:
-			continue
-		var track := idle.add_track(Animation.TYPE_ROTATION_3D)
-		idle.track_set_path(track, NodePath("target_character/Skeleton3D:" + bone))
+	# Every bone needs an idle key: otherwise switching from run leaves the
+	# unkeyed hips and legs at their final running frame while firing in place.
+	for index in skel.get_bone_count():
+		var bone := skel.get_bone_name(index)
+		var path := NodePath("target_character/Skeleton3D:" + bone)
+		var rotation_track := idle.add_track(Animation.TYPE_ROTATION_3D)
+		idle.track_set_path(rotation_track, path)
 		var rest := skel.get_bone_pose_rotation(index)
-		var swing := deg_to_rad(0.8 if bone == "mixamorig_Spine2" else 0.25)
-		idle.track_insert_key(track, 0.0, rest)
-		idle.track_insert_key(track, idle.length * 0.5, rest * Quaternion(Vector3.RIGHT, swing))
-		idle.track_insert_key(track, idle.length, rest)
+		var swing := deg_to_rad(0.8 if bone == "mixamorig_Spine2" else 0.25) if bone in ["mixamorig_Spine2", "mixamorig_Neck", "mixamorig_Head"] else 0.0
+		idle.track_insert_key(rotation_track, 0.0, rest)
+		idle.track_insert_key(rotation_track, idle.length * 0.5, rest * Quaternion(Vector3.RIGHT, swing))
+		idle.track_insert_key(rotation_track, idle.length, rest)
+		var position_track := idle.add_track(Animation.TYPE_POSITION_3D)
+		idle.track_set_path(position_track, path)
+		var position := skel.get_bone_pose_position(index)
+		idle.position_track_insert_key(position_track, 0.0, position)
+		idle.position_track_insert_key(position_track, idle.length, position)
 	lib.add_animation("Idle", idle)
 
 

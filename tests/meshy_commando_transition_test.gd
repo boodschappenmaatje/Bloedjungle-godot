@@ -1,0 +1,60 @@
+extends SceneTree
+## Regression for a Meshy run frame left on the legs after stopping to fire.
+
+var failures: Array[String] = []
+
+func _initialize() -> void:
+	call_deferred("_run")
+
+func _check(ok: bool, message: String) -> void:
+	if not ok:
+		failures.append(message)
+		push_error("MESHY COMMANDO TRANSITION: " + message)
+
+func _frames(n: int) -> void:
+	for _i in n:
+		await process_frame
+
+func _run() -> void:
+	GameSettings.get_value("soldaat")
+	var old_setting: String = str(GameSettings.values["soldaat"])
+	GameSettings.values["soldaat"] = "meshy"
+	var game: Node = root.get_node("Game")
+	game.set("state", "menu")
+	var world := Node3D.new()
+	root.add_child(world)
+	var player: Node = load("res://scenes/player.tscn").instantiate()
+	world.add_child(player)
+	await _frames(3)
+	player.set_physics_process(false)
+	var model: SoldierModel = player.get_node("Model")
+	var skel: Skeleton3D = model._mesh_skeleton
+	_check(model.meshy_player and skel != null, "test did not instantiate the Meshy player")
+	if skel != null:
+		var legs := [skel.find_bone("mixamorig_LeftUpLeg"), skel.find_bone("mixamorig_RightUpLeg")]
+		_check(legs[0] >= 0 and legs[1] >= 0, "leg bones missing")
+		if legs[0] >= 0 and legs[1] >= 0:
+			model.play("stil", 0.0)
+			await _frames(5)
+			var idle_left := skel.get_bone_pose_rotation(legs[0])
+			var idle_right := skel.get_bone_pose_rotation(legs[1])
+			model.play("rennen", 0.0)
+			await _frames(19)
+			var run_left := skel.get_bone_pose_rotation(legs[0])
+			var run_right := skel.get_bone_pose_rotation(legs[1])
+			_check(maxf(run_left.angle_to(idle_left), run_right.angle_to(idle_right)) > 0.12, "run frame is not distinct from idle")
+			model.set_shoot_pose(true, "m1911", 0.25)
+			model.play("stil", 0.18)
+			await _frames(25)
+			_check(skel.get_bone_pose_rotation(legs[0]).angle_to(idle_left) < 0.06, "left leg remains in running pose during stationary fire")
+			_check(skel.get_bone_pose_rotation(legs[1]).angle_to(idle_right) < 0.06, "right leg remains in running pose during stationary fire")
+			_check(model.current == "stil", "base clip did not switch to idle")
+			model.set_shoot_pose(false, "m1911", 0.25)
+			model.play("lopen")
+			await _frames(5)
+			_check(model.current == "lopen", "movement did not resume after stationary fire")
+	world.queue_free()
+	GameSettings.values["soldaat"] = old_setting
+	await _frames(2)
+	print("MESHY COMMANDO TRANSITION: ", "PASS" if failures.is_empty() else "FAIL")
+	quit(0 if failures.is_empty() else 1)

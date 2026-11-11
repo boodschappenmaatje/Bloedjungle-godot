@@ -9,6 +9,7 @@ var face := PI       # waar hij naartoe kijkt (0 = zuid, naar de camera toe)
 var weapon := "m1911"  # het uitgeruste wapen (Game.cur)
 var ammo := 0
 var fire_t := 0.0
+var _last_shot_ms := -100000   # Wapeneffecten AAA: rookje uit de loop bij herladen, kort na het schieten
 var reload_t := 0.0
 var idle_t := 0.0
 var dead := false
@@ -543,15 +544,19 @@ func _shoot(w: Dictionary) -> void:
 	match weapon:
 		"garand": camera_impulse = 0.012
 		"trench": camera_impulse = 0.02
+		"m1911": camera_impulse = 0.0
 		"mg42": camera_impulse = 0.006 if _shot_sequence % 5 == 0 else 0.0
 		"bazooka": camera_impulse = 0.035
+	var wfx_kick := WapenFx.kick(weapon)   # Wapeneffecten AAA: shotgun een zwaardere schok, pistool een lichte
+	if wfx_kick > 0.0:
+		camera_impulse = wfx_kick
 	if camera_impulse > 0.0:
 		var camera := get_parent().get_node_or_null("Camera")
 		if camera and camera.has_method("combat_impulse"):
 			camera.call("combat_impulse", camera_impulse)
 	for i in w.pellets:
 		var a: float = face + (randf() - 0.5) * w.spread * 2.0
-		var projectile_visual := tracer_weapon if weapon != "trench" or i == 0 else ""
+		var projectile_visual := tracer_weapon if weapon != "trench" or i == 0 or WapenFx.enabled("trench") else ""
 		var projectile := Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0), 0.28 if elev > 1.0 else 0.0, 0.0, projectile_visual)
 		# Presentation-only source tag: actual HP loss remains the sole hit signal.
 		# Explosive bazooka damage uses a separate path; do not claim bullet hits.
@@ -564,8 +569,10 @@ func _shoot(w: Dictionary) -> void:
 	var casing_every: int = int(profile.get("casing_every", 1))
 	if casing_every > 0 and (_shot_sequence - 1) % casing_every == 0:
 		var axes := model.casing_axes()
-		Fx.casing(get_parent(), model.casing_position(), axes[0], axes[1])
-	Sfx.play(Data.WEAPON_SND[weapon])
+		Fx.casing(get_parent(), model.casing_position(), axes[0], axes[1], weapon)
+	WapenFx.shot_sound(weapon)
+	WapenFx.haptic(weapon)
+	_last_shot_ms = Time.get_ticks_msec()
 	Game.changed.emit()
 	# Keep the empty M1911 slide visible; the existing idle/manual reload
 	# path may start the next reload later, but not in the firing frame.
@@ -621,6 +628,8 @@ func _reload(w: Dictionary) -> void:
 	else:
 		_reload_phase = 0
 	model.play_weapon_action("herladen")
+	if Time.get_ticks_msec() - _last_shot_ms < 3500:
+		WapenFx.reload_wisp(get_parent(), model.muzzle_position(), weapon, face)
 	if weapon == "m1911":
 		_m1911_mechanical_event("reload_start")
 	else:

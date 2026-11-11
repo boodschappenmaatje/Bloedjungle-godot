@@ -32,6 +32,7 @@ func _run() -> void:
 	_check(model.meshy_player and skel != null, "test did not instantiate the Meshy player")
 	if skel != null:
 		var legs := [skel.find_bone("mixamorig_LeftUpLeg"), skel.find_bone("mixamorig_RightUpLeg")]
+		var feet := [skel.find_bone("mixamorig_LeftFoot"), skel.find_bone("mixamorig_RightFoot")]
 		_check(legs[0] >= 0 and legs[1] >= 0, "leg bones missing")
 		if legs[0] >= 0 and legs[1] >= 0:
 			model.play("stil", 0.0)
@@ -48,6 +49,10 @@ func _run() -> void:
 			await _frames(25)
 			_check(skel.get_bone_pose_rotation(legs[0]).angle_to(idle_left) < 0.06, "left leg remains in running pose during stationary fire")
 			_check(skel.get_bone_pose_rotation(legs[1]).angle_to(idle_right) < 0.06, "right leg remains in running pose during stationary fire")
+			if feet[0] >= 0 and feet[1] >= 0:
+				var left_foot: Vector3 = skel.get_bone_global_pose(feet[0]).origin
+				var right_foot: Vector3 = skel.get_bone_global_pose(feet[1]).origin
+				_check(absf(left_foot.z - right_foot.z) < 0.15, "stationary fire leaves feet split in a running stride")
 			_check(model.current == "stil", "base clip did not switch to idle")
 			model.set_shoot_pose(false, "m1911", 0.25)
 			model.play("lopen")

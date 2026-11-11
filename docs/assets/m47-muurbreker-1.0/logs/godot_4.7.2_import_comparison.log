@@ -1,0 +1,10 @@
+Godot 4.7.2.stable.official.ed1daf0bf import comparison
+
+Prior PR CI run 42391046748 scanned M47_Muurbreker_1.0_animated.glb and M47_Muurbreker_Blender_1.0.blend under docs/. It logged `Blender path is invalid or not set, check your Editor Settings. Cannot configure blender path in headless mode.` The same run then lacked imported texture .ctex files and GLB scenes; surface_filtering_test.gd failed five mipmap checks. The new docs/assets/m47-muurbreker-1.0/.gdignore excludes those review files from the root project scan.
+
+Feature branch local iOS project export/full import: exit 0, Xcode project generated; 12 `Basis ... must be normalized ... Quaternion` ERROR lines from existing assets/brandkraan.glb.
+Feature branch after cache priming: second full import exit 0; 107 imported scenes; zero ERROR and SCRIPT ERROR lines.
+
+The source assets/brandkraan.glb is byte-identical to main; matching zero-basis messages appear in the main worktree as well. A detached cold-cache main worktree on local Linux emitted cache-dependent VQ2 texture messages; it was not treated as CI pass evidence. The independent main CI run 42247986984 succeeded.
+
+The current PR workflow run 42395675534 succeeded: its cache-prime step, full project validation, regression tests, unsigned iOS export, IPA checks, and artifact upload all passed. See github_actions_42395675534.log for the exact workflow summary.

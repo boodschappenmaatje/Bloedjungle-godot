@@ -1,0 +1,49 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+ERROR: Initializing already initialized RID
+   at: get_or_null (./core/templates/rid_owner.h:236)
+   GDScript backtrace (most recent call first):
+       [0] _setup_v2 (res://scripts/soldier_model.gd:289)
+       [1] setup (res://scripts/soldier_model.gd:206)
+       [2] _run (res://tests/wapen_clips_test.gd:30)
+ERROR: Parameter "mem" is null.
+   at: initialize_rid (./core/templates/rid_owner.h:284)
+   GDScript backtrace (most recent call first):
+       [0] _setup_v2 (res://scripts/soldier_model.gd:289)
+       [1] setup (res://scripts/soldier_model.gd:206)
+       [2] _run (res://tests/wapen_clips_test.gd:30)
+ERROR: Parameter "material" is null.
+   at: material_set_next_pass (servers/rendering/dummy/storage/material_storage.cpp:257)
+   GDScript backtrace (most recent call first):
+       [0] _setup_v2 (res://scripts/soldier_model.gd:289)
+       [1] setup (res://scripts/soldier_model.gd:206)
+       [2] _run (res://tests/wapen_clips_test.gd:30)
+ERROR: Parameter "material" is null.
+   at: material_set_shader (servers/rendering/dummy/storage/material_storage.cpp:250)
+   GDScript backtrace (most recent call first):
+       [0] _setup_v2 (res://scripts/soldier_model.gd:289)
+       [1] setup (res://scripts/soldier_model.gd:206)
+       [2] _run (res://tests/wapen_clips_test.gd:30)
+OK    m1911: M1911_Slede schuift 0.034 m naar achteren (verwacht 0.034)
+OK    m1911: M1911_Slede staat weer in rust
+OK    m1911: slede blijft open bij een leeg magazijn
+OK    m1911: slede sluit na herladen (gun_reset)
+OK    thompson: Thompson_Repeerknop schuift 0.022 m naar achteren (verwacht 0.022)
+OK    thompson: Thompson_Repeerknop staat weer in rust
+OK    garand: Garand_Sluiting schuift 0.045 m naar achteren (verwacht 0.045)
+OK    garand: Garand_Sluiting staat weer in rust
+OK    trench: Trench_Pomp schuift 0.070 m naar achteren (verwacht 0.070)
+OK    trench: Trench_Pomp staat weer in rust
+OK    mg42: MG42_Repeergreep schuift 0.030 m naar achteren (verwacht 0.030)
+OK    mg42: MG42_Repeergreep staat weer in rust
+OK    mannetje zonder wapen heeft geen clips
+WAPENCLIPS TEST OK
+ERROR: Parameter "material" is null.
+   at: material_set_shader (servers/rendering/dummy/storage/material_storage.cpp:250)
+WARNING: 39 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)
+ERROR: 12 resources still in use at exit (run with --verbose for details).
+   at: clear (core/io/resource.cpp:822)
+ERROR: Pages in use exist at exit in PagedAllocator: N12VariantPools12BucketMediumE
+   at: ~PagedAllocator (./core/templates/paged_allocator.h:170)
+ERROR: 1 RID allocations of type 'N13RendererDummy15MaterialStorage13DummyMaterialE' were leaked at exit.

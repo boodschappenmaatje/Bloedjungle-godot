@@ -1,0 +1,536 @@
+Godot Engine v4.7.2.stable.official.ed1daf0bf - https://godotengine.org
+
+PASS base-wall: verified Meshy source stays out of runtime exports and OTA PCKs
+PASS base-wall: Godot-extracted GLB sidecars stay out while the embedded-texture wall GLB ships
+PASS base-wall: wall PBR textures stay Basis-compressed and embedded without loose texture files
+PASS base-wall: optimized GLB imports as a PackedScene
+PASS base-wall: Wall_LOD0 exists
+PASS base-wall: Wall_LOD1 exists
+PASS base-wall: Wall_LOD2 exists
+PASS base-wall: Wall_LOD0 dimensions are 3.5 x 3.0 x 0.4 m
+PASS base-wall: Wall_LOD0 has Meshy concrete and jute sandbag surfaces
+PASS base-wall: LOD0 surface 0 retains embedded albedo and normal PBR maps
+PASS base-wall: LOD0 surface 0 uses a mobile sized 2K-or-smaller albedo
+PASS base-wall: LOD0 surface 1 retains embedded albedo and normal PBR maps
+PASS base-wall: LOD0 surface 1 uses a mobile sized 2K-or-smaller albedo
+PASS base-wall: Wall_LOD1 dimensions are 3.5 x 3.0 x 0.4 m
+PASS base-wall: Wall_LOD1 has Meshy concrete and jute sandbag surfaces
+PASS base-wall: Wall_LOD2 dimensions are 3.5 x 3.0 x 0.4 m
+PASS base-wall: Wall_LOD2 has Meshy concrete and jute sandbag surfaces
+PASS base-wall: three LODs reuse only two material resources
+PASS base-wall: LOD0 triangle budget: 8380
+PASS base-wall: LOD1 triangle budget: 2960
+PASS base-wall: LOD2 triangle budget: 758
+PASS base-wall: one low-cost shared StaticBody3D owns the perimeter colliders
+PASS base-wall: perimeter uses wall and high-fortification collision layers
+PASS base-wall: six continuous wall spans leave only the two gate openings
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_north_west_Wall_LOD0 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: LOD fallback references the next coarser mesh of the same span
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: north_west LOD0 modules follow the correct axis at a gap-free 3.5 m pitch
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: all LODs of north_west have the same range centre and culling bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_north_west_Wall_LOD1 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: LOD fallback references the next coarser mesh of the same span
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: all LODs of north_west have the same range centre and culling bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_north_west_Wall_LOD2 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_north_east_Wall_LOD0 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: LOD fallback references the next coarser mesh of the same span
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: north_east LOD0 modules follow the correct axis at a gap-free 3.5 m pitch
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: all LODs of north_east have the same range centre and culling bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_north_east_Wall_LOD1 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: LOD fallback references the next coarser mesh of the same span
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: all LODs of north_east have the same range centre and culling bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_north_east_Wall_LOD2 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_south_west_Wall_LOD0 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: LOD fallback references the next coarser mesh of the same span
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: south_west LOD0 modules follow the correct axis at a gap-free 3.5 m pitch
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: all LODs of south_west have the same range centre and culling bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_south_west_Wall_LOD1 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: LOD fallback references the next coarser mesh of the same span
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: all LODs of south_west have the same range centre and culling bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_south_west_Wall_LOD2 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_south_east_Wall_LOD0 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: LOD fallback references the next coarser mesh of the same span
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: south_east LOD0 modules follow the correct axis at a gap-free 3.5 m pitch
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: all LODs of south_east have the same range centre and culling bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_south_east_Wall_LOD1 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: LOD fallback references the next coarser mesh of the same span
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: all LODs of south_east have the same range centre and culling bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_south_east_Wall_LOD2 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_west_Wall_LOD0 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: LOD fallback references the next coarser mesh of the same span
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: west LOD0 modules follow the correct axis at a gap-free 3.5 m pitch
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: all LODs of west have the same range centre and culling bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_west_Wall_LOD1 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: LOD fallback references the next coarser mesh of the same span
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: all LODs of west have the same range centre and culling bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_west_Wall_LOD2 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_east_Wall_LOD0 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: LOD fallback references the next coarser mesh of the same span
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: east LOD0 modules follow the correct axis at a gap-free 3.5 m pitch
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: all LODs of east have the same range centre and culling bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_east_Wall_LOD1 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: LOD fallback references the next coarser mesh of the same span
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: wall LOD supplies explicit nonempty visibility bounds
+PASS base-wall: all LODs of east have the same range centre and culling bounds
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: shared bounds contain every module without culling its edges
+PASS base-wall: Wall_east_Wall_LOD2 uses a begin range with a visibility parent
+PASS base-wall: wall LOD transitions have one shared hysteresis decision
+PASS base-wall: wall LODs do not create flickering independent shadow maps
+PASS base-wall: six perimeter spans each share three LOD MultiMeshes
+PASS base-wall: 60 modules cover the four sides, excluding both portals
+PASS base-wall: all six sides have validated wall axes and contiguous module bounds
+PASS base-wall: one shared six-instance earth berm follows the wall spans and leaves both portals open
+PASS base-wall: every earth berm strip lies along its own wall (no strip across the compound)
+PASS base-wall: four shared berm corner caps close the outer foot at each 90 degree join
+PASS base-wall: berm strips and four corner caps have no coplanar top-face overlap
+PASS base-wall: all eight strip-to-corner top-edge joins remain connected
+PASS base-wall: berm strips stop at the two gates without extending into portals
+PASS base-wall: berm toe sits below y=0 terrain; no coplanar ground vertices
+PASS base-wall: berm keeps original visible 22cm top height
+PASS base-wall: berm toe sits below y=0 terrain; no coplanar ground vertices
+PASS base-wall: berm keeps original visible 22cm top height
+PASS base-wall: six constant SHADOWS_ONLY wall proxies replace LOD-specific shadows
+PASS base-wall: shadow proxy cannot render as a second visible wall
+PASS base-wall: shadow proxy cannot render as a second visible wall
+PASS base-wall: shadow proxy cannot render as a second visible wall
+PASS base-wall: shadow proxy cannot render as a second visible wall
+PASS base-wall: shadow proxy cannot render as a second visible wall
+PASS base-wall: shadow proxy cannot render as a second visible wall
+PASS base-wall: no legacy concrete wall meshes remain
+PASS base-wall: physics ray north hits wall
+PASS base-wall: physics ray south hits wall
+PASS base-wall: physics ray west hits wall
+PASS base-wall: physics ray east hits wall
+PASS base-wall: physics ray northwest corner hits wall
+PASS base-wall: physics ray north segment seam hits wall
+PASS base-wall: physics ray north gate opening passes through portal
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+WARNING: AnimationNodeBlendSpace1D::add_blend_point: No name provided, using safe index as reference. In the future, empty names will be deprecated, so explicitly passing a name is recommended.
+     at: add_blend_point (scene/animation/animation_blend_space_1d.cpp:168)
+     GDScript backtrace (most recent call first):
+         [0] _build_meshy_animation_tree (res://scripts/soldier_model.gd:409)
+         [1] _setup_meshy_player (res://scripts/soldier_model.gd:351)
+         [2] setup (res://scripts/soldier_model.gd:174)
+         [3] _ready (res://scripts/enemy.gd:74)
+         [4] _run (res://tests/base_wall_hq2_test.gd:247)
+PASS base-wall: enemy AI refuses a direct shot through the closed high wall
+PASS base-wall: enemy AI cannot angle direct fire over the 3 m wall at an elevated target
+PASS base-wall: enemy AI has line of sight through the existing gate opening
+PASS base-wall: blast line is occluded across closed wall
+PASS base-wall: blast originating inside the wall collider cannot leak through to the safe side
+PASS base-wall: blast line remains open on the same side
+PASS base-wall: tank shell splash cannot damage a character behind the high wall
+PASS base-wall: tank shell splash still damages on the same side
+PASS base-wall: character capsule cannot cross or jump over the closed 3 m wall
+PASS base-wall: camera stays at intended distance beyond an occluding base wall
+PASS base-wall: camera identifies the correct wall span without clipping against it
+PASS base-wall: wall stays visible even when camera ray intersects its collider
+PASS base-wall: wall stays fully opaque on Mobile and Forward+
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: all six wall sides stay visible and opaque
+PASS base-wall: user's explicit Muur uit diagnostic still hides the wall
+PASS base-wall: turning diagnostic back to Normaal immediately restores the wall
+PASS base-wall: wall opacity fix leaves physical and combat collisions intact
+PASS base-wall: over_wall bullets retain the high-wall mask
+PASS base-wall: over_wall bullets still pass low cover outside the fortified perimeter
+PASS base-wall: over_wall bullet ray still hits the high wall
+PASS base-wall: actual over_wall projectile terminates at the closed fortification
+PASS base-wall: ground direct fire cannot arc above the 3 m wall
+PASS base-wall: projectile starting inside the wall collider cannot emerge on the safe side
+PASS base-wall: grenade trajectory collides with the high wall
+PASS base-wall: grenade trajectory remains open through the portal
+PASS base-wall: enemy rocket mask also stops at the high wall
+PASS base-wall: project Game autoload is available
+PASS base-wall: noord upper gate leaf closes the visual gap to 3 m
+PASS base-wall: noord closed gate blocks passage
+PASS base-wall: noord closed gate blocks blast line
+PASS base-wall: noord closed upper gate leaf seals 3 m opening
+PASS base-wall: noord open gate has no invisible collision
+PASS base-wall: noord open gate permits line of sight
+PASS base-wall: noord open gate upper section also clears
+PASS base-wall: zuid upper gate leaf closes the visual gap to 3 m
+PASS base-wall: zuid closed gate blocks passage
+PASS base-wall: zuid closed gate blocks blast line
+PASS base-wall: zuid closed upper gate leaf seals 3 m opening
+PASS base-wall: zuid open gate has no invisible collision
+PASS base-wall: zuid open gate permits line of sight
+PASS base-wall: zuid open gate upper section also clears
+PASS base-wall: ground explosion cannot directly damage a character behind the closed wall
+PASS base-wall: ground explosion still damages characters on the same side
+PASS base-wall: overhead artillery retains its explicit wall-bypass gameplay rule
+BASE WALL HQ2 TEST PASS (0 failures)
+WARNING: 10 ObjectDB instances were leaked at exit (run with `--verbose` for details).
+   at: cleanup (core/object/object.cpp:2536)

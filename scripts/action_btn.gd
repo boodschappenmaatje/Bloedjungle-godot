@@ -42,7 +42,7 @@ static func make(k: String, cap: String) -> ActionBtn:
 		"sprint": "Sprinten · balk toont uithoudingsvermogen",
 		"rol": "Ontwijkrol · afkoeling wordt rond de knop getoond",
 		"houding": "Houding · tik: staan, hurken, liggen · vasthouden: meteen liggen of opstaan",
-		"krachten": "Krachten van je rang · tik: gebruiken of kiezen · vasthouden: wiel · napalm en artillerie: slepen om te richten",
+		"krachten": "Krachten van je rang · tik: wiel (kies een kracht, daarna vuurt de rechterstick af) · op een computer: tik gebruikt, napalm en artillerie slepen om te richten",
 		"kies": "Rangpunt uitgeven · kies een nieuwe kracht of een upgrade",
 	}.get(k, cap)
 	b.add_to_group("hud_button")

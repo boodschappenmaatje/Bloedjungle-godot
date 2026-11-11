@@ -2,8 +2,8 @@ extends SceneTree
 ## Test: de KIES-knop (ster) opent het kiesscherm bij een echte tik en het scherm blijft open (regressie van v216: "als ik op de ster druk gebeurt er niks").
 ## Oorzaak toen: een vinger geeft eerst het nagebootste muisgebaar (de knop opent op button_down) en daarna in hetzelfde beeld de aanraking zelf; die
 ## tweede viel buiten het paneel en sloot het scherm meteen weer.
-## Deel 1 bootst die volgorde na en draait ook headless (CI); deel 2 gebruikt echte aanrakingen via Input.parse_input_event en draait alleen met een
-## echt venster: BJ_TOUCH=1 BJ_SAFE=69,0,69,24 xvfb-run -a -s "-screen 0 1086x500x24" godot --rendering-driver opengl3 --path . -s tests/kies_knop_test.gd --resolution 1086x500 --fixed-fps 60
+## Deel 1 bootst die volgorde na en draait ook headless (CI); deel 2 gebruikt echte aanrakingen via Input.parse_input_event (KIES, KRACHTEN-wiel, rechterstick) en
+## draait alleen met een echt venster: BJ_TOUCH=1 BJ_SAFE=69,0,69,24 xvfb-run -a -s "-screen 0 1086x500x24" godot --rendering-driver opengl3 --path . -s tests/kies_knop_test.gd --resolution 1086x500 --fixed-fps 60
 ## Headless: godot --headless --path . --script tests/kies_knop_test.gd --fixed-fps 60
 var main: Node
 var game: Node
@@ -34,6 +34,23 @@ func _touch(pos: Vector2, pressed: bool) -> InputEventScreenTouch:
 	e.pressed = pressed
 	e.position = pos
 	return e
+
+
+func _touch_i(index: int, pos: Vector2, pressed: bool) -> InputEventScreenTouch:
+	var e := _touch(pos, pressed)
+	e.index = index
+	return e
+
+
+func _drag_i(index: int, pos: Vector2) -> InputEventScreenDrag:
+	var e := InputEventScreenDrag.new()
+	e.index = index
+	e.position = pos
+	return e
+
+
+func _stick_anchor() -> Vector2:
+	return main.get_node("Hud/Sticks")._anchor(true)
 
 
 func _process(_d: float) -> bool:
@@ -92,8 +109,8 @@ func _process(_d: float) -> bool:
 			Input.parse_input_event(_touch(kaart.get_center(), true))
 			Input.parse_input_event(_touch(kaart.get_center(), false))
 	if echt_venster and frames == 68:
-		_check(int(game.krachten.get("napalm", 0)) == 1 and game.rang_punten == 0, "echte aanraking: een tik op NAPALM geeft het punt aan napalm")
-		# daarna de krachtenknop zelf met echte aanrakingen: met één kracht gebruikt een tik hem meteen (napalm: de richtstrook)
+		# daarna de krachtenknop zelf met echte aanrakingen: een tik opent het wiel (zoals UITRUSTING), kiezen zet de rechterstick klaar,
+		# een nieuwe rechteraanraking richt en loslaten vuurt af
 		game.kracht_sel = "napalm"
 		game.changed.emit()
 	if echt_venster and frames == 74:
@@ -101,36 +118,60 @@ func _process(_d: float) -> bool:
 		Input.parse_input_event(_touch(ck, true))
 		Input.parse_input_event(_touch(ck, false))
 	if echt_venster and frames == 80:
-		_check(combat._place != null and is_instance_valid(combat._place), "echte aanraking: een tik op KRACHTEN zet de napalmstrook neer")
-		if combat._place != null and is_instance_valid(combat._place):
-			combat._place._confirm()
-		_check(game.kracht_cd.has("napalm"), "napalm bevestigd: afkoeling loopt")
+		_check(combat._wheel_kind == "support" and combat._wheel_sticky, "echte aanraking: een tik op KRACHTEN opent het wiel, ook met één kracht")
+		var w1: Vector2 = combat._wheel_center()
+		Input.parse_input_event(_touch(w1 + Vector2(70, 0), true))    # napalm staat rechts
+		Input.parse_input_event(_touch(w1 + Vector2(70, 0), false))
+	if echt_venster and frames == 86:
+		_check(combat._wheel_kind == "" and game.kracht_sel == "napalm" and combat.kracht_stick_armed, "echte aanraking: NAPALM kiezen sluit het wiel en zet de rechterstick klaar")
+		_check(not game.kracht_cd.has("napalm") and combat._place == null, "kiezen vuurt niets af")
+		Input.parse_input_event(_touch_i(1, _stick_anchor(), true))
+	if echt_venster and frames == 89:
+		Input.parse_input_event(_drag_i(1, _stick_anchor() + Vector2(40, 0)))
+	if echt_venster and frames == 92:
+		_check(combat._air_vis != null and is_instance_valid(combat._air_vis) and combat._air_vis.visible, "echte aanraking: de rechterstick toont de napalmstrook")
+		_check(not game.fire, "echte aanraking: in krachtstand schiet de rechterstick geen kogels")
+		Input.parse_input_event(_touch_i(1, _stick_anchor() + Vector2(40, 0), false))
+	if echt_venster and frames == 98:
+		_check(game.kracht_cd.has("napalm") and not combat.kracht_stick_armed, "echte aanraking: loslaten vuurt napalm af, afkoeling loopt")
 		game.krachten = {"satelliet": 1}
 		game.kracht_sel = "satelliet"
 		game.kracht_cd.clear()
 		game.changed.emit()
-	if echt_venster and frames == 88:
+	if echt_venster and frames == 104:
 		var cs: Vector2 = combat._air.get_global_rect().get_center()
 		Input.parse_input_event(_touch(cs, true))
 		Input.parse_input_event(_touch(cs, false))
-	if echt_venster and frames == 94:
-		_check(game.satelliet_t > 0.0 and game.kracht_cd.has("satelliet"), "echte aanraking: een tik op KRACHTEN gebruikt de satelliet")
-		# met twee krachten opent een tik het wiel; een tik op een kracht kiest hem (links = reparatie)
+	if echt_venster and frames == 110:
+		var w2: Vector2 = combat._wheel_center()
+		Input.parse_input_event(_touch(w2 + Vector2(0, 70), true))    # satelliet staat onder
+		Input.parse_input_event(_touch(w2 + Vector2(0, 70), false))
+	if echt_venster and frames == 116:
+		_check(combat.kracht_stick_armed and game.satelliet_t <= 0.0, "echte aanraking: SATELLIET kiezen zet de stick klaar zonder hem te gebruiken")
+		Input.parse_input_event(_touch_i(1, _stick_anchor(), true))
+	if echt_venster and frames == 119:
+		Input.parse_input_event(_drag_i(1, _stick_anchor() + Vector2(0, 40)))
+	if echt_venster and frames == 122:
+		Input.parse_input_event(_touch_i(1, _stick_anchor() + Vector2(0, 40), false))
+	if echt_venster and frames == 128:
+		_check(game.satelliet_t > 0.0 and game.kracht_cd.has("satelliet"), "echte aanraking: slepen en loslaten gebruikt de satelliet")
+		# met twee krachten kiest een tik op REPARATIE die kracht (links) en zet de stick klaar
 		game.krachten = {"satelliet": 1, "reparatie": 1}
 		game.kracht_sel = "satelliet"
 		game.kracht_cd.clear()
+		game.satelliet_t = 0.0
 		game.changed.emit()
-	if echt_venster and frames == 100:
+	if echt_venster and frames == 134:
 		var cw: Vector2 = combat._air.get_global_rect().get_center()
 		Input.parse_input_event(_touch(cw, true))
 		Input.parse_input_event(_touch(cw, false))
-	if echt_venster and frames == 106:
+	if echt_venster and frames == 140:
 		_check(combat._wheel_kind == "support" and combat._wheel_sticky, "echte aanraking: een tik op KRACHTEN opent het wiel")
-		var w: Vector2 = combat._wheel_center()
-		Input.parse_input_event(_touch(w + Vector2(-70, 0), true))
-		Input.parse_input_event(_touch(w + Vector2(-70, 0), false))
-	if echt_venster and frames == 112:
-		_check(combat._wheel_kind == "" and game.kracht_sel == "reparatie", "echte aanraking: een tik op REPARATIE kiest die kracht (%s)" % game.kracht_sel)
+		var w3: Vector2 = combat._wheel_center()
+		Input.parse_input_event(_touch(w3 + Vector2(-70, 0), true))
+		Input.parse_input_event(_touch(w3 + Vector2(-70, 0), false))
+	if echt_venster and frames == 146:
+		_check(combat._wheel_kind == "" and game.kracht_sel == "reparatie" and combat.kracht_stick_armed, "echte aanraking: een tik op REPARATIE kiest die kracht en zet de stick klaar (%s)" % game.kracht_sel)
 		_klaar()
 	return false
 

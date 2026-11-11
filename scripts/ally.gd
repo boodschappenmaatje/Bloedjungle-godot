@@ -272,7 +272,16 @@ func _march_goal() -> Vector3:
 	return VijandBasis.attack_spot(idx)
 
 
+## Waar hij heen loopt; staat dat aan de andere kant van de muur van jouw kamp, dan eerst door de poort (die gaat voor je soldaten vanzelf open).
 func _goal() -> Vector3:
+	var g := _goal_plain()
+	if helper or guard or truck != null or recall != null:
+		return g
+	var w: Variant = Kampmuur.gate_waypoint(global_position, g)
+	return w if w != null else g
+
+
+func _goal_plain() -> Vector3:
 	if recall != null:
 		return recall
 	if guard:

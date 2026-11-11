@@ -126,6 +126,9 @@ func _process(_d: float) -> bool:
 		steps.append(["uitrusting", func(): menu._open_gear("menu"), func(): return menu._pcs["gear"]])
 		steps.append(["testgroep", func(): menu._show("test"), func(): return menu._pcs["test"]])
 		steps.append(["pauze", func(): menu._show("pause"), func(): return menu._pcs["pause"]])
+		steps.append(["melden", func():
+			menu._show("menu")
+			menu.open_melden("menu"), func(): return menu._pcs["melden"]])
 		steps.append(["einde", func():
 			menu._over_title.text = "MISSIE MISLUKT"
 			menu._over_reason.text = "JE BENT GESNEUVELD"

@@ -240,6 +240,7 @@ func _issue(command: String, target: Vector3, enemy: Node3D) -> void:
 		if is_instance_valid(a) and Controller.can_command(a.helper, a.guard, a.truck != null):
 			a.set_command(command, target, enemy)
 			sent += 1
+	Logboek.actie("groepsbevel %s aan %d soldaten" % [command, sent])
 	if command == "basis":
 		if sent > 0:
 			Game.banner.emit("LEGER NAAR DE VIJANDBASIS", "%d soldaten marcheren naar zijn poort. VOLGEN roept ze terug." % sent, 3.0)

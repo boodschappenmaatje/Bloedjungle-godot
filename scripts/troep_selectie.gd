@@ -166,6 +166,7 @@ func issue(order: String, target := Vector3.ZERO, enemy: Node3D = null, node: No
 		mark_at = center()
 	for i in sel.size():
 		sel[i].set_command(order, target, enemy, node, i)
+	Logboek.actie("bevel %s aan %d eenheden naar (%.0f, %.0f)" % [order, sel.size(), target.x, target.z])
 	marks.append({"pos": Vector3(mark_at.x, 0.0, mark_at.z), "order": order, "t": now()})
 	if marks.size() > 6:
 		marks.pop_front()

@@ -31,6 +31,9 @@ func _run() -> void:
 	var skel: Skeleton3D = model._mesh_skeleton
 	_check(model.meshy_player and skel != null, "test did not instantiate the Meshy player")
 	if skel != null:
+		_check(skel.get_bone_count() == 28, "commando no longer uses the original 28-bone rig")
+		_check(model._model.find_child("High-cut olive helmet shell", true, false) != null, "visible commando helmet missing")
+		_check(model._model.find_child("Headset earcup", true, false) != null, "visible commando headset missing")
 		var legs := [skel.find_bone("mixamorig_LeftUpLeg"), skel.find_bone("mixamorig_RightUpLeg")]
 		var feet := [skel.find_bone("mixamorig_LeftFoot"), skel.find_bone("mixamorig_RightFoot")]
 		_check(legs[0] >= 0 and legs[1] >= 0, "leg bones missing")
@@ -58,6 +61,27 @@ func _run() -> void:
 			model.play("lopen")
 			await _frames(5)
 			_check(model.current == "lopen", "movement did not resume after stationary fire")
+			model.play("stil", 0.0)
+			await _frames(10)
+			var hips := skel.find_bone("mixamorig_Hips")
+			var chest := skel.find_bone("mixamorig_Spine2")
+			var direction_sample := {}
+			model._mesh_leg_pose.modification_processed.connect(func() -> void:
+				direction_sample["hip"] = skel.get_bone_global_pose(hips).basis.get_rotation_quaternion()
+				direction_sample["chest"] = skel.get_bone_global_pose(chest).basis.get_rotation_quaternion()
+			)
+			await _frames(2)
+			var hip_before: Quaternion = direction_sample["hip"]
+			var chest_before: Quaternion = direction_sample["chest"]
+			model.set_leg_yaw(PI / 2.0)
+			await _frames(20)
+			var hip_after: Quaternion = direction_sample["hip"]
+			var chest_after: Quaternion = direction_sample["chest"]
+			_check(hip_before.angle_to(hip_after) > 1.0, "Meshy legs do not turn toward sideways travel")
+			_check(chest_before.angle_to(chest_after) < 0.3, "Meshy chest no longer stays aimed while legs turn")
+			model.play("stil")
+			await _frames(20)
+			_check(hip_before.angle_to(direction_sample["hip"]) < 0.15, "Meshy legs do not settle after sideways travel")
 	world.queue_free()
 	GameSettings.values["soldaat"] = old_setting
 	await _frames(2)

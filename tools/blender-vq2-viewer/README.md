@@ -36,6 +36,10 @@ npm run build
 node test.mjs  # requires Chromium at /usr/bin/chromium or CHROMIUM=/path
 ```
 
+## Meshy-commando
+
+Select **Meshy-commando · oud / nieuw** or open the viewer with `?asset=meshy_commando`. Both real GLBs use the same camera and lights. Walking, Running and RunFast are genuine GLB clips; the other gameplay actions, weapon IK and transitions use Godot's separate animation libraries. The 58° camera preset moves closer for the character. `node test-meshy-commando.mjs` checks loading, the visible helmet, materials and clip availability and saves a comparison image. Native iPhone/Safari and Godot gameplay-camera tests have not been run here.
+
 `test.mjs` exercises the real rendered scenes, all seven animated-jeep clips,
 expected wheel/steering/MG/turret transforms, material modes, camera presets,
 mobile viewport layout and two-finger pinch. Chromium touch emulation is not

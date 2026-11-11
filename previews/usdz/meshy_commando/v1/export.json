@@ -1,0 +1,40 @@
+{
+  "package_status": "PASS",
+  "apple_arkit_validation": "NOT_RUN_BY_EXPORTER",
+  "source": "/workspace/Bloedjungle-godot/bron/meshy_commando/meshy_commando_aaa.blend",
+  "source_sha256": "1927d9b0b9e44be2fd570c291d3708510c8d97f0883184500bc95b99f1362e29",
+  "output": "/workspace/Bloedjungle-godot/previews/usdz/meshy_commando/v1/meshy_commando_aaa.usdz",
+  "output_bytes": 17206001,
+  "output_sha256": "de024f547cdaa864991bdc72f70c96369cb41ab5c1df57ed6358bd5756f76ead",
+  "blender_version": "4.5.0",
+  "preview_texture_max_px": 2048,
+  "centered_preview": false,
+  "source_texture_paths_resolved": 9,
+  "animation_exported": true,
+  "static_curves_converted_to_meshes": 0,
+  "mesh_objects": 22,
+  "materials": 6,
+  "material_images": 12,
+  "animation_actions": [
+    "Running_target_character"
+  ],
+  "scene_animation_active": true,
+  "frame_start": 1,
+  "frame_end": 250,
+  "fps": 24.0,
+  "packaged_files": [
+    "meshy_commando_aaa.usdc",
+    "textures/texture_0_normal.png",
+    "textures/texture_0_metallic-texture_0_roughness.png",
+    "textures/texture_0.png",
+    "textures/dark_olive_webbing_normal_512.png",
+    "textures/dark_olive_webbing_roughness_512.png",
+    "textures/dark_olive_webbing_albedo_512.png",
+    "textures/olive_nylon_normal_512.png",
+    "textures/olive_nylon_roughness_512.png",
+    "textures/olive_nylon_albedo_512.png",
+    "textures/parkerized_steel_normal_512.png",
+    "textures/parkerized_steel_roughness_512.png",
+    "textures/parkerized_steel_albedo_512.png"
+  ]
+}

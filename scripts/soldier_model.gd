@@ -11,9 +11,9 @@ const SCENE_PAD := "res://assets/soldaat.glb"
 const SCENE_V2_PAD := "res://assets/soldaat_vq2.glb"
 ## Player-only Showcase variant: Tiger Stripe + compact commando equipment; shared VQ2 stays unchanged for allies/enemies.
 const SCENE_PLAYER_PAD := "res://assets/soldaat_jungle_commando.glb"
-## Experimental player-only Meshy/Mixamo rig from the isolated, already-reviewed lab.
-## The file is byte-identical to the user-supplied remesh/rig export; NPCs never select it.
-const SCENE_MESHY_PLAYER_PATH := "res://assets/meshy_jungle_commando.glb"
+## Player-only commando on the original Meshy/Mixamo skeleton.
+const SCENE_MESHY_PLAYER_PATH := "res://assets/meshy_commando_aaa.glb"
+const SCENE_MESHY_PLAYER_FALLBACK_PATH := "res://assets/meshy_jungle_commando.glb"
 const SCENE_ASSAULT_MODEL_PATH := "res://assets/enemies/assault/assault_meshy_hq2_runtime.glb"
 ## Mesh-free shared animation source extracted from the supplied same-rig library.
 const MESHY_ANIMATION_LIBRARY := preload("res://resources/animations/meshy_player_animation_library.res")
@@ -41,6 +41,12 @@ const ASSAULT_MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit",
 const ASSAULT_MESHY_LOOPS := ["Combat_Stance", "Run_and_Shoot", "Walk_Left_with_Gun", "Walk_Backward_with_Gun", "Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Left", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun", "Rifle_Charge_inplace"]
 const MESHY_GARAND_PROFILE_PAD := "res://resources/weapon_profiles/garand_meshy.tres"   # verwijst naar zware bestanden: pas laden als het nodig is
 const MESHY_M1911_PROFILE_PAD := "res://resources/weapon_profiles/m1911_meshy.tres"
+const MESHY_WEAPON_PROFILES := {
+	"Thompson": "res://resources/weapon_profiles/thompson_meshy.tres",
+	"Trench": "res://resources/weapon_profiles/trench_meshy.tres",
+	"MG42": "res://resources/weapon_profiles/mg42_meshy.tres",
+	"Bazooka": "res://resources/weapon_profiles/bazooka_meshy.tres",
+}
 const MESHY_WEAPON_ADAPTER_SCRIPT := preload("res://scripts/weapon_model_adapter.gd")
 const LOOKS := {
 	"eigen": ["Lijf_Uniform", "Helm", "Vest", "Koppel", "Rugzak", "Laarzen"],
@@ -86,6 +92,7 @@ var assault_rig_test := false
 var look := ""
 var _uniform := Color.WHITE
 var _mesh_skeleton: Skeleton3D
+var _mesh_leg_pose: MeshyLegPose
 var _mesh_right_ik: SkeletonIK3D
 var _mesh_left_ik: SkeletonIK3D
 var _mesh_armed := true
@@ -127,11 +134,15 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 			enemy_status = "Meshy-Assault GLB gevonden, laden nog niet bevestigd"
 		else:
 			player_status = "Meshy gekozen, GLB bestaat niet in de app"
-		var mesh_path := SCENE_ASSAULT_MODEL_PATH if assault_rig_test else SCENE_MESHY_PLAYER_PATH
-		if ResourceLoader.exists(mesh_path):
+		var candidates: Array = [SCENE_ASSAULT_MODEL_PATH] if assault_rig_test else [SCENE_MESHY_PLAYER_PATH, SCENE_MESHY_PLAYER_FALLBACK_PATH]
+		for mesh_path in candidates:
+			if not ResourceLoader.exists(mesh_path):
+				continue
 			if not assault_rig_test:
 				player_status = "Meshy GLB gevonden, laden mislukt"
 			model_scene = ResourceLoader.load(mesh_path) as PackedScene
+			if model_scene != null:
+				break
 		if model_scene == null:
 			# Heavy OTA asset unavailable: old models remain usable only in
 			# the normal mode. The Meshy-only spawn gate prevents this fallback.
@@ -276,6 +287,8 @@ func _setup_pose() -> void:
 func set_leg_yaw(yaw: float) -> void:
 	if pose != null:
 		pose.leg_yaw = yaw
+	elif _mesh_leg_pose != null:
+		_mesh_leg_pose.leg_yaw = yaw
 
 
 ## VQ2: toont alleen het lichaam en de uitrusting van deze look. Ongebruikte delen worden weggegooid, behalve bij de
@@ -312,6 +325,11 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 		return
 	var skel := skels[0] as Skeleton3D
 	_mesh_skeleton = skel
+	if not assault_rig_test:
+		_mesh_leg_pose = MeshyLegPose.new()
+		_mesh_leg_pose.name = "MeshyLegPose"
+		skel.add_child(_mesh_leg_pose)
+		_mesh_leg_pose.setup_skeleton(skel)
 	if assault_rig_test:
 		_setup_assault_lods()
 	var required := ["mixamorig_RightShoulder", "mixamorig_RightArm", "mixamorig_RightForeArm", "mixamorig_RightHand",
@@ -499,7 +517,8 @@ func _attach_gun_meshy(skel: Skeleton3D, gun_kind: String) -> void:
 		configured = _mesh_weapon_adapter.configure_existing_meshy(assault_weapon)
 	else:
 		var visual_name: String = GUN_OF.get(gun_kind, "Garand")
-		var profile: Resource = _laad_hulp(MESHY_GARAND_PROFILE_PAD) if visual_name == "Garand" else (_laad_hulp(MESHY_M1911_PROFILE_PAD) if visual_name == "M1911" else null)
+		var profile_path: String = MESHY_GARAND_PROFILE_PAD if visual_name == "Garand" else (MESHY_M1911_PROFILE_PAD if visual_name == "M1911" else MESHY_WEAPON_PROFILES.get(visual_name, ""))
+		var profile: Resource = _laad_hulp(profile_path) if profile_path != "" else null
 		configured = _mesh_weapon_adapter.configure(visual_name, profile)
 	if not configured:
 		_mesh_weapon_adapter.queue_free()
@@ -1089,6 +1108,8 @@ func play(clip: String, blend := 0.18, speed := 1.0) -> void:
 func _play_meshy_clip(clip: String, blend: float, speed: float) -> void:
 	if anim == null:
 		return
+	if _mesh_leg_pose != null and clip in ["stil", "sprinten", "herladen", "rollen"]:
+		_mesh_leg_pose.leg_yaw = 0.0
 	# The stock Walking/Running clips are unarmed walks and pull both arms away
 	# from the Assault's detached Meshy rifle. The supplied tactical forward-walk
 	# and run-and-shoot cycles were checked over their full loops with both hand

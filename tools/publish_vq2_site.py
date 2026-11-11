@@ -18,7 +18,7 @@ shutil.copy2(ROOT/'assets/jeep.glb',dest/'assets/jeep.glb')
 shutil.copy2(ROOT/'assets/meshy_m1911.glb',dest/'assets/meshy_m1911.glb')
 (dest/'assets/vfx/m1911').mkdir(parents=True)
 shutil.copy2(ROOT/'assets/vfx/m1911/m1911_muzzle_flash_4x4.png',dest/'assets/vfx/m1911/m1911_muzzle_flash_4x4.png')
-for name in ('auto','bus','straaljager','soldaat','soldaat_vq2','klimmen','zitten','acties','wapens','jungle'):
+for name in ('auto','bus','straaljager','soldaat','soldaat_vq2','klimmen','zitten','acties','wapens','jungle','meshy_jungle_commando','meshy_commando_aaa'):
     path=ROOT/'assets'/(name+'.glb')
     if path.exists():shutil.copy2(path,dest/'assets'/path.name)
 if (ROOT/'assets/grass').exists():

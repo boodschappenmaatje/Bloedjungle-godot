@@ -6,6 +6,7 @@ extends Control
 ## in beeld. Met een keuze tik je op de grond (verplaatsen), op een vijand (aanvallen) of je kiest een ander bevel in de bevelbalk.
 ## Groepsvakjes 1-2-3: tik = kiezen, vasthouden = opslaan. Tik op de radar opent de grote kaart met dezelfde keuze.
 ## Ook buiten de bevelstand tekent dit vlak de korte bevelmarkers en lijnen (1,6 s na een bevel).
+## Jeeps en tanks doen mee (voertuigbevel, keuze 2A): ze staan in dezelfde lijst, krijgen een grotere ring met naam en levensbalk, en de knop VOERTUIGEN kiest ze allemaal.
 ## Alles wordt in 2D getekend met de camera (unproject): geen extra 3D-objecten, dus voor de iPhone vrijwel gratis.
 
 const BTN := 48.0
@@ -19,7 +20,7 @@ const CAM_SOUTH := 7.0     # m: en iets naar het zuiden, want de bevelbalk ligt 
 var active := false
 var _btn := Rect2()
 var _bar: Array = []
-var _row := {}             # "all", "none", "g0".."g2", "done" -> Rect2
+var _row := {}             # "all", "none", "veh", "g0".."g2", "done" -> Rect2
 var _hint_y := 0.0
 var _touch := -2
 var _mode := ""            # tap, box, klaar
@@ -122,13 +123,15 @@ func _layout() -> void:
 	_bar = BevelBalk.rects(Rect2(Vector2(bx, by), Vector2(bar_w, bar_h)))
 	var ry := by - 40.0
 	var w := 62.0
+	var vw := 86.0
 	_row = {
 		"all": Rect2(Vector2(bx, ry), Vector2(w, 32.0)),
 		"none": Rect2(Vector2(bx + w + 6.0, ry), Vector2(w, 32.0)),
+		"veh": Rect2(Vector2(bx + 2.0 * (w + 6.0), ry), Vector2(vw, 32.0)),
 		"done": Rect2(Vector2(bx + bar_w - w - 10.0, ry), Vector2(w + 10.0, 32.0)),
 	}
 	var gw := 46.0
-	var gx := bx + bar_w * 0.5 - (gw * 3.0 + 12.0) * 0.5
+	var gx := maxf(bx + bar_w * 0.5 - (gw * 3.0 + 12.0) * 0.5, bx + 2.0 * (w + 6.0) + vw + 8.0)
 	for i in 3:
 		_row["g%d" % i] = Rect2(Vector2(gx + float(i) * (gw + 6.0), ry), Vector2(gw, 32.0))
 	_hint_y = ry - 10.0
@@ -147,7 +150,7 @@ func _process(_delta: float) -> void:
 			var ts := _sel()
 			if ts != null:
 				ts.save_group(int(_press_btn.substr(1)))
-				Game.banner.emit("GROEP %d" % (int(_press_btn.substr(1)) + 1), "%d soldaten opgeslagen. Tik het vakje om ze weer te kiezen." % ts.sel.size(), 1.6)
+				Game.banner.emit("GROEP %d" % (int(_press_btn.substr(1)) + 1), "%s opgeslagen. Tik het vakje om ze weer te kiezen." % TroepSelectie.wie(ts.sel), 1.6)
 			_mode = "klaar"
 	var ts2 := _sel()
 	if active or (ts2 != null and (ts2.lines_fresh() or not ts2.marks.is_empty())) or _button_visible():
@@ -176,12 +179,13 @@ func _draw() -> void:
 		# wie je kunt kiezen: een dunne groene ring; gekozen: dik en licht, met een levensbalkje
 		for a in TroepSelectie.units():
 			if not ts.is_selected(a):
-				_ground_ring(cam, a.global_position, 0.7, Color(HudExtra.C_EIGEN, 0.55), 1.2)
+				_ground_ring(cam, a.global_position, _ring_r(a, 0.7), Color(HudExtra.C_EIGEN, 0.55), 1.2)
 	for a in ts.sel:
 		if not is_instance_valid(a):
 			continue
 		if active or ts.lines_fresh():
-			_ground_ring(cam, a.global_position, 0.8, HudExtra.C_EIGEN_HI, 2.6)
+			var veh := TroepSelectie.is_vehicle(a)
+			_ground_ring(cam, a.global_position, _ring_r(a, 0.8) + (0.4 if veh else 0.0), HudExtra.C_EIGEN_HI, 3.4 if veh else 2.6)
 			_hp_bar(cam, a)
 		if show_lines:
 			_order_line(cam, a)
@@ -221,9 +225,9 @@ func _draw_button(ts: TroepSelectie) -> void:
 func _draw_panel(ts: TroepSelectie) -> void:
 	var font := UI.body(700, 1)
 	var n := ts.sel.size()
-	var hint := "Tik een soldaat aan, sleep een kader of tik ALLES"
+	var hint := "Tik een soldaat of voertuig aan, sleep een kader of tik ALLES"
 	if n > 0:
-		var wie := "%d %s" % [n, "soldaat" if n == 1 else "soldaten"]
+		var wie := TroepSelectie.wie(ts.sel)
 		match ts.armed:
 			"attack":
 				hint = wie + " · tik een vijand of plek om aan te vallen"
@@ -237,12 +241,12 @@ func _draw_panel(ts: TroepSelectie) -> void:
 	var hp := Vector2((size.x - w) * 0.5, _hint_y)
 	draw_string_outline(font, hp, hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 5, Color(0, 0, 0, 0.85))
 	draw_string(font, hp, hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(1.0, 0.88, 0.6))
-	for key in ["all", "none", "done"]:
+	for key in ["all", "none", "veh", "done"]:
 		var r: Rect2 = _row[key]
-		var label: String = {"all": "ALLES", "none": "GEEN", "done": "KLAAR"}[key]
+		var label: String = {"all": "ALLES", "none": "GEEN", "veh": "VOERTUIGEN", "done": "KLAAR"}[key]
 		var strong: bool = key == "done"
 		draw_style_box(UI.box(Color(0.08, 0.1, 0.06, 0.95) if strong else Color(0.03, 0.045, 0.03, 0.9), Color(UI.BRASS, 0.8 if strong else 0.45), 1, 5, 0), r)
-		draw_string(font, Vector2(r.position.x, r.position.y + 21.0), label, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 11, UI.INK if strong else UI.BRASS)
+		draw_string(font, Vector2(r.position.x, r.position.y + 21.0), label, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 10 if key == "veh" else 11, UI.INK if strong else UI.BRASS)
 	for i in 3:
 		var r: Rect2 = _row["g%d" % i]
 		var cnt := ts.group_count(i)
@@ -266,15 +270,27 @@ func _ground_ring(cam: Camera3D, at: Vector3, r: float, col: Color, w: float) ->
 	draw_polyline(pts, col, w, true)
 
 
+## De straal van de ring om een eenheid: een voertuig is groter dan een soldaat (`ring_r` van de bestuurder).
+func _ring_r(a, soldier_r: float) -> float:
+	return float(a.ring_r) if TroepSelectie.is_vehicle(a) else soldier_r
+
+
 func _hp_bar(cam: Camera3D, a: Node3D) -> void:
-	var top: Vector3 = a.global_position + Vector3.UP * 2.15
+	var veh := TroepSelectie.is_vehicle(a)
+	var top: Vector3 = a.global_position + Vector3.UP * (3.0 if veh else 2.15)
 	if cam.is_position_behind(top):
 		return
 	var p := cam.unproject_position(top)
 	var f := clampf(float(a.get("hp")) / maxf(float(a.get("hp_max")), 1.0), 0.0, 1.0)
-	var r := Rect2(p - Vector2(13.0, 2.0), Vector2(26.0, 4.0))
+	var half := 21.0 if veh else 13.0
+	var r := Rect2(p - Vector2(half, 2.5), Vector2(half * 2.0, 5.0 if veh else 4.0))
 	draw_rect(r.grow(1.0), Color(0, 0, 0, 0.7), true)
 	draw_rect(Rect2(r.position, Vector2(r.size.x * f, r.size.y)), HudExtra.C_EIGEN if f > 0.35 else Color(1.0, 0.55, 0.2), true)
+	if veh:
+		var font := UI.body(700, 1)
+		var name_s: String = a.naam()
+		draw_string_outline(font, p + Vector2(-half, -6.0), name_s, HORIZONTAL_ALIGNMENT_CENTER, half * 2.0, 11, 4, Color(0, 0, 0, 0.85))
+		draw_string(font, p + Vector2(-half, -6.0), name_s, HORIZONTAL_ALIGNMENT_CENTER, half * 2.0, 11, HudExtra.C_EIGEN_HI)
 
 
 func _order_line(cam: Camera3D, a: Node3D) -> void:
@@ -418,6 +434,8 @@ func _pick(cam: Camera3D, list: Array, pos: Vector2) -> Node3D:
 		if sp == null:
 			continue
 		var d := (sp as Vector2).distance_to(pos)
+		if TroepSelectie.is_vehicle(n):
+			d -= 14.0   # een jeep of tank is groot: een tik er vlak naast telt ook
 		if d < bd:
 			bd = d
 			best = n
@@ -469,6 +487,11 @@ func _tap(pos: Vector2) -> void:
 			ts.select_all()
 			if ts.sel.is_empty():
 				Game.banner.emit("GEEN SOLDATEN", "Bouw een kazerne en train soldaten.", 2.2)
+			return
+		"veh":
+			ts.select_vehicles()
+			if ts.sel.is_empty():
+				Game.banner.emit("GEEN VOERTUIGEN", "Je hebt geen jeep of tank die je kunt bevelen (zit jij erin, stap dan uit).", 2.4)
 			return
 		"none":
 			ts.clear()

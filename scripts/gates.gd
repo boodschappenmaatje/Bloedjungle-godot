@@ -336,6 +336,12 @@ func _physics_process(delta: float) -> void:
 				if is_instance_valid(t) and t.wants_gate() and (t as Node3D).global_position.distance_to(pos_of(g)) < TRUCK_REACH:
 					friend = true
 					break
+		if live and not friend:
+			# een jeep of tank met een bevel (voertuigbevel) opent de poort van jouw kamp als hij erheen rijdt
+			for b in VoertuigBestuurder.all:
+				if is_instance_valid(b) and b.wil_poort() and b.vehicle.global_position.distance_to(pos_of(g)) < VoertuigBestuurder.GATE_REACH:
+					friend = true
+					break
 		g.hold = 0.9 if friend else g.hold - delta
 		var want := 1.0 if g.hold > 0.0 else 0.0
 		var prev: float = g.open

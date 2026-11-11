@@ -1,6 +1,6 @@
 # AAA aanvalscommando voor Bloedjungle — ontwerp
 
-Datum: 11 november 2026. Status: ter goedkeuring door Dennis. Dit document beschrijft het gewenste resultaat; het is nog geen opdracht om betaalde Meshy-taken te starten of de game te publiceren. Dennis koos op 11 november dat de animatieafwerking voor **alle speelbare wapens** geldt.
+Datum: 11 november 2026. Status: **goedgekeurd door Dennis**. Dit document beschrijft het gewenste resultaat; het is geen toestemming om de game te publiceren. Dennis koos op 11 november dat de animatieafwerking voor **alle speelbare wapens** geldt.
 
 ## Bedoeling
 

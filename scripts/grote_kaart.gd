@@ -2,7 +2,7 @@ class_name GroteKaart
 extends Control
 ## De grote kaart: tik op de radar rechtsboven en de kaart vult het scherm (Dennis' keuzes 2A, 3A, 5A, 7A, 8A, 11 nov 2026).
 ## Terrein is de luchtfoto van jouw wereld (KaartFoto), met een raster A-D / 1-5, pictogrammen per partij en een legenda.
-## Bevelen zoals in Command & Conquer: tik een soldaat aan (dubbeltik = al je soldaten van die soort), sleep met één vinger een kader,
+## Bevelen zoals in Command & Conquer: tik een soldaat of voertuig aan (dubbeltik = al je eenheden van die soort), sleep met één vinger een kader,
 ## knijp om in te zoomen en schuif met twee vingers. Met een keuze tik je op de grond (verplaatsen), op een vijand (aanvallen) of
 ## je kiest een ander bevel in de bevelbalk onderaan. Groepsvakjes 1-2-3: tik = kiezen, vasthouden = de keuze opslaan.
 ## Wacht het oude commandowiel op een doel (Aanvallen, Verplaatsen, Verdedigen voor je hele leger), dan is een tik op de kaart dat doel,
@@ -28,6 +28,7 @@ var _close := Rect2()
 var _legend_btn := Rect2()
 var _btn_all := Rect2()
 var _btn_none := Rect2()
+var _btn_veh := Rect2()   # VOERTUIGEN: al je jeeps en tanks
 var _groups: Array = [Rect2(), Rect2(), Rect2()]
 var _bar: Array = []
 var _legend := Rect2()
@@ -112,7 +113,7 @@ func _process(_delta: float) -> void:
 		var ts := _sel()
 		if ts != null:
 			ts.save_group(int(_press_btn.substr(1)))
-			Game.banner.emit("GROEP %d" % (int(_press_btn.substr(1)) + 1), "%d soldaten opgeslagen. Tik het vakje om ze weer te kiezen." % ts.sel.size(), 1.6)
+			Game.banner.emit("GROEP %d" % (int(_press_btn.substr(1)) + 1), "%s opgeslagen. Tik het vakje om ze weer te kiezen." % TroepSelectie.wie(ts.sel), 1.6)
 		_mode = "klaar"
 	queue_redraw()
 	_view.queue_redraw()
@@ -149,11 +150,13 @@ func _layout() -> void:
 		var y := c.position.y + 74.0
 		_btn_all = Rect2(Vector2(lx, y), Vector2(cw * 0.5 - 3.0, 32.0))
 		_btn_none = Rect2(Vector2(lx + cw * 0.5 + 3.0, y), Vector2(cw * 0.5 - 3.0, 32.0))
-		y += 38.0
+		y += 36.0
+		_btn_veh = Rect2(Vector2(lx, y), Vector2(cw, 30.0))
+		y += 36.0
 		var gw := (cw - 12.0) / 3.0
 		for i in 3:
 			_groups[i] = Rect2(Vector2(lx + float(i) * (gw + 6.0), y), Vector2(gw, 32.0))
-		y += 42.0
+		y += 40.0
 		_legend = Rect2(Vector2(lx, y), Vector2(cw, c.end.y - y))
 		_legend_btn = Rect2()
 		_legend_open = true
@@ -165,11 +168,12 @@ func _layout() -> void:
 		var bottom := c.end.y
 		_bar = BevelBalk.rects(Rect2(Vector2(c.position.x, bottom - bar_h), Vector2(c.size.x, bar_h)), 4.0)
 		var ry := bottom - bar_h - 8.0 - rows_h
-		var w5 := (c.size.x - 4.0 * 6.0) / 5.0
-		_btn_all = Rect2(Vector2(c.position.x, ry), Vector2(w5, rows_h))
-		_btn_none = Rect2(Vector2(c.position.x + w5 + 6.0, ry), Vector2(w5, rows_h))
+		var w6 := (c.size.x - 5.0 * 6.0) / 6.0
+		_btn_all = Rect2(Vector2(c.position.x, ry), Vector2(w6, rows_h))
+		_btn_none = Rect2(Vector2(c.position.x + w6 + 6.0, ry), Vector2(w6, rows_h))
+		_btn_veh = Rect2(Vector2(c.position.x + 2.0 * (w6 + 6.0), ry), Vector2(w6, rows_h))
 		for i in 3:
-			_groups[i] = Rect2(Vector2(c.position.x + float(i + 2) * (w5 + 6.0), ry), Vector2(w5, rows_h))
+			_groups[i] = Rect2(Vector2(c.position.x + float(i + 3) * (w6 + 6.0), ry), Vector2(w6, rows_h))
 		var top := c.position.y + HEAD + 18.0
 		var room := Rect2(Vector2(c.position.x, top), Vector2(c.size.x, ry - 8.0 - top))
 		var w2 := room.size.x
@@ -241,9 +245,8 @@ func _hint() -> String:
 		return "Tik op de kaart"
 	var ts := _sel()
 	if ts == null or ts.sel.is_empty():
-		return "Tik een soldaat aan, sleep een kader of tik ALLES"
-	var n := ts.sel.size()
-	var wie := "%d %s" % [n, "soldaat" if n == 1 else "soldaten"]
+		return "Tik een soldaat of voertuig aan, sleep een kader of tik ALLES"
+	var wie := TroepSelectie.wie(ts.sel)
 	match ts.armed:
 		"attack":
 			return wie + " · tik een vijand of plek om aan te vallen"
@@ -273,6 +276,7 @@ func _draw() -> void:
 		_button(_legend_btn, "LEGENDA", _legend_open, UI.INK_DIM)
 	_button(_btn_all, "ALLES", false, UI.BRASS)
 	_button(_btn_none, "GEEN", false, UI.INK_DIM)
+	_button(_btn_veh, "VOERTUIGEN", false, UI.BRASS)
 	for i in 3:
 		var n: int = ts.group_count(i) if ts != null else 0
 		var on: bool = n > 0
@@ -291,7 +295,11 @@ func _draw() -> void:
 
 func _button(r: Rect2, text: String, strong: bool, col: Color) -> void:
 	draw_style_box(UI.box(Color(0.08, 0.1, 0.06, 0.95) if strong else Color(0.03, 0.045, 0.03, 0.92), Color(col, 0.85 if strong else 0.5), 1, 5, 0), r)
-	draw_string(UI.body(700, 1), Vector2(r.position.x, r.position.y + r.size.y * 0.5 + 5.0), text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 12, UI.INK if strong else col)
+	var font := UI.body(700, 1)
+	var fs := 12
+	while fs > 8 and font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x > r.size.x - 6.0:
+		fs -= 1   # een lange tekst (VOERTUIGEN) krimpt tot hij in de knop past
+	draw_string(font, Vector2(r.position.x, r.position.y + r.size.y * 0.5 + fs * 0.4), text, HORIZONTAL_ALIGNMENT_CENTER, r.size.x, fs, UI.INK if strong else col)
 
 
 ## Het kaartbeeld (in het knipvlak _view, dus in zijn eigen coördinaten).
@@ -391,7 +399,7 @@ func _draw_legend(font: Font) -> void:
 	var y := r.position.y + 16.0
 	draw_string(UI.body(700, 2), Vector2(x - 4.0, y), "LEGENDA", HORIZONTAL_ALIGNMENT_LEFT, -1, 10, Color(HudExtra.C_RAND, 0.95))
 	y += 20.0
-	var rows := ["jij", "je soldaten", "gekozen", "je voertuigen", "je gebouwen", "vijand", "vijandelijk voertuig", "vijandbasis", "wat je ziet"]
+	var rows := ["jij", "je soldaten", "gekozen", "je voertuigen", "je gebouwen", "voertuig vast", "vijand", "vijandelijk voertuig", "vijandbasis", "wat je ziet"]
 	for row in rows:
 		if y > r.end.y - 4.0:
 			break
@@ -408,6 +416,8 @@ func _draw_legend(font: Font) -> void:
 				draw_rect(Rect2(p - Vector2(6, 4), Vector2(12, 8)), HudExtra.C_EIGEN)
 			"je gebouwen":
 				draw_rect(Rect2(p - Vector2(5, 5), Vector2(10, 10)), HudExtra.C_GEBOUW)
+			"voertuig vast":
+				draw_colored_polygon(PackedVector2Array([p + Vector2(0, -6), p + Vector2(6, 4.5), p + Vector2(-6, 4.5)]), HudExtra.C_VAST)
 			"vijand":
 				draw_colored_polygon(PackedVector2Array([p + Vector2(0, -4.5), p + Vector2(4.5, 0), p + Vector2(0, 4.5), p + Vector2(-4.5, 0)]), HudExtra.C_VIJAND)
 			"vijandelijk voertuig":
@@ -433,6 +443,8 @@ func _button_at(pos: Vector2) -> String:
 		return "all"
 	if _btn_none.grow(3.0).has_point(pos):
 		return "none"
+	if _btn_veh.grow(3.0).has_point(pos):
+		return "veh"
 	for i in 3:
 		if (_groups[i] as Rect2).grow(3.0).has_point(pos):
 			return "g%d" % i
@@ -600,6 +612,12 @@ func _tap(pos: Vector2) -> void:
 			if ts != null:
 				ts.clear()
 			return
+		"veh":
+			if ts != null:
+				ts.select_vehicles()
+				if ts.sel.is_empty():
+					Game.banner.emit("GEEN VOERTUIGEN", "Je hebt geen jeep of tank die je kunt bevelen (zit jij erin, stap dan uit).", 2.4)
+			return
 	if _press_btn.begins_with("g"):
 		if ts != null and not ts.pick_group(int(_press_btn.substr(1))):
 			Game.banner.emit("GROEP %d IS LEEG" % (int(_press_btn.substr(1)) + 1), "Kies soldaten en houd het vakje vast om ze op te slaan.", 2.0)
@@ -618,7 +636,7 @@ func _tap(pos: Vector2) -> void:
 	if ts == null:
 		close_map()
 		return
-	# eigen soldaat: kiezen; dubbeltik = al je soldaten van die soort
+	# eigen soldaat of voertuig: kiezen; dubbeltik = al je eenheden van die soort
 	var own := _ally_at(pos)
 	if own != null and (ts.armed != "bewaak" or ts.sel.is_empty()):
 		var now := _now()

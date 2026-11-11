@@ -44,6 +44,7 @@ var _speed := 0.0
 var _stap_k := 1.0          # (gekapte stap) / (beeldstap): 1 behalve bij een beeldsprong
 var _btn: ActionBtn
 var _schade: VoertuigSchade   # levenspunten (V3): vijandelijke raketten, granaten en kogels raken hem, zit jij erin dan sneuvel je mee
+var _bst: VoertuigBestuurder  # de ingebouwde bestuurder (voertuigbevel): rijdt en schiet op bevel als jij er niet in zit
 var _ram_cd := 0.0
 const TRACK_HALF := 1.5     # m, halve afstand tussen de rupsen (voor de snelheid per kant in een bocht)
 const TRACK_LEN := 13.27    # m, lengte van de rupsbaan (textuur loopt er één keer overheen)
@@ -83,6 +84,7 @@ func _ready() -> void:
 	layer.add_child(_btn)
 	_build_sight()
 	_schade = VoertuigSchade.attach(self, "tank")
+	_bst = VoertuigBestuurder.attach(self, "tank", _schade)
 
 
 func _toggle() -> void:
@@ -94,6 +96,7 @@ func _toggle() -> void:
 		return
 	driven = true
 	_schade.set_bestuurd(true)
+	_bst.on_board()
 	goals.clear()
 	p.driving = true
 	p.in_tank = true
@@ -109,6 +112,7 @@ func _toggle() -> void:
 func _uitstappen(p) -> void:
 	driven = false
 	_schade.set_bestuurd(false)
+	_bst.on_leave()
 	p.driving = false
 	p.in_tank = false
 	p.visible = true
@@ -174,6 +178,19 @@ func _process(raw_delta: float) -> void:
 			_speed *= 0.5
 			Foliage.fell(hit, global_position)
 		return
+	if goals.is_empty() and _bst != null and _bst.aktief():
+		# met een bevel rijdt en schiet de bestuurder (keuze 5A: de tank schiet alleen als hij stilstaat)
+		var rot1 := rotation.y
+		_bst.think(delta)
+		_drive_body(delta, live, _bst.stuur(DRIVE_SPEED))
+		var hit1 := Foliage.hull_tree(self, Vector2(1.95, 3.3))
+		if not hit1.is_empty():
+			rotation.y = rot1
+			_speed *= 0.5
+			Foliage.fell(hit1, global_position)
+		_aim(delta, _bst.drive_dir == Vector3.ZERO and absf(_speed) < 0.4)   # alleen als hij stilstaat en nergens heen wil
+		_ram()
+		return
 	_speed = 0.0
 	if goals.is_empty():
 		_turning = false
@@ -206,7 +223,7 @@ func _play(clip: String, speed: float) -> void:
 	_anim.speed_scale = speed
 
 
-func _aim(delta: float) -> void:
+func _aim(delta: float, may_fire := true) -> void:
 	var target = null
 	var best := SIGHT
 	for e in Game.enemies:
@@ -214,19 +231,29 @@ func _aim(delta: float) -> void:
 		if d < best:
 			best = d
 			target = e
+	var aim_at := Vector3.ZERO
+	var have := false
+	if target:
+		aim_at = target.global_position
+		have = true
+	elif _bst != null:
+		var sp: Variant = _bst.siege_point()   # op weg naar de vijandbasis: het hoofdkwartier is het doel
+		if sp != null:
+			aim_at = sp
+			have = true
 	var local := 0.0
 	var tilt := 0.03
-	if target:
-		var v: Vector3 = target.global_position - global_position
+	if have:
+		var v: Vector3 = aim_at - global_position
 		local = wrapf(atan2(-v.x, -v.z) - rotation.y, -PI, PI)
 		tilt = 0.0
 	var d := wrapf(local - _toren.rotation.y, -PI, PI)
 	_toren.rotation.y += clampf(d, -TURRET_TURN * delta, TURRET_TURN * delta)
 	_loop.rotation.x = lerpf(_loop.rotation.x, tilt, delta * 2.0)
 	_reload -= delta
-	if target and _reload <= 0.0 and absf(d) < 0.12:
+	if have and may_fire and _reload <= 0.0 and absf(d) < 0.12:
 		_reload = RELOAD
-		_shoot(target.global_position)
+		_shoot(aim_at)
 
 
 ## Schiet een granaat: vuur uit de loop, een halve seconde later ontploft hij waar de vijand stond.
@@ -258,7 +285,15 @@ static func shell_can_damage(origin: Vector3, target: Vector3) -> bool:
 ## Door jou bestuurd: de linker stick geeft de richting (de tank draait op de plek en rijdt dan door,
 ## ligt de richting achter hem dan rijdt hij achteruit), de rechter stick richt de koepel.
 func _drive_driven(delta: float, live: bool) -> void:
-	var mv := Game.move
+	_drive_body(delta, live, Game.move)
+	var p = Game.player
+	p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+	p.face = rotation.y + PI
+	_drive_gun(delta, live)
+
+
+## Het rijden zelf (romp, rupsen en animatie) met een stick `mv` (wereldrichting, lengte 0 tot 1): die van jou, of de denkbeeldige stick van de bestuurder.
+func _drive_body(delta: float, live: bool, mv: Vector2) -> void:
 	var want_speed := 0.0
 	var turning := false
 	if live and mv.length() > 0.15:
@@ -290,9 +325,10 @@ func _drive_driven(delta: float, live: bool) -> void:
 		_play("Draaien", _turn_scale if absf(_turn_scale) > 0.2 else 1.0)
 	else:
 		_play("Stationair", 1.0)
-	var p = Game.player
-	p.global_position = Vector3(global_position.x, 0.0, global_position.z)
-	p.face = rotation.y + PI
+
+
+## De koepel en het schieten als jij bestuurt: de rechter stick richt, de vuurknop schiet.
+func _drive_gun(delta: float, live: bool) -> void:
 	# koepel
 	var local := 0.0
 	if live and not is_nan(Game.aim):

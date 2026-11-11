@@ -165,10 +165,10 @@ static func _blocked(walls: Dictionary, c: Vector2i, step: Vector2i) -> bool:
 
 
 ## Kruist de rechte lijn van `from` naar `goal` een muur?
-static func _crosses(walls: Dictionary, from: Vector3, goal: Vector3) -> bool:
-	# ook strak langs een muurkop of de rand van een poortopening telt (een soldaat is geen punt): dus de lijn en twee lijnen 0,7 m ernaast
+static func _crosses(walls: Dictionary, from: Vector3, goal: Vector3, half := 0.7) -> bool:
+	# ook strak langs een muurkop of de rand van een poortopening telt (een soldaat is geen punt): dus de lijn en twee lijnen 0,7 m ernaast (een voertuig: de halve breedte van zijn romp)
 	var d := Vector2(goal.x - from.x, goal.z - from.z)
-	var side := Vector3(-d.y, 0.0, d.x).normalized() * 0.7 if d.length() > 0.01 else Vector3.ZERO
+	var side := Vector3(-d.y, 0.0, d.x).normalized() * half if d.length() > 0.01 else Vector3.ZERO
 	return _crosses_line(walls, from, goal) or _crosses_line(walls, from + side, goal + side) or _crosses_line(walls, from - side, goal - side)
 
 
@@ -216,6 +216,44 @@ static func route_next(from: Vector3, goal: Vector3) -> Variant:
 			var g: Dictionary = _all_cache[m[1]]
 			return Vector3(g.at.x + step.x * 1.3, 0.0, g.at.z + step.y * 1.3)
 	return cell_center(path[1])
+
+
+## Voor een voertuig (jeep of tank, `half` m aan elke kant van zijn midden): dezelfde weg als `route_next`, maar dwars door het midden van de poort. Een voertuig is veel breder dan een soldaat
+## en haakt anders achter de rand van de opening. Eerst rijdt hij naar een punt 10 m voor de poort op de middellijn, dan door de poort naar een punt 10 m erachter. Is hij al uitgelijnd
+## (binnen een trechter rond de middellijn), dan rijdt hij meteen door. Geeft null als hij rechtdoor kan (geen muur in de weg, ook niet voor zijn romp).
+static func vehicle_next(from: Vector3, goal: Vector3, half: float) -> Variant:
+	var walls := _walls()
+	if walls.is_empty():
+		return null
+	var a := _cell_of(from)
+	var b := _cell_of(goal)
+	if a == b or not _crosses(walls, from, goal, half):
+		return null
+	var key := Vector4i(a.x, a.y, b.x, b.y)
+	var path: Array
+	if _route_cache.has(key):
+		path = _route_cache[key]
+	else:
+		path = _bfs(walls, a, b)
+		_route_cache[key] = path
+	if path.size() < 2:
+		return null
+	for i in path.size() - 1:
+		var step: Vector2i = path[i + 1] - path[i]
+		for m in cell_moves(path[i]):
+			if m[0] == step and _all_cache.has(m[1]):
+				var g: Dictionary = _all_cache[m[1]]
+				var at := Vector3(g.at.x, 0.0, g.at.z)
+				var dir := Vector3(step.x, 0.0, step.y)
+				var rel := from - at
+				var along := rel.x * dir.x + rel.z * dir.z   # < 0: nog voor de poort
+				var lat := absf(rel.x * dir.z - rel.z * dir.x)
+				if along > 0.5:
+					return null   # al voorbij het midden van de poort: gewoon verder naar het doel
+				if lat <= 0.9 + 0.12 * absf(along):
+					return at + dir * 10.0   # uitgelijnd: dwars door de poort
+				return at - dir * 10.0       # eerst naar de middellijn, 10 m voor de poort
+	return route_next(from, goal)
 
 
 ## Kortste weg over het rooster van cel a naar cel b, rond de muren (poorten zijn open); leeg als er geen weg is.

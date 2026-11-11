@@ -11,6 +11,9 @@ var _download: Button
 var _back: Button
 var _close: Button
 var _balk: ProgressBar
+var _center: CenterContainer
+var _paneel: PanelContainer
+var _kolommen: BoxContainer
 
 
 ## Opent het scherm onder `parent` (één tegelijk).
@@ -39,30 +42,44 @@ func _ready() -> void:
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(dim)
 
-	var outer := MarginContainer.new()
-	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var safe := UI.safe_margins(get_viewport().get_visible_rect().size, 22.0)
-	outer.add_theme_constant_override("margin_left", roundi(safe.x + 18.0))
-	outer.add_theme_constant_override("margin_top", roundi(safe.y + 12.0))
-	outer.add_theme_constant_override("margin_right", roundi(safe.z + 24.0))
-	outer.add_theme_constant_override("margin_bottom", roundi(safe.w + 12.0))
-	add_child(outer)
-
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 24)
-	outer.add_child(row)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.custom_minimum_size.x = minf(620.0, get_viewport().get_visible_rect().size.x * 0.62)
-	row.add_child(scroll)
+	# donker paneel met kop en SLUITEN rechtsboven, net als de andere menu's; liggend tekst links en knoppen rechts,
+	# staand onder elkaar. Geen scrollbalk.
+	_center = CenterContainer.new()
+	_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_center)
+	_paneel = PanelContainer.new()
+	var sb := UI.box(Color(0.043, 0.052, 0.03, 0.9), Color(UI.BRASS, 0.55), 1, 6, 16)
+	sb.shadow_color = Color(0, 0, 0, 0.55)
+	sb.shadow_size = 24
+	_paneel.add_theme_stylebox_override("panel", sb)
+	_center.add_child(_paneel)
+	var blad := VBoxContainer.new()
+	blad.add_theme_constant_override("separation", 12)
+	_paneel.add_child(blad)
+	var kop := HBoxContainer.new()
+	kop.add_theme_constant_override("separation", 12)
+	blad.add_child(kop)
+	var titel := UI.label("UPDATES", UI.display(1), 28, UI.INK)
+	titel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	titel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	kop.add_child(titel)
+	_close = _knop("SLUITEN", "field_primary", queue_free)
+	_close.custom_minimum_size = Vector2(112, 42)
+	_close.add_theme_font_size_override("font_size", 17)
+	_close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	kop.add_child(_close)
+	_kolommen = BoxContainer.new()
+	_kolommen.add_theme_constant_override("separation", 20)
+	blad.add_child(_kolommen)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 9)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(v)
+	_kolommen.add_child(v)
+	var knoppen := VBoxContainer.new()
+	knoppen.add_theme_constant_override("separation", 9)
+	knoppen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_kolommen.add_child(knoppen)
 
-	v.add_child(UI.label("COMMANDOPOST  ·  OPERATIE GROENE HEL", UI.body(700, 3), 13, UI.BRASS))
-	v.add_child(UI.label("UPDATES", UI.display(2), 42, UI.INK))
 	_info = UI.label("", UI.body(600, 1), 15, UI.INK)
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(_info)
@@ -88,13 +105,13 @@ func _ready() -> void:
 	var save := _knop("OPSLAAN", "field", _sla_token_op)
 	token_row.add_child(save)
 	_check = _knop("CONTROLEREN OP UPDATES", "field", func(): Updater.controleer())
-	v.add_child(_check)
+	knoppen.add_child(_check)
 	_download = _knop("DOWNLOADEN EN INSTALLEREN", "field_primary", _download_met_lange_timeout)
-	v.add_child(_download)
+	knoppen.add_child(_download)
 	_back = _knop("TERUGDRAAIEN NAAR APP-VERSIE", "field", func(): Updater.terugdraaien())
-	v.add_child(_back)
-	_close = _knop("SLUITEN", "field", queue_free)
-	v.add_child(_close)
+	knoppen.add_child(_back)
+	get_viewport().size_changed.connect(_schik)
+	_schik()
 	Updater.status_changed.connect(_ververs)
 	_ververs()
 
@@ -378,6 +395,18 @@ func _ruim_keten_op(houd: Array) -> void:
 	for f in dir.get_files():
 		if not blijf.has(f):
 			dir.remove(f)
+
+
+## Binnen de veilige marges blijven; staand de knoppen onder de tekst.
+func _schik() -> void:
+	var vp := get_viewport().get_visible_rect().size
+	var safe := UI.safe_margins(vp, 10.0)
+	_center.offset_left = safe.x
+	_center.offset_top = safe.y
+	_center.offset_right = -safe.z
+	_center.offset_bottom = -safe.w
+	_kolommen.vertical = vp.y > vp.x
+	_paneel.custom_minimum_size.x = minf(900.0, vp.x - safe.x - safe.z)
 
 
 func _knop(text: String, kind: String, cb: Callable) -> Button:

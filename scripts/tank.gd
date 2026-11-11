@@ -183,7 +183,7 @@ func _process(raw_delta: float) -> void:
 		var rot1 := rotation.y
 		_bst.think(delta)
 		_drive_body(delta, live, _bst.stuur(DRIVE_SPEED))
-		var hit1 := Foliage.hull_tree(self, Vector2(1.95, 3.3))
+		var hit1 := Foliage.hull_tree(self, Vector2(2.2, 3.6))   # de bestuurder velt iets ruimer dan jouw tank (een boom aan de rand van de romp houdt hem anders tegen terwijl hij niet omvalt)
 		if not hit1.is_empty():
 			rotation.y = rot1
 			_speed *= 0.5

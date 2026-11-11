@@ -20,6 +20,9 @@ const SIEGE_HK := 30.0       # m: zo dichtbij het hoofdkwartier (plat, tot zijn 
 const RECOVER := 1.6         # s achteruit na vastlopen
 const MAX_TRIES := 4         # zoveel keer terugzetten, dan geeft hij het op ("VAST")
 const GATE_REACH := 16.0     # m: zo ver van een poort van jouw kamp opent hij voor een rijdend voertuig (Gates)
+const NAV_RETARGET := 5.0    # m: verschuift zijn doel meer dan dit, dan zoekt de routezoeker een nieuwe weg
+const NAV_COOL := 0.7        # s: minstens zo lang tussen twee zoekacties
+const NAV_OFF := 9.0         # m: verder dan dit van zijn route af (geduwd, omgeduwd) zoekt hij opnieuw
 
 static var all: Array = []   # alle bestuurders van levende voertuigen
 
@@ -60,6 +63,17 @@ var _sample_yaw := 0.0
 var _alpha := 0.0
 var _bridge_said := false
 var _road_said := false
+# de routezoeker (A*): de weg om bomen, rotsen en muren heen in jouw gebied (VoertuigRaster, VoertuigZoek)
+var _nav_pts: Array = []
+var _nav_i := 0
+var _nav_for := Vector3(1.0e9, 0.0, 1.0e9)   # het punt waar `_nav_pts` heen leidt
+var _nav_from := Vector3.ZERO               # waar de route begon
+var _nav_search: VoertuigZoek
+var _nav_dirty := false
+var _nav_cool := 0.0
+var _nav_snapped := false
+var _nav_partial := false
+var _nav_end := false
 
 
 # ---------------------------------------------------------------- aanmaken
@@ -176,6 +190,13 @@ func _reset_drive() -> void:
 	drive_speed = 0.0
 	_bridge_said = false
 	_road_said = false
+	_nav_pts = []
+	_nav_i = 0
+	_nav_for = Vector3(1.0e9, 0.0, 1.0e9)
+	_nav_search = null
+	_nav_dirty = false
+	_nav_cool = 0.0
+	_nav_end = false
 	_sample_t = 0.0
 	if is_instance_valid(vehicle):
 		_sample_pos = vehicle.global_position
@@ -333,6 +354,16 @@ func think(delta: float) -> void:
 			Game.banner.emit("BRUG OMHOOG", "%s wacht voor de brug." % naam(), 2.4)
 		return
 	var target: Vector3 = wp
+	if VoertuigRoute.side(vehicle.global_position) == 1 and VoertuigRoute.side(target) == 1:
+		var nt: Variant = _nav(target, delta)   # in jouw gebied: de routezoeker zoekt de weg om bomen, rotsen en muren heen
+		if _nav_end:
+			if _nav_partial:
+				_give_up("GEEN WEG", "%s komt er niet. Geef een nieuw bevel." % naam())
+			else:
+				_idle()   # het doel zelf is dicht (een boom, een rots): hij staat op de dichtstbijzijnde vrije plek
+			return
+		if nt != null:
+			target = nt
 	if VoertuigRoute.side(vehicle.global_position) >= 0:
 		var det: Variant = Kampmuur.vehicle_next(vehicle.global_position, target, float(s.half))   # rond de muren van jouw kamp, dwars door het midden van de poort
 		if det != null:
@@ -358,6 +389,69 @@ func _idle(done := true) -> void:
 		arrived = true
 	drive_dir = Vector3.ZERO
 	drive_speed = 0.0
+
+
+## Tussen het volgende punt van het plan (`wp`) en het stuur: de route van de routezoeker (A*) om bomen, rotsen en muren heen. Geeft het punt waar hij nu heen rijdt, of null (rechtdoor naar `wp`,
+## zolang er nog geen route is, of als de routezoeker geen begin of doel vond). Zet `_nav_end` als hij het einde van een route bereikt die niet bij het doel zelf eindigt.
+func _nav(wp: Vector3, delta: float) -> Variant:
+	_nav_end = false
+	_nav_cool -= delta
+	var space := vehicle.get_world_3d().direct_space_state
+	var z := VoertuigRaster.raster(kind == "tank")
+	var vp := vehicle.global_position
+	if _nav_search != null and Vector2(_nav_search.goal_pos.x - wp.x, _nav_search.goal_pos.z - wp.z).length() > NAV_RETARGET:
+		_nav_search = null   # de lopende zoekactie is voor een oud doel
+	var moved := Vector2(wp.x - _nav_for.x, wp.z - _nav_for.z).length() > NAV_RETARGET
+	if _nav_search == null and (moved or _nav_dirty) and _nav_cool <= 0.0:
+		_nav_search = z.search(vp, wp)
+		_nav_cool = NAV_COOL
+		_nav_dirty = false
+	if _nav_search != null:
+		_nav_search.step(space)
+		if _nav_search.done:
+			var sr := _nav_search   # klaar: de route van deze zoekactie wordt de nieuwe (een lege route = geen begin of doel te vinden: rechtdoor, zoals voor de routezoeker)
+			_nav_search = null
+			_nav_pts = sr.path
+			_nav_for = sr.goal_pos
+			_nav_from = sr.start_pos
+			_nav_snapped = sr.snapped
+			_nav_partial = sr.partial
+			_nav_dirty = false
+			_nav_pick(vp)
+			moved = false
+	if moved or _nav_pts.is_empty():
+		return null   # nog geen route voor dit doel (of geen te vinden): rechtdoor
+	var r := float(KINDS[kind].wp)
+	while _nav_i < _nav_pts.size() and _flat(_nav_pts[_nav_i]) < r:
+		_nav_i += 1
+	if _nav_i >= _nav_pts.size():
+		_nav_end = _nav_partial or _nav_snapped
+		return null
+	var a: Vector3 = _nav_pts[_nav_i - 1] if _nav_i > 0 else _nav_from
+	if _dist_segment(vp, a, _nav_pts[_nav_i]) > NAV_OFF:
+		_nav_dirty = true
+	return _nav_pts[_nav_i]
+
+
+## Waar op zijn route staat hij? Hij rijdt naar het eindpunt van het stuk van de route dat hem het dichtstbij ligt, ook als de zoekactie begon voor hij hier was.
+func _nav_pick(vp: Vector3) -> void:
+	_nav_i = 0
+	var bd := INF
+	var prev := _nav_from
+	for i in _nav_pts.size():
+		var d := _dist_segment(vp, prev, _nav_pts[i])
+		if d < bd - 0.01:
+			bd = d
+			_nav_i = i
+		prev = _nav_pts[i]
+
+
+static func _dist_segment(p: Vector3, a: Vector3, b: Vector3) -> float:
+	var ab := Vector2(b.x - a.x, b.z - a.z)
+	var f := 0.0
+	if ab.length_squared() > 0.0001:
+		f = clampf(Vector2(p.x - a.x, p.z - a.z).dot(ab) / ab.length_squared(), 0.0, 1.0)
+	return Vector2(p.x - (a.x + ab.x * f), p.z - (a.z + ab.y * f)).length()
 
 
 func _make_plan(gpos: Vector3) -> void:
@@ -469,13 +563,25 @@ func _check_stuck(delta: float) -> void:
 				return
 			_back_t = RECOVER
 			_back_dir = -signf(_alpha) if absf(_alpha) > 0.05 else (1.0 if randf() < 0.5 else -1.0)
+			var felled := false
+			if kind == "tank":
+				for _i in 3:
+					var tree := Foliage.hull_tree(vehicle, Vector2(2.6, 4.3))   # tegen een boom aan: omver (een tank rijdt bomen plat)
+					if tree.is_empty():
+						break
+					Foliage.fell(tree, vehicle.global_position)
+					felled = true
+			if VoertuigRoute.side(vehicle.global_position) == 1 and not felled:
+				VoertuigRaster.raster(kind == "tank").block_ahead(vehicle.global_position, -vehicle.global_transform.basis.z)   # de routezoeker gaat er omheen
+				_nav_dirty = true
+				_nav_cool = 0.0
 	else:
 		_stuck = 0
 		if moved > 3.0:
 			_tries = 0
 
 
-func _give_up() -> void:
+func _give_up(title := "%s VAST", text := "Hij kan zijn weg niet vinden. Geef een nieuw bevel.") -> void:
 	vast = true
 	arrived = true
 	command = "hold"
@@ -484,4 +590,4 @@ func _give_up() -> void:
 	_plan.clear()
 	drive_dir = Vector3.ZERO
 	drive_speed = 0.0
-	Game.banner.emit("%s VAST" % naam(), "Hij kan zijn weg niet vinden. Geef een nieuw bevel.", 2.6)
+	Game.banner.emit(title % naam() if title.contains("%s") else title, text, 2.6)

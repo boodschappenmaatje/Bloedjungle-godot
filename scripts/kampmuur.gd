@@ -523,6 +523,8 @@ static func build(path: Array) -> Dictionary:
 # ---------------------------------------------------------------- poort
 
 const GATE_COST := 100       # voorstel (Dennis heeft er nog geen prijs voor genoemd)
+const GATE_LANE_SIDE := 4.4   # m: half, langs de muur: de opening (3,4) plus ruimte voor een brede tank
+const GATE_LANE_ALONG := 9.0  # m: half, door de poort heen: wat een voertuig nodig heeft om rechtuit door de opening te rijden
 
 
 ## De twee randen en het midden voor een poort bij het aangetikte muurstuk `k`: het stuk zelf plus zijn buur in dezelfde lijn aan de kant van `toward`
@@ -561,11 +563,20 @@ static func place_gate(k: Vector4i, toward: Vector3) -> Dictionary:
 	Game.builds.remove(b1)
 	Game.builds.remove(b2)
 	Game.builds.batch = false
-	Game.gates.add_gate(pair[2], edge_yaw(pair[0]), pair[0], pair[1])
+	var gate: Dictionary = Game.gates.add_gate(pair[2], edge_yaw(pair[0]), pair[0], pair[1])
+	clear_gate_lane(Vector3(gate.at), float(gate.yaw))
 	Wachten.invalidate()
 	Sfx.play("thud")
 	check_enclosure()
 	return {"ok": true, "reason": ""}
+
+
+## Een poort ruimt de weg voor je voertuigen: bomen, stronken en rotsen vlak voor en achter de opening verdwijnen (zoals onder een gebouw), zodat een jeep of tank er nooit tegenaan blijft haken.
+static func clear_gate_lane(at: Vector3, yaw: float) -> int:
+	var half := Vector2(GATE_LANE_SIDE, GATE_LANE_ALONG)   # (langs de muur, door de poort)
+	if absf(cos(yaw)) < 0.5:
+		half = Vector2(half.y, half.x)
+	return Foliage.clear_world_rects([Rect2(Vector2(at.x, at.z) - half, half * 2.0)], 0.0)
 
 
 ## Verkoopt een poort: de helft van de prijs als bouwtegoed; de plek blijft open.

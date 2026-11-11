@@ -99,8 +99,9 @@ func _process(_d: float) -> bool:
 	if frames == 2400:
 		_check("de poort is opengegaan voor een voertuig", opened)
 		_check("de jeep is door de poort naar binnen gereden (%s)" % str(jeep.global_position), jeep.global_position.z < gz - 3.0 and jeep.global_position.z > 20.0 and not bj.vast)
-		# de tank steekt de poort over; buiten de muur staan bomen en gevallen stammen, waar hij kan vastlopen (dan meldt hij TANK VAST, keuze 9A): dat telt hier niet mee
+		# de tank steekt de poort over en zoekt buiten de muur zelf een weg tussen bomen, stammen en rotsen door (de routezoeker): hij komt aan en meldt niet VAST
 		_check("de tank is door de poort naar buiten gereden (%s)" % str(tank.global_position), tank.global_position.z > gz + 3.0)
+		_check("de tank staat bij zijn doel buiten de muur (%.1f m) en is niet vast" % Vector2(tank.global_position.x - 44.0, tank.global_position.z - (gz + 16.0)).length(), Vector2(tank.global_position.x - 44.0, tank.global_position.z - (gz + 16.0)).length() < 8.0 and not bt.vast)
 		print("klaar, fouten: ", fails)
 		quit(1 if fails > 0 else 0)
 	return false

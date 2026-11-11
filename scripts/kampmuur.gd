@@ -127,50 +127,129 @@ static func existing() -> Dictionary:
 	return out
 
 
-## De cellen binnen de omheining, hooguit twee seconden oud (soldaten vragen het elk beeld; het uitrekenen loopt over het hele rooster).
-static var _inside: Dictionary = {}
-static var _inside_t := -100000
+## Soldaten zoeken zelf hun weg om de muren van jouw kamp en door de poort (die gaat voor hen vanzelf open). Kruist de rechte lijn naar het doel een
+## muur, dan loopt hij over het rooster (de cellen tussen vier roosterpunten, zoals bij de omheining) langs de open randen en poorten naar het doel.
+## Geeft het middelpunt van de eerstvolgende cel, of null als je rechtdoor kunt lopen (geen muren, geen muur in de weg, al in de cel van het doel).
+static var _walls_cache: Dictionary = {}
+static var _walls_t := -100000
+static var _all_cache: Dictionary = {}
+static var _route_cache: Dictionary = {}
 
 
-static func inside(p: Vector3) -> bool:
+static func _walls() -> Dictionary:
 	var now := Time.get_ticks_msec()
-	if now - _inside_t > 2000:
-		_inside_t = now
-		_inside = region()
-	return not _inside.is_empty() and _inside.has(Vector2i(floori(p.x / STEP), floori(p.z / STEP)))
+	if now - _walls_t > 1500:
+		_walls_t = now
+		_route_cache = {}
+		var out := {}
+		var all := existing()
+		for k in all:
+			var w: Dictionary = all[k]
+			if str(w.get("kind", "")) == "kampmuur":   # een poort is geen muur: daar mag je door
+				out[k] = true
+		_walls_cache = out
+		_all_cache = all
+	return _walls_cache
 
 
-## Soldaten zoeken zelf hun weg door de poort: staat het doel aan de andere kant van de muur dan jij, dan is het eerstvolgende punt de poort
-## (eerst de buitenkant, dan de binnenkant, of andersom). Geeft null als je rechtdoor kunt lopen (geen omheining, dezelfde kant, geen poort).
-static func gate_waypoint(from: Vector3, goal: Vector3) -> Variant:
-	if Game.gates == null or not is_instance_valid(Game.gates) or Game.gates.list.is_empty():
+static func _cell_of(p: Vector3) -> Vector2i:
+	return Vector2i(floori(p.x / STEP), floori(p.z / STEP))
+
+
+## Staat er een muur tussen deze twee buurcellen?
+static func _blocked(walls: Dictionary, c: Vector2i, step: Vector2i) -> bool:
+	for m in cell_moves(c):
+		if m[0] == step:
+			return walls.has(m[1])
+	return false
+
+
+## Kruist de rechte lijn van `from` naar `goal` een muur?
+static func _crosses(walls: Dictionary, from: Vector3, goal: Vector3) -> bool:
+	# ook strak langs een muurkop of de rand van een poortopening telt (een soldaat is geen punt): dus de lijn en twee lijnen 0,7 m ernaast
+	var d := Vector2(goal.x - from.x, goal.z - from.z)
+	var side := Vector3(-d.y, 0.0, d.x).normalized() * 0.7 if d.length() > 0.01 else Vector3.ZERO
+	return _crosses_line(walls, from, goal) or _crosses_line(walls, from + side, goal + side) or _crosses_line(walls, from - side, goal - side)
+
+
+static func _crosses_line(walls: Dictionary, from: Vector3, goal: Vector3) -> bool:
+	var d := Vector2(goal.x - from.x, goal.z - from.z)
+	var n := maxi(1, ceili(d.length() / 1.2))
+	var prev := _cell_of(from)
+	for i in range(1, n + 1):
+		var t := float(i) / float(n)
+		var c := _cell_of(Vector3(from.x + d.x * t, 0.0, from.z + d.y * t))
+		if c != prev:
+			var dx := c.x - prev.x
+			var dy := c.y - prev.y
+			if dx != 0 and _blocked(walls, prev, Vector2i(dx, 0)):
+				return true
+			if dy != 0 and _blocked(walls, prev, Vector2i(0, dy)):
+				return true
+			if dx != 0 and dy != 0 and _blocked(walls, prev + Vector2i(0, dy), Vector2i(dx, 0)):
+				return true
+			prev = c
+	return false
+
+
+static func route_next(from: Vector3, goal: Vector3) -> Variant:
+	var walls := _walls()
+	if walls.is_empty():
 		return null
-	var from_in := inside(from)
-	if from_in == inside(goal):
+	var a := _cell_of(from)
+	var b := _cell_of(goal)
+	if a == b or not _crosses(walls, from, goal):
 		return null
-	var best: Variant = null
-	var best_d := INF
-	for g in Game.gates.list:
-		var d := Vector2(g.at.x, g.at.z).distance_to(Vector2(from.x, from.z)) + Vector2(g.at.x, g.at.z).distance_to(Vector2(goal.x, goal.z))
-		if d < best_d:
-			best_d = d
-			best = g
-	if best == null:
+	var key := Vector4i(a.x, a.y, b.x, b.y)
+	var path: Array
+	if _route_cache.has(key):
+		path = _route_cache[key]
+	else:
+		path = _bfs(walls, a, b)
+		_route_cache[key] = path
+	if path.size() < 2:
 		return null
-	var gp := Vector2(best.at.x, best.at.z)
-	var base := Vector2(Game.base_pos.x, Game.base_pos.z)
-	var n := Vector2(sin(float(best.yaw)), cos(float(best.yaw)))
-	if n.dot(gp - base) < 0.0:
-		n = -n   # n wijst naar buiten (weg van het hoofdkwartier)
-	var out_p := Vector3(gp.x + n.x * 3.2, 0.0, gp.y + n.y * 3.2)
-	var in_p := Vector3(gp.x - n.x * 3.2, 0.0, gp.y - n.y * 3.2)
-	# s = hoe ver hij vóór (+) of achter (-) de poort staat, t = hoe ver opzij; recht voor de opening loopt hij erdoor, anders eerst daarheen
-	var rel := Vector2(from.x, from.z) - gp
-	var s := rel.dot(n)
-	var t := rel.dot(Vector2(n.y, -n.x))
-	if from_in:
-		return in_p if (s < -0.4 and absf(t) > 1.2) else out_p
-	return out_p if (s > 0.4 and absf(t) > 1.2) else in_p
+	# door een poort: dwars door het midden van de opening (de middelpunten van de cellen liggen er tegen de rand van de poortopening aan)
+	var step: Vector2i = path[1] - path[0]
+	for m in cell_moves(path[0]):
+		if m[0] == step and _all_cache.has(m[1]):
+			var g: Dictionary = _all_cache[m[1]]
+			return Vector3(g.at.x + step.x * 1.3, 0.0, g.at.z + step.y * 1.3)
+	return cell_center(path[1])
+
+
+## Kortste weg over het rooster van cel a naar cel b, rond de muren (poorten zijn open); leeg als er geen weg is.
+static func _bfs(walls: Dictionary, a: Vector2i, b: Vector2i) -> Array:
+	var lo := Vector2i(mini(a.x, b.x), mini(a.y, b.y))
+	var hi := Vector2i(maxi(a.x, b.x), maxi(a.y, b.y))
+	for k in walls:
+		lo = Vector2i(mini(lo.x, (k as Vector4i).x), mini(lo.y, (k as Vector4i).y))
+		hi = Vector2i(maxi(hi.x, (k as Vector4i).z), maxi(hi.y, (k as Vector4i).w))
+	lo -= Vector2i(4, 4)
+	hi += Vector2i(4, 4)
+	var came := {a: a}
+	var queue: Array = [a]
+	var qi := 0
+	while qi < queue.size():
+		var c: Vector2i = queue[qi]
+		qi += 1
+		if c == b:
+			break
+		for m in cell_moves(c):
+			var nx: Vector2i = c + (m[0] as Vector2i)
+			if came.has(nx) or walls.has(m[1]) or nx.x < lo.x or nx.y < lo.y or nx.x > hi.x or nx.y > hi.y:
+				continue
+			came[nx] = c
+			queue.append(nx)
+	if not came.has(b):
+		return []
+	var out: Array = [b]
+	var cur := b
+	while cur != a:
+		cur = came[cur]
+		out.append(cur)
+	out.reverse()
+	return out
 
 
 static func count() -> int:

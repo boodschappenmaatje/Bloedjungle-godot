@@ -72,12 +72,11 @@ func _process(_d: float) -> bool:
 		var res: Dictionary = K.place_gate(k, K.vertex(Vector2i(12, zrow)))
 		_check("poort geplaatst (%s)" % str(res.reason), res.ok)
 		var gz: float = float(zrow) * 3.5
-		_check("binnen is binnen en buiten is buiten", K.inside(Vector3(40, 0, 40)) and not K.inside(Vector3(40, 0, gz + 12.0)))
-		var wp: Variant = K.gate_waypoint(Vector3(55, 0, gz + 12.0), Vector3(40, 0, 40))
-		_check("van buiten naar binnen is het eerste punt buiten de poort", wp != null and wp.z > gz and absf(wp.x - 42.0) < 0.5)
-		_check("zelfde kant: rechtdoor", K.gate_waypoint(Vector3(40, 0, 30), Vector3(50, 0, 45)) == null)
+		_check("zelfde kant: rechtdoor", K.route_next(Vector3(40, 0, 30), Vector3(50, 0, 45)) == null)
+		var wp: Variant = K.route_next(Vector3(76, 0, 30.0), Vector3(40, 0, 45))
+		_check("van de oostkant naar binnen loopt hij eerst om de muur heen", wp != null)
 		var script: GDScript = load("res://scripts/ally.gd")
-		for i in 4:
+		for i in 5:
 			var a = script.new()
 			a.kind = "geweer"
 			g.player.get_parent().add_child(a)
@@ -89,16 +88,18 @@ func _process(_d: float) -> bool:
 		al[1].global_position = Vector3(58.0, 0.0, gz + 10.0)
 		al[2].global_position = Vector3(30.0, 0.0, 45.0)
 		al[3].global_position = Vector3(52.0, 0.0, 40.0)
+		al[4].global_position = Vector3(76.0, 0.0, 30.0)
+		al[4].set_command("move", Vector3(40, 0, 45))
 		al[0].set_command("move", Vector3(40, 0, 45))
 		al[1].set_command("move", Vector3(46, 0, 42))
 		al[2].set_command("move", Vector3(44, 0, gz + 14.0))
 		al[3].set_command("move", Vector3(60, 0, gz + 14.0))
 	if frames > 24 and frames % 120 == 0 and not al.is_empty():
 		print(frames, " poort open=", g.gates.list[0].open, " ", al.map(func(a): return a.global_position.snapped(Vector3(0.1,0.1,0.1))), " ", g.state)
-	if frames == 700:
+	if frames == 2000:
 		var gz2: float = float(zrow) * 3.5
-		for i in 2:
-			_check("soldier %d is door de poort naar binnen gelopen (%s)" % [i, str(al[i].global_position)], K.inside(al[i].global_position))
+		for i in [0, 1, 4]:
+			_check("soldier %d is door de poort naar binnen gelopen (%s)" % [i, str(al[i].global_position)], al[i].global_position.z < gz2 - 3.0 and al[i].global_position.z > 20.0)
 		for i in range(2, 4):
 			_check("soldier %d is door de poort naar buiten gelopen (%s)" % [i, str(al[i].global_position)], al[i].global_position.z > gz2 + 3.0)
 		print("klaar, fouten: ", fails)

@@ -1,6 +1,6 @@
 # AAA aanvalscommando voor Bloedjungle — ontwerp
 
-Datum: 11 november 2026. Status: ter goedkeuring door Dennis. Dit document beschrijft het gewenste resultaat; het is nog geen opdracht om betaalde Meshy-taken te starten of de game te publiceren.
+Datum: 11 november 2026. Status: ter goedkeuring door Dennis. Dit document beschrijft het gewenste resultaat; het is nog geen opdracht om betaalde Meshy-taken te starten of de game te publiceren. Dennis koos op 11 november dat de animatieafwerking voor **alle speelbare wapens** geldt.
 
 ## Bedoeling
 
@@ -26,6 +26,7 @@ De speelbare soldaat moet eruitzien en bewegen als de hoofdfiguur van een hoogwa
 - Vergelijk de bestaande clips uit `resources/animations/meshy_player_animation_library.res` en `_api.res` met de iPhone-opname. Selecteer alleen bewegingen die in de gamecamera overtuigen. Nieuwe API-clips worden gericht gekozen na een gratis cataloguscontrole en kostenraming; Meshy-uitvoer wordt in Blender/Godot gecorrigeerd waar hand-, voet- of wapencontact tekortschiet.
 - Kernreeks: stil, tactisch lopen vooruit/achteruit/zijwaarts, rennen, sprinten, starten, afremmen/stoppen, draaien, richten, schieten tijdens bewegen en in stilstand, herladen en trefferreactie. Houdingen die de speler nu kan gebruiken (hurken/liggen/rollen/klimmen/zitten) blijven werken; zwakke of bevroren pose-overgangen worden afzonderlijk beoordeeld en niet als nieuwe animatie gepresenteerd.
 - Benen en voeten moeten zichtbaar landen zonder langdurig glijden of een vastgehouden pas bij stilstand. Romp en wapen mogen blijven richten terwijl de benen naar de looprichting bewegen. Beide handen blijven aan het actieve wapen; terugslag en herladen passen bij de wapenstand. De besturing en schietwaarden veranderen niet door cosmetische animatieverbetering.
+- De afwerking en beoordeling gelden voor **M1911, Thompson, Garand, Trench gun, MG42 en Bazooka**. Controleer per wapen de passende greep, tweede hand, schotreactie, herladen, lopen → stoppen → schieten en schieten → weer bewegen. Het pistool uit Dennis' opname is het eerste controlepunt, niet de grens van de oplevering. Gebruik gedeelde locomotion waar deze voor alle wapens werkt en wapenafhankelijke bovenlichaamclips of IK-correcties waar nodig.
 - Houd de 28-bots Mixamo-hiërarchie en bestaande `SoldierModel`-spelinterface intact. Horizontale root motion uit nieuwe clips wordt verwijderd of expliciet afgehandeld zodat de animatie het `CharacterBody3D` niet verplaatst; verticale beweging blijft alleen waar de actie die nodig heeft. Clipnamen, loopgedrag, overgangen en triggers worden in de asset-specificatie vastgelegd voordat definitieve clips worden geproduceerd.
 
 ## Doelen, grenzen en te vermijden uitkomsten
@@ -41,10 +42,6 @@ De speelbare soldaat moet eruitzien en bewegen als de hoofdfiguur van een hoogwa
 - Lever een reproduceerbare bewerkbare Blender-bron, geoptimaliseerde Godot-GLB met echte clips of een gekoppelde animatiebibliotheek, PBR-kaarten en een USDZ-preview voor de iPhone. Gebruik de bestaande VQ2-viewer voor 360° en afspelen van werkelijke clips, met de huidige Meshy-speler naast de nieuwe versie.
 - Vergelijk voor/na in identieke belichting en echte gamecamera, inclusief een korte reeks: lopen → rennen → stoppen → stilstaand schieten → herladen; ook schieten tijdens bewegen en bewegen na schieten. Test botnamen, cliptracks, wapen-IK, uitrusting, import en gameplayregressie.
 - De native iPhone-app is de prestatie- en touch-acceptatietest. Tot een fysieke meting is iPhone-FPS **NIET GETEST**. Werk op een featurebranch met Draft PR; geen merge naar `main` of OTA zonder Dennis' afzonderlijke toestemming.
-
-## Open keuze voor Dennis
-
-- Geldt de volledige AAA-animatieafwerking bij de eerste oplevering voor alle speelbare wapens, of eerst alleen voor het M1911-pistool uit de opname? De huidige spelcode heeft verschillende handgrepen en herlaadbewegingen per wapentype; deze keuze bepaalt de productie- en testomvang.
 
 ## Nog aan de bouwer
 

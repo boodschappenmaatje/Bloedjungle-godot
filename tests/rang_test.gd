@@ -199,6 +199,21 @@ func _run() -> void:
 	G.kracht_cd.clear()
 	await _frames(3)
 	_check("klaar: de knop is weer aan zonder seconden", not buttons._air.disabled and buttons._air.badge == "" and buttons._air.bar < 0.0)
+	# op een computer (geen aanraking) blijft het oude gedrag: geen krachtstand voor de rechterstick; een tik op de al gekozen kracht gebruikt hem meteen
+	# (op aanraking doet de krachtenknop hetzelfde als UITRUSTING: zie kracht_stick_test.gd)
+	_reset_rang()
+	G.krachten = {"satelliet": 1, "reparatie": 1}
+	G.kracht_sel = "satelliet"
+	await _frames(2)
+	_check("computer: geen krachtstand voor de rechterstick", not buttons.stick_armed())
+	buttons._sticky_pick("support", 2)    # satelliet (onder) is al gekozen: gebruikt hem meteen
+	_check("computer: een tik op de gekozen kracht gebruikt hem meteen", G.satelliet_t > 0.0 and not buttons.stick_armed())
+	buttons._sticky_pick("support", 3)    # reparatie (links): kiest alleen
+	_check("computer: een tik op een andere kracht kiest alleen", G.kracht_sel == "reparatie" and not buttons.stick_armed())
+	buttons.arm_kracht_stick()
+	_check("computer: de krachtstand wordt zonder aanraking nooit klaargezet", not buttons.kracht_stick_armed)
+	G.satelliet_t = 0.0
+	G.kracht_cd.clear()
 
 	# ---- 6. spionagesatelliet
 	_reset_rang()

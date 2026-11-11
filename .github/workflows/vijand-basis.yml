@@ -76,6 +76,7 @@ on:
       - "scripts/wheel_art.gd"
       - "tests/rang_test.gd"
       - "tests/kies_knop_test.gd"
+      - "tests/kracht_stick_test.gd"
       - "scripts/pause_menu.gd"
       - "scripts/progress.gd"
       - "scripts/mcv.gd"
@@ -281,4 +282,16 @@ jobs:
           set -e
           echo "Godot exit code: $RC"
           grep -E 'FAAL|KLAAR|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/kies_knop.log" | tail -n 40 || true
+          exit "$RC"
+      - name: KRACHTEN-knop werkt als de granaatknop (wiel, kiezen, rechterstick richt en vuurt af, annuleren)
+        shell: bash
+        run: |
+          set +e
+          timeout 360 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/kracht_stick_test.gd --fixed-fps 60 --quit-after 15000 > "$RUNNER_TEMP/kracht_stick.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|TEST OK|TEST MISLUKT|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/kracht_stick.log" | tail -n 40 || true
+          grep -Fq "TEST OK" "$RUNNER_TEMP/kracht_stick.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|TEST MISLUKT' "$RUNNER_TEMP/kracht_stick.log"; then exit 1; fi
           exit "$RC"

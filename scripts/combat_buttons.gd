@@ -36,6 +36,18 @@ var _air_vis: NapalmAim
 var _arty_vis: ArtillerieAim
 var _place: NapalmPlace       # napalm staat neergezet en wacht op START
 
+## Op aanraking (iPhone) werkt de krachtenknop zoals UITRUSTING/GRANAAT: een tik opent het wiel, een kracht kiezen sluit het wiel zonder iets af te vuren
+## en zet de rechterstick klaar. Een NIEUWE aanraking op de rechterstick richt (artillerie en napalm tonen hun richthulp), loslaten vuurt de kracht
+## af, terug naar het midden en dan loslaten annuleert. In die stand schiet de rechterstick geen kogels.
+var kracht_stick_armed := false
+var kstick_finger := -2       # vinger die de rechterstick vasthoudt in krachtstand
+var kstick_drag := Vector2.ZERO
+var _kstick_out := false      # de stick is al buiten het midden geweest
+const NAPALM_STICK_MIN := 6.0    # m: napalm met de rechterstick, zoals NapalmPlace (6-20 m, zo ver past nog op het scherm)
+const NAPALM_STICK_MAX := 20.0
+const ARTY_STICK_MIN := 14.0     # m: artillerie met de rechterstick; het slepen vanaf de knop (computer) blijft 14-60 m
+const ARTY_STICK_MAX := 26.0
+
 ## A held support/equipment button promotes to a four-way selector. The pointer remains owned here,
 ## so opening a wheel can never send its release through to the weapon/fire controls.
 const WHEEL_HOLD := 0.42
@@ -89,7 +101,7 @@ func _cancel_gesture() -> void:
 	_held_time = 0.0
 	_wheel_kind = ""
 	_wheel_sector = -1
-	cancel_grenade_stick()
+	cancel_stick()
 	cancel_aim()
 	cancel_air()
 	queue_redraw()
@@ -169,6 +181,8 @@ func _input(event: InputEvent) -> void:
 		drag_aim(event.position - _aim_start)
 
 func _air_input(event: InputEvent) -> void:
+	if UI.is_touch_platform():
+		return   # op aanraking loopt de krachtenknop via het wiel en de rechterstick (kracht_stick_*), niet via tikken of slepen op de knop zelf
 	if not is_visible_in_tree() or not _air.visible:
 		if air_finger != -2:
 			cancel_air()
@@ -232,11 +246,14 @@ func _wheel_input(event: InputEvent) -> bool:
 			pos = event.position
 			released = not event.pressed
 		if pointer == _held_pointer and released:
-			var open_equipment := _held_action == "equipment" and _held_time < WHEEL_HOLD
+			var quick := _held_time < WHEEL_HOLD
+			var action := _held_action
+			# De krachtenknop doet op aanraking hetzelfde als UITRUSTING: een korte tik opent het wiel (op een computer loopt dat via _air_input).
+			var open_wheel := quick and (action == "equipment" or (action == "support" and UI.is_touch_platform()))
 			_held_pointer = -2
 			_held_action = ""
-			if open_equipment:
-				_open_sticky("equipment", _grenade)
+			if open_wheel:
+				_open_sticky(action, _grenade if action == "equipment" else _air)
 				get_viewport().set_input_as_handled()
 				return true
 		return false
@@ -298,7 +315,7 @@ func _multiple_choices(kind: String) -> bool:
 
 
 func _open_sticky(kind: String, button: ActionBtn) -> void:
-	cancel_grenade_stick()  # re-opening equipment picker cancels pending throw
+	cancel_stick()  # een wiel opnieuw openen breekt een klaarstaande worp of kracht af
 	_wheel_kind = kind
 	_wheel_sticky = true
 	_wheel_sector = -1
@@ -343,7 +360,8 @@ func _sticky_input(event: InputEvent) -> bool:
 	return true
 
 
-## Tikken op een andere optie kiest die; tikken op de gekozen optie gebruikt hem meteen (kort, zonder richten).
+## Op aanraking kiest een tik op een optie die: GRANAAT en de krachten sluiten het wiel en zetten de rechterstick klaar, gebruiken doet de rechterstick.
+## Op een computer gebruikt een tik op de al gekozen kracht hem meteen (kort, zonder richten).
 func _sticky_pick(kind: String, sector: int) -> void:
 	var p = Game.player
 	if p == null or not is_instance_valid(p):
@@ -357,19 +375,22 @@ func _sticky_pick(kind: String, sector: int) -> void:
 			_select_wheel(kind, sector)
 		return
 	var id: String = Rang.VOLGORDE[sector]
-	if id == _air_id() and not p.dead and not p.driving:
+	if not UI.is_touch_platform() and id == _air_id() and not p.dead and not p.driving:
 		air_drag = Vector2.ZERO
 		_use_air(id, air_aim())
 	else:
 		_select_wheel(kind, sector)
 
 
-## Buiten het wiel slepen kiest het item. NAPALM en ARTILLERIE gebruiken dezelfde vinger om te richten; GRANAAT vereist een NIEUWE rechterstick-aanraking.
+## Buiten het wiel slepen kiest het item. Op aanraking vereisen GRANAAT en alle krachten een NIEUWE rechterstick-aanraking; op een computer
+## gebruiken NAPALM en ARTILLERIE dezelfde muisknop om te richten.
 func _exit_aim(pointer: int, pos: Vector2) -> bool:
 	var support_id := String(Rang.VOLGORDE[_wheel_sector]) if _wheel_kind == "support" and _wheel_sector >= 0 else ""
-	var napalm := support_id in ["napalm", "artillerie"] and Rang.klaar(support_id)
+	var touch := UI.is_touch_platform()
+	var aimed := support_id in ["napalm", "artillerie"] and Rang.klaar(support_id)
+	var kracht := support_id != "" and Rang.heeft(support_id) and (touch or aimed)
 	var grenade := _wheel_kind == "equipment" and _wheel_sector == 0 and Game.grenades > 0
-	if not napalm and not grenade:
+	if not kracht and not grenade:
 		return false
 	_select_wheel(_wheel_kind, _wheel_sector)
 	_wheel_kind = ""
@@ -377,10 +398,10 @@ func _exit_aim(pointer: int, pos: Vector2) -> bool:
 	_held_pointer = -2
 	_held_action = ""
 	queue_redraw()
-	if napalm:
+	if kracht and aimed and not touch:
 		_begin_air(pointer, pos)
-	# Grenade requires a NEW touch on the right stick, never inheriting
-	# the finger used to drag out of the equipment wheel.
+	# Op aanraking (granaat en krachten) begint het richten met een NIEUWE aanraking op de rechterstick, nooit met de vinger
+	# waarmee je uit het wiel sleepte.
 	get_viewport().set_input_as_handled()
 	return true
 
@@ -404,13 +425,15 @@ func _select_wheel(kind: String, sector: int) -> void:
 			if item == "grenade" and UI.is_touch_platform():
 				arm_grenade_stick()
 			else:
-				cancel_grenade_stick()
+				cancel_stick()
 		return
 	var id: String = Rang.VOLGORDE[sector]
 	if Rang.heeft(id):
 		Game.kracht_sel = id
 		Game.changed.emit()
 		Sfx.play("click")
+		cancel_stick()
+		arm_kracht_stick()   # alleen op aanraking: de rechterstick vuurt de gekozen kracht af
 
 
 func _draw() -> void:
@@ -450,10 +473,17 @@ func _draw_wheel() -> void:
 			items.append({"label": String(Rang.KRACHTEN[id].naam), "icon": id, "active": Rang.heeft(id), "current": now == id, "sub": sub})
 	WheelArt.draw(ci, center, items, -PI * 0.5, _wheel_sector)
 	var sel_id := String(Rang.VOLGORDE[_wheel_sector]) if _wheel_kind == "support" and _wheel_sector >= 0 else ""
-	var aimable := sel_id in ["napalm", "artillerie"] or (_wheel_kind == "equipment" and _wheel_sector == 0)
+	var touch := UI.is_touch_platform()
+	var aimable := (sel_id != "" and (touch or sel_id in ["napalm", "artillerie"])) or (_wheel_kind == "equipment" and _wheel_sector == 0)
 	if _wheel_sticky or (aimable and items[_wheel_sector].get("active", false)):
 		var f: Font = UI.body(700)
-		var t := ("Kies GRANAAT · daarna rechterstick" if _wheel_sticky else "GRANAAT kiezen, daarna stick") if _wheel_kind == "equipment" else ("Sleep verder om te richten" if not _wheel_sticky else "Tik op de optie om te gebruiken")
+		var t: String
+		if _wheel_kind == "equipment":
+			t = "Kies GRANAAT · daarna rechterstick" if _wheel_sticky else "GRANAAT kiezen, daarna stick"
+		elif touch:
+			t = "Kies een kracht · daarna rechterstick" if _wheel_sticky else "Kracht kiezen, daarna stick"
+		else:
+			t = "Sleep verder om te richten" if not _wheel_sticky else "Tik op de optie om te gebruiken"
 		var tw := f.get_string_size(t, HORIZONTAL_ALIGNMENT_LEFT, -1, 12).x
 		ci.draw_string(f, Vector2(clampf(center.x - tw * 0.5, 8.0, size.x - tw - 8.0), center.y - r - 8.0), t, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, UI.BRASS)
 
@@ -521,27 +551,33 @@ func cancel_air() -> void:
 
 
 ## Doelpunt van artillerie: schermrichting = wereldrichting, net als bij granaat en napalm; tikken kiest de dichtstbijzijnde vijand.
-func arty_target() -> Vector3:
+func arty_target(drag: Vector2 = air_drag, stick := false) -> Vector3:
 	var p = Game.player
-	var l := air_drag.length()
+	var l := drag.length()
 	if l <= AIM_DEAD:
 		return Artillerie.tap_target(p.global_position, Vector3(sin(p.face), 0.0, cos(p.face)))
-	var d := Vector3(air_drag.x, 0.0, air_drag.y).normalized()
+	var d := Vector3(drag.x, 0.0, drag.y).normalized()
+	if stick:   # met de rechterstick alleen zo ver als nog op het scherm past (de camera kijkt schuin vooruit), zodat je de doelcirkel ziet
+		var k := clampf((l - AIM_DEAD) / (AIM_FULL - AIM_DEAD), 0.0, 1.0)
+		return Vector3(p.global_position.x, 0.0, p.global_position.z) + d * lerpf(ARTY_STICK_MIN, ARTY_STICK_MAX, k)
 	return Artillerie.drag_target(p.global_position, d, (l - AIM_DEAD) / (AIM_FULL - AIM_DEAD))
 
 
 ## Midden en vliegrichting van de napalmstrook (of het doelpunt van artillerie): schermrichting = wereldrichting, net als bij de granaat.
-func air_aim() -> Dictionary:
+## `drag` is het slepen vanaf de knop (computer) of de uitwijking van de rechterstick (aanraking, kracht_stick_*).
+func air_aim(drag: Vector2 = air_drag, stick := false) -> Dictionary:
 	var p = Game.player
 	var base: Vector3 = p.global_position
-	var l := air_drag.length()
+	var l := drag.length()
 	if _air_id() == "artillerie":
-		return {"target": arty_target(), "dir": Vector3(sin(p.face), 0.0, cos(p.face))}
+		return {"target": arty_target(drag, stick), "dir": Vector3(sin(p.face), 0.0, cos(p.face))}
 	if l <= AIM_DEAD:
 		var f := Vector3(sin(p.face), 0.0, cos(p.face))
 		return {"target": base + f * Rang.NAPALM_TAP, "dir": f}
-	var d := Vector3(air_drag.x, 0.0, air_drag.y).normalized()
+	var d := Vector3(drag.x, 0.0, drag.y).normalized()
 	var k := clampf((l - AIM_DEAD) / (AIM_FULL - AIM_DEAD), 0.0, 1.0)
+	if stick:   # met de rechterstick dezelfde reikwijdte als de napalmstrook altijd had: zo ver past nog op het scherm
+		return {"target": base + d * lerpf(NAPALM_STICK_MIN, NAPALM_STICK_MAX, k), "dir": d}
 	return {"target": base + d * lerpf(Rang.NAPALM_RANGE_MIN, Rang.NAPALM_RANGE_MAX, k), "dir": d}
 
 
@@ -554,11 +590,20 @@ func _update_air() -> void:
 	if id != "napalm" and id != "artillerie":
 		return   # satelliet en reparatie hebben geen richthulp: loslaten gebruikt ze meteen
 	if _air_out and air_drag.length() <= AIM_DEAD:
-		for v in [_air_vis, _arty_vis]:
-			if v != null and is_instance_valid(v):
-				v.visible = false
+		_hide_air_preview()
 		return
-	var a := air_aim()
+	_show_air_preview(id, air_aim())
+
+
+func _hide_air_preview() -> void:
+	for v in [_air_vis, _arty_vis]:
+		if v != null and is_instance_valid(v):
+			v.visible = false
+
+
+## De richthulp van artillerie (doelcirkel) of napalm (strook), op de plek die `a` aangeeft.
+func _show_air_preview(id: String, a: Dictionary) -> void:
+	var p = Game.player
 	if id == "artillerie":
 		if _arty_vis == null or not is_instance_valid(_arty_vis):
 			_arty_vis = ArtillerieAim.new()
@@ -573,6 +618,125 @@ func _update_air() -> void:
 		_air_vis.show_strip(a.target, a.dir)
 
 
+## Rechterstick in krachtstand: kracht gekozen in het wiel, een NIEUWE aanraking richt, loslaten vuurt af (precies zoals de granaat).
+func arm_kracht_stick() -> void:
+	var p = Game.player
+	var id := _air_id()
+	if not UI.is_touch_platform() or id == "" or p == null or not is_instance_valid(p) or p.dead or p.driving:
+		return
+	cancel_stick()
+	if not Rang.klaar(id):
+		Sfx.play("click", 0.6)   # kiezen mag tijdens de afkoeling, maar er valt niets af te vuren: de stick blijft gewoon schieten
+		return
+	kracht_stick_armed = true
+	Game.fire = false
+	var sticks := get_tree().get_first_node_in_group("touch_sticks")
+	if sticks != null:
+		sticks.clear_right_for_grenade()   # dezelfde regel als bij de granaat: alleen een nieuwe rechteraanraking telt
+	queue_redraw()
+
+
+func kracht_stick_begin(pointer: int) -> void:
+	if not kracht_stick_armed or kstick_finger != -2 or wheel_is_open():
+		return
+	kstick_finger = pointer
+	kstick_drag = Vector2.ZERO
+	_kstick_out = false   # pas bij echt richten verschijnt de richthulp
+
+
+func kracht_stick_drag(pointer: int, stick_direction: Vector2) -> void:
+	if not kracht_stick_armed or pointer != kstick_finger:
+		return
+	kstick_drag = stick_direction.limit_length(1.0) * AIM_FULL   # dezelfde schaal als bij het slepen vanaf de knop
+	if kstick_drag.length() > AIM_DEAD:
+		_kstick_out = true
+	_update_kstick()
+
+
+func kracht_stick_release(pointer: int) -> void:
+	if not kracht_stick_armed or pointer != kstick_finger:
+		return
+	var p = Game.player
+	var id := _air_id()
+	var fire: bool = id != "" and _kstick_out and kstick_drag.length() > AIM_DEAD and not wheel_is_open() \
+		and p != null and is_instance_valid(p) and not p.dead and not p.driving and Rang.klaar(id)
+	var a: Dictionary = air_aim(kstick_drag, true) if fire else {}
+	var cancelled := _kstick_out and not fire
+	cancel_kracht_stick()   # eerst loskoppelen, dan pas vuren: nooit twee keer
+	if fire:
+		Rang.gebruik(id, p.get_parent(), a.target, a.dir)
+	elif cancelled:
+		Sfx.play("click")
+
+
+func cancel_kracht_stick() -> void:
+	var was := kracht_stick_armed
+	kracht_stick_armed = false
+	kstick_finger = -2
+	kstick_drag = Vector2.ZERO
+	_kstick_out = false
+	if was:
+		cancel_air()   # ruimt ook de richthulp op
+		queue_redraw()
+
+
+func _update_kstick() -> void:
+	var p = Game.player
+	var id := _air_id()
+	if kstick_finger == -2 or id == "" or p == null or not is_instance_valid(p):
+		return
+	if id != "napalm" and id != "artillerie":
+		return   # satelliet en reparatie hebben geen richthulp: loslaten vuurt ze af
+	if kstick_drag.length() <= AIM_DEAD:
+		_hide_air_preview()   # terug in het midden: loslaten annuleert
+		return
+	_show_air_preview(id, air_aim(kstick_drag, true))
+
+
+## De rechterstick heeft één "gerichte" stand voor GRANAAT en voor de krachten; touch_sticks.gd praat met deze functies.
+func stick_armed() -> bool:
+	return grenade_stick_armed or kracht_stick_armed
+
+
+## Heeft een vinger de rechterstick al in die stand? Een tweede vinger mag hem dan niet overnemen.
+func stick_has_finger() -> bool:
+	return (grenade_stick_armed and aim_finger != -2) or (kracht_stick_armed and kstick_finger != -2)
+
+
+func stick_begin(pointer: int) -> void:
+	if grenade_stick_armed:
+		grenade_stick_begin(pointer)
+	elif kracht_stick_armed:
+		kracht_stick_begin(pointer)
+
+
+func stick_drag(pointer: int, stick_direction: Vector2) -> void:
+	if grenade_stick_armed:
+		grenade_stick_drag(pointer, stick_direction)
+	elif kracht_stick_armed:
+		kracht_stick_drag(pointer, stick_direction)
+
+
+func stick_release(pointer: int) -> void:
+	if grenade_stick_armed:
+		grenade_stick_release(pointer)
+	elif kracht_stick_armed:
+		kracht_stick_release(pointer)
+
+
+func cancel_stick() -> void:
+	cancel_grenade_stick()
+	cancel_kracht_stick()
+
+
+## Opschrift bij de rechterstick in die stand: GOOI of de naam van de gekozen kracht.
+func stick_label() -> String:
+	if kracht_stick_armed:
+		var id := _air_id()
+		return String(Rang.KRACHTEN[id].naam) if id != "" else ""
+	return "GOOI" if grenade_stick_armed else ""
+
+
 ## A selected grenade becomes a one-shot touch-mode, not a HUD button drag.
 ## A throw can ONLY be committed by release of the exact right-stick finger
 ## that acquired the gesture; returning to center cancels without inventory use.
@@ -584,7 +748,7 @@ func arm_grenade_stick() -> void:
 	var p = Game.player
 	if not UI.is_touch_platform() or p == null or not is_instance_valid(p) or not p.can_throw_grenade():
 		return
-	cancel_grenade_stick()
+	cancel_stick()
 	grenade_stick_armed = true
 	Game.fire = false
 	var sticks := get_tree().get_first_node_in_group("touch_sticks")
@@ -774,7 +938,7 @@ func _process(_delta: float) -> void:
 	var driving: bool = p != null and is_instance_valid(p) and p.driving
 	visible = show and not driving  # in een voertuig: alleen de voertuigknoppen (UIT e.d.), geen granaat/herlaad/sprint/rol
 	if not show or p == null or not is_instance_valid(p) or driving or p.dead:
-		cancel_grenade_stick()
+		cancel_stick()
 		if aim_finger != -2:
 			cancel_aim()
 		if air_finger != -2:
@@ -793,15 +957,18 @@ func _process(_delta: float) -> void:
 			_wheel_kind = _held_action
 			_wheel_sticky = false
 			_wheel_sector = -1
-			if _held_action == "equipment":
-				cancel_grenade_stick()  # opening a held wheel also cancels a pending throw
-			else:
+			cancel_stick()  # een vastgehouden wiel openen breekt ook een klaarstaande worp of kracht af
+			if _held_action != "equipment":
 				cancel_air()
 			queue_redraw()
+	if kracht_stick_armed and (_air_id() == "" or not Rang.klaar(_air_id())):
+		cancel_kracht_stick()   # geen spookstand als de kracht ineens niet meer klaar is
 	if aim_finger != -2:
 		_update_aim()  # de speler loopt door tijdens het richten: de boog loopt mee
 	if air_finger != -2:
 		_update_air()
+	if kstick_finger != -2:
+		_update_kstick()   # idem voor de richthulp van een kracht
 	var rid := _air_id()
 	_air.visible = rid != "" and not p.driving and not p.dead
 	_air2.visible = Game.rang_punten > 0 and not p.driving and not p.dead

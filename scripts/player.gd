@@ -172,7 +172,7 @@ func _physics_process(delta: float) -> void:
 	var moving := mv.length()
 	var aim := face
 	var combat := get_tree().get_first_node_in_group("combat_buttons")
-	var grenade_mode := combat != null and bool(combat.get("grenade_stick_armed"))
+	var grenade_mode := combat != null and bool(combat.call("stick_armed"))   # granaat of kracht: de exacte stickrichting, geen richthulp naar vijanden
 	if not is_nan(Game.aim):
 		# Grenades use the EXACT stick direction; firearm aim assist may not
 		# magnetize the throw preview to a nearby enemy.
@@ -230,7 +230,7 @@ func _update_infantry_preview(delta: float, w: Dictionary) -> void:
 	if hud == null:
 		return
 	var combat := get_tree().get_first_node_in_group("combat_buttons")
-	if not _can_act() or Game.editing or is_nan(Game.aim) or (combat != null and bool(combat.get("grenade_stick_armed"))):
+	if not _can_act() or Game.editing or is_nan(Game.aim) or (combat != null and bool(combat.call("stick_armed"))):
 		_clear_infantry_preview()
 		return
 	_infantry_preview_t -= delta

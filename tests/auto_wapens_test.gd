@@ -80,6 +80,7 @@ func _run() -> void:
 		jeep.global_position = c + Vector3(0, 0, 12.0)
 		await _frames(2)
 		jeep.set_physics_process(false)
+		jeep.set_process(false)   # de eigen voertuigen rijden sinds v214 per beeld
 		await _shots(target, label + ": jeep-MG", func() -> void:
 			for i in 5:
 				var m: Vector3 = jeep._monding.global_position
@@ -92,6 +93,7 @@ func _run() -> void:
 		tank.rotation.y = atan2(1.0, 0.0)   # loop (-Z) wijst naar -x, naar de auto
 		await _frames(2)
 		tank.set_physics_process(false)
+		tank.set_process(false)   # de eigen voertuigen rijden sinds v214 per beeld
 		tank._toren.rotation.y = 0.0
 		tank._lock = {}
 		await _frames(1)

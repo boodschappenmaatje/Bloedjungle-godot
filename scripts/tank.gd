@@ -24,6 +24,7 @@ const DRIVE_TURN := 1.5    # rad/s draaien als jij bestuurt
 const DRIVE_TURRET := 2.4  # rad/s koepel als jij richt
 const DRIVE_RELOAD := 1.6
 const BOARD_DIST := 6.5
+const MAX_STAP := 1.0 / 30.0   # s: een grotere beeldsprong (app terug uit de achtergrond) rekent hij als een kleinere stap
 const RAM_DAMAGE := 60.0
 const SHOT_RANGE := 45.0   # m, verder landt de granaat op de grond
 
@@ -40,6 +41,7 @@ var _line: MeshInstance3D
 var _line_mesh := ImmediateMesh.new()
 var _mark_t := 0.0
 var _speed := 0.0
+var _stap_k := 1.0          # (gekapte stap) / (beeldstap): 1 behalve bij een beeldsprong
 var _btn: ActionBtn
 var _schade: VoertuigSchade   # levenspunten (V3): vijandelijke raketten, granaten en kogels raken hem, zit jij erin dan sneuvel je mee
 var _ram_cd := 0.0
@@ -130,7 +132,7 @@ func on_vernield() -> void:
 	velocity = Vector3.ZERO
 	if _btn != null:
 		_btn.hide()
-	set_physics_process(false)
+	set_process(false)
 
 
 ## Rupsbanden laten lopen naar wat de tank het afgelopen beeld echt deed (vooruit en draaien), per kant.
@@ -147,7 +149,13 @@ func _update_tracks(delta: float) -> void:
 		_rups[1].uv1_offset.x = fposmod(_rups[1].uv1_offset.x + (fwd + yaw * TRACK_HALF) * delta / TRACK_LEN, 1.0)
 
 
-func _physics_process(delta: float) -> void:
+## Rijden gebeurt per beeld, niet per natuurkundige tik (60 per seconde): de camera volgt per beeld en een tank die per tik
+## rijdt hapert op een scherm dat 90 beelden per seconde tekent. move_and_slide rekent in _process met de beeld-delta.
+func _process(raw_delta: float) -> void:
+	if raw_delta <= 0.0:
+		return
+	var delta := minf(raw_delta, MAX_STAP)
+	_stap_k = delta / raw_delta
 	_update_tracks(delta)
 	_ram_cd -= delta
 	var pl = Game.player
@@ -265,7 +273,7 @@ func _drive_driven(delta: float, live: bool) -> void:
 		want_speed = (-DRIVE_REVERSE if reverse else DRIVE_SPEED) * minf(mv.length() * 1.3, 1.0) * align
 	_speed = move_toward(_speed, want_speed, 7.0 * delta)
 	if absf(_speed) > 0.01:
-		velocity = -global_transform.basis.z * _speed
+		velocity = -global_transform.basis.z * _speed * _stap_k   # bij een beeldsprong (> 1/30 s) rijdt hij niet door een muur heen
 		move_and_slide()
 		Foliage.ram(self, absf(_speed), 1.5, 2.5)   # tegen een boom aan: hij valt om
 		global_position.y = 0.0

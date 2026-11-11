@@ -62,6 +62,7 @@ func _process(_d: float) -> bool:
 		jeep.position = Vector3(200, 0, 200)
 		main.add_child(jeep)
 		jeep.set_physics_process(false)
+		jeep.set_process(false)   # de eigen voertuigen rijden sinds v214 per beeld
 	if frames > 332 and is_instance_valid(jeep):
 		# de jeep rijdt dwars door het beeld: stof achter de wielen en een donkere vlek eronder
 		jeep.rotation.y = -PI * 0.5

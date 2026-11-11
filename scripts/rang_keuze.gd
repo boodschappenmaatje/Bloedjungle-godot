@@ -13,6 +13,7 @@ var _cards: Array = []     # Rect2 per kracht in Rang.VOLGORDE
 var _close := Rect2()
 var _panel := Rect2()
 var _hot := -1
+var _born := -1            # beeldnummer waarin het scherm opende (zie _input)
 
 
 static func open(parent: Control) -> RangKeuze:
@@ -30,6 +31,7 @@ func _ready() -> void:
 	z_index = 120
 	resized.connect(_layout)
 	_layout()
+	_born = Engine.get_process_frames()
 	Sfx.play("click")
 
 
@@ -89,6 +91,10 @@ func _input(event: InputEvent) -> void:
 		return
 	get_viewport().set_input_as_handled()   # nooit door naar de knoppen of sticks eronder
 	if not pressed:
+		return
+	# Een vinger op de KIES-knop geeft twee gebeurtenissen vlak na elkaar: eerst het nagebootste muisgebaar (daar opent de knop op, button_down) en
+	# daarna in hetzelfde beeld de aanraking zelf. Die tweede zou hier buiten het paneel vallen en het scherm meteen weer sluiten ("tik ernaast").
+	if Engine.get_process_frames() <= _born:
 		return
 	if _close.has_point(pos) or not _panel.has_point(pos):
 		queue_free()

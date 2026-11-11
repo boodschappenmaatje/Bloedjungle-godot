@@ -28,6 +28,7 @@ func _ready() -> void:
 	tank.position = player.position + Vector3(-7.0, 0.0, -2.0)
 	$Main.add_child(tank)
 	tank.set_physics_process(false)
+	tank.set_process(false)   # de eigen voertuigen rijden sinds v214 per beeld
 	for i in 2:
 		var ally := Ally.new()
 		ally.setup(100.0, 16.0, i)

@@ -54,6 +54,7 @@ func _process(_d: float) -> bool:
 		jeep.position = Vector3(-9, 0, 12)
 		main.add_child(jeep)
 		jeep.set_physics_process(false)
+		jeep.set_process(false)   # de eigen voertuigen rijden sinds v214 per beeld
 	if frames == 8:
 		atm = get_first_node_in_group("atmosphere")
 		world = get_first_node_in_group("graphics2_wereld")

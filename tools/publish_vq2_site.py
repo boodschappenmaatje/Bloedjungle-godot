@@ -30,3 +30,7 @@ shutil.copy2(ROOT/'docs/vq2/results/asset-report.json',dest/'docs/vq2/results/as
 (dest/'index.html').write_text('<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=tools/blender-vq2-viewer/?asset=grass_tall"><a href="tools/blender-vq2-viewer/?asset=grass_tall">Open Bloedjungle 3D viewer</a>')
 (dest/'.nojekyll').touch()
 print('Static viewer artifact:',dest)
+
+# Review-only Meshy motion candidate; not referenced by game scenes.
+(dest/'bron/meshy_commando/prime_sprint_retargeted').mkdir(parents=True)
+shutil.copy2(ROOT/'bron/meshy_commando/prime_sprint_retargeted/animation_glb.glb',dest/'bron/meshy_commando/prime_sprint_retargeted/animation_glb.glb')

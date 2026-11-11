@@ -10,7 +10,7 @@
 
 **Spec:** `docs/superpowers/specs/2026-11-11-aaa-meshy-commando-design.md`
 
-**Implementation status (11 November 2026):** The Blender source, new GLB, six-weapon profiles, focused tests, browser comparison and USDZ are built. Sprint foot drift, native iPhone validation and real gamecamera capture remain open; see `docs/meshy_commando_motion_review.md`. No new paid Meshy task has been submitted.
+**Implementation status (11 November 2026):** The Blender source, new GLB, six-weapon profiles, focused tests, browser comparison and USDZ are built. Sprint foot drift, native iPhone validation and real gamecamera capture remain open; see `docs/meshy_commando_motion_review.md`. The user-approved 3-second Prime sprint was generated and retargeted for 13 credits, but rejected for gameplay due to its folded-forward pose. A catalog alternative costs 3 more credits and awaits user approval; see the motion review.
 
 ## Global Constraints
 

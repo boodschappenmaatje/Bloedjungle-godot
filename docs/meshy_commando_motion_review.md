@@ -12,9 +12,21 @@ Foot contact remains a visible limitation. In a local controller test, median ab
 
 `tests/meshy_commando_weapons_test.gd` switches M1911, Thompson, Garand, Trench, MG42 and Bazooka through idle, run, stationary fire, walk, reload and run. Both hands remain within 4 cm of their grips. Four long guns now use explicit profiles. In particular, the Thompson muzzle had been **0.485 m** ahead of the barrel; the Trench muzzle was **0.17 m** ahead. New markers align to the actual imported mesh bounds. The existing recoil and reload timing remain controlled by Godot.
 
-## Optional Meshy motion purchase
+## Meshy Prime sprint experiment
 
-The already owned API library has no convincing planted-foot tactical sprint for this controller. The smallest paid experiment would be **one 3-second prime Text to Motion tactical sprint**, followed by **one Animation retarget** to the existing Meshy rig task `01a18b88-1709-77cf-bce7-e580117991cb`. The [Meshy price list](https://docs.meshy.ai/api/pricing.md), checked 11 November 2026, quotes **10 + 3 = 13 credits**; the available balance was **25 credits**. A second prime walk costs another 13 credits, exceeding that balance by one. A swift motion costs 3 + 3 credits but may be unsuitable for hero animation. No new paid task was submitted. The generated motion would still need retargeting from the API's 24-bone rig to the game's 28-bone rig and visual/foot-contact acceptance; purchase alone is no guarantee of better movement.
+The user approved one Prime sprint experiment. Meshy generated one 3-second clip and retargeted it to the existing Meshy rig task `01a18b88-1709-77cf-bce7-e580117991cb`:
+
+- Text to Motion task `01a1cc5c-d64e-7085-b3a2-8c53ec3de8c9`: **SUCCEEDED**, 10 credits.
+- Animation retarget task `01a1cc5d-62fb-711a-8382-27f6740ce364`: **SUCCEEDED**, 3 credits.
+- Total charged: **13 credits**. Balance afterwards: **12 credits**.
+- Source FBX: `bron/meshy_commando/prime_sprint_raw/motion.fbx`.
+- Meshy retarget GLB: `bron/meshy_commando/prime_sprint_retargeted/animation_glb.glb` (24-bone API rig).
+- Game-rig Animation resource: `resources/animations/meshy_commando_prime_sprint.res` (retargeted to 28 bones by `bron/meshy_commando/retarget_prime_sprint.gd`).
+- [Browser comparison image](../previews/meshy_commando/prime_sprint_candidate.png) plays the actual Meshy clip next to the original player.
+
+The clip plays and changes the hips on the game rig, but the actual preview shows an excessively folded-forward upper body and lowered head. It is **not** assigned to `sprinten`; the game continues to use `RunFast`. The review-only viewer candidate uses Meshy's 24-bone output and does not represent a game-ready clip. No second generation or retarget was submitted.
+
+The free animation catalog also returned action **509, “Lean Forward Sprint”** (`WalkAndRun/Running`). Its preview looks more upright than this Prime result. Applying a catalog action to the same rig costs **3 credits** according to the [Meshy price list](https://docs.meshy.ai/api/pricing.md), checked 11 November 2026. That additional paid retarget has not been submitted.
 
 ## Verification limits
 

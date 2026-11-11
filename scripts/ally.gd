@@ -41,7 +41,13 @@ var _far_acc := 0.0
 var _far_n := 0
 var _beleg := false      # ver van de speler en op zijn plek voor het HK: telt mee in het beleg (Beleg)
 
-func set_command(order: String, target: Vector3, enemy: Node3D = null) -> void:
+var command_slot := -1   # plek in de vorming bij een bevel aan een keuze (TroepSelectie); -1 = zijn eigen nummer (idx), zoals bij het wiel
+var command_node: Node3D   # BEWAAK: het gebouw, voertuig of de soldaat die hij bewaakt
+var _threat: Node3D        # VERDEDIG/BEWAAK: de vijand die hij nu achternagaat
+var _threat_t := 0.0
+const CHASE := 14.0        # m: zo ver van zijn plek gaat een verdediger of bewaker een vijand achterna, daarna terug
+
+func set_command(order: String, target: Vector3, enemy: Node3D = null, node: Node3D = null, slot := -1) -> void:
 	if helper or guard or truck != null: return
 	if order == "hold": command_hold_position = global_position
 	_beleg = false
@@ -51,6 +57,12 @@ func set_command(order: String, target: Vector3, enemy: Node3D = null) -> void:
 	command = order
 	command_target = target
 	command_enemy = enemy if is_instance_valid(enemy) else null
+	command_node = node if is_instance_valid(node) else null
+	command_slot = slot
+	_threat = null
+	if order == "bewaak" and command_node == null:
+		command = "hold"   # niets meer om te bewaken: dan blijft hij staan waar hij is
+		command_hold_position = global_position
 
 
 var _stuck_t := 0.0
@@ -137,7 +149,7 @@ func _physics_process(delta: float) -> void:
 		if _wait_t <= 0.0:
 			_wait_t = -1.0
 			_leg += 1
-	elif to_goal.length() > (0.6 if (Game.troop_mode == "hold" and not helper) or guard else 2.2):
+	elif to_goal.length() > (0.6 if ((Game.troop_mode == "hold" or command != "follow") and not helper) or guard else 2.2):
 		var wp := Route.waypoint(global_position, goal)
 		var d := Vector2(wp.x - global_position.x, wp.z - global_position.z)
 		if d.length() > 0.05:
@@ -272,11 +284,26 @@ func _goal() -> Vector3:
 			return st.global_position   # een hospik loopt naar wie geheeld moet worden, een ingenieur naar wat gerepareerd moet worden
 	if command == "basis" and not helper:
 		return _march_goal()
+	if not helper and command == "bewaak":
+		if not is_instance_valid(command_node) or command_node.get("dead") == true:
+			command = "hold"
+			command_hold_position = global_position
+			return global_position
+		var guard_at := command_node.global_position
+		var chase := _chase(guard_at)
+		if chase != null:
+			return chase.global_position
+		var ga := float(command_slot if command_slot >= 0 else idx) * TAU / 6.0 + 0.4
+		return Vector3(guard_at.x, 0.0, guard_at.z) + Vector3(cos(ga), 0.0, sin(ga)) * 3.2
+	if not helper and command == "defend":
+		var chase2 := _chase(command_target)
+		if chase2 != null:
+			return chase2.global_position
 	if not helper and command in ["hold", "defend", "move", "attack"]:
 		var enemy_valid := is_instance_valid(command_enemy)
 		var enemy_position := command_enemy.global_position if enemy_valid else Vector3.ZERO
 		var follow_position: Vector3 = Game.player.global_position + Vector3(cos(float(idx) * 2.4 + 0.6), 0.0, sin(float(idx) * 2.4 + 0.6)) * 2.8
-		return TeamOrderRules.soldier_goal(command, command_target, enemy_position, enemy_valid, idx, command_hold_position, follow_position)
+		return TeamOrderRules.soldier_goal(command, command_target, enemy_position, enemy_valid, command_slot if command_slot >= 0 else idx, command_hold_position, follow_position)
 	if Game.troop_mode == "hold" and not helper and command == "follow":
 		var p: Vector2 = POSTS[idx % POSTS.size()] * 2.0
 		return Game.base_pos + Vector3(p.x, 0, p.y)
@@ -284,6 +311,33 @@ func _goal() -> Vector3:
 	var base: Vector3 = Game.player.global_position
 	base.y = 0.0
 	return base + Vector3(cos(a), 0, sin(a)) * 2.8
+
+
+## VERDEDIG en BEWAAK: een vijand binnen CHASE meter van de plek gaat hij achterna; verder weg laat hij hem gaan en loopt hij terug.
+## Twee keer per seconde gekozen, dus goedkoop.
+func _chase(center: Vector3) -> Node3D:
+	_threat_t -= get_physics_process_delta_time()
+	if _threat_t <= 0.0:
+		_threat_t = 0.5
+		_threat = null
+		var best := CHASE * CHASE
+		for ev in Game.enemies:
+			if not is_instance_valid(ev) or not ev is Node3D or ev.get("dead") == true:
+				continue
+			var p: Vector3 = (ev as Node3D).global_position
+			var d2 := Vector2(p.x - center.x, p.z - center.z).length_squared()
+			if d2 < best:
+				best = d2
+				_threat = ev
+	if _threat != null and (not is_instance_valid(_threat) or _threat.get("dead") == true):
+		_threat = null
+	if _threat == null or _supports():
+		return null
+	# al binnen schootsafstand: blijf staan en schiet (geen stap verder van de plek af)
+	var reach := float(_ty().range) * 0.8
+	if global_position.distance_to(_threat.global_position) <= reach:
+		return self
+	return _threat
 
 
 func _nearest_enemy() -> Node3D:

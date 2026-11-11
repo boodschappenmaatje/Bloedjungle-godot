@@ -7,7 +7,7 @@ extends Node3D
 const G := 3.4   # halve breedte van de poortopening (m)
 const HP := 900.0
 const REACH := 4.4
-const ALLY_REACH := 4.6
+const ALLY_REACH := 8.0   # de poort schuift in 2,5 s open: soldaten op weg ernaartoe houden hem dus al van verder open, zonder te wachten
 const TRUCK_REACH := 11.0   # voorraadtrucks (voorraad.gd) openen de poort ruim van tevoren: hij schuift in 2,5 s open
 const SLIDE_T := 2.5
 const EXISTING_GATE_PANEL_H := 1.22

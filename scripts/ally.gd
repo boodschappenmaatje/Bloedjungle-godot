@@ -153,7 +153,7 @@ func _physics_process(delta: float) -> void:
 		var wp := Route.waypoint(global_position, goal)
 		var d := Vector2(wp.x - global_position.x, wp.z - global_position.z)
 		if d.length() > 0.05:
-			var pace := 0.4 if patrolling else (1.0 if to_goal.length() > 5.0 else 0.6)   # wandelen of rennen
+			var pace := 0.4 if patrolling else (1.0 if (to_goal.length() > 5.0 or _via) else 0.6)   # wandelen of rennen
 			want = Vector3(d.x, 0, d.y).normalized() * SPEED * pace
 			moving = true
 	# een stam of rots recht in de weg: even opzij omlopen
@@ -273,11 +273,16 @@ func _march_goal() -> Vector3:
 
 
 ## Waar hij heen loopt; staat dat aan de andere kant van de muur van jouw kamp, dan eerst door de poort (die gaat voor je soldaten vanzelf open).
+var _via := false   # hij loopt nu naar een tussenpunt (rond een muur, door een poort) en niet naar zijn eigen doel: dan niet afremmen
+
+
 func _goal() -> Vector3:
 	var g := _goal_plain()
+	_via = false
 	if helper or guard or truck != null or recall != null:
 		return g
-	var w: Variant = Kampmuur.gate_waypoint(global_position, g)
+	var w: Variant = Kampmuur.route_next(global_position, g)
+	_via = w != null
 	return w if w != null else g
 
 

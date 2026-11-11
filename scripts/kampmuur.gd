@@ -127,6 +127,52 @@ static func existing() -> Dictionary:
 	return out
 
 
+## De cellen binnen de omheining, hooguit twee seconden oud (soldaten vragen het elk beeld; het uitrekenen loopt over het hele rooster).
+static var _inside: Dictionary = {}
+static var _inside_t := -100000
+
+
+static func inside(p: Vector3) -> bool:
+	var now := Time.get_ticks_msec()
+	if now - _inside_t > 2000:
+		_inside_t = now
+		_inside = region()
+	return not _inside.is_empty() and _inside.has(Vector2i(floori(p.x / STEP), floori(p.z / STEP)))
+
+
+## Soldaten zoeken zelf hun weg door de poort: staat het doel aan de andere kant van de muur dan jij, dan is het eerstvolgende punt de poort
+## (eerst de buitenkant, dan de binnenkant, of andersom). Geeft null als je rechtdoor kunt lopen (geen omheining, dezelfde kant, geen poort).
+static func gate_waypoint(from: Vector3, goal: Vector3) -> Variant:
+	if Game.gates == null or not is_instance_valid(Game.gates) or Game.gates.list.is_empty():
+		return null
+	var from_in := inside(from)
+	if from_in == inside(goal):
+		return null
+	var best: Variant = null
+	var best_d := INF
+	for g in Game.gates.list:
+		var d := Vector2(g.at.x, g.at.z).distance_to(Vector2(from.x, from.z)) + Vector2(g.at.x, g.at.z).distance_to(Vector2(goal.x, goal.z))
+		if d < best_d:
+			best_d = d
+			best = g
+	if best == null:
+		return null
+	var gp := Vector2(best.at.x, best.at.z)
+	var base := Vector2(Game.base_pos.x, Game.base_pos.z)
+	var n := Vector2(sin(float(best.yaw)), cos(float(best.yaw)))
+	if n.dot(gp - base) < 0.0:
+		n = -n   # n wijst naar buiten (weg van het hoofdkwartier)
+	var out_p := Vector3(gp.x + n.x * 3.2, 0.0, gp.y + n.y * 3.2)
+	var in_p := Vector3(gp.x - n.x * 3.2, 0.0, gp.y - n.y * 3.2)
+	# s = hoe ver hij vóór (+) of achter (-) de poort staat, t = hoe ver opzij; recht voor de opening loopt hij erdoor, anders eerst daarheen
+	var rel := Vector2(from.x, from.z) - gp
+	var s := rel.dot(n)
+	var t := rel.dot(Vector2(n.y, -n.x))
+	if from_in:
+		return in_p if (s < -0.4 and absf(t) > 1.2) else out_p
+	return out_p if (s > 0.4 and absf(t) > 1.2) else in_p
+
+
 static func count() -> int:
 	var n := 0
 	for b in Game.buildings:

@@ -28,6 +28,7 @@ on:
       - "scripts/kaart_foto.gd"
       - "scripts/camera_rig.gd"
       - "tests/troepenbevel_test.gd"
+      - "tests/soldaat_poort_test.gd"
       - "scripts/route.gd"
       - "assets/vijand_hk.glb"
       - "assets/vijand_m2_toren.glb"
@@ -217,6 +218,17 @@ jobs:
           echo "Godot exit code: $RC"
           grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/troepenbevel.log" | tail -n 40 || true
           tail -n 15 "$RUNNER_TEMP/troepenbevel.log"
+          exit "$RC"
+      - name: Soldaten door de poort van jouw muur
+        shell: bash
+        run: |
+          set +e
+          timeout 300 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/soldaat_poort_test.gd --fixed-fps 60 > "$RUNNER_TEMP/soldaat_poort.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/soldaat_poort.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/soldaat_poort.log"
           exit "$RC"
       - name: Vijandelijke jeep (model, schade, wachtrij, schieten, rit over de brug)
         shell: bash

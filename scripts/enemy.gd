@@ -620,7 +620,7 @@ func _burn_step(delta: float) -> void:
 func _burn_die() -> void:
 	hp = 0.0
 	velocity = Vector3.ZERO
-	Game.hit_src = "lucht"   # een brandende vijand telt niet voor je eigen streak
+	Game.hit_src = "lucht"   # een brandende vijand is geen bevestigde treffer van de speler
 	_die(_burn_dir, "brand_val")
 	Game.hit_src = "speler"
 	if _burn_fx != null and is_instance_valid(_burn_fx):
@@ -634,8 +634,6 @@ func _die(dir: Vector3, clip := "") -> void:
 	Game.enemies.erase(self)
 	Game.alert(global_position, 12.0, 5.0)  # de buren in de buurt zijn gewaarschuwd en zoeken de speler
 	Game.kills += 1
-	if Game.hit_src == "speler":
-		Game.streak_kill()  # soldaten en luchtsteun tellen niet mee voor je eigen streak
 	Sfx.play("thud", 1.0, global_position)
 	Progress.stats.kills += 1
 	if Progress.stats.kills % 25 == 0:

@@ -166,6 +166,21 @@ func take(dmg: float, dir: Vector3) -> void:
 		_fire = Fx.flame(_vehicle, _info.flame, float(_info.flame_h))
 
 
+## Noodreparatie (Rang): levenspunten erbij; boven de helft verdwijnt de rook, boven een kwart het vuur. Een wrak blijft een wrak.
+func heal(amount: float) -> void:
+	if dead or amount <= 0.0:
+		return
+	hp = minf(max_hp, hp + amount)
+	if _smoke != null and hp >= max_hp * SMOKE_AT:
+		if is_instance_valid(_smoke):
+			_smoke.queue_free()
+		_smoke = null
+	if _fire != null and hp >= max_hp * FIRE_AT:
+		if is_instance_valid(_fire):
+			_fire.queue_free()
+		_fire = null
+
+
 func _shake(amount: float) -> void:
 	var p = Game.player
 	if p == null or not is_instance_valid(p):

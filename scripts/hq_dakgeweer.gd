@@ -3,7 +3,7 @@ extends Node3D
 ## Automatisch dakgeweer van het hoofdkwartier (niveau 3, Generals-plan stap 3): een MG 42 (het bestaande VQ2-model uit
 ## assets/wapens.glb) op een stalen statief met schild en munitiekist. Het wordt in BUILD_TIME seconden zichtbaar opgebouwd
 ## (Godot-gestuurd, geen Blender-clip), draait daarna zelf naar de dichtstbijzijnde vijand en schiet binnen RANGE meter.
-## Kills van het dakgeweer tellen niet voor je eigen killstreak (src "soldaat"), net als bij soldaten.
+## Treffers van het dakgeweer tellen als die van een soldaat (src "soldaat"); de score telt wel voor je rang.
 
 const BUILD_TIME := 10.0
 const RANGE := 25.0

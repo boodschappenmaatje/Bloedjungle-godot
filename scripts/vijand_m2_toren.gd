@@ -2,6 +2,7 @@ class_name VijandM2Toren
 extends Node3D
 
 const HP := 650.0
+const SCORE := 200          # score voor een gesloopte toren (telt voor je rang)
 const RANGE := 36.0
 const DAMAGE := 6.0
 const BURST := 8
@@ -209,6 +210,7 @@ func damage(amount: float, _kind := "bullet") -> void:
 	hp -= amount
 	if hp <= 0.0:
 		destroyed = true
+		Game.add_score(SCORE)   # een toren slopen telt mee voor je rang (Rang, keuze 1A)
 		if is_instance_valid(shooter):
 			shooter.hit(shooter.hp + 1.0, Vector3.UP, true)
 		intact.rotation.z = 0.18

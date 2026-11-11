@@ -3,7 +3,7 @@ extends Node
 ## Voordelen van het hoofdkwartier per niveau (Generals-plan stap 3). Hangt als kind aan het hoofdkwartier (hoofdkwartier.gd).
 ##  Niveau 2: radar. Alle vijanden binnen RADAR_RANGE m van het hoofdkwartier staan als stip op de radar (hud_extra.gd) en
 ##            een nieuwe groep meldt zich met een waarschuwing; bouw- en opleidingstijden zijn 25% korter (Buildings.time_factor).
-##  Niveau 3: automatisch dakgeweer (HqRoofGun, in 10 s zichtbaar gebouwd) en het artilleriecommando (Artillerie, 90 s afkoeling).
+##  Niveau 3: automatisch dakgeweer (HqRoofGun, in 10 s zichtbaar gebouwd) en het artilleriecommando (Artillerie, 90 s afkoeling; Rang.niveau: artillerie niveau 1, de generaalsrang maakt hem sterker).
 
 ## Wat de volgende upgrade geeft, per huidig niveau (wapenkamer en tikmenu op het hoofdkwartier).
 const UPGRADE_TEXT := {
@@ -44,8 +44,6 @@ static func contacts() -> Array:
 
 
 func _process(delta: float) -> void:
-	if Game.artillery_cd > 0.0 and (Game.state == "play" or Game.state == "prep"):
-		Game.artillery_cd = maxf(0.0, Game.artillery_cd - delta)
 	_roof_gun()
 	_alert_cd -= delta
 	_scan_t -= delta

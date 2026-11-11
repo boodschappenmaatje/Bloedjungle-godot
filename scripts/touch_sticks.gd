@@ -260,7 +260,7 @@ func _process(_delta: float) -> void:
 		fire = false
 		right_stick_firing = false
 		_m1911_fire_latched = false
-	if Streak.armed:
+	if NapalmPlace.armed:
 		aim = NAN   # napalm staat klaar: de rechterstick richt de strook en schiet niet
 		fire = false
 		right_stick_firing = false

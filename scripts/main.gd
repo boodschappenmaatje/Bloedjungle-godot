@@ -332,7 +332,6 @@ func _wave_cleared() -> void:
 	clear_t = -1.0
 	Game.routes = Game.next_routes.duplicate()
 	Barrel.populate(self)  # opgeblazen vaten komen terug
-	Game.streak_reset()
 	if Progress.test_groep == 0:   # een testspel (start bij groep N) telt niet mee als "beste groep"
 		Progress.stats.bestWave = maxi(Progress.stats.bestWave, Game.wave)
 		Progress.save()

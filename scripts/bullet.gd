@@ -42,7 +42,7 @@ var visual_weapon := ""
 var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
 var feedback_source := ""  # optional confirmed-hit channel (e.g. player-driven jeep MG)
 var wclass := ""    # soort schade voor het steen-papier-schaar (Data.ARMOR_MULT); "" = neutraal, zoals alles wat er al was
-var src := "speler"  # wie schoot: "speler" of "soldaat" (alleen kills van de speler tellen voor de killstreak)
+var src := "speler"  # wie schoot: "speler" of "soldaat" (voor bevestigde treffers; de score telt voor iedereen)
 
 
 func _enter_tree() -> void:
@@ -450,7 +450,7 @@ func _explode(at: Vector3) -> void:
 			var d: float = e.global_position.distance_to(at)
 			if d < explosive and not BaseWallRules.blocks_blast(at, e.global_position):
 				Game.hit_class = wclass
-				Game.hit_src = src   # een raket van een soldaat telt niet voor jouw killstreak
+				Game.hit_src = src   # een raket van een soldaat is geen treffer van de speler
 				e.hit(dmg * (1.0 - d / explosive * 0.7), (e.global_position - at).normalized(), true)
 				Game.hit_src = "speler"
 				Game.hit_class = ""

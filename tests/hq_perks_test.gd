@@ -1,7 +1,7 @@
 extends SceneTree
 ## Test: voordelen van het hoofdkwartier (Generals-plan stap 3).
 ## Niveau 2: radar tot 85 m met waarschuwing, bouw- en opleidingstijd 25% korter.
-## Niveau 3: dakgeweer (10 s opbouw, schiet binnen 25 m) en artilleriecommando (5 granaten, 90 s afkoeling, alleen vijanden).
+## Niveau 3: dakgeweer (10 s opbouw, schiet binnen 25 m) en artilleriecommando (5 granaten, 90 s afkoeling, alleen vijanden; sinds E1 via de KRACHTEN-knop).
 ## Draaien: godot --headless --path . -s tests/hq_perks_test.gd --fixed-fps 60
 
 var failures: Array[String] = []
@@ -10,6 +10,7 @@ var game: Node
 var Bld: GDScript   # via load(): class_names die de autoload Game gebruiken mogen niet statisch in een -s test staan
 var Art: GDScript
 var Perks: GDScript
+var Rg: GDScript    # Rang
 
 
 func _initialize() -> void:
@@ -64,6 +65,7 @@ func _run() -> void:
 	Bld = load("res://scripts/buildings.gd")
 	Art = load("res://scripts/artillerie.gd")
 	Perks = load("res://scripts/hq_perks.gd")
+	Rg = load("res://scripts/rang.gd")
 	await _frames(3)
 	main.get_node("Hud/Sticks").set_process(false)
 	await main.call("begin")
@@ -80,7 +82,7 @@ func _run() -> void:
 	# ---- niveau 1: geen voordelen
 	_check(game.hq_level == 1, "begin op niveau 1")
 	_check(is_equal_approx(Bld.time_factor(), 1.0), "niveau 1: bouwtijd normaal")
-	_check(not Art.ready_now(), "niveau 1: geen artilleriecommando")
+	_check(not Rg.klaar("artillerie"), "niveau 1: geen artilleriecommando")
 	_check(not extra._in_friendly_sight(Vector3(60, 0, 0)), "niveau 1: radar ziet niet tot 60 m")
 	game.state = "play"
 	var e1 := _enemy(Vector3(0, 0, -70))
@@ -90,7 +92,7 @@ func _run() -> void:
 	game.enemies.erase(e1)
 	_check(hq.get_node_or_null("Plaat") == null and get_nodes_in_group("hq_gun").is_empty(), "niveau 1: geen dakgeweer")
 	await _frames(2)
-	_check(not buttons._arty.visible, "niveau 1: artillerieknop verborgen")
+	_check(not buttons._air.visible, "niveau 1: krachtenknop verborgen (nog geen rang, geen artillerie)")
 
 	# ---- niveau 2
 	game.hq_level = 2
@@ -131,7 +133,7 @@ func _run() -> void:
 	var gun: Node = perks.gun
 	_check(gun != null and is_instance_valid(gun), "niveau 3: dakgeweer verschijnt")
 	_check(gun != null and not gun.built and gun.progress() < 0.05, "dakgeweer begint onafgebouwd")
-	_check(Art.ready_now(), "niveau 3: artilleriecommando klaar")
+	_check(Rg.klaar("artillerie"), "niveau 3: artilleriecommando klaar")
 	var spot: Vector3 = gun.global_position
 	_check(spot.y > 4.0 and spot.y < 5.5 and Vector2(spot.x, spot.z).length() < 2.6, "dakgeweer staat op het dak (y %.2f)" % spot.y)
 	var steps := 0
@@ -175,9 +177,10 @@ func _run() -> void:
 	game.enemies.erase(edge)
 
 	# ---- niveau 3: artillerie
-	game.artillery_cd = 0.0
+	game.kracht_cd.clear()
 	await _frames(2)
-	_check(buttons._arty.visible and not buttons._arty.disabled, "artillerieknop zichtbaar en klaar")
+	_check(buttons._air.visible and not buttons._air.disabled and buttons._air.reward == "artillerie", "krachtenknop toont artillerie en is klaar")
+	_check(Rg.niveau("artillerie") == 1, "HK niveau 3 geeft artillerie op niveau 1")
 	var t1: Vector3 = Art.tap_target(Vector3(0, 0, 0), Vector3(0, 0, 1))
 	_check(t1.is_equal_approx(Vector3(0, 0, Art.TAP_RANGE)), "tikken zonder vijand: recht vooruit (%s)" % str(t1))
 	var d1: Vector3 = Art.drag_target(Vector3(5, 0, 5), Vector3(1, 0, 0), 0.0)
@@ -191,13 +194,14 @@ func _run() -> void:
 		e.set_physics_process(false)   # ze blijven staan, zodat de test alleen de inslagen meet
 	var tap: Vector3 = Art.tap_target(Vector3(10, 0, 40), Vector3(0, 0, 1))
 	_check(Vector2(tap.x - v1.global_position.x, tap.z - v1.global_position.z).length() < 8.0 or Vector2(tap.x - v2.global_position.x, tap.z - v2.global_position.z).length() < 8.0, "tikken richt op de dichtstbijzijnde vijand")
-	var streak0: int = game.streak
 	var hp_player: float = game.player.hp
-	var strike = Art.call_in(main, target)
-	_check(is_equal_approx(game.artillery_cd, 90.0), "na gebruik: 90 s afkoeling")
-	_check(not Art.ready_now(), "tijdens de afkoeling niet nog eens")
+	_check(Rg.gebruik("artillerie", main, target, Vector3.ZERO), "kracht gebruiken lukt")
+	var strike = _find_script(main, "artillerie")
+	_check(strike != null and strike.shells == 5, "niveau 1: 5 granaten")
+	_check(is_equal_approx(float(game.kracht_cd.get("artillerie", 0.0)), 90.0), "na gebruik: 90 s afkoeling")
+	_check(not Rg.klaar("artillerie") and not Rg.gebruik("artillerie", main, target, Vector3.ZERO), "tijdens de afkoeling niet nog eens")
 	await _frames(2)
-	_check(buttons._arty.disabled and buttons._arty.badge != "", "knop grijs met seconden tijdens de afkoeling (%s)" % buttons._arty.badge)
+	_check(buttons._air.disabled and buttons._air.badge != "", "knop grijs met seconden tijdens de afkoeling (%s)" % buttons._air.badge)
 	var guard2 := 0
 	while is_instance_valid(strike) and guard2 < 900:
 		await process_frame
@@ -206,18 +210,17 @@ func _run() -> void:
 	_check(v1.dead or v1.hp <= 0.0, "vijand in de inslagzone is geraakt")
 	_check(v2.hp < 280.0, "zware vijand heeft schade (hp %.0f)" % v2.hp)
 	_check(not safe.dead and safe.hp > 60.0, "vijand op 25 m van het doel blijft heel")
-	_check(game.streak == streak0, "artillerie-kills tellen niet voor je killstreak")
 	_check(is_equal_approx(game.player.hp, hp_player), "jijzelf krijgt geen schade")
-	var cd0: float = game.artillery_cd
-	perks._process(10.0)
-	_check(is_equal_approx(game.artillery_cd, cd0 - 10.0), "afkoeling loopt tijdens een golf (10 s)")
-	game.artillery_cd = 0.3
-	perks._process(1.0)
-	_check(is_equal_approx(game.artillery_cd, 0.0) and Art.ready_now(), "na afkoeling weer klaar")
+	var cd0: float = game.kracht_cd.get("artillerie", 0.0)
+	game._process(10.0)
+	_check(is_equal_approx(float(game.kracht_cd.get("artillerie", 0.0)), cd0 - 10.0), "afkoeling loopt tijdens het spel (10 s)")
+	game.kracht_cd["artillerie"] = 0.3
+	game._process(1.0)
+	_check(Rg.klaar("artillerie"), "na afkoeling weer klaar")
 
 	# ---- nieuw spel: alles weer uit
 	game.reset()
-	_check(game.hq_level == 1 and is_equal_approx(game.artillery_cd, 0.0), "nieuw spel: niveau 1 en afkoeling nul")
+	_check(game.hq_level == 1 and game.kracht_cd.is_empty(), "nieuw spel: niveau 1 en afkoeling nul")
 	perks._process(0.0)
 	await _frames(2)
 	_check(perks.gun == null and get_nodes_in_group("hq_gun").is_empty(), "nieuw spel: dakgeweer weg")

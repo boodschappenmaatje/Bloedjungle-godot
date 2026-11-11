@@ -64,7 +64,7 @@ const ROWS := [
 	["g2_diepte", "Test: Graphics 2.0 diepte", [["on", "Aan"], ["off", "Uit"]]],
 	["t_res", "Test: 3D-beeld klein (30%)", [["auto", "Uit"], ["small", "Aan"]]],
 	["perf", "Prestatiemodus", [["off", "Uit"], ["on", "Aan"]]],
-	["t_streak", "Test: alle killstreaks, onbeperkt", [["off", "Uit"], ["on", "Aan"]]],
+	["t_krachten", "Test: alle krachten op niveau 3, geen afkoeling", [["off", "Uit"], ["on", "Aan"]]],
 	["diag", "Diagnose-run (30 s, start zelf in het spel)", [["off", "Uit"], ["on", "Aan"]]],
 ]
 ## Instellingen in tabbladen (keuze 2A): links/rechts zijn de twee kolommen in liggend; staand komen ze onder elkaar.
@@ -74,7 +74,7 @@ const SETTINGS_TABS := [
 	{"title": "WERELD", "left": ["time", "weather"], "right": ["wind"]},
 	{"title": "SOLDATEN", "left": ["soldaat", "enemy_models"], "right": ["ragdoll", "markeringen", "#meshy"]},
 	{"title": "GELUID & BESTURING", "left": ["sound", "m1911_fire_mode", "vliegtuig_hoogte", "#m1911"], "right": ["#camera"]},
-	{"title": "TEST", "left": ["t_sun", "t_jungle", "t_stad", "t_post", "t_res"], "right": ["g2_fx", "g2_licht", "g2_diepte", "t_streak", "diag"]},
+	{"title": "TEST", "left": ["t_sun", "t_jungle", "t_stad", "t_post", "t_res"], "right": ["g2_fx", "g2_licht", "g2_diepte", "t_krachten", "diag"]},
 ]
 const TEXTS := {
 	"#meshy": "Alleen Meshy gebruikt de nieuwe Assault-soldaten met M1 Garand. Omschakelen verwijdert oude vijandtypes; de groepsgrootte blijft gelijk.",

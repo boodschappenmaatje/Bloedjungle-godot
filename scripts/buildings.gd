@@ -670,6 +670,19 @@ func damage(b: Dictionary, dmg: float) -> void:
 	Game.changed.emit()
 
 
+## Noodreparatie (Rang): een gebouw of bouwstuk krijgt levenspunten terug; boven de helft is het niet meer gebarsten of brandend.
+func heal(b: Dictionary, amount: float) -> void:
+	if b.down or amount <= 0.0 or not Game.buildings.has(b):
+		return
+	b.hp = minf(float(b.max_hp), float(b.hp) + amount)
+	if b.cracked and b.hp >= b.max_hp * 0.5:
+		b.cracked = false
+		if is_piece(b.kind):
+			b.node.scale.y = 1.0
+		_clear_fx(b)
+	Game.changed.emit()
+
+
 func _break(b: Dictionary) -> void:
 	var at: Vector3 = b.node.global_position
 	if is_piece(b.kind):

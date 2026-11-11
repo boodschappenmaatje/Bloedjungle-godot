@@ -1,11 +1,10 @@
 class_name Artillerie
 extends Node3D
-## Artilleriecommando van het hoofdkwartier (niveau 3, Generals-plan stap 3): je wijst een punt aan, na een korte radio-oproep
-## slaan SHELLS granaten in rond dat punt. Daarna COOLDOWN seconden wachten (Game.artillery_cd, loopt in HqPerks).
-## Alleen vijanden krijgen schade: jijzelf, je soldaten en je gebouwen blijven heel. Kills tellen niet voor je killstreak.
+## Artilleriecommando: je wijst een punt aan, na een korte radio-oproep slaan `shells` granaten in rond dat punt (5 op niveau 1, zie Rang).
+## Het commando komt van het hoofdkwartier niveau 3 (Generals-plan stap 3) of van de generaalsrang (stap E1); de afkoeling staat in Rang.
+## Alleen vijanden krijgen schade: jijzelf, je soldaten en je gebouwen blijven heel.
 
-const COOLDOWN := 90.0
-const SHELLS := 5
+const SHELLS := 5          # aantal granaten op niveau 1
 const RADIUS := 6.5        # m: zo ver rond het doelpunt kunnen de granaten inslaan
 const BLAST := 4.8         # m: ontploffingsstraal per granaat
 const DAMAGE := 320.0      # schade in het midden van een inslag, 40% aan de rand
@@ -17,6 +16,7 @@ const RANGE_MAX := 60.0
 const TAP_RANGE := 26.0    # alleen tikken: dichtstbijzijnde vijand in dit bereik, anders zo ver recht vooruit
 
 var target := Vector3.ZERO
+var shells := SHELLS
 var impacts: Array = []     # {t, pos, shown, done}
 var _t := 0.0
 var _marker: MeshInstance3D
@@ -25,18 +25,13 @@ var _shells_done := 0
 static var _ring_shader: Shader
 
 
-## Wijst het punt aan en zet de afkoeling op COOLDOWN. Returns de strike.
-static func call_in(parent: Node, at: Vector3) -> Artillerie:
+## Wijst het punt aan. De afkoeling zet de aanroeper (Rang.gebruik). Returns de strike.
+static func call_in(parent: Node, at: Vector3, shells_ := SHELLS) -> Artillerie:
 	var a := Artillerie.new()
+	a.shells = shells_
 	parent.add_child(a)
 	a.start(at)
-	Game.artillery_cd = COOLDOWN
 	return a
-
-
-## Is het commando klaar voor gebruik?
-static func ready_now() -> bool:
-	return Game.hq_level >= 3 and Game.artillery_cd <= 0.0
 
 
 ## Doelpunt bij tikken: de dichtstbijzijnde vijand die ver genoeg weg is, anders recht vooruit.
@@ -63,16 +58,16 @@ static func drag_target(from: Vector3, dir: Vector3, k: float) -> Vector3:
 func start(at: Vector3) -> void:
 	target = Vector3(at.x, 0.0, at.z)
 	global_position = target
-	for i in SHELLS:
+	for i in shells:
 		var p := target
 		if i > 0:
 			var a := float(i) * 2.399 + randf() * 0.6        # gouden hoek: gelijkmatig verspreid
-			var r := sqrt(float(i) / float(SHELLS)) * RADIUS * randf_range(0.7, 1.0)
+			var r := sqrt(float(i) / float(shells)) * RADIUS * randf_range(0.7, 1.0)
 			p += Vector3(cos(a) * r, 0.0, sin(a) * r)
 		impacts.append({"t": CALL_DELAY + float(i) * INTERVAL, "pos": p, "shown": false, "done": false})
 	_marker = _make_marker()
 	add_child(_marker)
-	Game.banner.emit("ARTILLERIE ONDERWEG", "%d granaten · inslag over %d s" % [SHELLS, ceili(CALL_DELAY)], 1.6)
+	Game.banner.emit("ARTILLERIE ONDERWEG", "%d granaten · inslag over %d s" % [shells, ceili(CALL_DELAY)], 1.6)
 	Sfx.play("click", 0.7)
 
 
@@ -91,7 +86,7 @@ func _process(delta: float) -> void:
 			im.done = true
 			_impact(im.pos)
 			_shells_done += 1
-	if _shells_done >= SHELLS:
+	if _shells_done >= shells:
 		queue_free()
 
 
@@ -136,7 +131,7 @@ static func damage_at(at: Vector3) -> int:
 		var d := flat.length() - float(e.t.get("r", 0.4))
 		if d < BLAST:
 			var k := 1.0 - clampf(maxf(d, 0.0) / BLAST, 0.0, 1.0) * 0.6
-			Game.hit_src = "lucht"    # luchtsteun telt niet voor je eigen killstreak
+			Game.hit_src = "lucht"    # artillerie telt als luchtsteun (geen bevestigde treffer van de speler)
 			e.hit(DAMAGE * k, flat.normalized() if flat.length() > 0.01 else Vector3.UP, true)
 			Game.hit_src = "speler"
 			hits += 1

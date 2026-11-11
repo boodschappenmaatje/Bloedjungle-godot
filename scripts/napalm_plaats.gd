@@ -11,6 +11,8 @@ const TURN_MIN := 22.0      # px slepen voor de richting verandert
 const BTN_GO := Vector2(190, 52)
 const BTN_X := Vector2(52, 52)
 
+static var armed := false   # napalm staat klaar: de rechterstick plaatst de strook en schiet niet (touch_sticks.gd)
+
 var center := Vector3.ZERO
 var dir := Vector3.FORWARD
 var _vis: NapalmAim
@@ -40,13 +42,13 @@ func _ready() -> void:
 	if p != null and is_instance_valid(p):
 		_vis = NapalmAim.new()
 		p.get_parent().add_child(_vis)
-	Streak.armed = true
+	armed = true
 	_update()
 	Sfx.play("click")
 
 
 func _exit_tree() -> void:
-	Streak.armed = false
+	armed = false
 	if _vis != null and is_instance_valid(_vis):
 		_vis.queue_free()
 	_vis = null
@@ -67,7 +69,7 @@ func _field() -> Rect2:
 
 func _process(delta: float) -> void:
 	var p = Game.player
-	if p == null or not is_instance_valid(p) or p.dead or p.driving or (Game.state != "play" and Game.state != "prep") or not Game.streak_bank.has("napalm"):
+	if p == null or not is_instance_valid(p) or p.dead or p.driving or (Game.state != "play" and Game.state != "prep") or not Rang.klaar("napalm"):
 		queue_free()
 		return
 	_hint_t += delta
@@ -187,9 +189,8 @@ func _update() -> void:
 
 func _confirm() -> void:
 	var p = Game.player
-	if p != null and is_instance_valid(p) and Game.streak_bank.has("napalm"):
-		Game.streak_take()
-		Streak.use("napalm", p.get_parent(), center, dir)
+	if p != null and is_instance_valid(p) and Rang.klaar("napalm"):
+		Rang.gebruik("napalm", p.get_parent(), center, dir)
 	queue_free()
 
 

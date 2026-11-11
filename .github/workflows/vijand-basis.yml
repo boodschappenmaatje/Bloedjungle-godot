@@ -59,6 +59,16 @@ on:
       - "scripts/enemy.gd"
       - "tests/voertuig_schade_test.gd"
       - "tests/rijden_vloeiend_test.gd"
+      - "scripts/rang.gd"
+      - "scripts/rang_hud.gd"
+      - "scripts/rang_keuze.gd"
+      - "scripts/noodreparatie.gd"
+      - "scripts/artillerie.gd"
+      - "scripts/napalm_aanval.gd"
+      - "scripts/napalm_plaats.gd"
+      - "scripts/action_btn.gd"
+      - "scripts/wheel_art.gd"
+      - "tests/rang_test.gd"
       - "scripts/pause_menu.gd"
       - "scripts/progress.gd"
       - "scripts/mcv.gd"
@@ -232,4 +242,15 @@ jobs:
           echo "Godot exit code: $RC"
           grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/rijden_vloeiend.log" | tail -n 40 || true
           tail -n 15 "$RUNNER_TEMP/rijden_vloeiend.log"
+          exit "$RC"
+      - name: Generaalsrang met krachten (sterren op score, KIES-scherm, afkoeling, noodreparatie, satelliet, napalm, artillerie)
+        shell: bash
+        run: |
+          set +e
+          timeout 600 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/rang_test.gd --fixed-fps 60 > "$RUNNER_TEMP/rang.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/rang.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/rang.log"
           exit "$RC"

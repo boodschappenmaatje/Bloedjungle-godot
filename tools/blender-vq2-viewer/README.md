@@ -36,6 +36,10 @@ npm run build
 node test.mjs  # requires Chromium at /usr/bin/chromium or CHROMIUM=/path
 ```
 
+## Meshy-commando
+
+Select **Meshy-commando · oud / nieuw** or open the viewer with `?asset=meshy_commando`. Both real GLBs use the same camera and lights. Walking, Running and RunFast are genuine GLB clips; the other gameplay actions, weapon IK and transitions use Godot's separate animation libraries. The 58° camera preset moves closer for the character. `node test-meshy-commando.mjs` checks loading, the visible helmet, materials and clip availability and saves a comparison image. Native iPhone/Safari and Godot gameplay-camera tests have not been run here.
+
 `test.mjs` exercises the real rendered scenes, all seven animated-jeep clips,
 expected wheel/steering/MG/turret transforms, material modes, camera presets,
 mobile viewport layout and two-finger pinch. Chromium touch emulation is not
@@ -103,3 +107,7 @@ Model **Garage** vergelijkt de oude golfplaat-garage (`assets/vq2_baseline/garag
 ## Voorraaddepot, voorraadtruck en voorraadstapel (stap 4b, stijl Intendance)
 
 De viewer bevat vier invoeren uit `bron/voorraad/`: **Voorraaddepot** (`assets/voorraaddepot.glb`, clips `Poort` en `Kraan-lossen`), **Voorraadtruck** (`voorraadtruck.glb`, sinds v182 het Meshy-model van Dennis uit `bron/voorraad_meshy/`; clips `Laden` en `Lossen`, 6 s: de kraan zwenkt over de cabine, de grijper pakt een kist en legt hem in de bak of op de laadplaat; met oud/nieuw-vergelijking tegen `vq2_baseline/voorraadtruck_v1.glb`), **Voorraadtruck · wrak** (`voorraadtruck_wrak.glb`, ook oud/nieuw) en **Voorraadstapel** (`voorraadstapel.glb`: de drie standen vol, half en leeg naast elkaar; Godot laat er één tegelijk zien). Depot en stapel hebben geen V1 (nieuwe modellen); de truck en het wrak wel. Kies de clip, druk op Afspelen of sleep de tijdlijn. Wielrotatie, vering, stof, geluid, nachtlampen, de teller en de gouden ruit van de stapel zijn Godot en dus niet in de viewer. Test: `node test-voorraad.mjs` (Chromium; schrijft `docs/vq2/results/voorraad-viewer-test.json` en beelden naar `docs/vq2/renders/`).
+
+## Prime-sprintkandidaat
+
+Selecteer **Meshy-sprintkandidaat · clip bekijken** (of `?asset=meshy_sprint_candidate`) voor de echte retargeted Meshy-clip naast de originele speler. Dit is een 24-botten API-rigpreview, niet de game-integratie op de 28-botten speler. De clip is bewust niet als gameplay-sprint gekoppeld; zie `docs/meshy_commando_motion_review.md`. `node test-meshy-sprint-candidate.mjs` controleert clipweergave en beenbeweging.

@@ -18,7 +18,7 @@ shutil.copy2(ROOT/'assets/jeep.glb',dest/'assets/jeep.glb')
 shutil.copy2(ROOT/'assets/meshy_m1911.glb',dest/'assets/meshy_m1911.glb')
 (dest/'assets/vfx/m1911').mkdir(parents=True)
 shutil.copy2(ROOT/'assets/vfx/m1911/m1911_muzzle_flash_4x4.png',dest/'assets/vfx/m1911/m1911_muzzle_flash_4x4.png')
-for name in ('auto','bus','straaljager','soldaat','soldaat_vq2','klimmen','zitten','acties','wapens','jungle'):
+for name in ('auto','bus','straaljager','soldaat','soldaat_vq2','klimmen','zitten','acties','wapens','jungle','meshy_jungle_commando','meshy_commando_aaa'):
     path=ROOT/'assets'/(name+'.glb')
     if path.exists():shutil.copy2(path,dest/'assets'/path.name)
 if (ROOT/'assets/grass').exists():
@@ -30,3 +30,7 @@ shutil.copy2(ROOT/'docs/vq2/results/asset-report.json',dest/'docs/vq2/results/as
 (dest/'index.html').write_text('<!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=tools/blender-vq2-viewer/?asset=grass_tall"><a href="tools/blender-vq2-viewer/?asset=grass_tall">Open Bloedjungle 3D viewer</a>')
 (dest/'.nojekyll').touch()
 print('Static viewer artifact:',dest)
+
+# Review-only Meshy motion candidate; not referenced by game scenes.
+(dest/'bron/meshy_commando/prime_sprint_retargeted').mkdir(parents=True)
+shutil.copy2(ROOT/'bron/meshy_commando/prime_sprint_retargeted/animation_glb.glb',dest/'bron/meshy_commando/prime_sprint_retargeted/animation_glb.glb')

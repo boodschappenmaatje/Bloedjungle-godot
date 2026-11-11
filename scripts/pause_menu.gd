@@ -38,16 +38,16 @@ class MenuIcon extends Control:
 ## uitrusting, wapenwiel en "missie mislukt". Staat in een eigen laag boven de rest van de HUD.
 
 const ROWS := [
-	["soldaat", "Mannetjes (na nieuw spel)", [["vq2", "Realistisch"], ["meshy", "Meshy-speler (nieuw)"], ["v1", "Oud model"]]],
+	["soldaat", "Mannetjes (na nieuw spel)", [["vq2", "Realistisch"], ["meshy", "Meshy-speler"], ["v1", "Oud model"]]],
 	["enemy_models", "Vijandmodellen", [["all", "Alle types"], ["meshy", "Alleen Meshy"]]],
 	["m1911_fire_mode", "M1911 schieten", [["assist", "Rustig (0,5 s)"], ["manual", "Handmatig"]]],
-	["vliegtuig_hoogte", "Vliegtuig: hoogte (rechterstick)", [["normaal", "Normaal (omlaag = stijgen)"], ["omgekeerd", "Omgekeerd (omhoog = stijgen)"]]],
+	["vliegtuig_hoogte", "Vliegtuighoogte (rechterstick)", [["normaal", "Omlaag = stijgen"], ["omgekeerd", "Omhoog = stijgen"]]],
 	["ragdoll", "Doodsval vijanden", [["on", "Ragdoll"], ["off", "Animatie"]]],
-	["markeringen", "Markeringen soldaten", [["on", "Aan"], ["tact", "Alleen Tactisch"], ["off", "Uit"]]],
+	["markeringen", "Markeringen soldaten", [["on", "Aan"], ["tact", "Tactisch"], ["off", "Uit"]]],
 	["sound", "Geluid", [["on", "Aan"], ["off", "Uit"]]],
 	["g2", "Graphics 2.0", [["on", "Aan"], ["off", "Klassiek"]]],
 	["quality", "Grafiek", [["low", "Laag"], ["high", "Hoog"], ["ultra", "Ultra"]]],
-	["upscaling", "Upscaling (MetalFX)", [["off", "Uit"], ["quality", "Kwaliteit"], ["balanced", "Gebalanceerd"], ["performance", "Prestatie"]]],
+	["upscaling", "Upscaling (MetalFX)", [["off", "Uit"], ["quality", "Kwaliteit"], ["balanced", "Balans"], ["performance", "Prestatie"]]],
 	["time", "Tijd", [["day", "Dag"], ["dusk", "Avond"], ["night", "Nacht"]]],
 	["weather", "Weer", [["clear", "Helder"], ["rain", "Regen"], ["mist", "Mist"]]],
 	["wind", "Bomen bewegen", [["off", "Uit"], ["on", "Aan"]]],
@@ -67,14 +67,20 @@ const ROWS := [
 	["t_krachten", "Test: alle krachten op niveau 3, geen afkoeling", [["off", "Uit"], ["on", "Aan"]]],
 	["diag", "Diagnose-run (30 s, start zelf in het spel)", [["off", "Uit"], ["on", "Aan"]]],
 ]
-const SETTINGS_GROUPS := [
-	{"title": "BEELD & PRESTATIES", "keys": ["quality", "upscaling", "hz", "perf", "fps", "treeshadow", "buildshadow", "g2"]},
-	{"title": "WERELD & SFEER", "keys": ["time", "weather", "wind"]},
-	{"title": "SOLDATEN & VIJANDEN", "keys": ["soldaat", "enemy_models", "ragdoll", "markeringen"]},
-	{"title": "AUDIO", "keys": ["sound"]},
-	{"title": "BESTURING & CAMERA", "keys": ["m1911_fire_mode", "vliegtuig_hoogte"]},
-	{"title": "GEAVANCEERD", "advanced": true, "keys": ["t_sun", "t_jungle", "t_stad", "t_post", "g2_fx", "g2_licht", "g2_diepte", "t_res", "t_krachten", "diag"]},
+## Instellingen in tabbladen (keuze 2A): links/rechts zijn de twee kolommen in liggend; staand komen ze onder elkaar.
+## "#..." is een blok tekst of de camerahoek in plaats van een keuzeregel.
+const SETTINGS_TABS := [
+	{"title": "BEELD", "left": ["quality", "upscaling", "hz", "perf"], "right": ["fps", "treeshadow", "buildshadow", "g2"], "note": true},
+	{"title": "WERELD", "left": ["time", "weather"], "right": ["wind"]},
+	{"title": "SOLDATEN", "left": ["soldaat", "enemy_models"], "right": ["ragdoll", "markeringen", "#meshy"]},
+	{"title": "GELUID & BESTURING", "left": ["sound", "m1911_fire_mode", "vliegtuig_hoogte", "#m1911"], "right": ["#camera"]},
+	{"title": "TEST", "left": ["t_sun", "t_jungle", "t_stad", "t_post", "t_res"], "right": ["g2_fx", "g2_licht", "g2_diepte", "t_krachten", "diag"]},
 ]
+const TEXTS := {
+	"#meshy": "Alleen Meshy gebruikt de nieuwe Assault-soldaten met M1 Garand. Omschakelen verwijdert oude vijandtypes; de groepsgrootte blijft gelijk.",
+	"#m1911": "Colt M1911: beweeg de rechterstick licht om te richten; de buitenste ring vuurt. Rustig vuurt maximaal iedere 0,5 seconde. Handmatig vraagt voor elk schot een nieuwe beweging naar de schietring.",
+}
+const LABEL_W := 132.0  # breedte van de naamkolom in liggend; past het langste woord (PRESTATIEMODUS, SCHERPTEDIEPTE)
 
 const NOTES := {
 	"low": "Laag: geen schaduwen en een lichtere afbeelding, voor oudere telefoons.",
@@ -100,8 +106,19 @@ var _pcs := {}  # naam -> het paneel zelf
 var _cur := ""
 var _return := "pause"
 var _mute_btn: Button
-var _advanced_settings: VBoxContainer
-var _advanced_settings_button: Button
+var _menu_shade: TextureRect
+var _menu_outer: MarginContainer
+var _menu_layout: BoxContainer
+var _menu_left: VBoxContainer
+var _menu_right: VBoxContainer
+var _centers := {}  # naam -> CenterContainer (binnen de veilige marges)
+var _orient := []  # BoxContainers die staand onder elkaar gaan
+var _name_boxes := []  # naamkolommen van de keuzeregels
+var _grids := []  # [GridContainer, kolommen liggend, kolommen staand]
+var _tab_buttons := []
+var _tab_pages := []
+var _tab := 0
+var _settings_scroll: ScrollContainer
 var _note: Label
 var _segs := {}
 var _camera_pitch_slider: HSlider
@@ -147,6 +164,14 @@ func _ready() -> void:
 	_menu_tint.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_menu_tint.visible = false
 	_root.add_child(_menu_tint)
+	# keuze 5A: links donker naar rechts doorzichtig, zodat het uitzicht zichtbaar blijft
+	_menu_shade = TextureRect.new()
+	_menu_shade.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	_menu_shade.stretch_mode = TextureRect.STRETCH_SCALE
+	_menu_shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_menu_shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_menu_shade.visible = false
+	_root.add_child(_menu_shade)
 	_root.hide()
 	_build_menu()
 	_build_test()
@@ -164,30 +189,45 @@ func _ready() -> void:
 
 # ---------------------------------------------------------------- hulpjes
 
-func _centered(name: String, w: float, frameless := false) -> PanelContainer:
+func _centered(name: String, w: float) -> PanelContainer:
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(center)
 	var pc := PanelContainer.new()
 	pc.set_meta("w", w)
-	var sb := UI.box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0, 0, 0) if frameless else UI.box(UI.PANEL, UI.PANEL_LINE, 1, 8, 20)
-	if not frameless:
-		sb.shadow_color = Color(0, 0, 0, 0.6)
-		sb.shadow_size = 30
-	pc.add_theme_stylebox_override("panel", sb)
+	pc.add_theme_stylebox_override("panel", UI.sheet_box())
 	center.add_child(pc)
 	_sheets[name] = center
+	_centers[name] = center
 	_pcs[name] = pc
 	return pc
 
 
-## Een blad dat binnen het scherm blijft en verticaal scrolt als het niet past.
-func _scrolling(pc: PanelContainer) -> VBoxContainer:
+## Een blad met vaste kop (titel + knop rechtsboven, keuze 6A) en daaronder inhoud die alleen bij een heel klein
+## scherm met de vinger verschuift; een scrollbalk wordt nooit getoond.
+func _sheet(pc: PanelContainer, title: String, close_text := "", close_cb := Callable()) -> VBoxContainer:
+	var outer := VBoxContainer.new()
+	outer.add_theme_constant_override("separation", 12)
+	pc.add_child(outer)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 12)
+	head.visible = title != "" or close_text != ""
+	outer.add_child(head)
+	var t := UI.label(title, UI.display(1), 28, UI.INK)
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(t)
+	if close_text != "":
+		var b := _button(close_text, "field_primary", close_cb)
+		b.custom_minimum_size = Vector2(112, 42)
+		b.add_theme_font_size_override("font_size", 17)
+		b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		head.add_child(b)
 	var sc := ScrollContainer.new()
 	sc.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	sc.set_meta("sheet", pc)
-	pc.add_child(sc)
+	sc.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	outer.add_child(sc)
 	var v := VBoxContainer.new()
 	v.add_theme_constant_override("separation", 12)
 	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -195,14 +235,56 @@ func _scrolling(pc: PanelContainer) -> VBoxContainer:
 	return v
 
 
+func _scroll_of(pc: Control) -> ScrollContainer:
+	var found := pc.find_children("*", "ScrollContainer", true, false)
+	return found[0] as ScrollContainer if not found.is_empty() else null
+
+
+func _portrait() -> bool:
+	var vp := get_viewport().get_visible_rect().size
+	return vp.y > vp.x
+
+
+## Liggend of staand: kolommen naast of onder elkaar, naam naast of boven de keuzebalk, rasters met meer of minder kolommen.
+func _relayout(portrait: bool, vp: Vector2) -> void:
+	for b in _orient:
+		(b as BoxContainer).vertical = portrait
+	for nb in _name_boxes:
+		(nb as Control).custom_minimum_size.x = 0.0 if portrait else LABEL_W
+		(nb as Control).size_flags_vertical = Control.SIZE_FILL if portrait else Control.SIZE_SHRINK_CENTER
+		((nb as Control).get_parent() as Control).add_theme_constant_override("separation", 2 if portrait else 10)
+	for g in _grids:
+		(g[0] as GridContainer).columns = g[2] if portrait else g[1]
+	for b in _tab_buttons:
+		(b as Button).add_theme_font_size_override("font_size", 12 if portrait else 15)
+	var safe := UI.safe_margins(vp, 10.0)
+	for n in _centers:
+		var c: Control = _centers[n]
+		c.offset_left = safe.x
+		c.offset_top = safe.y
+		c.offset_right = -safe.z
+		c.offset_bottom = -safe.w
+	_layout_menu(portrait, vp)
+
+
 func _fit_sheets() -> void:
 	var vp := get_viewport().get_visible_rect().size
+	var portrait := vp.y > vp.x
+	_relayout(portrait, vp)
+	var safe := UI.safe_margins(vp, 10.0)
+	var avail := Vector2(vp.x - safe.x - safe.z, vp.y - safe.y - safe.w)
 	for name in _pcs:
 		var pc: PanelContainer = _pcs[name]
-		pc.custom_minimum_size.x = minf(pc.get_meta("w"), vp.x - 24.0)
-		for c in pc.get_children():
-			if c is ScrollContainer:
-				c.custom_minimum_size.y = minf(c.get_child(0).get_combined_minimum_size().y, vp.y - 24.0 - 40.0)
+		pc.custom_minimum_size.x = minf(pc.get_meta("w"), avail.x)
+		var sc := _scroll_of(pc)
+		if sc == null:
+			continue
+		var other := pc.get_combined_minimum_size().y - sc.get_combined_minimum_size().y
+		var want: float = (sc.get_child(0) as Control).get_combined_minimum_size().y
+		if name == "settings":
+			# vaste hoogte, zodat het blad niet verspringt bij een ander tabblad
+			want = 99999.0 if portrait else maxf(want, 360.0)
+		sc.custom_minimum_size.y = maxf(60.0, minf(want, avail.y - other))
 
 
 func _button(text: String, kind: String, cb: Callable) -> Button:
@@ -247,8 +329,8 @@ func _input(event: InputEvent) -> void:
 			var pc: PanelContainer = _pcs[name]
 			if not pc.is_visible_in_tree():
 				continue
-			for c in pc.get_children():
-				if c is ScrollContainer and c.get_global_rect().has_point(pos):
+			for c in pc.find_children("*", "ScrollContainer", true, false):
+				if (c as Control).is_visible_in_tree() and (c as Control).get_global_rect().has_point(pos):
 					_drag_sc = c
 		_drag_id = idx
 		_drag_acc = 0.0
@@ -269,11 +351,6 @@ func _eyebrow(t: String) -> Label:
 	return UI.label(t.to_upper(), UI.body(700, 2), 12, UI.BRASS)
 
 
-func _head(v: Control, eyebrow: String, title: String, size := 34) -> void:
-	v.add_child(_eyebrow(eyebrow))
-	v.add_child(UI.label(title, UI.display(1), size, UI.INK))
-
-
 func _wrap(t: String, size := 14, color := UI.INK_DIM, w := 0.0) -> Label:
 	var l := UI.label(t, UI.body(500, 0), size, color)
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -285,10 +362,12 @@ func _wrap(t: String, size := 14, color := UI.INK_DIM, w := 0.0) -> Label:
 func _show(name: String) -> void:
 	_cur = name
 	_root.visible = name != ""
-	var command_screen := name in ["menu", "settings"]
+	# in het hoofdmenu en de schermen die je van daaruit opent: de foto van de commandopost
+	var command_screen := name == "menu" or (name in ["settings", "gear", "test"] and Game.state == "menu")
 	_menu_background.visible = command_screen
 	_menu_tint.visible = command_screen
-	_root.color.a = 0.0 if command_screen else (0.35 if name == "gear" else 0.72)
+	_menu_shade.visible = name == "menu"
+	_root.color.a = 0.0 if command_screen else 0.6
 	for n in _sheets:
 		_sheets[n].visible = n == name
 	if name != "":
@@ -299,93 +378,142 @@ func _show(name: String) -> void:
 
 # ---------------------------------------------------------------- hoofdmenu
 
-func _menu_action_button(icon_name: String, label_text: String, kind: String, cb: Callable) -> Button:
+func _menu_action_button(icon_name: String, label_text: String, kind: String, cb: Callable, font_size := 21) -> Button:
 	var style_kind := "field_primary" if kind == "gold" else "field"
 	var b := _button("", style_kind, cb)
-	b.custom_minimum_size = Vector2(0, 56 if kind != "gold" else 62)
+	b.custom_minimum_size = Vector2(0, 52 if kind != "gold" else 62)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.offset_left = 14
-	row.offset_right = -14
+	row.offset_left = 12
+	row.offset_right = -12
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_theme_constant_override("separation", 14)
+	row.add_theme_constant_override("separation", 10 if kind != "gold" else 14)
 	var icon := MenuIcon.new()
 	icon.icon_name = icon_name
 	icon.tint = UI.INK if kind == "gold" else UI.BRASS
-	icon.custom_minimum_size = Vector2(36, 36)
+	icon.custom_minimum_size = Vector2(30, 30) if kind != "gold" else Vector2(36, 36)
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
 	var divider := ColorRect.new()
 	divider.color = Color(UI.BRASS, 0.72)
-	divider.custom_minimum_size = Vector2(2, 32)
+	divider.custom_minimum_size = Vector2(2, 28)
 	divider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(divider)
-	var label := UI.label(label_text, UI.display(0), 21, UI.INK)
+	var label := UI.label(label_text, UI.display(0), font_size, UI.INK)
 	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(label)
 	b.add_child(row)
 	return b
 
 
+## Kleinere tegel met pictogram boven de naam (Stadseditor, Updates, Testgroep).
+func _menu_tile(icon_name: String, label_text: String, cb: Callable) -> Button:
+	var b := _button("", "field", cb)
+	b.custom_minimum_size = Vector2(0, 64)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var col := VBoxContainer.new()
+	col.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	col.alignment = BoxContainer.ALIGNMENT_CENTER
+	col.add_theme_constant_override("separation", 3)
+	col.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var icon := MenuIcon.new()
+	icon.icon_name = icon_name
+	icon.tint = UI.BRASS
+	icon.custom_minimum_size = Vector2(28, 26)
+	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	col.add_child(icon)
+	var label := UI.label(label_text, UI.display(0), 13, UI.INK)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	col.add_child(label)
+	b.add_child(col)
+	return b
+
+
+## Hoofdmenu (keuze 1B): SPELEN groot, Uitrusting en Instellingen naast elkaar, drie tegels eronder. Geen scrollvak:
+## alles past liggend en staand op een iPhone.
 func _build_menu() -> void:
-	var outer := MarginContainer.new()
-	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	outer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var vp := get_viewport().get_visible_rect().size
-	var safe := UI.safe_margins(vp, 22.0)
-	outer.add_theme_constant_override("margin_left", roundi(safe.x + 18.0))
-	outer.add_theme_constant_override("margin_top", roundi(safe.y + 8.0))
-	outer.add_theme_constant_override("margin_right", roundi(safe.z + 24.0))
-	outer.add_theme_constant_override("margin_bottom", roundi(safe.w + 8.0))
-	_root.add_child(outer)
-	_sheets["menu"] = outer
+	_menu_outer = MarginContainer.new()
+	_menu_outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_menu_outer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.add_child(_menu_outer)
+	_sheets["menu"] = _menu_outer
 
-	var layout := HBoxContainer.new()
-	layout.add_theme_constant_override("separation", 20)
-	outer.add_child(layout)
+	_menu_layout = BoxContainer.new()
+	_menu_layout.add_theme_constant_override("separation", 20)
+	_menu_layout.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_menu_outer.add_child(_menu_layout)
 
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.custom_minimum_size.x = minf(460.0, vp.x * 0.58)
-	layout.add_child(scroll)
-
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 9)
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(left)
-	left.add_child(_eyebrow("COMMANDOPOST  ·  OPERATIE GROENE HEL  ·  1944"))
-	left.add_child(UI.label("BLOEDJUNGLE", UI.display(2), 46, UI.INK))
-	left.add_child(UI.label("OPERATIE GROENE HEL", UI.body(700, 4), 17, UI.BRASS))
+	_menu_left = VBoxContainer.new()
+	_menu_left.add_theme_constant_override("separation", 10)
+	_menu_left.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_menu_layout.add_child(_menu_left)
+	_menu_left.add_child(_eyebrow("COMMANDOPOST  ·  OPERATIE GROENE HEL  ·  1944"))
+	_menu_left.add_child(UI.label("BLOEDJUNGLE", UI.display(2), 44, UI.INK))
+	_menu_left.add_child(UI.label("OPERATIE GROENE HEL", UI.body(700, 4), 16, UI.BRASS))
 	var gap := Control.new()
-	gap.custom_minimum_size.y = 8
-	left.add_child(gap)
-	left.add_child(_menu_action_button("play", "SPELEN", "gold", _start_game))
-	left.add_child(_menu_action_button("gear", "UITRUSTING", "secondary", func(): _open_gear("menu")))
-	left.add_child(_menu_action_button("gear", "INSTELLINGEN", "secondary", func(): _open_settings("menu")))
-	left.add_child(_menu_action_button("city", "STADSEDITOR", "secondary", _open_stad_editor))
-	left.add_child(_menu_action_button("updates", "UPDATES", "secondary", func(): UpdatePanel.open(self)))
-	left.add_child(_menu_action_button("target", "TESTGROEP", "secondary", func(): _show("test")))
+	gap.custom_minimum_size.y = 6
+	_menu_left.add_child(gap)
+	_menu_left.add_child(_menu_action_button("play", "SPELEN", "gold", _start_game))
+	var pair := HBoxContainer.new()
+	pair.add_theme_constant_override("separation", 10)
+	_menu_left.add_child(pair)
+	pair.add_child(_menu_action_button("gear", "UITRUSTING", "secondary", func(): _open_gear("menu"), 16))
+	pair.add_child(_menu_action_button("gear", "INSTELLINGEN", "secondary", func(): _open_settings("menu"), 16))
+	var tiles := HBoxContainer.new()
+	tiles.add_theme_constant_override("separation", 10)
+	_menu_left.add_child(tiles)
+	tiles.add_child(_menu_tile("city", "STADSEDITOR", _open_stad_editor))
+	tiles.add_child(_menu_tile("updates", "UPDATES", func(): UpdatePanel.open(self)))
+	tiles.add_child(_menu_tile("target", "TESTGROEP", func(): _show("test")))
 
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	layout.add_child(spacer)
+	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_menu_layout.add_child(spacer)
 
-	var right := VBoxContainer.new()
-	right.size_flags_horizontal = Control.SIZE_SHRINK_END
-	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.custom_minimum_size.x = minf(320.0, vp.x * 0.28)
-	layout.add_child(right)
-	var bottom_gap := Control.new()
-	bottom_gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	right.add_child(bottom_gap)
-	right.add_child(_eyebrow("BESTE SOLDATEN"))
+	_menu_right = VBoxContainer.new()
+	_menu_right.size_flags_vertical = Control.SIZE_SHRINK_END
+	_menu_right.add_theme_constant_override("separation", 6)
+	_menu_layout.add_child(_menu_right)
+	_menu_right.add_child(_eyebrow("BESTE SOLDATEN"))
 	_scores_box = VBoxContainer.new()
 	_scores_box.add_theme_constant_override("separation", 4)
-	right.add_child(_scores_box)
+	_menu_right.add_child(_scores_box)
+
+
+func _layout_menu(portrait: bool, vp: Vector2) -> void:
+	var safe := UI.safe_margins(vp, 22.0)
+	_menu_outer.add_theme_constant_override("margin_left", roundi(safe.x + 8.0))
+	_menu_outer.add_theme_constant_override("margin_top", roundi(safe.y + 8.0))
+	_menu_outer.add_theme_constant_override("margin_right", roundi(safe.z + 8.0))
+	_menu_outer.add_theme_constant_override("margin_bottom", roundi(safe.w + 8.0))
+	var inner_w := vp.x - safe.x - safe.z - 16.0
+	_menu_layout.vertical = portrait
+	_menu_left.custom_minimum_size.x = inner_w if portrait else minf(470.0, inner_w * 0.56)
+	_menu_right.custom_minimum_size.x = inner_w if portrait else minf(320.0, inner_w * 0.3)
+	_menu_left.size_flags_vertical = Control.SIZE_SHRINK_BEGIN if portrait else Control.SIZE_SHRINK_CENTER
+	var g := Gradient.new()
+	var dark := Color(0.035, 0.045, 0.025)
+	if portrait:
+		# staand staat alles over de hele breedte: van boven donker naar onder iets lichter
+		g.set_color(0, Color(dark, 0.86))
+		g.set_color(1, Color(dark, 0.6))
+	else:
+		g.set_color(0, Color(dark, 0.9))
+		g.set_color(1, Color(dark, 0.0))
+		g.add_point(0.5, Color(dark, 0.74))
+	var tex := GradientTexture2D.new()
+	tex.gradient = g
+	tex.width = 256
+	tex.height = 256
+	tex.fill_from = Vector2(0, 0)
+	tex.fill_to = Vector2(0, 1) if portrait else Vector2(0.78, 0)
+	_menu_shade.texture = tex
 
 
 func _score_table(into: VBoxContainer, highlight := -1) -> void:
@@ -442,21 +570,21 @@ static func groep_inhoud(n: int) -> String:
 
 
 func _build_test() -> void:
-	var v := _scrolling(_centered("test", 620))
-	_head(v, "Test", "START BIJ GROEP")
-	v.add_child(_wrap("Kies een groep: het spel begint zoals altijd met de bouwwagen, maar de eerste aanvalsgroep is meteen de gekozen groep, %d s na het uitklappen (of eerder met Start nu). Een testspel telt niet mee voor je beste groep en de scorelijst." % int(Progress.TEST_RUST), 14, UI.INK_DIM, 560.0))
+	var v := _sheet(_centered("test", 940), "START BIJ GROEP", "TERUG", func(): _show("menu"))
+	v.add_child(_wrap("Kies een groep: het spel begint zoals altijd met de bouwwagen, maar de eerste aanvalsgroep is meteen de gekozen groep, %d s na het uitklappen (of eerder met Start nu). Een testspel telt niet mee voor je beste groep en de scorelijst." % int(Progress.TEST_RUST), 14, UI.INK_DIM))
 	var g := GridContainer.new()
-	g.columns = 3
+	g.columns = 4
 	g.add_theme_constant_override("h_separation", 8)
 	g.add_theme_constant_override("v_separation", 8)
 	v.add_child(g)
+	_grids.append([g, 4, 2])
 	for n in range(1, TEST_GROEPEN + 1):
 		var groep: int = n
 		var b := _button("Groep %d\n%s" % [n, groep_inhoud(n)], "secondary", func(): _start_test(groep))
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		b.custom_minimum_size = Vector2(170, 58)
+		b.custom_minimum_size = Vector2(0, 58)
+		b.add_theme_font_size_override("font_size", 14)
 		g.add_child(b)
-	v.add_child(_button("TERUG", "primary", func(): _show("menu")))
 
 
 func _start_test(n: int) -> void:
@@ -484,14 +612,21 @@ func _open_stad_editor() -> void:
 # ---------------------------------------------------------------- pauze
 
 func _build_pause() -> void:
-	var v := _scrolling(_centered("pause", 380))
-	v.add_child(UI.label("PAUZE", UI.display(1), 34, UI.INK))
+	var v := _sheet(_centered("pause", 460), "PAUZE")
 	v.add_child(_button("VERDER", "primary", func(): set_paused(false)))
+	var g := GridContainer.new()
+	g.columns = 2
+	g.add_theme_constant_override("h_separation", 8)
+	g.add_theme_constant_override("v_separation", 8)
+	v.add_child(g)
 	_mute_btn = _button("", "secondary", _toggle_sound)
-	v.add_child(_mute_btn)
-	v.add_child(_button("Instellingen", "secondary", func(): _open_settings("pause")))
-	v.add_child(_button("Stadseditor", "secondary", _open_stad_editor))
-	v.add_child(_button("Updates", "secondary", func(): UpdatePanel.open(self)))
+	var knoppen: Array = [_mute_btn,
+		_button("Instellingen", "secondary", func(): _open_settings("pause")),
+		_button("Stadseditor", "secondary", _open_stad_editor),
+		_button("Updates", "secondary", func(): UpdatePanel.open(self))]
+	for b in knoppen:
+		(b as Button).size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		g.add_child(b)
 	v.add_child(_button("Stoppen", "secondary", func():
 		get_tree().paused = false
 		_show("")
@@ -524,66 +659,140 @@ func _refresh_sound() -> void:
 # ---------------------------------------------------------------- instellingen
 
 func _build_settings() -> void:
-	var v := _scrolling(_centered("settings", 760, true))
-	_head(v, "COMMANDOPOST  ·  OPERATIE GROENE HEL", "INSTELLINGEN", 42)
-	for section in SETTINGS_GROUPS:
-		var section_rows: VBoxContainer = v
-		if section.get("advanced", false):
-			_advanced_settings_button = _button("GEAVANCEERD  ·  TEST & DIAGNOSE  +", "secondary", _toggle_advanced_settings)
-			v.add_child(_advanced_settings_button)
-			_advanced_settings = VBoxContainer.new()
-			_advanced_settings.add_theme_constant_override("separation", 9)
-			_advanced_settings.visible = false
-			v.add_child(_advanced_settings)
-			section_rows = _advanced_settings
-		else:
-			v.add_child(_settings_section_header(section["title"]))
-		for key in section["keys"]:
-			var matches: Array = ROWS.filter(func(r): return r[0] == key)
-			if not matches.is_empty():
-				_add_setting_row(section_rows, matches[0])
-		if section["title"] == "SOLDATEN & VIJANDEN":
-			section_rows.add_child(_wrap("Alleen Meshy gebruikt de nieuwe Assault-soldaten met M1 Garand. Omschakelen verwijdert oude vijandtypes; de groepsgrootte blijft gelijk.", 12, UI.INK_DIM, 440.0))
-		if section["title"] == "BESTURING & CAMERA":
-			_build_camera_pitch_controls(section_rows)
-			section_rows.add_child(_wrap("Colt M1911: beweeg de rechterstick licht om te richten; de buitenste ring vuurt. Rustig vuurt maximaal iedere 0,5 seconde. Handmatig vraagt voor elk schot een nieuwe beweging naar de schietring.", 12, UI.INK_DIM, 440.0))
-	_note = _wrap("", 14, UI.INK_DIM, 440.0)
-	v.add_child(_note)
-	v.add_child(_button("KLAAR", "primary", func(): _show(_return)))
-	_refresh()
+	var pc := _centered("settings", 980)
+	var outer := VBoxContainer.new()
+	outer.add_theme_constant_override("separation", 10)
+	pc.add_child(outer)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 12)
+	outer.add_child(head)
+	var title := UI.label("INSTELLINGEN", UI.display(1), 28, UI.INK)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(title)
+	var klaar := _button("KLAAR", "field_primary", func(): _show(_return))
+	klaar.custom_minimum_size = Vector2(112, 42)
+	klaar.add_theme_font_size_override("font_size", 17)
+	klaar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(klaar)
 
-
-func _settings_section_header(title: String) -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 9)
-	var accent := ColorRect.new()
-	accent.color = UI.BRASS
-	accent.custom_minimum_size = Vector2(3, 22)
-	row.add_child(accent)
-	var label := UI.label(title, UI.body(700, 3), 16, UI.BRASS)
-	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(label)
+	var tabs := HBoxContainer.new()
+	tabs.add_theme_constant_override("separation", 2)
+	outer.add_child(tabs)
 	var line := ColorRect.new()
 	line.color = UI.PANEL_LINE
 	line.custom_minimum_size.y = 1
-	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	line.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	row.add_child(line)
-	return row
+	outer.add_child(line)
+
+	_settings_scroll = ScrollContainer.new()
+	_settings_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	_settings_scroll.vertical_scroll_mode = ScrollContainer.SCROLL_MODE_SHOW_NEVER
+	outer.add_child(_settings_scroll)
+	var pages := VBoxContainer.new()
+	pages.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_settings_scroll.add_child(pages)
+
+	for i in SETTINGS_TABS.size():
+		var tab: Dictionary = SETTINGS_TABS[i]
+		var idx := i
+		var tb := _button(tab["title"], "tab", func(): _select_tab(idx))
+		tb.custom_minimum_size.y = 40
+		tabs.add_child(tb)
+		_tab_buttons.append(tb)
+		var page := VBoxContainer.new()
+		page.add_theme_constant_override("separation", 12)
+		page.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		pages.add_child(page)
+		_tab_pages.append(page)
+		var cols := BoxContainer.new()
+		cols.add_theme_constant_override("separation", 24)
+		page.add_child(cols)
+		_orient.append(cols)
+		for side in ["left", "right"]:
+			var col := VBoxContainer.new()
+			col.add_theme_constant_override("separation", 9)
+			col.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			cols.add_child(col)
+			for key in tab[side]:
+				_add_settings_block(col, key)
+		if tab.get("note", false):
+			_note = _wrap("", 13, UI.INK_DIM)
+			page.add_child(_note)
+	_select_tab(0)
+	_refresh()
+
+
+func _add_settings_block(col: VBoxContainer, key: String) -> void:
+	if key == "#camera":
+		_build_camera_pitch_controls(col)
+	elif TEXTS.has(key):
+		col.add_child(_wrap(TEXTS[key], 12, UI.INK_DIM))
+	else:
+		var matches: Array = ROWS.filter(func(r): return r[0] == key)
+		if not matches.is_empty():
+			_add_setting_row(col, matches[0])
+
+
+func _select_tab(i: int) -> void:
+	_tab = i
+	for j in _tab_pages.size():
+		(_tab_pages[j] as Control).visible = j == i
+		var b: Button = _tab_buttons[j]
+		var sb := UI.box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0, 0, 0)
+		sb.content_margin_left = 12
+		sb.content_margin_right = 12
+		if j == i:
+			sb.border_color = UI.BRASS
+			sb.border_width_bottom = 3
+		for st in ["normal", "hover", "pressed", "focus"]:
+			b.add_theme_stylebox_override(st, sb)
+		for cn in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+			b.add_theme_color_override(cn, UI.BRASS if j == i else UI.INK_DIM)
+	if _settings_scroll != null:
+		_settings_scroll.scroll_vertical = 0
+
+
+## Naam van een regel (keuze 3A): hoofdletters, nooit midden in een woord afgebroken; wat tussen haakjes staat komt klein eronder.
+## In het tabblad TEST valt het voorvoegsel "Test:" weg.
+static func setting_name(text: String) -> PackedStringArray:
+	var main := text
+	var sub := ""
+	if main.begins_with("Test: "):
+		main = main.substr(6)
+	var open := main.find(" (")
+	if open > 0 and main.ends_with(")"):
+		sub = main.substr(open + 2, main.length() - open - 3)
+		main = main.substr(0, open)
+	return PackedStringArray([main.to_upper(), sub])
 
 
 func _add_setting_row(v: VBoxContainer, r: Array) -> void:
-	var row := HBoxContainer.new()
+	var row := BoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	var l := UI.label(r[1].to_upper(), UI.body(700, 2), 16, UI.INK)
-	l.custom_minimum_size.x = 110
-	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	row.add_child(l)
+	_orient.append(row)
+	var names := setting_name(r[1])
+	var name_box := VBoxContainer.new()
+	name_box.add_theme_constant_override("separation", 0)
+	name_box.custom_minimum_size.x = LABEL_W
+	name_box.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	name_box.set_meta("setting", r[0])
+	_name_boxes.append(name_box)
+	var l := UI.label(names[0], UI.body(700, 1), 15, UI.INK)
+	l.autowrap_mode = TextServer.AUTOWRAP_WORD
+	name_box.add_child(l)
+	if names[1] != "":
+		var s := UI.label(names[1], UI.body(500, 0), 12, UI.INK_DIM)
+		s.autowrap_mode = TextServer.AUTOWRAP_WORD
+		name_box.add_child(s)
+	row.add_child(name_box)
+	# keuze 4A: één balk op een donkere ondergrond, alle vakjes even breed en even hoog
 	var frame := PanelContainer.new()
 	frame.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	frame.add_theme_stylebox_override("panel", UI.box(Color(0, 0, 0, 0), UI.PANEL_LINE, 1, 4, 0))
+	frame.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	var fb := UI.box(Color(0.02, 0.025, 0.014, 0.85), UI.PANEL_LINE, 1, 4, 1)
+	frame.add_theme_stylebox_override("panel", fb)
 	var seg := HBoxContainer.new()
-	seg.add_theme_constant_override("separation", 1)
+	seg.add_theme_constant_override("separation", 0)
 	frame.add_child(seg)
 	_segs[r[0]] = []
 	for o in r[2]:
@@ -600,18 +809,14 @@ func _add_setting_row(v: VBoxContainer, r: Array) -> void:
 			_apply()
 			_refresh())
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.custom_minimum_size = Vector2(0, 42)
+		b.clip_text = true  # zo worden alle vakjes precies even breed
+		b.add_theme_font_size_override("font_size", 14)
 		b.set_meta("v", val)
 		seg.add_child(b)
 		_segs[r[0]].append(b)
 	row.add_child(frame)
 	v.add_child(row)
-
-
-func _toggle_advanced_settings() -> void:
-	_advanced_settings.visible = not _advanced_settings.visible
-	_advanced_settings_button.text = "GEAVANCEERD  ·  TEST & DIAGNOSE  " + ("−" if _advanced_settings.visible else "+")
-	_fit_sheets()
-
 
 
 ## Instelbare schuine camera: 35° = meer zijkant, 75° = meer bovenaanzicht.
@@ -698,38 +903,13 @@ func _apply() -> void:
 # ---------------------------------------------------------------- uitrusting
 
 func _build_gear() -> void:
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 12)
-	_root.add_child(margin)
-	_sheets["gear"] = margin
-	var row := HBoxContainer.new()
-	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.add_child(row)
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_child(spacer)
-	var pc := PanelContainer.new()
-	pc.set_meta("w", 460.0)
-	pc.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	var sb := UI.box(UI.PANEL, UI.PANEL_LINE, 1, 8, 20)
-	sb.shadow_color = Color(0, 0, 0, 0.6)
-	sb.shadow_size = 30
-	pc.add_theme_stylebox_override("panel", sb)
-	row.add_child(pc)
-	_pcs["gear"] = pc
-	var v := _scrolling(pc)
-	_head(v, "Jouw soldaat", "UITRUSTING")
+	var v := _sheet(_centered("gear", 960), "UITRUSTING", "KLAAR", func(): _show(_return))
 	_gear_stats = _wrap("", 13)
 	v.add_child(_gear_stats)
 	_gear_body = VBoxContainer.new()
-	_gear_body.add_theme_constant_override("separation", 12)
+	_gear_body.add_theme_constant_override("separation", 10)
 	v.add_child(_gear_body)
 	v.add_child(_wrap("Vergrendelde onderdelen speel je vrij met mijlpalen. Je voortgang blijft bewaard tussen missies.", 13))
-	v.add_child(_button("KLAAR", "primary", func(): _show(_return)))
 
 
 func _open_gear(from: String) -> void:
@@ -748,7 +928,7 @@ func _render_gear() -> void:
 		box.add_theme_constant_override("separation", 6)
 		box.add_child(UI.label(Progress.TITLES[slot].to_upper(), UI.body(700, 2), 12, UI.INK_DIM))
 		var grid := GridContainer.new()
-		grid.columns = 3
+		grid.columns = 3 if _portrait() else 6
 		grid.add_theme_constant_override("h_separation", 6)
 		grid.add_theme_constant_override("v_separation", 6)
 		box.add_child(grid)
@@ -762,7 +942,7 @@ func _gear_chip(slot: String, it: Dictionary) -> Button:
 	var on: bool = Progress.item(slot).id == it.id
 	var b := Button.new()
 	b.focus_mode = Control.FOCUS_NONE
-	b.custom_minimum_size = Vector2(124, 74)
+	b.custom_minimum_size = Vector2(0, 70)
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.disabled = not open
 	var n := UI.box(Color(UI.BRASS, 0.12) if on else Color(0, 0, 0, 0.28), UI.BRASS if on else UI.PANEL_LINE, 1, 4, 8)
@@ -898,7 +1078,19 @@ func _close_wheel() -> void:
 # ---------------------------------------------------------------- missie mislukt
 
 func _build_over() -> void:
-	var v := _scrolling(_centered("over", 560))
+	var top := _sheet(_centered("over", 900), "")
+	var cols := BoxContainer.new()
+	cols.add_theme_constant_override("separation", 24)
+	top.add_child(cols)
+	_orient.append(cols)
+	var v := VBoxContainer.new()
+	v.add_theme_constant_override("separation", 12)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cols.add_child(v)
+	var right := VBoxContainer.new()
+	right.add_theme_constant_override("separation", 6)
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	cols.add_child(right)
 	_over_reason = _eyebrow("Je bent gesneuveld")
 	v.add_child(_over_reason)
 	_over_title = UI.label("MISSIE MISLUKT", UI.display(1), 34, UI.INK)
@@ -929,8 +1121,9 @@ func _build_over() -> void:
 	_over_save_row.add_child(_over_name)
 	_over_save_row.add_child(_button("Bewaar score", "buy", _save_score))
 	v.add_child(_over_save_row)
+	right.add_child(_eyebrow("BESTE SOLDATEN"))
 	_over_scores = VBoxContainer.new()
-	v.add_child(_over_scores)
+	right.add_child(_over_scores)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
 	var again := _button("OPNIEUW", "primary", func():
@@ -939,11 +1132,13 @@ func _build_over() -> void:
 		get_tree().reload_current_scene())
 	again.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(again)
-	row.add_child(_button("Menu", "secondary", func():
+	var naar_menu := _button("MENU", "secondary", func():
 		Progress.autostart = false
 		Progress.test_groep = 0
 		get_tree().paused = false
-		get_tree().reload_current_scene()))
+		get_tree().reload_current_scene())
+	naar_menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(naar_menu)
 	v.add_child(row)
 
 

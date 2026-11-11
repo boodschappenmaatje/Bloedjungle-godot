@@ -26,52 +26,74 @@ func _ready() -> void:
 	add_to_group("update_panel")
 	layer = 30
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	var bg := TextureRect.new()
+	bg.texture = load("res://assets/ui/main_menu_bunker.jpg") as Texture2D
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(bg)
 	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.7)
+	dim.color = Color(0.015, 0.022, 0.015, 0.42)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(dim)
-	var c := CenterContainer.new()
-	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(c)
-	var pc := PanelContainer.new()
-	pc.custom_minimum_size = Vector2(430, 0)
-	pc.add_theme_stylebox_override("panel", UI.box(UI.PANEL, UI.PANEL_LINE, 1, 6, 16))
-	c.add_child(pc)
+
+	var outer := MarginContainer.new()
+	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var safe := UI.safe_margins(get_viewport().get_visible_rect().size, 22.0)
+	outer.add_theme_constant_override("margin_left", roundi(safe.x + 18.0))
+	outer.add_theme_constant_override("margin_top", roundi(safe.y + 12.0))
+	outer.add_theme_constant_override("margin_right", roundi(safe.z + 24.0))
+	outer.add_theme_constant_override("margin_bottom", roundi(safe.w + 12.0))
+	add_child(outer)
+
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 24)
+	outer.add_child(row)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.custom_minimum_size.x = minf(620.0, get_viewport().get_visible_rect().size.x * 0.62)
+	row.add_child(scroll)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 8)
-	pc.add_child(v)
-	v.add_child(UI.label("UPDATES", UI.display(1), 28, UI.INK))
-	_info = UI.label("", UI.body(600, 0), 13, UI.INK_DIM)
+	v.add_theme_constant_override("separation", 9)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(v)
+
+	v.add_child(UI.label("COMMANDOPOST  ·  OPERATIE GROENE HEL", UI.body(700, 3), 13, UI.BRASS))
+	v.add_child(UI.label("UPDATES", UI.display(2), 42, UI.INK))
+	_info = UI.label("", UI.body(600, 1), 15, UI.INK)
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(_info)
-	_status = UI.label("", UI.body(700, 0), 15, UI.BRASS)
+	_status = UI.label("", UI.body(700, 1), 16, UI.BRASS)
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(_status)
 	_balk = ProgressBar.new()
 	_balk.show_percentage = false
-	_balk.custom_minimum_size.y = 8
+	_balk.custom_minimum_size.y = 9
 	_balk.visible = false
 	v.add_child(_balk)
-	var hint := UI.label("Toegangstoken (GitHub, alleen-lezen, alleen deze repository). Wordt alleen op dit toestel bewaard.", UI.body(600, 0), 12, UI.INK_DIM)
+	var hint := UI.label("Toegangstoken (GitHub, alleen-lezen, alleen deze repository). Wordt alleen op dit toestel bewaard.", UI.body(600, 0), 13, UI.INK_DIM)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(hint)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
-	v.add_child(row)
+	var token_row := HBoxContainer.new()
+	token_row.add_theme_constant_override("separation", 8)
+	v.add_child(token_row)
 	_token = LineEdit.new()
 	_token.secret = true
 	_token.placeholder_text = "github_pat_…" if Updater.token() == "" else "(ingevuld; plak een nieuw token om te vervangen)"
 	_token.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(_token)
-	var save := _knop("Opslaan", "secondary", _sla_token_op)
-	row.add_child(save)
-	_check = _knop("Controleer op updates", "secondary", func(): Updater.controleer())
+	token_row.add_child(_token)
+	var save := _knop("OPSLAAN", "field", _sla_token_op)
+	token_row.add_child(save)
+	_check = _knop("CONTROLEREN OP UPDATES", "field", func(): Updater.controleer())
 	v.add_child(_check)
-	_download = _knop("Download en installeer", "primary", _download_met_lange_timeout)
+	_download = _knop("DOWNLOADEN EN INSTALLEREN", "field_primary", _download_met_lange_timeout)
 	v.add_child(_download)
-	_back = _knop("Terugdraaien naar de app-versie", "secondary", func(): Updater.terugdraaien())
+	_back = _knop("TERUGDRAAIEN NAAR APP-VERSIE", "field", func(): Updater.terugdraaien())
 	v.add_child(_back)
-	_close = _knop("Sluiten", "secondary", queue_free)
+	_close = _knop("SLUITEN", "field", queue_free)
 	v.add_child(_close)
 	Updater.status_changed.connect(_ververs)
 	_ververs()
@@ -363,6 +385,7 @@ func _knop(text: String, kind: String, cb: Callable) -> Button:
 	b.text = text
 	b.focus_mode = Control.FOCUS_NONE
 	UI.style_button(b, kind)
+	b.custom_minimum_size.y = 52.0 if kind == "field_primary" else 46.0
 	b.pressed.connect(cb)
 	return b
 

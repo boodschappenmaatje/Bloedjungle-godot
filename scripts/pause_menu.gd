@@ -164,16 +164,17 @@ func _ready() -> void:
 
 # ---------------------------------------------------------------- hulpjes
 
-func _centered(name: String, w: float) -> PanelContainer:
+func _centered(name: String, w: float, frameless := false) -> PanelContainer:
 	var center := CenterContainer.new()
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_root.add_child(center)
 	var pc := PanelContainer.new()
 	pc.set_meta("w", w)
-	var sb := UI.box(UI.PANEL, UI.PANEL_LINE, 1, 8, 20)
-	sb.shadow_color = Color(0, 0, 0, 0.6)
-	sb.shadow_size = 30
+	var sb := UI.box(Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0, 0, 0) if frameless else UI.box(UI.PANEL, UI.PANEL_LINE, 1, 8, 20)
+	if not frameless:
+		sb.shadow_color = Color(0, 0, 0, 0.6)
+		sb.shadow_size = 30
 	pc.add_theme_stylebox_override("panel", sb)
 	center.add_child(pc)
 	_sheets[name] = center
@@ -284,10 +285,10 @@ func _wrap(t: String, size := 14, color := UI.INK_DIM, w := 0.0) -> Label:
 func _show(name: String) -> void:
 	_cur = name
 	_root.visible = name != ""
-	var on_main_menu := name == "menu"
-	_menu_background.visible = on_main_menu
-	_menu_tint.visible = on_main_menu
-	_root.color.a = 0.0 if on_main_menu else (0.35 if name == "gear" else 0.72)
+	var command_screen := name in ["menu", "settings"]
+	_menu_background.visible = command_screen
+	_menu_tint.visible = command_screen
+	_root.color.a = 0.0 if command_screen else (0.35 if name == "gear" else 0.72)
 	for n in _sheets:
 		_sheets[n].visible = n == name
 	if name != "":
@@ -299,28 +300,30 @@ func _show(name: String) -> void:
 # ---------------------------------------------------------------- hoofdmenu
 
 func _menu_action_button(icon_name: String, label_text: String, kind: String, cb: Callable) -> Button:
-	var b := _button("", kind, cb)
-	b.custom_minimum_size.y = 58 if kind != "gold" else 66
+	var style_kind := "field_primary" if kind == "gold" else "field"
+	var b := _button("", style_kind, cb)
+	b.custom_minimum_size = Vector2(0, 56 if kind != "gold" else 62)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.offset_left = 16
+	row.offset_left = 14
 	row.offset_right = -14
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_theme_constant_override("separation", 12)
+	row.add_theme_constant_override("separation", 14)
 	var icon := MenuIcon.new()
 	icon.icon_name = icon_name
-	icon.tint = UI.BRASS
-	icon.custom_minimum_size = Vector2(30, 30)
+	icon.tint = UI.INK if kind == "gold" else UI.BRASS
+	icon.custom_minimum_size = Vector2(36, 36)
 	icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(icon)
 	var divider := ColorRect.new()
-	divider.color = Color(UI.BRASS, 0.55)
-	divider.custom_minimum_size = Vector2(1, 28)
+	divider.color = Color(UI.BRASS, 0.72)
+	divider.custom_minimum_size = Vector2(2, 32)
 	divider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(divider)
-	var label := UI.label(label_text, UI.body(700, 2), 17, UI.INK)
+	var label := UI.label(label_text, UI.display(0), 21, UI.INK)
 	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(label)
 	b.add_child(row)
@@ -331,79 +334,58 @@ func _build_menu() -> void:
 	var outer := MarginContainer.new()
 	outer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	outer.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var safe := UI.safe_margins(get_viewport().get_visible_rect().size, 22.0)
-	outer.add_theme_constant_override("margin_left", roundi(safe.x))
-	outer.add_theme_constant_override("margin_top", roundi(safe.y))
-	outer.add_theme_constant_override("margin_right", roundi(safe.z))
-	outer.add_theme_constant_override("margin_bottom", roundi(safe.w))
+	var vp := get_viewport().get_visible_rect().size
+	var safe := UI.safe_margins(vp, 22.0)
+	outer.add_theme_constant_override("margin_left", roundi(safe.x + 18.0))
+	outer.add_theme_constant_override("margin_top", roundi(safe.y + 8.0))
+	outer.add_theme_constant_override("margin_right", roundi(safe.z + 24.0))
+	outer.add_theme_constant_override("margin_bottom", roundi(safe.w + 8.0))
 	_root.add_child(outer)
 	_sheets["menu"] = outer
+
 	var layout := HBoxContainer.new()
-	layout.add_theme_constant_override("separation", 24)
+	layout.add_theme_constant_override("separation", 20)
 	outer.add_child(layout)
 
-	var menu_panel := PanelContainer.new()
-	menu_panel.custom_minimum_size.x = minf(440.0, get_viewport().get_visible_rect().size.x * 0.40)
-	menu_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var menu_style := UI.box(Color(0.035, 0.045, 0.028, 0.88), UI.BRASS, 1, 6, 20)
-	menu_style.shadow_color = Color(0, 0, 0, 0.65)
-	menu_style.shadow_size = 18
-	menu_panel.add_theme_stylebox_override("panel", menu_style)
-	layout.add_child(menu_panel)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.custom_minimum_size.x = minf(460.0, vp.x * 0.58)
+	layout.add_child(scroll)
 
 	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 10)
-	menu_panel.add_child(left)
+	left.add_theme_constant_override("separation", 9)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(left)
 	left.add_child(_eyebrow("COMMANDOPOST  ·  OPERATIE GROENE HEL  ·  1944"))
-	left.add_child(UI.label("BLOEDJUNGLE", UI.display(2), 38, UI.INK))
-	left.add_child(_wrap("Houd de bunker overeind. Bereid je verdediging voor en trek de jungle in.", 15, UI.INK_DIM, 380.0))
-
-	left.add_child(_menu_action_button("play", "START MISSIE", "gold", _start_game))
+	left.add_child(UI.label("BLOEDJUNGLE", UI.display(2), 46, UI.INK))
+	left.add_child(UI.label("OPERATIE GROENE HEL", UI.body(700, 4), 17, UI.BRASS))
+	var gap := Control.new()
+	gap.custom_minimum_size.y = 8
+	left.add_child(gap)
+	left.add_child(_menu_action_button("play", "SPELEN", "gold", _start_game))
 	left.add_child(_menu_action_button("gear", "UITRUSTING", "secondary", func(): _open_gear("menu")))
 	left.add_child(_menu_action_button("gear", "INSTELLINGEN", "secondary", func(): _open_settings("menu")))
 	left.add_child(_menu_action_button("city", "STADSEDITOR", "secondary", _open_stad_editor))
 	left.add_child(_menu_action_button("updates", "UPDATES", "secondary", func(): UpdatePanel.open(self)))
-
-	# Testoptie voor snelle controle van latere aanvalsgroepen blijft beschikbaar.
 	left.add_child(_menu_action_button("target", "TESTGROEP", "secondary", func(): _show("test")))
-	left.add_child(_wrap("Draai je iPhone liggend voor meer overzicht.", 13, UI.BRASS, 380.0))
+
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	layout.add_child(spacer)
 
 	var right := VBoxContainer.new()
-	right.add_theme_constant_override("separation", 16)
-	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.size_flags_horizontal = Control.SIZE_SHRINK_END
 	right.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.custom_minimum_size.x = minf(320.0, vp.x * 0.28)
 	layout.add_child(right)
-
-	var briefing := PanelContainer.new()
-	briefing.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	briefing.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	briefing.add_theme_stylebox_override("panel", UI.box(Color(0.035, 0.045, 0.028, 0.68), UI.PANEL_LINE, 1, 6, 18))
-	right.add_child(briefing)
-	var briefing_body := VBoxContainer.new()
-	briefing_body.add_theme_constant_override("separation", 12)
-	briefing.add_child(briefing_body)
-	briefing_body.add_child(_eyebrow("MISSIEBRIEFING"))
-	briefing_body.add_child(UI.label("JUNGLEFRONT", UI.display(1), 30, UI.INK))
-	briefing_body.add_child(_wrap("Je bent de laatste man van je eenheid. Zoek dekking achter muren en wrakken. Verzamel punten om zwaarder geschut en upgrades te bouwen.", 16, UI.INK, 560.0))
-	briefing_body.add_child(_wrap("BEDIENING", 13, UI.BRASS))
-	var ctrl := GridContainer.new()
-	ctrl.columns = 2
-	ctrl.add_theme_constant_override("h_separation", 12)
-	ctrl.add_theme_constant_override("v_separation", 6)
-	briefing_body.add_child(ctrl)
-	for r in [["LINKS", "Sleep om te lopen"], ["RECHTS", "Richt en schiet"], ["DEKKING", "Sta vlak achter een muur of wrak"], ["WINDOWS", "WASD · muis · Q wisselt · B wapenkamer"]]:
-		ctrl.add_child(UI.label(r[0], UI.body(700, 1), 13, UI.BRASS))
-		ctrl.add_child(_wrap(r[1], 14, UI.INK_DIM, 260.0))
-
-	var score_panel := PanelContainer.new()
-	score_panel.add_theme_stylebox_override("panel", UI.box(Color(0.035, 0.045, 0.028, 0.76), UI.PANEL_LINE, 1, 6, 14))
-	right.add_child(score_panel)
-	var scores := VBoxContainer.new()
-	scores.add_theme_constant_override("separation", 8)
-	score_panel.add_child(scores)
-	scores.add_child(_eyebrow("BESTE SOLDATEN"))
+	var bottom_gap := Control.new()
+	bottom_gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	right.add_child(bottom_gap)
+	right.add_child(_eyebrow("BESTE SOLDATEN"))
 	_scores_box = VBoxContainer.new()
-	scores.add_child(_scores_box)
+	_scores_box.add_theme_constant_override("separation", 4)
+	right.add_child(_scores_box)
 
 
 func _score_table(into: VBoxContainer, highlight := -1) -> void:
@@ -542,8 +524,8 @@ func _refresh_sound() -> void:
 # ---------------------------------------------------------------- instellingen
 
 func _build_settings() -> void:
-	var v := _scrolling(_centered("settings", 560))
-	_head(v, "Commandopost", "INSTELLINGEN")
+	var v := _scrolling(_centered("settings", 760, true))
+	_head(v, "COMMANDOPOST  ·  OPERATIE GROENE HEL", "INSTELLINGEN", 42)
 	for section in SETTINGS_GROUPS:
 		var section_rows: VBoxContainer = v
 		if section.get("advanced", false):
@@ -578,7 +560,7 @@ func _settings_section_header(title: String) -> Control:
 	accent.color = UI.BRASS
 	accent.custom_minimum_size = Vector2(3, 22)
 	row.add_child(accent)
-	var label := UI.label(title, UI.body(700, 2), 14, UI.BRASS)
+	var label := UI.label(title, UI.body(700, 3), 16, UI.BRASS)
 	label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(label)
 	var line := ColorRect.new()
@@ -593,7 +575,7 @@ func _settings_section_header(title: String) -> Control:
 func _add_setting_row(v: VBoxContainer, r: Array) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
-	var l := UI.label(r[1].to_upper(), UI.body(700, 1), 14, UI.INK_DIM)
+	var l := UI.label(r[1].to_upper(), UI.body(700, 2), 16, UI.INK)
 	l.custom_minimum_size.x = 110
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	row.add_child(l)

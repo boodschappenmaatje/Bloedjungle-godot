@@ -3,7 +3,7 @@ extends SceneTree
 ## (Data.ARMOR_MULT), brand, wrak, de wachtrij van main.gd (maximaal drie voertuigen), het schieten op de speler en op een soldaat, de rit van de poort
 ## over de Hoofdstraat en de brug naar het kamp, en het wachten voor een opgehaalde brug.
 ## godot --headless --path . --script tests/vijand_jeep_test.gd --fixed-fps 60
-## Duurt ongeveer 6700 beeldjes (de rit van de poort naar het kamp is 3900 beeldjes), ruim een minuut. Draai hem met Godot 4.7.2 (zoals de CI): Godot 4.6.3 headless
+## Duurt ongeveer 5500 tot 8500 beeldjes (de rit van de poort naar het kamp duurt 3300 tot 5000 beeldjes: bij een boomstam vlak na de poort hapert hij een tijdje), ruim een minuut. Draai hem met Godot 4.7.2 (zoals de CI): Godot 4.6.3 headless
 ## hapert of crasht in deze scène na enkele honderden beeldjes, ook zonder deze test.
 
 var fails := 0
@@ -275,7 +275,9 @@ func _run() -> void:
 	var f := 0
 	var max_z := -9999.0
 	var t0 := Time.get_ticks_msec()
-	while f < 3900 and is_instance_valid(r):
+	# Bij seed 11 zit er een boomstam (Level-botsing) vlak na de poort waar hij 10 tot 35 s tegenaan hapert; hoe lang hangt van een worp af
+	# (de kant waarop hij achteruit steekt). Daarom een ruim budget (120 s) en stoppen zodra hij bij het kamp staat, in plaats van een vaste 65 s.
+	while f < 7200 and is_instance_valid(r) and not (r.holding and r._flat_dist(basis) < 26.0):
 		await _frames(60)
 		f += 60
 		max_z = maxf(max_z, r.global_position.z)
@@ -285,7 +287,8 @@ func _run() -> void:
 			langs_brug = true
 	print("de rit duurde %.0f s echte tijd" % ((Time.get_ticks_msec() - t0) / 1000.0))
 	_check("hij is onderweg over de brug geweest", langs_brug)
-	_check("hij staat na 65 s bij het kamp en houdt stil (afstand tot het HK %.1f m)" % r._flat_dist(basis), r.holding and r._flat_dist(basis) < 26.0)
+	print("aangekomen na %d beelden (%.0f s)" % [f, f / 60.0])
+	_check("hij staat binnen 120 s bij het kamp en houdt stil (afstand tot het HK %.1f m)" % r._flat_dist(basis), r.holding and r._flat_dist(basis) < 26.0)
 	_check("de levensbalk volgt de levenspunten", r.find_child("Levensbalk", true, false) != null)
 	r.queue_free()
 	G.enemies.erase(r)

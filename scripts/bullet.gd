@@ -339,7 +339,7 @@ func _physics_process(delta: float) -> void:
 				hit = wall_hit
 	if (mask & MASK_VEHICLE) != 0:
 		# auto's en bussen apart: de botsdoos is lager dan de kogelbaan, en een snelle kogel kan er in één stap overheen springen
-		var v := vehicle_on_path(global_position, global_position + step)
+		var v := vehicle_on_path(global_position, global_position + step, not from_player)   # jouw eigen jeep en tank worden alleen door de vijand geraakt (V3)
 		if not v.is_empty() and (not hit or global_position.distance_to(v.pos) <= global_position.distance_to(hit.position) + 0.01):
 			_hit_vehicle(v)
 			queue_free()
@@ -386,13 +386,16 @@ func _physics_process(delta: float) -> void:
 	global_position += step
 
 
-## De eerste auto of bus op het stuk baan van a naar b: {car, pos}, of leeg.
-static func vehicle_on_path(a: Vector3, b: Vector3) -> Dictionary:
+## De eerste auto of bus op het stuk baan van a naar b: {car, pos}, of leeg. Met `hostile` (een schot van de vijand) tellen ook jouw eigen jeep en tank mee (VoertuigSchade).
+static func vehicle_on_path(a: Vector3, b: Vector3, hostile := false) -> Dictionary:
 	var best := 2.0
 	var found: Node3D = null
 	var mid := (a + b) * 0.5
 	var reach := a.distance_to(b) * 0.5 + 6.0   # 6 m: ruim een halve bus; verder weg hoeft de doos niet bekeken te worden
-	for list: Array in [Auto.all, Bus.all]:
+	var lists: Array = [Auto.all, Bus.all]
+	if hostile:
+		lists.append(VoertuigSchade.all)
+	for list: Array in lists:
 		for v: Node3D in list:
 			if not is_instance_valid(v):
 				continue
@@ -415,7 +418,9 @@ func _hit_vehicle(v: Dictionary) -> void:
 	elif explosive > 0.0:
 		_explode(at)
 	else:
+		Game.hit_class = wclass   # het pantser van jouw jeep en tank kijkt naar de soort schade (VoertuigSchade.hit)
 		v.car.hit(dmg, dir, from_player)
+		Game.hit_class = ""
 		Fx.impact(get_parent(), at, -dir, "metal")
 
 
@@ -457,6 +462,7 @@ func _boom_enemy(at: Vector3) -> void:
 	Game.note_blast(at, r)
 	Fx.explosion(get_parent(), at, 0.9)
 	Barrel.catch_blast(at, r)
+	VoertuigSchade.blast(at, r, dmg, "raket")   # een raket van de vijand tegen jouw jeep of tank
 	if Game.builds:
 		Game.builds.blast(at, r, dmg, false)
 	if Game.gates:

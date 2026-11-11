@@ -44,6 +44,7 @@ var _body_base: Transform3D
 var _mg_base: Transform3D
 var _lijf_base: Transform3D
 var _btn: ActionBtn
+var _schade: VoertuigSchade   # levenspunten (V3): vijandelijke kogels, raketten en tankgranaten raken hem, zit jij erin dan sneuvel je mee
 
 @onready var _anim: AnimationPlayer = $Model/AnimationPlayer
 @onready var _body: Node3D = $Model/Jeep/Body
@@ -66,6 +67,7 @@ func _ready() -> void:
 	_rest_fire_parts()
 	_setup_lights()
 	_build_button()
+	_schade = VoertuigSchade.attach(self, "jeep")
 
 
 ## De Blender-clip Vuren keyt ook romp, wielen en geschut; die sporen halen we eruit zodat de code
@@ -122,12 +124,13 @@ func _build_button() -> void:
 func _toggle() -> void:
 	var p = Game.player
 	# Input must not let a dead player board or re-board the jeep.
-	if p == null or p.dead:
+	if p == null or p.dead or _schade.dead:
 		return
 	if driven:
 		_disembark(p)
 	else:
 		driven = true
+		_schade.set_bestuurd(true)
 		goals.clear()
 		p.driving = true
 		p.visible = false
@@ -143,6 +146,7 @@ func _toggle() -> void:
 ## back to the jeep every frame even after Player.respawn() moved them home.
 func _disembark(p) -> void:
 	driven = false
+	_schade.set_bestuurd(false)
 	p.driving = false
 	p.visible = true
 	var side := global_transform.basis.x
@@ -155,6 +159,22 @@ func _disembark(p) -> void:
 		_btn.kind = "enter"
 		_btn.set_caption("IN")
 		_btn.queue_redraw()
+
+
+## Het voertuig is kapot (VoertuigSchade): de speler is al gesneuveld, de jeep blijft als wrak staan en doet niets meer.
+func on_vernield() -> void:
+	var p = Game.player
+	if driven and p != null:
+		_disembark(p)
+	driven = false
+	goals.clear()
+	_speed = 0.0
+	velocity = Vector3.ZERO
+	_clear_aim_preview()
+	_set_firing(false)
+	if _btn != null:
+		_btn.hide()
+	set_physics_process(false)
 
 
 func _physics_process(delta: float) -> void:

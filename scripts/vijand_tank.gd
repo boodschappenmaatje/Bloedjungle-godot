@@ -507,7 +507,7 @@ func _blocked_by_wall(goal: Vector3) -> bool:
 # ---------------------------------------------------------------- doel kiezen en schieten
 
 ## Het dichtstbijzijnde doel binnen schootsafstand. Soldaten en jij tellen zwaarder dan muren (je afstand telt dertig procent korter), het hoofdkwartier telt vanaf zijn rand.
-## Geeft {"kind": ally/player/build/gate/hq, "pos": Vector3, ...} of een leeg woordenboek.
+## Geeft {"kind": ally/player/voertuig/build/gate/hq, "pos": Vector3, ...} of een leeg woordenboek.
 func _pick_target() -> Dictionary:
 	var best := {}
 	var best_score := SHOT_RANGE + 0.01
@@ -525,6 +525,11 @@ func _pick_target() -> Dictionary:
 		if d2 * 0.7 < best_score and d2 <= SHOT_RANGE:
 			best_score = d2 * 0.7
 			best = {"kind": "player", "pos": p.global_position, "node": p, "dist": d2}
+	for v in VoertuigSchade.doelen():   # jouw jeep en tank tellen ook als doel, ook als ze leeg geparkeerd staan (V3, keuze 6A)
+		var dv := _flat_dist((v as Node3D).global_position)
+		if dv * 0.7 < best_score and dv <= SHOT_RANGE:
+			best_score = dv * 0.7
+			best = {"kind": "voertuig", "pos": (v as Node3D).global_position, "node": v, "dist": dv}
 	for b in Game.buildings:
 		if not b is Dictionary or b.get("down", false) or not Buildings.DEFS.has(b.kind):
 			continue
@@ -558,6 +563,8 @@ func _target_valid() -> bool:
 	match str(target.kind):
 		"ally", "player":
 			return target.node != null and is_instance_valid(target.node) and target.node.get("dead") != true
+		"voertuig":
+			return target.node != null and is_instance_valid(target.node) and VoertuigSchade.doelen().has(target.node)
 		"build":
 			return Game.buildings.has(target.ref) and not target.ref.down
 		"gate":
@@ -578,7 +585,7 @@ func _target_dist() -> float:
 
 func _target_pos() -> Vector3:
 	match str(target.kind):
-		"ally", "player":
+		"ally", "player", "voertuig":
 			return (target.node as Node3D).global_position
 		"gate":
 			return Game.gates.pos_of(Game.gates.list[int(target.index)])
@@ -687,6 +694,7 @@ static func boom(parent: Node, at: Vector3, dmg := SHELL_DAMAGE) -> void:
 	Game.note_blast(at, r)
 	Fx.explosion(parent, at + Vector3.UP * 0.2, 1.2)
 	Barrel.catch_blast(at, r)
+	VoertuigSchade.blast(at, r, dmg)   # tegen jouw jeep en tank telt een tankgranaat als "explosie" (pantser jeep/tank)
 	if Game.builds != null:
 		Game.builds.blast(at, r, dmg * BUILD_MULT, false)
 	if Game.gates != null:

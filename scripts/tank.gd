@@ -41,6 +41,7 @@ var _line_mesh := ImmediateMesh.new()
 var _mark_t := 0.0
 var _speed := 0.0
 var _btn: ActionBtn
+var _schade: VoertuigSchade   # levenspunten (V3): vijandelijke raketten, granaten en kogels raken hem, zit jij erin dan sneuvel je mee
 var _ram_cd := 0.0
 const TRACK_HALF := 1.5     # m, halve afstand tussen de rupsen (voor de snelheid per kant in een bocht)
 const TRACK_LEN := 13.27    # m, lengte van de rupsbaan (textuur loopt er één keer overheen)
@@ -79,34 +80,57 @@ func _ready() -> void:
 	_btn.hide()
 	layer.add_child(_btn)
 	_build_sight()
+	_schade = VoertuigSchade.attach(self, "tank")
 
 
 func _toggle() -> void:
 	var p = Game.player
-	if p == null or p.dead:
+	if p == null or p.dead or _schade.dead:
 		return
 	if driven:
-		driven = false
-		p.driving = false
-		p.in_tank = false
-		p.visible = true
-		_clear_sight()
-		p.global_position = global_position - global_transform.basis.x * 3.2
-		p.global_position.y = 0.0
-		p.collision_mask = p.get("_mask0")
-		_btn.kind = "enter"
-		_btn.set_caption("IN")
-	else:
-		driven = true
-		goals.clear()
-		p.driving = true
-		p.in_tank = true
-		p.visible = false
-		p.collision_mask = 0
-		p.velocity = Vector3.ZERO
-		_btn.kind = "exit"
-		_btn.set_caption("UIT")
+		_uitstappen(p)
+		return
+	driven = true
+	_schade.set_bestuurd(true)
+	goals.clear()
+	p.driving = true
+	p.in_tank = true
+	p.visible = false
+	p.collision_mask = 0
+	p.velocity = Vector3.ZERO
+	_btn.kind = "exit"
+	_btn.set_caption("UIT")
 	_btn.queue_redraw()
+
+
+## De speler stapt uit (knop, of hij is gesneuveld: dan staat hij naast de tank en het wrak).
+func _uitstappen(p) -> void:
+	driven = false
+	_schade.set_bestuurd(false)
+	p.driving = false
+	p.in_tank = false
+	p.visible = true
+	_clear_sight()
+	p.global_position = global_position - global_transform.basis.x * 3.2
+	p.global_position.y = 0.0
+	p.collision_mask = p.get("_mask0")
+	_btn.kind = "enter"
+	_btn.set_caption("IN")
+	_btn.queue_redraw()
+
+
+## Het voertuig is kapot (VoertuigSchade): de speler is al gesneuveld, de tank blijft als wrak staan en doet niets meer.
+func on_vernield() -> void:
+	var p = Game.player
+	if driven and p != null:
+		_uitstappen(p)
+	driven = false
+	goals.clear()
+	_speed = 0.0
+	velocity = Vector3.ZERO
+	if _btn != null:
+		_btn.hide()
+	set_physics_process(false)
 
 
 ## Rupsbanden laten lopen naar wat de tank het afgelopen beeld echt deed (vooruit en draaien), per kant.
@@ -129,7 +153,7 @@ func _physics_process(delta: float) -> void:
 	var pl = Game.player
 	var live: bool = Game.state == "play" or Game.state == "prep"
 	if pl != null and pl.dead and driven:
-		_toggle()
+		_uitstappen(pl)
 	_btn.visible = pl != null and not pl.dead and live and (driven or pl.global_position.distance_to(global_position) < BOARD_DIST)
 	_btn.dock(2)
 	collision_mask = 0 if not goals.is_empty() else 178

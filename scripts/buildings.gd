@@ -1074,6 +1074,16 @@ func cancel_order(b: Dictionary, kind: String) -> void:
 	Game.changed.emit()
 
 
+## Een wagen van de garage is vernield (VoertuigSchade, stap V3, keuze 4A: weg is weg): hij telt niet meer mee bij "In dienst" en een nieuwe koop je opnieuw in de garage.
+func vehicle_lost(v: Node3D, kind: String) -> void:
+	for b in Game.buildings:
+		if b is Dictionary and b.get("kind", "") == "garage" and b.has("fleet") and (b.fleet as Array).has(v):
+			(b.fleet as Array).erase(v)
+			b.has[kind] = maxi(0, int(b.has[kind]) - 1)
+			Game.changed.emit()
+			return
+
+
 func _front(b: Dictionary) -> Vector3:
 	return Vector3(sin(b.yaw), 0, cos(b.yaw))
 

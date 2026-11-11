@@ -786,6 +786,8 @@ func _animate_low(mv: Vector2, moving: float) -> void:
 func hit(dmg: float, dir: Vector3, from_player: bool, heavy := false) -> void:
 	if from_player or dead or airborne or Game.state == "over":
 		return
+	if driving and VoertuigSchade.bestuurd != null:
+		return   # in je jeep of tank vangt het voertuig de schade op (VoertuigSchade, stap V3)
 	if in_tank:
 		if not heavy:
 			Fx.spark(get_parent(), global_position + Vector3.UP * 1.2, dir)  # kogels en messen ketsen af op het pantser
@@ -813,6 +815,19 @@ func hit(dmg: float, dir: Vector3, from_player: bool, heavy := false) -> void:
 		respawn_t = RESPAWN_TIME
 		Sfx.play("thud", 0.8)
 		Game.changed.emit()
+
+
+## Het voertuig waar je in zat is vernield (stap V3, keuze 3B): je sneuvelt mee, zoals bij elke dood, en komt na 8 s terug bij de bunker.
+func sneuvel() -> void:
+	if dead:
+		return
+	hp = 0.0
+	dead = true
+	in_tank = false
+	model.play("dood1", 0.1)
+	respawn_t = RESPAWN_TIME
+	Sfx.play("thud", 0.8)
+	Game.changed.emit()
 
 
 ## Terugkomen na sneuvelen (Generals-plan 2d): vol leven, bij de bunker, even onkwetsbaar.

@@ -53,6 +53,11 @@ on:
       - "scripts/vijand_tank.gd"
       - "assets/vijand_tank.glb"
       - "tests/vijand_tank_test.gd"
+      - "scripts/voertuig_schade.gd"
+      - "scripts/tank.gd"
+      - "scripts/buildings.gd"
+      - "scripts/enemy.gd"
+      - "tests/voertuig_schade_test.gd"
       - "scripts/pause_menu.gd"
       - "scripts/progress.gd"
       - "scripts/mcv.gd"
@@ -204,4 +209,15 @@ jobs:
           echo "Godot exit code: $RC"
           grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/vijand_tank.log" | tail -n 40 || true
           tail -n 15 "$RUNNER_TEMP/vijand_tank.log"
+          exit "$RC"
+      - name: Eigen voertuigen met levenspunten (schade van vijanden, meesterven, wrak, HUD-balk, vijanden schieten op lege voertuigen)
+        shell: bash
+        run: |
+          set +e
+          timeout 300 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voertuig_schade_test.gd --fixed-fps 60 > "$RUNNER_TEMP/voertuig_schade.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/voertuig_schade.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/voertuig_schade.log"
           exit "$RC"

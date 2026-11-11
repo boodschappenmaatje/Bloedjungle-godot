@@ -589,7 +589,7 @@ func _fire_at_base(delta: float, has_target: bool) -> void:
 func _pick_target() -> Node3D:
 	var best: Node3D = null
 	var best_d := CHASE_R if not _north_of_river(global_position) else RANGE
-	for c in Game.allies + [Game.player]:
+	for c in Game.allies + [Game.player] + VoertuigSchade.doelen():   # ook jouw jeep en tank, ook leeg geparkeerd (V3, keuze 6A)
 		if c == null or not is_instance_valid(c) or c.get("dead") == true:
 			continue
 		if c is Ally and c.beleg_bezig():

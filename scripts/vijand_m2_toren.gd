@@ -137,7 +137,7 @@ func _physics_process(delta: float) -> void:
 		return
 	var best: Node3D
 	var score := -INF
-	for candidate in Game.allies + [Game.player]:
+	for candidate in Game.allies + [Game.player] + VoertuigSchade.doelen():   # ook jouw jeep en tank (V3, keuze 6A)
 		if not is_instance_valid(candidate) or candidate.get("dead") == true:
 			continue
 		if candidate is Ally and candidate.beleg_bezig():

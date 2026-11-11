@@ -366,10 +366,15 @@ func _far_step(delta: float) -> void:
 	_far_acc = 0.0
 
 
-## Dichtstbijzijnde bouwwerk (geen muur of zandzak) binnen 26 m dat nog heel is en waar hij vrij zicht op heeft.
+## Dichtstbijzijnde bouwwerk (geen muur of zandzak) of voertuig van jou (jeep, tank) binnen 26 m dat nog heel is en waar hij vrij zicht op heeft.
 func _rocket_target() -> Variant:
 	var best: Variant = null
 	var bd := 26.0
+	for v in VoertuigSchade.doelen():   # raketten zijn er juist voor pantser (V3, keuze 6A)
+		var dv := _flat((v as Node3D).global_position - global_position).length()
+		if dv < bd and _rocket_clear({"at": (v as Node3D).global_position, "node": v}):
+			bd = dv
+			best = {"at": (v as Node3D).global_position, "node": v}
 	for b in Game.buildings:
 		if b.down or Game.builds.is_piece(b.kind):
 			continue

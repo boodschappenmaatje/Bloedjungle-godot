@@ -18,6 +18,8 @@ var _last_weapon := ""
 var _hurt: ColorRect
 var _hurt_a := 0.0
 var _last_hp := -1.0
+var _veh_fill := false   # de balk heeft nu de kleur van het voertuig (groen) in plaats van die van je soldaat (rood)
+var _last_vf := -1.0   # deel levenspunten van je jeep of tank bij het vorige beeld (VoertuigSchade), -1 = je zit in geen voertuig
 var _arrows: Control
 var _bars: VBoxContainer
 var _status_panel: PanelContainer
@@ -661,11 +663,20 @@ func _process(delta: float) -> void:
 	_score.text = "★ %s" % UI.nl(Game.score)
 	_base_bar.value = Game.base_hp / Game.base_max
 	var p = Game.player
+	var vf := VoertuigSchade.bestuurd_fractie()   # zit je in je jeep of tank, dan toont de balk het voertuig (V3)
 	if p:
-		_hp_bar.value = p.hp / Game.max_hp()
-		if _last_hp >= 0.0 and p.hp < _last_hp:
+		_hp_bar.value = vf if vf >= 0.0 else p.hp / Game.max_hp()
+		_hp_bar.tooltip_text = ("%s" % VoertuigSchade.bestuurd_naam()) if vf >= 0.0 else "Spelergezondheid"
+		if (vf >= 0.0) != _veh_fill:
+			_veh_fill = vf >= 0.0
+			_hp_bar.add_theme_stylebox_override("fill", UI.box(Color8(112, 176, 84) if _veh_fill else UI.BLOOD_HI, Color(0, 0, 0, 0), 0, 1, 0))
+		if vf >= 0.0:
+			if _last_vf >= 0.0 and vf < _last_vf:
+				_hurt_a = 0.5
+		elif _last_hp >= 0.0 and p.hp < _last_hp:
 			_hurt_a = 0.5
 		_last_hp = p.hp
+		_last_vf = vf
 		if p.weapon != _last_weapon:
 			if _last_weapon != "":
 				_weapon.text = Data.WEAPONS[p.weapon].name.to_upper()
@@ -691,7 +702,7 @@ func _process(delta: float) -> void:
 	_hurt_a = maxf(0.0, _hurt_a - delta)
 	var low_hp := 0.0
 	if p and Game.state == "play":
-		var f: float = p.hp / Game.max_hp()
+		var f: float = vf if vf >= 0.0 else p.hp / Game.max_hp()
 		if f < 0.3:
 			low_hp = (0.3 - f) * 2.0 * (0.6 + 0.4 * sin(Time.get_ticks_msec() / 180.0))
 	(_hurt.material as ShaderMaterial).set_shader_parameter("amount", clampf(maxf(_hurt_a * 2.0, low_hp), 0.0, 1.0))

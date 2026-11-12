@@ -102,7 +102,7 @@ static func echt_niveau(id: String) -> int:
 
 ## Niveau waarmee de kracht nu werkt (in de test altijd het hoogste).
 static func niveau(id: String) -> int:
-	return MAX_NIVEAU if test() else echt_niveau(id)
+	return MAX_NIVEAU if (test() and KRACHTEN.has(id)) else echt_niveau(id)
 
 
 static func heeft(id: String) -> bool:

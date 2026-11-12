@@ -358,6 +358,7 @@ func _run() -> void:
 	_check("testschakelaar: alle krachten op niveau 3 zonder afkoeling", Rg.heeft("napalm") and Rg.niveau("satelliet") == 3 and Rg.beschikbaar().size() == 6)
 	G.kracht_cd["satelliet"] = 99.0
 	_check("testschakelaar: nooit afkoeling", Rg.klaar("satelliet") and is_equal_approx(Rg.cd_rest("satelliet"), 0.0))
+	_check("testschakelaar: een lege kracht-keuze telt niet als kracht (KRACHTEN-knop staat dan klaar)", not Rg.heeft("") and Rg.huidig() != "")
 	gs.set_value("t_krachten", "off")
 	_check("schakelaar uit: weer niets", not Rg.heeft("napalm") and Rg.beschikbaar().is_empty())
 

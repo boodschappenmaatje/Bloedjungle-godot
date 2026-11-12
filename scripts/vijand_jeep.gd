@@ -590,7 +590,7 @@ func _pick_target() -> Node3D:
 	for c in Game.allies + [Game.player] + VoertuigSchade.doelen():   # ook jouw jeep en tank, ook leeg geparkeerd (V3, keuze 6A)
 		if c == null or not is_instance_valid(c) or c.get("dead") == true:
 			continue
-		if c is Ally and c.beleg_bezig():
+		if c is Ally and c.onraakbaar():
 			continue
 		var d := _flat_dist((c as Node3D).global_position)
 		if d < best_d and (d > RANGE or _clear_shot((c as Node3D).global_position + Vector3.UP * 1.3)):

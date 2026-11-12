@@ -302,6 +302,7 @@ var _pillars: Dictionary = {}   # regelvoorvoegsel ("M0") -> dragende hoekstukke
 var _warn := 0.0            # > 0: het gebouw kraakt en stort over zoveel seconden in
 var _warn_tick := 0.0
 var _pending: Dictionary = {}   # de instortingsregel die na het kraken wordt uitgevoerd
+var garnizoen: Garnizoen     # soldaten die in dit gebouw zitten (Generals-plan F2, garnizoen.gd)
 
 ## Snel slopen (dragende hoeken, kettingreactie, kraken, sterkere explosies). Uit = de oude regels, voor regressietests.
 static var fast := true
@@ -379,6 +380,7 @@ func _ready() -> void:
 	_guards()
 	_furniture()
 	_shadow_proxy()
+	garnizoen = Garnizoen.voor(self)
 
 
 func _exit_tree() -> void:
@@ -1305,6 +1307,8 @@ func _dust_wave(c: Vector3, span: float) -> void:
 
 ## Verdieping k en alles erboven zakt in: vloeren kapot, inrichting weg, muren erboven kapot of weg, dak weg.
 func _fall_from(k: int) -> void:
+	if garnizoen != null:
+		garnizoen.instort(k)   # wie op die verdieping zat, sneuvelt (F2, keuze 9B)
 	_shadow_broken()
 	_fall = k
 	_collapsed = true
@@ -1346,6 +1350,8 @@ func _fall_from(k: int) -> void:
 
 ## Het hele gebouw stort in: alles weg, de ruïne uit het model komt ervoor in de plaats (houdt kogels tegen).
 func _ruin_all() -> void:
+	if garnizoen != null:
+		garnizoen.instort(0)   # iedereen binnen sneuvelt (F2, keuze 9B)
 	_shadow_broken()
 	_ruin = true
 	_collapsed = true
@@ -1360,7 +1366,7 @@ func _ruin_all() -> void:
 	if _dak:
 		_dak.visible = false
 	for c in get_children():
-		if c is StaticBody3D or (c is Node3D and c != model):
+		if c is StaticBody3D or (c is Node3D and c != model and c != garnizoen):
 			c.queue_free()   # losse puinhopen en de relingen
 	_piles.clear()
 	var ruine: Node3D = model.find_child("Ruine", true, false)
@@ -1394,6 +1400,8 @@ func _ruin_part(nm: String) -> void:
 		return
 	_shadow_broken()
 	var part: Dictionary = spec.parts[nm]
+	if garnizoen != null:
+		garnizoen.instort(1, nm)
 	_ruined[nm] = true
 	_collapsed = true
 	for s in segs:

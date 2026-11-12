@@ -31,6 +31,7 @@ var _press_btn := ""
 var _last_tap_t := -10.0
 var _last_tap_unit: Node3D
 var _dimmed: Array = []
+var _eruit_rect := Rect2()   # knop ERUIT boven een gebouw met jouw soldaten (F2, 4A)
 
 
 func _ready() -> void:
@@ -84,6 +85,9 @@ func close_stand() -> void:
 	if is_in_group("kaart_open"):
 		remove_from_group("kaart_open")
 	_dim(false)
+	var ts := _sel()
+	if ts != null:
+		ts.gebouw = null
 	queue_redraw()
 
 
@@ -193,6 +197,7 @@ func _draw() -> void:
 		_mark(cam, m)
 	if active:
 		_draw_panel(ts)
+		_draw_eruit(cam, ts)
 		if _mode == "box":
 			var b := Rect2(_start, _box_to - _start).abs()
 			draw_rect(b, Color(HudExtra.C_EIGEN_HI, 0.12), true)
@@ -236,7 +241,9 @@ func _draw_panel(ts: TroepSelectie) -> void:
 			"bewaak":
 				hint = wie + " · tik wat ze bewaken (gebouw, voertuig, soldaat of jij)"
 			_:
-				hint = wie + " · tik waar ze heen moeten, of op een vijand"
+				hint = wie + " · tik waar ze heen moeten, op een vijand, of op een huis om erin te gaan"
+	elif _eruit_vis():
+		hint = "Gebouw met %d van je soldaten · tik ERUIT om ze naar buiten te halen" % ts.gebouw.bewoners.size()
 	var w := font.get_string_size(hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x
 	var hp := Vector2((size.x - w) * 0.5, _hint_y)
 	draw_string_outline(font, hp, hint, HORIZONTAL_ALIGNMENT_LEFT, -1, 13, 5, Color(0, 0, 0, 0.85))
@@ -257,6 +264,39 @@ func _draw_panel(ts: TroepSelectie) -> void:
 			draw_rect(Rect2(r.position + Vector2(2.0, r.size.y - 4.0), Vector2((r.size.x - 4.0) * f, 2.0)), HudExtra.C_EIGEN_HI)
 		draw_string(font, Vector2(r.position.x, r.position.y + 21.0), "%d · %d" % [i + 1, cnt] if cnt > 0 else str(i + 1), HORIZONTAL_ALIGNMENT_CENTER, r.size.x, 12, HudExtra.C_EIGEN_HI if cnt > 0 else UI.INK_DIM)
 	BevelBalk.draw(self, _bar, ts.armed, n > 0)
+
+
+func _eruit_vis() -> bool:
+	var ts := _sel()
+	return active and ts != null and is_instance_valid(ts.gebouw) and ts.gebouw.partij == "eigen" and not ts.gebouw.bewoners.is_empty()
+
+
+## Het gekozen gebouw: een groene rand op de grond en de knop ERUIT erboven.
+func _draw_eruit(cam: Camera3D, ts: TroepSelectie) -> void:
+	if not _eruit_vis():
+		_eruit_rect = Rect2()
+		return
+	var g: Garnizoen = ts.gebouw
+	var h: Woonhuis = g.huis
+	var hx := float(h.spec.hx) + 0.4
+	var hz := float(h.spec.hz) + 0.4
+	var pts := PackedVector2Array()
+	for c in [Vector3(-hx, 0.1, -hz), Vector3(hx, 0.1, -hz), Vector3(hx, 0.1, hz), Vector3(-hx, 0.1, hz), Vector3(-hx, 0.1, -hz)]:
+		var w := h.to_global(c)
+		if cam.is_position_behind(w):
+			return
+		pts.append(cam.unproject_position(w))
+	draw_polyline(pts, HudExtra.C_EIGEN_HI, 2.6, true)
+	var top := h.to_global(Vector3(0.0, g._dak_y() + 1.0, 0.0))
+	if cam.is_position_behind(top):
+		return
+	var sp := cam.unproject_position(top)
+	var font := UI.body(700, 1)
+	var label := "ERUIT  ·  %d" % g.bewoners.size()
+	var w2 := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 28.0
+	_eruit_rect = Rect2(sp - Vector2(w2 * 0.5, 44.0), Vector2(w2, 34.0))
+	draw_style_box(UI.box(Color(0.08, 0.16, 0.06, 0.96), Color(HudExtra.C_EIGEN_HI, 0.95), 1, 6, 0), _eruit_rect)
+	draw_string(font, Vector2(_eruit_rect.position.x, _eruit_rect.position.y + 22.0), label, HORIZONTAL_ALIGNMENT_CENTER, _eruit_rect.size.x, 13, HudExtra.C_EIGEN_HI)
 
 
 ## Een ring op de grond rond `at` (in perspectief, net als de echte soldaatring).
@@ -332,6 +372,8 @@ func _mark(cam: Camera3D, m: Dictionary) -> void:
 # ---------------------------------------------------------------- invoer
 
 func _row_at(pos: Vector2) -> String:
+	if _eruit_vis() and _eruit_rect.grow(4.0).has_point(pos):
+		return "eruit"
 	for key in _row:
 		if (_row[key] as Rect2).grow(3.0).has_point(pos):
 			return key
@@ -496,6 +538,13 @@ func _tap(pos: Vector2) -> void:
 		"none":
 			ts.clear()
 			return
+		"eruit":
+			if _eruit_vis():
+				var out: Array = ts.gebouw.eruit()
+				ts.gebouw = null
+				ts.select(out)
+				Game.banner.emit("ERUIT", "%s staan bij de deur" % TroepSelectie.wie(out), 1.4)
+			return
 	if _press_btn.begins_with("g"):
 		if not ts.pick_group(int(_press_btn.substr(1))):
 			Game.banner.emit("GROEP %d IS LEEG" % (int(_press_btn.substr(1)) + 1), "Kies soldaten en houd het vakje vast om ze op te slaan.", 2.0)
@@ -515,6 +564,7 @@ func _tap(pos: Vector2) -> void:
 		ts.apply_tap(g if g != null else Vector3.ZERO, null, who)
 		return
 	if own != null:
+		ts.gebouw = null
 		var now := _now()
 		if now - _last_tap_t < DOUBLE_TAP and is_instance_valid(_last_tap_unit) and String(_last_tap_unit.get("kind")) == String(own.get("kind")):
 			ts.select_kind(String(own.get("kind")), _on_screen(cam))
@@ -525,6 +575,10 @@ func _tap(pos: Vector2) -> void:
 			_last_tap_unit = own
 		return
 	if ts.sel.is_empty():
+		# niemand gekozen: een tik op een gebouw met jouw soldaten kiest dat gebouw, met de knop ERUIT erboven (F2, 4A)
+		var gw: Variant = _ground(cam, pos)
+		var gz: Garnizoen = Garnizoen.at(gw) if gw != null else null
+		ts.gebouw = gz if gz != null and gz.partij == "eigen" else null
 		return
 	var enemy := _pick(cam, Game.enemies, pos)
 	var world: Variant = _ground(cam, pos)

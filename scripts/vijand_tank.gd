@@ -511,7 +511,7 @@ func _pick_target() -> Dictionary:
 	var best_score := SHOT_RANGE + 0.01
 	var here := global_position
 	for c in Game.allies:
-		if c == null or not is_instance_valid(c) or c.get("dead") == true or (c is Ally and c.beleg_bezig()):
+		if c == null or not is_instance_valid(c) or c.get("dead") == true or (c is Ally and c.onraakbaar()):
 			continue
 		var d := _flat_dist((c as Node3D).global_position)
 		if d * 0.7 < best_score and d <= SHOT_RANGE:
@@ -693,6 +693,7 @@ static func boom(parent: Node, at: Vector3, dmg := SHELL_DAMAGE) -> void:
 	Fx.explosion(parent, at + Vector3.UP * 0.2, 1.2)
 	Barrel.catch_blast(at, r)
 	VoertuigSchade.blast(at, r, dmg)   # tegen jouw jeep en tank telt een tankgranaat als "explosie" (pantser jeep/tank)
+	Garnizoen.blast(at, r, dmg, "eigen")
 	if Game.builds != null:
 		Game.builds.blast(at, r, dmg * BUILD_MULT, false)
 	if Game.gates != null:
@@ -703,7 +704,7 @@ static func boom(parent: Node, at: Vector3, dmg := SHELL_DAMAGE) -> void:
 			if not g.broken and gd < r:
 				Game.gates.damage(i, dmg * 1.2 * (1.0 - gd / r), "explosive")
 	for a in Game.allies.duplicate():
-		if a == null or not is_instance_valid(a) or (a is Ally and a.beleg_bezig()):
+		if a == null or not is_instance_valid(a) or (a is Ally and a.onraakbaar()):
 			continue
 		var d := Vector2(a.global_position.x - at.x, a.global_position.z - at.z).length()
 		if d < r and not BaseWallRules.blocks_blast(at, a.global_position):

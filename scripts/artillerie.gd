@@ -123,6 +123,7 @@ func _impact(at: Vector3) -> void:
 static func damage_at(at: Vector3) -> int:
 	VijandHk.blast(at, BLAST, DAMAGE)   # ook het vijandelijke hoofdkwartier (stap 5a-2)
 	VijandM2Toren.blast(at, BLAST, DAMAGE)
+	Garnizoen.blast(at, BLAST, DAMAGE, "vijand")   # een granaat van boven in een bezet gebouw (F2)
 	var hits := 0
 	for e in Game.enemies.duplicate():
 		if not is_instance_valid(e) or e.get("dead") == true:

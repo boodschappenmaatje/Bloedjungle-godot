@@ -58,6 +58,7 @@ func _start_world() -> void:
 		n.queue_free()   # de geparkeerde bouwwagen van een vorig spel
 	for n in get_tree().get_nodes_in_group("mcv_hq"):
 		n.queue_free()   # het hoofdkwartier van een vorig spel
+	Garnizoen.start_game()   # F2: de vijand bezet zijn vier gebouwen in de stad (7A)
 	Game.supply.start_game()   # MCV-start: alleen de voorraadstapels; het depot is gratis maar zet je zelf neer
 	var mcv := Mcv.new()
 	mcv.position = Mcv.START_POS

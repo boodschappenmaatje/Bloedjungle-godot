@@ -203,6 +203,7 @@ func _explode() -> void:
 	if Game.builds:
 		Game.builds.blast(at, r, DAMAGE, true)
 	VijandHk.blast(at, r, DAMAGE)   # het vijandelijke hoofdkwartier slopen = winnen
+	Garnizoen.blast(at, r, DAMAGE, "vijand")   # een granaat door het raam van een bezet gebouw (F2)
 	VijandM2Toren.blast(at, r, DAMAGE)
 	if Game.gates:
 		for i in Game.gates.list.size():

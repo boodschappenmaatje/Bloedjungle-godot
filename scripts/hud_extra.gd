@@ -362,6 +362,23 @@ func _draw_vijand_basis(map: Rect2) -> void:
 		_cv.draw_rect(patch.grow(2.0 * _k), Color(1.0, 0.62, 0.15, 0.55 + 0.4 * pulse), false, 1.6 * _k)
 
 
+## Bezette stadsgebouwen (F2, keuze 3A/8A): een vlak met een rand in partijkleur, rood voor de vijand en groen voor jouw soldaten.
+func _draw_garnizoenen(map: Rect2) -> void:
+	for g: Garnizoen in Garnizoen.all:
+		if not is_instance_valid(g) or g.partij == "" or g.bewoners.is_empty():
+			continue
+		var h: Woonhuis = g.huis
+		var hx := float(h.spec.hx)
+		var hz := float(h.spec.hz)
+		var pts := PackedVector2Array()
+		for c in [Vector3(-hx, 0, -hz), Vector3(hx, 0, -hz), Vector3(hx, 0, hz), Vector3(-hx, 0, hz)]:
+			pts.append(_radar_point(h.to_global(c), map))
+		var col := C_VIJAND if g.partij == "vijand" else C_EIGEN
+		_cv.draw_colored_polygon(pts, Color(col, 0.38))
+		pts.append(pts[0])
+		_cv.draw_polyline(pts, Color(col, 0.95), 1.3 * _k, true)
+
+
 ## Kleuren van radar en kaart (keuze 3A): jij goud met een pijl, al je eigen eenheden groen (net als hun ringen in het spel),
 ## je gebouwen goud, de vijand rood.
 const C_JIJ := Color(0.98, 0.8, 0.36)
@@ -436,6 +453,7 @@ func _draw_terrain(map: Rect2) -> void:
 func _draw_map_content(map: Rect2) -> void:
 	_draw_terrain(map)
 	_draw_vijand_basis(map)
+	_draw_garnizoenen(map)
 	# De bunker staat op het echte wereldnulpunt; overige markers volgen de huidige bouwdata.
 	var base := _radar_point(Game.base_pos, map)
 	if Game.mcv_deployed:   # pas een hoofdkwartier als de wagen is uitgeklapt

@@ -109,7 +109,7 @@ func _physics_process(delta: float) -> void:
 			return
 	var target: Node3D = Game.player if is_instance_valid(Game.player) and not Game.player.dead else null
 	for a in Game.allies:
-		if is_instance_valid(a) and global_position.distance_to(a.global_position) < (global_position.distance_to(target.global_position) if target else INF):
+		if is_instance_valid(a) and not a.onraakbaar() and global_position.distance_to(a.global_position) < (global_position.distance_to(target.global_position) if target else INF):
 			target = a
 	if target == null:
 		return

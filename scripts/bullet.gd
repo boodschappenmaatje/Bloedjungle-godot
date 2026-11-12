@@ -328,7 +328,7 @@ func _physics_process(delta: float) -> void:
 		var nearest: Ally = null
 		var nearest_distance := INF
 		for soldier in Game.allies:
-			if not is_instance_valid(soldier) or soldier.beleg_bezig():
+			if not is_instance_valid(soldier) or soldier.onraakbaar():
 				continue
 			var center: Vector3 = soldier.global_position + Vector3.UP * 1.2
 			var fraction := clampf((center - global_position).dot(step) / step.length_squared(), 0.0, 1.0)
@@ -467,6 +467,7 @@ func _explode(at: Vector3) -> void:
 	Fx.explosion(get_parent(), at, 1.4)
 	Barrel.catch_blast(at, explosive)
 	VijandHk.blast(at, explosive, dmg)   # de bazooka tegen het vijandelijke hoofdkwartier
+	Garnizoen.blast(at, explosive, dmg, "vijand")   # door een raam of tegen de muur van een bezet gebouw (F2)
 	VijandM2Toren.blast(at, explosive, dmg)
 	if Game.builds:
 		Game.builds.blast(at, explosive, dmg, true)  # eigen raketten doen een beetje schade aan je eigen bouwwerk
@@ -488,6 +489,7 @@ func _boom_enemy(at: Vector3) -> void:
 	Fx.explosion(get_parent(), at, 0.9)
 	Barrel.catch_blast(at, r)
 	VoertuigSchade.blast(at, r, dmg, "raket")   # een raket van de vijand tegen jouw jeep of tank
+	Garnizoen.blast(at, r, dmg, "eigen")   # en tegen een gebouw met jouw soldaten (F2)
 	if Game.builds:
 		Game.builds.blast(at, r, dmg, false)
 	if Game.gates:

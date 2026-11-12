@@ -4,6 +4,11 @@ on:
   pull_request:
     paths:
       - "scripts/vijand_basis.gd"
+      - "scripts/garnizoen.gd"
+      - "scripts/woonhuis.gd"
+      - "scripts/house_body.gd"
+      - "scripts/enemy.gd"
+      - "tests/garnizoen_test.gd"
       - "scripts/level.gd"
       - "scripts/data.gd"
       - "scripts/foliage.gd"
@@ -190,6 +195,13 @@ jobs:
           set -euo pipefail
           GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
           timeout 240 "$GODOT" --headless --path . --script tests/auto_wapens_test.gd --fixed-fps 60
+      - name: Garnizoen in de stad (F2)
+        shell: bash
+        run: |
+          set -euo pipefail
+          GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
+          timeout 300 "$GODOT" --headless --path . --script tests/garnizoen_test.gd --fixed-fps 60 2>&1 | tee "$RUNNER_TEMP/garnizoen.log" | grep -E '^(OK|FOUT)|klaar|garnizoen'
+          grep -Fq "klaar: 0 fouten" "$RUNNER_TEMP/garnizoen.log"
       - name: Testoptie start bij groep
         shell: bash
         run: |

@@ -11,3 +11,5 @@ func hit(dmg: float, _dir: Vector3, from_player: bool) -> void:
 	if house == null or seg.is_empty():
 		return
 	house.damage(seg, dmg * (0.33 if from_player else 1.0))
+	if house.garnizoen != null:
+		house.garnizoen.kogel(seg, dmg, from_player)   # een kogel op een raam kan een bewoner raken (F2)

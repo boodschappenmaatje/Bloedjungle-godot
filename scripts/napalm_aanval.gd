@@ -379,6 +379,7 @@ func _in_strip(p: Vector3) -> bool:
 
 
 func _burn_damage() -> void:
+	Garnizoen.brand(_in_strip, TICK)   # wie in een brandend gebouw zit, verbrandt (F2)
 	for e in Game.enemies.duplicate():
 		if is_instance_valid(e) and not e.dead and _in_strip(e.global_position):
 			e.ignite(BURN_RUN)   # in de brandende strook: vlam vat, 5 s rennen, dan neer

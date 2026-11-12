@@ -27,6 +27,7 @@ var armed := "move"                 # wat een tik op de grond doet (slim tikken,
 var marks: Array = []               # {pos, order, t}: korte markers op de grond
 var order_t := -100.0               # echte tijd (s) van het laatste bevel: zo lang daarna zie je de lijnen ook buiten de bevelstand
 var _slowed := false
+var gebouw: Garnizoen              # een gebouw met jouw soldaten dat je aantikte: de bevelstand toont dan ERUIT (F2, 4A)
 
 
 static func inst(tree: SceneTree) -> TroepSelectie:
@@ -43,7 +44,7 @@ static func commandable(a) -> bool:
 		return false
 	if a is VoertuigBestuurder:
 		return a.bevelbaar()
-	return a is Node3D and Game.allies.has(a) and Controller.can_command(bool(a.get("helper")), bool(a.get("guard")), a.get("truck") != null)
+	return a is Node3D and Game.allies.has(a) and a.get("binnen") == null and Controller.can_command(bool(a.get("helper")), bool(a.get("guard")), a.get("truck") != null)
 
 
 ## Soldaten en voertuigen die je nu kunt bevelen.
@@ -216,7 +217,10 @@ func issue(order: String, target := Vector3.ZERO, enemy: Node3D = null, node: No
 	elif order == "hold" or order == "follow":
 		mark_at = center()
 	for i in sel.size():
-		sel[i].set_command(order, target, enemy, node, i)
+		var o := order
+		if o == "bezet" and is_vehicle(sel[i]):
+			o = "move"   # een jeep of tank past niet in een huis: hij rijdt naar de deur
+		sel[i].set_command(o, target, enemy, node, i)
 	var boek := get_tree().root.get_node_or_null("Game/Logboek") if is_inside_tree() else null   # foutenlogboek
 	if boek != null:
 		boek.noteer_actie("bevel %s aan %d eenheden naar (%.0f, %.0f)" % [order, sel.size(), target.x, target.z])
@@ -264,6 +268,14 @@ func apply_tap(world: Vector3, enemy: Node3D, own: Node3D) -> String:
 			return "issued"
 		Game.banner.emit("VIJANDBASIS", "Daar kun je niet verdedigen. Tik op de basis met VERPLAATS of AANVAL om hem aan te vallen.", 2.5)
 		return "geweigerd"
+	if armed in ["move", "defend"]:
+		var gz := Garnizoen.at(world)
+		if gz != null:
+			if gz.partij == "vijand":
+				Game.banner.emit("BEZET DOOR DE VIJAND", "Haal ze eruit met granaten, raketten of napalm, of loop zelf naar binnen.", 2.6)
+				return "geweigerd"
+			issue("bezet", gz.deur(), null, gz)   # 4A: tik op een stadsgebouw = erin
+			return "issued"
 	issue(armed, world)
 	return "issued"
 

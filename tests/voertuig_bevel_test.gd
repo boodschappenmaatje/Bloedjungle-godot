@@ -431,6 +431,8 @@ func _test_basis() -> void:
 	var rz: float = D.river_z(D.BRIDGE_X)
 	var VB: Script = load("res://scripts/vijand_basis.gd")
 	var gate: Vector3 = VB.gate_outside()
+	for gz in load("res://scripts/garnizoen.gd").get("all"):
+		gz._leeg()   # F2: deze test gaat over de route; vijanden in de stadsgebouwen zouden de jeep onderweg beschieten
 	var j := _vehicle("jeep", Vector3(D.BRIDGE_X, 0.0, rz + 25.0))
 	await _frames(4)
 	var bj := _bst(j)

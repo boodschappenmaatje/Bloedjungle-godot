@@ -175,6 +175,16 @@ func _physics_process(delta: float) -> void:
 		_tgt_y = 0.0
 		goal = rb.at
 		dist = _flat(rb.at - global_position).length() - 2.0
+	# F2: een gebouw met jouw soldaten binnen bereik: hij schiet terug op het raam
+	_aim_pt = null
+	if not at_player and rb == null and not melee:
+		var gz: Variant = Garnizoen.eigen_doel(global_position, range_)
+		if gz != null:
+			goal = (gz as Node3D).global_position
+			goal.y = 0.0
+			_aim_pt = (gz as Node3D).global_position
+			_tgt_y = (_aim_pt as Vector3).y
+			dist = _flat(goal - global_position).length()
 
 	# vanaf hier: waar hij naartoe loopt (move_goal) kan anders zijn dan waarop hij mikt (goal)
 	var move_goal := goal
@@ -210,7 +220,7 @@ func _physics_process(delta: float) -> void:
 	fire_t -= delta
 	var want_move := true
 	var look := face
-	var aim_at := goal + Vector3.UP * 1.2
+	var aim_at: Vector3 = _aim_pt if _aim_pt != null else goal + Vector3.UP * 1.2
 	if mode == "cover":
 		var cd := _flat(cover_pt - global_position)
 		want_move = cd.length() > 0.6
@@ -314,6 +324,7 @@ func _physics_process(delta: float) -> void:
 
 
 var _tgt_y := 0.0
+var _aim_pt: Variant = null   # F2: het raam van een gebouw met jouw soldaten waar hij nu op schiet (null = jij of de basis)
 var _far := false
 var _far_acc := 0.0
 var _far_n := 0
@@ -411,7 +422,10 @@ func _shoot(a: float) -> void:
 	var muzzle: Vector3 = model.muzzle_position()
 	Game.mark_attack(global_position)
 	var rise := 0.0
-	if _tgt_y > 1.0 and Game.player:
+	if _aim_pt != null:
+		var ad := _flat((_aim_pt as Vector3) - muzzle).length()
+		rise = ((_aim_pt as Vector3).y - muzzle.y) / maxf(ad, 3.0)
+	elif _tgt_y > 1.0 and Game.player:
 		var dd := _flat(Game.player.global_position - muzzle).length()
 		rise = (_tgt_y + 1.0 - muzzle.y) / maxf(dd, 3.0)
 	var weapon_kind := "mg42" if type == "heavy" else "garand"

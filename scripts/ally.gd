@@ -45,10 +45,13 @@ var command_slot := -1   # plek in de vorming bij een bevel aan een keuze (Troep
 var command_node: Node3D   # BEWAAK: het gebouw, voertuig of de soldaat die hij bewaakt
 var _threat: Node3D        # VERDEDIG/BEWAAK: de vijand die hij nu achternagaat
 var _threat_t := 0.0
+var binnen: Node = null     # het garnizoen (Garnizoen) waar hij nu in zit; dan is hij onzichtbaar en rekent hij niet (F2)
 const CHASE := 14.0        # m: zo ver van zijn plek gaat een verdediger of bewaker een vijand achterna, daarna terug
 
 func set_command(order: String, target: Vector3, enemy: Node3D = null, node: Node3D = null, slot := -1) -> void:
 	if helper or guard or truck != null: return
+	if binnen != null and is_instance_valid(binnen) and order != "bezet":
+		binnen.uit(self)   # een ander bevel (teamwiel, bevelstand): eerst naar buiten
 	if order == "hold": command_hold_position = global_position
 	_beleg = false
 	if order == "basis":
@@ -134,6 +137,12 @@ func _physics_process(delta: float) -> void:
 	var target: Node3D = command_enemy if is_instance_valid(command_enemy) else _nearest_enemy()
 	if target == null and not _supports():
 		target = _hk_target()
+	if target == null and not _supports():
+		target = Garnizoen.vijand_doel(global_position, float(_ty().range))   # een raam van een gebouw van de vijand (F2)
+	if command == "bezet" and is_instance_valid(command_node) and _flat_to(command_node.deur()) < Garnizoen.INSTAP:
+		if command_node.binnen_gaan(self):
+			return
+		_bezet_mislukt()
 	if _supports():
 		target = null   # een hospik en een ingenieur schieten niet
 	var goal := _goal()
@@ -249,6 +258,11 @@ func beleg_bezig() -> bool:
 	return _far and _beleg and command == "basis"
 
 
+## Niet te raken: op afstand in het beleg, of binnen in een gebouw (daar raakt alleen wat op het gebouw schiet, zie Garnizoen).
+func onraakbaar() -> bool:
+	return beleg_bezig() or binnen != null
+
+
 ## Het vijandelijke hoofdkwartier als doelwit: alleen als hij er dichtbij genoeg voor staat (de rest van de tijd is het geen vijand).
 func _hk_target() -> Node3D:
 	var hk := VijandHk.inst
@@ -276,6 +290,20 @@ func _march_goal() -> Vector3:
 var _via := false   # hij loopt nu naar een tussenpunt (rond een muur, door een poort) en niet naar zijn eigen doel: dan niet afremmen
 
 
+func _flat_to(p: Vector3) -> float:
+	return Vector2(p.x - global_position.x, p.z - global_position.z).length()
+
+
+## Het gebouw is vol of van de vijand geworden: blijf bij de deur staan en verdedig die.
+func _bezet_mislukt() -> void:
+	var g: Node = command_node
+	command = "defend"
+	command_target = global_position
+	command_node = null
+	if is_instance_valid(g) and g.vol():
+		Game.banner.emit("GEBOUW VOL", "%d van %d plaatsen bezet" % [g.bewoners.size(), g.plaatsen()], 1.4)
+
+
 func _goal() -> Vector3:
 	var g := _goal_plain()
 	_via = false
@@ -298,6 +326,12 @@ func _goal_plain() -> Vector3:
 			return st.global_position   # een hospik loopt naar wie geheeld moet worden, een ingenieur naar wat gerepareerd moet worden
 	if command == "basis" and not helper:
 		return _march_goal()
+	if command == "bezet" and not helper:
+		if not is_instance_valid(command_node) or command_node.ruine():
+			command = "hold"
+			command_hold_position = global_position
+			return global_position
+		return command_node.deur()
 	if not helper and command == "bewaak":
 		if not is_instance_valid(command_node) or command_node.get("dead") == true:
 			command = "hold"

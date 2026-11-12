@@ -141,7 +141,7 @@ func _physics_process(delta: float) -> void:
 	for candidate in Game.allies + [Game.player] + VoertuigSchade.doelen():   # ook jouw jeep en tank (V3, keuze 6A)
 		if not is_instance_valid(candidate) or candidate.get("dead") == true:
 			continue
-		if candidate is Ally and candidate.beleg_bezig():
+		if candidate is Ally and candidate.onraakbaar():
 			continue
 		var to: Vector3 = candidate.global_position - global_position
 		var d := Vector2(to.x, to.z).length()

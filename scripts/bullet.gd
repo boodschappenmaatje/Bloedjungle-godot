@@ -42,6 +42,8 @@ var visual_weapon := ""
 var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
 var feedback_source := ""  # optional confirmed-hit channel (e.g. player-driven jeep MG)
 var wclass := ""    # soort schade voor het steen-papier-schaar (Data.ARMOR_MULT); "" = neutraal, zoals alles wat er al was
+var ground_land := false   # Wapeneffecten AAA: de kogel zakt op het eind naar de grond en laat daar stof achter
+var _land_from := 0.0
 var src := "speler"  # wie schoot: "speler" of "soldaat" (voor bevestigde treffers; de score telt voor iedereen)
 
 
@@ -74,7 +76,10 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 		b.scale.z = TRAIL_START
 	elif Data.WEAPON_VISUALS.has(visual_weapon):
 		b.mesh = _weapon_glow(visual_weapon, not by_player)
-		b._trail_len = 2.2 if visual_weapon == "m1911" and by_player and Fx.m1911_vfx_enabled() else float(Data.WEAPON_VISUALS[visual_weapon].trail_length)
+		if by_player and WapenFx.enabled(visual_weapon):
+			b._trail_len = WapenFx.trace_length(visual_weapon)
+		else:
+			b._trail_len = 2.2 if visual_weapon == "m1911" and by_player and Fx.m1911_vfx_enabled() else float(Data.WEAPON_VISUALS[visual_weapon].trail_length)
 		b.scale.z = TRAIL_START
 	elif by_player:
 		b.mesh = _plain_bullet_mesh()
@@ -93,6 +98,9 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.sink = sink_
 	b.dir.y = rise_  # schiet omhoog naar iemand op een toren
 	b.mask = (MASK_ENEMY if by_player else MASK_PLAYER) | MASK_BUNKER | MASK_VEHICLE | MASK_NATURE | MASK_FORTIFICATION | (0 if over_wall else MASK_WALL)
+	if by_player and not over_wall and sink_ == 0.0 and rise_ == 0.0 and from.y > 0.3 and WapenFx.enabled(visual_weapon):
+		b.ground_land = true
+		b._land_from = lifetime * 0.4
 	parent.add_child(b)
 	b.global_position = from
 	b.rotation.y = angle
@@ -206,6 +214,8 @@ func _add_rocket_part(parent: Node3D, part_mesh: Mesh, mat: Material, at: Vector
 ## Lichtspoor: een felle kop met een staart die uitdooft (twee kruislings gezette vlakken met een kleurverloop)
 ## en een kleine gloeiende bol als kop. Beide tellen op bij wat erachter ligt, dus het straalt zonder te vullen.
 static func _weapon_glow(weapon: String, enemy_tracer := false) -> ArrayMesh:
+	if not enemy_tracer and WapenFx.enabled(weapon):
+		return WapenFx.tracer_mesh(weapon)
 	var colt_test := weapon == "m1911" and not enemy_tracer and Fx.m1911_vfx_enabled()
 	var key := "%s:%s%s" % [weapon, "enemy" if enemy_tracer else "player", ":vfx" if colt_test else ""]
 	if _weapon_glows.has(key):
@@ -277,6 +287,8 @@ func _physics_process(delta: float) -> void:
 	if life <= 0.0:
 		if rocket:
 			_boom_enemy(global_position)
+		elif ground_land:
+			WapenFx.ground_hit(get_parent(), global_position, visual_weapon)
 		elif dir.y < -0.05 and randf() < 0.35:
 			Fx.dust(get_parent(), Vector3(global_position.x, 0.1, global_position.z))  # schuine kogel (heli) slaat in de grond
 		queue_free()
@@ -285,6 +297,8 @@ func _physics_process(delta: float) -> void:
 		Fx.dust(get_parent(), global_position - dir * 0.6)
 	if sink > 0.0:
 		dir.y = -sink if global_position.y > 1.3 else 0.0
+	if ground_land and life < _land_from:
+		dir.y = -maxf(global_position.y, 0.0) / maxf(speed * life, 0.06)   # zo komt hij precies aan het eind van zijn baan op de grond
 	var flat_speed := Vector2(dir.x, dir.z).length()
 	rotation = Vector3(-atan2(dir.y, maxf(flat_speed, 0.001)), atan2(dir.x, dir.z), 0.0)
 	if _trail_len > 0.0 and scale.z < 1.0:
@@ -373,6 +387,7 @@ func _physics_process(delta: float) -> void:
 				var dealt := CombatAimFeedback.actual_damage(hp_before, float(c.get("hp")))
 				if dealt > 0.0:
 					Game.combat_hit_confirmed.emit(hit.position, dealt, feedback_source)
+					WapenFx.treffer(get_parent(), c, hit.position, dir, visual_weapon)
 			if pierce > 0 and c.collision_layer == MASK_ENEMY:
 				pierce -= 1
 				dmg *= 0.85

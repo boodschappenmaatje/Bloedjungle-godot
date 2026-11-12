@@ -14,6 +14,9 @@ func _check(ok: bool, message: String) -> void:
 
 func _run() -> void:
 	var fx: Script = load("res://scripts/fx.gd")
+	var gs: Script = load("res://scripts/game_settings.gd")
+	var wapenfx_oud: String = gs.get_value("wapenfx")
+	gs.set_value("wapenfx", "klassiek")   # deze test gaat over de Klassiek-vlam van het pistool
 	var stage := Node3D.new()
 	root.add_child(stage)
 	OS.set_environment("M1911_VFX_TEST", "")
@@ -49,6 +52,7 @@ func _run() -> void:
 	_check(not is_instance_valid(oldest), "oudste kogelspoor is niet opgeruimd")
 	OS.set_environment("M1911_VFX_TEST", "0")
 	_check(not fx.m1911_vfx_enabled(), "Colt testvariant kan niet worden uitgeschakeld")
+	gs.set_value("wapenfx", wapenfx_oud)
 	stage.queue_free()
 	print("COLT VFX TEST: %s" % ("PASS" if failures.is_empty() else "FAIL: " + str(failures)))
 	quit(0 if failures.is_empty() else 1)

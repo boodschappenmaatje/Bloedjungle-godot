@@ -5,6 +5,8 @@ extends Node
 ## de bevelmarkers op de grond en het vertragen van het spel tot 30 % zolang de bevelstand of de grote kaart open is.
 ## De bevelstand (BevelStand) en de grote kaart (GroteKaart) gebruiken allebei deze ene lijst.
 ## Zonder keuze werkt het oude commandowiel (TeamCommands) zoals altijd voor je hele leger.
+## Sinds de stap "voertuigbevel" (Dennis' keuze 2A, 11 nov 2026) staan je jeeps en tanks in dezelfde lijst: hun ingebouwde bestuurder (`VoertuigBestuurder`)
+## heeft dezelfde velden en dezelfde `set_command` als een soldaat, dus alles hieronder werkt voor soldaten en voertuigen door elkaar.
 
 const Controller = preload("res://scripts/team_command_controller.gd")
 
@@ -35,17 +37,61 @@ static func now() -> float:
 	return Time.get_ticks_msec() / 1000.0
 
 
-## Een eigen soldaat die bevelen aanneemt: leeft, hoort bij je leger en is geen wacht, versterking of passagier.
+## Een eigen soldaat die bevelen aanneemt: leeft, hoort bij je leger en is geen wacht, versterking of passagier. Of een jeep of tank (de bestuurder) waar jij niet in zit.
 static func commandable(a) -> bool:
-	return is_instance_valid(a) and a is Node3D and Game.allies.has(a) and Controller.can_command(bool(a.get("helper")), bool(a.get("guard")), a.get("truck") != null)
+	if not is_instance_valid(a):
+		return false
+	if a is VoertuigBestuurder:
+		return a.bevelbaar()
+	return a is Node3D and Game.allies.has(a) and Controller.can_command(bool(a.get("helper")), bool(a.get("guard")), a.get("truck") != null)
 
 
+## Soldaten en voertuigen die je nu kunt bevelen.
 static func units() -> Array:
 	var out: Array = []
 	for a in Game.allies:
 		if commandable(a):
 			out.append(a)
+	out.append_array(vehicles())
 	return out
+
+
+## Alleen de jeeps en tanks die je kunt bevelen.
+static func vehicles() -> Array:
+	var out: Array = []
+	for b in VoertuigBestuurder.all:
+		if commandable(b):
+			out.append(b)
+	return out
+
+
+static func is_vehicle(a) -> bool:
+	return a is VoertuigBestuurder
+
+
+## "3 soldaten", "1 jeep", "2 voertuigen" of "4 eenheden" (door elkaar): voor de tekst bij de keuze.
+static func wie(list: Array) -> String:
+	var soldiers := 0
+	var jeeps := 0
+	var tanks := 0
+	for a in list:
+		if not is_instance_valid(a):
+			continue
+		if a is VoertuigBestuurder:
+			if a.kind == "tank":
+				tanks += 1
+			else:
+				jeeps += 1
+		else:
+			soldiers += 1
+	var veh := jeeps + tanks
+	if veh == 0:
+		return "%d %s" % [soldiers, "soldaat" if soldiers == 1 else "soldaten"]
+	if soldiers == 0:
+		if veh == 1:
+			return "1 tank" if tanks == 1 else "1 jeep"
+		return "%d voertuigen" % veh
+	return "%d eenheden" % (soldiers + veh)
 
 
 
@@ -89,6 +135,11 @@ func toggle(a) -> void:
 
 func select_all() -> void:
 	select(units())
+
+
+## De knop VOERTUIGEN: al je jeeps en tanks.
+func select_vehicles() -> void:
+	select(vehicles())
 
 
 ## Dubbeltik: alle soldaten van dezelfde soort uit `pool` (bijvoorbeeld wat in beeld is).

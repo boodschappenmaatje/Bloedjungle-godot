@@ -369,6 +369,7 @@ const C_EIGEN := Color(0.45, 0.88, 0.36)
 const C_EIGEN_HI := Color(0.74, 1.0, 0.58)
 const C_GEBOUW := Color(0.86, 0.68, 0.3)
 const C_VIJAND := Color(1.0, 0.3, 0.2)
+const C_VAST := Color(1.0, 0.84, 0.18)   # een eigen voertuig dat vastzit (voertuigbevel, keuze 9A)
 const C_RAND := Color(0.84, 0.67, 0.31)
 var _first := {}   # instance-id -> eerste keer gezien (s): een nieuw contact knippert even
 
@@ -512,6 +513,18 @@ func _draw_map_content(map: Rect2) -> void:
 			_cv.draw_circle(ap, (1.6 if _k < 1.5 else 2.4) * _k, C_EIGEN_HI if picked else C_EIGEN)
 			if picked:
 				_cv.draw_arc(ap, 4.6 * _k, 0.0, TAU, 14, C_EIGEN_HI, 1.0 * _k, true)
+	# je gekozen voertuigen krijgen een lichte ring; een voertuig dat vastzit een geel waarschuwingsteken (voertuigbevel, keuze 9A)
+	for b in VoertuigBestuurder.all:
+		if not is_instance_valid(b) or b.dead or not is_instance_valid(b.vehicle) or not (b.vehicle as Node3D).is_visible_in_tree():
+			continue
+		var bp := _radar_point(b.global_position, map)
+		if ts != null and ts.is_selected(b):
+			_cv.draw_arc(bp, 7.5 * _k, 0.0, TAU, 16, C_EIGEN_HI, 1.2 * _k, true)
+		if b.vast:
+			var tw := 4.2 * _k
+			var tri := PackedVector2Array([bp + Vector2(0.0, -11.0 * _k), bp + Vector2(tw, -4.0 * _k), bp + Vector2(-tw, -4.0 * _k)])
+			_cv.draw_colored_polygon(tri, C_VAST)
+			_cv.draw_polyline(PackedVector2Array([tri[0], tri[1], tri[2], tri[0]]), Color(0.1, 0.07, 0.0, 0.9), 0.8 * _k, true)
 	_draw_view(map)
 	var player: Node3D = Game.player
 	if player != null and is_instance_valid(player):

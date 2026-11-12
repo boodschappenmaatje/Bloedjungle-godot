@@ -50,6 +50,8 @@ const ROWS := [
 	["markeringen", "Markeringen soldaten", [["on", "Aan"], ["tact", "Tactisch"], ["off", "Uit"]]],
 	["sound", "Geluid", [["on", "Aan"], ["off", "Uit"]]],
 	["g2", "Graphics 2.0", [["on", "Aan"], ["off", "Klassiek"]]],
+	["wapenfx", "Wapeneffecten (shotgun, pistool)", [["nieuw", "Nieuw"], ["klassiek", "Klassiek"]]],
+	["wapen_haptiek", "Trilling bij schieten", [["on", "Aan"], ["off", "Uit"]]],
 	["quality", "Grafiek", [["low", "Laag"], ["high", "Hoog"], ["ultra", "Ultra"]]],
 	["upscaling", "Upscaling (MetalFX)", [["off", "Uit"], ["quality", "Kwaliteit"], ["balanced", "Balans"], ["performance", "Prestatie"]]],
 	["time", "Tijd", [["day", "Dag"], ["dusk", "Avond"], ["night", "Nacht"]]],
@@ -74,10 +76,10 @@ const ROWS := [
 ## Instellingen in tabbladen (keuze 2A): links/rechts zijn de twee kolommen in liggend; staand komen ze onder elkaar.
 ## "#..." is een blok tekst of de camerahoek in plaats van een keuzeregel.
 const SETTINGS_TABS := [
-	{"title": "BEELD", "left": ["quality", "upscaling", "hz", "perf"], "right": ["fps", "treeshadow", "buildshadow", "g2"], "note": true},
+	{"title": "BEELD", "left": ["quality", "upscaling", "hz", "perf"], "right": ["fps", "treeshadow", "buildshadow", "g2", "wapenfx"], "note": true},
 	{"title": "WERELD", "left": ["time", "weather"], "right": ["wind"]},
 	{"title": "SOLDATEN", "left": ["soldaat", "enemy_models"], "right": ["ragdoll", "markeringen", "#meshy"]},
-	{"title": "GELUID & BESTURING", "left": ["sound", "m1911_fire_mode", "vliegtuig_hoogte", "#m1911"], "right": ["#camera"]},
+	{"title": "GELUID & BESTURING", "left": ["sound", "m1911_fire_mode", "vliegtuig_hoogte", "#m1911"], "right": ["#camera", "wapen_haptiek"]},
 	{"title": "TEST", "left": ["t_sun", "t_jungle", "t_stad", "t_post", "t_res"], "right": ["g2_fx", "g2_licht", "g2_diepte", "t_krachten", "diag"]},
 ]
 const TEXTS := {

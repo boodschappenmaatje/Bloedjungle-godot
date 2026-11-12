@@ -276,7 +276,7 @@ static var _casings := 0
 static var _casing_pool: Array[MeshInstance3D] = []
 
 
-static func casing(parent: Node, pos: Vector3, eject_right := Vector3.RIGHT, forward := Vector3.FORWARD) -> void:
+static func casing(parent: Node, pos: Vector3, eject_right := Vector3.RIGHT, forward := Vector3.FORWARD, kind := "") -> void:
 	if _casings >= MAX_CASINGS or not _near_camera(parent, pos, 42.0):
 		return
 	if _casing_mesh == null:
@@ -311,7 +311,10 @@ static func casing(parent: Node, pos: Vector3, eject_right := Vector3.RIGHT, for
 		else:
 			parent.add_child(c)
 	c.visible = true
-	c.scale = Vector3.ONE * 1.45
+	var wfx := kind != "" and WapenFx.enabled(kind)   # Wapeneffecten AAA: groter, shotgun rood met koperen bodem, stuit en tink
+	var shell_mesh: Mesh = WapenFx.casing_mesh(kind) if wfx else null
+	c.mesh = shell_mesh if shell_mesh != null else _casing_mesh
+	c.scale = Vector3.ONE * (WapenFx.casing_scale(kind) if wfx else 1.45)
 	c.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	c.global_position = pos
 	c.set_meta("casing_active", true)
@@ -327,6 +330,14 @@ static func casing(parent: Node, pos: Vector3, eject_right := Vector3.RIGHT, for
 	tw.tween_method(func(t: float):
 		c.global_position = pos + Vector3(v.x * t, v.y * t - 0.5 * g * t * t, v.z * t)
 		c.rotation = spin * t, 0.0, d, d)
+	if wfx:
+		var land := pos + Vector3(v.x * d, v.y * d - 0.5 * g * d * d, v.z * d)
+		var hop := 0.22
+		tw.tween_callback(func(): Sfx.play_file("huls_tink", 0.3, land))
+		tw.tween_method(func(t: float):
+			c.global_position = land + Vector3(v.x * 0.3 * t, 1.1 * t - 0.5 * g * t * t, v.z * 0.3 * t)
+			c.rotation = spin * (d + t) * 0.4, 0.0, hop, hop)
+		tw.tween_callback(func(): Sfx.play_file("huls_tink", 0.15, land))
 	tw.tween_interval(0.9)
 	tw.tween_property(c, "scale", Vector3.ZERO, 0.28)
 	tw.tween_callback(_recycle_casing.bind(c))
@@ -483,6 +494,9 @@ static func _muzzle_mesh(weapon: String, variant: int) -> ArrayMesh:
 static func muzzle(parent: Node, pos: Vector3, weapon := "m1911", angle := 0.0) -> void:
 	var v: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
 	if weapon == "bazooka" or float(v.flash_life) <= 0.0:
+		return
+	if WapenFx.enabled(weapon):   # shotgun en pistool: de nieuwe, gelaagde effecten (Instellingen: Wapeneffecten)
+		WapenFx.muzzle(parent, pos, weapon, angle)
 		return
 	# Isolated visual test path. Sound, casing, projectiles and recoil remain in their
 	# existing callers; avoid layering the legacy flash over the atlas.

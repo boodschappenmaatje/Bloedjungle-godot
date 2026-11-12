@@ -86,7 +86,11 @@ func _run() -> void:
 				_check(projectile.get("mesh") is ArrayMesh, "%s tracer ontbreekt" % id)
 		if id == "trench" and spawned.size() > 1:
 			_check(spawned[0].get("mesh") is ArrayMesh, "shotgun mist de ene zichtbare tracer door de hagelspreiding")
-			_check(not (spawned[1].get("mesh") is ArrayMesh), "shotgun tekent een volledige lichtstaart achter iedere hagelkorrel")
+			if GameSettings.get_value("wapenfx") == "nieuw":
+				# Wapeneffecten AAA: elke korrel krijgt een dun, kort streepje (één vlak, geen bol), samen de waaier
+				_check(spawned[1].get("mesh") is ArrayMesh and (spawned[1].get("mesh") as ArrayMesh).get_surface_count() == 1, "shotgun toont niet alle korrels als dun streepje")
+			else:
+				_check(not (spawned[1].get("mesh") is ArrayMesh), "shotgun tekent een volledige lichtstaart achter iedere hagelkorrel")
 		if id == "trench":
 			var pump := (player.get("model").get("_gun") as Node3D).find_child("Trench_Pomp", true, false) as Node3D
 			_check(pump != null and player.get("model").get("_gun_anim") != null, "Winchester-model heeft geen afzonderlijk pompdeel met clip")

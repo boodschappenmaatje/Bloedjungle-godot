@@ -21,6 +21,10 @@ const KLEUR_DONKER := Color("353924")
 const KLEUR_ACCENT := Color("b7aa38")
 
 static var _mats: Dictionary = {}
+static var _stukken: Array = []   # muurstukken: {body, kap, pos, half, hp}
+const STUK := 4.0         # m: lengte van een muurstuk
+const STUK_HP := 1000.0
+const WALL_MULT := 3.0    # explosies doen zoveel keer meer schade aan muren
 
 
 ## Alle onderdelen als kinderen van één knoop "VijandBasis" (groep "vijand_basis") onder root.
@@ -107,11 +111,49 @@ static func _muur(h: Node3D) -> void:
 	var muur := Node3D.new()
 	muur.name = "Muur"
 	h.add_child(muur)
+	_stukken.clear()
 	for s in segs:
 		var p: Vector3 = s[0]
 		var sz: Vector2 = s[1]
-		Kit.box(muur, p, Vector3(sz.x, WALL_H, sz.y), _mat(KLEUR_MUUR), 0.0, Kit.LAYER_WALL)
-		Kit.box(muur, p + Vector3.UP * WALL_H, Vector3(sz.x + 0.1, 0.14, sz.y + 0.14), _mat(KLEUR_DONKER))
+		# De lange muur bestaat uit stukken van ~4 m, zodat een M-47 (VijandBasis.blast) er een gat in kan slaan.
+		var langs_x: bool = sz.x >= sz.y
+		var lengte: float = sz.x if langs_x else sz.y
+		var n := maxi(1, ceili(lengte / STUK))
+		var stuk_len := lengte / float(n)
+		for i in n:
+			var off := -lengte * 0.5 + stuk_len * (float(i) + 0.5)
+			var sp := p + (Vector3(off, 0, 0) if langs_x else Vector3(0, 0, off))
+			var ssz := Vector3(stuk_len if langs_x else sz.x, WALL_H, sz.y if langs_x else stuk_len)
+			var body := Kit.box(muur, sp, ssz, _mat(KLEUR_MUUR), 0.0, Kit.LAYER_WALL)
+			var kap := Kit.box(muur, sp + Vector3.UP * WALL_H, Vector3(ssz.x + 0.1 if langs_x else sz.x + 0.1, 0.14, sz.y + 0.14 if langs_x else ssz.z + 0.1), _mat(KLEUR_DONKER))
+			_stukken.append({"body": body, "kap": kap, "pos": sp, "half": stuk_len * 0.5, "hp": STUK_HP})
+
+
+## Ontploffing (M-47 Muurbreker): muurstukken in de straal krijgen schade (WALL_MULT keer zo veel als tegen een soldaat); een stuk dat
+## breekt laat een gat in de muur: collision en model verdwijnen, zodat je er doorheen kunt lopen en schieten.
+static func blast(at: Vector3, radius: float, dmg: float) -> void:
+	for st in _stukken:
+		if st.hp <= 0.0 or not is_instance_valid(st.body):
+			continue
+		var wp: Vector3 = (st.body as Node3D).global_position
+		var d := maxf(Vector2(wp.x - at.x, wp.z - at.z).length() - float(st.half), 0.0)
+		if d >= radius:
+			continue
+		st.hp -= dmg * WALL_MULT * (1.0 - d / radius)
+		if st.hp <= 0.0:
+			Fx.explosion((st.body as Node3D).get_parent(), wp + Vector3.UP * 1.0, 0.8)
+			(st.body as Node3D).queue_free()
+			if is_instance_valid(st.kap):
+				(st.kap as Node3D).queue_free()
+
+
+## Hoeveel muurstukken van de vijandelijke basis nog staan (voor tests).
+static func muur_over() -> int:
+	var n := 0
+	for st in _stukken:
+		if st.hp > 0.0 and is_instance_valid(st.body):
+			n += 1
+	return n
 
 
 ## Twee poortposten met een balk met geel-zwarte rand; de opening blijft vrij.

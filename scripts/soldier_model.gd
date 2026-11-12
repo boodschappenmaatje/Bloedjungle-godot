@@ -41,6 +41,7 @@ const ASSAULT_MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit",
 const ASSAULT_MESHY_LOOPS := ["Combat_Stance", "Run_and_Shoot", "Walk_Left_with_Gun", "Walk_Backward_with_Gun", "Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Left", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun", "Rifle_Charge_inplace"]
 const MESHY_GARAND_PROFILE_PAD := "res://resources/weapon_profiles/garand_meshy.tres"   # verwijst naar zware bestanden: pas laden als het nodig is
 const MESHY_M1911_PROFILE_PAD := "res://resources/weapon_profiles/m1911_meshy.tres"
+const MESHY_M47_PROFILE_PAD := "res://resources/weapon_profiles/m47_meshy.tres"
 const MESHY_WEAPON_ADAPTER_SCRIPT := preload("res://scripts/weapon_model_adapter.gd")
 const LOOKS := {
 	"eigen": ["Lijf_Uniform", "Helm", "Vest", "Koppel", "Rugzak", "Laarzen"],
@@ -499,7 +500,7 @@ func _attach_gun_meshy(skel: Skeleton3D, gun_kind: String) -> void:
 		configured = _mesh_weapon_adapter.configure_existing_meshy(assault_weapon)
 	else:
 		var visual_name: String = GUN_OF.get(gun_kind, "Garand")
-		var profile: Resource = _laad_hulp(MESHY_GARAND_PROFILE_PAD) if visual_name == "Garand" else (_laad_hulp(MESHY_M1911_PROFILE_PAD) if visual_name == "M1911" else null)
+		var profile: Resource = _laad_hulp(MESHY_GARAND_PROFILE_PAD) if visual_name == "Garand" else (_laad_hulp(MESHY_M1911_PROFILE_PAD) if visual_name == "M1911" else (_laad_hulp(MESHY_M47_PROFILE_PAD) if visual_name == "M47" else null))
 		configured = _mesh_weapon_adapter.configure(visual_name, profile)
 	if not configured:
 		_mesh_weapon_adapter.queue_free()
@@ -832,7 +833,7 @@ func set_band(c: Color) -> void:
 
 const GUNS_PAD := "res://assets/wapens.glb"  # bron/wapens: M1911, Thompson, Garand, Trench, MG42, Bazooka
 const GUN_OF := {"rifle": "Garand", "rocket": "Bazooka", "heavy": "MG42", "m1911": "M1911", "thompson": "Thompson",
-	"garand": "Garand", "trench": "Trench", "mg42": "MG42", "bazooka": "Bazooka"}
+	"garand": "Garand", "trench": "Trench", "mg42": "MG42", "bazooka": "Bazooka", "m47": "M47"}
 
 var _hand: BoneAttachment3D
 var _gun: Node3D

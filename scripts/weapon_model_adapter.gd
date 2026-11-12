@@ -32,7 +32,10 @@ func configure(visual_name: String, profile_: Resource = null) -> bool:
 	selected.name = selected_name + "Mesh"
 	selected.transform = Transform3D.IDENTITY
 	selected.scale = profile.model_scale
+	selected.position = profile.model_offset
 	add_child(selected)
+	for lod in selected.find_children("*_LOD1", "Node3D", true, false) + selected.find_children("*_LOD2", "Node3D", true, false):
+		(lod as Node3D).visible = false   # alleen LOD0 in het spel; de rest zou er dubbel overheen liggen
 	weapon = selected
 	animation_player = _weapon_animation_player(holder, selected, selected_name)
 	if animation_player != null:

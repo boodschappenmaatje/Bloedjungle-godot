@@ -16,9 +16,10 @@ class ArrowGlyph:
 		draw_colored_polygon(pts, Color.WHITE)  # de kleur komt van modulate (goud of gedimd)
 
 
-const IDS := ["m1911", "thompson", "garand", "trench", "mg42", "bazooka"]
+const IDS := ["m1911", "thompson", "garand", "trench", "mg42", "bazooka", "m47"]
 const GUNS_PAD := "res://assets/wapens.glb"  # zwaar OTA-bestand: pas laden als het nodig is
 const MESHY_M1911_PAD := "res://assets/meshy_m1911.glb"
+const M47_PAD := "res://assets/m47/M47_Muurbreker.glb"
 const OPEN_TIME := 3.0
 const ICON_SIZE := Vector2i(256, 96)
 
@@ -127,13 +128,27 @@ func _render_icons() -> void:
 	var meshy_holder := (load(MESHY_M1911_PAD) as PackedScene).instantiate() as Node3D
 	vp.add_child(meshy_holder)
 	meshy_holder.visible = false
+	var m47_scene := load(M47_PAD) as PackedScene if ResourceLoader.exists(M47_PAD) else null   # zware OTA-bestand: kan ontbreken (bv. in CI zonder LFS)
+	var m47_holder: Node3D = null
+	if m47_scene != null:
+		m47_holder = m47_scene.instantiate() as Node3D
+		vp.add_child(m47_holder)
+		m47_holder.visible = false
+		for lod in ["M47_LOD1", "M47_LOD2"]:
+			var lod_node := m47_holder.find_child(lod, true, false) as Node3D
+			if lod_node != null:
+				lod_node.visible = false   # alleen LOD0 in het plaatje
 	for i in IDS.size():
 		var id: String = IDS[i]
-		var meshy := id == "m1911"
+		if id == "m47" and m47_holder == null:
+			continue
+		var meshy := id == "m1911" or id == "m47"
 		holder.visible = not meshy
-		meshy_holder.visible = meshy
-		var source: Node3D = meshy_holder if meshy else holder
-		var node := source.find_child(SoldierModel.GUN_OF[id], true, false) as Node3D
+		meshy_holder.visible = id == "m1911"
+		if m47_holder != null:
+			m47_holder.visible = id == "m47"
+		var source: Node3D = meshy_holder if id == "m1911" else (m47_holder if id == "m47" else holder)
+		var node := source.find_child("M47_Mechanism_Rig" if id == "m47" else SoldierModel.GUN_OF[id], true, false) as Node3D
 		if node == null:
 			continue
 		for other in source.get_children():

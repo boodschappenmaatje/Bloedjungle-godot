@@ -483,6 +483,7 @@ func _build_menu() -> void:
 	tiles.add_child(_menu_tile("city", "STADSEDITOR", _open_stad_editor))
 	tiles.add_child(_menu_tile("updates", "UPDATES", func(): UpdatePanel.open(self)))
 	tiles.add_child(_menu_tile("target", "TESTGROEP", func(): _show("test")))
+	tiles.add_child(_menu_tile("target", "M-47", func(): get_tree().change_scene_to_file("res://scenes/m47_proefveld.tscn")))
 	tiles.add_child(_menu_tile("meld", "MELDEN", func(): open_melden("menu")))
 
 	var spacer := Control.new()

@@ -8,7 +8,7 @@ const SOLDIER_SCALE := 1.2
 # Wapens (01-data.js). rate = seconden tussen schoten, speed = kogelsnelheid (m/s), life = levensduur kogel,
 # pierce = extra mensen waar de kogel doorheen gaat, slow = loopsnelheid met dit wapen, explosive = ontploffingsstraal.
 # welk schotgeluid bij welk wapen hoort (Sfx)
-const WEAPON_SND := {"m1911": "m1911_real", "thompson": "smg", "garand": "rifle", "trench": "shotgun", "mg42": "mg", "bazooka": "rocket"}
+const WEAPON_SND := {"m1911": "m1911_real", "thompson": "smg", "garand": "rifle", "trench": "shotgun", "mg42": "mg", "bazooka": "rocket", "m47": "rocket"}
 const WEAPONS := {
 	"m1911": {"short": "Pistool", "name": "M1911A1 Pistool", "price": 0, "dmg": 26.0, "rate": 0.50, "mag": 7, "reload": 1.05, "spread": 0.035, "speed": 75.0, "pellets": 1, "pierce": 0, "life": 0.6, "desc": ".45 ACP enkelvoudig; zeven patronen in het magazijn."},
 	"thompson": {"short": "Thompson", "name": "Thompson M1928", "price": 700, "dmg": 18.0, "rate": 0.075, "mag": 30, "reload": 2.0, "spread": 0.08, "speed": 75.0, "pellets": 1, "pierce": 0, "life": 0.55, "desc": "De Tommy gun. Snel, luid en hongerig."},
@@ -16,6 +16,7 @@ const WEAPONS := {
 	"trench": {"short": "Shotgun", "name": "Winchester M1897", "price": 1400, "dmg": 16.0, "rate": 0.62, "mag": 6, "reload": 2.6, "spread": 0.2, "speed": 65.0, "pellets": 9, "pierce": 0, "life": 0.32, "desc": "Loopgraafshotgun. Van dichtbij blijft er weinig over."},
 	"mg42": {"short": "MG 42", "name": "MG 42", "price": 2800, "dmg": 27.0, "rate": 0.05, "mag": 100, "reload": 3.6, "spread": 0.1, "speed": 95.0, "pellets": 1, "pierce": 1, "life": 0.6, "slow": 0.78, "desc": "1200 schoten per minuut. Je loopt er wel trager mee."},
 	"bazooka": {"short": "Bazooka", "name": "M1 Bazooka", "price": 3800, "dmg": 240.0, "rate": 1.0, "mag": 1, "reload": 2.1, "spread": 0.01, "speed": 32.0, "pellets": 1, "pierce": 0, "life": 1.4, "explosive": 4.8, "desc": "Raketwerper. Enorme ontploffing, houd afstand."},
+	"m47": {"short": "M-47", "name": "M-47 Muurbreker", "price": 500, "dmg": 520.0, "rate": 2.2, "mag": 3, "reload": 3.2, "spread": 0.0, "speed": 26.0, "pellets": 1, "pierce": 0, "life": 1.0, "explosive": 6.0, "slow": 0.88, "desc": "Plasma-schacht die muren, huizen en bouwwerken stuk slaat. Trage herlaadtijd."},
 }
 # Alleen visuele kogel- en flitsinstellingen; deze waarden veranderen de schietlogica niet.
 const WEAPON_VISUALS := {
@@ -26,8 +27,10 @@ const WEAPON_VISUALS := {
 	"mg42": {"flash_length": 1.0, "flash_width": 0.4, "flash_life": 0.065, "flash_color": Color(1.0, 0.64, 0.25), "flash_particles": 3, "flash_energy": 1.2, "flash_range": 4.5, "trail_every": 1, "trail_length": 2.5, "trail_width": 0.048, "trail_head": Color(1.0, 0.78, 0.16, 1.0), "trail_tail": Color(1.0, 0.38, 0.02, 0.28), "casing_every": 4, "recoil": 0.38},
 	# De bazooka krijgt een raketprojectiel en uitlaatwolk, geen pistoolachtige vlam of tracerbol.
 	"bazooka": {"flash_length": 0.0, "flash_width": 0.0, "flash_life": 0.0, "flash_color": Color(0.55, 0.48, 0.36), "flash_particles": 0, "flash_energy": 0.0, "flash_range": 0.0, "trail_every": 0, "trail_length": 0.0, "trail_width": 0.0, "trail_head": Color(0.8, 0.72, 0.55, 0.0), "trail_tail": Color(0.5, 0.42, 0.3, 0.0), "casing_every": 0, "recoil": 1.4},
+	# Het M-47 heeft een eigen effect (M47Shot / M47Vfx): geen standaard flits of tracer.
+	"m47": {"flash_length": 0.0, "flash_width": 0.0, "flash_life": 0.0, "flash_color": Color(0.3, 0.6, 1.0), "flash_particles": 0, "flash_energy": 0.0, "flash_range": 0.0, "trail_every": 0, "trail_length": 0.0, "trail_width": 0.0, "trail_head": Color(0.3, 0.6, 1.0, 0.0), "trail_tail": Color(0.3, 0.6, 1.0, 0.0), "casing_every": 0, "recoil": 1.5},
 }
-const WEAPON_ORDER := ["m1911", "thompson", "garand", "trench", "mg42", "bazooka"]
+const WEAPON_ORDER := ["m1911", "thompson", "garand", "trench", "mg42", "bazooka", "m47"]
 const UPGS := [["dmg", "Schade", "+30% schade"], ["rate", "Vuursnelheid", "14% sneller"], ["mag", "Magazijn", "+30% kogels"], ["rel", "Herladen", "18% sneller"]]
 const UPG_MAX := 5
 

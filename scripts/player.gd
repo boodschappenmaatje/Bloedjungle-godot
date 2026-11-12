@@ -559,7 +559,10 @@ func _shoot(w: Dictionary) -> void:
 		var camera := get_parent().get_node_or_null("Camera")
 		if camera and camera.has_method("combat_impulse"):
 			camera.call("combat_impulse", camera_impulse)
-	for i in w.pellets:
+	if weapon == "m47":
+		# Eigen effect + zware ontploffing bij de inslag (M47Shot); geen gewone kogel.
+		M47Shot.fire(get_parent(), muzzle, face, w.dmg * Progress.bonus().dmg, float(w.explosive))
+	for i in 0 if weapon == "m47" else int(w.pellets):
 		var a: float = face + (randf() - 0.5) * w.spread * 2.0
 		var projectile_visual := tracer_weapon if weapon != "trench" or i == 0 or WapenFx.enabled("trench") else ""
 		var projectile := Bullet.fire(get_parent(), muzzle, a, w.speed * randf_range(0.92, 1.05), w.dmg * Progress.bonus().dmg, w.life * randf_range(0.85, 1.1), true, over, w.pierce, w.get("explosive", 0.0), 0.28 if elev > 1.0 else 0.0, 0.0, projectile_visual)
@@ -567,7 +570,9 @@ func _shoot(w: Dictionary) -> void:
 		# Explosive bazooka damage uses a separate path; do not claim bullet hits.
 		if weapon != "bazooka":
 			projectile.feedback_source = "infantry"
-	if weapon == "bazooka":
+	if weapon == "m47":
+		pass
+	elif weapon == "bazooka":
 		Fx.rocket_launch(get_parent(), muzzle, face)
 	else:
 		Fx.muzzle(get_parent(), muzzle, weapon, face)

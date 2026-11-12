@@ -1,0 +1,19 @@
+[gd_resource type="Resource" load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/weapon_model_profile.gd" id="1"]
+[ext_resource type="PackedScene" path="res://assets/m47/M47_Muurbreker.glb" id="2"]
+
+[resource]
+script = ExtResource("1")
+model_node = &"M47_Mechanism_Rig"
+model_scene = ExtResource("2")
+mount_position = Vector3(-0.12, 1.27, 0.28)
+mount_rotation = Vector3(0, 1.570796, 0)
+model_scale = Vector3(0.6, 0.6, 0.6)
+model_offset = Vector3(0, 0, 0)
+left_hand_grip = Vector3(-0.50, -0.30, 0.0)
+muzzle_local = Vector3(-0.95, 0.0, 0.0)
+casing_local = Vector3(0.3, 0.1, 0.0)
+magazine_local = Vector3(0.3, -0.2, 0.0)
+sight_local = Vector3(0.0, 0.36, 0.0)
+ejection_local = Vector3(0.3, 0.1, 0.0)

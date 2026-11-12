@@ -32,3 +32,14 @@ De geluiden zijn **zelf gesynthetiseerd** (`bron/wapenfx/maak_geluid.py`), geen 
 - `assets/wapenfx/`: plaatjes, shader en geluiden. `scripts/wapenfx.gd`: alle logica en voorraden.
 - `tests/wapenfx_test.gd`: voorraden begrensd, Klassiek ongewijzigd, spoor, huls, landing, opruimen.
 - `tests/wapenfx_foto.gd`: voor/na-opnames met identieke camera en seed (`BJ_WFX=nieuw|klassiek`).
+
+## Ronde 2 (v223): groter, echter, meeslepender
+
+- Vlam 2x groter (pistool 3,8 m, shotgun 7 m) met een tweede kleinere tong ernaast (Hoog en Ultra), felle gloed en een sterker warm licht (max 3 lampen, geen schaduw).
+- De oranje schijf op de grond is vervangen door een klein zacht vlekje; het licht doet het werk.
+- Rook: 4 tot 9 wolkjes die uitwaaieren plus een rookbank (shotgun, Hoog en Ultra) die 3 tot 4 s blijft hangen.
+- Kogelsporen dikker met hete kop en vurige staart; blaadjes, splinters en vonken bij inslag op bomen, muren en grond; stevigere bloedspat en terugslag bij vijanden.
+- Camera: inzoomstoot van 0,35 (pistool) tot 0,9 graden (shotgun) op Hoog en Ultra, zwaardere schok.
+- Geluid: shotgun gebaseerd op een echte opname (OpenGameArt "Gunshot Sounds" van Tabasco / Vincent Sevedge, zie `bron/wapenfx/opnames/BRON.md`), pistool krijgt een zware echte onderlaag, nieuw kogelsuis-geluid voor vijandelijke kogels langs je oor.
+- Kwaliteitstrap: `WapenFx.tier()` (Laag = Prestatie, Hoog, Ultra, min de trap van de prestatieregelaar).
+- Niet gedaan: rode randflits bij een treffer, vogels die opvliegen (de bestaande jungle-stilte bij schoten blijft), vignet. Native iPhone-fps: NIET GETEST.

@@ -550,6 +550,11 @@ func _shoot(w: Dictionary) -> void:
 	var wfx_kick := WapenFx.kick(weapon)   # Wapeneffecten AAA: shotgun een zwaardere schok, pistool een lichte
 	if wfx_kick > 0.0:
 		camera_impulse = wfx_kick
+	var wfx_fov := WapenFx.fov_punch(weapon)
+	if wfx_fov > 0.0:
+		var cam_fov := get_parent().get_node_or_null("Camera")
+		if cam_fov and cam_fov.has_method("fov_punch"):
+			cam_fov.call("fov_punch", wfx_fov)
 	if camera_impulse > 0.0:
 		var camera := get_parent().get_node_or_null("Camera")
 		if camera and camera.has_method("combat_impulse"):

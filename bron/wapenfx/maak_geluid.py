@@ -64,6 +64,19 @@ def galm(x, rng, lengte=0.8, dichtheid=34, zwaarte=0.5):
     return out * zwaarte
 
 
+def echt(naam, van=0.0, tot=None):
+    """Laadt een echte opname uit opnames/ (mono, naar 32 kHz), bijgesneden."""
+    pad = os.path.join(os.path.dirname(__file__), "opnames", naam)
+    with wave.open(pad) as w:
+        ch, sr = w.getnchannels(), w.getframerate()
+        x = np.frombuffer(w.readframes(w.getnframes()), dtype="<i2").astype(float) / 32768.0
+    x = x.reshape(-1, ch).mean(axis=1)
+    x = x[int(sr * van): int(sr * tot) if tot else None]
+    n = int(len(x) * SR / sr)
+    x = np.interp(np.linspace(0, len(x) - 1, n), np.arange(len(x)), x)
+    return x / max(1e-6, np.max(np.abs(x)))
+
+
 def opslaan(naam, x, piek=0.89):
     x = np.tanh(x * 1.1)
     x = x / max(1e-6, np.max(np.abs(x))) * piek
@@ -98,6 +111,10 @@ def shotgun():
         klak = (np.sin(2 * np.pi * f0 * tt) * 0.5 + np.sin(2 * np.pi * f0 * 1.52 * tt) * 0.3) * np.exp(-tt / 0.012)
         klak += hp(ruis(0.09, rng), 2500) * np.exp(-tt / 0.006) * 0.8
         plaats(s, klak * 0.55 * zw, t0)
+    # 4b. echte opname (CC0, zie opnames/BRON.md) als hoofdlaag; de eigen lagen geven er diepte aan
+    echt_schot = echt("shotty.wav", 0.12, 0.7)
+    s *= 0.45
+    plaats(s, echt_schot * 2.6, 0.0)
     # 5. staart: jungle-galm over het begin
     kop = s[: int(SR * 0.4)].copy()
     staart = np.zeros_like(s)
@@ -117,6 +134,29 @@ def pistool_staart():
     plaats(s, impuls * 0.35, 0.07)
     s += lp(st, 3600)
     opslaan("pistool_staart.wav", s, 0.55)
+
+
+def pistool_diep():
+    """Echte opname van een pistool, laag gefilterd: de zwaarte onder de bestaande m1911-knal."""
+    rng = np.random.default_rng(52)
+    x = echt("cz.wav", 0.27, 0.9)
+    laag_deel = lp(x, 900)
+    s = laag(0.9)
+    plaats(s, laag_deel * 0.9, 0.0)
+    s += lp(galm(s.copy(), rng, 0.85, 46, 1.1), 3200)
+    opslaan("pistool_staart.wav", s, 0.62)
+
+
+def kogelsuis():
+    """Korte zwiep van een kogel die langs je oor gaat."""
+    rng = np.random.default_rng(88)
+    s = laag(0.22)
+    tt = np.arange(len(s)) / SR
+    ruw = hp(ruis(0.22, rng), 1800)
+    boog = np.exp(-((tt - 0.09) / 0.045) ** 2)
+    s += ruw * boog * 0.8
+    s += np.sin(2 * np.pi * np.cumsum(5200 - 3200 * tt / 0.22) / SR) * boog * 0.2
+    opslaan("kogelsuis.wav", s, 0.55)
 
 
 def tink():
@@ -141,6 +181,7 @@ def tik():
 if __name__ == "__main__":
     os.makedirs(UIT, exist_ok=True)
     shotgun()
-    pistool_staart()
+    pistool_diep()
+    kogelsuis()
     tink()
     tik()

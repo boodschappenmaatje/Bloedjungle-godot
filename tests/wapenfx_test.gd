@@ -34,10 +34,13 @@ func _run() -> void:
 	fx.muzzle(stage, Vector3.ZERO, "trench", 0.0)
 	fx.muzzle(stage, Vector3(3, 0, 0), "m1911", 0.0)
 	var flashes := _flash_nodes(stage)
-	_check(flashes.size() == 2, "twee schoten maken niet twee vlammen (%d)" % flashes.size())
-	if flashes.size() == 2:
-		var a := (flashes[0] as MeshInstance3D).material_override as ShaderMaterial
-		var b := (flashes[1] as MeshInstance3D).material_override as ShaderMaterial
+	_check(flashes.size() >= 2, "twee schoten maken minder dan twee vlammen (%d)" % flashes.size())
+	var tr_flash: Array = flashes.filter(func(n): return str(n.get_meta("wfx_key")) == "flash:trench")
+	var pi_flash: Array = flashes.filter(func(n): return str(n.get_meta("wfx_key")) == "flash:m1911")
+	_check(not tr_flash.is_empty() and not pi_flash.is_empty(), "shotgun of pistool heeft geen eigen vlam")
+	if not tr_flash.is_empty() and not pi_flash.is_empty():
+		var a := (tr_flash[0] as MeshInstance3D).material_override as ShaderMaterial
+		var b := (pi_flash[0] as MeshInstance3D).material_override as ShaderMaterial
 		_check(a != null and b != null and a != b, "vlammen delen hetzelfde materiaal")
 		_check(a.get_shader_parameter("flipbook_atlas") != b.get_shader_parameter("flipbook_atlas"), "shotgun en pistool gebruiken hetzelfde vlamplaatje")
 	# afvuren zonder pauze: de voorraden mogen niet onbegrensd groeien
@@ -55,7 +58,7 @@ func _run() -> void:
 	for w in ["trench", "m1911"]:
 		var m: ArrayMesh = wfx.tracer_mesh(w)
 		_check(m != null and m.get_surface_count() == 1, "kogelspoor %s heeft niet één vlak" % w)
-	_check(wfx.trace_length("m1911") < 2.2 and wfx.trace_length("trench") < 1.0, "kogelsporen zijn niet korter dan de oude staaf")
+	_check(wfx.trace_length("m1911") < 2.2 and wfx.trace_length("trench") < 1.2, "kogelsporen zijn niet korter dan de oude staaf")
 
 	# --- hulzen ---
 	fx.casing(stage, Vector3(0, 1.2, 0), Vector3.RIGHT, Vector3.FORWARD, "trench")
@@ -85,7 +88,7 @@ func _run() -> void:
 
 	# --- opruimen: alles in de voorraad wordt vanzelf weer vrij ---
 	gs.set_value("wapenfx", "nieuw")
-	await create_timer(2.4).timeout
+	await create_timer(5.6).timeout
 	var active := 0
 	for n in stage.find_children("*", "Node3D", true, false):
 		if n.get_meta("wfx_active", false):

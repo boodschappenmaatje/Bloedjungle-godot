@@ -43,3 +43,7 @@ De geluiden zijn **zelf gesynthetiseerd** (`bron/wapenfx/maak_geluid.py`), geen 
 - Geluid: shotgun gebaseerd op een echte opname (OpenGameArt "Gunshot Sounds" van Tabasco / Vincent Sevedge, zie `bron/wapenfx/opnames/BRON.md`), pistool krijgt een zware echte onderlaag, nieuw kogelsuis-geluid voor vijandelijke kogels langs je oor.
 - Kwaliteitstrap: `WapenFx.tier()` (Laag = Prestatie, Hoog, Ultra, min de trap van de prestatieregelaar).
 - Niet gedaan: rode randflits bij een treffer, vogels die opvliegen (de bestaande jungle-stilte bij schoten blijft), vignet. Native iPhone-fps: NIET GETEST.
+
+## v224: kogelsporen mooier en duidelijker
+
+Na de iPhone-opname van v223 waren de kogels te dunne, korte witte streepjes. Het spoor is nu één mesh met een brede zachte oranje halo en een dunne witgele kern, een kop die toespitst en een staart die uitdooft; pistool 3,4 m, shotgun-korrels 2,0 m, HDR-helder zodat het gras warm meekleurt. Nog steeds één vlak per kogel (zelfde kosten als eerst). Native iPhone-fps: NIET GETEST.

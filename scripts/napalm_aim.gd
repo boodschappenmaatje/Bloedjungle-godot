@@ -62,21 +62,23 @@ func _init() -> void:
 
 
 ## Toont de strook rond center, met het toestel dat langs dir vliegt.
-func show_strip(center: Vector3, dir: Vector3) -> void:
+## Standaard de napalmstrook; de luchtaanval (E2) geeft zijn eigen lengte en breedte mee.
+func show_strip(center: Vector3, dir: Vector3, length: float = Rang.NAPALM_LENGTH, width: float = Rang.NAPALM_WIDTH) -> void:
 	global_transform = Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.z)), Vector3(center.x, 0.07, center.z))
-	_mat.set_shader_parameter("half_size", Vector2(Rang.NAPALM_WIDTH * 0.5, Rang.NAPALM_LENGTH * 0.5))
+	_plane.size = Vector2(width + 1.0, length + 1.0)
+	_mat.set_shader_parameter("half_size", Vector2(width * 0.5, length * 0.5))
 	var side := dir.cross(Vector3.UP)
 	enemies_in_strip = 0
 	for e in Game.enemies:
 		if is_instance_valid(e):
 			var d: Vector3 = e.global_position - center
-			if absf(d.dot(dir)) < Rang.NAPALM_LENGTH * 0.5 and absf(d.dot(side)) < Rang.NAPALM_WIDTH * 0.5:
+			if absf(d.dot(dir)) < length * 0.5 and absf(d.dot(side)) < width * 0.5:
 				enemies_in_strip += 1
 	var p = Game.player
 	self_in_strip = false
 	if p != null and is_instance_valid(p):
 		var dp: Vector3 = p.global_position - center
-		self_in_strip = absf(dp.dot(dir)) < Rang.NAPALM_LENGTH * 0.5 + 1.0 and absf(dp.dot(side)) < Rang.NAPALM_WIDTH * 0.5 + 1.0
+		self_in_strip = absf(dp.dot(dir)) < length * 0.5 + 1.0 and absf(dp.dot(side)) < width * 0.5 + 1.0
 	_mat.set_shader_parameter("col", SELF_HIT if self_in_strip else OK)
 	_label.text = ("×%d" % enemies_in_strip) if enemies_in_strip > 0 else ""
 	_label.modulate = ENEMY

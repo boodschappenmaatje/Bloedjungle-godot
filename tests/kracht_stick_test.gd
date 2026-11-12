@@ -66,12 +66,14 @@ func _stick_r() -> float:
 	return float(script.get_script_constant_map().get("STICK_R"))
 
 
-## Tik op de knop, daarna op een kant van het wiel: 0 = boven (artillerie), 1 = rechts (napalm), 2 = onder (satelliet), 3 = links (reparatie).
+## Tik op de knop, daarna op een vak van het zesvaks wiel (E2): 0 = artillerie, 1 = napalm, 2 = satelliet, 3 = reparatie
+## (de vakken van luchtaanval en parachutisten zijn hier overgeslagen: vak 1 en 5 van zes).
 func _kies(sector: int) -> void:
 	await _tap(btn.get_global_rect().get_center())
 	var mid := (_wheel_value("INNER") + _wheel_value("OUTER")) * 0.5
-	var dirs := [Vector2(0, -1), Vector2(1, 0), Vector2(0, 1), Vector2(-1, 0)]
-	await _tap(cb._wheel_center() + dirs[sector] * mid)
+	var vak: int = [0, 2, 3, 4][sector]
+	var hoek := float(vak) * TAU / 6.0
+	await _tap(cb._wheel_center() + Vector2(sin(hoek), -cos(hoek)) * mid)
 
 
 ## Rechterstick: nieuwe aanraking, naar `offset` slepen (in stickpixels), nog niet loslaten.
@@ -128,7 +130,7 @@ func _run() -> void:
 
 	# 2. NAPALM kiezen: wiel dicht, geen strook, rechterstick klaar, nog niets gebruikt
 	var mid := (_wheel_value("INNER") + _wheel_value("OUTER")) * 0.5
-	await _tap(cb._wheel_center() + Vector2(mid, 0))
+	await _tap(cb._wheel_center() + Vector2(sin(TAU / 3.0), -cos(TAU / 3.0)) * mid)   # vak 2: napalm
 	_check(not cb.wheel_is_open() and game.kracht_sel == "napalm", "NAPALM kiezen sluit het wiel")
 	_check(cb.kracht_stick_armed and not cb.grenade_stick_armed, "kiezen zet de rechterstick klaar")
 	_check(game.kracht_cd.is_empty() and _gebruikt("napalm") == 0 and cb._place == null, "kiezen vuurt niets af en zet geen strook neer")
@@ -252,7 +254,7 @@ func _run() -> void:
 	e.index = 0
 	e.position = Vector2(700, 300) + Vector2(80, 0)
 	cb._input(e)
-	_check(cb._wheel_kind == "support" and cb._wheel_sector == 1, "binnen het wiel: sector napalm")
+	_check(cb._wheel_kind == "support" and cb._wheel_sector == 2, "binnen het wiel: sector napalm")
 	e = InputEventScreenDrag.new()
 	e.index = 0
 	e.position = Vector2(700, 300) + Vector2(180, 0)

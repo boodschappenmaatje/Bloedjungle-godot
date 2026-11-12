@@ -58,14 +58,17 @@ func _init() -> void:
 	add_child(_label)
 
 
-func show_at(center: Vector3) -> void:
+## Standaard de artilleriering; de parachutisten (E2) tonen hun landingscirkel met eigen straal en naam.
+func show_at(center: Vector3, radius: float = Artillerie.RADIUS, naam: String = "ARTILLERIE") -> void:
 	global_position = Vector3(center.x, 0.08, center.z)
+	_mat.set_shader_parameter("radius", radius)
+	(_mi.mesh as PlaneMesh).size = Vector2(radius * 2.0 + 1.0, radius * 2.0 + 1.0)
 	enemies_inside = 0
 	for e in Game.enemies:
 		if is_instance_valid(e) and e.get("dead") != true:
-			if Vector2(e.global_position.x - center.x, e.global_position.z - center.z).length() < Artillerie.RADIUS:
+			if Vector2(e.global_position.x - center.x, e.global_position.z - center.z).length() < radius:
 				enemies_inside += 1
 	_mat.set_shader_parameter("col", ENEMY if enemies_inside > 0 else OK)
 	_mat.set_shader_parameter("alpha", 0.6 + 0.3 * sin(Time.get_ticks_msec() / 160.0))
-	_label.text = "ARTILLERIE" if enemies_inside == 0 else "ARTILLERIE · %d" % enemies_inside
+	_label.text = naam if enemies_inside == 0 else "%s · %d" % [naam, enemies_inside]
 	_label.modulate = ENEMY if enemies_inside > 0 else OK

@@ -1,10 +1,19 @@
 class_name Rang
 extends RefCounted
 ## Fixture-only stub voor scripts/rang.gd: de teamcommando-tests kiezen alleen krachten in het wiel.
-const VOLGORDE := ["artillerie", "napalm", "satelliet", "reparatie"]
+const VOLGORDE := ["artillerie", "luchtaanval", "napalm", "satelliet", "reparatie", "parachutisten"]
+const GERICHT := ["artillerie", "napalm", "luchtaanval", "parachutisten"]
+const LUCHT_LENGTH := 30.0
+const LUCHT_WIDTH := 6.0
+const LUCHT_STICK_MIN := 8.0
+const LUCHT_STICK_MAX := 26.0
+const LUCHT_RANGE_MIN := 8.0
+const LUCHT_RANGE_MAX := 34.0
+const DROP_STRAAL := 10.0
 const KRACHTEN := {
 	"artillerie": {"naam": "ARTILLERIE"}, "napalm": {"naam": "NAPALM"},
 	"satelliet": {"naam": "SATELLIET"}, "reparatie": {"naam": "REPARATIE"},
+	"luchtaanval": {"naam": "LUCHTAANVAL"}, "parachutisten": {"naam": "PARACHUTISTEN", "kort": "PARA'S"},
 }
 const NAPALM_TAP := 8.0
 const NAPALM_RANGE_MIN := 8.0

@@ -26,6 +26,7 @@ var plane: Node3D
 var _t := 0.0
 var _jumpers: Array = []   # [{ally, kind, land, from, s_jump, state, t, chute}]
 var _done := false
+var _door_open := false
 
 
 ## Ververst het doel: niet binnen de vijandmuur. Static zodat de test het direct kan aanroepen.
@@ -124,6 +125,12 @@ func _physics_process(delta: float) -> void:
 
 
 func _jump(j: Dictionary) -> void:
+	if not _door_open and plane != null:
+		_door_open = true
+		var ap: AnimationPlayer = plane.find_child("AnimationPlayer", true, false)
+		if ap != null and ap.has_animation("Droppen"):   # deur open, springlicht groen (C-47)
+			ap.play("Droppen")
+			ap.animation_finished.connect(func(_n): ap.play("Vliegen"), CONNECT_ONE_SHOT)
 	var a := Ally.new()
 	a.kind = j.kind
 	var lv := _level()

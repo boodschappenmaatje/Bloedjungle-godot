@@ -82,6 +82,31 @@ func play(name: String, vol := 1.0, pos = null) -> void:
 	p.play()
 
 
+## Wapeneffecten AAA: speelt een los bestand uit assets/wapenfx/geluid (pas geladen als het nodig is). false = bestand ontbreekt, de aanroeper valt terug op het oude geluid.
+var _files := {}
+
+
+func play_file(file: String, vol := 1.0, pos = null) -> bool:
+	if not _files.has(file):
+		var pad := "res://assets/wapenfx/geluid/%s.wav" % file
+		_files[file] = load(pad) as AudioStream if ResourceLoader.exists(pad) else null
+	var stream: AudioStream = _files[file]
+	if stream == null:
+		return false
+	if pos != null and Game.player:
+		var d: float = (pos as Vector3).distance_to(Game.player.global_position)
+		vol *= clampf(1.2 - d / 35.0, 0.05, 1.0)
+	if file.begins_with("shotgun") or file.begins_with("pistool"):
+		JungleGeluid.verstoor("shotgun" if file.begins_with("shotgun") else "pistol", vol)
+	var p := _players[_next]
+	_next = (_next + 1) % VOICES
+	p.stream = stream
+	p.pitch_scale = randf_range(0.97, 1.04)
+	p.volume_db = linear_to_db(maxf(0.001, vol * MASTER))
+	p.play()
+	return true
+
+
 func set_m1911_test_volume(value: float) -> void:
 	m1911_test_volume = clampf(value, 0.0, 1.5)
 

@@ -13,7 +13,7 @@ var gz: GDScript
 var allies: Array = []
 var hotel: Node3D
 var wh: Node3D
-const O := 1500   # eerst de opbouw van het hoofdkwartier afwachten (die trekt de camera naar de bouwplek)
+const O := 100
 
 
 func _initialize() -> void:
@@ -54,6 +54,8 @@ func _process(_d: float) -> bool:
 		game.prep_t = 1e9
 	if p != null and frames > 10:
 		p.hp = 1000.0   # de speler blijft staan voor de foto's
+	for o in get_nodes_in_group("mcv_opbouw"):
+		o.remove_from_group("mcv_opbouw")   # de opbouw van het hoofdkwartier trekt anders de camera naar de bouwplek
 	if frames == 20:
 		hotel = _huis("hotel")
 		wh = _huis("woonhuis")

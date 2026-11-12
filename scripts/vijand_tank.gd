@@ -633,9 +633,7 @@ func _shoot(aim: Vector3) -> void:
 	if not h.is_empty():
 		to = (h.position as Vector3) - (to + Vector3.UP * 0.9 - from).normalized() * 0.3
 		to.y = maxf(to.y, 0.0)
-	Fx.muzzle(get_parent(), from)
-	Fx.dust(get_parent(), from)
-	Sfx.play("boom", 0.55, global_position)
+	TankFx.shot(get_parent(), from, to - from, false, false)
 	if _anim != null and _anim.has_animation("Vuren"):
 		_anim.play("Vuren", 0.02)
 	_recoil()
@@ -653,6 +651,8 @@ func _recoil() -> void:
 static func launch(parent: Node, from: Vector3, to: Vector3, _aim: Vector3, dmg := SHELL_DAMAGE) -> void:
 	var shell := Node3D.new()
 	shell.name = "TankGranaat"
+	if TankFx.enabled():
+		shell.add_child(TankFx.streak())   # snelle lichtstreep in plaats van het oranje balletje
 	var ball := MeshInstance3D.new()
 	var sph := SphereMesh.new()
 	sph.radius = 0.13
@@ -667,7 +667,8 @@ static func launch(parent: Node, from: Vector3, to: Vector3, _aim: Vector3, dmg 
 	sph.material = mat
 	ball.mesh = sph
 	ball.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	shell.add_child(ball)
+	if not TankFx.enabled():
+		shell.add_child(ball)
 	parent.add_child(shell)
 	shell.global_position = from
 	var flat := Vector2(to.x - from.x, to.z - from.z)
@@ -690,7 +691,7 @@ static func boom(parent: Node, at: Vector3, dmg := SHELL_DAMAGE) -> void:
 		return
 	var r := SHELL_RADIUS
 	Game.note_blast(at, r)
-	Fx.explosion(parent, at + Vector3.UP * 0.2, 1.2)
+	TankFx.impact(parent, at, 1.2)
 	Barrel.catch_blast(at, r)
 	VoertuigSchade.blast(at, r, dmg)   # tegen jouw jeep en tank telt een tankgranaat als "explosie" (pantser jeep/tank)
 	Garnizoen.blast(at, r, dmg, "eigen")

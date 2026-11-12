@@ -71,7 +71,9 @@
     "moved": [
      "PropL",
      "PropR",
-     "C47"
+     "C47",
+     "RoerAs",
+     "ElevAs"
     ]
    },
    "Vliegen": {
@@ -80,7 +82,8 @@
      "PropL",
      "PropR",
      "C47",
-     "RoerAs"
+     "RoerAs",
+     "ElevAs"
     ]
    },
    "Bocht": {
@@ -89,16 +92,39 @@
      "PropL",
      "PropR",
      "C47",
-     "RoerAs"
+     "RoerAs",
+     "ElevAs"
     ]
    },
    "Droppen": {
-    "duration": 4,
+    "duration": 2,
     "moved": [
      "PropL",
      "PropR",
      "C47",
      "RoerAs",
+     "ElevAs",
+     "Deur"
+    ]
+   },
+   "Open": {
+    "duration": 2,
+    "moved": [
+     "PropL",
+     "PropR",
+     "C47",
+     "RoerAs",
+     "ElevAs"
+    ]
+   },
+   "Sluiten": {
+    "duration": 1.5,
+    "moved": [
+     "PropL",
+     "PropR",
+     "C47",
+     "RoerAs",
+     "ElevAs",
      "Deur"
     ]
    }
@@ -131,7 +157,7 @@
  "errors": [],
  "stats": {
   "p47": "P-47 Thunderbolt (spelversie): 49.109 driehoeken · 63 meshes · 7 materialen · 11 texturen · clips: Stationair-loop, Vliegen-loop, Bocht, Aanval, Rol, Landingsgestel. Bron: Dennis' Drive-model Republic P-47 (één mesh, 501.646 driehoeken); bron/p47_dennis (Blender): segmenteren op gemeten grenzen, decimeren naar 48k, nieuwe UV en 2K-albedo/normaal gebakken van het origineel. Zes echte clips; mondingen, bommen en raketten zijn eigen knopen. Vliegpad, schieten, bommen en geluid zijn Godot (scripts/luchtaanval.gd). Geen iPhone-FPS gemeten.",
-  "c47": "C-47 Skytrain (spelversie): 44.804 driehoeken · 48 meshes · 16 materialen · 18 texturen · clips: Stationair-loop, Vliegen-loop, Bocht, Droppen. Bron: bron/c47 (Blender, procedureel), v2 met ca. 45.000 driehoeken: romp op 72 segmenten, laagdekker-vleugel met losse kleppen en rolroeren, hoogteroer en richtingsroer, twee sterrenmotoren met elk 14 cilinders met koelribben, kapkleppen en uitlaten, driebladige propellers met profielbladen, hoofdgestel met schokdemper, schaarlinks en band met profiel, staartwiel, ramen met kozijnen, astrokoepel, antenne, springdeur met kozijn en scharnieren en groen/rood springlicht. 2K-PBR. Clips Stationair-loop, Vliegen-loop (rolroeren en hoogteroer bewegen licht), Bocht (rolroeren tegengesteld, roer) en Droppen (deur open, licht groen, deur dicht). Vliegpad, springers en geluid zijn Godot (scripts/parachutisten.gd). Geen iPhone-FPS gemeten.",
+  "c47": "C-47 Skytrain (spelversie): 59.710 driehoeken · 13 meshes · 6 materialen · 3 texturen · clips: Stationair-loop, Vliegen-loop, Bocht, Droppen, Open-loop, Sluiten. Bron: Dennis' eigen C-47-model (Drive, één scan-mesh van 277.780 driehoeken, 3 x 4K-texturen); bron/c47_dennis (Blender): opgedeeld in romp, twee propellers (bladen + spinner), laaddeur met scharnier op de achterrand (bakboord), richtingsroer en hoogteroer; gedecimeerd naar ca. 60k met nieuwe UV en 2K albedo/normaal/ORM gebakken van het origineel; laadruimte achter de deur, springlichten en propellerschijven zijn nieuw. Clips Stationair-loop, Vliegen-loop (propellers draaien echt, 4 omw/s), Bocht, Droppen (deur gaat open, licht groen), Open-loop (deur blijft open) en Sluiten (deur dicht, licht rood). Vliegpad, springers en geluid zijn Godot (scripts/parachutisten.gd). Geen iPhone-FPS gemeten.",
   "parachute": "Parachute (spelversie): 1.752 driehoeken · 2 meshes · 2 materialen · 3 texturen · clips: Openen, Zweven-loop, Inzakken. Bron: bron/parachute (Blender): één mesh met shape keys (Gesloten, Blazen, Inzakken, Slinger, Duik), 1K-ripstop-PBR. Echte clips Openen (met openingsschok), Zweven-loop en Inzakken. Soldaat, val en landing zijn Godot (scripts/parachutisten.gd). Geen iPhone-FPS gemeten."
  },
  "ok": true

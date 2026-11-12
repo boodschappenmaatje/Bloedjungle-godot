@@ -27,6 +27,8 @@ var _t := 0.0
 var _jumpers: Array = []   # [{ally, kind, land, from, s_jump, state, t, chute}]
 var _done := false
 var _door_open := false
+var _door_closed := false
+var path_is_c47 := false
 
 
 ## Ververst het doel: niet binnen de vijandmuur. Static zodat de test het direct kan aanroepen.
@@ -76,6 +78,7 @@ func start(at: Vector3, n: int) -> void:
 	plane = (load(path) as PackedScene).instantiate()
 	add_child(plane)
 	plane.top_level = true
+	path_is_c47 = path == C47_PAD
 	if path == P47_PAD:
 		plane.scale = Vector3.ONE * 1.5   # tijdelijk: nog geen C-47 in de assets
 	_place(-LEAD)
@@ -114,12 +117,20 @@ func _physics_process(delta: float) -> void:
 			plane = null
 			Sfx.jet_off()
 	var open := false
+	var wacht := false
 	for j in _jumpers:
 		if j.state == "wacht":
 			open = true   # springt nog uit het toestel
+			wacht = true
 		elif j.state != "klaar":
 			_step(j, delta)
 			open = true
+	if _door_open and not wacht and not _door_closed and plane != null:
+		_door_closed = true   # iedereen is eruit: deur dicht, licht rood
+		var ap2: AnimationPlayer = plane.find_child("AnimationPlayer", true, false)
+		if ap2 != null and ap2.has_animation("Sluiten"):
+			ap2.play("Sluiten")
+			ap2.animation_finished.connect(func(_n): _play(plane, "Vliegen"), CONNECT_ONE_SHOT)
 	if plane == null and not open:
 		queue_free()
 
@@ -128,15 +139,15 @@ func _jump(j: Dictionary) -> void:
 	if not _door_open and plane != null:
 		_door_open = true
 		var ap: AnimationPlayer = plane.find_child("AnimationPlayer", true, false)
-		if ap != null and ap.has_animation("Droppen"):   # deur open, springlicht groen (C-47)
+		if ap != null and ap.has_animation("Droppen"):   # deur open, springlicht groen (C-47); de deur blijft open zolang er gesprongen wordt
 			ap.play("Droppen")
-			ap.animation_finished.connect(func(_n): ap.play("Vliegen"), CONNECT_ONE_SHOT)
+			ap.animation_finished.connect(func(_n): _play(plane, "Open"), CONNECT_ONE_SHOT)
 	var a := Ally.new()
 	a.kind = j.kind
 	var lv := _level()
 	add_child(a)
 	a.top_level = true
-	a.global_position = plane.global_position + Vector3(0, -1.0, 0)
+	a.global_position = plane.global_transform * Vector3(-1.6, -0.9, 1.8) if path_is_c47 else plane.global_position + Vector3(0, -1.0, 0)   # uit de laaddeur (bakboord, achter de vleugel)
 	a.face = atan2(dir.x, dir.z)
 	a.setup(float(Buildings.LEVELS[lv].hp), float(Buildings.LEVELS[lv].dmg), Game.allies.size())
 	a.rotation.y = a.face

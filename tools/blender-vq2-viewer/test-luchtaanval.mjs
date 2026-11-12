@@ -14,7 +14,7 @@ const out=path.join(root,'docs/vq2/renders');await fs.mkdir(out,{recursive:true}
 const results={browser:'Chromium headless, software WebGL; geen fysieke Safari/iPhone-test',clips:{},phases:[],errors:[]};
 function assert(ok,msg){if(!ok)throw Error(msg);}
 async function scrub(page,time){await page.locator('#scrub').evaluate((e,t)=>{e.value=t;e.dispatchEvent(new Event('input',{bubbles:true}));},String(time));await page.waitForTimeout(100);}
-const sample=page=>page.evaluate(()=>{const o={};for(const n of ['Propeller','ElevatorR','AileronR','Roer','GearR','GearStaart','Body','Parachute','PropL','PropR','C47','RoerAs','Deur']){const x=window.__VQ2_TEST__.node(n);if(x)o[n]={q:x.quaternion.toArray(),p:x.position.toArray()};}
+const sample=page=>page.evaluate(()=>{const o={};for(const n of ['Propeller','ElevatorR','AileronR','Roer','GearR','GearStaart','Body','Parachute','PropL','PropR','C47','RoerAs','ElevAs','Deur']){const x=window.__VQ2_TEST__.node(n);if(x)o[n]={q:x.quaternion.toArray(),p:x.position.toArray()};}
  const z=window.__VQ2_TEST__.node('Zeil');if(z){const m=[];z.traverse(c=>{if(c.morphTargetInfluences)m.push(...c.morphTargetInfluences);});o.Zeil={m};}return o;});
 const diff=(a,b)=>Object.keys(a).filter(k=>JSON.stringify(a[k])!==JSON.stringify(b[k]));
 async function pick(page,asset){await page.selectOption('#asset',asset);await page.waitForFunction(a=>window.__VQ2_TEST__.ready()&&window.__VQ2_TEST__.loaded().asset===a,asset);await page.waitForTimeout(300);}
@@ -25,7 +25,7 @@ try{
  await page.waitForFunction(()=>window.__VQ2_TEST__?.ready());
  const jobs={
   p47:{n:6,expect:{Stationair:['Propeller'],Vliegen:['Propeller','ElevatorR'],Bocht:['Body','AileronR'],Aanval:['Body','ElevatorR'],Rol:['Body','AileronR'],Landingsgestel:['GearR','GearStaart']}},
-  c47:{n:4,expect:{Stationair:['PropL'],Vliegen:['PropR','C47'],Bocht:['C47','RoerAs'],Droppen:['Deur']}},
+  c47:{n:6,expect:{Stationair:['PropL'],Vliegen:['PropR','C47'],Bocht:['C47','RoerAs','ElevAs'],Droppen:['Deur'],Open:['PropL'],Sluiten:['Deur']}},
   parachute:{n:3,expect:{Openen:['Zeil','Parachute'],Zweven:['Zeil','Parachute'],Inzakken:['Zeil','Parachute']}}};
  for(const [asset,job] of Object.entries(jobs)){
   await pick(page,asset);

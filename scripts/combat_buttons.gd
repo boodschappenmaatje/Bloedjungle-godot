@@ -387,7 +387,7 @@ func _sticky_pick(kind: String, sector: int) -> void:
 func _exit_aim(pointer: int, pos: Vector2) -> bool:
 	var support_id := String(Rang.VOLGORDE[_wheel_sector]) if _wheel_kind == "support" and _wheel_sector >= 0 else ""
 	var touch := UI.is_touch_platform()
-	var aimed := support_id in ["napalm", "artillerie"] and Rang.klaar(support_id)
+	var aimed := support_id in Rang.GERICHT and Rang.klaar(support_id)
 	var kracht := support_id != "" and Rang.heeft(support_id) and (touch or aimed)
 	var grenade := _wheel_kind == "equipment" and _wheel_sector == 0 and Game.grenades > 0
 	if not kracht and not grenade:
@@ -409,6 +409,10 @@ func _exit_aim(pointer: int, pos: Vector2) -> bool:
 func _sector(delta: Vector2) -> int:
 	if delta.length() < 28.0:
 		return -1
+	if _wheel_kind == "support":   # zes vakken van 60 graden, vak 0 boven, met de klok mee
+		var n := Rang.VOLGORDE.size()
+		var a := fposmod(delta.angle() + PI * 0.5 + PI / float(n), TAU)
+		return mini(int(a / (TAU / float(n))), n - 1)
 	if absf(delta.x) > absf(delta.y):
 		return 1 if delta.x > 0.0 else 3
 	return 2 if delta.y > 0.0 else 0
@@ -470,11 +474,11 @@ func _draw_wheel() -> void:
 			var sub := ""
 			if Rang.heeft(id):
 				sub = "%d s" % ceili(cd) if cd > 0.0 else "NIV %d" % Rang.niveau(id)
-			items.append({"label": String(Rang.KRACHTEN[id].naam), "icon": id, "active": Rang.heeft(id), "current": now == id, "sub": sub})
+			items.append({"label": String(Rang.KRACHTEN[id].get("kort", Rang.KRACHTEN[id].naam)), "icon": id, "active": Rang.heeft(id), "current": now == id, "sub": sub})
 	WheelArt.draw(ci, center, items, -PI * 0.5, _wheel_sector)
 	var sel_id := String(Rang.VOLGORDE[_wheel_sector]) if _wheel_kind == "support" and _wheel_sector >= 0 else ""
 	var touch := UI.is_touch_platform()
-	var aimable := (sel_id != "" and (touch or sel_id in ["napalm", "artillerie"])) or (_wheel_kind == "equipment" and _wheel_sector == 0)
+	var aimable := (sel_id != "" and (touch or sel_id in Rang.GERICHT)) or (_wheel_kind == "equipment" and _wheel_sector == 0)
 	if _wheel_sticky or (aimable and items[_wheel_sector].get("active", false)):
 		var f: Font = UI.body(700)
 		var t: String
@@ -569,8 +573,17 @@ func air_aim(drag: Vector2 = air_drag, stick := false) -> Dictionary:
 	var p = Game.player
 	var base: Vector3 = p.global_position
 	var l := drag.length()
-	if _air_id() == "artillerie":
+	if _air_id() == "artillerie" or _air_id() == "parachutisten":   # een doelpunt; de parachutisten landen er omheen
 		return {"target": arty_target(drag, stick), "dir": Vector3(sin(p.face), 0.0, cos(p.face))}
+	if _air_id() == "luchtaanval":   # een strook zoals napalm, maar met eigen bereik (8 tot 26 m met de stick)
+		if l <= AIM_DEAD:
+			var f0 := Vector3(sin(p.face), 0.0, cos(p.face))
+			return {"target": base + f0 * Rang.NAPALM_TAP, "dir": f0}
+		var d0 := Vector3(drag.x, 0.0, drag.y).normalized()
+		var k0 := clampf((l - AIM_DEAD) / (AIM_FULL - AIM_DEAD), 0.0, 1.0)
+		if stick:
+			return {"target": base + d0 * lerpf(Rang.LUCHT_STICK_MIN, Rang.LUCHT_STICK_MAX, k0), "dir": d0}
+		return {"target": base + d0 * lerpf(Rang.LUCHT_RANGE_MIN, Rang.LUCHT_RANGE_MAX, k0), "dir": d0}
 	if l <= AIM_DEAD:
 		var f := Vector3(sin(p.face), 0.0, cos(p.face))
 		return {"target": base + f * Rang.NAPALM_TAP, "dir": f}
@@ -587,7 +600,7 @@ func _update_air() -> void:
 		cancel_air()
 		return
 	var id := _air_id()
-	if id != "napalm" and id != "artillerie":
+	if not id in Rang.GERICHT:
 		return   # satelliet en reparatie hebben geen richthulp: loslaten gebruikt ze meteen
 	if _air_out and air_drag.length() <= AIM_DEAD:
 		_hide_air_preview()
@@ -604,18 +617,24 @@ func _hide_air_preview() -> void:
 ## De richthulp van artillerie (doelcirkel) of napalm (strook), op de plek die `a` aangeeft.
 func _show_air_preview(id: String, a: Dictionary) -> void:
 	var p = Game.player
-	if id == "artillerie":
+	if id == "artillerie" or id == "parachutisten":
 		if _arty_vis == null or not is_instance_valid(_arty_vis):
 			_arty_vis = ArtillerieAim.new()
 			p.get_parent().add_child(_arty_vis)
 		_arty_vis.visible = true
-		_arty_vis.show_at(a.target)
+		if id == "parachutisten":
+			_arty_vis.show_at(a.target, Rang.DROP_STRAAL, "PARACHUTISTEN")
+		else:
+			_arty_vis.show_at(a.target)
 	else:
 		if _air_vis == null or not is_instance_valid(_air_vis):
 			_air_vis = NapalmAim.new()
 			p.get_parent().add_child(_air_vis)
 		_air_vis.visible = true
-		_air_vis.show_strip(a.target, a.dir)
+		if id == "luchtaanval":
+			_air_vis.show_strip(a.target, a.dir, Rang.LUCHT_LENGTH, Rang.LUCHT_WIDTH)
+		else:
+			_air_vis.show_strip(a.target, a.dir)
 
 
 ## Rechterstick in krachtstand: kracht gekozen in het wiel, een NIEUWE aanraking richt, loslaten vuurt af (precies zoals de granaat).
@@ -685,7 +704,7 @@ func _update_kstick() -> void:
 	var id := _air_id()
 	if kstick_finger == -2 or id == "" or p == null or not is_instance_valid(p):
 		return
-	if id != "napalm" and id != "artillerie":
+	if not id in Rang.GERICHT:
 		return   # satelliet en reparatie hebben geen richthulp: loslaten vuurt ze af
 	if kstick_drag.length() <= AIM_DEAD:
 		_hide_air_preview()   # terug in het midden: loslaten annuleert

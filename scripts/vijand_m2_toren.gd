@@ -230,3 +230,15 @@ static func blast(at: Vector3, radius: float, amount: float) -> void:
 		var distance := center.distance_to(at)
 		if distance < radius + 1.4 and not BaseWallRules.blocks_blast(at, center):
 			tower.damage(amount * (1.0 - 0.7 * maxf(distance - 1.4, 0.0) / radius), "explosive")
+
+
+## Staat er een bemande M2-toren binnen dist (vlak, m) van dit punt? Luchtaanval (E2): dan raakt hij het toestel (vonken, rook; hij wordt niet neergehaald).
+static func any_near(at: Vector3, dist: float) -> bool:
+	var tree := Engine.get_main_loop() as SceneTree
+	if tree == null:
+		return false
+	for node in tree.get_nodes_in_group("vijand_toren"):
+		var tower := node as VijandM2Toren
+		if tower != null and is_instance_valid(tower) and Vector2(tower.global_position.x - at.x, tower.global_position.z - at.z).length() < dist:
+			return true
+	return false

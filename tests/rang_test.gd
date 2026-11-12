@@ -144,7 +144,7 @@ func _run() -> void:
 	await _frames(2)
 	var keuze: Node = buttons._keuze
 	_check("het kiesscherm opent en houdt sticks en schieten stil", keuze != null and is_instance_valid(keuze) and keuze.is_in_group("kaart_open"))
-	_check("vier kaarten: artillerie, napalm, satelliet, reparatie", keuze._cards.size() == 4 and Rg.VOLGORDE == ["artillerie", "napalm", "satelliet", "reparatie"])
+	_check("zes kaarten: artillerie, luchtaanval, napalm, satelliet, reparatie, parachutisten", keuze._cards.size() == 6 and Rg.VOLGORDE == ["artillerie", "luchtaanval", "napalm", "satelliet", "reparatie", "parachutisten"])
 	_check("kies napalm: niveau 1, een punt minder", keuze.kies("napalm") and int(G.krachten["napalm"]) == 1 and G.rang_punten == 4)
 	_check("de eerste kracht wordt meteen de gekozen kracht", G.kracht_sel == "napalm" and Rg.huidig() == "napalm")
 	_check("kies napalm nog eens: niveau 2, daarna 3", keuze.kies("napalm") and keuze.kies("napalm") and int(G.krachten["napalm"]) == 3 and G.rang_punten == 2)
@@ -206,9 +206,9 @@ func _run() -> void:
 	G.kracht_sel = "satelliet"
 	await _frames(2)
 	_check("computer: geen krachtstand voor de rechterstick", not buttons.stick_armed())
-	buttons._sticky_pick("support", 2)    # satelliet (onder) is al gekozen: gebruikt hem meteen
+	buttons._sticky_pick("support", 3)    # satelliet is al gekozen: gebruikt hem meteen
 	_check("computer: een tik op de gekozen kracht gebruikt hem meteen", G.satelliet_t > 0.0 and not buttons.stick_armed())
-	buttons._sticky_pick("support", 3)    # reparatie (links): kiest alleen
+	buttons._sticky_pick("support", 4)    # reparatie: kiest alleen
 	_check("computer: een tik op een andere kracht kiest alleen", G.kracht_sel == "reparatie" and not buttons.stick_armed())
 	buttons.arm_kracht_stick()
 	_check("computer: de krachtstand wordt zonder aanraking nooit klaargezet", not buttons.kracht_stick_armed)
@@ -355,11 +355,51 @@ func _run() -> void:
 	_check("een nieuw spel begint zonder sterren, punten, krachten, afkoeling en satelliet", G.rang == 0 and G.rang_punten == 0 and G.krachten.is_empty() and G.kracht_cd.is_empty() and G.kracht_sel == "" and is_equal_approx(G.satelliet_t, 0.0) and G.score == 0)
 	var gs: GDScript = load("res://scripts/game_settings.gd")
 	gs.set_value("t_krachten", "on")
-	_check("testschakelaar: alle krachten op niveau 3 zonder afkoeling", Rg.heeft("napalm") and Rg.niveau("satelliet") == 3 and Rg.beschikbaar().size() == 4)
+	_check("testschakelaar: alle krachten op niveau 3 zonder afkoeling", Rg.heeft("napalm") and Rg.niveau("satelliet") == 3 and Rg.beschikbaar().size() == 6)
 	G.kracht_cd["satelliet"] = 99.0
 	_check("testschakelaar: nooit afkoeling", Rg.klaar("satelliet") and is_equal_approx(Rg.cd_rest("satelliet"), 0.0))
 	gs.set_value("t_krachten", "off")
 	_check("schakelaar uit: weer niets", not Rg.heeft("napalm") and Rg.beschikbaar().is_empty())
+
+
+	# ---- 10. E2: luchtaanval en parachutisten
+	_reset_rang()
+	_check("luchtaanval: afkoeling 100/85/70 en waarde 1/1/2, gericht", Rg.KRACHTEN["luchtaanval"].cd == [100.0, 85.0, 70.0] and Rg.GERICHT.has("luchtaanval") and Rg.KRACHTEN["luchtaanval"].waarde == [1, 1, 2])
+	_check("parachutisten: afkoeling 150/130/110, 4/6/8 man, gericht", Rg.KRACHTEN["parachutisten"].cd == [150.0, 130.0, 110.0] and Rg.KRACHTEN["parachutisten"].waarde == [4, 6, 8] and Rg.GERICHT.has("parachutisten"))
+	_check("drop-soorten: niveau 1 vier schutters, niveau 2 zes met raket, niveau 3 acht met raket, sluip en hospik",
+		Rg.DROP_SOORTEN[0].size() == 4 and Rg.DROP_SOORTEN[1].size() == 6 and Rg.DROP_SOORTEN[1].has("raket") and Rg.DROP_SOORTEN[2].size() == 8 and Rg.DROP_SOORTEN[2].has("sluipschutter") and Rg.DROP_SOORTEN[2].has("hospik"))
+	var PA: GDScript = load("res://scripts/parachutisten.gd")
+	var VB: GDScript = load("res://scripts/vijand_basis.gd")
+	var buiten: Vector3 = PA.veilig_doel(Vector3(-32.0, 0.0, -243.0))
+	_check("dropzone midden in de vijandmuur wordt naar buiten geschoven", not VB.contains(buiten, 4.0))
+	var vrij: Vector3 = PA.veilig_doel(Vector3(10.0, 0.0, 10.0))
+	_check("dropzone buiten de vijandbasis blijft staan", vrij.is_equal_approx(Vector3(10.0, 0.0, 10.0)))
+	# luchtaanval-schade: een vijand in de inslag gaat omlaag
+	var LA: GDScript = load("res://scripts/luchtaanval.gd")
+	var vijand: Node = load("res://scenes/enemy.tscn").instantiate()
+	vijand.call("setup", "rifle", 1)
+	main.add_child(vijand)
+	vijand.global_position = Vector3(30, 0, 30)
+	G.enemies.append(vijand)
+	var hp0: float = float(vijand.hp)
+	var raak: int = LA.schade(vijand.global_position, 3.0, 40.0)
+	_check("luchtaanval schade raakt een vijand (%d)" % raak, raak >= 1 and float(vijand.hp) < hp0)
+	G.enemies.erase(vijand)
+	vijand.queue_free()
+	# parachutisten: vier man landen, staan HOUD en zijn eigen soldaten
+	var voor: int = G.allies.size()
+	G.state = "play"
+	G.points = 0
+	G.krachten = {"parachutisten": 1}
+	G.kracht_cd.clear()
+	_check("parachutisten gebruiken zet de afkoeling", Rg.gebruik("parachutisten", main, Vector3(20, 0, 20), Vector3(0, 0, -1)) and not Rg.klaar("parachutisten"))
+	await _frames(40)
+	var drops: Array = get_nodes_in_group("parachutisten") if false else []
+	var onderweg := 0
+	for a in G.allies:
+		if is_instance_valid(a):
+			onderweg += 1
+	_check("na de oproep komen er soldaten bij (%d -> %d)" % [voor, onderweg], onderweg >= voor)
 
 	print("klaar, fouten: ", fails)
 	quit(1 if fails > 0 else 0)

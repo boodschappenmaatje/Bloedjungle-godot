@@ -1,6 +1,6 @@
 class_name WheelArt
 extends RefCounted
-## HUD 3.0-wiel: vier segmenten rond een centrumknop (×), elk met een pictogram, een naam en eventueel een regeltje eronder ("sub": niveau of afkoeling). Gebruikt door het
+## HUD 3.0-wiel: vier segmenten (steunwiel sinds E2: zes) rond een centrumknop (×), elk met een pictogram, een naam en eventueel een regeltje eronder ("sub": niveau of afkoeling). Gebruikt door het
 ## commando-wiel (TeamCommands) en het steun- en uitrustingswiel (CombatButtons).
 
 const OUTER := 104.0
@@ -9,12 +9,13 @@ const GAP := 0.045
 const DARK := Color(0.05, 0.06, 0.04, 0.9)
 
 
-## items: [{"label", "icon", "active", "current"}] met item i op first_angle + i * 90° (0 = rechts, -90° = boven).
+## items: [{"label", "icon", "active", "current"}] met item i op first_angle + i * 360°/n (0 = rechts, -90° = boven); n = aantal items (4 of 6).
 ## selected: sector die de vinger nu aanwijst (-1 = geen).
 static func draw(ci: CanvasItem, center: Vector2, items: Array, first_angle: float, selected: int) -> void:
 	ci.draw_circle(center, OUTER + 4.0, Color(0.0, 0.0, 0.0, 0.42))
+	var n := maxi(items.size(), 1)
 	for i in items.size():
-		var a := first_angle + float(i) * TAU / 4.0
+		var a := first_angle + float(i) * TAU / float(n)
 		var it: Dictionary = items[i]
 		var active: bool = it.get("active", true)
 		var current: bool = it.get("current", false)
@@ -24,7 +25,7 @@ static func draw(ci: CanvasItem, center: Vector2, items: Array, first_angle: flo
 			fill = Color(0.2, 0.155, 0.055, 0.98)
 		elif current:
 			fill = Color(0.12, 0.095, 0.035, 0.96)
-		var poly := _segment(center, a)
+		var poly := _segment(center, a, n)
 		ci.draw_colored_polygon(poly, fill)
 		var edge := Color(UI.BRASS, 0.95 if hot or current else (0.62 if active else 0.28))
 		ci.draw_polyline(poly + PackedVector2Array([poly[0]]), edge, 2.2 if hot or current else 1.6, true)
@@ -45,9 +46,9 @@ static func draw(ci: CanvasItem, center: Vector2, items: Array, first_angle: flo
 	ci.draw_line(center + Vector2(-6, 6), center + Vector2(6, -6), UI.INK, 2.2, true)
 
 
-static func _segment(center: Vector2, a: float) -> PackedVector2Array:
+static func _segment(center: Vector2, a: float, n: int = 4) -> PackedVector2Array:
 	var pts := PackedVector2Array()
-	var half := PI / 4.0 - GAP
+	var half := PI / float(n) - GAP
 	var steps := 14
 	for s in steps + 1:
 		var t := a - half + 2.0 * half * float(s) / float(steps)
@@ -79,7 +80,7 @@ static func icon(ci: CanvasItem, kind: String, c: Vector2, col: Color) -> void:
 		"verplaatsen":
 			ci.draw_line(c + Vector2(-8, -13), c + Vector2(-8, 13), col, 2.6)
 			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-8, -13), c + Vector2(11, -8), c + Vector2(-8, -2)]), col)
-		"artillerie", "napalm", "satelliet", "reparatie":
+		"artillerie", "napalm", "satelliet", "reparatie", "luchtaanval", "parachutisten":
 			Rang.teken_icoon(ci, kind, c, 1.0, col)
 		"granaat":
 			ci.draw_circle(c + Vector2(0, 3), 10.0, col)

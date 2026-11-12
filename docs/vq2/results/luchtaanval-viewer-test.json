@@ -1,0 +1,99 @@
+{
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "clips": {
+  "p47": {
+   "Stationair": {
+    "duration": 3,
+    "moved": [
+     "Propeller",
+     "ElevatorR",
+     "AileronR",
+     "Roer",
+     "Body"
+    ]
+   },
+   "Vliegen": {
+    "duration": 2,
+    "moved": [
+     "Propeller",
+     "ElevatorR",
+     "AileronR",
+     "Roer",
+     "Body"
+    ]
+   },
+   "Bocht": {
+    "duration": 3,
+    "moved": [
+     "Propeller",
+     "ElevatorR",
+     "AileronR",
+     "Roer",
+     "Body"
+    ]
+   },
+   "Aanval": {
+    "duration": 3,
+    "moved": [
+     "Propeller",
+     "ElevatorR",
+     "AileronR",
+     "Roer",
+     "Body"
+    ]
+   },
+   "Rol": {
+    "duration": 2,
+    "moved": [
+     "Propeller",
+     "ElevatorR",
+     "AileronR",
+     "Roer",
+     "Body"
+    ]
+   },
+   "Landingsgestel": {
+    "duration": 2.4000000953674316,
+    "moved": [
+     "Propeller",
+     "ElevatorR",
+     "AileronR",
+     "Roer",
+     "GearR",
+     "GearStaart",
+     "Body"
+    ]
+   }
+  },
+  "parachute": {
+   "Openen": {
+    "duration": 0.800000011920929,
+    "moved": [
+     "Parachute",
+     "Zeil"
+    ]
+   },
+   "Zweven": {
+    "duration": 3,
+    "moved": [
+     "Parachute",
+     "Zeil"
+    ]
+   },
+   "Inzakken": {
+    "duration": 1.2000000476837158,
+    "moved": [
+     "Parachute",
+     "Zeil"
+    ]
+   }
+  }
+ },
+ "phases": [],
+ "errors": [],
+ "stats": {
+  "p47": "P-47 Thunderbolt (spelversie): 49.109 driehoeken · 63 meshes · 7 materialen · 11 texturen · clips: Stationair-loop, Vliegen-loop, Bocht, Aanval, Rol, Landingsgestel. Bron: Dennis' Drive-model Republic P-47 (één mesh, 501.646 driehoeken); bron/p47_dennis (Blender): segmenteren op gemeten grenzen, decimeren naar 48k, nieuwe UV en 2K-albedo/normaal gebakken van het origineel. Zes echte clips; mondingen, bommen en raketten zijn eigen knopen. Vliegpad, schieten, bommen en geluid zijn Godot (scripts/luchtaanval.gd). Geen iPhone-FPS gemeten.",
+  "parachute": "Parachute (spelversie): 1.752 driehoeken · 2 meshes · 2 materialen · 3 texturen · clips: Openen, Zweven-loop, Inzakken. Bron: bron/parachute (Blender): één mesh met shape keys (Gesloten, Blazen, Inzakken, Slinger, Duik), 1K-ripstop-PBR. Echte clips Openen (met openingsschok), Zweven-loop en Inzakken. Soldaat, val en landing zijn Godot (scripts/parachutisten.gd). Geen iPhone-FPS gemeten."
+ },
+ "ok": true
+}

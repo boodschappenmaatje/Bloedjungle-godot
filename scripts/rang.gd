@@ -12,7 +12,8 @@ extends RefCounted
 const GRENZEN := [600, 2000, 4500, 8000, 13000]     # score voor ster 1 tot 5 (voorstel: bijstellen na Dennis' test)
 const NAMEN := ["SOLDAAT", "SERGEANT", "LUITENANT", "KAPITEIN", "MAJOOR", "GENERAAL"]
 const MAX_NIVEAU := 3
-const VOLGORDE := ["artillerie", "napalm", "satelliet", "reparatie"]   # in het wiel: boven, rechts, onder, links
+const GERICHT := ["artillerie", "napalm", "luchtaanval", "parachutisten"]   # krachten met een richthulp (stick of slepen); satelliet en reparatie gaan meteen
+const VOLGORDE := ["artillerie", "luchtaanval", "napalm", "satelliet", "reparatie", "parachutisten"]   # in het wiel (zes vakken van 60 graden, met de klok mee vanaf boven)
 
 ## Per kracht: naam, afkoeling per niveau (s) en de waarde die per niveau groeit.
 const KRACHTEN := {
@@ -20,6 +21,8 @@ const KRACHTEN := {
 	"napalm": {"naam": "NAPALM", "cd": [120.0, 100.0, 80.0], "waarde": [10.0, 14.0, 18.0]},      # s dat de strook brandt
 	"satelliet": {"naam": "SATELLIET", "cd": [120.0, 100.0, 80.0], "waarde": [20.0, 30.0, 45.0]}, # s dat alle vijanden op de kaart staan
 	"reparatie": {"naam": "REPARATIE", "cd": [60.0, 50.0, 40.0], "waarde": [0.4, 0.7, 1.0]},      # deel dat wordt geheeld
+	"luchtaanval": {"naam": "LUCHTAANVAL", "cd": [100.0, 85.0, 70.0], "waarde": [1, 1, 2]},       # P-47 toestellen (niveau 2: ook raketten; niveau 3: een tweede toestel)
+	"parachutisten": {"naam": "PARACHUTISTEN", "cd": [150.0, 130.0, 110.0], "waarde": [4, 6, 8], "kort": "PARA'S"}, # soldaten die springen (E2)
 }
 const REPARATIE_STRAAL := [20.0, 28.0, 36.0]   # m rond jou
 
@@ -29,6 +32,21 @@ const NAPALM_WIDTH := 5.0    # m breed
 const NAPALM_RANGE_MIN := 8.0
 const NAPALM_RANGE_MAX := 30.0
 const NAPALM_TAP := 14.0     # alleen tikken: zo ver recht vooruit
+
+# Luchtaanval (E2, Dennis' keuzes 1C 2A 3A 4A 5A): P-47 duikt over een strook; mikken zoals napalm (strook, 8 tot 26 m).
+const LUCHT_LENGTH := 30.0   # m lengte van de beschietingsstrook
+const LUCHT_WIDTH := 6.0     # m breed
+const LUCHT_STICK_MIN := 8.0
+const LUCHT_STICK_MAX := 26.0
+const LUCHT_RANGE_MIN := 8.0   # slepen vanaf de knop (computer)
+const LUCHT_RANGE_MAX := 34.0
+# Parachutisten (E2, keuzes 6A 7A 8A 9A): transportvliegtuig, soldaten landen verspreid binnen DROP_STRAAL rond het doel (artillerie-bereik 14 tot 26 m met de stick).
+const DROP_STRAAL := 10.0
+const DROP_SOORTEN := [
+	["geweer", "geweer", "geweer", "geweer"],
+	["geweer", "geweer", "geweer", "geweer", "geweer", "raket"],
+	["geweer", "geweer", "geweer", "geweer", "raket", "sluipschutter", "hospik", "geweer"],
+]
 
 
 ## Test: alle krachten op niveau 3 zonder afkoeling (instelling "Test: alle krachten").
@@ -138,6 +156,11 @@ static func tekst(id: String, n: int) -> String:
 			return "strook van %d m, vuur %d s, %s" % [roundi(NAPALM_LENGTH), roundi(float(w)), cd]
 		"satelliet":
 			return "alle vijanden %d s op de kaart, %s" % [roundi(float(w)), cd]
+		"luchtaanval":
+			var extra := "" if n == 1 else (", raketten" if n == 2 else ", raketten en een tweede toestel")
+			return "P-47 over een strook van %d m, mitrailleurs en 2 bommen%s, %s" % [roundi(LUCHT_LENGTH), extra, cd]
+		"parachutisten":
+			return "%d parachutisten springen bij je doel, %s" % [int(w), cd]
 		_:
 			return "heelt %d%% in %d m, %s" % [roundi(float(w) * 100.0), roundi(float(REPARATIE_STRAAL[n - 1])), cd]
 
@@ -192,6 +215,10 @@ static func gebruik(id: String, main: Node, at: Vector3, dir: Vector3) -> bool:
 			Sfx.play("ping", 1.0)
 		"reparatie":
 			NoodReparatie.start(main, Game.player.global_position, n)
+		"luchtaanval":
+			LuchtAanval.start_aanval(main, at, dir, n)
+		"parachutisten":
+			Parachutisten.start_drop(main, at, n)
 	start_cd(id)
 	Game.krachten_gebruikt[id] = int(Game.krachten_gebruikt.get(id, 0)) + 1
 	Game.changed.emit()
@@ -226,6 +253,22 @@ static func teken_icoon(ci: CanvasItem, id: String, c: Vector2, s: float, col: C
 			ci.draw_arc(c, 13.0 * s, 0.0, TAU, 24, col, 2.0 * s, true)
 			ci.draw_rect(Rect2(c + Vector2(-3.5, -9) * s, Vector2(7, 18) * s), col)
 			ci.draw_rect(Rect2(c + Vector2(-9, -3.5) * s, Vector2(18, 7) * s), col)
+		"luchtaanval":
+			# jager van boven: romp, vleugels, staartvlak en de cirkel van de propeller
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(0, -13) * s, c + Vector2(3, -8) * s, c + Vector2(3, 8) * s, c + Vector2(0, 13) * s, c + Vector2(-3, 8) * s, c + Vector2(-3, -8) * s]), col)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-14, -1) * s, c + Vector2(-3, -4) * s, c + Vector2(-3, 2) * s, c + Vector2(-14, 2) * s]), col)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(14, -1) * s, c + Vector2(3, -4) * s, c + Vector2(3, 2) * s, c + Vector2(14, 2) * s]), col)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(-6, 10) * s, c + Vector2(-2, 7) * s, c + Vector2(-2, 11) * s, c + Vector2(-6, 12) * s]), col)
+			ci.draw_colored_polygon(PackedVector2Array([c + Vector2(6, 10) * s, c + Vector2(2, 7) * s, c + Vector2(2, 11) * s, c + Vector2(6, 12) * s]), col)
+			ci.draw_arc(c + Vector2(0, -14) * s, 6.0 * s, PI * 1.15, PI * 1.85, 6, col, 1.6 * s)
+		"parachutisten":
+			# koepel met lijnen naar een springer
+			ci.draw_arc(c + Vector2(0, -2) * s, 12.0 * s, PI, TAU, 14, col, 3.0 * s, true)
+			ci.draw_line(c + Vector2(-12, -2) * s, c + Vector2(0, 11) * s, col, 1.4 * s, true)
+			ci.draw_line(c + Vector2(12, -2) * s, c + Vector2(0, 11) * s, col, 1.4 * s, true)
+			ci.draw_line(c + Vector2(-4, -12) * s, c + Vector2(0, 11) * s, col, 1.2 * s, true)
+			ci.draw_line(c + Vector2(4, -12) * s, c + Vector2(0, 11) * s, col, 1.2 * s, true)
+			ci.draw_circle(c + Vector2(0, 13) * s, 2.4 * s, col)
 		"ster":
 			ci.draw_colored_polygon(ster_punten(c, 12.0 * s, 5.0 * s), col)
 

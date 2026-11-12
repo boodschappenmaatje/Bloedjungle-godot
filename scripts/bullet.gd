@@ -44,6 +44,7 @@ var feedback_source := ""  # optional confirmed-hit channel (e.g. player-driven 
 var wclass := ""    # soort schade voor het steen-papier-schaar (Data.ARMOR_MULT); "" = neutraal, zoals alles wat er al was
 var ground_land := false   # Wapeneffecten AAA: de kogel zakt op het eind naar de grond en laat daar stof achter
 var _land_from := 0.0
+var _suis := false   # Wapeneffecten AAA: vijandelijke kogel die langs je oor gaat zwiept één keer
 var src := "speler"  # wie schoot: "speler" of "soldaat" (voor bevestigde treffers; de score telt voor iedereen)
 
 
@@ -293,6 +294,11 @@ func _physics_process(delta: float) -> void:
 			Fx.dust(get_parent(), Vector3(global_position.x, 0.1, global_position.z))  # schuine kogel (heli) slaat in de grond
 		queue_free()
 		return
+	if not from_player and not _suis and not rocket and Game.player != null and GameSettings.get_value("wapenfx") == "nieuw":
+		var dp: Vector3 = Game.player.global_position + Vector3.UP * 1.0 - global_position
+		if dp.length_squared() < 6.0 and dp.dot(dir) > -0.5:
+			_suis = true
+			Sfx.play_file("kogelsuis", 0.5)
 	if rocket and randf() < 0.5:
 		Fx.dust(get_parent(), global_position - dir * 0.6)
 	if sink > 0.0:
@@ -374,6 +380,8 @@ func _physics_process(delta: float) -> void:
 			var target_handles_impact := target_script_path in ["res://scripts/enemy.gd", "res://scripts/player.gd"] or c is Barrel or c is Pomp or c is Brandkraan
 			if not target_handles_impact and hit.normal.length_squared() > 0.001:
 				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c), from_player and visual_weapon == "m1911")
+				if from_player:
+					WapenFx.surface_hit(get_parent(), hit.position, hit.normal, _impact_material(c), visual_weapon)
 			# Only a real HP reduction may trigger the player's hit marker.
 			# Shields, cover, misses, friendly AI and non-player explosions stay silent.
 			var can_confirm := from_player and feedback_source in ["jeep", "infantry"] and c is Node3D and (Game.enemies.has(c) or (c as Node).is_in_group("vijand_verdediger"))
@@ -396,6 +404,8 @@ func _physics_process(delta: float) -> void:
 		else:
 			if hit.normal.length_squared() > 0.001:
 				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c), from_player and visual_weapon == "m1911")
+				if from_player:
+					WapenFx.surface_hit(get_parent(), hit.position, hit.normal, _impact_material(c), visual_weapon)
 		queue_free()
 		return
 	global_position += step

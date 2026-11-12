@@ -15,26 +15,26 @@ const FLASH_FRAMES := 10   # van de 16 beelden worden de eerste 10 afgespeeld; d
 
 const PROFIEL := {
 	"m1911": {
-		"atlas": "flash_pistool_4x4.png", "flash": 1.9, "flash_life": 0.075, "flash_int": 1.5,
-		"glow": 0.9, "patch": 3.0, "patch_life": 0.11, "patch_a": 0.34,
-		"light": 1.7, "light_range": 6.0, "light_life": 0.085,
-		"smoke_n": 2, "smoke_size": 0.26, "smoke_grow": 2.8, "smoke_life": 0.95, "smoke_speed": 1.1, "smoke_a": 0.28,
-		"sparks": 4, "kick": 0.008, "haptic_ms": 12, "haptic_amp": 0.25,
-		"trace_len": 1.1, "trace_w": 0.02, "trace_head": Color(1.0, 0.95, 0.72, 0.95), "trace_tail": Color(1.0, 0.46, 0.1, 0.0),
-		"dust": 0.5, "hole": true,
+		"atlas": "flash_pistool_4x4.png", "flash": 3.8, "flash_life": 0.085, "flash_int": 1.7,
+		"glow": 2.0, "patch": 1.3, "patch_life": 0.09, "patch_a": 0.12,
+		"light": 4.2, "light_range": 10.0, "light_life": 0.11,
+		"smoke_n": 4, "smoke_size": 0.3, "smoke_grow": 3.2, "smoke_life": 1.2, "smoke_speed": 2.6, "smoke_a": 0.3,
+		"sparks": 8, "kick": 0.012, "fov": 0.35, "haptic_ms": 12, "haptic_amp": 0.25,
+		"trace_len": 1.7, "trace_w": 0.05, "trace_head": Color(1.0, 0.97, 0.78, 1.0), "trace_tail": Color(1.0, 0.5, 0.1, 0.0),
+		"dust": 0.7, "hole": true, "bank": 0,
 	},
 	"trench": {
-		"atlas": "flash_shotgun_4x4.png", "flash": 3.7, "flash_life": 0.11, "flash_int": 1.6,
-		"glow": 1.8, "patch": 6.4, "patch_life": 0.17, "patch_a": 0.46,
-		"light": 3.0, "light_range": 8.0, "light_life": 0.13,
-		"smoke_n": 6, "smoke_size": 0.42, "smoke_grow": 3.0, "smoke_life": 1.55, "smoke_speed": 2.7, "smoke_a": 0.36,
-		"sparks": 11, "kick": 0.028, "haptic_ms": 30, "haptic_amp": 0.7,
-		"trace_len": 0.62, "trace_w": 0.013, "trace_head": Color(1.0, 0.86, 0.5, 0.9), "trace_tail": Color(1.0, 0.4, 0.06, 0.0),
-		"dust": 0.38, "hole": false,
+		"atlas": "flash_shotgun_4x4.png", "flash": 7.0, "flash_life": 0.12, "flash_int": 1.8,
+		"glow": 3.6, "patch": 2.6, "patch_life": 0.14, "patch_a": 0.2,
+		"light": 7.5, "light_range": 14.0, "light_life": 0.16,
+		"smoke_n": 9, "smoke_size": 0.5, "smoke_grow": 3.4, "smoke_life": 1.9, "smoke_speed": 3.6, "smoke_a": 0.4,
+		"sparks": 18, "kick": 0.04, "fov": 0.9, "haptic_ms": 30, "haptic_amp": 0.7,
+		"trace_len": 1.0, "trace_w": 0.032, "trace_head": Color(1.0, 0.9, 0.55, 1.0), "trace_tail": Color(1.0, 0.42, 0.06, 0.0),
+		"dust": 0.55, "hole": false, "bank": 1,
 	},
 }
 
-const CAP := {"flash": 4, "patch": 4, "light": 2, "rook": 22, "stof": 14}
+const CAP := {"flash": 6, "patch": 4, "light": 3, "rook": 40, "bank": 8, "stof": 18}
 
 static var _pools := {}    # naam -> vrije knopen
 static var _made := {}     # naam -> aantal knopen dat bestaat
@@ -46,6 +46,12 @@ static var _mats := {}
 ## True als dit wapen de nieuwe effecten krijgt (instelling Nieuw, en alleen shotgun en pistool).
 static func enabled(weapon: String) -> bool:
 	return PROFIEL.has(weapon) and GameSettings.get_value("wapenfx") == "nieuw"
+
+
+## Kwaliteitstrap voor de zwaarste lagen: 0 = Prestatie (of de regelaar heeft een onderdeel uitgezet), 1 = Hoog, 2 = Ultra.
+static func tier() -> int:
+	var q: int = {"low": 0, "high": 1, "ultra": 2}.get(GameSettings.get_value("quality"), 1)
+	return clampi(q - Atmosphere.tier, 0, 2)
 
 
 static func profile(weapon: String) -> Dictionary:
@@ -113,17 +119,23 @@ static func muzzle(parent: Node, pos: Vector3, weapon: String, angle: float) -> 
 	if not enabled(weapon) or not Fx._near_camera(parent, pos, 38.0):
 		return
 	var p: Dictionary = PROFIEL[weapon]
+	var t := tier()
 	var fwd := Vector3(sin(angle), 0.0, cos(angle))
-	_flash(parent, pos, weapon, angle, p)
-	Fx._flash_quad(parent, pos + Vector3.UP * 0.1 + fwd * 0.12, p.glow, p.flash_life * 0.9, Color(1.0, 0.66, 0.24, 0.55))
-	_patch(parent, pos + fwd * 0.5, p)
-	_light(parent, pos + fwd * 0.45 + Vector3.UP * 0.3, p)
-	for i in int(p.smoke_n):
+	_flash(parent, pos, weapon, angle, p, 1.0)
+	if t >= 1:
+		_flash(parent, pos, weapon, angle + randf_range(-0.22, 0.22), p, 0.62)   # tweede, kleinere tong ernaast: de vlam flakkert
+	Fx._flash_quad(parent, pos + Vector3.UP * 0.1 + fwd * 0.12, p.glow, p.flash_life * 0.9, Color(1.0, 0.66, 0.24, 0.6))
+	_patch(parent, pos + fwd * 0.3, p)
+	_light(parent, pos + fwd * 0.6 + Vector3.UP * 0.5, p)
+	var n := [3, int(p.smoke_n * 0.7), int(p.smoke_n)][t] as int
+	for i in n:
 		_puff(parent, pos, fwd, p, i, "rook", Color(0.64, 0.6, 0.54))
-	Fx._burst(parent, pos + fwd * 0.3, fwd, int(p.sparks), Color(1.0, 0.72, 0.28), 0.026, 6.5 if weapon == "trench" else 5.0, Vector3(0.02, 0.02, 0.06))
+	if t >= 1 and int(p.bank) > 0:
+		_bank(parent, pos + fwd * 0.9, p, t)
+	Fx._burst(parent, pos + fwd * 0.3, fwd, int(p.sparks * (1.0 if t >= 1 else 0.5)), Color(1.0, 0.72, 0.28), 0.03, 7.5 if weapon == "trench" else 6.0, Vector3(0.02, 0.02, 0.08))
 
 
-static func _flash(parent: Node, pos: Vector3, weapon: String, angle: float, p: Dictionary) -> void:
+static func _flash(parent: Node, pos: Vector3, weapon: String, angle: float, p: Dictionary, mul: float) -> void:
 	var f := _acquire("flash:" + weapon, parent, func() -> Node3D:
 		var mi := MeshInstance3D.new()
 		var plane := PlaneMesh.new()
@@ -137,7 +149,7 @@ static func _flash(parent: Node, pos: Vector3, weapon: String, angle: float, p: 
 		return mi)
 	if f == null:
 		return
-	var size: float = p.flash * randf_range(0.9, 1.12)
+	var size: float = p.flash * mul * randf_range(0.9, 1.15)
 	f.scale = Vector3(size * (1.0 if randf() < 0.5 else -1.0), 1.0, size)
 	f.rotation = Vector3(0.0, angle, 0.0)
 	# het loopeinde zit bovenaan in het plaatje: leg de vlam een beetje voor de loop
@@ -146,7 +158,7 @@ static func _flash(parent: Node, pos: Vector3, weapon: String, angle: float, p: 
 	mat.set_shader_parameter("intensity", p.flash_int)
 	mat.set_shader_parameter("frame_index", 0.0)
 	var tw := f.create_tween()
-	tw.tween_method(func(fr: float): mat.set_shader_parameter("frame_index", fr), 0.0, float(FLASH_FRAMES - 1), p.flash_life)
+	tw.tween_method(func(fr: float): mat.set_shader_parameter("frame_index", fr), 0.0, float(FLASH_FRAMES - 1), p.flash_life * mul)
 	tw.tween_callback(_release.bind(f))
 
 
@@ -204,7 +216,7 @@ static func _puff_material() -> StandardMaterial3D:
 		m.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 		m.albedo_texture = _texture("rook.png")
 		m.no_depth_test = false
-		m.albedo_color = Color(0.66, 0.62, 0.56)   # grijs, niet wit: past bij de gouden zon
+		m.albedo_color = Color(0.76, 0.69, 0.58)   # warm grijs: het gouden zonlicht kleurt de rook
 		_mats["puff"] = m
 	return _mats["puff"]
 
@@ -250,6 +262,17 @@ static func _puff(parent: Node, pos: Vector3, fwd: Vector3, p: Dictionary, i: in
 	tw.tween_callback(_release.bind(s))
 
 
+## Rookbank: grote, trage, doorzichtige wolk die blijft hangen; na een paar schoten staat er een grijze waas boven de schutter (Hoog en Ultra).
+static func _bank(parent: Node, pos: Vector3, p: Dictionary, t: int) -> void:
+	var q: Dictionary = p.duplicate()
+	q.smoke_size = 1.0
+	q.smoke_grow = 1.8
+	q.smoke_life = 4.2 if t >= 2 else 2.8
+	q.smoke_speed = 0.35
+	q.smoke_a = 0.17
+	_puff(parent, pos, Vector3(0.0, 0.0, 0.0), q, 0, "bank", Color(0.7, 0.66, 0.6))
+
+
 ## Klein rookje uit de loop als je herlaadt (alleen kort na het schieten).
 static func reload_wisp(parent: Node, pos: Vector3, weapon: String, angle: float) -> void:
 	if not enabled(weapon) or not Fx._near_camera(parent, pos, 30.0):
@@ -290,7 +313,7 @@ static func tracer_mesh(weapon: String) -> ArrayMesh:
 	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	mat.vertex_color_use_as_albedo = true
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.albedo_color = Color(1.25, 1.25, 1.25)   # net fel genoeg voor de gloed, niet de witte staaf van vroeger
+	mat.albedo_color = Color(1.7, 1.6, 1.4)   # heldere kop met vurige staart: goed te zien op afstand, geen witte staaf
 	m.surface_set_material(0, mat)
 	_meshes[key] = m
 	return m
@@ -314,6 +337,8 @@ static func ground_hit(parent: Node, at: Vector3, weapon: String) -> void:
 	_dust(parent, g, p, 1.0)
 	Fx._burst(parent, g + Vector3.UP * 0.05, Vector3.UP, 7, Color(0.36, 0.26, 0.14), 0.05, 4.2, Vector3(0.05, 0.04, 0.05))
 	Fx._burst(parent, g + Vector3.UP * 0.05, Vector3.UP, 5, Color(0.22, 0.42, 0.1), 0.04, 3.4, Vector3(0.02, 0.05, 0.02))   # grassprieten
+	if tier() >= 1:
+		Fx._burst(parent, g + Vector3.UP * 0.1, Vector3.UP, 6, Color(0.3, 0.5, 0.12), 0.07, 2.6, Vector3(0.07, 0.01, 0.045))   # rondtollende blaadjes
 	if p.hole:
 		Fx.decal(parent, g, Vector3.UP, "hole", 0.3, 20.0)
 
@@ -345,6 +370,24 @@ static func _dust(parent: Node, g: Vector3, p: Dictionary, scale_mul: float) -> 
 		mi.global_position = g + Vector3.UP * (0.12 + 0.35 * u)
 		mi.transparency = 0.45 + 0.55 * u, 0.0, 1.0, 0.7)
 	tw.tween_callback(_release.bind(s))
+
+
+## Extra inslageffect op bomen, muren en voertuigen, bovenop Fx.impact (alleen voor kogels van de speler met de nieuwe effecten).
+static func surface_hit(parent: Node, pos: Vector3, normal: Vector3, material: String, weapon: String) -> void:
+	if not enabled(weapon) or not is_instance_valid(parent) or not Fx._near_camera(parent, pos, 30.0):
+		return
+	var n := normal.normalized()
+	match material:
+		"wood":
+			Fx._burst(parent, pos, n, 6, Color(0.3, 0.5, 0.12), 0.08, 2.4, Vector3(0.08, 0.012, 0.05))   # blaadjes dwarrelen weg
+			if tier() >= 1:
+				Fx._burst(parent, pos, n, 4, Color(0.7, 0.55, 0.35), 0.03, 6.0, Vector3(0.02, 0.1, 0.02))   # splinters
+		"metal", "concrete":
+			Fx._burst(parent, pos, n, 5, Color(1.0, 0.7, 0.25), 0.025, 8.0, Vector3(0.02, 0.07, 0.02))
+			if tier() >= 1:
+				_dust(parent, pos, PROFIEL[weapon], 0.55)
+		_:
+			_dust(parent, pos, PROFIEL[weapon], 0.5)
 
 
 # ---------- hulzen ----------
@@ -394,6 +437,11 @@ static func kick(weapon: String) -> float:
 	return float(PROFIEL.get(weapon, PROFIEL["m1911"]).kick) if enabled(weapon) else -1.0
 
 
+## Korte inzoomstoot van de camera bij een schot, in graden (Hoog en Ultra; 0 = geen).
+static func fov_punch(weapon: String) -> float:
+	return float(PROFIEL[weapon].fov) if enabled(weapon) and tier() >= 1 else 0.0
+
+
 ## Korte tik in je hand (alleen op telefoons, en uit te zetten in Instellingen).
 static func haptic(weapon: String) -> void:
 	if not enabled(weapon) or GameSettings.get_value("wapen_haptiek") != "on":
@@ -422,7 +470,8 @@ static func treffer(parent: Node, target: Node, at: Vector3, dir: Vector3, weapo
 	if not enabled(weapon) or not is_instance_valid(parent):
 		return
 	var flat := Vector3(dir.x, 0.0, dir.z).normalized()
-	Fx.blood(parent, at + Vector3.UP * 0.1, flat + Vector3.UP * 0.15, 22 if weapon == "trench" else 15)
+	Fx.blood(parent, at + Vector3.UP * 0.1, flat + Vector3.UP * 0.15, 32 if weapon == "trench" else 20)
+	Fx.ground_blood(parent, at + flat * 0.9, 0.9 if weapon == "trench" else 0.6)
 	if target != null and is_instance_valid(target) and target.get("model") != null and target.get("model").has_method("hit_reaction"):
-		target.get("model").hit_reaction(flat, 1.9 if weapon == "trench" else 1.4)
+		target.get("model").hit_reaction(flat, 2.8 if weapon == "trench" else 1.9)
 	Sfx.play_file("tik_treffer", 0.45)

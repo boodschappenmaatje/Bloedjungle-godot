@@ -19,6 +19,7 @@ var _editor_tilt := EDITOR_TILT
 var _editor_active := false
 var _combat_shake_time := 0.0
 var _combat_shake_strength := 0.0
+var _fov_punch := 0.0   # Wapeneffecten AAA: korte inzoomstoot (graden) bij een schot
 var _group_distance := 0.0
 var _group_shift := Vector3.ZERO  # groepsverschuiving t.o.v. de speler (beweegt mee tussen scans)
 var _group_offset := Vector3.ZERO  # zacht bijgestuurde versie van _group_shift
@@ -43,6 +44,10 @@ func snap_to_player() -> void:
 	_group_hold = 0.0
 
 ## Kleine, korte camerakick voor zware wapens en nabije explosies.
+func fov_punch(deg: float) -> void:
+	_fov_punch = maxf(_fov_punch, clampf(deg, 0.0, 1.5))
+
+
 func combat_impulse(strength: float) -> void:
 	_combat_shake_strength = maxf(_combat_shake_strength, clampf(strength, 0.0, 0.055))
 	_combat_shake_time = maxf(_combat_shake_time, 0.13)
@@ -243,6 +248,11 @@ func _process(delta: float) -> void:
 		_combat_shake_time = maxf(0.0, _combat_shake_time - delta)
 		if _combat_shake_time == 0.0:
 			_combat_shake_strength = 0.0
+	if _fov_punch > 0.0:
+		_fov_punch = maxf(0.0, _fov_punch - delta * 9.0)
+		fov = 45.0 - _fov_punch
+	elif fov != 45.0:
+		fov = 45.0
 	_nlook = _look
 	look_at(_look, Vector3.UP)
 	# Alleen de zichtlijn naar de speler en naar de dichtstbijzijnde vijanden wordt uit de bladeren gehouden.

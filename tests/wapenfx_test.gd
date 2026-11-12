@@ -58,7 +58,7 @@ func _run() -> void:
 	for w in ["trench", "m1911"]:
 		var m: ArrayMesh = wfx.tracer_mesh(w)
 		_check(m != null and m.get_surface_count() == 1, "kogelspoor %s heeft niet één vlak" % w)
-	_check(wfx.trace_length("m1911") < 2.2 and wfx.trace_length("trench") < 1.2, "kogelsporen zijn niet korter dan de oude staaf")
+	_check(wfx.trace_length("m1911") < 4.0 and wfx.trace_length("trench") < 2.5, "kogelsporen zijn langer dan afgesproken")
 
 	# --- hulzen ---
 	fx.casing(stage, Vector3(0, 1.2, 0), Vector3.RIGHT, Vector3.FORWARD, "trench")

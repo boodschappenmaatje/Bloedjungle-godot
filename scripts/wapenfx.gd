@@ -20,7 +20,7 @@ const PROFIEL := {
 		"light": 4.2, "light_range": 10.0, "light_life": 0.11,
 		"smoke_n": 4, "smoke_size": 0.3, "smoke_grow": 3.2, "smoke_life": 1.2, "smoke_speed": 2.6, "smoke_a": 0.3,
 		"sparks": 8, "kick": 0.012, "fov": 0.35, "haptic_ms": 12, "haptic_amp": 0.25,
-		"trace_len": 1.7, "trace_w": 0.05, "trace_head": Color(1.0, 0.97, 0.78, 1.0), "trace_tail": Color(1.0, 0.5, 0.1, 0.0),
+		"trace_len": 3.4, "trace_w": 0.05, "trace_head": Color(1.0, 0.97, 0.78, 1.0), "trace_tail": Color(1.0, 0.5, 0.1, 0.0),
 		"dust": 0.7, "hole": true, "bank": 0,
 	},
 	"trench": {
@@ -29,7 +29,7 @@ const PROFIEL := {
 		"light": 7.5, "light_range": 14.0, "light_life": 0.16,
 		"smoke_n": 9, "smoke_size": 0.5, "smoke_grow": 3.4, "smoke_life": 1.9, "smoke_speed": 3.6, "smoke_a": 0.4,
 		"sparks": 18, "kick": 0.04, "fov": 0.9, "haptic_ms": 30, "haptic_amp": 0.7,
-		"trace_len": 1.0, "trace_w": 0.032, "trace_head": Color(1.0, 0.9, 0.55, 1.0), "trace_tail": Color(1.0, 0.42, 0.06, 0.0),
+		"trace_len": 2.0, "trace_w": 0.034, "trace_head": Color(1.0, 0.9, 0.55, 1.0), "trace_tail": Color(1.0, 0.42, 0.06, 0.0),
 		"dust": 0.55, "hole": false, "bank": 1,
 	},
 }
@@ -297,15 +297,38 @@ static func tracer_mesh(weapon: String) -> ArrayMesh:
 	var m := ArrayMesh.new()
 	var st := SurfaceTool.new()
 	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var z0: float = -float(p.trace_len)
-	var z1 := 0.07
-	for ang in [0.0, PI * 0.5]:
-		var side := Vector3(cos(ang), sin(ang), 0.0) * float(p.trace_w)
-		var pts := [Vector3(0, 0, z0) - side * 0.15, Vector3(0, 0, z0) + side * 0.15, Vector3(0, 0, z1) + side, Vector3(0, 0, z1) - side]
-		var cols := [p.trace_tail, p.trace_tail, p.trace_head, p.trace_head]
-		for i in [0, 1, 2, 0, 2, 3]:
-			st.set_color(cols[i])
-			st.add_vertex(pts[i])
+	var lang: float = p.trace_len
+	var head: Color = p.trace_head
+	var tail: Color = p.trace_tail
+	var halo := Color(1.0, 0.5, 0.12)
+	# twee lagen in één vlak: een brede zachte oranje halo en daarbinnen een dunne, witgele kern.
+	# Elke laag bestaat uit twee kruislings gezette linten met een kop die toespitst en een staart die uitdooft.
+	for laag in 2:
+		var breed: float = float(p.trace_w) * (3.4 if laag == 0 else 1.0)
+		var kleur_kop: Color = Color(halo.r, halo.g, halo.b, 0.42) if laag == 0 else head
+		var kleur_mid: Color = Color(halo.r, halo.g, halo.b, 0.2) if laag == 0 else head.lerp(tail, 0.45)
+		var kleur_eind: Color = Color(halo.r, halo.g, halo.b, 0.0) if laag == 0 else tail
+		# stations: [z, breedtefactor, kleur]
+		var st_list := [
+			[-lang, 0.1, kleur_eind],
+			[-lang * 0.45, 0.62, kleur_mid],
+			[0.0, 1.0, kleur_kop],
+			[0.16, 0.12, Color(kleur_kop.r, kleur_kop.g, kleur_kop.b, kleur_kop.a * 0.0)],
+		]
+		for ang in [0.0, PI * 0.5]:
+			var zijde := Vector3(cos(ang), sin(ang), 0.0)
+			for i in st_list.size() - 1:
+				var a_ : Array = st_list[i]
+				var b_ : Array = st_list[i + 1]
+				var pa: Vector3 = Vector3(0, 0, a_[0])
+				var pb: Vector3 = Vector3(0, 0, b_[0])
+				var wa: Vector3 = zijde * breed * a_[1]
+				var wb: Vector3 = zijde * breed * b_[1]
+				var pts := [pa - wa, pa + wa, pb + wb, pb - wb]
+				var cols := [a_[2], a_[2], b_[2], b_[2]]
+				for k in [0, 1, 2, 0, 2, 3]:
+					st.set_color(cols[k])
+					st.add_vertex(pts[k])
 	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, st.commit_to_arrays())
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
@@ -313,7 +336,7 @@ static func tracer_mesh(weapon: String) -> ArrayMesh:
 	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	mat.vertex_color_use_as_albedo = true
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.albedo_color = Color(1.7, 1.6, 1.4)   # heldere kop met vurige staart: goed te zien op afstand, geen witte staaf
+	mat.albedo_color = Color(2.1, 1.9, 1.6)   # HDR: de kern straalt, de halo kleurt het gras eromheen warm
 	m.surface_set_material(0, mat)
 	_meshes[key] = m
 	return m

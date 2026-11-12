@@ -14,6 +14,11 @@ func _init() -> void:
 	_warm_up()
 
 
+## Het foutenlogboek (scripts/logboek.gd) hangt onder Game: een nieuwe autoload in project.godot zou niet met een OTA-update meekomen.
+func _ready() -> void:
+	add_child(load("res://scripts/logboek.gd").new())
+
+
 ## Zware modellen worden niet meer met preload bij het compileren geladen (de OTA-keten komt daarna), maar met load() als ze nodig zijn.
 ## Om haperingen bij het eerste gebruik te voorkomen vragen we de grootste alvast in een achtergrond-thread aan.
 static func _warm_up() -> void:

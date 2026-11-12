@@ -87,6 +87,10 @@ on:
       - "scripts/action_btn.gd"
       - "scripts/wheel_art.gd"
       - "tests/rang_test.gd"
+      - "scripts/logboek.gd"
+      - "scripts/meldingen_config.gd"
+      - "scripts/pause_menu.gd"
+      - "tests/logboek_test.gd"
       - "tests/kies_knop_test.gd"
       - "tests/kracht_stick_test.gd"
       - "scripts/pause_menu.gd"
@@ -128,6 +132,11 @@ jobs:
           .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --version
       - name: Import project
         run: timeout 900 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --import
+      - name: Foutenlogboek en Meld probleem (zonder echte melding)
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 180 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/logboek_test.gd 2>&1 | grep -E '^(OK|FOUT)|klaar|SCRIPT ERROR|Parse Error'
       - name: Vijandbasis- en kaarttest
         shell: bash
         run: |

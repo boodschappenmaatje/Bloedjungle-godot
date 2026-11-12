@@ -32,6 +32,10 @@ class MenuIcon extends Control:
 				draw_line(c + Vector2(7, 0), c + Vector2(13, 0), tint, 2.0, true)
 				draw_line(c + Vector2(0, -13), c + Vector2(0, -7), tint, 2.0, true)
 				draw_line(c + Vector2(0, 7), c + Vector2(0, 13), tint, 2.0, true)
+			"meld":
+				draw_polyline(PackedVector2Array([c + Vector2(0, -11), c + Vector2(11, 9), c + Vector2(-11, 9), c + Vector2(0, -11)]), tint, 2.0, true)
+				draw_line(c + Vector2(0, -4), c + Vector2(0, 3), tint, 2.5, true)
+				draw_circle(c + Vector2(0, 6.5), 1.5, tint, true)
 
 
 ## Alle schermen van de web-versie die over het spel heen komen: hoofdmenu, pauze, instellingen,
@@ -139,6 +143,13 @@ var _saved := false
 var over_delay := 1.4  # korte pauze voor het scherm verschijnt, zodat je de dood nog ziet
 var over_delay_win := 3.4  # na het slopen van het vijandelijke hoofdkwartier: tijd voor de instorting
 var _over_title: Label
+var _meld_intro: Label
+var _meld_tekst: LineEdit
+var _meld_status: Label
+var _meld_knop: Button
+var _meld_vorige := false
+var _meld_terug := "menu"
+var _meld_aangeboden := false
 
 
 func _ready() -> void:
@@ -184,6 +195,7 @@ func _ready() -> void:
 	_build_gear()
 	_build_wheel()
 	_build_over()
+	_build_melden()
 	Game.over.connect(_on_over)
 	get_viewport().size_changed.connect(_fit_sheets)
 	_show("")
@@ -365,7 +377,7 @@ func _show(name: String) -> void:
 	_cur = name
 	_root.visible = name != ""
 	# in het hoofdmenu en de schermen die je van daaruit opent: de foto van de commandopost
-	var command_screen := name == "menu" or (name in ["settings", "gear", "test"] and Game.state == "menu")
+	var command_screen := name == "menu" or (name in ["settings", "gear", "test", "melden"] and Game.state == "menu")
 	_menu_background.visible = command_screen
 	_menu_tint.visible = command_screen
 	_menu_shade.visible = name == "menu"
@@ -471,6 +483,7 @@ func _build_menu() -> void:
 	tiles.add_child(_menu_tile("city", "STADSEDITOR", _open_stad_editor))
 	tiles.add_child(_menu_tile("updates", "UPDATES", func(): UpdatePanel.open(self)))
 	tiles.add_child(_menu_tile("target", "TESTGROEP", func(): _show("test")))
+	tiles.add_child(_menu_tile("meld", "MELDEN", func(): open_melden("menu")))
 
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -550,6 +563,89 @@ func _score_table(into: VBoxContainer, highlight := -1) -> void:
 func show_menu() -> void:
 	_score_table(_scores_box)
 	_show("menu")
+	# liep het spel de vorige keer vast of waren er fouten: één keer aanbieden om dat te melden (nooit vanzelf versturen)
+	if not _meld_aangeboden and Logboek.inst != null and Logboek.inst.vorige_uitleg() != "" and DisplayServer.get_name() != "headless":
+		_meld_aangeboden = true
+		open_melden("menu", true)
+
+
+# ---------------------------------------------------------------- meld probleem (foutenlogboek op afstand)
+
+func _build_melden() -> void:
+	var v := _sheet(_centered("melden", 620), "MELD PROBLEEM")
+	_meld_intro = _wrap("", 15, UI.INK, 300.0)
+	v.add_child(_meld_intro)
+	v.add_child(_wrap("Mee gaan: versie, toestel, fps, foutmeldingen, je laatste acties en je positie van de laatste 5 minuten. Geen naam of andere persoonlijke gegevens. Er gaat alleen iets weg als je op VERSTUUR tikt.", 13, UI.INK_DIM, 300.0))
+	_meld_tekst = LineEdit.new()
+	_meld_tekst.max_length = 300
+	_meld_tekst.placeholder_text = "Wat ging er mis? (mag leeg blijven)"
+	_meld_tekst.custom_minimum_size.y = 44
+	_meld_tekst.add_theme_font_override("font", UI.body(600, 0))
+	_meld_tekst.add_theme_font_size_override("font_size", 17)
+	_meld_tekst.add_theme_color_override("font_color", UI.INK)
+	_meld_tekst.add_theme_stylebox_override("normal", UI.box(Color(0, 0, 0, 0.35), UI.PANEL_LINE, 1, 4, 10))
+	_meld_tekst.add_theme_stylebox_override("focus", UI.box(Color(0, 0, 0, 0.35), UI.BRASS, 1, 4, 10))
+	v.add_child(_meld_tekst)
+	_meld_status = _wrap("", 14, UI.BRASS, 300.0)
+	v.add_child(_meld_status)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	v.add_child(row)
+	_meld_knop = _button("VERSTUUR", "primary", _melden_versturen)
+	_meld_knop.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(_meld_knop)
+	var terug := _button("TERUG", "secondary", _melden_sluiten)
+	terug.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(terug)
+
+
+## Opent het meldscherm vanuit het hoofdmenu of de pauze. van_vorige: het gaat om de vorige (vastgelopen) sessie.
+func open_melden(from: String, van_vorige := false) -> void:
+	_meld_terug = from
+	_meld_vorige = van_vorige
+	_meld_tekst.text = ""
+	_meld_status.text = ""
+	_meld_knop.disabled = false
+	var boek := Logboek.inst
+	if boek == null:
+		_meld_intro.text = "Het logboek draait niet; er valt niets te melden."
+		_meld_knop.disabled = true
+	elif van_vorige:
+		_meld_intro.text = boek.vorige_uitleg() + " Wil je dat aan Claude melden? Dan kan het worden uitgezocht."
+	else:
+		_meld_intro.text = "Stuur wat er net gebeurde naar Claude, zodat het kan worden uitgezocht."
+		var n := boek.wachtrij_aantal()
+		if n > 0:
+			_meld_status.text = "%d eerdere melding(en) wachten nog op verbinding." % n
+	_show("melden")
+
+
+func _melden_versturen() -> void:
+	var boek := Logboek.inst
+	if boek == null or boek.bezig:
+		return
+	_meld_knop.disabled = true
+	_meld_status.text = "Versturen..."
+	if not boek.verstuurd.is_connected(_melden_klaar):
+		boek.verstuurd.connect(_melden_klaar)
+	boek.meld(_meld_tekst.text.strip_edges(), _meld_vorige)
+	_meld_vorige = false
+
+
+func _melden_klaar(ok: bool, uitleg: String) -> void:
+	if _cur != "melden":
+		return
+	_meld_status.text = uitleg
+	_meld_status.add_theme_color_override("font_color", UI.INK if ok else UI.BRASS)
+	if ok:
+		_meld_tekst.text = ""
+
+
+func _melden_sluiten() -> void:
+	if _meld_vorige and Logboek.inst != null:
+		Logboek.inst.vorige_afwijzen()   # NIET MELDEN: niet nog eens vragen
+	_meld_vorige = false
+	_show(_meld_terug)
 
 
 func _start_game() -> void:
@@ -629,6 +725,7 @@ func _build_pause() -> void:
 	for b in knoppen:
 		(b as Button).size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		g.add_child(b)
+	v.add_child(_button("Meld probleem", "secondary", func(): open_melden("pause")))
 	v.add_child(_button("Stoppen", "secondary", func():
 		get_tree().paused = false
 		_show("")

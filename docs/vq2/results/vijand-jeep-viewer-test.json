@@ -1,0 +1,45 @@
+{
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "assets": {
+  "vijand_jeep": {
+   "clips": {
+    "Rijden": {
+     "duration": 1,
+     "moved": [
+      "WielLV",
+      "WielRV",
+      "WielLA",
+      "WielRA"
+     ]
+    },
+    "Sturen": {
+     "duration": 2,
+     "moved": [
+      "StuurLV",
+      "StuurRV"
+     ]
+    },
+    "Vuren": {
+     "duration": 0.1666666716337204,
+     "moved": [
+      "MG"
+     ]
+    }
+   },
+   "nodes": {
+    "Body": true,
+    "RompMesh": true,
+    "Geschut": true,
+    "MG": true,
+    "Monding": true,
+    "Bestuurder": true,
+    "Schutter": true,
+    "Bovenlijf": true
+   },
+   "stats": "Vijandelijke jeep (spelversie): 45.050 driehoeken · 10 meshes · 5 materialen · 3 texturen · clips: Vuren, Sturen, Rijden. Bron: Dennis' Meshy-jeep (Google Drive, niet in de repo); bron/vijand_jeep/stap1-4 (Blender): remesh, romp (30k), MG (8k), vier wielen los, bestuurder en schutter uit de eigen jeep in vijandkleuren (8c7b52 en 5b6038), spelversie op 2K gebakken. Godot stuurt wielen, sturen en MG zelf; de clips zijn voor de viewer. Geen iPhone-FPS gemeten.",
+   "status": "Vijandelijke jeep · Dennis' Meshy-jeep met bestuurder en MG-schutter (nieuw) · Vijandelijke jeep (Meshy, 4,2 m) met MG op een draaipaal, bestuurder en schutter in vijandkleuren: echte clips Rijden (vier wielen draaien, 1 s), Sturen (voorwielen links-rechts, 2 s) en Vuren (MG-terugslag, 0,12 s); in het spel stuurt Godot wielen, sturen en MG zelf, 2K-PBR (geen V1) · 360° draaien en zoomen actief."
+  }
+ },
+ "errors": [],
+ "ok": true
+}

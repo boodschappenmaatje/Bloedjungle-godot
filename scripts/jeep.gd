@@ -18,6 +18,7 @@ const GUN_TURN_DRIVEN := 7.0
 const FIRE_RATE := 0.1      # s tussen kogels
 const DAMAGE := 9.0
 const BOARD_DIST := 4.5     # m: dichterbij dan dit toont de knop INSTAPPEN
+const MAX_STAP := 1.0 / 30.0   # s: een grotere beeldsprong (app terug uit de achtergrond) rekent hij als een kleinere stap
 const RAM_DAMAGE := 40.0
 # Only when the driver puts the right stick on an exposed tower gunner.
 # Normal ground-level jeep fire remains manual and unchanged.
@@ -28,6 +29,7 @@ const GUNNER_MAX_ELEVATION := 0.56       # ~= 29 degrees upward
 var driven := false
 var goals: Array = []  # Vector3-punten waar hij zelf naartoe rijdt (uit de garage); leeg = geparkeerd
 var _speed := 0.0
+var _stap_k := 1.0          # (gekapte stap) / (beeldstap): 1 behalve bij een beeldsprong
 var _steer := 0.0
 var _yaw_rate := 0.0
 var _accel := 0.0
@@ -44,6 +46,13 @@ var _body_base: Transform3D
 var _mg_base: Transform3D
 var _lijf_base: Transform3D
 var _btn: ActionBtn
+var _schade: VoertuigSchade   # levenspunten (V3): vijandelijke kogels, raketten en tankgranaten raken hem, zit jij erin dan sneuvel je mee
+var _bst: VoertuigBestuurder  # de ingebouwde bestuurder (voertuigbevel): rijdt en schiet op bevel als jij er niet in zit
+const AI_BURST := 6           # de schutter schiet in salvo's van zes kogels, dan een seconde rust (zoals de vijandelijke jeep)
+const AI_RATE := 0.12
+const AI_PAUSE := 1.0
+var _burst := 0
+var _burst_pause := 0.0
 
 @onready var _anim: AnimationPlayer = $Model/AnimationPlayer
 @onready var _body: Node3D = $Model/Jeep/Body
@@ -66,6 +75,8 @@ func _ready() -> void:
 	_rest_fire_parts()
 	_setup_lights()
 	_build_button()
+	_schade = VoertuigSchade.attach(self, "jeep")
+	_bst = VoertuigBestuurder.attach(self, "jeep", _schade)
 
 
 ## De Blender-clip Vuren keyt ook romp, wielen en geschut; die sporen halen we eruit zodat de code
@@ -122,12 +133,14 @@ func _build_button() -> void:
 func _toggle() -> void:
 	var p = Game.player
 	# Input must not let a dead player board or re-board the jeep.
-	if p == null or p.dead:
+	if p == null or p.dead or _schade.dead:
 		return
 	if driven:
 		_disembark(p)
 	else:
 		driven = true
+		_schade.set_bestuurd(true)
+		_bst.on_board()
 		goals.clear()
 		p.driving = true
 		p.visible = false
@@ -143,6 +156,8 @@ func _toggle() -> void:
 ## back to the jeep every frame even after Player.respawn() moved them home.
 func _disembark(p) -> void:
 	driven = false
+	_schade.set_bestuurd(false)
+	_bst.on_leave()
 	p.driving = false
 	p.visible = true
 	var side := global_transform.basis.x
@@ -157,7 +172,30 @@ func _disembark(p) -> void:
 		_btn.queue_redraw()
 
 
-func _physics_process(delta: float) -> void:
+## Het voertuig is kapot (VoertuigSchade): de speler is al gesneuveld, de jeep blijft als wrak staan en doet niets meer.
+func on_vernield() -> void:
+	var p = Game.player
+	if driven and p != null:
+		_disembark(p)
+	driven = false
+	goals.clear()
+	_speed = 0.0
+	velocity = Vector3.ZERO
+	_clear_aim_preview()
+	_set_firing(false)
+	if _btn != null:
+		_btn.hide()
+	set_process(false)
+
+
+## Rijden gebeurt per beeld, niet per natuurkundige tik. De camera volgt per beeld; reed de jeep per tik (60 per seconde)
+## terwijl de iPhone 90 beelden per seconde tekent, dan kreeg het ene beeld een stap en het volgende geen: hij hapert.
+## move_and_slide rekent in _process met de beeld-delta van de motor, dus afstand = snelheid x delta.
+func _process(raw_delta: float) -> void:
+	if raw_delta <= 0.0:
+		return
+	var delta := minf(raw_delta, MAX_STAP)
+	_stap_k = delta / raw_delta
 	_t += delta
 	_ram_cd -= delta
 	var p = Game.player
@@ -168,23 +206,30 @@ func _physics_process(delta: float) -> void:
 		var near: bool = p != null and not p.dead and live and (driven or p.global_position.distance_to(global_position) < BOARD_DIST)
 		_btn.visible = near
 		_btn.dock(2)
-	_drive(delta, live)
+	var ai := _bst != null and _bst.aktief()
+	if ai:
+		_bst.think(delta)
+	_drive(delta, live, ai)
 	_animate(delta)
 	if driven and p != null:
 		p.global_position = Vector3(global_position.x, 0.0, global_position.z)
 		p.face = rotation.y + PI
 		_aim_driven(delta, live)
 		_ram()
+	elif ai:
+		_clear_aim_preview()
+		_aim_ai(delta)
+		_ram()
 	else:
 		_clear_aim_preview()
 		_aim_auto(delta)
 
 
-func _drive(delta: float, live: bool) -> void:
+func _drive(delta: float, live: bool, ai := false) -> void:
 	var want_speed := 0.0
 	var want_steer := 0.0
 	var pivot := 0.0
-	var mv := Game.move
+	var mv := _bst.stuur(SPEED) if ai else Game.move   # met een bevel stuurt de bestuurder, met een denkbeeldige stick
 	collision_mask = 0 if not goals.is_empty() else 178
 	if not driven and not goals.is_empty():
 		# uit de garage naar zijn parkeerplek: sturen naar het volgende punt
@@ -199,7 +244,7 @@ func _drive(delta: float, live: bool) -> void:
 			want_speed = clampf(to.length() * 0.8 + 0.8, 1.5, 4.5)
 			if goals.size() == 1:
 				want_speed = clampf(to.length() * 0.8, 0.8, 4.5)
-	elif driven and live and mv.length() > 0.15:
+	elif (driven or ai) and live and mv.length() > 0.15:
 		# de jeep draait naar de kant waar je de stick duwt; ligt die achter hem, dan rijdt hij achteruit
 		var want := atan2(-mv.x, -mv.y)
 		var diff := wrapf(want - rotation.y, -PI, PI)
@@ -221,7 +266,7 @@ func _drive(delta: float, live: bool) -> void:
 	if absf(_speed) < 0.01:
 		return
 	rotation.y += _yaw_rate * delta
-	velocity = -global_transform.basis.z * _speed
+	velocity = -global_transform.basis.z * _speed * _stap_k   # bij een beeldsprong (> 1/30 s) rijdt hij niet door een muur heen
 	move_and_slide()
 	Foliage.ram(self, absf(_speed), 6.0)   # tegen een boom aan: hij valt om
 	global_position.y = 0.0
@@ -318,7 +363,30 @@ func _clear_aim_preview() -> void:
 	_aim_preview_t = 0.0
 
 
-## Geparkeerd of zonder bestuurder schiet de schutter niet: schieten doe je zelf vanuit de jeep.
+## Met een bevel schiet de schutter zelf (keuze 5A): op de dichtstbijzijnde vijand binnen 30 m, in salvo's van zes kogels met een seconde rust, ook tijdens het rijden.
+func _aim_ai(delta: float) -> void:
+	var t := _bst.gun_target(delta)
+	var local := 0.0
+	if t != null:
+		var v := t.global_position - global_position
+		local = wrapf(atan2(-v.x, -v.z) - rotation.y, -PI, PI)
+	var d := wrapf(local - _gun.rotation.y, -PI, PI)
+	_gun.rotation.y += clampf(d, -GUN_TURN * delta, GUN_TURN * delta)
+	_cool -= delta
+	_burst_pause -= delta
+	var shoot := t != null and absf(d) < 0.15 and _burst_pause <= 0.0
+	if shoot and _cool <= 0.0:
+		_cool = AI_RATE
+		var fwd := -_gun.global_transform.basis.z
+		_shoot(atan2(fwd.x, fwd.z) + randf_range(-0.05, 0.05))
+		_burst += 1
+		if _burst >= AI_BURST:
+			_burst = 0
+			_burst_pause = AI_PAUSE
+	_set_firing(shoot)
+
+
+## Zonder bestuurder (nog onderweg uit de garage, of het spel staat stil) schiet de schutter niet: schieten doe je zelf vanuit de jeep.
 func _aim_auto(delta: float) -> void:
 	var d := wrapf(0.0 - _gun.rotation.y, -PI, PI)
 	_gun.rotation.y += clampf(d, -GUN_TURN * delta, GUN_TURN * delta)

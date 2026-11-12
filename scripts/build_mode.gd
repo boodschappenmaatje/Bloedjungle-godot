@@ -756,7 +756,16 @@ func _fill_panel() -> void:
 			rij.add_child(slot)
 		vb.add_child(rij)
 		vb.move_child(rij, row.get_index())
-		_act(row, "Schutter", "%d pt" % Buildings.TRAIN_COST, Game.builds.room(b) > 0 and b.queue < Buildings.RIJ_MAX and Game.points >= Buildings.TRAIN_COST, func(): Game.builds.recruit(b))
+		# een knop per soldatensoort (Data.SOLDIER_TYPES): schutter, raketsoldaat, sluipschutter, hospik, ingenieur
+		var types := HBoxContainer.new()
+		types.add_theme_constant_override("separation", 6)
+		vb.add_child(types)
+		vb.move_child(types, row.get_index())
+		for sk in Data.SOLDIER_ORDER:
+			var sty: Dictionary = Data.SOLDIER_TYPES[sk]
+			var can_train: bool = Game.builds.room(b) > 0 and b.queue < Buildings.RIJ_MAX and Game.points >= int(sty.cost)
+			var kind_key: String = sk
+			_act(types, String(sty.short), "%d pt" % int(sty.cost), can_train, func(): Game.builds.recruit(b, kind_key))
 		var nw: int = Game.builds.wachten_of(b).size()
 		_act(row, "Wacht", "%d pt · %d/%d" % [Wachten.COST, nw, Wachten.MAX_PER_KAZERNE], Game.builds.can_buy_wacht(b), func(): Game.builds.buy_wacht(b))
 		_act(row, "Vlag", "zet punt", true, func():
@@ -778,7 +787,7 @@ func _fill_panel() -> void:
 					if is_instance_valid(soldier) and not soldier.helper and not soldier.guard and soldier.truck == null:
 						soldier.set_command(Game.troop_mode, Vector3.ZERO)
 				Game.changed.emit())
-		tip = ("Niveau %d: %d soldaten, %ds training, sterker." % [b.lv + 1, nx.max, roundi(float(nx.time) * Buildings.time_factor())] if nx else "Volledig opgewaardeerd.") + (" Je soldaten bewaken de muur." if Game.troop_mode == "hold" else " Je soldaten lopen met je mee.")
+		tip = "Raket: tegen pantser · Sluip: ver, tegen mensen · Hospik: heelt · Ingen.: repareert.  " + ("Niveau %d: %d soldaten, %ds training, sterker." % [b.lv + 1, nx.max, roundi(float(nx.time) * Buildings.time_factor())] if nx else "Volledig opgewaardeerd.") + (" Je soldaten bewaken de muur." if Game.troop_mode == "hold" else " Je soldaten lopen met je mee.")
 	elif b.kind == "garage":
 		var have: Array = []
 		for k in Buildings.VEHICLES:
@@ -829,7 +838,7 @@ func _fill_panel() -> void:
 	if b.kind != "kampmuur":   # een muurstuk zit vast op het rooster
 		_act(row, "Draai", "", true, func():
 			if not Game.builds.turn(b):
-				_say("GEEN RUIMTE")
+				_say("GEEN RUIMTE" if Game.builds.last_turn_why == "" else Game.builds.last_turn_why.to_upper())
 			Game.changed.emit())
 	var armed: bool = _sell_arm == b
 	_act(row, "Zeker?" if armed else "Verkoop", "+%d tegoed" % Game.builds.sell_value(b), true, func():

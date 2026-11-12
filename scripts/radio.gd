@@ -11,9 +11,10 @@ const POOLS := {
 	"gebouw_vernield": ["gebouw_vernield_1", "gebouw_vernield_2"],
 	"basis_aanval": ["basis_aanval_1", "basis_aanval_2", "basis_aanval_3"],
 	"eenheid_klaar": ["eenheid_klaar_1", "eenheid_klaar_2"],
+	"voertuig_onderweg": ["voertuig_onderweg_1"],   # stap V1: Dennis sloeg deze radiozin over (9 nov); zonder bestand blijft het stil, een wav kan later gewoon bij assets/geluid/radio/
 }
 ## Minimaal aantal seconden tussen twee meldingen van dezelfde soort (zodat een gevecht niet blijft roepen).
-const COOLDOWN := {"bouw_klaar": 0.0, "gebouw_vernield": 4.0, "basis_aanval": 25.0, "eenheid_klaar": 3.0}
+const COOLDOWN := {"bouw_klaar": 0.0, "gebouw_vernield": 4.0, "basis_aanval": 25.0, "eenheid_klaar": 3.0, "voertuig_onderweg": 20.0}
 const VOLUME_DB := -3.0
 
 var _player: AudioStreamPlayer

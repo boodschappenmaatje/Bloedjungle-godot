@@ -70,7 +70,7 @@ static func _decal_tex(kind: String) -> ImageTexture:
 				var a := rng.randf() * TAU
 				var d := rng.randf_range(0.0, 0.34) * n
 				blobs.append([n / 2.0 + cos(a) * d, n / 2.0 + sin(a) * d, rng.randf_range(0.06, 0.2) * n])
-		"hole":
+		"hole", "bark":
 			blobs.append([n / 2.0, n / 2.0, 0.34 * n])
 			blobs.append([n / 2.0, n / 2.0, 0.14 * n])
 		_:
@@ -88,6 +88,8 @@ static func _decal_tex(kind: String) -> ImageTexture:
 				var col := Color(0.22, 0.015, 0.015)
 				if kind == "hole":
 					col = Color(0.02, 0.02, 0.02)
+				elif kind == "bark":
+					col = Color(0.095, 0.052, 0.025)
 				elif kind == "scorch":
 					col = Color(0.03, 0.03, 0.025)
 				img.set_pixel(x, y, Color(col.r, col.g, col.b, clampf(a * 2.4, 0.0, 0.95)))
@@ -134,7 +136,10 @@ static func dust(parent: Node, pos: Vector3) -> void:
 
 
 ## Inslagreactie op aarde, hout, metaal of steen/beton.
-static func impact(parent: Node, pos: Vector3, normal: Vector3, material := "concrete") -> void:
+static func impact(parent: Node, pos: Vector3, normal: Vector3, material := "concrete", colt_shot := false) -> void:
+	if colt_shot and m1911_vfx_enabled() and material in ["wood", "concrete"]:
+		_colt_impact(parent, pos, normal, material)
+		return
 	match material:
 		"dirt":
 			_burst(parent, pos, normal, 11, Color(0.34, 0.24, 0.13), 0.055, 4.5, Vector3(0.05, 0.04, 0.05))
@@ -149,6 +154,21 @@ static func impact(parent: Node, pos: Vector3, normal: Vector3, material := "con
 			_burst(parent, pos, normal, 7, Color(0.46, 0.44, 0.4), 0.065, 3.8, Vector3(0.06, 0.05, 0.055))
 			_flash_quad(parent, pos + normal.normalized() * 0.03, 0.3, 0.06, Color(1.0, 0.82, 0.5, 0.9))
 			decal(parent, pos, normal, "hole", 0.42, 60.0)
+
+
+## Eén korte contactflits, materiaaldeeltjes en een spoor op het geraakte oppervlak.
+## Bestaande pools en de globale limiet van 70 decals blijven verantwoordelijk voor opruimen.
+static func _colt_impact(parent: Node, pos: Vector3, normal: Vector3, material: String) -> void:
+	var n := normal.normalized()
+	if material == "wood":
+		_burst(parent, pos, n, 9, Color(0.47, 0.29, 0.13), 0.055, 5.8, Vector3(0.025, 0.13, 0.025))
+		_burst(parent, pos, n, 6, Color(0.42, 0.34, 0.23, 0.68), 0.07, 2.0)
+		decal(parent, pos, n, "bark", 0.3, 120.0)
+	else:
+		_burst(parent, pos, n, 8, Color(0.55, 0.53, 0.47), 0.06, 4.6, Vector3(0.055, 0.04, 0.05))
+		_burst(parent, pos, n, 7, Color(0.51, 0.48, 0.42, 0.7), 0.085, 2.0)
+		decal(parent, pos, n, "hole", 0.34, 120.0)
+	_flash_quad(parent, pos + n * 0.035, 0.21, 0.05, Color(1.0, 0.72, 0.3, 0.72))
 
 
 ## Felle vonkjes met een korte flits: inslag in muur of bunker, en bij een raak op een mens.
@@ -256,7 +276,7 @@ static var _casings := 0
 static var _casing_pool: Array[MeshInstance3D] = []
 
 
-static func casing(parent: Node, pos: Vector3, eject_right := Vector3.RIGHT, forward := Vector3.FORWARD) -> void:
+static func casing(parent: Node, pos: Vector3, eject_right := Vector3.RIGHT, forward := Vector3.FORWARD, kind := "") -> void:
 	if _casings >= MAX_CASINGS or not _near_camera(parent, pos, 42.0):
 		return
 	if _casing_mesh == null:
@@ -291,7 +311,10 @@ static func casing(parent: Node, pos: Vector3, eject_right := Vector3.RIGHT, for
 		else:
 			parent.add_child(c)
 	c.visible = true
-	c.scale = Vector3.ONE * 1.45
+	var wfx := kind != "" and WapenFx.enabled(kind)   # Wapeneffecten AAA: groter, shotgun rood met koperen bodem, stuit en tink
+	var shell_mesh: Mesh = WapenFx.casing_mesh(kind) if wfx else null
+	c.mesh = shell_mesh if shell_mesh != null else _casing_mesh
+	c.scale = Vector3.ONE * (WapenFx.casing_scale(kind) if wfx else 1.45)
 	c.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	c.global_position = pos
 	c.set_meta("casing_active", true)
@@ -307,6 +330,14 @@ static func casing(parent: Node, pos: Vector3, eject_right := Vector3.RIGHT, for
 	tw.tween_method(func(t: float):
 		c.global_position = pos + Vector3(v.x * t, v.y * t - 0.5 * g * t * t, v.z * t)
 		c.rotation = spin * t, 0.0, d, d)
+	if wfx:
+		var land := pos + Vector3(v.x * d, v.y * d - 0.5 * g * d * d, v.z * d)
+		var hop := 0.22
+		tw.tween_callback(func(): Sfx.play_file("huls_tink", 0.3, land))
+		tw.tween_method(func(t: float):
+			c.global_position = land + Vector3(v.x * 0.3 * t, 1.1 * t - 0.5 * g * t * t, v.z * 0.3 * t)
+			c.rotation = spin * (d + t) * 0.4, 0.0, hop, hop)
+		tw.tween_callback(func(): Sfx.play_file("huls_tink", 0.15, land))
 	tw.tween_interval(0.9)
 	tw.tween_property(c, "scale", Vector3.ZERO, 0.28)
 	tw.tween_callback(_recycle_casing.bind(c))
@@ -464,7 +495,59 @@ static func muzzle(parent: Node, pos: Vector3, weapon := "m1911", angle := 0.0) 
 	var v: Dictionary = Data.WEAPON_VISUALS.get(weapon, Data.WEAPON_VISUALS["m1911"])
 	if weapon == "bazooka" or float(v.flash_life) <= 0.0:
 		return
+	if WapenFx.enabled(weapon):   # shotgun en pistool: de nieuwe, gelaagde effecten (Instellingen: Wapeneffecten)
+		WapenFx.muzzle(parent, pos, weapon, angle)
+		return
+	# Isolated visual test path. Sound, casing, projectiles and recoil remain in their
+	# existing callers; avoid layering the legacy flash over the atlas.
+	if weapon == "m1911" and m1911_vfx_enabled():
+		_show_m1911_flipbook(parent, pos, angle)
+		_muzzle_smoke(parent, pos - Vector3(sin(angle), 0.0, cos(angle)) * 0.05, weapon, angle)
+		if int(v.flash_particles) > 0:
+			_burst(parent, pos, Vector3.UP * 0.2, int(v.flash_particles), v.flash_color, 0.025, 4.8, Vector3(0.025, 0.035, 0.025))
+		return
 	_show_muzzle_flash(parent, pos, _muzzle_mesh(weapon, randi() % 3), angle, v.flash_life, v.flash_width * 0.28, weapon, v.flash_particles, v.flash_color, v.flash_energy, v.flash_range)
+
+
+const M1911_FLIPBOOK_SHADER := preload("res://assets/vfx/m1911/m1911_flipbook.gdshader")
+const M1911_FLIPBOOK_TEXTURE_PATH := "res://assets/vfx/m1911/m1911_muzzle_flash_4x4.png"
+static var _m1911_flipbook_quad: QuadMesh
+static var _m1911_flipbook_live := 0
+const MAX_M1911_FLIPBOOKS := 8
+
+static func m1911_vfx_enabled() -> bool:
+	# De goedgekeurde Colt-effecten zijn standaard zichtbaar, ook in iOS/OTA.
+	# De bestaande testvlag kan de variant voor regressievergelijkingen uitzetten.
+	return OS.get_environment("M1911_VFX_TEST") != "0"
+
+
+static func _show_m1911_flipbook(parent: Node, pos: Vector3, angle: float) -> void:
+	if _m1911_flipbook_live >= MAX_M1911_FLIPBOOKS or not _near_camera(parent, pos, 38.0):
+		return
+	if _m1911_flipbook_quad == null:
+		_m1911_flipbook_quad = QuadMesh.new()
+		_m1911_flipbook_quad.size = Vector2(1.7, 1.05)
+	# Elke gelijktijdige flits krijgt zijn eigen frame; een gedeeld materiaal liet
+	# snelle schoten elkaars animatie overschrijven.
+	var material := ShaderMaterial.new()
+	material.shader = M1911_FLIPBOOK_SHADER
+	material.set_shader_parameter("flipbook_atlas", load(M1911_FLIPBOOK_TEXTURE_PATH))
+	material.set_shader_parameter("intensity", 1.65)
+	material.set_shader_parameter("frame_index", 0.0)
+	var fx := MeshInstance3D.new()
+	fx.name = "M1911FlipbookTest"
+	fx.set_meta("m1911_flipbook", true)
+	fx.mesh = _m1911_flipbook_quad
+	fx.material_override = material
+	fx.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(fx)
+	fx.global_position = pos + Vector3.UP * 0.16
+	fx.rotation.y = angle
+	_m1911_flipbook_live += 1
+	fx.tree_exiting.connect(func(): _m1911_flipbook_live = maxi(0, _m1911_flipbook_live - 1))
+	var tw := fx.create_tween()
+	tw.tween_method(func(frame: float): material.set_shader_parameter("frame_index", frame), 0.0, 15.0, 0.075)
+	tw.tween_callback(fx.queue_free)
 
 
 static func _show_muzzle_flash(parent: Node, pos: Vector3, flash_mesh: ArrayMesh, angle: float, life: float, glow_size: float, smoke_style: String, particles: int, color: Color, light_energy: float, light_range: float) -> void:
@@ -741,22 +824,98 @@ static func explosion(parent: Node, pos: Vector3, scale := 1.0, chunks: Array = 
 		func(): return _spray(48, 1.2, Vector3(0.025, 0.24, 0.025), Color(1.0, 0.8, 0.35), 0.0, 0.0, 72.0, 16.0, true))
 	spray_once(parent, "aarde", pos + Vector3.UP * 0.3, 3.0 * scale, 8.0 * scale, 0.95, 1.4,
 		func(): return _spray(30, 1.3, Vector3(0.11, 0.11, 0.11), Color(0.2, 0.14, 0.09), 0.0, 0.0, 80.0, 18.0, false))
+	var g2 := Graphics2.fx()
+	if g2:
+		_g2_blast(parent, pos, scale)
 	# lichtflits: hooguit MAX_BLAST_LIGHTS tegelijk (elke extra lamp kost elk object eromheen een lichtberekening)
 	if _blast_lights < MAX_BLAST_LIGHTS:
 		_blast_lights += 1
 		var l := OmniLight3D.new()
 		l.light_color = Color(1.0, 0.6, 0.25)
-		l.light_energy = 9.0
-		l.omni_range = 15.0 * scale
+		l.light_energy = 16.0 if g2 else 9.0
+		l.omni_range = (22.0 if g2 else 15.0) * scale
 		l.shadow_enabled = false
 		l.tree_exited.connect(func(): _blast_lights = maxi(0, _blast_lights - 1))
 		parent.add_child(l)
 		l.global_position = pos + Vector3.UP * 1.2
 		var tw := l.create_tween()
-		tw.tween_property(l, "light_energy", 3.5, 0.12)
-		tw.tween_property(l, "light_energy", 0.0, 0.9)
+		tw.tween_property(l, "light_energy", 5.0 if g2 else 3.5, 0.12)
+		tw.tween_property(l, "light_energy", 0.0, 1.5 if g2 else 0.9)
 		tw.tween_callback(l.queue_free)
 	decal(parent, Vector3(pos.x, 0.0, pos.z), Vector3.UP, "scorch", 3.6 * scale, 80.0)
+
+
+## Graphics 2.0: wat een explosie erbij krijgt. Een korte felle flits, een schokgolf van stof over de grond, een stofring die
+## laag wegrolt en een rookzuil die een paar seconden blijft hangen. Alles uit pools of met een vaste bovengrens.
+const G2_SHOCK := preload("res://shaders/g2_schokgolf.gdshader")
+const G2_MAX_SHOCKS := 4
+const G2_MAX_SMOKE := 5
+static var g2_budget := 1.0   # Atmosphere zet dit lager als de kwaliteitstrap zakt
+static var _g2_shocks := 0
+static var _g2_smoke := 0
+static var _g2_shock_mesh: PlaneMesh
+
+
+## Deeltjesmateriaal dat de grootte van elk deeltje echt volgt (het gewone materiaal tekent elk deeltje als 1 m).
+static func g2_particle_mat() -> StandardMaterial3D:
+	if not _mats.has("g2_deeltje"):
+		var m: StandardMaterial3D = _particle_mat(Color.WHITE, false).duplicate()
+		m.billboard_keep_scale = true
+		_mats["g2_deeltje"] = m
+	return _mats["g2_deeltje"]
+
+
+static func _g2_blast(parent: Node, pos: Vector3, scale: float) -> void:
+	if not is_instance_valid(parent) or not parent.is_inside_tree():
+		return
+	_flash_quad(parent, pos + Vector3.UP * 1.3, 8.5 * scale, 0.1, Color(1.0, 0.86, 0.6, 0.9))
+	if pos.y < 1.0 and _g2_shocks < G2_MAX_SHOCKS:
+		_g2_shocks += 1
+		if _g2_shock_mesh == null:
+			_g2_shock_mesh = PlaneMesh.new()
+			_g2_shock_mesh.size = Vector2.ONE
+		var m := ShaderMaterial.new()
+		m.shader = G2_SHOCK
+		m.render_priority = 1
+		var ring := MeshInstance3D.new()
+		ring.mesh = _g2_shock_mesh
+		ring.material_override = m
+		ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		var size := 17.0 * scale
+		ring.scale = Vector3(size, 1.0, size)
+		parent.add_child(ring)
+		ring.global_position = Vector3(pos.x, 0.07, pos.z)
+		var tw := ring.create_tween()
+		tw.tween_method(func(v: float): m.set_shader_parameter("t", v), 0.0, 1.0, 0.55).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+		tw.tween_callback(ring.queue_free)
+		ring.tree_exiting.connect(func(): _g2_shocks = maxi(0, _g2_shocks - 1))
+	# stofring: laag over de grond naar buiten, remt snel af
+	spray_once(parent, "g2_stofring", Vector3(pos.x, maxf(pos.y, 0.0) + 0.4, pos.z), 5.0 * scale, 10.0 * scale, 0.96, 2.2, func():
+		var d := _puff(20, 2.0, 2.8, false, _ramp([Color(0.72, 0.64, 0.5, 0.0), Color(0.72, 0.64, 0.5, 0.8), Color(0.78, 0.71, 0.6, 0.0)], [0.0, 0.12, 1.0]), Vector2(5.0, 10.0), 1.0)
+		d.direction = Vector3(1, 0.06, 0)
+		d.spread = 180.0
+		d.flatness = 0.92
+		d.damping_min = 5.0
+		d.damping_max = 8.0
+		d.gravity = Vector3(0, 0.2, 0)
+		d.mesh.material = g2_particle_mat()
+		d.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		return d)
+	# rookzuil die blijft hangen en traag met de wind meedrijft
+	if _g2_smoke < roundi(G2_MAX_SMOKE * g2_budget):
+		_g2_smoke += 1
+		parent.get_tree().create_timer(7.2).timeout.connect(func(): _g2_smoke = maxi(0, _g2_smoke - 1))
+		spray_once(parent, "g2_rookzuil", pos + Vector3.UP * 1.0, 0.5, 1.6, 0.6, 7.2, func():
+			var r := _puff(16, 6.5, 3.6, false, _ramp([Color(0.06, 0.05, 0.045, 0.0), Color(0.1, 0.09, 0.08, 0.95), Color(0.33, 0.31, 0.29, 0.75), Color(0.52, 0.5, 0.47, 0.0)], [0.0, 0.07, 0.5, 1.0]), Vector2(0.5, 1.6), 1.0)
+			r.spread = 30.0
+			r.damping_min = 0.5
+			r.damping_max = 0.9
+			r.gravity = Vector3(0.3, 0.3, 0.08)
+			r.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
+			r.emission_sphere_radius = 1.0
+			r.mesh.material = g2_particle_mat()
+			r.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+			return r)
 
 
 const MAX_BLAST_LIGHTS := 3
@@ -860,6 +1019,8 @@ static func _fireball(parent: Node, pos: Vector3, scale: float) -> void:
 	m.set_shader_parameter("rows", def.rows)
 	m.set_shader_parameter("frames", def.frames)
 	m.set_shader_parameter("flip_x", randf() < 0.5)
+	if Graphics2.fx():
+		m.set_shader_parameter("bright", 1.25)   # met de gloed aan straalt de vuurbal
 	var mi := MeshInstance3D.new()
 	mi.mesh = _fire_quad[v]
 	mi.material_override = m

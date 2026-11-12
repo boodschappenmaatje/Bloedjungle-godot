@@ -4,12 +4,19 @@ class_name Foliage
 
 static var _mats := {}
 static var _shadow_mats := {}  # soort -> nepschaduw-materiaal
-const STRIP_EXTRA := {"palm": 70, "bush": 230, "fern": 330, "grass": 1300, "rock": 26}  # extra stuks in de strook tussen muur en rivier
+## Bosjes/open-plek-patroon (_grove): bij de vaste Data.WORLD_SEED_DEFAULT precies de oude vaste waarden, zodat de
+## editor, headless en tests exact dezelfde jungle houden. Bij een willekeurige wereld-seed (echt spel, "wereld per
+## start" W1) krijgt elke start een andere fase en frequentie, dus andere open plekken en bosjes.
+static var _grove_px := 1.3
+static var _grove_pz := 0.4
+static var _grove_fx := 0.075
+static var _grove_fz := 0.095
+const STRIP_EXTRA := {"palm": 90, "bush": 300, "fern": 430, "grass": 1300, "rock": 32}  # extra stuks in de strook tussen muur en rivier
 ## Hoeveel van de extra planten per gebied blijft staan: moeras = varens en gras, open plek = bijna kaal met rotsen, dicht = alles.
 const STRIP_KEEP := {
 	"dicht": {"palm": 1.0, "bush": 1.0, "fern": 1.0, "grass": 1.0, "rock": 0.5},
-	"moeras": {"palm": 0.3, "bush": 0.35, "fern": 0.9, "grass": 1.0, "rock": 0.2},
-	"open": {"palm": 0.06, "bush": 0.12, "fern": 0.3, "grass": 0.45, "rock": 1.0},
+	"moeras": {"palm": 0.45, "bush": 0.5, "fern": 0.9, "grass": 1.0, "rock": 0.2},
+	"open": {"palm": 0.12, "bush": 0.2, "fern": 0.4, "grass": 0.45, "rock": 1.0},
 }
 ## Afstand (m, vanaf de camera, gemeten tot het midden van een vak van 36 m) waarboven een soort niet meer getekend wordt.
 const VIS_END := {"palm": 140.0, "bush": 95.0, "fern": 85.0, "grass": 55.0}
@@ -56,6 +63,10 @@ static func update_visibility_focus(player_pos: Vector3, camera_pos: Vector3, de
 	if _focus_mats.is_empty():
 		for key in ["palm", "leaf", "fern"]:
 			_focus_mats.append(material(key))
+		_meshy_mesh("Meshy_Boom")   # zorgt dat ook de Meshy-bladmaterialen bestaan
+		for key in _mats:
+			if String(key).begins_with("meshy_") and _mats[key] not in _focus_mats:
+				_focus_mats.append(_mats[key])
 	var on := _fade > 0.001
 	var e: Array[Vector4] = [Vector4.ZERO, Vector4.ZERO, Vector4.ZERO]
 	for i in mini(extras.size(), 3):
@@ -181,13 +192,65 @@ static func _frond(st: SurfaceTool, origin: Vector3, yaw: float, length: float, 
 ## verre variant, 3 rotsen. Stam = schors, kroon = palmblad, rots = steen met mos in de vertexkleuren.
 const PALMS := ["Palm1", "Palm2", "Palm3"]
 ## Wat er op een palmplek komt te staan: een op de vijf is een jungleboom (plankwortels, lianen), op 0,75 geschaald.
-const PALM_POOL := ["Palm1", "Palm2", "Palm3", "Palm1", "Boom1", "Palm2", "Palm3", "Boom2", "Palm1", "Palm2"]
+const PALM_POOL := ["Palm4", "Boom3", "Palm2", "Palm4", "Boom1", "Palm3", "Boom3", "Palm4", "Boom2", "Palm1"]
 const BOOM_SCALE := 0.75
-const ROCKS := ["Rots1", "Rots2", "Rots3"]
+const LOGS := ["StamA", "StamB"]
+const ROCKS := ["Rots1", "Rots2", "Rots3", "KeiA", "KeiB"]
 static var _jungle := {}
+
+## Modellen die Dennis in Meshy maakte (assets/meshy_flora.glb, bron/meshy_flora/): een kokospalm (Palm4), een jungleboom
+## (Boom3, valt en botst als Boom1/2), een varen, een heliconia, twee mosrotsen en twee gevallen stammen. De namen zijn
+## de spelnamen; de waarde is de objectnaam in het glb. Planten krijgen het windmateriaal, rotsen en stammen houden
+## hun eigen (PBR-)materiaal.
+const MESHY := {"Palm4": "Meshy_Palm", "Palm4_far": "Meshy_Palm_far", "Boom3": "Meshy_Boom", "Boom3_far": "Meshy_Boom_far",
+	"Varen": "Meshy_Varen", "Heli": "Meshy_Heli", "KeiA": "Meshy_KeiA", "KeiB": "Meshy_KeiB", "StamA": "Meshy_StamA", "StamB": "Meshy_StamB"}
+## wind-meshes: objectnaam -> [zwaai, tint]; alles wat hier niet staat (keien, stammen) blijft een gewoon materiaal
+const MESHY_PLANT := {
+	"Meshy_Palm": [0.14, Vector3(1.0, 1.0, 0.95)], "Meshy_Palm_far": [0.14, Vector3(1.0, 1.0, 0.95)],
+	"Meshy_Boom": [0.06, Vector3(1.85, 1.9, 1.5)], "Meshy_Boom_far": [0.06, Vector3(1.85, 1.9, 1.5)],
+	"Meshy_Varen": [0.1, Vector3(1.0, 1.0, 0.95)], "Meshy_Heli": [0.08, Vector3(1.0, 1.0, 1.0)]}
+## Elke zoveelste plant van een soort is de Meshy-plant (zware modellen, dus ver weg niet getekend).
+const MESHY_MIX := {"fern": ["Varen", 3], "bush": ["Heli", 4]}
+const MESHY_NEAR_END := 70.0
+static var _meshy := {}
+
+
+static func _meshy_mesh(name: String) -> Mesh:
+	if _meshy.is_empty():
+		var root := (load("res://assets/meshy_flora.glb") as PackedScene).instantiate()
+		for mi in root.find_children("*", "MeshInstance3D", true, false):
+			var nm := String(mi.name)
+			var mesh := (mi as MeshInstance3D).mesh
+			if MESHY_PLANT.has(nm):
+				for i in mesh.get_surface_count():
+					var sm := mesh.surface_get_material(i) as BaseMaterial3D
+					var key := "meshy_" + nm.trim_suffix("_far")
+					if not _mats.has(key):
+						var m := ShaderMaterial.new()
+						m.shader = preload("res://shaders/foliage.gdshader")
+						m.set_shader_parameter("use_tex", true)
+						m.set_shader_parameter("tex", sm.albedo_texture)
+						if sm.normal_texture != null:
+							m.set_shader_parameter("nrm", sm.normal_texture)
+						m.set_shader_parameter("cut", 0.0)
+						m.set_shader_parameter("sway", MESHY_PLANT[nm][0])
+						m.set_shader_parameter("tint", MESHY_PLANT[nm][1])
+						m.set_shader_parameter("wind", 1.0 if GameSettings.get_value("wind") == "on" else 0.0)
+						_mats[key] = m
+					mesh.surface_set_material(i, _mats[key])
+			_meshy[nm] = mesh
+		root.free()
+	return _meshy[name]
+
+
+## Heeft dit model een Meshy-versie? (keien en stammen mogen niet het bladmateriaal van Kit.rock krijgen)
+static func is_meshy(name: String) -> bool:
+	return MESHY.has(name)
 
 
 static func jungle_mesh(name: String) -> Mesh:
+	if MESHY.has(name):
+		return _meshy_mesh(MESHY[name])
 	if _jungle.is_empty():
 		var root := (load("res://assets/jungle.glb") as PackedScene).instantiate()
 		for mi in root.find_children("*", "MeshInstance3D", true, false):
@@ -261,8 +324,8 @@ static var _root: Node3D  # waar de jungle in hangt (de vallende bomen komen er 
 static var _reg := {}  # vak (36 m) -> palmen en bomen die nog kunnen omvallen (zie fell_near)
 const VEG_CELL := 36.0
 const BUILD_CLEAR_MARGIN := 0.75
-const CLEARABLE_KINDS := ["palm", "bush", "fern", "grass"]
-const SOUTH_COUNTS := {"palm": 150, "bush": 260, "fern": 220, "grass": 1100, "rock": 32}
+const CLEARABLE_KINDS := ["palm", "bush", "fern", "grass", "log"]
+const SOUTH_COUNTS := {"palm": 190, "bush": 340, "fern": 300, "grass": 1100, "rock": 40}
 static var _vegetation_cells := {}  # 36 m spatial index; each item points at one actual MultiMesh instance
 static var _vegetation_serial := 0
 static var _building_clearings := {}  # live placed building id -> regions reapplied after Level rebuild
@@ -338,6 +401,11 @@ static func _entries_for_build_regions(regions: Array, at: Vector3, yaw: float, 
 						continue
 					if _point_in_build_region(entry.world_position, at, yaw, region, margin):
 						found[entry.vegetation_id] = entry
+					else:
+						for extra: Vector3 in entry.get("extra_points", []):   # een lange stam: ook zijn uiteinden tellen
+							if _point_in_build_region(extra, at, yaw, region, margin):
+								found[entry.vegetation_id] = entry
+								break
 	return found.values()
 
 
@@ -349,6 +417,14 @@ static func count_clearable_in_regions(regions: Array, at: Vector3, yaw: float, 
 static func clear_for_building(building_id: int, regions: Array, at: Vector3, yaw: float, margin := BUILD_CLEAR_MARGIN, rocks := false) -> int:
 	_building_clearings[building_id] = {"regions": regions.duplicate(true), "at": at, "yaw": yaw, "margin": margin, "rocks": rocks}
 	return _clear_regions_now(regions, at, yaw, margin, rocks)
+
+
+## Alles wat binnen deze vlakken (x, z in de wereld; {center, size}) staat verdwijnt: bomen, struiken, varens, gras, stammen en rotsen.
+static func clear_world_rects(rects: Array, margin := 0.0) -> int:
+	var regions: Array = []
+	for r: Rect2 in rects:
+		regions.append({"name": "binnen", "center": r.get_center(), "size": r.size, "yaw": 0.0})
+	return _clear_regions_now(regions, Vector3.ZERO, 0.0, margin, true)
 
 
 static func release_building_clearance(building_id: int) -> void:
@@ -429,12 +505,29 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 	_vegetation_cells.clear()
 	_vegetation_serial = 0
 	_root = parent
-	logs(parent)
+	var varied := seed_ != Data.WORLD_SEED_DEFAULT
+	if varied:
+		var grove_rng := RandomNumberGenerator.new()
+		grove_rng.seed = seed_ + 7001   # eigen generator: raakt de telling van rng/south_rng hieronder niet
+		_grove_px = grove_rng.randf_range(0.0, TAU)
+		_grove_pz = grove_rng.randf_range(0.0, TAU)
+		_grove_fx = grove_rng.randf_range(0.05, 0.1)
+		_grove_fz = grove_rng.randf_range(0.07, 0.12)
+	else:
+		_grove_px = 1.3
+		_grove_pz = 0.4
+		_grove_fx = 0.075
+		_grove_fz = 0.095
+	logs(parent, 41 if not varied else seed_ + 4001)
+	if varied:
+		_crates(parent, seed_ + 8001)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
 	var south_rng := RandomNumberGenerator.new()
 	south_rng.seed = seed_ + 1009
-	var sets := {"palm": [190, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [320, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [300, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [45, 18.0, 75.0, 0.7, 2.2, 0.15]}
+	var fill_rng := RandomNumberGenerator.new()   # eigen generator: de bestaande plekken blijven precies waar ze waren
+	fill_rng.seed = seed_ + 3001
+	var sets := {"palm": [240, 18.5, 90.0, 0.85, 1.6, 0.1], "bush": [420, 16.5, 80.0, 0.8, 1.8, 0.05], "fern": [420, 15.8, 70.0, 0.8, 1.7, 0.04], "grass": [1400, 15.2, 62.0, 0.8, 1.8, 0.0], "rock": [60, 18.0, 75.0, 0.7, 2.2, 0.15]}
 	var meshes := {"bush": bush(), "fern": fern(), "grass": grass()}
 	for kind in sets:
 		if step.is_valid():
@@ -445,6 +538,7 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 		_scatter(rng, c[0], c[1], c[2], xf, cols, c[3], c[4], c[5])
 		_strip(rng, kind, xf.size() + STRIP_EXTRA[kind], xf, cols, c[3], c[4], c[5])
 		_south_scatter(south_rng, kind, SOUTH_COUNTS[kind], xf, cols, c[3], c[4], c[5])
+		_fill_scatter(fill_rng, kind, FILL_COUNTS[kind], xf, cols, c[3], c[4], c[5])
 		if kind == "grass":
 			# Keep the original RNG/placement sequence for palms, rocks and all gameplay.
 			# Only grass is replaced by Blender tufts with separate geometric LODs.
@@ -461,7 +555,7 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 				for i in range(v, xf.size(), ROCKS.size()):
 					vx.append(xf[i])
 					vc.append(cols[i])
-				var inst := Kit.scatter(parent, jungle_mesh(ROCKS[v]), rm, vx, vc)
+				var inst := Kit.scatter(parent, jungle_mesh(ROCKS[v]), null if is_meshy(ROCKS[v]) else rm, vx, vc)
 				inst.add_to_group("foliage_rock")
 				for k in vx.size():
 					var source_index := v + k * ROCKS.size()
@@ -483,6 +577,8 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 			var groups := {}
 			for i in cells[key][0].size():
 				var vn: String = PALM_POOL[i % PALM_POOL.size()] if kind == "palm" else ""
+				if MESHY_MIX.has(kind) and i % int(MESHY_MIX[kind][1]) == 0:
+					vn = MESHY_MIX[kind][0]   # elke zoveelste varen / struik is de Meshy-plant
 				if not groups.has(vn):
 					groups[vn] = [[], [], []]
 				var xt: Transform3D = cells[key][0][i]
@@ -495,13 +591,13 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 			for vn in groups:
 				var vx: Array = groups[vn][0]
 				var vc: Array = groups[vn][1]
-				var mesh: Mesh = jungle_mesh(vn) if kind == "palm" else meshes[kind]
+				var mesh: Mesh = jungle_mesh(vn) if vn != "" else meshes[kind]
 				var shapes: Array = []
 				if kind == "palm":
 					shapes = _collide(parent, vx, BOOM_COLLIDE_R if vn.begins_with("Boom") else COLLIDE_R["palm"], "wood", "palm")
 				var inst := Kit.scatter(parent, mesh, null, vx, vc)
 				inst.add_to_group("foliage_" + kind)
-				inst.visibility_range_end = VIS_END[kind]
+				inst.visibility_range_end = minf(VIS_END[kind], MESHY_NEAR_END) if vn != "" and kind != "palm" else VIS_END[kind]
 				inst.visibility_range_end_margin = 16.0
 				inst.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_SELF
 				var far: MultiMeshInstance3D = null
@@ -530,7 +626,44 @@ static func plant(parent: Node3D, seed_ := 11, step := Callable()) -> void:
 							_reg[key] = []
 						_reg[key].append(entry)
 					_register_vegetation(entry)
+	_clear_vehicle_roads()
 	reapply_building_clearings()
+
+
+## Vijandelijke voertuigen (AanvalRoutes.voertuig_pad) rijden van de vijandbasis door de jungle naar de brug en dan recht op
+## het kamp af. Een jeep velt geen jungleboom en niemand rijdt door een rots, dus op die baan staan geen stammen en rotsen
+## (struiken, varens en gras blijven). Nodig sinds het vollere bos van v211: daar liep de tank vast.
+const ROAD_HALF := 4.6
+static func _clear_vehicle_roads() -> int:
+	var pts: Array = [VijandBasis.gate_outside()]
+	pts.append_array(AanvalRoutes.TANK_WEG)
+	pts.append(Vector3(Data.BRIDGE_X, 0.0, -Data.START_CLEAR))   # van de brug recht naar de noordkant van het kamp
+	var lines: Array = [pts, AanvalRoutes.VOERTUIG_WEG]
+	var found: Array = []   # eerst verzamelen: weghalen verandert de lijsten waar we doorheen lopen
+	for cell in _vegetation_cells:
+		for e: Dictionary in _vegetation_cells[cell]:
+			var kind: String = e.get("kind", "")
+			if (kind != "palm" and kind != "rock") or e.get("cleared", false):
+				continue
+			var p: Vector3 = e["world_position"]
+			var q := Vector2(p.x, p.z)
+			var hit := false
+			for line: Array in lines:
+				for i in line.size() - 1:
+					var a := Vector2(line[i].x, line[i].z)
+					var b := Vector2(line[i + 1].x, line[i + 1].z)
+					if Geometry2D.get_closest_point_to_segment(q, a, b).distance_to(q) < ROAD_HALF:
+						hit = true
+						break
+				if hit:
+					break
+			if hit:
+				found.append(e)
+	var removed := 0
+	for e: Dictionary in found:
+		if _remove_vegetation_entry(e):
+			removed += 1
+	return removed
 
 
 ## Onzichtbare ronde zuilen op de plek van stammen en rotsen, per vak van 36 m één lichaam (goedkoop voor de natuurkunde).
@@ -742,6 +875,42 @@ static func _south_scatter(rng: RandomNumberGenerator, kind: String, count: int,
 
 
 
+## Vulling (v211): de gaten in de dichtheidskaart. Oost- en weststrook naast het kamp, het bos ten noorden van de rivier
+## en het zuiden, tot z = FOLIAGE_Z_N. Zelfde bosjes/open-plekkenpatroon als de rest; het pad en de rivier blijven vrij.
+const FILL_COUNTS := {"palm": 170, "bush": 260, "fern": 330, "grass": 1500, "rock": 45}
+static func _fill_scatter(rng: RandomNumberGenerator, kind: String, count: int, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
+	var added := 0
+	var tries := 0
+	while added < count and tries < count * 40:
+		tries += 1
+		var p := Vector3(rng.randf_range(-Data.WORLD_X + 6.0, Data.WORLD_X - 6.0), 0.0, rng.randf_range(-Data.FOLIAGE_Z_N + 4.0, Data.WORLD_Z_S - 9.0))
+		var gap := absf(p.x) > 80.0 and p.z > -30.0 and p.z < 80.0   # flanken naast het kamp
+		var north := p.z < Data.river_z(p.x) - 4.0
+		var south := p.z > 70.0
+		if not (gap or north or south):
+			continue
+		if maxf(absf(p.x), absf(p.z)) < Data.START_CLEAR + 1.8 or absf(p.x) < Data.START_ROAD_HALF + 3.0 and p.z > -Data.START_CLEAR:
+			continue
+		if _in_river(p):
+			continue
+		if kind == "palm" and p.z < Data.FOREST_Z0 and absf(p.x - Data.path_x(p.z)) < 7.5:
+			continue
+		if kind == "rock":
+			var reserved := false
+			for region in AirfieldHQ23.site_regions():
+				if _point_in_build_region(p, AirfieldHQ23.SUGGESTED_CENTER, 0.0, region, 1.0):
+					reserved = true
+					break
+			if reserved:
+				continue
+		if kind != "grass" and rng.randf() > 0.30 + 0.70 * _grove(p.x, p.z):
+			continue
+		if p.z < -30.0 and p.z < Data.river_z(p.x) and rng.randf() > STRIP_KEEP[Data.strip_zone(p.x)][kind]:
+			continue
+		_add(rng, out, cols, p, s_min, s_max, tilt)
+		added += 1
+
+
 ## In de rivier, op de oevers en op de open paden naar brug en ondiepte.
 static func _in_river(p: Vector3) -> bool:
 	var d := absf(p.z - Data.river_z(p.x))
@@ -767,7 +936,7 @@ static func _add(rng: RandomNumberGenerator, out: Array, cols: Array, p: Vector3
 ## Bos tussen de basismuur en de rivier en daarachter: bosjes en open plekken wisselen elkaar af (rustige sinus-ruis),
 ## dus je kunt tussen de bomen door lopen en kijken. Het pad van de poort naar de brug blijft vrij.
 static func _grove(x: float, z: float) -> float:
-	return 0.5 + 0.5 * sin(x * 0.075 + 1.3) * sin(z * 0.095 + 0.4)
+	return 0.5 + 0.5 * sin(x * _grove_fx + _grove_px) * sin(z * _grove_fz + _grove_pz)
 
 
 static func _strip(rng: RandomNumberGenerator, kind: String, count: int, out: Array, cols: Array, s_min: float, s_max: float, tilt: float) -> void:
@@ -794,18 +963,14 @@ static func _strip(rng: RandomNumberGenerator, kind: String, count: int, out: Ar
 static func logs(parent: Node3D, seed_ := 41) -> void:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = seed_
-	var cyl := CylinderMesh.new()
-	cyl.top_radius = 0.34
-	cyl.bottom_radius = 0.4
-	cyl.height = 1.0
-	cyl.radial_segments = 8
-	cyl.rings = 1
-	var mat := Kit.photo("nature/tree_bark", 1.5, Color(0.7, 0.62, 0.52))
 	var xf: Array = []
+	var log_shapes: Array = []
+	var log_ends: Array = []
 	var body := StaticBody3D.new()
 	body.collision_layer = Kit.LAYER_WALL
 	body.collision_mask = 0
 	body.set_meta("impact_material", "wood")
+	body.set_meta("clearable_vegetation", true)   # een liggende stam verdwijnt als je er een muur of gebouw neerzet, hij blokkeert niets
 	parent.add_child(body)
 	var tries := 0
 	while xf.size() < 30 and tries < 800:
@@ -814,9 +979,9 @@ static func logs(parent: Node3D, seed_ := 41) -> void:
 		var p := Vector3(x, 0.32, rng.randf_range(Data.river_z(x) + 5.0, -Data.START_CLEAR - 3.0))
 		if absf(x) < 6.0 or _in_river(p) or Data.strip_zone(x) == "moeras" and rng.randf() < 0.5:
 			continue
-		var len_ := rng.randf_range(3.5, 7.0)
+		var len_ := rng.randf_range(3.0, 4.6)   # de Meshy-stam is 3 m lang, de schaal volgt de lengte
 		var yaw := rng.randf() * PI
-		var b: Basis = Basis.from_euler(Vector3(0, yaw, 0)) * Basis.from_euler(Vector3(PI / 2.0, 0, 0)) * Basis.from_scale(Vector3(1, len_, 1))
+		var b: Basis = Basis.from_euler(Vector3(0, yaw, 0)) * Basis.from_euler(Vector3(PI / 2.0, 0, 0)) * Basis.from_scale(Vector3.ONE * (len_ / 3.0))
 		xf.append(Transform3D(b, p))
 		var cs := CollisionShape3D.new()
 		var bs := BoxShape3D.new()
@@ -824,4 +989,66 @@ static func logs(parent: Node3D, seed_ := 41) -> void:
 		cs.shape = bs
 		cs.transform = Transform3D(Basis.from_euler(Vector3(0, yaw, 0)), p)
 		body.add_child(cs)
-	Kit.scatter(parent, cyl, mat, xf, [], true)
+		log_shapes.append(cs)
+		var along := Vector3(sin(yaw), 0.0, cos(yaw)) * (len_ * 0.5)
+		log_ends.append([p + along, p - along])
+	# twee Meshy-stammen, om en om
+	var parts: Array = []   # [multimesh-instance, xforms van die soort, indexen in xf]
+	for v in LOGS.size():
+		var vx: Array = []
+		var vi: Array = []
+		for i in range(v, xf.size(), LOGS.size()):
+			vx.append(xf[i])
+			vi.append(i)
+		parts.append([Kit.scatter(parent, jungle_mesh(LOGS[v]), null, vx, [], true), vi])
+	for i in xf.size():
+		var t: Transform3D = xf[i]
+		var part: Array = parts[i % LOGS.size()]
+		var inst: MultiMeshInstance3D = part[0]
+		var entry := _register_vegetation({"kind": "log", "xf": t, "slots": [{"multimesh": inst.multimesh, "index": (part[1] as Array).find(i)}], "shapes": [log_shapes[i]]})
+		var extra: Array = []
+		for end: Vector3 in log_ends[i]:
+			extra.append(_root.to_global(end) if is_instance_valid(_root) else end)
+		extra.append(entry.world_position)
+		entry["extra_points"] = extra
+		for end: Vector3 in extra:   # ook in de vakken van de uiteinden, zodat een muur naast een lange stam hem vindt
+			var cell := Vector2i(floori(end.x / VEG_CELL), floori(end.z / VEG_CELL))
+			if cell != entry.vegetation_cell:
+				if not _vegetation_cells.has(cell):
+					_vegetation_cells[cell] = []
+				if not (_vegetation_cells[cell] as Array).has(entry):
+					_vegetation_cells[cell].append(entry)
+
+
+## Achtergelaten munitiekisten in de jungle-strook (wereld per start, W1): alleen bij een willekeurige wereld-seed,
+## nooit bij de vaste Data.WORLD_SEED_DEFAULT (editor/headless/tests blijven ongewijzigd). Zuiver decoratief, geen
+## botsing: ze staan altijd in de open jungle-strook, nooit in de rivier, op een weg, in de stad of op het vliegveld.
+const CRATE_COUNT := 7
+
+static func _crates(parent: Node3D, seed_: int) -> void:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = seed_
+	var placed := 0
+	var tries := 0
+	while placed < CRATE_COUNT and tries < 400:
+		tries += 1
+		var x := rng.randf_range(-Data.WORLD_X + 6.0, Data.WORLD_X - 6.0)
+		# zelfde strook als logs(): tussen de basismuur en de rivier, waar x zijn eigen rivierdiepte heeft
+		var z := rng.randf_range(Data.river_z(x) + 6.0, -Data.START_CLEAR - 4.0)
+		var p := Vector3(x, 0.0, z)
+		if _in_river(p) or absf(x) < Data.START_ROAD_HALF + 2.0:
+			continue
+		var reserved := false
+		for region in AirfieldHQ23.site_regions():
+			if _point_in_build_region(p, AirfieldHQ23.SUGGESTED_CENTER, 0.0, region, 1.0):
+				reserved = true
+				break
+		if reserved:
+			continue
+		if rng.randf() > 0.3 + 0.7 * _grove(x, z):
+			continue   # staan het liefst in een bosje, niet op een kale open plek
+		var group := 1 if rng.randf() < 0.7 else 2   # soms een los kratje, soms twee gestapeld
+		var yaw := rng.randf() * TAU
+		for g in group:
+			Kit.prop(parent, Kit.MUNITIEKIST, p + Vector3(0.0, g * 0.43, 0.0), 1.0, yaw + rng.randf_range(-0.3, 0.3))
+		placed += 1

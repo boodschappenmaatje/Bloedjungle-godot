@@ -130,9 +130,16 @@ static func soldier_goal(order: String, target: Vector3, target_enemy_position: 
 		"hold":
 			return hold_position
 		"defend":
-			return target + Vector3(cos(float(index) * TAU / 4.0), 0.0, sin(float(index) * TAU / 4.0)) * 3.0
+			# een kring van zes rond de plek; meer soldaten komen in een tweede, ruimere kring
+			var da := float(index % 6) * TAU / 6.0 + float(index / 6) * 0.5
+			return target + Vector3(cos(da), 0.0, sin(da)) * (3.0 + 1.3 * float(index / 6))
 		"move":
-			return target + Vector3((index % 2) * 1.6 - 0.8, 0.0, (index / 2 % 2) * 1.6 - 0.8)
+			if index < 4:
+				return target + Vector3((index % 2) * 1.6 - 0.8, 0.0, (index / 2 % 2) * 1.6 - 0.8)
+			# grotere keuze (bevelstand): kringen van acht om het blokje van vier, zodat niemand op elkaar staat
+			var ring := (index - 4) / 8
+			var ma := float((index - 4) % 8) * TAU / 8.0 + float(ring) * 0.39
+			return target + Vector3(cos(ma), 0.0, sin(ma)) * (2.5 + 1.4 * float(ring))
 		"attack":
 			if has_valid_enemy:
 				return target_enemy_position + Vector3(cos(float(index) * 2.4), 0.0, sin(float(index) * 2.4)) * 3.0

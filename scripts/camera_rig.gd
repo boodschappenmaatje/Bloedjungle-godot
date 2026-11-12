@@ -19,6 +19,7 @@ var _editor_tilt := EDITOR_TILT
 var _editor_active := false
 var _combat_shake_time := 0.0
 var _combat_shake_strength := 0.0
+var _fov_punch := 0.0   # Wapeneffecten AAA: korte inzoomstoot (graden) bij een schot
 var _group_distance := 0.0
 var _group_shift := Vector3.ZERO  # groepsverschuiving t.o.v. de speler (beweegt mee tussen scans)
 var _group_offset := Vector3.ZERO  # zacht bijgestuurde versie van _group_shift
@@ -43,6 +44,10 @@ func snap_to_player() -> void:
 	_group_hold = 0.0
 
 ## Kleine, korte camerakick voor zware wapens en nabije explosies.
+func fov_punch(deg: float) -> void:
+	_fov_punch = maxf(_fov_punch, clampf(deg, 0.0, 1.5))
+
+
 func combat_impulse(strength: float) -> void:
 	_combat_shake_strength = maxf(_combat_shake_strength, clampf(strength, 0.0, 0.055))
 	_combat_shake_time = maxf(_combat_shake_time, 0.13)
@@ -184,6 +189,17 @@ func _process(delta: float) -> void:
 	var plane = VLIEGTUIG.driven_plane if is_instance_valid(VLIEGTUIG.driven_plane) else null
 	if plane != null:
 		wanted_distance += plane.camera_extra()   # hoger en sneller vliegen: de tactische camera zoomt rustig mee uit
+	# Bouwwagen kiest een plek: ver genoeg weg om het hele voorterrein en de omgeving te zien waar het hoofdkwartier komt.
+	if not get_tree().get_nodes_in_group("mcv").is_empty():
+		wanted_distance = maxf(wanted_distance, MCV_DISTANCE)
+	# Wegrijden, uitklappen en bouwen van het hoofdkwartier: ruim beeld, midden tussen hoofdkwartier en wagen.
+	var opbouw := get_tree().get_first_node_in_group("mcv_opbouw")
+	if opbouw != null:
+		wanted_distance = maxf(wanted_distance, OPBOUW_DISTANCE)
+	_opbouw_weight = lerpf(_opbouw_weight, 1.0 if opbouw != null else 0.0, 1.0 - exp(-1.5 * delta))
+	# Bevelstand (troepenbevel): iets verder weg, zodat je meer soldaten en de grond eromheen ziet.
+	if get_tree().get_first_node_in_group("bevelstand_actief") != null:
+		wanted_distance = maxf(wanted_distance, BevelStand.CAM_DISTANCE)
 	# Alleen automatische tank-/groepskadrering kan de vaste speelcamera tijdelijk verruimen.
 	if _group_hold > 0.0:
 		wanted_distance = maxf(wanted_distance, _group_distance)
@@ -208,11 +224,18 @@ func _process(delta: float) -> void:
 	_group_weight = lerpf(_group_weight, 1.0 if _group_hold > 0.0 else 0.0, group_f)
 	_group_offset = _group_offset.lerp(_group_shift, group_f)
 	var target: Vector3 = p.global_position + _lead + _group_offset * _group_weight
+	if get_tree().get_first_node_in_group("bevelstand_actief") != null:
+		target.z += BevelStand.CAM_SOUTH   # bevelstand: beeld iets naar het zuiden, zodat soldaten achter je boven de bevelbalk staan
+	if opbouw != null:
+		_opbouw_focus = opbouw.camera_focus()
+	if _opbouw_weight > 0.001:
+		target = target.lerp(Vector3(_opbouw_focus.x, 0.0, _opbouw_focus.z), _opbouw_weight)
 	# De speler staat iets onder het midden van het beeld: de camera kijkt een stukje voorbij hem
 	# De ingestelde kijkhoek blijft behouden; de uitsnede houdt ruimte voor de schietrichting.
 	focus = target + Vector3(0.0, 0.0, -dist * (0.05 if portrait else 0.07))
 	var goal: Vector3 = focus + Vector3(0.0, h, back)
-	goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)
+	if opbouw == null and _opbouw_weight < 0.05:
+		goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)   # tijdens de opbouw telt de bouwplek zelf niet als obstakel
 	var follow := 1.0 - exp(-(8.0 if plane != null else 5.0) * delta)
 	global_position = goal if _snap else global_position.lerp(goal, follow)
 	# Kijkpunt en positie volgen met dezelfde snelheid: de kijkhoek blijft gelijk en draait niet abrupt.
@@ -225,6 +248,11 @@ func _process(delta: float) -> void:
 		_combat_shake_time = maxf(0.0, _combat_shake_time - delta)
 		if _combat_shake_time == 0.0:
 			_combat_shake_strength = 0.0
+	if _fov_punch > 0.0:
+		_fov_punch = maxf(0.0, _fov_punch - delta * 9.0)
+		fov = 45.0 - _fov_punch
+	elif fov != 45.0:
+		fov = 45.0
 	_nlook = _look
 	look_at(_look, Vector3.UP)
 	# Alleen de zichtlijn naar de speler en naar de dichtstbijzijnde vijanden wordt uit de bladeren gehouden.
@@ -232,6 +260,10 @@ func _process(delta: float) -> void:
 	Foliage.update_pushers(p, get_tree())
 
 
+var _opbouw_weight := 0.0
+var _opbouw_focus := Vector3.ZERO
+const OPBOUW_DISTANCE := 27.0   # camera-afstand tijdens wegrijden, uitklappen en bouwen (dichterbij: je ziet de kraan en de bouwers)
+const MCV_DISTANCE := 38.0   # camera-afstand terwijl de bouwwagen een plek zoekt (normaal 22,5)
 var _camera_distance := 0.0
 
 

@@ -61,8 +61,12 @@ static func bevel(sb: StyleBoxFlat, depth := 4, pressed := false) -> StyleBoxFla
 	return sb
 
 
+## Eén vakje van een keuzebalk: gekozen = olijfgroen met een messing streep onderaan.
 static func seg_state(b: Button, on: bool) -> void:
 	var n := box(OLIVE if on else Color(0, 0, 0, 0), Color(0, 0, 0, 0), 0, 0, 6)
+	if on:
+		n.border_color = BRASS
+		n.border_width_bottom = 3
 	n.content_margin_left = 8
 	n.content_margin_right = 8
 	for st in ["normal", "hover", "pressed", "focus"]:
@@ -70,6 +74,14 @@ static func seg_state(b: Button, on: bool) -> void:
 	var c := INK if on else INK_DIM
 	for cn in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
 		b.add_theme_color_override(cn, c)
+
+
+## Donker paneel met een dunne messing rand: de ondergrond van alle submenu's, zodat tekst los staat van de achtergrondfoto.
+static func sheet_box(margin := 16) -> StyleBoxFlat:
+	var sb := box(Color(0.043, 0.052, 0.03, 0.9), Color(BRASS, 0.55), 1, 6, margin)
+	sb.shadow_color = Color(0, 0, 0, 0.55)
+	sb.shadow_size = 24
+	return sb
 
 
 static func label(text: String, font: Font, size: int, color: Color) -> Label:
@@ -85,6 +97,12 @@ static func label(text: String, font: Font, size: int, color: Color) -> Label:
 ## Marges voor schermranden en uitsparingen zoals de Dynamic Island, omgerekend naar HUD-coördinaten.
 ## Op desktops en schermen zonder veilige marge valt alleen de kleine standaardmarge toe.
 static func safe_margins(view_size: Vector2, base := 12.0) -> Vector4:
+	# BJ_SAFE="links,boven,rechts,onder" (in HUD-punten) bootst in tests de inkeping van een iPhone na
+	var fake := OS.get_environment("BJ_SAFE")
+	if fake != "":
+		var p := fake.split_floats(",")
+		if p.size() == 4:
+			return Vector4(base + p[0], base + p[1], base + p[2], base + p[3])
 	var screen := Vector2(DisplayServer.screen_get_size())
 	var safe: Rect2i = DisplayServer.get_display_safe_area()
 	if screen.x <= 0.0 or screen.y <= 0.0 or safe.size.x <= 0 or safe.size.y <= 0:
@@ -119,6 +137,22 @@ static func style_button(b: Button, kind: String) -> void:
 	var size := 15
 	var col := INK
 	match kind:
+		"field":
+			normal = box(Color(0.075, 0.085, 0.05, 0.92), Color("77704a"), 2, 3, 8)
+			pressed = box(Color(0.22, 0.20, 0.11, 0.98), BRASS, 2, 3, 8)
+			disabled = normal
+			font = display(0)
+			size = 18
+			col = INK
+			b.custom_minimum_size.y = 50.0
+		"field_primary":
+			normal = box(Color("9c762b"), Color("e2bf67"), 2, 3, 8)
+			pressed = box(Color("c09839"), Color("f0d17f"), 2, 3, 8)
+			disabled = normal
+			font = display(0)
+			size = 20
+			col = Color("17160d")
+			b.custom_minimum_size.y = 58.0
 		"buy":
 			normal = box(OLIVE, OLIVE_HI, 1, 4, 4)
 			pressed = box(OLIVE_HI, OLIVE_HI, 1, 4, 4)
@@ -169,7 +203,7 @@ static func style_button(b: Button, kind: String) -> void:
 			col = INK_DIM
 			font = body(700, 2)
 	# 3D-look: hogere kleuren en een dikke onderrand voor de knoppen die je indrukt
-	if kind in ["buy", "primary", "gold", "round", "secondary", "pause"]:
+	if kind in ["buy", "primary", "gold", "round", "secondary", "pause", "field", "field_primary"]:
 		var depth := 5 if kind == "primary" else 4
 		bevel(normal, depth)
 		bevel(pressed, depth, true)

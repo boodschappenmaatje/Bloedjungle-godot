@@ -45,7 +45,7 @@ func _init() -> void:
 		_shader.code = SHADER
 	_mat.shader = _shader
 	_mat.render_priority = 9
-	_plane.size = Vector2(Streak.NAPALM_WIDTH + 1.0, Streak.NAPALM_LENGTH + 1.0)
+	_plane.size = Vector2(Rang.NAPALM_WIDTH + 1.0, Rang.NAPALM_LENGTH + 1.0)
 	_mi.mesh = _plane
 	_mi.material_override = _mat
 	_mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -64,19 +64,19 @@ func _init() -> void:
 ## Toont de strook rond center, met het toestel dat langs dir vliegt.
 func show_strip(center: Vector3, dir: Vector3) -> void:
 	global_transform = Transform3D(Basis(Vector3.UP, atan2(-dir.x, -dir.z)), Vector3(center.x, 0.07, center.z))
-	_mat.set_shader_parameter("half_size", Vector2(Streak.NAPALM_WIDTH * 0.5, Streak.NAPALM_LENGTH * 0.5))
+	_mat.set_shader_parameter("half_size", Vector2(Rang.NAPALM_WIDTH * 0.5, Rang.NAPALM_LENGTH * 0.5))
 	var side := dir.cross(Vector3.UP)
 	enemies_in_strip = 0
 	for e in Game.enemies:
 		if is_instance_valid(e):
 			var d: Vector3 = e.global_position - center
-			if absf(d.dot(dir)) < Streak.NAPALM_LENGTH * 0.5 and absf(d.dot(side)) < Streak.NAPALM_WIDTH * 0.5:
+			if absf(d.dot(dir)) < Rang.NAPALM_LENGTH * 0.5 and absf(d.dot(side)) < Rang.NAPALM_WIDTH * 0.5:
 				enemies_in_strip += 1
 	var p = Game.player
 	self_in_strip = false
 	if p != null and is_instance_valid(p):
 		var dp: Vector3 = p.global_position - center
-		self_in_strip = absf(dp.dot(dir)) < Streak.NAPALM_LENGTH * 0.5 + 1.0 and absf(dp.dot(side)) < Streak.NAPALM_WIDTH * 0.5 + 1.0
+		self_in_strip = absf(dp.dot(dir)) < Rang.NAPALM_LENGTH * 0.5 + 1.0 and absf(dp.dot(side)) < Rang.NAPALM_WIDTH * 0.5 + 1.0
 	_mat.set_shader_parameter("col", SELF_HIT if self_in_strip else OK)
 	_label.text = ("×%d" % enemies_in_strip) if enemies_in_strip > 0 else ""
 	_label.modulate = ENEMY

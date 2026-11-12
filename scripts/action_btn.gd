@@ -5,12 +5,12 @@ extends Button
 
 const SIZE := Vector2(54, 54)
 const GAP := 62.0
-const ICON_ONLY := ["combined", "granaat", "herlaad", "sprint", "rol", "lucht", "lucht2", "houding", "artillerie"]
+const ICON_ONLY := ["combined", "granaat", "herlaad", "sprint", "rol", "krachten", "kies", "houding"]
 
 var kind := ""
 var caption := ""
 var equipment_kind := "grenade"
-var reward := ""   # luchtsteun-knop: id van de beloning die klaarstaat (Streak.LADDER)
+var reward := ""   # KRACHTEN-knop: id van de gekozen kracht (Rang.VOLGORDE), voor het pictogram
 var bar := -1.0  # 0..1 toont een smalle sterktebalk onder de knop, -1 verbergt hem
 var open_state := false
 var badge := ""  # klein getal rechtsboven, bijv. "×3"
@@ -42,9 +42,8 @@ static func make(k: String, cap: String) -> ActionBtn:
 		"sprint": "Sprinten · balk toont uithoudingsvermogen",
 		"rol": "Ontwijkrol · afkoeling wordt rond de knop getoond",
 		"houding": "Houding · tik: staan, hurken, liggen · vasthouden: meteen liggen of opstaan",
-		"lucht2": "Andere luchtsteun · tik om deze te kiezen",
-		"lucht": "Luchtsteun · tik om te gebruiken, napalm: vasthouden en slepen om de strook te richten",
-		"artillerie": "Artillerie van het hoofdkwartier · vasthouden en slepen om te richten, loslaten om 5 granaten te roepen · tikken: dichtstbijzijnde vijand · 90 s afkoeling",
+		"krachten": "Krachten van je rang · tik: wiel (kies een kracht, daarna vuurt de rechterstick af) · op een computer: tik gebruikt, napalm en artillerie slepen om te richten",
+		"kies": "Rangpunt uitgeven · kies een nieuwe kracht of een upgrade",
 	}.get(k, cap)
 	b.add_to_group("hud_button")
 	b.custom_minimum_size = SIZE
@@ -178,32 +177,17 @@ func _draw() -> void:
 					draw_line(c + Vector2(-4, 3), c + Vector2(4, 0), col, 2.6)
 					draw_line(c + Vector2(-14, 12), c + Vector2(14, 12), col, 1.8)
 			draw_arc(size * 0.5, size.x * 0.5 - 2.0, 0, TAU, 28, Color(UI.BRASS, 0.9 if stance > 0 else 0.0), 2.4)
-		"lucht":
-			# HUD 3.0: één steunknop met een helikopter; het wiel (lang indrukken) kiest welke steun
-			draw_line(c + Vector2(-15, -10), c + Vector2(15, -10), col, 2.4)
-			draw_line(c + Vector2(0, -10), c + Vector2(0, -6), col, 2.2)
-			draw_colored_polygon(PackedVector2Array([c + Vector2(-8, -4), c + Vector2(0, -7), c + Vector2(8, -4), c + Vector2(11, 1), c + Vector2(7, 6), c + Vector2(-6, 6), c + Vector2(-9, 2)]), col)
-			draw_colored_polygon(PackedVector2Array([c + Vector2(3, -4), c + Vector2(8, -3), c + Vector2(9, 1), c + Vector2(3, 1)]), Color(0.05, 0.06, 0.04, 0.9))
-			draw_line(c + Vector2(-8, 0), c + Vector2(-18, -3), col, 2.8)
-			draw_line(c + Vector2(-18, -3), c + Vector2(-18, -9), col, 2.4)
-			draw_line(c + Vector2(-8, 10), c + Vector2(9, 10), col, 2.0)
-			draw_line(c + Vector2(-4, 6), c + Vector2(-4, 10), col, 1.8)
-			draw_line(c + Vector2(4, 6), c + Vector2(4, 10), col, 1.8)
+		"krachten":
+			# de gekozen kracht van je rang (Rang) met een gloeiende ring zodra hij klaar is; zonder keuze een ster
+			Rang.teken_icoon(self, reward if reward != "" else "ster", c, 0.95, col)
 			if not disabled:
 				var pulse := 0.55 + 0.45 * sin(Time.get_ticks_msec() / 260.0)
 				draw_arc(size * 0.5, size.x * 0.5 - 1.5, 0, TAU, 32, Color(UI.BRASS, 0.35 + 0.65 * pulse), 2.6, true)
-		"artillerie":
-			# een vallende granaat boven drie inslagen
-			draw_colored_polygon(PackedVector2Array([c + Vector2(0, -15), c + Vector2(3.6, -9), c + Vector2(3.6, -1), c + Vector2(-3.6, -1), c + Vector2(-3.6, -9)]), col)
-			draw_rect(Rect2(c + Vector2(-3.6, -1), Vector2(7.2, 3.0)), Color(0.05, 0.06, 0.04, 0.9))
-			draw_colored_polygon(PackedVector2Array([c + Vector2(-3.6, 2), c + Vector2(3.6, 2), c + Vector2(5.5, 6), c + Vector2(-5.5, 6)]), col)
-			for x in [-11.0, 0.0, 11.0]:
-				draw_arc(c + Vector2(x, 12), 4.2, PI, TAU, 8, col, 2.2)
-			if not disabled:
-				var apulse := 0.55 + 0.45 * sin(Time.get_ticks_msec() / 300.0)
-				draw_arc(size * 0.5, size.x * 0.5 - 1.5, 0, TAU, 32, Color(UI.BRASS, 0.3 + 0.6 * apulse), 2.6, true)
-		"lucht2":
-			Streak.draw_icon(self, reward, c + Vector2(0, 1), 0.85, Color(col, 0.75))
+		"kies":
+			# een ster met een gloeiende ring: er wacht een rangpunt
+			Rang.teken_icoon(self, "ster", c, 1.15, UI.BRASS)
+			var kpulse := 0.55 + 0.45 * sin(Time.get_ticks_msec() / 200.0)
+			draw_arc(size * 0.5, size.x * 0.5 - 1.5, 0, TAU, 32, Color(UI.BRASS, 0.4 + 0.6 * kpulse), 2.8, true)
 		"granaat":
 			match equipment_kind:
 				"mine":
@@ -222,7 +206,7 @@ func _draw() -> void:
 					draw_arc(c + Vector2(0, 3), 6.0, 2.4, 3.9, 6, Color(0.05, 0.06, 0.04, 0.8), 2.0)
 	if kind in ["sprint"] and open_state:
 		draw_arc(size * 0.5, size.x * 0.5 - 2.0, 0, TAU, 28, UI.BRASS, 2.4)  # staat aan
-	if (kind == "rol" or kind == "artillerie") and bar >= 0.0:
+	if (kind == "rol" or kind == "krachten") and bar >= 0.0:
 		var ring_center := Vector2(size.x * 0.5, size.y * 0.5)
 		var radius := size.x * 0.5 - 2.0
 		draw_arc(ring_center, radius, 0, TAU, 36, Color(UI.INK_DIM, 0.45), 2.2, true)

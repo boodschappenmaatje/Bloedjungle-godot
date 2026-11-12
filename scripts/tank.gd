@@ -24,6 +24,7 @@ const DRIVE_TURN := 1.5    # rad/s draaien als jij bestuurt
 const DRIVE_TURRET := 2.4  # rad/s koepel als jij richt
 const DRIVE_RELOAD := 1.6
 const BOARD_DIST := 6.5
+const MAX_STAP := 1.0 / 30.0   # s: een grotere beeldsprong (app terug uit de achtergrond) rekent hij als een kleinere stap
 const RAM_DAMAGE := 60.0
 const SHOT_RANGE := 45.0   # m, verder landt de granaat op de grond
 
@@ -40,7 +41,10 @@ var _line: MeshInstance3D
 var _line_mesh := ImmediateMesh.new()
 var _mark_t := 0.0
 var _speed := 0.0
+var _stap_k := 1.0          # (gekapte stap) / (beeldstap): 1 behalve bij een beeldsprong
 var _btn: ActionBtn
+var _schade: VoertuigSchade   # levenspunten (V3): vijandelijke raketten, granaten en kogels raken hem, zit jij erin dan sneuvel je mee
+var _bst: VoertuigBestuurder  # de ingebouwde bestuurder (voertuigbevel): rijdt en schiet op bevel als jij er niet in zit
 var _ram_cd := 0.0
 const TRACK_HALF := 1.5     # m, halve afstand tussen de rupsen (voor de snelheid per kant in een bocht)
 const TRACK_LEN := 13.27    # m, lengte van de rupsbaan (textuur loopt er één keer overheen)
@@ -79,34 +83,60 @@ func _ready() -> void:
 	_btn.hide()
 	layer.add_child(_btn)
 	_build_sight()
+	_schade = VoertuigSchade.attach(self, "tank")
+	_bst = VoertuigBestuurder.attach(self, "tank", _schade)
 
 
 func _toggle() -> void:
 	var p = Game.player
-	if p == null or p.dead:
+	if p == null or p.dead or _schade.dead:
 		return
 	if driven:
-		driven = false
-		p.driving = false
-		p.in_tank = false
-		p.visible = true
-		_clear_sight()
-		p.global_position = global_position - global_transform.basis.x * 3.2
-		p.global_position.y = 0.0
-		p.collision_mask = p.get("_mask0")
-		_btn.kind = "enter"
-		_btn.set_caption("IN")
-	else:
-		driven = true
-		goals.clear()
-		p.driving = true
-		p.in_tank = true
-		p.visible = false
-		p.collision_mask = 0
-		p.velocity = Vector3.ZERO
-		_btn.kind = "exit"
-		_btn.set_caption("UIT")
+		_uitstappen(p)
+		return
+	driven = true
+	_schade.set_bestuurd(true)
+	_bst.on_board()
+	goals.clear()
+	p.driving = true
+	p.in_tank = true
+	p.visible = false
+	p.collision_mask = 0
+	p.velocity = Vector3.ZERO
+	_btn.kind = "exit"
+	_btn.set_caption("UIT")
 	_btn.queue_redraw()
+
+
+## De speler stapt uit (knop, of hij is gesneuveld: dan staat hij naast de tank en het wrak).
+func _uitstappen(p) -> void:
+	driven = false
+	_schade.set_bestuurd(false)
+	_bst.on_leave()
+	p.driving = false
+	p.in_tank = false
+	p.visible = true
+	_clear_sight()
+	p.global_position = global_position - global_transform.basis.x * 3.2
+	p.global_position.y = 0.0
+	p.collision_mask = p.get("_mask0")
+	_btn.kind = "enter"
+	_btn.set_caption("IN")
+	_btn.queue_redraw()
+
+
+## Het voertuig is kapot (VoertuigSchade): de speler is al gesneuveld, de tank blijft als wrak staan en doet niets meer.
+func on_vernield() -> void:
+	var p = Game.player
+	if driven and p != null:
+		_uitstappen(p)
+	driven = false
+	goals.clear()
+	_speed = 0.0
+	velocity = Vector3.ZERO
+	if _btn != null:
+		_btn.hide()
+	set_process(false)
 
 
 ## Rupsbanden laten lopen naar wat de tank het afgelopen beeld echt deed (vooruit en draaien), per kant.
@@ -123,13 +153,19 @@ func _update_tracks(delta: float) -> void:
 		_rups[1].uv1_offset.x = fposmod(_rups[1].uv1_offset.x + (fwd + yaw * TRACK_HALF) * delta / TRACK_LEN, 1.0)
 
 
-func _physics_process(delta: float) -> void:
+## Rijden gebeurt per beeld, niet per natuurkundige tik (60 per seconde): de camera volgt per beeld en een tank die per tik
+## rijdt hapert op een scherm dat 90 beelden per seconde tekent. move_and_slide rekent in _process met de beeld-delta.
+func _process(raw_delta: float) -> void:
+	if raw_delta <= 0.0:
+		return
+	var delta := minf(raw_delta, MAX_STAP)
+	_stap_k = delta / raw_delta
 	_update_tracks(delta)
 	_ram_cd -= delta
 	var pl = Game.player
 	var live: bool = Game.state == "play" or Game.state == "prep"
 	if pl != null and pl.dead and driven:
-		_toggle()
+		_uitstappen(pl)
 	_btn.visible = pl != null and not pl.dead and live and (driven or pl.global_position.distance_to(global_position) < BOARD_DIST)
 	_btn.dock(2)
 	collision_mask = 0 if not goals.is_empty() else 178
@@ -141,6 +177,19 @@ func _physics_process(delta: float) -> void:
 			rotation.y = rot0
 			_speed *= 0.5
 			Foliage.fell(hit, global_position)
+		return
+	if goals.is_empty() and _bst != null and _bst.aktief():
+		# met een bevel rijdt en schiet de bestuurder (keuze 5A: de tank schiet alleen als hij stilstaat)
+		var rot1 := rotation.y
+		_bst.think(delta)
+		_drive_body(delta, live, _bst.stuur(DRIVE_SPEED))
+		var hit1 := Foliage.hull_tree(self, Vector2(2.2, 3.6))   # de bestuurder velt iets ruimer dan jouw tank (een boom aan de rand van de romp houdt hem anders tegen terwijl hij niet omvalt)
+		if not hit1.is_empty():
+			rotation.y = rot1
+			_speed *= 0.5
+			Foliage.fell(hit1, global_position)
+		_aim(delta, _bst.drive_dir == Vector3.ZERO and absf(_speed) < 0.4)   # alleen als hij stilstaat en nergens heen wil
+		_ram()
 		return
 	_speed = 0.0
 	if goals.is_empty():
@@ -174,7 +223,7 @@ func _play(clip: String, speed: float) -> void:
 	_anim.speed_scale = speed
 
 
-func _aim(delta: float) -> void:
+func _aim(delta: float, may_fire := true) -> void:
 	var target = null
 	var best := SIGHT
 	for e in Game.enemies:
@@ -182,19 +231,29 @@ func _aim(delta: float) -> void:
 		if d < best:
 			best = d
 			target = e
+	var aim_at := Vector3.ZERO
+	var have := false
+	if target:
+		aim_at = target.global_position
+		have = true
+	elif _bst != null:
+		var sp: Variant = _bst.siege_point()   # op weg naar de vijandbasis: het hoofdkwartier is het doel
+		if sp != null:
+			aim_at = sp
+			have = true
 	var local := 0.0
 	var tilt := 0.03
-	if target:
-		var v: Vector3 = target.global_position - global_position
+	if have:
+		var v: Vector3 = aim_at - global_position
 		local = wrapf(atan2(-v.x, -v.z) - rotation.y, -PI, PI)
 		tilt = 0.0
 	var d := wrapf(local - _toren.rotation.y, -PI, PI)
 	_toren.rotation.y += clampf(d, -TURRET_TURN * delta, TURRET_TURN * delta)
 	_loop.rotation.x = lerpf(_loop.rotation.x, tilt, delta * 2.0)
 	_reload -= delta
-	if target and _reload <= 0.0 and absf(d) < 0.12:
+	if have and may_fire and _reload <= 0.0 and absf(d) < 0.12:
 		_reload = RELOAD
-		_shoot(target.global_position)
+		_shoot(aim_at)
 
 
 ## Schiet een granaat: vuur uit de loop, een halve seconde later ontploft hij waar de vijand stond.
@@ -226,7 +285,15 @@ static func shell_can_damage(origin: Vector3, target: Vector3) -> bool:
 ## Door jou bestuurd: de linker stick geeft de richting (de tank draait op de plek en rijdt dan door,
 ## ligt de richting achter hem dan rijdt hij achteruit), de rechter stick richt de koepel.
 func _drive_driven(delta: float, live: bool) -> void:
-	var mv := Game.move
+	_drive_body(delta, live, Game.move)
+	var p = Game.player
+	p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+	p.face = rotation.y + PI
+	_drive_gun(delta, live)
+
+
+## Het rijden zelf (romp, rupsen en animatie) met een stick `mv` (wereldrichting, lengte 0 tot 1): die van jou, of de denkbeeldige stick van de bestuurder.
+func _drive_body(delta: float, live: bool, mv: Vector2) -> void:
 	var want_speed := 0.0
 	var turning := false
 	if live and mv.length() > 0.15:
@@ -241,7 +308,7 @@ func _drive_driven(delta: float, live: bool) -> void:
 		want_speed = (-DRIVE_REVERSE if reverse else DRIVE_SPEED) * minf(mv.length() * 1.3, 1.0) * align
 	_speed = move_toward(_speed, want_speed, 7.0 * delta)
 	if absf(_speed) > 0.01:
-		velocity = -global_transform.basis.z * _speed
+		velocity = -global_transform.basis.z * _speed * _stap_k   # bij een beeldsprong (> 1/30 s) rijdt hij niet door een muur heen
 		move_and_slide()
 		Foliage.ram(self, absf(_speed), 1.5, 2.5)   # tegen een boom aan: hij valt om
 		global_position.y = 0.0
@@ -258,9 +325,10 @@ func _drive_driven(delta: float, live: bool) -> void:
 		_play("Draaien", _turn_scale if absf(_turn_scale) > 0.2 else 1.0)
 	else:
 		_play("Stationair", 1.0)
-	var p = Game.player
-	p.global_position = Vector3(global_position.x, 0.0, global_position.z)
-	p.face = rotation.y + PI
+
+
+## De koepel en het schieten als jij bestuurt: de rechter stick richt, de vuurknop schiet.
+func _drive_gun(delta: float, live: bool) -> void:
 	# koepel
 	var local := 0.0
 	if live and not is_nan(Game.aim):

@@ -14,10 +14,9 @@ var enemies: Array = []
 var equipment_sel := "grenade"
 var grenades := 3
 var inv := {"mine": 2}
-var streak_bank: Array = ["truck", "napalm"]
-var streak_sel := ""
+var rang_punten := 0
+var kracht_sel := ""
 var move := Vector2.ZERO
 var aim := NAN
 var fire := false
 var player: Node3D
-func streak_current() -> String: return streak_sel

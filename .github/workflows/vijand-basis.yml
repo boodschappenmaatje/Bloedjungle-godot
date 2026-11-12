@@ -22,6 +22,13 @@ on:
       - "scripts/combat_buttons.gd"
       - "tests/granaat_richten_test.gd"
       - "scripts/grote_kaart.gd"
+      - "scripts/troep_selectie.gd"
+      - "scripts/bevel_stand.gd"
+      - "scripts/bevel_balk.gd"
+      - "scripts/kaart_foto.gd"
+      - "scripts/camera_rig.gd"
+      - "tests/troepenbevel_test.gd"
+      - "tests/soldaat_poort_test.gd"
       - "scripts/route.gd"
       - "assets/vijand_hk.glb"
       - "assets/vijand_m2_toren.glb"
@@ -47,6 +54,49 @@ on:
       - "tests/vijand_hk_test.gd"
       - "tests/aanval_basis_test.gd"
       - "tests/grote_kaart_test.gd"
+      - "scripts/vijand_jeep.gd"
+      - "assets/vijand_jeep.glb"
+      - "tests/vijand_jeep_test.gd"
+      - "scripts/vijand_tank.gd"
+      - "assets/vijand_tank.glb"
+      - "tests/vijand_tank_test.gd"
+      - "scripts/voertuig_schade.gd"
+      - "scripts/tank.gd"
+      - "scripts/buildings.gd"
+      - "scripts/enemy.gd"
+      - "tests/voertuig_schade_test.gd"
+      - "tests/rijden_vloeiend_test.gd"
+      - "scripts/voertuig_bestuurder.gd"
+      - "scripts/voertuig_route.gd"
+      - "scripts/voertuig_raster.gd"
+      - "scripts/voertuig_zoek.gd"
+      - "scripts/gates.gd"
+      - "scripts/kampmuur.gd"
+      - "tests/voertuig_route_test.gd"
+      - "tests/voertuig_bevel_test.gd"
+      - "tests/voertuig_bevel_ui_test.gd"
+      - "tests/voertuig_poort_test.gd"
+      - "tests/voertuig_zoeker_test.gd"
+      - "scripts/rang.gd"
+      - "scripts/rang_hud.gd"
+      - "scripts/rang_keuze.gd"
+      - "scripts/noodreparatie.gd"
+      - "scripts/artillerie.gd"
+      - "scripts/napalm_aanval.gd"
+      - "scripts/napalm_plaats.gd"
+      - "scripts/action_btn.gd"
+      - "scripts/wheel_art.gd"
+      - "tests/rang_test.gd"
+      - "scripts/logboek.gd"
+      - "scripts/meldingen_config.gd"
+      - "scripts/pause_menu.gd"
+      - "tests/logboek_test.gd"
+      - "tests/kies_knop_test.gd"
+      - "tests/kracht_stick_test.gd"
+      - "scripts/pause_menu.gd"
+      - "scripts/progress.gd"
+      - "scripts/mcv.gd"
+      - "tests/test_groep_test.gd"
       - ".github/workflows/vijand-basis.yml"
   workflow_dispatch:
 
@@ -58,7 +108,7 @@ concurrency:
 jobs:
   vijandbasis:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
         with:
@@ -82,6 +132,11 @@ jobs:
           .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --version
       - name: Import project
         run: timeout 900 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --import
+      - name: Foutenlogboek en Meld probleem (zonder echte melding)
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 180 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/logboek_test.gd 2>&1 | grep -E '^(OK|FOUT)|klaar|SCRIPT ERROR|Parse Error'
       - name: Vijandbasis- en kaarttest
         shell: bash
         run: |
@@ -135,6 +190,11 @@ jobs:
           set -euo pipefail
           GODOT=.godot-runner/Godot_v4.7.2-stable_linux.x86_64
           timeout 240 "$GODOT" --headless --path . --script tests/auto_wapens_test.gd --fixed-fps 60
+      - name: Testoptie start bij groep
+        shell: bash
+        run: |
+          set -euo pipefail
+          timeout 300 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/test_groep_test.gd --fixed-fps 60
       - name: Vijand-hoofdkwartier- en groepentest
         shell: bash
         run: |
@@ -167,4 +227,158 @@ jobs:
           echo "Godot exit code: $RC"
           grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/grote_kaart.log" | tail -n 40 || true
           tail -n 15 "$RUNNER_TEMP/grote_kaart.log"
+          exit "$RC"
+      - name: Troepenbevel (keuze, groepen, bevelen, grote kaart, bevelstand)
+        shell: bash
+        run: |
+          set +e
+          timeout 300 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/troepenbevel_test.gd --fixed-fps 60 > "$RUNNER_TEMP/troepenbevel.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/troepenbevel.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/troepenbevel.log"
+          exit "$RC"
+      - name: Soldaten door de poort van jouw muur
+        shell: bash
+        run: |
+          set +e
+          timeout 300 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/soldaat_poort_test.gd --fixed-fps 60 > "$RUNNER_TEMP/soldaat_poort.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/soldaat_poort.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/soldaat_poort.log"
+          exit "$RC"
+      - name: Vijandelijke jeep (model, schade, wachtrij, schieten, rit over de brug)
+        shell: bash
+        run: |
+          set +e
+          timeout 900 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/vijand_jeep_test.gd --fixed-fps 60 > "$RUNNER_TEMP/vijand_jeep.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/vijand_jeep.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/vijand_jeep.log"
+          exit "$RC"
+      - name: Vijandelijke tank (model, schade, wachtrij, beleg met granaten, rit over de brug)
+        shell: bash
+        run: |
+          set +e
+          timeout 1200 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/vijand_tank_test.gd --fixed-fps 60 > "$RUNNER_TEMP/vijand_tank.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/vijand_tank.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/vijand_tank.log"
+          exit "$RC"
+      - name: Eigen voertuigen met levenspunten (schade van vijanden, meesterven, wrak, HUD-balk, vijanden schieten op lege voertuigen)
+        shell: bash
+        run: |
+          set +e
+          timeout 300 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voertuig_schade_test.gd --fixed-fps 60 > "$RUNNER_TEMP/voertuig_schade.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/voertuig_schade.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/voertuig_schade.log"
+          exit "$RC"
+      - name: Jeep en tank rijden vloeiend (89 beelden per seconde tegen 60 natuurkundige tikken)
+        shell: bash
+        run: |
+          set +e
+          timeout 300 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/rijden_vloeiend_test.gd --fixed-fps 89 > "$RUNNER_TEMP/rijden_vloeiend.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/rijden_vloeiend.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/rijden_vloeiend.log"
+          exit "$RC"
+      - name: Voertuigbevel, de weg (vrij rijden in jouw gebied, brug, vaste voertuigroute in de stad)
+        shell: bash
+        run: |
+          set +e
+          timeout 120 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voertuig_route_test.gd > "$RUNNER_TEMP/voertuig_route.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/voertuig_route.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/voertuig_route.log"
+          exit "$RC"
+      - name: Voertuigbevel (jeep en tank kiezen, VERPLAATS, schieten, konvooi, in- en uitstappen, vast, brug, rit naar de vijandbasis)
+        shell: bash
+        run: |
+          set +e
+          timeout 900 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voertuig_bevel_test.gd --fixed-fps 60 > "$RUNNER_TEMP/voertuig_bevel.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/voertuig_bevel.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/voertuig_bevel.log"
+          exit "$RC"
+      - name: Voertuigbevel, bediening (VOERTUIGEN-knop, tikken op jeep en tank, bevelstand en grote kaart)
+        shell: bash
+        run: |
+          set +e
+          timeout 300 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voertuig_bevel_ui_test.gd --fixed-fps 60 > "$RUNNER_TEMP/voertuig_bevel_ui.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/voertuig_bevel_ui.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/voertuig_bevel_ui.log"
+          exit "$RC"
+      - name: Voertuigbevel, de routezoeker (raster, A*, U-val, zigzagmuur, afgesloten plek, rekentijd per beeld)
+        shell: bash
+        run: |
+          set +e
+          timeout 900 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voertuig_zoeker_test.gd --fixed-fps 60 > "$RUNNER_TEMP/voertuig_zoeker.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/voertuig_zoeker.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/voertuig_zoeker.log"
+          exit "$RC"
+      - name: Voertuigbevel, de poort van je kamp (jeep en tank rijden naar binnen en naar buiten)
+        shell: bash
+        run: |
+          set +e
+          timeout 600 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/voertuig_poort_test.gd --fixed-fps 60 > "$RUNNER_TEMP/voertuig_poort.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/voertuig_poort.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/voertuig_poort.log"
+          exit "$RC"
+      - name: Generaalsrang met krachten (sterren op score, KIES-scherm, afkoeling, noodreparatie, satelliet, napalm, artillerie)
+        shell: bash
+        run: |
+          set +e
+          timeout 600 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/rang_test.gd --fixed-fps 60 > "$RUNNER_TEMP/rang.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|klaar, fouten|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/rang.log" | tail -n 40 || true
+          tail -n 15 "$RUNNER_TEMP/rang.log"
+          exit "$RC"
+      - name: KIES-knop opent het kiesscherm bij een echte aanraking (volgorde van muisgebaar en aanraking)
+        shell: bash
+        run: |
+          set +e
+          BJ_TOUCH=1 timeout 300 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/kies_knop_test.gd --fixed-fps 60 > "$RUNNER_TEMP/kies_knop.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FAAL|KLAAR|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/kies_knop.log" | tail -n 40 || true
+          exit "$RC"
+      - name: KRACHTEN-knop werkt als de granaatknop (wiel, kiezen, rechterstick richt en vuurt af, annuleren)
+        shell: bash
+        run: |
+          set +e
+          timeout 360 .godot-runner/Godot_v4.7.2-stable_linux.x86_64 --headless --path . --script tests/kracht_stick_test.gd --fixed-fps 60 --quit-after 15000 > "$RUNNER_TEMP/kracht_stick.log" 2>&1
+          RC=$?
+          set -e
+          echo "Godot exit code: $RC"
+          grep -E 'FOUT|TEST OK|TEST MISLUKT|SCRIPT ERROR|Parse Error' "$RUNNER_TEMP/kracht_stick.log" | tail -n 40 || true
+          grep -Fq "TEST OK" "$RUNNER_TEMP/kracht_stick.log"
+          if grep -Eq 'SCRIPT ERROR:|Parse Error:|TEST MISLUKT' "$RUNNER_TEMP/kracht_stick.log"; then exit 1; fi
           exit "$RC"

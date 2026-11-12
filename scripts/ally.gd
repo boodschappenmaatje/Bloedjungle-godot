@@ -12,6 +12,11 @@ const TeamOrderRules = preload("res://scripts/team_command_controller.gd")
 var model: SoldierModel
 var face := 0.0
 var hp := 100.0
+var hp_max := 100.0
+var kind := "geweer"   # soldatensoort (Data.SOLDIER_TYPES): geweer, raket, sluip, hospik of ingenieur
+var _support_t := 0.0
+var _support_target: Variant = null
+var _fx_t := 0.0
 var dmg := 16.0
 var idx := 0
 var fire_t := 0.5
@@ -36,7 +41,13 @@ var _far_acc := 0.0
 var _far_n := 0
 var _beleg := false      # ver van de speler en op zijn plek voor het HK: telt mee in het beleg (Beleg)
 
-func set_command(order: String, target: Vector3, enemy: Node3D = null) -> void:
+var command_slot := -1   # plek in de vorming bij een bevel aan een keuze (TroepSelectie); -1 = zijn eigen nummer (idx), zoals bij het wiel
+var command_node: Node3D   # BEWAAK: het gebouw, voertuig of de soldaat die hij bewaakt
+var _threat: Node3D        # VERDEDIG/BEWAAK: de vijand die hij nu achternagaat
+var _threat_t := 0.0
+const CHASE := 14.0        # m: zo ver van zijn plek gaat een verdediger of bewaker een vijand achterna, daarna terug
+
+func set_command(order: String, target: Vector3, enemy: Node3D = null, node: Node3D = null, slot := -1) -> void:
 	if helper or guard or truck != null: return
 	if order == "hold": command_hold_position = global_position
 	_beleg = false
@@ -46,6 +57,12 @@ func set_command(order: String, target: Vector3, enemy: Node3D = null) -> void:
 	command = order
 	command_target = target
 	command_enemy = enemy if is_instance_valid(enemy) else null
+	command_node = node if is_instance_valid(node) else null
+	command_slot = slot
+	_threat = null
+	if order == "bewaak" and command_node == null:
+		command = "hold"   # niets meer om te bewaken: dan blijft hij staan waar hij is
+		command_hold_position = global_position
 
 
 var _stuck_t := 0.0
@@ -53,9 +70,19 @@ var _detour_t := 0.0
 var _detour_side := 1.0
 
 
+func _ty() -> Dictionary:
+	return Data.SOLDIER_TYPES.get(kind, Data.SOLDIER_TYPES["geweer"])
+
+
+func _supports() -> bool:
+	return kind == "hospik" or kind == "ingenieur"
+
+
 func setup(hp_: float, dmg_: float, index: int) -> void:
-	hp = hp_
-	dmg = dmg_
+	var ty := _ty()
+	hp = hp_ * float(ty.hp)
+	hp_max = hp
+	dmg = dmg_ * float(ty.dmg) if float(ty.dmg) > 0.0 else 0.0
 	idx = index
 	collision_layer = 0
 	collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_WATER | Kit.LAYER_NATURE
@@ -69,40 +96,46 @@ func setup(hp_: float, dmg_: float, index: int) -> void:
 	add_child(col)
 	model = SoldierModel.new()
 	add_child(model)
-	model.setup(Color("5a6a36"), "thompson")
+	model.setup(ty.color, String(ty.gun))
 	model.scale = Vector3.ONE * Data.SOLDIER_SCALE
 	rotation.y = face
 
 
 func set_level(hp_: float, dmg_: float) -> void:
-	hp = maxf(hp, hp_ * 0.8)
-	dmg = dmg_
+	var ty := _ty()
+	hp_max = maxf(hp_max, hp_ * float(ty.hp))
+	hp = maxf(hp, hp_ * float(ty.hp) * 0.8)
+	dmg = dmg_ * float(ty.dmg) if float(ty.dmg) > 0.0 else 0.0
 
 
 func _physics_process(delta: float) -> void:
 	if truck != null:
 		if is_instance_valid(truck):
-			model.set_shoot_pose(false, "thompson", 0.5)
+			model.set_shoot_pose(false, String(_ty().wep), 0.5)
 			truck.ride_step(self, delta)
 			rotation.y = face
 			return
 		truck = null
 	if Game.state != "play" and Game.state != "prep":
 		velocity = Vector3.ZERO
-		model.set_shoot_pose(false, "thompson", 0.5)
+		model.set_shoot_pose(false, String(_ty().wep), 0.5)
 		return
 	if _is_far():
 		_far_step(delta)
 		return
 	_set_far(false)
 	fire_t -= delta
+	if _supports():
+		_support_step(delta)
 	if command_enemy != null and (not is_instance_valid(command_enemy) or command_enemy.get("dead") == true):
 		command_enemy = null
 		if Game.squad_order == "attack" and (not is_instance_valid(Game.squad_target_enemy) or Game.squad_target_enemy.get("dead") == true):
 			Game.squad_target_enemy = null
 	var target: Node3D = command_enemy if is_instance_valid(command_enemy) else _nearest_enemy()
-	if target == null:
+	if target == null and not _supports():
 		target = _hk_target()
+	if _supports():
+		target = null   # een hospik en een ingenieur schieten niet
 	var goal := _goal()
 	var to_goal := Vector2(goal.x - global_position.x, goal.z - global_position.z)
 	var want := Vector3.ZERO
@@ -116,11 +149,11 @@ func _physics_process(delta: float) -> void:
 		if _wait_t <= 0.0:
 			_wait_t = -1.0
 			_leg += 1
-	elif to_goal.length() > (0.6 if (Game.troop_mode == "hold" and not helper) or guard else 2.2):
+	elif to_goal.length() > (0.6 if ((Game.troop_mode == "hold" or command != "follow") and not helper) or guard else 2.2):
 		var wp := Route.waypoint(global_position, goal)
 		var d := Vector2(wp.x - global_position.x, wp.z - global_position.z)
 		if d.length() > 0.05:
-			var pace := 0.4 if patrolling else (1.0 if to_goal.length() > 5.0 else 0.6)   # wandelen of rennen
+			var pace := 0.4 if patrolling else (1.0 if (to_goal.length() > 5.0 or _via) else 0.6)   # wandelen of rennen
 			want = Vector3(d.x, 0, d.y).normalized() * SPEED * pace
 			moving = true
 	# een stam of rots recht in de weg: even opzij omlopen
@@ -148,7 +181,7 @@ func _physics_process(delta: float) -> void:
 	if target != null and fire_t <= 0.0 and absf(angle_difference(face, look)) < 0.35:
 		_shoot()
 	_shooting = target != null
-	model.set_shoot_pose(_shooting, "thompson", 0.5)
+	model.set_shoot_pose(_shooting, String(_ty().wep), maxf(float(_ty().rate), 0.3))
 	if moving:
 		model.play("lopen", 0.2, 0.9 if patrolling else 1.4)
 	elif _shooting:
@@ -239,18 +272,52 @@ func _march_goal() -> Vector3:
 	return VijandBasis.attack_spot(idx)
 
 
+## Waar hij heen loopt; staat dat aan de andere kant van de muur van jouw kamp, dan eerst door de poort (die gaat voor je soldaten vanzelf open).
+var _via := false   # hij loopt nu naar een tussenpunt (rond een muur, door een poort) en niet naar zijn eigen doel: dan niet afremmen
+
+
 func _goal() -> Vector3:
+	var g := _goal_plain()
+	_via = false
+	if helper or guard or truck != null or recall != null:
+		return g
+	var w: Variant = Kampmuur.route_next(global_position, g)
+	_via = w != null
+	return w if w != null else g
+
+
+func _goal_plain() -> Vector3:
 	if recall != null:
 		return recall
 	if guard:
 		return Wachten.goal(self)   # ronde langs de binnenkant van de muur, bij een aanval naar de poort
+	if _supports() and not helper and command == "follow" and _support_target != null and is_instance_valid(_support_target):
+		var st: Node3D = _support_target
+		var stop := 3.0 if kind == "hospik" else 4.0
+		if global_position.distance_to(st.global_position) > stop:
+			return st.global_position   # een hospik loopt naar wie geheeld moet worden, een ingenieur naar wat gerepareerd moet worden
 	if command == "basis" and not helper:
 		return _march_goal()
+	if not helper and command == "bewaak":
+		if not is_instance_valid(command_node) or command_node.get("dead") == true:
+			command = "hold"
+			command_hold_position = global_position
+			return global_position
+		var guard_at := command_node.global_position
+		var chase := _chase(guard_at)
+		if chase != null:
+			return chase.global_position
+		var ga := float(command_slot if command_slot >= 0 else idx) * TAU / 6.0 + 0.4
+		return Vector3(guard_at.x, 0.0, guard_at.z) + Vector3(cos(ga), 0.0, sin(ga)) * 3.2
+	if not helper and command == "defend":
+		var chase2 := _chase(command_target)
+		if chase2 != null:
+			return chase2.global_position
 	if not helper and command in ["hold", "defend", "move", "attack"]:
 		var enemy_valid := is_instance_valid(command_enemy)
 		var enemy_position := command_enemy.global_position if enemy_valid else Vector3.ZERO
 		var follow_position: Vector3 = Game.player.global_position + Vector3(cos(float(idx) * 2.4 + 0.6), 0.0, sin(float(idx) * 2.4 + 0.6)) * 2.8
-		return TeamOrderRules.soldier_goal(command, command_target, enemy_position, enemy_valid, idx, command_hold_position, follow_position)
+		return TeamOrderRules.soldier_goal(command, command_target, enemy_position, enemy_valid, command_slot if command_slot >= 0 else idx, command_hold_position, follow_position)
 	if Game.troop_mode == "hold" and not helper and command == "follow":
 		var p: Vector2 = POSTS[idx % POSTS.size()] * 2.0
 		return Game.base_pos + Vector3(p.x, 0, p.y)
@@ -260,9 +327,39 @@ func _goal() -> Vector3:
 	return base + Vector3(cos(a), 0, sin(a)) * 2.8
 
 
+## VERDEDIG en BEWAAK: een vijand binnen CHASE meter van de plek gaat hij achterna; verder weg laat hij hem gaan en loopt hij terug.
+## Twee keer per seconde gekozen, dus goedkoop.
+func _chase(center: Vector3) -> Node3D:
+	_threat_t -= get_physics_process_delta_time()
+	if _threat_t <= 0.0:
+		_threat_t = 0.5
+		_threat = null
+		var best := CHASE * CHASE
+		for ev in Game.enemies:
+			if not is_instance_valid(ev) or not ev is Node3D or ev.get("dead") == true:
+				continue
+			var p: Vector3 = (ev as Node3D).global_position
+			var d2 := Vector2(p.x - center.x, p.z - center.z).length_squared()
+			if d2 < best:
+				best = d2
+				_threat = ev
+	if _threat != null and (not is_instance_valid(_threat) or _threat.get("dead") == true):
+		_threat = null
+	if _threat == null or _supports():
+		return null
+	# al binnen schootsafstand: blijf staan en schiet (geen stap verder van de plek af)
+	var reach := float(_ty().range) * 0.8
+	if global_position.distance_to(_threat.global_position) <= reach:
+		return self
+	return _threat
+
+
 func _nearest_enemy() -> Node3D:
 	var best: Node3D = null
-	var bd := RANGE
+	var reach := float(_ty().range)
+	if reach <= 0.0:
+		return null
+	var bd := reach
 	var from := global_position + Vector3.UP * 1.4
 	for ev in Game.enemies:   # niet getypeerd: een al vrijgegeven vijand mag in de lijst staan
 		if not is_instance_valid(ev):
@@ -271,6 +368,8 @@ func _nearest_enemy() -> Node3D:
 		var d := (e.global_position - global_position)
 		d.y = 0.0
 		var l := d.length()
+		if kind == "raket" and String(e.get("armor")) == "zwaar":
+			l -= 8.0   # een raketsoldaat kiest liever een zware vijand
 		if l < bd:
 			var target := e.global_position + Vector3.UP * 1.3
 			if BaseWallRules.blocks_ground_fire(from, target):
@@ -284,16 +383,112 @@ func _nearest_enemy() -> Node3D:
 
 
 func _shoot() -> void:
-	fire_t = 0.5
+	var ty := _ty()
+	fire_t = float(ty.rate)
 	_shot_sequence += 1
-	model.shoot_recoil("thompson")
+	var wep: String = String(ty.wep)
+	model.shoot_recoil(wep)
 	var muzzle: Vector3 = model.muzzle_position()
-	var profile: Dictionary = Data.WEAPON_VISUALS["thompson"]
-	var tracer := "thompson" if (_shot_sequence - 1) % int(profile.trail_every) == 0 else ""
-	var b := Bullet.fire(get_parent(), muzzle, face + randf_range(-0.05, 0.05), 70.0, dmg, 0.6, true, false, 0, 0.0, 0.0, 0.0, tracer)
+	if kind == "raket":
+		# een raket: traag, ontploft bij de inslag en doet vooral zware vijanden pijn (steen-papier-schaar)
+		var rk := Bullet.fire(get_parent(), muzzle, face + randf_range(-0.03, 0.03), 26.0, dmg, 1.2, true, false, 0, 2.8, 0.0, 0.0, "bazooka")
+		rk.src = "soldaat"
+		rk.wclass = String(ty.wclass)
+		Sfx.play("rocket", 0.5, global_position)
+		return
+	var profile: Dictionary = Data.WEAPON_VISUALS[wep]
+	var tracer := wep if (_shot_sequence - 1) % int(profile.trail_every) == 0 else ""
+	var spread := 0.05 if kind == "geweer" else 0.012
+	var speed := 70.0 if kind == "geweer" else 120.0
+	var b := Bullet.fire(get_parent(), muzzle, face + randf_range(-spread, spread), speed, dmg, 0.6 if kind == "geweer" else 0.9, true, false, 0, 0.0, 0.0, 0.0, tracer)
 	b.src = "soldaat"
-	Fx.muzzle(get_parent(), muzzle, "thompson", face)
+	b.wclass = String(ty.wclass)
+	Fx.muzzle(get_parent(), muzzle, wep, face)
 	if _shot_sequence % int(profile.casing_every) == 0:
 		var axes := model.casing_axes()
 		Fx.casing(get_parent(), model.casing_position(), axes[0], axes[1])
-	Sfx.play("ak", 0.45, global_position)
+	Sfx.play("ak" if kind == "geweer" else "rifle", 0.45, global_position)
+
+
+# ---------------------------------------------------------------- hospik en ingenieur
+
+## Een hospik heelt jou en je soldaten dichtbij; een ingenieur repareert je gebouwen en trucks. Het doel wordt twee keer per seconde gekozen.
+func _support_step(delta: float) -> void:
+	_support_t -= delta
+	if _support_t <= 0.0:
+		_support_t = 0.4
+		_support_target = _heal_target() if kind == "hospik" else _repair_target()
+	_fx_t -= delta
+	if _support_target == null or not is_instance_valid(_support_target):
+		return
+	var ty := _ty()
+	var reach := 8.0 if kind == "hospik" else 6.0
+	if global_position.distance_to((_support_target as Node3D).global_position) > reach:
+		return
+	if kind == "hospik":
+		var amount := float(ty.heal) * delta
+		if _support_target == Game.player:
+			Game.player.hp = minf(Game.max_hp(), Game.player.hp + amount)
+		else:
+			_support_target.hp = minf(float(_support_target.hp_max), float(_support_target.hp) + amount)
+		if _fx_t <= 0.0:
+			_fx_t = 0.9
+			if _support_target != Game.player:
+				_support_target.model.flash(Color(0.3, 1.0, 0.45))
+			Sfx.play("ping", 0.2, global_position)
+	else:
+		var amount2 := float(ty.repair) * delta
+		var rep: Variant = _repair_ref
+		if rep is Dictionary:
+			rep.hp = minf(float(rep.max_hp), float(rep.hp) + amount2)
+		elif rep is Node:
+			rep.hp = minf(float(VoorraadTruck.HP_MAX), float(rep.hp) + amount2)
+		if _fx_t <= 0.0:
+			_fx_t = 0.5
+			Sfx.play("thud", 0.18, global_position)
+			Game.changed.emit()
+
+
+var _repair_ref: Variant = null   # het gebouw (Dictionary) of de truck die de ingenieur nu repareert
+
+
+func _heal_target() -> Node3D:
+	var best: Node3D = null
+	var worst := 0.97
+	var cands: Array = [Game.player]
+	cands.append_array(Game.allies)
+	for c in cands:
+		if c == self or not is_instance_valid(c) or c.get("dead") == true:
+			continue
+		var mx: float = Game.max_hp() if c == Game.player else float(c.get("hp_max"))
+		if mx <= 0.0:
+			continue
+		var ratio := float(c.hp) / mx
+		if ratio < worst and global_position.distance_to((c as Node3D).global_position) < 40.0:
+			worst = ratio
+			best = c
+	return best
+
+
+## Het dichtstbijzijnde beschadigde gebouw of de beschadigde truck vlakbij het hoofdkwartier.
+func _repair_target() -> Node3D:
+	var best: Node3D = null
+	var bd := 45.0
+	_repair_ref = null
+	for b in Game.buildings:
+		if b.down or Buildings.under_construction(b) or float(b.hp) >= float(b.max_hp) - 0.5 or not is_instance_valid(b.node):
+			continue
+		var d := global_position.distance_to((b.node as Node3D).global_position)
+		if d < bd:
+			bd = d
+			best = b.node
+			_repair_ref = b
+	for t in get_tree().get_nodes_in_group("voorraadtruck"):
+		if not is_instance_valid(t) or t.state == VoorraadTruck.S.WRAK or float(t.hp) >= VoorraadTruck.HP_MAX - 0.5:
+			continue
+		var d2 := global_position.distance_to((t as Node3D).global_position)
+		if d2 < bd:
+			bd = d2
+			best = t
+			_repair_ref = t
+	return best

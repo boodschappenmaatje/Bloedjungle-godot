@@ -31,7 +31,9 @@ func _process(_d: float) -> bool:
 		combat = main.get_node("Hud").find_child("CombatButtons", true, false)
 		team = get_first_node_in_group("team_commands")
 	if frames == 30:
-		game.streak_bank = ["truck", "napalm"]
+		game.krachten = {"artillerie": 2, "napalm": 1, "satelliet": 1, "reparatie": 3}
+		game.kracht_sel = "napalm"
+		game.kracht_cd["satelliet"] = 42.0
 		game.changed.emit()
 	if frames == 60:
 		combat._wheel_kind = "equipment"
@@ -42,7 +44,7 @@ func _process(_d: float) -> bool:
 	if frames == 70:
 		root.get_viewport().get_texture().get_image().save_png(out + "/wiel_uitrusting.png")
 		combat._wheel_kind = "support"
-		combat._wheel_sector = 3
+		combat._wheel_sector = 1
 		combat.queue_redraw()
 	if frames == 80:
 		root.get_viewport().get_texture().get_image().save_png(out + "/wiel_steun.png")

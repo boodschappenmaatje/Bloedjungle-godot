@@ -9,6 +9,7 @@ extends CharacterBody3D
 
 var type := "knife"
 var t: Dictionary
+var armor := "licht"   # pantser voor het steen-papier-schaar (Data.ARMOR_MULT): "licht" of "zwaar"
 var hp := 45.0
 var max_hp := 45.0
 var face := 0.0
@@ -55,6 +56,7 @@ var _detour_side := 1.0
 func setup(kind: String, wave: int) -> void:
 	type = kind
 	t = Data.ETYPES[kind]
+	armor = String(t.get("armor", "licht"))
 	max_hp = t.hp * (1.0 + (maxi(1, wave) - 1) * 0.11)
 	hp = max_hp
 	fire_t = randf_range(0.8, 1.8)
@@ -364,10 +366,15 @@ func _far_step(delta: float) -> void:
 	_far_acc = 0.0
 
 
-## Dichtstbijzijnde bouwwerk (geen muur of zandzak) binnen 26 m dat nog heel is en waar hij vrij zicht op heeft.
+## Dichtstbijzijnde bouwwerk (geen muur of zandzak) of voertuig van jou (jeep, tank) binnen 26 m dat nog heel is en waar hij vrij zicht op heeft.
 func _rocket_target() -> Variant:
 	var best: Variant = null
 	var bd := 26.0
+	for v in VoertuigSchade.doelen():   # raketten zijn er juist voor pantser (V3, keuze 6A)
+		var dv := _flat((v as Node3D).global_position - global_position).length()
+		if dv < bd and _rocket_clear({"at": (v as Node3D).global_position, "node": v}):
+			bd = dv
+			best = {"at": (v as Node3D).global_position, "node": v}
 	for b in Game.buildings:
 		if b.down or Game.builds.is_piece(b.kind):
 			continue
@@ -562,6 +569,7 @@ func _animate(spd: float, moving: bool) -> void:
 func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	if not from_player or dead:
 		return
+	dmg *= Data.counter(Game.hit_class, armor)   # steen-papier-schaar: raketten tegen zwaar, sluipschutters tegen mensen
 	hp -= dmg
 	hurt_t = 0.0
 	model.flash(Color(1.0, 0.38, 0.07))
@@ -612,7 +620,7 @@ func _burn_step(delta: float) -> void:
 func _burn_die() -> void:
 	hp = 0.0
 	velocity = Vector3.ZERO
-	Game.hit_src = "lucht"   # een brandende vijand telt niet voor je eigen streak
+	Game.hit_src = "lucht"   # een brandende vijand is geen bevestigde treffer van de speler
 	_die(_burn_dir, "brand_val")
 	Game.hit_src = "speler"
 	if _burn_fx != null and is_instance_valid(_burn_fx):
@@ -626,8 +634,6 @@ func _die(dir: Vector3, clip := "") -> void:
 	Game.enemies.erase(self)
 	Game.alert(global_position, 12.0, 5.0)  # de buren in de buurt zijn gewaarschuwd en zoeken de speler
 	Game.kills += 1
-	if Game.hit_src == "speler":
-		Game.streak_kill()  # soldaten en luchtsteun tellen niet mee voor je eigen streak
 	Sfx.play("thud", 1.0, global_position)
 	Progress.stats.kills += 1
 	if Progress.stats.kills % 25 == 0:

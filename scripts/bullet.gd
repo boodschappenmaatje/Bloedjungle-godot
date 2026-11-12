@@ -41,7 +41,11 @@ var ground_direct_fire := false  # ground-level direct fire cannot arc over the 
 var visual_weapon := ""
 var sink := 0.0  # kogels van een toren dalen tot schouderhoogte
 var feedback_source := ""  # optional confirmed-hit channel (e.g. player-driven jeep MG)
-var src := "speler"  # wie schoot: "speler" of "soldaat" (alleen kills van de speler tellen voor de killstreak)
+var wclass := ""    # soort schade voor het steen-papier-schaar (Data.ARMOR_MULT); "" = neutraal, zoals alles wat er al was
+var ground_land := false   # Wapeneffecten AAA: de kogel zakt op het eind naar de grond en laat daar stof achter
+var _land_from := 0.0
+var _suis := false   # Wapeneffecten AAA: vijandelijke kogel die langs je oor gaat zwiept één keer
+var src := "speler"  # wie schoot: "speler" of "soldaat" (voor bevestigde treffers; de score telt voor iedereen)
 
 
 func _enter_tree() -> void:
@@ -73,7 +77,10 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 		b.scale.z = TRAIL_START
 	elif Data.WEAPON_VISUALS.has(visual_weapon):
 		b.mesh = _weapon_glow(visual_weapon, not by_player)
-		b._trail_len = float(Data.WEAPON_VISUALS[visual_weapon].trail_length)
+		if by_player and WapenFx.enabled(visual_weapon):
+			b._trail_len = WapenFx.trace_length(visual_weapon)
+		else:
+			b._trail_len = 2.2 if visual_weapon == "m1911" and by_player and Fx.m1911_vfx_enabled() else float(Data.WEAPON_VISUALS[visual_weapon].trail_length)
 		b.scale.z = TRAIL_START
 	elif by_player:
 		b.mesh = _plain_bullet_mesh()
@@ -92,6 +99,9 @@ static func fire(parent: Node, from: Vector3, angle: float, spd: float, damage: 
 	b.sink = sink_
 	b.dir.y = rise_  # schiet omhoog naar iemand op een toren
 	b.mask = (MASK_ENEMY if by_player else MASK_PLAYER) | MASK_BUNKER | MASK_VEHICLE | MASK_NATURE | MASK_FORTIFICATION | (0 if over_wall else MASK_WALL)
+	if by_player and not over_wall and sink_ == 0.0 and rise_ == 0.0 and from.y > 0.3 and WapenFx.enabled(visual_weapon):
+		b.ground_land = true
+		b._land_from = lifetime * 0.4
 	parent.add_child(b)
 	b.global_position = from
 	b.rotation.y = angle
@@ -205,9 +215,16 @@ func _add_rocket_part(parent: Node3D, part_mesh: Mesh, mat: Material, at: Vector
 ## Lichtspoor: een felle kop met een staart die uitdooft (twee kruislings gezette vlakken met een kleurverloop)
 ## en een kleine gloeiende bol als kop. Beide tellen op bij wat erachter ligt, dus het straalt zonder te vullen.
 static func _weapon_glow(weapon: String, enemy_tracer := false) -> ArrayMesh:
-	var key := "%s:%s" % [weapon, "enemy" if enemy_tracer else "player"]
+	if not enemy_tracer and WapenFx.enabled(weapon):
+		return WapenFx.tracer_mesh(weapon)
+	var colt_test := weapon == "m1911" and not enemy_tracer and Fx.m1911_vfx_enabled()
+	var key := "%s:%s%s" % [weapon, "enemy" if enemy_tracer else "player", ":vfx" if colt_test else ""]
 	if _weapon_glows.has(key):
 		return _weapon_glows[key]
+	if colt_test:
+		var colt_trail := _glow(Color(1.0, 0.91, 0.65, 1.0), Color(1.0, 0.42, 0.08, 0.0), 2.2, 0.055, 0.18, 0.025)
+		_weapon_glows[key] = colt_trail
+		return colt_trail
 	var v: Dictionary = Data.WEAPON_VISUALS[weapon]
 	var head: Color = Color(1.0, 0.48, 0.28, 0.94) if enemy_tracer else v.trail_head
 	var tail: Color = Color(0.85, 0.12, 0.035, 0.0) if enemy_tracer else v.trail_tail
@@ -236,6 +253,8 @@ static func _glow(head: Color, tail: Color, tail_length := 2.0, width := 0.07, h
 	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	mat.vertex_color_use_as_albedo = true
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	if Graphics2.fx():
+		mat.albedo_color = Color(2.0, 2.0, 2.0)   # Graphics 2.0: fel genoeg om met de gloed op te lichten
 	m.surface_set_material(0, mat)
 	var ball := SphereMesh.new()
 	ball.radius = ball_size
@@ -269,14 +288,23 @@ func _physics_process(delta: float) -> void:
 	if life <= 0.0:
 		if rocket:
 			_boom_enemy(global_position)
+		elif ground_land:
+			WapenFx.ground_hit(get_parent(), global_position, visual_weapon)
 		elif dir.y < -0.05 and randf() < 0.35:
 			Fx.dust(get_parent(), Vector3(global_position.x, 0.1, global_position.z))  # schuine kogel (heli) slaat in de grond
 		queue_free()
 		return
+	if not from_player and not _suis and not rocket and Game.player != null and GameSettings.get_value("wapenfx") == "nieuw":
+		var dp: Vector3 = Game.player.global_position + Vector3.UP * 1.0 - global_position
+		if dp.length_squared() < 6.0 and dp.dot(dir) > -0.5:
+			_suis = true
+			Sfx.play_file("kogelsuis", 0.5)
 	if rocket and randf() < 0.5:
 		Fx.dust(get_parent(), global_position - dir * 0.6)
 	if sink > 0.0:
 		dir.y = -sink if global_position.y > 1.3 else 0.0
+	if ground_land and life < _land_from:
+		dir.y = -maxf(global_position.y, 0.0) / maxf(speed * life, 0.06)   # zo komt hij precies aan het eind van zijn baan op de grond
 	var flat_speed := Vector2(dir.x, dir.z).length()
 	rotation = Vector3(-atan2(dir.y, maxf(flat_speed, 0.001)), atan2(dir.x, dir.z), 0.0)
 	if _trail_len > 0.0 and scale.z < 1.0:
@@ -331,7 +359,7 @@ func _physics_process(delta: float) -> void:
 				hit = wall_hit
 	if (mask & MASK_VEHICLE) != 0:
 		# auto's en bussen apart: de botsdoos is lager dan de kogelbaan, en een snelle kogel kan er in één stap overheen springen
-		var v := vehicle_on_path(global_position, global_position + step)
+		var v := vehicle_on_path(global_position, global_position + step, not from_player)   # jouw eigen jeep en tank worden alleen door de vijand geraakt (V3)
 		if not v.is_empty() and (not hit or global_position.distance_to(v.pos) <= global_position.distance_to(hit.position) + 0.01):
 			_hit_vehicle(v)
 			queue_free()
@@ -351,18 +379,23 @@ func _physics_process(delta: float) -> void:
 			var target_script_path := target_script.resource_path if target_script != null else ""
 			var target_handles_impact := target_script_path in ["res://scripts/enemy.gd", "res://scripts/player.gd"] or c is Barrel or c is Pomp or c is Brandkraan
 			if not target_handles_impact and hit.normal.length_squared() > 0.001:
-				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
+				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c), from_player and visual_weapon == "m1911")
+				if from_player:
+					WapenFx.surface_hit(get_parent(), hit.position, hit.normal, _impact_material(c), visual_weapon)
 			# Only a real HP reduction may trigger the player's hit marker.
 			# Shields, cover, misses, friendly AI and non-player explosions stay silent.
 			var can_confirm := from_player and feedback_source in ["jeep", "infantry"] and c is Node3D and (Game.enemies.has(c) or (c as Node).is_in_group("vijand_verdediger"))
 			var hp_before := float(c.get("hp")) if can_confirm else 0.0
 			Game.hit_src = src
+			Game.hit_class = wclass
 			c.hit(dmg, dir, from_player)
+			Game.hit_class = ""
 			Game.hit_src = "speler"
 			if can_confirm and is_instance_valid(c):
 				var dealt := CombatAimFeedback.actual_damage(hp_before, float(c.get("hp")))
 				if dealt > 0.0:
 					Game.combat_hit_confirmed.emit(hit.position, dealt, feedback_source)
+					WapenFx.treffer(get_parent(), c, hit.position, dir, visual_weapon)
 			if pierce > 0 and c.collision_layer == MASK_ENEMY:
 				pierce -= 1
 				dmg *= 0.85
@@ -370,19 +403,24 @@ func _physics_process(delta: float) -> void:
 				return
 		else:
 			if hit.normal.length_squared() > 0.001:
-				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c))
+				Fx.impact(get_parent(), hit.position, hit.normal, _impact_material(c), from_player and visual_weapon == "m1911")
+				if from_player:
+					WapenFx.surface_hit(get_parent(), hit.position, hit.normal, _impact_material(c), visual_weapon)
 		queue_free()
 		return
 	global_position += step
 
 
-## De eerste auto of bus op het stuk baan van a naar b: {car, pos}, of leeg.
-static func vehicle_on_path(a: Vector3, b: Vector3) -> Dictionary:
+## De eerste auto of bus op het stuk baan van a naar b: {car, pos}, of leeg. Met `hostile` (een schot van de vijand) tellen ook jouw eigen jeep en tank mee (VoertuigSchade).
+static func vehicle_on_path(a: Vector3, b: Vector3, hostile := false) -> Dictionary:
 	var best := 2.0
 	var found: Node3D = null
 	var mid := (a + b) * 0.5
 	var reach := a.distance_to(b) * 0.5 + 6.0   # 6 m: ruim een halve bus; verder weg hoeft de doos niet bekeken te worden
-	for list: Array in [Auto.all, Bus.all]:
+	var lists: Array = [Auto.all, Bus.all]
+	if hostile:
+		lists.append(VoertuigSchade.all)
+	for list: Array in lists:
 		for v: Node3D in list:
 			if not is_instance_valid(v):
 				continue
@@ -405,7 +443,9 @@ func _hit_vehicle(v: Dictionary) -> void:
 	elif explosive > 0.0:
 		_explode(at)
 	else:
+		Game.hit_class = wclass   # het pantser van jouw jeep en tank kijkt naar de soort schade (VoertuigSchade.hit)
 		v.car.hit(dmg, dir, from_player)
+		Game.hit_class = ""
 		Fx.impact(get_parent(), at, -dir, "metal")
 
 
@@ -434,7 +474,11 @@ func _explode(at: Vector3) -> void:
 		if is_instance_valid(e):
 			var d: float = e.global_position.distance_to(at)
 			if d < explosive and not BaseWallRules.blocks_blast(at, e.global_position):
+				Game.hit_class = wclass
+				Game.hit_src = src   # een raket van een soldaat is geen treffer van de speler
 				e.hit(dmg * (1.0 - d / explosive * 0.7), (e.global_position - at).normalized(), true)
+				Game.hit_src = "speler"
+				Game.hit_class = ""
 
 
 ## Ontploffing van een vijandelijke raket (explode() in 15-combat.js met fromPlayer = false).
@@ -443,6 +487,7 @@ func _boom_enemy(at: Vector3) -> void:
 	Game.note_blast(at, r)
 	Fx.explosion(get_parent(), at, 0.9)
 	Barrel.catch_blast(at, r)
+	VoertuigSchade.blast(at, r, dmg, "raket")   # een raket van de vijand tegen jouw jeep of tank
 	if Game.builds:
 		Game.builds.blast(at, r, dmg, false)
 	if Game.gates:

@@ -4,3 +4,4 @@ await build({entryPoints:['src.js'],bundle:true,format:'esm',minify:true,legalCo
 // Three's embedded GLSL has harmless trailing spaces; keep generated diffs clean.
 const code=await fs.readFile('viewer.js','utf8');
 await fs.writeFile('viewer.js',code.replace(/[\t ]+$/gm,''));
+await build({entryPoints:['colt-vfx-src.js'],bundle:true,format:'esm',minify:true,legalComments:'linked',outfile:'colt-vfx.js'});

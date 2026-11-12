@@ -7,7 +7,7 @@ extends Node3D
 const G := 3.4   # halve breedte van de poortopening (m)
 const HP := 900.0
 const REACH := 4.4
-const ALLY_REACH := 4.6
+const ALLY_REACH := 8.0   # de poort schuift in 2,5 s open: soldaten op weg ernaartoe houden hem dus al van verder open, zonder te wachten
 const TRUCK_REACH := 11.0   # voorraadtrucks (voorraad.gd) openen de poort ruim van tevoren: hij schuift in 2,5 s open
 const SLIDE_T := 2.5
 const EXISTING_GATE_PANEL_H := 1.22
@@ -334,6 +334,12 @@ func _physics_process(delta: float) -> void:
 		if live and not friend:
 			for t in get_tree().get_nodes_in_group("voorraadtruck"):
 				if is_instance_valid(t) and t.wants_gate() and (t as Node3D).global_position.distance_to(pos_of(g)) < TRUCK_REACH:
+					friend = true
+					break
+		if live and not friend:
+			# een jeep of tank met een bevel (voertuigbevel) opent de poort van jouw kamp als hij erheen rijdt
+			for b in VoertuigBestuurder.all:
+				if is_instance_valid(b) and b.wil_poort() and b.vehicle.global_position.distance_to(pos_of(g)) < VoertuigBestuurder.GATE_REACH:
 					friend = true
 					break
 		g.hold = 0.9 if friend else g.hold - delta

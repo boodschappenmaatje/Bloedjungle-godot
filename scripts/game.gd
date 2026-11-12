@@ -14,6 +14,11 @@ func _init() -> void:
 	_warm_up()
 
 
+## Het foutenlogboek (scripts/logboek.gd) hangt onder Game: een nieuwe autoload in project.godot zou niet met een OTA-update meekomen.
+func _ready() -> void:
+	add_child(load("res://scripts/logboek.gd").new())
+
+
 ## Zware modellen worden niet meer met preload bij het compileren geladen (de OTA-keten komt daarna), maar met load() als ze nodig zijn.
 ## Om haperingen bij het eerste gebruik te voorkomen vragen we de grootste alvast in een achtergrond-thread aan.
 static func _warm_up() -> void:
@@ -33,7 +38,6 @@ var base_hp := Data.BASE_HP
 var rocket_seen := false
 var base_max := Data.BASE_HP
 var hq_level := 1   # niveau van het hoofdkwartier (1..3)
-var artillery_cd := 0.0   # s tot het artilleriecommando (HK niveau 3) weer klaar is; loopt in HqPerks
 var prep_t := 0.0
 var mcv_deployed := false   # MCV-start: de wagen is uitgeklapt, het hoofdkwartier staat en de klok loopt
 var base_pos := Vector3.ZERO   # midden van het hoofdkwartier; in het oude spel de oorsprong
@@ -80,19 +84,21 @@ var squad_target_enemy: Node3D
 # Aanvalsrichting (N/O/Z/W) -> seconden dat de rand nog oplicht; gevuld door vijanden die schieten of steken.
 var attack := {"N": 0.0, "O": 0.0, "Z": 0.0, "W": 0.0}
 
-# Killstreak (luchtsteun): kills op rij binnen deze golf, beloningen die klaarstaan (opsparen kan), en wie de laatste treffer deed
-var streak := 0
-var streak_sel := ""             # door de speler gekozen beloning (leeg of niet meer klaarstaand = de nieuwste)
-var streak_bank: Array = []     # ids uit Streak.LADDER die klaarstaan, oudste eerst
-var streak_given := {}          # id -> true: deze streak al uitgereikt
-var streak_t := -100.0          # tijd (s) van de laatste streak-kill: de teller komt dan even in beeld
-var streak_air := {"truck": 0, "napalm": 0}  # beloningen die je dit spel hebt gebruikt (voor de samenvatting)
+# Generaalsrang (scripts/rang.gd, Generals-plan E1): score geeft sterren, elke ster een punt voor een kracht of een upgrade
+var rang := 0                    # 0 tot 5 sterren
+var rang_punten := 0             # punten die je nog niet hebt uitgegeven
+var krachten := {}               # id -> niveau 1 tot 3 van de krachten die je hebt gekozen (Rang.KRACHTEN)
+var kracht_cd := {}              # id -> seconden afkoeling die nog resten (loopt in Game._process)
+var kracht_sel := ""             # de kracht die de KRACHTEN-knop toont (leeg of niet meer beschikbaar = de eerste die je hebt)
+var krachten_gebruikt := {}      # id -> hoe vaak je hem dit spel gebruikte
+var satelliet_t := 0.0           # s dat de spionagesatelliet nog alle vijanden op radar en kaart toont
 var power := true:   # stroom in de basis en de straatlantaarns (de generator komt later terug als gebouw: Generals-plan A4)
 	set(v):
 		if v != power:
 			power = v
 			power_changed.emit()
-var hit_src := "speler"         # wie schiet er nu: speler, soldaat of lucht; alleen speler-kills tellen voor de streak
+var hit_class := ""          # soort schade van de kogel of raket die nu raakt (Data.ARMOR_MULT); "" = neutraal
+var hit_src := "speler"         # wie schiet er nu: speler, soldaat of lucht (voor bevestigde treffers en bosbrand)
 
 var player  # de speler (player.gd)
 var defs  # verdediging die je neerzet (defenses.gd)
@@ -109,6 +115,7 @@ func note_blast(at: Vector3, radius: float) -> void:
 	VoorraadTruck.catch_blast(at, radius)   # voorraadtrucks ook
 	Bus.catch_blast(at, radius)          # bussen ook (zwaarder: er is veel nodig)
 	Foliage.fell_near(at, radius)   # bomen vlakbij vallen om
+	Bosbrand.catch_blast(at, radius)   # planten vlakbij vatten vlam: het vuur loopt door het bos
 	blast_at = at
 	blast_r = radius
 	blast_t = Time.get_ticks_msec()
@@ -165,7 +172,6 @@ func reset() -> void:
 	base_hp = Data.BASE_HP
 	base_max = Data.BASE_HP
 	hq_level = 1
-	artillery_cd = 0.0
 	mcv_deployed = false
 	free_wall = true
 	free_towers = 0
@@ -200,11 +206,13 @@ func reset() -> void:
 	squad_order = "follow"
 	squad_target = Vector3.ZERO
 	squad_target_enemy = null
-	streak = 0
-	streak_bank.clear()
-	streak_sel = ""
-	streak_given.clear()
-	streak_t = -100.0
+	rang = 0
+	rang_punten = 0
+	krachten.clear()
+	kracht_cd.clear()
+	kracht_sel = ""
+	krachten_gebruikt.clear()
+	satelliet_t = 0.0
 	hit_src = "speler"
 
 
@@ -218,65 +226,10 @@ func base_home() -> Vector3:
 	return base_point(Vector3(0.0, 0.0, 4.0))
 
 
-## Een vijand is door jou (of jouw voertuig) gevallen: de streak loopt op en een beloning kan klaarstaan.
-func streak_kill() -> void:
-	streak += 1
-	streak_t = Time.get_ticks_msec() / 1000.0
-	for r in Streak.LADDER:
-		if streak >= int(r.kills) and not streak_given.has(r.id):
-			streak_given[r.id] = true
-			streak_bank.append(r.id)
-			Sfx.play("buy")
-			banner.emit(String(r.klaar), "Tik op de luchtsteun-knop", 1.5)
-	changed.emit()
-
-
-## Einde van de golf: de teller begint opnieuw. Wat klaarstaat blijft beschikbaar tot je het gebruikt.
-func streak_reset() -> void:
-	streak = 0
-	streak_given.clear()
-	changed.emit()
-
-
-## Testschakelaar (Instellingen): alle beloningen staan altijd klaar en raken niet op.
-func streak_test() -> bool:
-	return GameSettings.get_value("t_streak") == "on"
-
-
-func streak_fill() -> void:
-	for r in Streak.LADDER:
-		if not streak_bank.has(r.id):
-			streak_bank.push_front(r.id)
-
-
-## De beloning die de luchtsteun-knop nu toont: je keuze, of anders de nieuwste die klaarstaat. "" als er niets klaarstaat.
-func streak_current() -> String:
-	if streak_test():
-		streak_fill()
-	if streak_bank.is_empty():
-		return ""
-	return streak_sel if streak_bank.has(streak_sel) else String(streak_bank.back())
-
-
-## Andere beloningen (één per soort) waaruit de speler kan kiezen.
-func streak_others() -> Array:
-	var cur := streak_current()
-	var out: Array = []
-	for id in streak_bank:
-		if id != cur and not out.has(id):
-			out.append(id)
-	return out
-
-
-## Gebruikt de gekozen beloning. Geeft het id terug, of "" als er niets klaarstaat. In de testmodus raakt hij niet op.
-func streak_take() -> String:
-	var id := streak_current()
-	if id == "":
-		return ""
-	if not streak_test():
-		streak_bank.erase(id)
-	changed.emit()
-	return id
+## Afkoeltijden van de krachten en de seconden van de satelliet lopen tijdens het spel.
+func _process(delta: float) -> void:
+	if state == "play" or state == "prep":
+		Rang.tick(delta)
 
 
 func can_afford_build(c: int) -> bool:
@@ -308,12 +261,14 @@ func add_points(n: int) -> void:
 	n = roundi(n * Progress.bonus().points)
 	points += n
 	score += n
+	Rang.check()
 	changed.emit()
 
 
 ## Alleen score, geen geld: vijanden die je neerhaalt geven sinds Generals-stap 4 geen punten meer; geld komt uit voorraad (voorraad.gd).
 func add_score(n: int) -> void:
 	score += roundi(n * Progress.bonus().points)
+	Rang.check()
 	changed.emit()
 
 

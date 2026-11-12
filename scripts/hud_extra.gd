@@ -18,6 +18,8 @@ var _last_weapon := ""
 var _hurt: ColorRect
 var _hurt_a := 0.0
 var _last_hp := -1.0
+var _veh_fill := false   # de balk heeft nu de kleur van het voertuig (groen) in plaats van die van je soldaat (rood)
+var _last_vf := -1.0   # deel levenspunten van je jeep of tank bij het vorige beeld (VoertuigSchade), -1 = je zit in geen voertuig
 var _arrows: Control
 var _bars: VBoxContainer
 var _status_panel: PanelContainer
@@ -31,8 +33,10 @@ var _radar: Control
 var _map: Control   # de grote kaart (GroteKaart), opent bij een tik op de radar
 var _cv: Control    # het vlak waarop de kaart nu getekend wordt: de radar of de grote kaart
 var _k := 1.0       # schaal van de stippen en lijnen: 1 op de radar, groter op de grote kaart
-var _streak: StreakHud
+var _rang: RangHud
 var _radar_refresh := 0.0
+var _foto: KaartFoto   # luchtfoto van de wereld voor radar en kaart (keuze 2A)
+var _foto_hq := false  # stond het hoofdkwartier er bij de laatste foto
 ## Contacten op de radar: alleen vijanden die je zelf, je torens, je soldaten of de basis kunnen zien.
 ## Een gezien contact blijft nog even (vervagend) staan.
 const RADAR_SIGHT := 38.0  # m rond de speler
@@ -72,13 +76,21 @@ func _ready() -> void:
 	_build_ammo()
 	_build_camera_controls()
 	_build_radar()
-	_streak = StreakHud.new()
-	_streak.name = "StreakHud"
-	add_child(_streak)
+	_rang = RangHud.new()
+	_rang.name = "RangHud"
+	add_child(_rang)
 	_menu = PauseMenu.new()
 	add_child(_menu)
+	# de grote kaart in een eigen laag boven alle knoppen (de UITKLAPPEN-knop van de bouwwagen scheen er vroeger doorheen)
+	var map_layer := CanvasLayer.new()
+	map_layer.name = "KaartLaag"
+	map_layer.layer = 40
+	add_child(map_layer)
 	_map = GroteKaart.new()
-	add_child(_map)
+	_map._hud = self
+	map_layer.add_child(_map)
+	_foto = KaartFoto.new()
+	add_child(_foto)
 	_fps = _shadowed(UI.label("", UI.body(700, 0), 13, UI.GOOD))
 	_fps.position = Vector2(12, 84)
 	add_child(_fps)
@@ -247,6 +259,7 @@ func _build_radar() -> void:
 	_radar.size = _radar.custom_minimum_size
 	_radar.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_radar.draw.connect(_draw_radar)
+	_radar.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS   # luchtfoto verkleind zonder korrel
 	add_child(_radar)
 	_menu_button.size = Vector2(36, 34)
 	_menu_button.position = Vector2(_radar.size.x - 38.0, 4.0)
@@ -296,6 +309,8 @@ func open_map(target: bool) -> bool:
 	if not map_allowed():
 		return false
 	_map.open_map(target)
+	if KaartFoto.tex != null and KaartFoto.age() > KaartFoto.REFRESH:
+		_foto.request(1)   # de kaart is oud (nieuwe gebouwen, brand): tegel voor tegel opnieuw, de oude blijft zolang staan
 	return true
 
 
@@ -347,25 +362,54 @@ func _draw_vijand_basis(map: Rect2) -> void:
 		_cv.draw_rect(patch.grow(2.0 * _k), Color(1.0, 0.62, 0.15, 0.55 + 0.4 * pulse), false, 1.6 * _k)
 
 
+## Kleuren van radar en kaart (keuze 3A): jij goud met een pijl, al je eigen eenheden groen (net als hun ringen in het spel),
+## je gebouwen goud, de vijand rood.
+const C_JIJ := Color(0.98, 0.8, 0.36)
+const C_EIGEN := Color(0.45, 0.88, 0.36)
+const C_EIGEN_HI := Color(0.74, 1.0, 0.58)
+const C_GEBOUW := Color(0.86, 0.68, 0.3)
+const C_VIJAND := Color(1.0, 0.3, 0.2)
+const C_VAST := Color(1.0, 0.84, 0.18)   # een eigen voertuig dat vastzit (voertuigbevel, keuze 9A)
+const C_RAND := Color(0.84, 0.67, 0.31)
+var _first := {}   # instance-id -> eerste keer gezien (s): een nieuw contact knippert even
+
+
 func _draw_radar() -> void:
 	if _radar == null or not _radar.visible:
 		return
 	_cv = _radar
 	_k = 1.0
 	var bounds := Rect2(Vector2.ZERO, _radar.size)
-	_cv.draw_style_box(UI.box(Color(0.025, 0.045, 0.035, 0.9), Color(UI.PANEL_LINE, 0.82), 1, 6, 0), bounds)
 	var head := 22.0 if _radar.size.x >= 110.0 else 16.0
+	# commandoradar (keuze 1A): donker paneel met gouden rand en hoekjes, de luchtfoto als terrein
+	_cv.draw_style_box(UI.box(Color(0.02, 0.03, 0.02, 0.92), Color(C_RAND, 0.55), 1, 5, 0), bounds)
+	var sat: bool = Game.satelliet_t > 0.0
 	if head > 6.0:
-		_cv.draw_string(UI.body(700, 0), Vector2(7, 14), "CONTACTEN" if _radar.size.x >= 110.0 else "RADAR", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK_DIM)
+		var kop := "SAT %d" % ceili(Game.satelliet_t) if sat else "RADAR"
+		_cv.draw_string(UI.body(700, 1), Vector2(7, 14), kop, HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color(0.5, 0.9, 1.0) if sat else Color(C_RAND, 0.9))
 	if _radar.size.x >= 88.0:
 		var north_x := _radar.size.x * 0.5
 		_cv.draw_string(UI.body(700, 0), Vector2(north_x - 4.0, 13.0), "N", HORIZONTAL_ALIGNMENT_LEFT, -1, 9, UI.INK)
 		_cv.draw_colored_polygon(PackedVector2Array([Vector2(north_x, 15.0), Vector2(north_x - 3.5, 21.0), Vector2(north_x + 3.5, 21.0)]), UI.BRASS)
-	_draw_map_content(_radar_map())
+	var map := _radar_map()
+	_draw_map_content(map)
+	draw_frame(_cv, map, 1.0, Color(0.5, 0.9, 1.0) if sat and int(Time.get_ticks_msec() / 400) % 2 == 0 else C_RAND)
+
+
+## Gouden lijst met hoekjes om een kaartvlak (radar en grote kaart).
+func draw_frame(cv: Control, r: Rect2, k: float, col := C_RAND) -> void:
+	cv.draw_rect(r, Color(col, 0.55), false, 1.0)
+	var L := 7.0 * k
+	var w := 2.0 * k
+	for c in [[r.position, Vector2(1, 1)], [Vector2(r.end.x, r.position.y), Vector2(-1, 1)], [r.end, Vector2(-1, -1)], [Vector2(r.position.x, r.end.y), Vector2(1, -1)]]:
+		var p: Vector2 = c[0]
+		var d: Vector2 = c[1]
+		cv.draw_polyline(PackedVector2Array([p + Vector2(0.0, L * d.y), p, p + Vector2(L * d.x, 0.0)]), col, w)
 
 
 ## Het kaartbeeld zelf: muren, rivier, vijandbasis, gebouwen, vijanden en jij. Dezelfde tekenroutine voor de radar (k = 1)
 ## en de grote kaart (GroteKaart, k = 2 tot 3): `canvas` is het Control waarvan we nu in de draw-aanroep zitten.
+## `map` is het vlak van de hele wereld; op de ingezoomde grote kaart is dat groter dan wat je ziet (de kaart knipt de rest af).
 func draw_map_on(canvas: Control, map: Rect2, k: float) -> void:
 	_cv = canvas
 	_k = k
@@ -374,34 +418,42 @@ func draw_map_on(canvas: Control, map: Rect2, k: float) -> void:
 	_k = 1.0
 
 
-func _draw_map_content(map: Rect2) -> void:
-	# kruislijnen als schaalreferentie, geen extra scene of viewport
-	var mid_x: float = map.position.x + map.size.x * 0.5
-	var mid_y: float = map.position.y + map.size.y * 0.5
-	_cv.draw_line(Vector2(mid_x, map.position.y), Vector2(mid_x, map.end.y), Color(0.42, 0.52, 0.38, 0.2), 1.0 * _k)
-	_cv.draw_line(Vector2(map.position.x, mid_y), Vector2(map.end.x, mid_y), Color(0.42, 0.52, 0.38, 0.2), 1.0 * _k)
+## Terrein: de luchtfoto (KaartFoto), iets gedempt en groen-goud getint zodat de tekens erop goed te lezen zijn.
+## Zolang er geen foto is: een donkergroen vlak met de rivier.
+func _draw_terrain(map: Rect2) -> void:
+	if KaartFoto.tex != null:
+		_cv.draw_texture_rect(KaartFoto.tex, map, false, Color(0.8, 0.86, 0.72))
+		_cv.draw_rect(map, Color(0.02, 0.04, 0.02, 0.28), true)
+	else:
+		_cv.draw_rect(map, Color(0.11, 0.16, 0.09), true)
 	var river := PackedVector2Array()
 	for i in 33:
 		var xw: float = lerpf(-Data.WORLD_X, Data.WORLD_X, float(i) / 32.0)
 		river.append(_radar_point(Vector3(xw, 0.0, Data.river_z(xw)), map))
-	_cv.draw_polyline(river, Color(0.2, 0.55, 0.65, 0.65), 1.5 * _k, true)
+	_cv.draw_polyline(river, Color(0.32, 0.66, 0.78, 0.45 if KaartFoto.tex != null else 0.8), (1.2 if KaartFoto.tex != null else 2.2) * _k, true)
+
+
+func _draw_map_content(map: Rect2) -> void:
+	_draw_terrain(map)
 	_draw_vijand_basis(map)
 	# De bunker staat op het echte wereldnulpunt; overige markers volgen de huidige bouwdata.
 	var base := _radar_point(Game.base_pos, map)
 	if Game.mcv_deployed:   # pas een hoofdkwartier als de wagen is uitgeklapt
 		if Game.hq_level >= 2:
 			_draw_hq_radar(map, base)
-		_cv.draw_rect(Rect2(base - Vector2(3.5, 3.5) * _k, Vector2(7, 7) * _k), Color(1.0, 0.74, 0.28), true)
+		var hk := Rect2(base - Vector2(4.0, 4.0) * _k, Vector2(8, 8) * _k)
+		_cv.draw_rect(hk, C_GEBOUW, true)
+		_cv.draw_rect(hk, Color(0.1, 0.07, 0.02, 0.9), false, 1.0)
 	for tower in get_tree().get_nodes_in_group("tower"):
 		if is_instance_valid(tower) and tower is Node3D:
 			var tp := _radar_point(tower.global_position, map)
-			_cv.draw_colored_polygon(PackedVector2Array([tp + Vector2(0, -4) * _k, tp + Vector2(4, 0) * _k, tp + Vector2(0, 4) * _k, tp + Vector2(-4, 0) * _k]), Color(0.38, 0.75, 0.48))
+			_cv.draw_colored_polygon(PackedVector2Array([tp + Vector2(0, -3.6) * _k, tp + Vector2(3.6, 0) * _k, tp + Vector2(0, 3.6) * _k, tp + Vector2(-3.6, 0) * _k]), C_GEBOUW)
 	if Game.gates != null and is_instance_valid(Game.gates):
 		for gate in Game.gates.list:
 			var root: Variant = gate.get("root")
 			if root != null and is_instance_valid(root):
-				var gate_color := Color(0.24, 0.82, 0.42) if float(gate.get("open", 0.0)) > 0.8 else Color(0.92, 0.25, 0.16)
-				_cv.draw_circle(_radar_point(root.global_position, map), 2.0 * _k, gate_color)
+				var gate_color := Color(0.4, 0.86, 0.42) if float(gate.get("open", 0.0)) > 0.8 else Color(0.92, 0.3, 0.18)
+				_cv.draw_circle(_radar_point(root.global_position, map), 1.8 * _k, gate_color)
 	for building in Game.buildings:
 		if not building is Dictionary:
 			continue
@@ -411,8 +463,19 @@ func _draw_map_content(map: Rect2) -> void:
 		var at: Vector3 = building.get("at", Vector3.ZERO)
 		var kind: String = str(building.get("kind", ""))
 		var point := _radar_point(at, map)
-		var col := Color(0.78, 0.84, 0.42) if kind in ["muur", "zandzak"] else Color(0.38, 0.75, 0.48)
-		_cv.draw_rect(Rect2(point - Vector2(2, 2) * _k, Vector2(4, 4) * _k), col, true)
+		if kind in ["muur", "zandzak"]:
+			_cv.draw_rect(Rect2(point - Vector2(1.5, 1.5) * _k, Vector2(3, 3) * _k), Color(C_GEBOUW, 0.7), true)
+		else:
+			var r := Rect2(point - Vector2(3, 3) * _k, Vector2(6, 6) * _k)
+			_cv.draw_rect(r, C_GEBOUW, true)
+			_cv.draw_rect(r, Color(0.1, 0.07, 0.02, 0.85), false, 1.0)
+	# eigen voertuigen (jeep, tank, auto's, bus, bouwwagen) en voorraadtrucks: groene silhouetjes
+	for v in get_tree().get_nodes_in_group("voertuigen"):
+		if is_instance_valid(v) and v is Node3D and (v as Node3D).is_visible_in_tree():
+			_draw_vehicle(_radar_point(v.global_position, map), (v as Node3D).global_rotation.y, C_EIGEN, _is_tank(v), 1.0)
+	for t in get_tree().get_nodes_in_group("voorraadtruck"):
+		if is_instance_valid(t) and t is Node3D:
+			_draw_vehicle(_radar_point(t.global_position, map), (t as Node3D).global_rotation.y, C_EIGEN, false, 0.9)
 	for enemy in Game.enemies:
 		if not is_instance_valid(enemy) or not enemy is Node3D or enemy.get("dead") == true:
 			continue
@@ -420,7 +483,18 @@ func _draw_map_content(map: Rect2) -> void:
 		if vis <= 0.0:
 			continue
 		var point := _radar_point(enemy.global_position, map)
-		_cv.draw_circle(point, 2.5 * _k, Color(1.0, 0.24, 0.16, 0.95 * vis))
+		if enemy.is_in_group("vijand_voertuig"):
+			# een voertuig is een groter teken (keuze 8A uit de voertuigkeuzes): rood silhouet met een lichte rand
+			_draw_vehicle(point, (enemy as Node3D).global_rotation.y, Color(C_VIJAND, 0.95 * vis), String(enemy.get_script().resource_path).ends_with("tank.gd"), 1.15, Color(1.0, 0.92, 0.8, 0.9 * vis))
+		else:
+			var r := 2.6 * _k
+			_cv.draw_colored_polygon(PackedVector2Array([point + Vector2(0, -r), point + Vector2(r, 0), point + Vector2(0, r), point + Vector2(-r, 0)]), Color(C_VIJAND, 0.95 * vis))
+		# een nieuw contact knippert anderhalve seconde met een ring
+		var born: float = _first.get(enemy.get_instance_id(), -99.0)
+		var since := Time.get_ticks_msec() / 1000.0 - born
+		if since < 1.5 and vis >= 1.0:
+			var pulse := fmod(since, 0.5) / 0.5
+			_cv.draw_arc(point, (3.0 + 6.0 * pulse) * _k, 0.0, TAU, 16, Color(C_VIJAND, 1.0 - pulse), 1.2 * _k, true)
 	if _seen.size() > 64:  # oude contacten opruimen
 		var alive := {}
 		for e in Game.enemies:
@@ -429,18 +503,76 @@ func _draw_map_content(map: Rect2) -> void:
 		for id in _seen.keys():
 			if not alive.has(id):
 				_seen.erase(id)
-	if _k > 1.5:
-		# alleen op de grote kaart: je soldaten (blauw), ook als ze ver weg onzichtbaar marcheren
-		for ally in Game.allies:
-			if is_instance_valid(ally) and ally is Node3D:
-				_cv.draw_circle(_radar_point(ally.global_position, map), 2.6 * _k, Color(0.35, 0.68, 1.0, 0.95))
+				_first.erase(id)
+	# je soldaten (groen), ook als ze ver weg onzichtbaar marcheren; gekozen soldaten met een lichte ring
+	var ts := TroepSelectie.inst(get_tree())
+	for ally in Game.allies:
+		if is_instance_valid(ally) and ally is Node3D:
+			var ap := _radar_point(ally.global_position, map)
+			var picked: bool = ts != null and ts.is_selected(ally)
+			_cv.draw_circle(ap, (1.6 if _k < 1.5 else 2.4) * _k, C_EIGEN_HI if picked else C_EIGEN)
+			if picked:
+				_cv.draw_arc(ap, 4.6 * _k, 0.0, TAU, 14, C_EIGEN_HI, 1.0 * _k, true)
+	# je gekozen voertuigen krijgen een lichte ring; een voertuig dat vastzit een geel waarschuwingsteken (voertuigbevel, keuze 9A)
+	for b in VoertuigBestuurder.all:
+		if not is_instance_valid(b) or b.dead or not is_instance_valid(b.vehicle) or not (b.vehicle as Node3D).is_visible_in_tree():
+			continue
+		var bp := _radar_point(b.global_position, map)
+		if ts != null and ts.is_selected(b):
+			_cv.draw_arc(bp, 7.5 * _k, 0.0, TAU, 16, C_EIGEN_HI, 1.2 * _k, true)
+		if b.vast:
+			var tw := 4.2 * _k
+			var tri := PackedVector2Array([bp + Vector2(0.0, -11.0 * _k), bp + Vector2(tw, -4.0 * _k), bp + Vector2(-tw, -4.0 * _k)])
+			_cv.draw_colored_polygon(tri, C_VAST)
+			_cv.draw_polyline(PackedVector2Array([tri[0], tri[1], tri[2], tri[0]]), Color(0.1, 0.07, 0.0, 0.9), 0.8 * _k, true)
+	_draw_view(map)
 	var player: Node3D = Game.player
 	if player != null and is_instance_valid(player):
 		var center := _radar_point(player.global_position, map)
 		var direction := Vector2(sin(player.face), cos(player.face)).normalized()
-		var side := Vector2(direction.y, -direction.x) * 3.2 * _k
-		_cv.draw_colored_polygon(PackedVector2Array([center + direction * 5.0 * _k, center - direction * 3.0 * _k + side, center - direction * 3.0 * _k - side]), Color(0.27, 0.86, 1.0))
+		var side := Vector2(direction.y, -direction.x) * 3.4 * _k
+		var arrow := PackedVector2Array([center + direction * 5.6 * _k, center - direction * 3.2 * _k + side, center - direction * 1.4 * _k, center - direction * 3.2 * _k - side])
+		_cv.draw_colored_polygon(arrow, C_JIJ)
+		_cv.draw_polyline(PackedVector2Array([arrow[0], arrow[1], arrow[2], arrow[3], arrow[0]]), Color(0.08, 0.06, 0.02, 0.9), 0.8 * maxf(1.0, _k * 0.6), true)
 	_draw_radar_attacks(map)
+
+
+func _is_tank(v: Node) -> bool:
+	var sc: Script = v.get_script()
+	return sc != null and String(sc.resource_path).get_file() == "tank.gd"
+
+
+## Een voertuig als klein silhouet in zijn rijrichting: romp, en bij een tank een loop.
+func _draw_vehicle(p: Vector2, yaw: float, col: Color, tank: bool, scale := 1.0, edge := Color(0.05, 0.08, 0.04, 0.9)) -> void:
+	var f := Vector2(sin(yaw), cos(yaw))   # voorkant in kaartrichting (x oost, z zuid = omlaag)
+	var s := Vector2(f.y, -f.x)
+	var L := 4.4 * _k * scale
+	var W := 2.8 * _k * scale
+	var hull := PackedVector2Array([p + f * L + s * W, p + f * L - s * W, p - f * L - s * W, p - f * L + s * W])
+	_cv.draw_colored_polygon(hull, col)
+	_cv.draw_polyline(PackedVector2Array([hull[0], hull[1], hull[2], hull[3], hull[0]]), edge, 0.8 * maxf(1.0, _k * 0.5), true)
+	if tank:
+		_cv.draw_line(p, p + f * L * 1.7, edge, 1.6 * _k * scale * 0.6, true)
+		_cv.draw_circle(p, W * 0.6, edge)
+
+
+## Wat de camera nu in beeld heeft, als stippelkader op de kaart (keuze 1A).
+func _draw_view(map: Rect2) -> void:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null or Game.build_mode:
+		return
+	var vs := get_viewport().get_visible_rect().size
+	var pts := PackedVector2Array()
+	for c in [Vector2.ZERO, Vector2(vs.x, 0.0), vs, Vector2(0.0, vs.y)]:
+		var o := cam.project_ray_origin(c)
+		var d := cam.project_ray_normal(c)
+		if d.y > -0.05:
+			d.y = -0.05   # bovenrand richting de horizon: niet oneindig ver
+		var t := -o.y / d.y
+		var g := o + d * minf(t, 160.0)
+		pts.append(_radar_point(g, map))
+	pts.append(pts[0])
+	_cv.draw_polyline(pts, Color(0.92, 0.94, 0.86, 0.55), 1.0, true)
 
 
 ## Hoofdkwartier niveau 2: de radarring (bereik) met een zwaaiende lijn, zoals de draaiende schotel op het dak.
@@ -457,6 +589,8 @@ func _draw_hq_radar(map: Rect2, base: Vector2) -> void:
 
 ## Wie ziet dit punt: de speler, de basis, een toren, een soldaat of een eigen gebouw.
 func _in_friendly_sight(pos: Vector3) -> bool:
+	if Game.satelliet_t > 0.0:
+		return true   # kracht SATELLIET (Rang): alle vijanden staan op de kaart
 	if Game.hq_level >= 2 and Vector2(pos.x - Game.base_pos.x, pos.z - Game.base_pos.z).length() <= HqPerks.RADAR_RANGE:
 		return true   # hoofdkwartier niveau 2: de radar ziet alles binnen 85 m
 	var player: Node3D = Game.player
@@ -484,6 +618,8 @@ func _enemy_vis(enemy: Node3D) -> float:
 	var now := Time.get_ticks_msec() / 1000.0
 	var id := enemy.get_instance_id()
 	if _in_friendly_sight(enemy.global_position):
+		if not _first.has(id) or now - float(_seen.get(id, -999.0)) > 20.0:
+			_first[id] = now   # nieuw (of lang weg geweest): even laten knipperen
 		_seen[id] = now
 		return 1.0
 	var last: float = _seen.get(id, -999.0)
@@ -596,11 +732,11 @@ func _layout() -> void:
 	_status_panel.size = Vector2(minf(size.x * 0.42, 190.0), 48.0)
 	_top_right.reset_size()
 	_camera_controls.position = Vector2(safe.x, safe.y + _status_panel.size.y + 7.0)
-	# killstreak-teller: liggend rechts naast de balken, staand eronder (daar staan de TACTISCH-knoppen niet)
+	# rang (sterren en balk): liggend rechts naast de balken, staand eronder (daar staan de TACTISCH-knoppen niet)
 	if size.x < size.y:
-		_streak.position = Vector2(safe.x + 2.0, safe.y + _status_panel.size.y + 5.0)
+		_rang.position = Vector2(safe.x + 2.0, safe.y + _status_panel.size.y + 5.0)
 	else:
-		_streak.position = Vector2(safe.x + _status_panel.size.x + 8.0, safe.y + 8.0)
+		_rang.position = Vector2(safe.x + _status_panel.size.x + 8.0, safe.y + 8.0)
 	_radar.position = Vector2(size.x - safe.z - _radar.size.x, safe.y + 8.0)
 	_menu_button.position = Vector2(_radar.size.x - 38.0, 4.0)
 	if size.x < size.y:
@@ -636,6 +772,14 @@ func _process(delta: float) -> void:
 	var active_hud := Game.state == "play" or Game.state == "prep"
 	_camera_controls.visible = active_hud and not Game.build_mode and size.x >= size.y
 	_radar.visible = active_hud
+	if active_hud and not Game.editing:
+		# de eerste foto zodra de wereld staat, en opnieuw als het hoofdkwartier is uitgeklapt
+		if KaartFoto.tex == null and not _foto.busy() and KaartFoto.age() > 999.0:
+			_foto.request(20)
+			KaartFoto.made_at = Time.get_ticks_msec() / 1000.0 - 990.0   # niet elk beeld opnieuw vragen als het mislukt
+		elif Game.mcv_deployed != _foto_hq and not _foto.busy():
+			_foto_hq = Game.mcv_deployed
+			_foto.request(45)
 	if active_hud:
 		_update_camera_controls()
 		_radar_refresh -= delta
@@ -654,11 +798,20 @@ func _process(delta: float) -> void:
 	_score.text = "★ %s" % UI.nl(Game.score)
 	_base_bar.value = Game.base_hp / Game.base_max
 	var p = Game.player
+	var vf := VoertuigSchade.bestuurd_fractie()   # zit je in je jeep of tank, dan toont de balk het voertuig (V3)
 	if p:
-		_hp_bar.value = p.hp / Game.max_hp()
-		if _last_hp >= 0.0 and p.hp < _last_hp:
+		_hp_bar.value = vf if vf >= 0.0 else p.hp / Game.max_hp()
+		_hp_bar.tooltip_text = ("%s" % VoertuigSchade.bestuurd_naam()) if vf >= 0.0 else "Spelergezondheid"
+		if (vf >= 0.0) != _veh_fill:
+			_veh_fill = vf >= 0.0
+			_hp_bar.add_theme_stylebox_override("fill", UI.box(Color8(112, 176, 84) if _veh_fill else UI.BLOOD_HI, Color(0, 0, 0, 0), 0, 1, 0))
+		if vf >= 0.0:
+			if _last_vf >= 0.0 and vf < _last_vf:
+				_hurt_a = 0.5
+		elif _last_hp >= 0.0 and p.hp < _last_hp:
 			_hurt_a = 0.5
 		_last_hp = p.hp
+		_last_vf = vf
 		if p.weapon != _last_weapon:
 			if _last_weapon != "":
 				_weapon.text = Data.WEAPONS[p.weapon].name.to_upper()
@@ -684,7 +837,7 @@ func _process(delta: float) -> void:
 	_hurt_a = maxf(0.0, _hurt_a - delta)
 	var low_hp := 0.0
 	if p and Game.state == "play":
-		var f: float = p.hp / Game.max_hp()
+		var f: float = vf if vf >= 0.0 else p.hp / Game.max_hp()
 		if f < 0.3:
 			low_hp = (0.3 - f) * 2.0 * (0.6 + 0.4 * sin(Time.get_ticks_msec() / 180.0))
 	(_hurt.material as ShaderMaterial).set_shader_parameter("amount", clampf(maxf(_hurt_a * 2.0, low_hp), 0.0, 1.0))

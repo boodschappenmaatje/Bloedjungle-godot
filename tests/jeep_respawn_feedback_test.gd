@@ -50,7 +50,10 @@ func _run() -> void:
 	jeep._toggle()
 	_check("jeep can be driven", jeep.driven and player.driving and not player.visible)
 	var parked: Vector3 = jeep.global_position
+	# Stap V3: in je jeep vangt de jeep de schade op; je sneuvelt pas als de jeep vernield wordt.
 	player.hit(99999.0, Vector3.FORWARD, false)
+	_check("zittend in de jeep raakt een kogel jou niet persoonlijk", not player.dead and player.hp > 0.0)
+	jeep._schade.take(99999.0, Vector3.FORWARD)
 	_check("player died inside jeep", player.dead and player.respawn_t > 0.0)
 	await _frames(3)
 	_check("death forcibly ends jeep driving", not jeep.driven and not player.driving)

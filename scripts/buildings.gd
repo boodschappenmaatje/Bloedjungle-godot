@@ -67,8 +67,24 @@ static func time_factor() -> float:
 
 
 ## Seconden per rekruut in deze kazerne, met de bonus van het hoofdkwartier.
+## Seconden training voor de soldaat die nu vooraan in de rij staat (of een gewone schutter als de rij leeg is): per soort een eigen tijd (Data.SOLDIER_TYPES).
 static func train_time(b: Dictionary) -> float:
-	return float(LEVELS[b.lv].time) * time_factor()
+	var q: Array = b.get("queue_kinds", [])
+	var mult := float(Data.SOLDIER_TYPES[q[0]].time) if not q.is_empty() and Data.SOLDIER_TYPES.has(q[0]) else 1.0
+	return float(LEVELS[b.lv].time) * time_factor() * mult
+
+
+static func soldier_cost(kind: String) -> int:
+	return int(Data.SOLDIER_TYPES[kind].cost) if Data.SOLDIER_TYPES.has(kind) else TRAIN_COST
+
+
+## Wat de soldaten in de rij samen kostten (voor het terugkrijgen bij verkopen).
+static func queue_value(b: Dictionary) -> int:
+	var v := 0
+	var q: Array = b.get("queue_kinds", [])
+	for i in int(b.queue):
+		v += soldier_cost(String(q[i])) if i < q.size() else TRAIN_COST
+	return v
 
 
 func count(kind: String) -> int:
@@ -162,6 +178,10 @@ func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null)
 		ex.append(me.node.get_rid())
 	if _hits(Vector3(sz.x - 0.2, 1.0, sz.z - 0.2) if piece else Vector3(sz.x + 0.4, 1.0, sz.z + 0.4), at, yaw, ex):
 		return _placement_result(false, "Te dicht bij bestaande gebouwen", 0)
+	if kind == "depot" and Game.supply != null and is_instance_valid(Game.supply):
+		var stem_why: String = Game.supply.stem_blocker(at, yaw, me)
+		if stem_why != "":
+			return _placement_result(false, "Uitrit geblokkeerd: " + stem_why, 0)
 	if piece or kind == "helipad":
 		var removable_piece := Foliage.count_clearable_in_regions(_clearance_regions(kind), at, yaw) if is_inside_tree() else 0
 		return _placement_result(true, "Bouwen mogelijk — begroeiing wordt verwijderd" if removable_piece > 0 else "Bouwen mogelijk", removable_piece)
@@ -280,6 +300,12 @@ func _first_protected_overlap(query: PhysicsShapeQueryParameters3D) -> Object:
 		var found_clearable := false
 		for hit: Dictionary in hits:
 			var collider: Object = hit.get("collider")
+			if collider is VoorraadTruck:   # een rijdende truck houdt geen gebouw tegen (hij rijdt weg)
+				var truck_rid: RID = hit.get("rid", RID())
+				if truck_rid.is_valid() and not excluded.has(truck_rid):
+					excluded.append(truck_rid)
+					found_clearable = true
+				continue
 			if Foliage.collider_is_clearable(collider):
 				var rid: RID = hit.get("rid", RID())
 				if rid.is_valid() and not excluded.has(rid):
@@ -421,7 +447,7 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 	node.position = at
 	node.rotation.y = yaw
 	add_child(node)
-	var b := {"kind": kind, "node": node, "at": at, "yaw": yaw, "lv": 1, "queue": 0, "train_t": 0.0,
+	var b := {"kind": kind, "node": node, "at": at, "yaw": yaw, "lv": 1, "queue": 0, "queue_kinds": [], "train_t": 0.0,
 		"hp": DEFS[kind].hp, "max_hp": DEFS[kind].hp, "down": false, "cracked": false, "fx": null, "bar": null,
 		"rij": null, "rally": Vector3.ZERO, "has_rally": false, "rally_mode": "volgen", "flag": null}
 	node.ref = b
@@ -644,6 +670,19 @@ func damage(b: Dictionary, dmg: float) -> void:
 	Game.changed.emit()
 
 
+## Noodreparatie (Rang): een gebouw of bouwstuk krijgt levenspunten terug; boven de helft is het niet meer gebarsten of brandend.
+func heal(b: Dictionary, amount: float) -> void:
+	if b.down or amount <= 0.0 or not Game.buildings.has(b):
+		return
+	b.hp = minf(float(b.max_hp), float(b.hp) + amount)
+	if b.cracked and b.hp >= b.max_hp * 0.5:
+		b.cracked = false
+		if is_piece(b.kind):
+			b.node.scale.y = 1.0
+		_clear_fx(b)
+	Game.changed.emit()
+
+
 func _break(b: Dictionary) -> void:
 	var at: Vector3 = b.node.global_position
 	if is_piece(b.kind):
@@ -708,7 +747,7 @@ func sell_value(b: Dictionary) -> int:
 	if b.kind == "kazerne":
 		for l in range(2, b.lv + 1):
 			spent += LEVELS[l].cost
-	return roundi(spent * (0.25 if b.down else 0.5)) + b.queue * TRAIN_COST
+	return roundi(spent * (0.25 if b.down else 0.5)) + queue_value(b)
 
 
 func sell(b: Dictionary) -> void:
@@ -717,12 +756,21 @@ func sell(b: Dictionary) -> void:
 	Sfx.play("buy")
 
 
+var last_turn_why := ""   # waarom het draaien niet lukte (de reden van de eerste stand), voor de melding
+
+
+## Draait een gebouw een kwartslag; kan die stand niet (bijvoorbeeld door de uitrit van een depot), dan de eerstvolgende die wel kan.
 func turn(b: Dictionary) -> bool:
-	var ny: float = fposmod(b.yaw + PI / 2.0, TAU)
-	if not can_place(b.kind, b.at, ny, b):
-		return false
-	move_to(b, b.at, ny)
-	return true
+	last_turn_why = ""
+	for i in range(1, 4):
+		var ny: float = fposmod(b.yaw + float(i) * PI / 2.0, TAU)
+		var st: Dictionary = placement_status(b.kind, b.at, ny, b)
+		if bool(st.valid):
+			move_to(b, b.at, ny)
+			return true
+		if last_turn_why == "":
+			last_turn_why = String(st.reason)
+	return false
 
 
 # ---------------------------------------------------------------- kazerne
@@ -750,12 +798,18 @@ func room(b: Dictionary) -> int:
 	return LEVELS[b.lv].max - soldiers_alive() - queued()
 
 
-func recruit(b: Dictionary) -> void:
-	if b.down or under_construction(b) or room(b) <= 0 or b.queue >= RIJ_MAX or not Game.pay_points(TRAIN_COST):
+## Zet een soldaat van deze soort (Data.SOLDIER_TYPES) in de bouwrij van de kazerne.
+func recruit(b: Dictionary, kind := "geweer") -> void:
+	if not Data.SOLDIER_TYPES.has(kind):
 		return
-	if b.queue == 0:
-		b.train_t = train_time(b)
+	if b.down or under_construction(b) or room(b) <= 0 or b.queue >= RIJ_MAX or not Game.pay_points(soldier_cost(kind)):
+		return
+	if not b.has("queue_kinds"):
+		b["queue_kinds"] = []
+	(b.queue_kinds as Array).append(kind)
 	b.queue += 1
+	if b.queue == 1:
+		b.train_t = train_time(b)
 	Game.changed.emit()
 
 
@@ -805,7 +859,9 @@ func cancel_recruit(b: Dictionary) -> void:
 	if b.queue <= 0:
 		return
 	b.queue -= 1
-	Game.points += TRAIN_COST
+	var kinds: Array = b.get("queue_kinds", [])
+	var gone: String = String(kinds.pop_back()) if not kinds.is_empty() else "geweer"
+	Game.points += soldier_cost(gone)
 	if b.queue == 0:
 		b.train_t = 0.0
 	Sfx.play("ping", 0.5)
@@ -860,9 +916,10 @@ func upgrade(b: Dictionary) -> void:
 	Game.changed.emit()
 
 
-func _spawn(b: Dictionary) -> void:
+func _spawn(b: Dictionary, kind := "geweer") -> void:
 	var lv: Dictionary = LEVELS[b.lv]
 	var a := Ally.new()
+	a.kind = kind
 	add_child(a)
 	a.global_position = door_of(b)
 	a.face = b.yaw
@@ -871,7 +928,7 @@ func _spawn(b: Dictionary) -> void:
 	if b.rally_mode == "vlag" and b.has_rally:
 		a.set_command("defend", b.rally)
 	Sfx.play("reload")
-	Game.banner.emit("NIEUWE REKRUUT", "", 1.0)
+	Game.banner.emit("NIEUWE REKRUUT" if kind == "geweer" else "NIEUW: " + String(Data.SOLDIER_TYPES[kind].name).to_upper(), "", 1.0)
 	radio.say("eenheid_klaar")
 	Game.changed.emit()
 
@@ -919,8 +976,10 @@ func _physics_process(delta: float) -> void:
 		if b.kind == "kazerne" and not b.down and not under_construction(b) and b.queue > 0:
 			b.train_t -= delta
 			if b.train_t <= 0.0:
+				var kinds: Array = b.get("queue_kinds", [])
+				var kind: String = String(kinds.pop_front()) if not kinds.is_empty() else "geweer"
 				b.queue -= 1
-				_spawn(b)
+				_spawn(b, kind)
 				b.train_t = train_time(b)
 
 
@@ -1026,6 +1085,16 @@ func cancel_order(b: Dictionary, kind: String) -> void:
 	Game.points += VEHICLES[kind].cost
 	Sfx.play("ping", 0.5)
 	Game.changed.emit()
+
+
+## Een wagen van de garage is vernield (VoertuigSchade, stap V3, keuze 4A: weg is weg): hij telt niet meer mee bij "In dienst" en een nieuwe koop je opnieuw in de garage.
+func vehicle_lost(v: Node3D, kind: String) -> void:
+	for b in Game.buildings:
+		if b is Dictionary and b.get("kind", "") == "garage" and b.has("fleet") and (b.fleet as Array).has(v):
+			(b.fleet as Array).erase(v)
+			b.has[kind] = maxi(0, int(b.has[kind]) - 1)
+			Game.changed.emit()
+			return
 
 
 func _front(b: Dictionary) -> Vector3:

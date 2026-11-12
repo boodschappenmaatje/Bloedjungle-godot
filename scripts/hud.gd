@@ -3,7 +3,7 @@ extends CanvasLayer
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
 const VLIEGTUIG := preload("res://scripts/vliegtuig.gd")
-const VERSION := "v194"
+const VERSION := "v225"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -39,6 +39,10 @@ func _ready() -> void:
 	add_child(GateHud.new())
 	# Last in this CanvasLayer so modal TEAM input blocks taps from reaching other HUD buttons.
 	add_child(load("res://scripts/team_commands.gd").new())
+	# troepenbevel (11 nov 2026): de keuzelijst en de bevelstand met de BEVEL-knop; de bevelstand komt na het teamwiel
+	# zodat hij in de bevelstand als eerste de aanrakingen krijgt
+	add_child(TroepSelectie.new())
+	add_child(BevelStand.new())
 	_style()
 	# schermtekst en sticks schalen mee met de schermgrootte: op een telefoon staat 1 punt = meerdere pixels
 	get_window().size_changed.connect(_rescale)

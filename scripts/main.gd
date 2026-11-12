@@ -54,6 +54,8 @@ func begin() -> void:
 func _start_world() -> void:
 	for n in get_tree().get_nodes_in_group("mcv"):
 		n.queue_free()
+	for n in get_tree().get_nodes_in_group("mcv_wagen"):
+		n.queue_free()   # de geparkeerde bouwwagen van een vorig spel
 	for n in get_tree().get_nodes_in_group("mcv_hq"):
 		n.queue_free()   # het hoofdkwartier van een vorig spel
 	Game.supply.start_game()   # MCV-start: alleen de voorraadstapels; het depot is gratis maar zet je zelf neer
@@ -79,6 +81,8 @@ func _load_world() -> void:
 	if lvl.get("built"):
 		return
 	var instant := DisplayServer.get_name() == "headless" or OS.has_environment("BJ_INSTANT")
+	if not instant and not Engine.is_editor_hint():
+		Data.randomize_world_seed()   # wereld per start (W1): nieuwe jungle-seed, eenmaal per spelsessie; headless/tests/editor blijven op Data.WORLD_SEED_DEFAULT
 	var screen := Loading.new()
 	if not instant:
 		add_child(screen)
@@ -190,13 +194,15 @@ static func _pipeline_compiles() -> int:
 func _start_prep() -> void:
 	Barrel.populate(self)  # opgeblazen vaten komen terug
 	queue.clear()
-	Game.wave = 0
-	Game.next_routes = AanvalRoutes.pick_group(1)
+	Game.wave = maxi(0, Progress.test_groep - 1)   # testoptie: de eerste groep die uitrukt is dan groep test_groep
+	Game.next_routes = AanvalRoutes.pick_group(Game.wave + 1)
 	Game.routes = Game.next_routes.duplicate()  # de pijlen tonen al tijdens de rust waar de eerste groep vandaan komt
 	Game.state = "prep"
-	Game.prep_t = Data.MCV_RUST
+	Game.prep_t = Progress.eerste_rust()
 	clear_t = -1.0
 	Game.changed.emit()
+	if Progress.test_groep > 0:
+		Game.banner.emit("TEST · START BIJ GROEP %d" % Progress.test_groep, PauseMenu.groep_inhoud(Progress.test_groep), 3.0)
 
 
 ## De volgende aanvalsgroep komt nu uit de poort van de vijandbasis ("Start nu", of het aftellen is op).
@@ -214,9 +220,14 @@ func _launch_group() -> void:
 	var routes: Array = Game.next_routes.duplicate()
 	if routes.is_empty():
 		routes = AanvalRoutes.pick_group(Game.wave)
+	var was_leeg := queue.is_empty()
 	for kind in Data.build_group(Game.wave):
 		queue.append({"kind": kind, "n": Game.wave, "routes": routes})
-	if queue.size() == Data.build_group(Game.wave).size():
+	# voertuigen (Dennis, keuze 1B): ze rukken uit voor de soldaten, en rijden hun eigen weg (AanvalRoutes.voertuig_pad)
+	var voertuigen := Data.groep_voertuigen(Game.wave)
+	for i in voertuigen.size():
+		queue.insert(i, {"kind": voertuigen[i], "n": Game.wave, "voertuig": true})
+	if was_leeg:
 		spawn_t = 0.5   # de enige wachtende groep: de eerste vijand komt snel
 	clear_t = -1.0
 	Game.routes = routes
@@ -238,7 +249,11 @@ func _process(delta: float) -> void:
 		if queue.size():
 			spawn_t -= delta
 			var max_alive := 22 + mini(18, Game.wave * 2)
-			if spawn_t <= 0.0 and Game.enemies.size() < max_alive:
+			var volgend: Variant = queue[0]
+			var wacht_op_plek: bool = volgend is Dictionary and volgend.get("voertuig", false) and get_tree().get_nodes_in_group("vijand_voertuig").size() >= Data.VOERTUIG_MAX
+			if wacht_op_plek and queue.size() > 1:
+				queue.push_back(queue.pop_front())   # er rijden al drie voertuigen: de soldaten gaan voor, het voertuig wacht achteraan
+			elif spawn_t <= 0.0 and Game.enemies.size() < max_alive and not wacht_op_plek:
 				_spawn(queue.pop_front())
 				spawn_t = maxf(0.25, 1.2 - Game.wave * 0.06) * randf_range(0.6, 1.3)
 				if queue.is_empty():
@@ -254,6 +269,9 @@ func _process(delta: float) -> void:
 ## Eén vijand uit de wachtrij laten uitrukken. Een kale soort ("rocket") mag ook (tests): dan gelden de routes van nu.
 func _spawn(item: Variant) -> void:
 	PerfMonitor.note("vijand gespawnd")
+	if item is Dictionary and item.get("voertuig", false):
+		_spawn_voertuig(item)
+		return
 	var entry: Dictionary = item if item is Dictionary else {"kind": String(item), "n": maxi(1, Game.wave), "routes": Game.routes if not Game.routes.is_empty() else AanvalRoutes.pick_group(1)}
 	# Resolve again at spawn time: the setting may change while a group
 	# is already queued. Never leave old, invisible attackers in the world.
@@ -276,6 +294,19 @@ func _spawn(item: Variant) -> void:
 	add_child(e)
 
 
+## Een vijandelijk voertuig rijdt uit de poort van de vijandbasis: de weg staat in AanvalRoutes.voertuig_pad. De jeep (stap V1) rijdt snel en schiet met zijn MG,
+## de tank (stap V2) rijdt langzaam, stopt op afstand van het eerste doel en beschiet het met granaten.
+func _spawn_voertuig(entry: Dictionary) -> void:
+	var tank: bool = str(entry.kind) == "tank"
+	var v: Node3D = VijandTank.make(AanvalRoutes.voertuig_pad(true), int(entry.n)) if tank else VijandJeep.make(AanvalRoutes.voertuig_pad(), int(entry.n))
+	v.position = VijandBasis.gate_inside() + Vector3(0.0, 0.0, -2.0)
+	v.rotation.y = PI   # met de neus naar de poort (zuid)
+	add_child(v)
+	Game.banner.emit("VIJANDELIJKE TANK ONDERWEG" if tank else "VIJANDELIJKE JEEP ONDERWEG", "Hij rijdt door de stad naar je basis" if not tank else "Hij belegert alles binnen 38 m met granaten", 2.0)
+	if Game.builds != null and Game.builds.radio != null:
+		Game.builds.radio.say("voertuig_onderweg")   # Dennis neemt de zin nog op; zonder opname blijft het stil
+
+
 ## Applied by the Settings toggle, including while the mission is paused.
 ## Existing legacy enemies leave the combat list and are freed, never merely
 ## hidden while continuing to collide, shoot or damage the player.
@@ -283,10 +314,10 @@ func apply_enemy_model_filter() -> void:
 	if GameSettings.get_value("enemy_models") != "meshy":
 		return
 	for item in queue:
-		if item is Dictionary:
+		if item is Dictionary and not item.get("voertuig", false):
 			item["kind"] = "assault"
 	for enemy in Game.enemies.duplicate():
-		if not is_instance_valid(enemy) or str(enemy.get("type")) == "assault":
+		if not is_instance_valid(enemy) or str(enemy.get("type")) == "assault" or enemy.is_in_group("vijand_voertuig"):
 			continue
 		Game.enemies.erase(enemy)
 		enemy.visible = false
@@ -301,8 +332,8 @@ func _wave_cleared() -> void:
 	clear_t = -1.0
 	Game.routes = Game.next_routes.duplicate()
 	Barrel.populate(self)  # opgeblazen vaten komen terug
-	Game.streak_reset()
-	Progress.stats.bestWave = maxi(Progress.stats.bestWave, Game.wave)
-	Progress.save()
+	if Progress.test_groep == 0:   # een testspel (start bij groep N) telt niet mee als "beste groep"
+		Progress.stats.bestWave = maxi(Progress.stats.bestWave, Game.wave)
+		Progress.save()
 	Game.banner.emit("GROEP %d AFGESLAGEN" % Game.wave, "Volgende groep over %d s" % ceili(maxf(Game.prep_t, 0.0)), 3.0)
 	Game.changed.emit()

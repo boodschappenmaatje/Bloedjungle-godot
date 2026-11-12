@@ -11,6 +11,9 @@ var _download: Button
 var _back: Button
 var _close: Button
 var _balk: ProgressBar
+var _center: CenterContainer
+var _paneel: PanelContainer
+var _kolommen: BoxContainer
 
 
 ## Opent het scherm onder `parent` (één tegelijk).
@@ -26,53 +29,89 @@ func _ready() -> void:
 	add_to_group("update_panel")
 	layer = 30
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	var bg := TextureRect.new()
+	bg.texture = load("res://assets/ui/main_menu_bunker.jpg") as Texture2D
+	bg.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	bg.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(bg)
 	var dim := ColorRect.new()
-	dim.color = Color(0, 0, 0, 0.7)
+	dim.color = Color(0.015, 0.022, 0.015, 0.42)
+	dim.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	add_child(dim)
-	var c := CenterContainer.new()
-	c.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	add_child(c)
-	var pc := PanelContainer.new()
-	pc.custom_minimum_size = Vector2(430, 0)
-	pc.add_theme_stylebox_override("panel", UI.box(UI.PANEL, UI.PANEL_LINE, 1, 6, 16))
-	c.add_child(pc)
+
+	# donker paneel met kop en SLUITEN rechtsboven, net als de andere menu's; liggend tekst links en knoppen rechts,
+	# staand onder elkaar. Geen scrollbalk.
+	_center = CenterContainer.new()
+	_center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(_center)
+	_paneel = PanelContainer.new()
+	var sb := UI.box(Color(0.043, 0.052, 0.03, 0.9), Color(UI.BRASS, 0.55), 1, 6, 16)
+	sb.shadow_color = Color(0, 0, 0, 0.55)
+	sb.shadow_size = 24
+	_paneel.add_theme_stylebox_override("panel", sb)
+	_center.add_child(_paneel)
+	var blad := VBoxContainer.new()
+	blad.add_theme_constant_override("separation", 12)
+	_paneel.add_child(blad)
+	var kop := HBoxContainer.new()
+	kop.add_theme_constant_override("separation", 12)
+	blad.add_child(kop)
+	var titel := UI.label("UPDATES", UI.display(1), 28, UI.INK)
+	titel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	titel.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	kop.add_child(titel)
+	_close = _knop("SLUITEN", "field_primary", queue_free)
+	_close.custom_minimum_size = Vector2(112, 42)
+	_close.add_theme_font_size_override("font_size", 17)
+	_close.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	kop.add_child(_close)
+	_kolommen = BoxContainer.new()
+	_kolommen.add_theme_constant_override("separation", 20)
+	blad.add_child(_kolommen)
 	var v := VBoxContainer.new()
-	v.add_theme_constant_override("separation", 8)
-	pc.add_child(v)
-	v.add_child(UI.label("UPDATES", UI.display(1), 28, UI.INK))
-	_info = UI.label("", UI.body(600, 0), 13, UI.INK_DIM)
+	v.add_theme_constant_override("separation", 9)
+	v.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_kolommen.add_child(v)
+	var knoppen := VBoxContainer.new()
+	knoppen.add_theme_constant_override("separation", 9)
+	knoppen.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_kolommen.add_child(knoppen)
+
+	_info = UI.label("", UI.body(600, 1), 15, UI.INK)
 	_info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(_info)
-	_status = UI.label("", UI.body(700, 0), 15, UI.BRASS)
+	_status = UI.label("", UI.body(700, 1), 16, UI.BRASS)
 	_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(_status)
 	_balk = ProgressBar.new()
 	_balk.show_percentage = false
-	_balk.custom_minimum_size.y = 8
+	_balk.custom_minimum_size.y = 9
 	_balk.visible = false
 	v.add_child(_balk)
-	var hint := UI.label("Toegangstoken (GitHub, alleen-lezen, alleen deze repository). Wordt alleen op dit toestel bewaard.", UI.body(600, 0), 12, UI.INK_DIM)
+	var hint := UI.label("Toegangstoken (GitHub, alleen-lezen, alleen deze repository). Wordt alleen op dit toestel bewaard.", UI.body(600, 0), 13, UI.INK_DIM)
 	hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	v.add_child(hint)
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 6)
-	v.add_child(row)
+	var token_row := HBoxContainer.new()
+	token_row.add_theme_constant_override("separation", 8)
+	v.add_child(token_row)
 	_token = LineEdit.new()
 	_token.secret = true
 	_token.placeholder_text = "github_pat_…" if Updater.token() == "" else "(ingevuld; plak een nieuw token om te vervangen)"
 	_token.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(_token)
-	var save := _knop("Opslaan", "secondary", _sla_token_op)
-	row.add_child(save)
-	_check = _knop("Controleer op updates", "secondary", func(): Updater.controleer())
-	v.add_child(_check)
-	_download = _knop("Download en installeer", "primary", _download_met_lange_timeout)
-	v.add_child(_download)
-	_back = _knop("Terugdraaien naar de app-versie", "secondary", func(): Updater.terugdraaien())
-	v.add_child(_back)
-	_close = _knop("Sluiten", "secondary", queue_free)
-	v.add_child(_close)
+	token_row.add_child(_token)
+	var save := _knop("OPSLAAN", "field", _sla_token_op)
+	token_row.add_child(save)
+	_check = _knop("CONTROLEREN OP UPDATES", "field", func(): Updater.controleer())
+	knoppen.add_child(_check)
+	_download = _knop("DOWNLOADEN EN INSTALLEREN", "field_primary", _download_met_lange_timeout)
+	knoppen.add_child(_download)
+	_back = _knop("TERUGDRAAIEN NAAR APP-VERSIE", "field", func(): Updater.terugdraaien())
+	knoppen.add_child(_back)
+	get_viewport().size_changed.connect(_schik)
+	_schik()
 	Updater.status_changed.connect(_ververs)
 	_ververs()
 
@@ -358,11 +397,24 @@ func _ruim_keten_op(houd: Array) -> void:
 			dir.remove(f)
 
 
+## Binnen de veilige marges blijven; staand de knoppen onder de tekst.
+func _schik() -> void:
+	var vp := get_viewport().get_visible_rect().size
+	var safe := UI.safe_margins(vp, 10.0)
+	_center.offset_left = safe.x
+	_center.offset_top = safe.y
+	_center.offset_right = -safe.z
+	_center.offset_bottom = -safe.w
+	_kolommen.vertical = vp.y > vp.x
+	_paneel.custom_minimum_size.x = minf(900.0, vp.x - safe.x - safe.z)
+
+
 func _knop(text: String, kind: String, cb: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.focus_mode = Control.FOCUS_NONE
 	UI.style_button(b, kind)
+	b.custom_minimum_size.y = 52.0 if kind == "field_primary" else 46.0
 	b.pressed.connect(cb)
 	return b
 

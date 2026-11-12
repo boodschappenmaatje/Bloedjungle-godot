@@ -23,7 +23,8 @@ func build_now() -> void:
 	River.build(self)
 	Stad.build(self)
 	VijandBasis.build(self)
-	Foliage.plant(self)
+	Foliage.plant(self, Data.world_seed)
+	Bosbrand.setup(self)
 	built = true
 
 
@@ -46,7 +47,8 @@ func build_stepped(progress: Callable) -> void:
 	var order := ["palm", "bush", "fern", "grass", "rock"]
 	var step := func(kind: String) -> void:
 		await tick.call(0.3 + 0.12 * order.find(kind), names[kind])
-	await Foliage.plant(self, 11, step)
+	await Foliage.plant(self, Data.world_seed, step)
+	Bosbrand.setup(self)
 	built = true
 
 
@@ -76,6 +78,13 @@ func _ground() -> void:
 	mat.set_shader_parameter("mud_tex", load("res://assets/textures/terrain/gravel_rock/base_color.jpg"))
 	mat.set_shader_parameter("dirt_height", load("res://assets/textures/terrain/dry_earth/roughness.jpg"))
 	mat.set_shader_parameter("dirt_normal", load("res://assets/textures/terrain/dry_earth/normal_gl.jpg"))
+	# wereld per start W2: de rivier-kronkel in de shader moet de Data.river_z()-vorm van deze sessie volgen
+	mat.set_shader_parameter("river_amp1", Data._river_amp1)
+	mat.set_shader_parameter("river_freq1", Data._river_freq1)
+	mat.set_shader_parameter("river_phase1", Data._river_phase1)
+	mat.set_shader_parameter("river_amp2", Data._river_amp2)
+	mat.set_shader_parameter("river_freq2", Data._river_freq2)
+	mat.set_shader_parameter("river_phase2", Data._river_phase2)
 	mesh.material_override = mat
 	body.add_child(mesh)
 	body.add_to_group("ground")

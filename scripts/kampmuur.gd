@@ -127,6 +127,169 @@ static func existing() -> Dictionary:
 	return out
 
 
+## Soldaten zoeken zelf hun weg om de muren van jouw kamp en door de poort (die gaat voor hen vanzelf open). Kruist de rechte lijn naar het doel een
+## muur, dan loopt hij over het rooster (de cellen tussen vier roosterpunten, zoals bij de omheining) langs de open randen en poorten naar het doel.
+## Geeft het middelpunt van de eerstvolgende cel, of null als je rechtdoor kunt lopen (geen muren, geen muur in de weg, al in de cel van het doel).
+static var _walls_cache: Dictionary = {}
+static var _walls_t := -100000
+static var _all_cache: Dictionary = {}
+static var _route_cache: Dictionary = {}
+
+
+static func _walls() -> Dictionary:
+	var now := Time.get_ticks_msec()
+	if now - _walls_t > 1500:
+		_walls_t = now
+		_route_cache = {}
+		var out := {}
+		var all := existing()
+		for k in all:
+			var w: Dictionary = all[k]
+			if str(w.get("kind", "")) == "kampmuur":   # een poort is geen muur: daar mag je door
+				out[k] = true
+		_walls_cache = out
+		_all_cache = all
+	return _walls_cache
+
+
+static func _cell_of(p: Vector3) -> Vector2i:
+	return Vector2i(floori(p.x / STEP), floori(p.z / STEP))
+
+
+## Staat er een muur tussen deze twee buurcellen?
+static func _blocked(walls: Dictionary, c: Vector2i, step: Vector2i) -> bool:
+	for m in cell_moves(c):
+		if m[0] == step:
+			return walls.has(m[1])
+	return false
+
+
+## Kruist de rechte lijn van `from` naar `goal` een muur?
+static func _crosses(walls: Dictionary, from: Vector3, goal: Vector3, half := 0.7) -> bool:
+	# ook strak langs een muurkop of de rand van een poortopening telt (een soldaat is geen punt): dus de lijn en twee lijnen 0,7 m ernaast (een voertuig: de halve breedte van zijn romp)
+	var d := Vector2(goal.x - from.x, goal.z - from.z)
+	var side := Vector3(-d.y, 0.0, d.x).normalized() * half if d.length() > 0.01 else Vector3.ZERO
+	return _crosses_line(walls, from, goal) or _crosses_line(walls, from + side, goal + side) or _crosses_line(walls, from - side, goal - side)
+
+
+static func _crosses_line(walls: Dictionary, from: Vector3, goal: Vector3) -> bool:
+	var d := Vector2(goal.x - from.x, goal.z - from.z)
+	var n := maxi(1, ceili(d.length() / 1.2))
+	var prev := _cell_of(from)
+	for i in range(1, n + 1):
+		var t := float(i) / float(n)
+		var c := _cell_of(Vector3(from.x + d.x * t, 0.0, from.z + d.y * t))
+		if c != prev:
+			var dx := c.x - prev.x
+			var dy := c.y - prev.y
+			if dx != 0 and _blocked(walls, prev, Vector2i(dx, 0)):
+				return true
+			if dy != 0 and _blocked(walls, prev, Vector2i(0, dy)):
+				return true
+			if dx != 0 and dy != 0 and _blocked(walls, prev + Vector2i(0, dy), Vector2i(dx, 0)):
+				return true
+			prev = c
+	return false
+
+
+static func route_next(from: Vector3, goal: Vector3) -> Variant:
+	var walls := _walls()
+	if walls.is_empty():
+		return null
+	var a := _cell_of(from)
+	var b := _cell_of(goal)
+	if a == b or not _crosses(walls, from, goal):
+		return null
+	var key := Vector4i(a.x, a.y, b.x, b.y)
+	var path: Array
+	if _route_cache.has(key):
+		path = _route_cache[key]
+	else:
+		path = _bfs(walls, a, b)
+		_route_cache[key] = path
+	if path.size() < 2:
+		return null
+	# door een poort: dwars door het midden van de opening (de middelpunten van de cellen liggen er tegen de rand van de poortopening aan)
+	var step: Vector2i = path[1] - path[0]
+	for m in cell_moves(path[0]):
+		if m[0] == step and _all_cache.has(m[1]):
+			var g: Dictionary = _all_cache[m[1]]
+			return Vector3(g.at.x + step.x * 1.3, 0.0, g.at.z + step.y * 1.3)
+	return cell_center(path[1])
+
+
+## Voor een voertuig (jeep of tank, `half` m aan elke kant van zijn midden): dezelfde weg als `route_next`, maar dwars door het midden van de poort. Een voertuig is veel breder dan een soldaat
+## en haakt anders achter de rand van de opening. Eerst rijdt hij naar een punt 10 m voor de poort op de middellijn, dan door de poort naar een punt 10 m erachter. Is hij al uitgelijnd
+## (binnen een trechter rond de middellijn), dan rijdt hij meteen door. Geeft null als hij rechtdoor kan (geen muur in de weg, ook niet voor zijn romp).
+static func vehicle_next(from: Vector3, goal: Vector3, half: float) -> Variant:
+	var walls := _walls()
+	if walls.is_empty():
+		return null
+	var a := _cell_of(from)
+	var b := _cell_of(goal)
+	if a == b or not _crosses(walls, from, goal, half):
+		return null
+	var key := Vector4i(a.x, a.y, b.x, b.y)
+	var path: Array
+	if _route_cache.has(key):
+		path = _route_cache[key]
+	else:
+		path = _bfs(walls, a, b)
+		_route_cache[key] = path
+	if path.size() < 2:
+		return null
+	for i in path.size() - 1:
+		var step: Vector2i = path[i + 1] - path[i]
+		for m in cell_moves(path[i]):
+			if m[0] == step and _all_cache.has(m[1]):
+				var g: Dictionary = _all_cache[m[1]]
+				var at := Vector3(g.at.x, 0.0, g.at.z)
+				var dir := Vector3(step.x, 0.0, step.y)
+				var rel := from - at
+				var along := rel.x * dir.x + rel.z * dir.z   # < 0: nog voor de poort
+				var lat := absf(rel.x * dir.z - rel.z * dir.x)
+				if along > 0.5:
+					return null   # al voorbij het midden van de poort: gewoon verder naar het doel
+				if lat <= 0.9 + 0.12 * absf(along):
+					return at + dir * 10.0   # uitgelijnd: dwars door de poort
+				return at - dir * 10.0       # eerst naar de middellijn, 10 m voor de poort
+	return route_next(from, goal)
+
+
+## Kortste weg over het rooster van cel a naar cel b, rond de muren (poorten zijn open); leeg als er geen weg is.
+static func _bfs(walls: Dictionary, a: Vector2i, b: Vector2i) -> Array:
+	var lo := Vector2i(mini(a.x, b.x), mini(a.y, b.y))
+	var hi := Vector2i(maxi(a.x, b.x), maxi(a.y, b.y))
+	for k in walls:
+		lo = Vector2i(mini(lo.x, (k as Vector4i).x), mini(lo.y, (k as Vector4i).y))
+		hi = Vector2i(maxi(hi.x, (k as Vector4i).z), maxi(hi.y, (k as Vector4i).w))
+	lo -= Vector2i(4, 4)
+	hi += Vector2i(4, 4)
+	var came := {a: a}
+	var queue: Array = [a]
+	var qi := 0
+	while qi < queue.size():
+		var c: Vector2i = queue[qi]
+		qi += 1
+		if c == b:
+			break
+		for m in cell_moves(c):
+			var nx: Vector2i = c + (m[0] as Vector2i)
+			if came.has(nx) or walls.has(m[1]) or nx.x < lo.x or nx.y < lo.y or nx.x > hi.x or nx.y > hi.y:
+				continue
+			came[nx] = c
+			queue.append(nx)
+	if not came.has(b):
+		return []
+	var out: Array = [b]
+	var cur := b
+	while cur != a:
+		cur = came[cur]
+		out.append(cur)
+	out.reverse()
+	return out
+
+
 static func count() -> int:
 	var n := 0
 	for b in Game.buildings:
@@ -201,7 +364,36 @@ static func cell_center(c: Vector2i) -> Vector3:
 
 
 ## Na het bouwen of verkopen: is de eerste omheining nu compleet? Dan blijft alles wat tot nu toe gratis was gratis en kost elk volgend stuk 50.
+## Alles binnen de omheining verdwijnt vanzelf (bomen, struiken, gras, stammen, rotsen), waar het ook staat: het vierkant is dan van jou.
+static func clear_inside(walls: Dictionary = {}) -> int:
+	var cells := region(walls)
+	if cells.is_empty():
+		return 0
+	var rows := {}   # rij (z) -> de x-cellen in die rij
+	for c: Vector2i in cells:
+		if not rows.has(c.y):
+			rows[c.y] = []
+		(rows[c.y] as Array).append(c.x)
+	var rects: Array = []
+	for z in rows:
+		var xs: Array = rows[z]
+		xs.sort()
+		var start: int = xs[0]
+		var prev: int = xs[0]
+		for i in range(1, xs.size() + 1):
+			if i < xs.size() and int(xs[i]) == prev + 1:
+				prev = xs[i]
+				continue
+			rects.append(Rect2(start * STEP, int(z) * STEP, (prev - start + 1) * STEP, STEP))
+			if i < xs.size():
+				start = xs[i]
+				prev = xs[i]
+	return Foliage.clear_world_rects(rects, 0.4)
+
+
 static func check_enclosure() -> void:
+	if Game.mcv_deployed and enclosed():
+		clear_inside()
 	if Game.free_wall and Game.mcv_deployed and enclosed():
 		Game.free_wall = false
 		Game.banner.emit("OMHEINING COMPLEET", "Die was gratis · elk volgend muurstuk kost %d" % COST, 3.5)
@@ -318,12 +510,21 @@ static func build(path: Array) -> Dictionary:
 		Sfx.play("thud")
 		Game.changed.emit()
 		check_enclosure()
+	# het getrokken vierkant is van jou: ook als een stuk is overgeslagen (te duur, in de weg) verdwijnt de begroeiing binnen de lijnen
+	if Game.mcv_deployed and path.size() >= 4:
+		var plan := existing()
+		for k in path_edges(path):
+			if not plan.has(k):
+				plan[k] = {"kind": "plan"}
+		clear_inside(plan)
 	return r
 
 
 # ---------------------------------------------------------------- poort
 
 const GATE_COST := 100       # voorstel (Dennis heeft er nog geen prijs voor genoemd)
+const GATE_LANE_SIDE := 4.4   # m: half, langs de muur: de opening (3,4) plus ruimte voor een brede tank
+const GATE_LANE_ALONG := 9.0  # m: half, door de poort heen: wat een voertuig nodig heeft om rechtuit door de opening te rijden
 
 
 ## De twee randen en het midden voor een poort bij het aangetikte muurstuk `k`: het stuk zelf plus zijn buur in dezelfde lijn aan de kant van `toward`
@@ -362,11 +563,20 @@ static func place_gate(k: Vector4i, toward: Vector3) -> Dictionary:
 	Game.builds.remove(b1)
 	Game.builds.remove(b2)
 	Game.builds.batch = false
-	Game.gates.add_gate(pair[2], edge_yaw(pair[0]), pair[0], pair[1])
+	var gate: Dictionary = Game.gates.add_gate(pair[2], edge_yaw(pair[0]), pair[0], pair[1])
+	clear_gate_lane(Vector3(gate.at), float(gate.yaw))
 	Wachten.invalidate()
 	Sfx.play("thud")
 	check_enclosure()
 	return {"ok": true, "reason": ""}
+
+
+## Een poort ruimt de weg voor je voertuigen: bomen, stronken en rotsen vlak voor en achter de opening verdwijnen (zoals onder een gebouw), zodat een jeep of tank er nooit tegenaan blijft haken.
+static func clear_gate_lane(at: Vector3, yaw: float) -> int:
+	var half := Vector2(GATE_LANE_SIDE, GATE_LANE_ALONG)   # (langs de muur, door de poort)
+	if absf(cos(yaw)) < 0.5:
+		half = Vector2(half.y, half.x)
+	return Foliage.clear_world_rects([Rect2(Vector2(at.x, at.z) - half, half * 2.0)], 0.0)
 
 
 ## Verkoopt een poort: de helft van de prijs als bouwtegoed; de plek blijft open.

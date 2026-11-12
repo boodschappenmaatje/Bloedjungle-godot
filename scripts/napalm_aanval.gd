@@ -1,9 +1,9 @@
 class_name NapalmAanval
 extends Node3D
-## Killstreak NAPALM-AANVAL: een straaljager (assets/straaljager.glb) scheert laag over een strook van NAPALM_LENGTH x NAPALM_WIDTH meter
+## Kracht NAPALM (generaalsrang, Rang): een straaljager (assets/straaljager.glb) scheert laag over een strook van NAPALM_LENGTH x NAPALM_WIDTH meter
 ## en laat vier napalmbussen vallen die elk op een vast punt van de strook neerkomen. Elke bus ontploft in een vuurbal en laat
 ## brandende napalm achter; vijanden die in de strook staan of erin lopen vatten vlam, rennen 5 s panisch rond en vallen dan dood. De speler brandt een beetje mee als hij erin staat.
-## Schade telt als "lucht": die kills tellen niet mee voor je eigen streak.
+## Schade telt als "lucht" (geen bevestigde treffer van de speler); de score van de kills telt wel voor je rang.
 
 const JET_PAD := "res://assets/straaljager.glb"  # zwaar OTA-bestand: pas laden als het nodig is (zie tests/ota_vroeg_test.gd)
 const SPEED := 30.0       # m/s: veel langzamer dan eerst (58), zodat het toestel langer in beeld blijft
@@ -11,7 +11,7 @@ const HEIGHT := 13.0      # m boven de grond
 const LEAD := 70.0        # m voor de strook waar het toestel begint
 const FALL_V := 26.0      # m/s vooruitsnelheid van een losgelaten bus
 const GRAVITY := 22.0
-const BURN_TIME := 10.0
+const BURN_TIME := 10.0   # s vuur op niveau 1; hoger niveau: Rang.KRACHTEN.napalm.waarde (burn_time)
 const BURN_RUN := 5.0     # s dat een vijand brandend rondrent voor hij dood neervalt (enemy.gd: ignite)
 const SELF_DPS := 8.0
 const TICK := 0.25
@@ -27,6 +27,7 @@ const PUDDLE := preload("res://shaders/napalm_plas.gdshader")
 
 var center := Vector3.ZERO
 var dir := Vector3.FORWARD
+var burn_time := BURN_TIME   # s dat de strook brandt (Rang.gebruik zet hem naar het niveau van de kracht)
 var jet: Node3D
 var _t := 0.0
 var _bombs: Array = []        # [{node, released, hit, at (inslagpunt), s (positie langs de strook waar hij valt)}]
@@ -55,7 +56,7 @@ func start(target: Vector3, d: Vector3) -> void:
 	add_child(jet)
 	jet.top_level = true
 	jet.scale = Vector3.ONE * 0.8   # 13 m lang: past op het scherm en leest als een toestel boven de strook
-	_place(-LEAD - Streak.NAPALM_LENGTH * 0.5)
+	_place(-LEAD - Rang.NAPALM_LENGTH * 0.5)
 	jet.rotation.y = atan2(-dir.x, -dir.z)
 	_jet_visibility()
 	var ap: AnimationPlayer = jet.find_child("AnimationPlayer", true, false)
@@ -64,7 +65,7 @@ func start(target: Vector3, d: Vector3) -> void:
 	var kinds := ["Bom1", "Bom2", "Bom3", "Bom4"]
 	for i in kinds.size():
 		var node: Node3D = jet.find_child(kinds[i], true, false)
-		var s_along := -Streak.NAPALM_LENGTH * 0.5 + Streak.NAPALM_LENGTH * float(i) / float(kinds.size() - 1)
+		var s_along := -Rang.NAPALM_LENGTH * 0.5 + Rang.NAPALM_LENGTH * float(i) / float(kinds.size() - 1)
 		_bombs.append({"node": node, "released": false, "hit": false, "s": s_along, "at": center + dir * s_along})
 	Game.banner.emit("NAPALM ONDERWEG", "Blijf uit de strook", 1.5)
 	Sfx.jet_on()
@@ -140,14 +141,14 @@ func _physics_process(delta: float) -> void:
 		return
 	_t += delta
 	if jet != null:
-		var s := -LEAD - Streak.NAPALM_LENGTH * 0.5 + SPEED * _t
+		var s := -LEAD - Rang.NAPALM_LENGTH * 0.5 + SPEED * _t
 		_place(s)
 		_jet_sound(s)
 		var lead := FALL_V * sqrt(2.0 * (HEIGHT - 1.0) / GRAVITY)
 		for b in _bombs:
 			if not b.released and s >= float(b.s) - lead:
 				_release(b)
-		if s > LEAD + Streak.NAPALM_LENGTH:
+		if s > LEAD + Rang.NAPALM_LENGTH:
 			jet.queue_free()
 			jet = null
 			if _jet_light != null:
@@ -167,7 +168,7 @@ func _physics_process(delta: float) -> void:
 		for b in _bombs:
 			if not b.hit:
 				all_hit = false
-		if all_hit and _burn_t > BURN_TIME and jet == null and _after_t < 0.0:
+		if all_hit and _burn_t > burn_time and jet == null and _after_t < 0.0:
 			_start_smolder()
 	if _after_t >= 0.0:
 		_after_t += delta
@@ -342,7 +343,7 @@ func _roll(parent: Node, at: Vector3, d: Vector3) -> void:
 ## Verkoolde sporen: zwarte vlekken rond de inslag die blijven liggen als het vuur uit is.
 func _char(parent: Node, at: Vector3) -> void:
 	var side := dir.cross(Vector3.UP)
-	var half := Streak.NAPALM_WIDTH * 0.5
+	var half := Rang.NAPALM_WIDTH * 0.5
 	Fx.decal(parent, at, Vector3.UP, "scorch", 6.0, 140.0)
 	for i in 3:
 		var p := at + dir * randf_range(-3.2, 3.2) + side * randf_range(-half, half)
@@ -372,7 +373,7 @@ func _in_strip(p: Vector3) -> bool:
 		var d := Vector3(p.x - at.x, 0.0, p.z - at.z)
 		var along := d.dot(dir)
 		var across := absf(d.dot(dir.cross(Vector3.UP)))
-		if absf(along) < 4.4 and across < Streak.NAPALM_WIDTH * 0.5 + 0.8:
+		if absf(along) < 4.4 and across < Rang.NAPALM_WIDTH * 0.5 + 0.8:
 			return true
 	return false
 
@@ -388,9 +389,9 @@ func _burn_damage() -> void:
 
 ## Het brandende veld: een gloeiende grondlaag over de hele strook en rijen lage vlammen die meekomen met de vuurgolf.
 func _make_carpet() -> void:
-	var length := Streak.NAPALM_LENGTH + 2.0 * REACH
+	var length := Rang.NAPALM_LENGTH + 2.0 * REACH
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(length, Streak.NAPALM_WIDTH + 1.0)
+	plane.size = Vector2(length, Rang.NAPALM_WIDTH + 1.0)
 	_carpet = MeshInstance3D.new()
 	_carpet.mesh = plane
 	_carpet.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -398,14 +399,14 @@ func _make_carpet() -> void:
 	_carpet_mat.shader = CARPET
 	_carpet_mat.set_shader_parameter("wave_speed", WAVE_SPEED)
 	_carpet_mat.set_shader_parameter("max_reach", REACH)
-	_carpet_mat.set_shader_parameter("half_width", Streak.NAPALM_WIDTH * 0.5 + 0.5)
+	_carpet_mat.set_shader_parameter("half_width", Rang.NAPALM_WIDTH * 0.5 + 0.5)
 	_carpet.material_override = _carpet_mat
 	get_parent().add_child(_carpet)
 	_carpet.global_position = center + Vector3.UP * 0.06
 	_carpet.rotation.y = atan2(-dir.z, dir.x) + 0.0   # lokale x = langs de strook
 	var side := dir.cross(Vector3.UP)
 	var n := int(ceil(length / FLAME_STEP))
-	var half := Streak.NAPALM_WIDTH * 0.5
+	var half := Rang.NAPALM_WIDTH * 0.5
 	for i in n:
 		var s := -length * 0.5 + (float(i) + 0.5) * FLAME_STEP
 		var edge := smoothstep(0.55, 1.0, absf(s) / (length * 0.5))   # aan de uiteinden van de strook wordt het vuur lager
@@ -440,7 +441,7 @@ func _update_carpet(_delta: float) -> void:
 	_carpet_mat.set_shader_parameter("imp_s", imp_s)
 	_carpet_mat.set_shader_parameter("imp_t", imp_t)
 	var since := _t - _first_hit
-	var left := BURN_TIME - since
+	var left := burn_time - since
 	_carpet_mat.set_shader_parameter("fade", clampf(left / FADE_TIME, 0.0, 1.0))
 	_carpet_mat.set_shader_parameter("after", 1.0 if _after_t < 0.0 else clampf(1.0 - _after_t / AFTER_TIME, 0.0, 1.0))
 	for f in _flames:

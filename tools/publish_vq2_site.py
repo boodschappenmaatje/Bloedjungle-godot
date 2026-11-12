@@ -8,13 +8,16 @@ dest=args.destination.resolve()
 if dest.exists():
     raise SystemExit('Destination must be a new directory: '+str(dest))
 viewer=dest/'tools/blender-vq2-viewer';viewer.mkdir(parents=True)
-for name in ('index.html','viewer.js','viewer.js.LEGAL.txt','style.css','THREE-LICENSE.txt'):
+for name in ('index.html','viewer.js','viewer.js.LEGAL.txt','style.css','THREE-LICENSE.txt','colt-vfx.html','colt-vfx.js'):
     shutil.copy2(ROOT/'tools/blender-vq2-viewer'/name,viewer/name)
 (dest/'assets/vq2_baseline').mkdir(parents=True)
 for name in ('kazerne','wachttoren','legerjeep'):
     for folder in ('assets','assets/vq2_baseline'):
         shutil.copy2(ROOT/folder/(name+'.glb'),dest/folder/(name+'.glb'))
 shutil.copy2(ROOT/'assets/jeep.glb',dest/'assets/jeep.glb')
+shutil.copy2(ROOT/'assets/meshy_m1911.glb',dest/'assets/meshy_m1911.glb')
+(dest/'assets/vfx/m1911').mkdir(parents=True)
+shutil.copy2(ROOT/'assets/vfx/m1911/m1911_muzzle_flash_4x4.png',dest/'assets/vfx/m1911/m1911_muzzle_flash_4x4.png')
 for name in ('auto','bus','straaljager','soldaat','soldaat_vq2','klimmen','zitten','acties','wapens','jungle'):
     path=ROOT/'assets'/(name+'.glb')
     if path.exists():shutil.copy2(path,dest/'assets'/path.name)

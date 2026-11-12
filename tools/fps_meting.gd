@@ -4,7 +4,7 @@ extends SceneTree
 ## Draaien (lavapipe, Mobile-renderer zoals op de iPhone):
 ##   BJ_INSTANT=1 xvfb-run -a -s "-screen 0 1280x720x24" godot --rendering-driver vulkan --rendering-method mobile \
 ##     --path . -s tools/fps_meting.gd --resolution 1434x660
-## BJ_QUALITY=ultra|high|low kiest de grafiekstand (standaard ultra), BJ_SPOTS=stad,plein beperkt de plekken.
+## BJ_G2=on|off kiest Graphics 2.0 of klassiek. BJ_QUALITY=ultra|high|low kiest de grafiekstand (standaard ultra), BJ_SPOTS=stad,plein beperkt de plekken.
 
 var main: Node
 var frames := 0
@@ -26,6 +26,8 @@ func _initialize() -> void:
 	GameSettings.set_value("quality", OS.get_environment("BJ_QUALITY") if OS.has_environment("BJ_QUALITY") else "ultra")
 	GameSettings.set_value("treeshadow", OS.get_environment("BJ_TREESHADOW") if OS.has_environment("BJ_TREESHADOW") else "real")
 	GameSettings.set_value("wind", "on")
+	if OS.has_environment("BJ_G2"):
+		GameSettings.set_value("g2", OS.get_environment("BJ_G2"))   # on | off: Graphics 2.0 tegenover klassiek
 	if OS.has_environment("BJ_BUILDSHADOW"):
 		GameSettings.set_value("buildshadow", OS.get_environment("BJ_BUILDSHADOW"))
 	order = spots.keys()

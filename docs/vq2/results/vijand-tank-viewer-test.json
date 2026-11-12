@@ -1,0 +1,74 @@
+{
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "assets": {
+  "vijand_tank": {
+   "clips": {
+    "Rijden-loop": {
+     "duration": 0.5666666626930237,
+     "moved": [
+      "WielL_aandrijf",
+      "WielL_w1",
+      "WielL_w5",
+      "WielL_w9",
+      "WielL_spanwiel",
+      "WielR_aandrijf",
+      "WielR_w1",
+      "WielR_w5",
+      "WielR_w9",
+      "WielR_spanwiel"
+     ]
+    },
+    "Draaien-loop": {
+     "duration": 1.0333333015441895,
+     "moved": [
+      "WielL_aandrijf",
+      "WielL_w1",
+      "WielL_w5",
+      "WielL_w9",
+      "WielL_spanwiel",
+      "WielR_aandrijf",
+      "WielR_w1",
+      "WielR_w5",
+      "WielR_w9",
+      "WielR_spanwiel"
+     ]
+    },
+    "Vuren": {
+     "duration": 0.4000000059604645,
+     "moved": [
+      "KanonMesh"
+     ]
+    }
+   },
+   "nodes": {
+    "Body": true,
+    "RompMesh": true,
+    "RupsL": true,
+    "RupsR": true,
+    "Toren": true,
+    "TorenMesh": true,
+    "Kanon": true,
+    "KanonMesh": true,
+    "Monding": true,
+    "WielL_aandrijf": true,
+    "WielL_w1": true,
+    "WielL_w5": true,
+    "WielL_w9": true,
+    "WielL_spanwiel": true,
+    "WielR_aandrijf": true,
+    "WielR_w1": true,
+    "WielR_w5": true,
+    "WielR_w9": true,
+    "WielR_spanwiel": true
+   },
+   "rups": {
+    "voor": 0,
+    "na": 0.03705928853753468
+   },
+   "stats": "Vijandelijke tank (spelversie): 37.922 driehoeken · 27 meshes · 3 materialen · 11 texturen · clips: Rijden-loop, Draaien-loop, Vuren. Bron: Dennis' Meshy-tank (Google Drive, niet in de repo, 5,3 miljoen driehoeken); bron/vijand_tank/stap1-4 (Blender): voxel-remesh, romp en koepel uit de gesloten schil, kanon en 22 wielen opnieuw gedraaid, twee rupsen als band (u = booglengte), 2K-atlas en rups 4096x512 gebakken (albedo, normal, ORM). Godot stuurt koepel (Y), kanon (X), wielen en rupsen zelf; de clips zijn voor de viewer. Geen iPhone-FPS gemeten.",
+   "status": "Vijandelijke tank · Dennis' Meshy-tank met koepel, kanon en rupsen (nieuw) · Vijandelijke tank (Meshy, 8,0 m met kanon, olijfgroen met gele tekens): echte clips Rijden-loop (22 wielen draaien, 1 omwenteling), Draaien-loop (links en rechts tegengesteld) en Vuren (kanon schiet terug, 0,4 s). Koepel en kanon kantelen worden in het spel door vijand_tank.gd gestuurd: gebruik de twee schuiven. De rupsen lopen via de textuur-offset zodra Rijden of Draaien speelt, 2K-PBR (geen V1) · 360° draaien en zoomen actief."
+  }
+ },
+ "errors": [],
+ "ok": true
+}

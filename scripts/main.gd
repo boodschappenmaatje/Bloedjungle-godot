@@ -41,6 +41,11 @@ func _ready() -> void:
 ## Start een missie vanuit het hoofdmenu. De wereld wordt pas nu gebouwd, achter het laadscherm.
 func begin() -> void:
 	await _load_world()
+	# Instellingen opnieuw toepassen nu de jungle er staat: Atmosphere deed dit al bij het opstarten, maar toen bestond het gras
+	# nog niet (minder gras en geen palmschaduw tot je in Instellingen wisselde, v225).
+	var atm := get_tree().get_first_node_in_group("atmosphere")
+	if atm != null:
+		atm.apply_settings()
 	Game.reset()
 	if Game.player:
 		Game.player.refresh_look()

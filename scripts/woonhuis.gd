@@ -30,6 +30,8 @@ static func _spec(kind: String) -> Dictionary:
 		return _spec_hotel()
 	if kind == "magazijn":
 		return _spec_magazijn()
+	if kind == "tropical_shop_a":
+		return _spec_tropical_shop_a()
 	if kind == "winkel":
 		var f0 := 0.3
 		var f1 := 3.8
@@ -88,6 +90,73 @@ static func _spec(kind: String) -> Dictionary:
 		"roof_y": 4.0, "roof_r": 5.0, "roof_c": Vector3(0, 7.0, 0),
 		"fall_piles": [[Vector3(2.2, f0, -0.5), 1.15], [Vector3(-1.0, f0, -1.5), 1.0]],
 		"near": 9.0, "banner": "HUIS INGESTORT",
+	}
+
+
+## Twee verdiepingen; +Z is de entree. Dit gebouw heeft geen damage-fragmenten:
+## de zichtbare Blender-modules en aparte eenvoudige botsvormen worden gebruikt.
+static func _spec_tropical_shop_a() -> Dictionary:
+	var f0 := 0.22
+	var f1 := 3.55
+	var walls: Array = [
+		[Vector3(0, 0.10, 0), Vector3(10.3, 0.22, 8.6)],
+		# Begane grond voorgevel met echte deuropening
+		[Vector3(-4.54, 1.91, 4.30), Vector3(1.22, 3.38, 0.24)],
+		[Vector3(-1.70, 1.91, 4.30), Vector3(1.88, 3.38, 0.24)],
+		[Vector3(1.70, 1.91, 4.30), Vector3(1.88, 3.38, 0.24)],
+		[Vector3(4.54, 1.91, 4.30), Vector3(1.22, 3.38, 0.24)],
+		[Vector3(0, 2.91, 4.30), Vector3(1.52, 1.38, 0.24)],
+		# Achterdeur en buitenmuren
+		[Vector3(-1.94, 1.91, -4.30), Vector3(6.58, 3.38, 0.24)],
+		[Vector3(3.83, 1.91, -4.30), Vector3(2.64, 3.38, 0.24)],
+		[Vector3(1.89, 2.89, -4.30), Vector3(1.22, 1.42, 0.24)],
+		[Vector3(-5.15, 1.91, 0), Vector3(0.24, 3.38, 8.6)],
+		[Vector3(5.15, 1.91, 0), Vector3(0.24, 3.38, 8.6)],
+		# Bovenwoning; dubbele balkondeur blijft open in de collider
+		[Vector3(-3.36, 5.14, 4.30), Vector3(3.58, 3.18, 0.24)],
+		[Vector3(3.36, 5.14, 4.30), Vector3(3.58, 3.18, 0.24)],
+		[Vector3(0, 6.39, 4.30), Vector3(1.56, 0.68, 0.24)],
+		[Vector3(0, 5.14, -4.30), Vector3(10.3, 3.18, 0.24)],
+		[Vector3(-5.15, 5.14, 0), Vector3(0.24, 3.18, 8.6)],
+		[Vector3(5.15, 5.14, 0), Vector3(0.24, 3.18, 8.6)],
+		# Interne voorraadwand met doorgang
+		[Vector3(2.25, 1.76, -2.15), Vector3(0.16, 3.0, 3.50)],
+	]
+	var upper_floors: Array = [
+		[Vector3(-4.30, f1 - 0.08, 0), Vector3(1.70, 0.22, 8.36)],
+		[Vector3(0.05, f1 - 0.08, 0), Vector3(5.00, 0.22, 8.36)],
+		[Vector3(-3.25, f1 - 0.08, 3.05), Vector3(1.40, 0.22, 2.50)],
+		[Vector3(-3.25, f1 - 0.08, -3.55), Vector3(1.40, 0.22, 1.70)],
+		[Vector3(0, f1, 5.25), Vector3(4.10, 0.24, 1.65)],
+	]
+	var guards: Array = [
+		[Vector3(-3.93, 2.0, -0.8), Vector3(0.08, 3.0, 4.2)],
+		[Vector3(-2.55, 2.0, -0.8), Vector3(0.08, 3.0, 4.2)],
+		[Vector3(-3.25, f1 + 0.55, 1.20), Vector3(1.40, 1.10, 0.10)],
+		[Vector3(-2.55, f1 + 0.55, -0.5), Vector3(0.10, 1.10, 3.40)],
+		[Vector3(-3.25, f1 + 0.55, -2.20), Vector3(1.40, 1.10, 0.10)],
+		[Vector3(0, f1 + 0.55, 6.05), Vector3(4.10, 1.10, 0.10)],
+		[Vector3(-2.03, f1 + 0.55, 5.45), Vector3(0.10, 1.10, 1.20)],
+		[Vector3(2.03, f1 + 0.55, 5.45), Vector3(0.10, 1.10, 1.20)],
+	]
+	return {
+		"glb": "res://assets/tropical_shop_a.glb", "roof_node": "Roof_Meshy", "levels": [f0, f1], "hx": 5.15, "hz": 4.3,
+		"groups": ["Ground_Floor", "Upper_Floor"], "walls": walls + upper_floors,
+		"stairs": [[-3.95, -2.55, -2.75, 1.75, 0, 1]], "holes": [[1, -3.95, -2.55, -2.75, 1.75]],
+		"guards": guards,
+		"doors": ["Front door left_Pivot", "Front door right_Pivot", "Rear service door_Pivot",
+			"Balcony door left_Pivot", "Balcony door right_Pivot", "Stockroom interior door_Pivot", "Bedroom door_Pivot"],
+		"furniture_boxes": [
+			[[Vector3(-1.45, 0.72, -0.55), Vector3(2.6, 1.0, 0.78)], [Vector3(3.60, 1.05, -2.4), Vector3(1.2, 1.7, 0.7)]],
+			[[Vector3(2.95, 4.35, -1.4), Vector3(1.25, 1.5, 0.75)], [Vector3(1.3, 3.95, -2.8), Vector3(1.7, 0.8, 0.75)]],
+		],
+		"cutaway": {
+			0: ["Roof_Meshy", "Upper_Floor", "Exterior_Walls_Upper", "Exterior_Details_Upper", "Interior_Walls_Upper", "Residence_Furniture", "Accessible_Balcony", "Exterior_Walls_Ground", "Exterior_Details_Ground"],
+			1: ["Roof_Meshy", "Ground_Floor", "Exterior_Walls_Ground", "Exterior_Details_Ground", "Interior_Walls_Ground", "Shop_Furniture", "Walkable_Staircase", "Exterior_Walls_Upper", "Exterior_Details_Upper"],
+		},
+		"collapse": [], "ruin": false, "ruin_boxes": [], "roof_levels": 0,
+		"roof_y": 7.2, "roof_r": 5.5, "roof_c": Vector3(0, 7.0, 0), "fall_piles": [],
+		"near": 10.0, "banner": "WINKELPAND INGESTORT",
 	}
 
 
@@ -338,7 +407,7 @@ func _ready() -> void:
 	for l in model.find_children("*", "Light3D", true, false):
 		l.visible = false   # lampen pas 's nachts (scheelt op de iPhone)
 	_find_glass()
-	_dak = model.find_child("Dak", true, false)
+	_dak = model.find_child(String(spec.get("roof_node", "Dak")), true, false)
 	_ver = model.find_child("Verdieping", true, false)
 	for g in spec.groups:
 		_groups.append(model.find_child(g, true, false))
@@ -346,9 +415,10 @@ func _ready() -> void:
 	if ruine:
 		ruine.visible = false
 	var puin: Node3D = model.find_child("Puin", true, false)
-	for c in puin.get_children():
-		_puin[c.name] = c
-	puin.visible = false
+	if puin:
+		for c in puin.get_children():
+			_puin[c.name] = c
+		puin.visible = false
 	for n in model.find_children("*", "Node3D", true, false):
 		var heel := n.get_node_or_null(NodePath(String(n.name) + "_heel")) as MeshInstance3D
 		var kapot := n.get_node_or_null(NodePath(String(n.name) + "_kapot")) as MeshInstance3D
@@ -377,6 +447,7 @@ func _ready() -> void:
 		if d:
 			var closed := d.rotation.z if kind == "magazijn" else d.rotation.y
 			doors.append({"node": d, "closed": closed, "t": 0.0, "dir": float(spec.get("door_dir", {}).get(nm, 1.0))})
+	_wall_shapes()
 	_guards()
 	_furniture()
 	_shadow_proxy()
@@ -579,6 +650,30 @@ func _guards() -> void:
 	_guard_body = _guard_bodies.get("")
 
 
+## Simplified gameplay collision for the modular tropical shop. These boxes
+## leave the entrance, rear door, balcony door and stair opening traversable.
+func _wall_shapes() -> void:
+	if not spec.has("walls"):
+		return
+	var body := StaticBody3D.new()
+	body.name = "Shop wall and floor collision"
+	body.collision_layer = Kit.LAYER_WALL
+	body.collision_mask = 0
+	add_child(body)
+	for item in spec.walls:
+		_box(body, item[0], item[1])
+	# One broad, low-cost ramp follows the visible timber staircase. Its top edge
+	# joins the second-floor landing, while the actual handrails remain in guards.
+	var ramp := CollisionShape3D.new()
+	var ramp_shape := BoxShape3D.new()
+	ramp_shape.size = Vector3(1.15, 0.18, 4.65)
+	ramp.shape = ramp_shape
+	ramp.position = Vector3(-3.25, 1.78, -0.62)
+	ramp.rotation.x = -0.66
+	body.add_child(ramp)
+	_box(body, Vector3(-3.25, 3.47, 1.55), Vector3(1.50, 0.20, 1.00))
+
+
 ## Meubels zijn massief: van elk knooppunt "Inrichting*" in het model (de samengevoegde meubels van een laag) wordt elk los
 ## voorwerp een botsblok, zodat je er niet doorheen loopt. Nieuwe gebouwen krijgen dit vanzelf zolang het meubilair in een mesh
 ## "Inrichting<laag>" onder de groep van die laag zit. Een voorwerp is een groep driehoeken die dezelfde hoekpunten delen.
@@ -593,6 +688,17 @@ func _furniture() -> void:
 	var holder := Node3D.new()
 	holder.name = "Meubels"
 	add_child(holder)
+	if spec.has("furniture_boxes"):
+		for level_index in spec.furniture_boxes.size():
+			var body := StaticBody3D.new()
+			body.collision_layer = Kit.LAYER_WALL
+			body.collision_mask = 0
+			body.set_meta("nocam", true)
+			holder.add_child(body)
+			for item in spec.furniture_boxes[level_index]:
+				_box(body, item[0], item[1])
+			_meubels.append({"body": body, "group": String(spec.groups[level_index]), "level": level_index})
+		return
 	var zones := _door_zones()
 	for mi: MeshInstance3D in model.find_children("Inrichting*", "MeshInstance3D", true, false):
 		var group := String(mi.get_parent().name)
@@ -892,6 +998,18 @@ func _apply_view() -> void:
 		return
 	if _dak:
 		_dak.visible = _inside < 0 or _inside > int(spec.get("roof_levels", 99))
+	if spec.has("cutaway"):
+		var all_modules: Array = []
+		for names in spec.cutaway.values():
+			for name in names:
+				if not all_modules.has(name): all_modules.append(name)
+		for name in all_modules:
+			var module := model.find_child(String(name), true, false) as Node3D
+			if module: module.visible = true
+		if _inside >= 0:
+			for name in spec.cutaway.get(_inside, []):
+				var module := model.find_child(String(name), true, false) as Node3D
+				if module: module.visible = false
 	for k in range(1, _groups.size()):
 		if _groups[k]:
 			(_groups[k] as Node3D).visible = _inside < 0 or k <= _inside or k >= _fall

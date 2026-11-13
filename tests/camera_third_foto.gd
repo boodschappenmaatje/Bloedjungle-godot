@@ -36,7 +36,10 @@ func _shot(name: String) -> void:
 func _calls(name: String) -> void:
 	var dc := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME)
 	var pr := RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME)
-	print("METING %s %s draw_calls=%d primitives=%d" % [tag, name, dc, pr])
+	var vp := root.get_viewport()
+	var zicht := vp.get_render_info(Viewport.RENDER_INFO_TYPE_VISIBLE, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME)
+	var schaduw := vp.get_render_info(Viewport.RENDER_INFO_TYPE_SHADOW, Viewport.RENDER_INFO_DRAW_CALLS_IN_FRAME)
+	print("METING %s %s draw_calls=%d (beeld %d, schaduw %d) primitives=%d" % [tag, name, dc, zicht, schaduw, pr])
 
 
 func _vehicle(scene: String, at: Vector3) -> void:
@@ -76,6 +79,8 @@ func _process(_d: float) -> bool:
 		160:
 			_shot("spel")
 			_calls("jungle")
+			if OS.get_environment("MEET_ALLEEN") != "":
+				return true
 			aim_hold = PI - 0.35
 		200:
 			_shot("richten")

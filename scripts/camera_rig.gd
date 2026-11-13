@@ -39,7 +39,8 @@ const TP_PITCH := 25.0            # graden onder de horizon
 const TP_PITCH_BLOCKED := 55.0    # muur of dak vlak achter je: de camera klimt naar boven-achter
 const TP_FOV := 58.0
 const TP_FOV_AIM := 52.0
-const TP_FAR := 180.0             # zichtafstand in third person (tactisch 220): mist doet de rest
+const TP_FAR := 60.0              # zichtafstand in third person (tactisch 220); verder weg verdwijnt alles in de mist
+const TP_FOG := 2.2               # mistdichtheid x2,2 in third person: de rand van de zichtafstand valt weg in de nevel
 const TP_TURN_MAX := deg_to_rad(120.0)   # nooit sneller draaien dan 120°/s
 const TP_VEHICLE_DISTANCE := {"tank": 12.0, "jeep": 9.0}
 const TP_VEHICLE_DEFAULT := 10.0  # auto, bus, vrachtwagen
@@ -233,7 +234,13 @@ func _process(delta: float) -> void:
 		return
 	_editor_active = false
 	_blook = Vector3.ZERO
-	if _fog0 >= 0.0 and env:
+	if mode == "third" and env:
+		# 9A: third person kijkt tot de horizon. Dichtere mist plus een korte zichtafstand houden het aantal
+		# getekende bladgroepen in de buurt van het bovenbeeld (zie tests/camera_third_foto.gd, METING-regels).
+		if _fog0 < 0.0:
+			_fog0 = env.fog_density
+		env.fog_density = lerpf(env.fog_density, _fog0 * TP_FOG, minf(1.0, delta * 4.0))
+	elif _fog0 >= 0.0 and env:
 		# mist en zichtafstand keren zacht terug i.p.v. in één frame te springen
 		env.fog_density = lerpf(env.fog_density, _fog0, minf(1.0, delta * 4.0))
 		if absf(env.fog_density - _fog0) < _fog0 * 0.02:

@@ -14,6 +14,11 @@ const LICHT_T := 11.0        # s dalen
 static var _mat_rook: StandardMaterial3D
 static var _mat_bus: StandardMaterial3D
 static var _mat_ster: StandardMaterial3D
+static var rook_zicht := true       # uit te zetten in tests die de rook niet willen
+static var _gordijnen: Array = []   # actieve rookgordijnen: {a, b (2D-eindpunten), tot (ms)}; ze blokkeren het zicht (zie rook_blokkeert)
+
+const ROOK_DIK := 2.6        # m: halve dikte van het gordijn voor het zicht
+const ROOK_NAAST := 6.0      # m: van dichtbij ziet men nog wel door de rook
 
 
 static func _rook_mat() -> StandardMaterial3D:
@@ -62,10 +67,55 @@ static func rookgranaat(parent: Node, van: Vector3, naar: Vector3, voor: Vector3
 	return root
 
 
+## Blokkeert een rookgordijn de zichtlijn van `van` naar `naar`? Een gordijn telt vanaf het moment dat de wolken groot zijn tot het begint uit te doven.
+static func zet_rook_zicht(aan: bool) -> void:
+	rook_zicht = aan
+
+
+## Spelklok in ms (fysicaframes, dus gelijk aan het spel ook als dat sneller of trager loopt).
+static func _nu() -> int:
+	return int(float(Engine.get_physics_frames()) * 1000.0 / float(Engine.physics_ticks_per_second))
+
+
+static func rook_blokkeert(van: Vector3, naar: Vector3) -> bool:
+	if not rook_zicht or _gordijnen.is_empty():
+		return false
+	var nu := _nu()
+	var a := Vector2(van.x, van.z)
+	var b := Vector2(naar.x, naar.z)
+	if a.distance_to(b) < ROOK_NAAST:
+		return false
+	var i := _gordijnen.size() - 1
+	while i >= 0:
+		var gd: Dictionary = _gordijnen[i]
+		if nu > int(gd.tot):
+			_gordijnen.remove_at(i)
+		elif nu >= int(gd.van) and _seg_afstand(a, b, gd.a, gd.b) < ROOK_DIK:
+			return true
+		i -= 1
+	return false
+
+
+## Kortste afstand tussen twee lijnstukken in het vlak.
+static func _seg_afstand(p1: Vector2, p2: Vector2, q1: Vector2, q2: Vector2) -> float:
+	if Geometry2D.segment_intersects_segment(p1, p2, q1, q2) != null:
+		return 0.0
+	var c1 := Geometry2D.get_closest_point_to_segment(p1, q1, q2).distance_to(p1)
+	var c2 := Geometry2D.get_closest_point_to_segment(p2, q1, q2).distance_to(p2)
+	var c3 := Geometry2D.get_closest_point_to_segment(q1, p1, p2).distance_to(q1)
+	var c4 := Geometry2D.get_closest_point_to_segment(q2, p1, p2).distance_to(q2)
+	return minf(minf(c1, c2), minf(c3, c4))
+
+
 static func _gordijn(root: Node3D, at: Vector3, voor: Vector3) -> void:
 	var dwars := Vector3(-voor.z, 0.0, voor.x).normalized()
 	if dwars.length() < 0.5:
 		dwars = Vector3.RIGHT
+	var nu := _nu()
+	_gordijnen.append({
+		"a": Vector2(at.x, at.z) - Vector2(dwars.x, dwars.z) * ROOK_BREED * 0.45,
+		"b": Vector2(at.x, at.z) + Vector2(dwars.x, dwars.z) * ROOK_BREED * 0.45,
+		"van": nu + 3500, "tot": nu + int((ROOK_T + ROOK_WEG * 0.4) * 1000.0)})
 	var quad := QuadMesh.new()
 	quad.size = Vector2.ONE
 	quad.material = _rook_mat()

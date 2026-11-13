@@ -1,5 +1,5 @@
 extends SceneTree
-## Schermafbeeldingen van de slimme vijandaanval (v229): de groep gehurkt in een waaier op het verzamelpunt, het rookgordijn en de rode lichtkogel bij het begin
+## Schermafbeeldingen van de slimme vijandaanval (v230): de groep gehurkt in een waaier op het verzamelpunt, het rookgordijn en de rode lichtkogel bij het begin
 ## van de aanval (met de melding CONTACT en de lijn op de radar), vuur en beweging, en een groep die door de smalle Backdoor de rivier oversteekt.
 ## FOTO_DIR=/pad xvfb-run -a -s "-screen 0 932x430x24" godot --rendering-driver opengl3 --path . -s tests/aanval_ai_foto.gd --resolution 932x430 --fixed-fps 60
 
@@ -83,7 +83,8 @@ func _process(_d: float) -> bool:
 	var rally: Vector3 = ai.rally_van(KANT) if ai != null else Vector3.ZERO
 	var naar_hk: Vector3 = (game.base_pos - rally).normalized() if ai != null else Vector3.ZERO
 	if frames >= 8 and frames < A + 260:
-		p.global_position = rally + naar_hk * 19.0 + Vector3(0, 0, 2.0)
+		var afst := 14.0 if frames < A + 90 else (30.0 if frames >= A + 150 else 22.0)
+		p.global_position = rally + naar_hk * afst + Vector3(0, 0, 2.0)
 		p.face = atan2(-naar_hk.x, -naar_hk.z)
 	if frames == A:
 		_shot("verzamelen")
@@ -92,9 +93,11 @@ func _process(_d: float) -> bool:
 		AI.set("aan", true)
 	if frames == A + 75:
 		_shot("rook_lichtkogel")
-	if frames == A + 160:
+	if frames == A + 190:
+		_shot("rookgordijn")
+	if frames == A + 205:
 		_shot("vuur_en_beweging")
-	if frames == A + 240:
+	if frames == A + 245:
 		var hud := get_first_node_in_group("hud_extra")
 		if hud != null:
 			hud.open_map(false)

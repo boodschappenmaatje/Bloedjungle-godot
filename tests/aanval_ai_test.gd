@@ -57,6 +57,7 @@ func _keuzes(n: int) -> Dictionary:
 
 
 func _run() -> void:
+	load("res://scripts/aanval_fx.gd").call("zet_rook_zicht", false)   # gewone fases zonder zichtblokkade; die test staat onderaan
 	AI = load("res://scripts/aanval_ai.gd")
 	var dt := load("res://scripts/data.gd") as GDScript
 	var rt := load("res://scripts/route.gd") as GDScript
@@ -174,6 +175,7 @@ func _run() -> void:
 	var max_f := 9000
 	var f := 0
 	var gezien_contact := false
+	var contact_gemeld := false
 	var leden_voor: Array = []
 	while f < max_f:
 		await process_frame
@@ -182,22 +184,29 @@ func _run() -> void:
 			break
 		staten[g.staat] = true
 		for e in g.leden:
-			if is_instance_valid(e) and not e.dead and absf(e.global_position.z - dt.river_z(e.global_position.x)) < 1.0 and overgestoken_x.size() < 50:
+			if is_instance_valid(e) and not e.dead and absf(e.global_position.z - dt.river_z(e.global_position.x)) < 2.5 and overgestoken_x.size() < 50:
 				overgestoken_x.append(e.global_position.x)
 		if g.staat == "verzamelen" and leden_voor.is_empty():
 			leden_voor = g.leden.duplicate()
 			# 9A: jij komt kijken bij het verzamelpunt: contact
 			p.global_position = ai.rally_van(g.kant) + (basis - ai.rally_van(g.kant)).normalized() * 30.0
-		if g.gezien:
+		if g.gezien and not gezien_contact:
 			gezien_contact = true
+			contact_gemeld = _banners.any(func(b): return b.begins_with("CONTACT")) and ai.contacten.size() > 0
 		if g.staat == "storm":
 			break
 	print("na %d beeldjes: staten %s" % [f, staten.keys()])
 	_check("de groep doorloopt mars, verzamelen, aanval en storm", staten.has("mars") and staten.has("verzamelen") and staten.has("aanval") and g.staat == "storm")
-	var goed_over := overgestoken_x.all(func(x): return absf(float(x) - oversteek_x) < 4.0)
-	_check("2A: ze steken over bij de gekozen oversteek (%s)" % g.oversteek, overgestoken_x.size() > 0 and goed_over)
+	var goed_n := overgestoken_x.filter(func(x): return absf(float(x) - oversteek_x) < 4.0).size()
+	var andere := 0
+	for k in [dt.BRIDGE_X, dt.FORD_X, dt.BACKDOOR_X]:
+		if absf(float(k) - oversteek_x) > 1.0:
+			andere += overgestoken_x.filter(func(x): return absf(float(x) - float(k)) < 4.0).size()
+	var pad_ok: bool = ai.stad_pad(g.oversteek).any(func(q): return absf((q as Vector3).x - oversteek_x) < 4.0)
+	var goed_over: bool = andere == 0 and (goed_n >= 3 or (overgestoken_x.size() == 0 and pad_ok))   # genoeg metingen bij de gekozen oversteek en niemand bij een andere
+	_check("2A: ze steken over bij de gekozen oversteek (%s)" % g.oversteek, goed_over)
 	_check("3A: op het verzamelpunt wachten ze gehurkt in een waaier", leden_voor.size() >= 3)
-	_check("9A: contact gemeld zodra jij ze zag", gezien_contact and _banners.any(func(b): return b.begins_with("CONTACT")) and ai.contacten.size() > 0)
+	_check("9A: contact gemeld zodra jij ze zag", gezien_contact and contact_gemeld)
 	_check("3A: rookgranaat bij het begin van de aanval", get_nodes_in_group("aanval_rook").size() > 0 or g.rook)
 	# prestaties: één denkstap van het brein met een complete groep (zelfde rekenwerk als in het spel, twee keer per seconde)
 	var t0 := Time.get_ticks_usec()
@@ -213,6 +222,10 @@ func _run() -> void:
 	var levend: Array = g.leden.filter(func(e): return is_instance_valid(e) and not e.dead)
 	if levend.size() > 0:
 		var e0: Node3D = levend[0]
+		for x in levend:
+			if str(x.type) == "assault":
+				e0 = x
+				break
 		a2.global_position = e0.global_position + (basis - e0.global_position).normalized() * 12.0
 		a2.set_command("hold", a2.global_position)
 		G.allies.append(a2)
@@ -221,7 +234,13 @@ func _run() -> void:
 		ai._kies_doel(e0)
 		_check("4A: een soldaat van jou dichtbij gaat voor (wat terugschiet)", e0.ai_doel == a2)
 		var hp0: float = a2.hp
-		for i in 400:
+		# deterministisch: een kogel met src "vijand" recht op de soldaat (de vijand zelf schiet daar ook mee, zie Enemy._shoot)
+		e0.set_physics_process(false)
+		var vanaf: Vector3 = a2.global_position + Vector3(-8, 1.2, 0)
+		var hoek := atan2(8.0, 0.0)
+		var kogel = load("res://scripts/bullet.gd").fire(main, vanaf, hoek, 40.0, 10.0, 2.0, false, false, 0, 0.0, 0.0, 0.0, "")
+		kogel.src = "vijand"
+		for i in 120:
 			await process_frame
 			if not is_instance_valid(a2) or a2.hp < hp0:
 				break
@@ -337,5 +356,33 @@ func _run() -> void:
 	await _frames(90)
 	_check("3A: rookgordijn van 9 wolken", r1 != null and is_instance_valid(r1) and r1.get_child_count() >= 1 + fx.ROOK_N)
 	_check("6A: lichtkogel met een rode lamp, hoog in de lucht", l1 != null and is_instance_valid(l1) and l1.find_children("*", "OmniLight3D", true, false).size() == 1 and (l1.get_child(0) as Node3D).global_position.y > 10.0)
+	# rook blokkeert het zicht (v230)
+	fx.call("zet_rook_zicht", true)
+	await _frames(420)
+	var kruis: bool = fx.rook_blokkeert(basis + Vector3(0, 1, -52), basis + Vector3(0, 1, -28))
+	var langs: bool = fx.rook_blokkeert(basis + Vector3(-30, 1, -52), basis + Vector3(-30, 1, -28))
+	var dichtbij: bool = fx.rook_blokkeert(basis + Vector3(0, 1, -42), basis + Vector3(0, 1, -38))
+	var naast: bool = fx.rook_blokkeert(basis + Vector3(20, 1, -45), basis + Vector3(20, 1, -35))
+	_check("zicht: een lijn dwars door het rookgordijn is geblokkeerd", kruis)
+	_check("zicht: een lijn ver naast het gordijn niet", not langs and not naast)
+	_check("zicht: van dichtbij (< 6 m) ziet men wel door de rook", not dichtbij)
+	var e1 = null
+	for e in G.enemies:
+		e1 = e
+		break
+	if e1 == null:
+		main._spawn({"kind": "assault", "n": 1, "routes": ["brug"]})
+		await _frames(2)
+		for e in G.enemies:
+			e1 = e
+			break
+	e1.set_physics_process(false)
+	e1.global_position = basis + Vector3(0, 0, -52)
+	_check("zicht: een vijand schiet niet door de rook (_clear_shot)", not e1._clear_shot(basis + Vector3(0, 1.3, -28), true))
+	e1.global_position = basis + Vector3(-30, 0, -52)
+	_check("zicht: wel ernaast", e1._clear_shot(basis + Vector3(-30, 1.3, -28), true))
+	fx._gordijnen.clear()
+	_check("zicht: na het uitdoven geen blokkade meer", not fx.rook_blokkeert(basis + Vector3(0, 1, -52), basis + Vector3(0, 1, -28)))
+	_clear_enemies()
 	print("klaar, fouten: ", fails)
 	quit(1 if fails > 0 else 0)

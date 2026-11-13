@@ -56,6 +56,7 @@ var ai_hold: Variant = null    # Vector3: hier wachten (verzamelpunt, sprong, te
 var ai_vuur := false           # dekkingsvuur: ook buiten zijn gewone bereik schieten (tot AI_VUUR_R m)
 var ai_snel := false           # oprukken of terugtrekken: rennen
 var ai_order := ""             # "storm" of ""
+var _ai_far_t := 0.0
 var ai_doel: Node3D = null     # 4A: waar hij op schiet als jij niet dichtbij bent (null = het HK)
 var _ai_wacht := false         # staat nu op zijn wachtplek (gehurkt)
 const AI_VUUR_R := 34.0
@@ -272,6 +273,12 @@ func _physics_process(delta: float) -> void:
 		if fire_t <= 0.0:
 			_shoot(look)
 
+	# AanvalAI: staat zijn doel (een soldaat van jou) pal voor hem, dan treft een kogel niet meer: kolfslag
+	if not melee and not at_player and rb == null and ai_doel is Ally and fire_t <= 0.0 and _flat((ai_doel as Node3D).global_position - global_position).length() < 2.0:
+		fire_t = t.rate
+		Sfx.play("knife", 0.8, global_position)
+		_ai_steek(ai_doel)
+
 	# AanvalAI: op zijn wachtplek blijven (gehurkt); de ploeg met dekkingsvuur schiet ook op grotere afstand
 	_ai_wacht = false
 	if ai_hold != null and not at_player and rb == null and mode == "attack" and _route_goal() == null:
@@ -421,6 +428,14 @@ func _far_step(delta: float) -> void:
 		rg = ai_hold
 	elif rg == null and ai_doel != null and is_instance_valid(ai_doel):
 		rg = ai_doel.global_position
+	# AanvalAI: een soldaat van jou pal voor hem, ook als jij ver weg bent: hij slaat (anders was die soldaat onaantastbaar)
+	if ai_doel is Ally and _flat((ai_doel as Node3D).global_position - global_position).length() < 2.5:
+		_ai_far_t -= _far_acc
+		if _ai_far_t <= 0.0:
+			_ai_far_t = maxf(float(t.rate), 0.8)
+			_ai_steek(ai_doel)
+		_far_acc = 0.0
+		return
 	var wp := Route.waypoint(global_position, rg if rg != null else Game.base_pos)
 	var d := _flat(wp - global_position)
 	if d.length() > 0.05:
@@ -546,6 +561,8 @@ func _clear_shot(target: Vector3, at_bunker: bool) -> bool:
 	var from := global_position + Vector3.UP * 1.33
 	if BaseWallRules.blocks_ground_fire(from, target):
 		return false
+	if AanvalFx.rook_blokkeert(from, target):
+		return false   # rookgordijn: hij ziet zijn doel niet
 	var mask := Bullet.MASK_WALL | (0 if at_bunker else Bullet.MASK_BUNKER)
 	var q := PhysicsRayQueryParameters3D.create(from, target, mask)
 	q.hit_from_inside = true

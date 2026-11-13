@@ -633,7 +633,7 @@ func _verken(g: Dictionary, levend: Array) -> void:
 		var gezien := satelliet
 		if not gezien:
 			for z in zien:
-				if _flat((z[0] as Vector3) - at).length() < float(z[1]):
+				if _flat((z[0] as Vector3) - at).length() < float(z[1]) and not AanvalFx.rook_blokkeert(at, z[0]):
 					gezien = true
 					break
 		if gezien:

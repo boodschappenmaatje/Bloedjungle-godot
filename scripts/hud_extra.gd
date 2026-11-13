@@ -231,7 +231,7 @@ func _camera_button_new(text_: String, button_size: Vector2) -> Button:
 	b.size = button_size
 	b.add_to_group("hud_button")
 	b.focus_mode = Control.FOCUS_NONE
-	b.add_theme_font_size_override("font_size", 11 if text_ == "TACTISCH" else 18)
+	b.add_theme_font_size_override("font_size", 11 if text_ in ["TACTISCH", "3E PERSOON"] else 18)
 	UI.style_button(b, "pause")
 	return b
 
@@ -248,8 +248,9 @@ func _update_camera_controls() -> void:
 	if cam == null:
 		return
 	var combat: bool = cam.get("combat_view") == true
-	_camera_button.text = "GEVECHT" if combat else "TACTISCH"
-	_camera_button.tooltip_text = "Schakel tussen tactische en gevechtscamera"
+	# het opschrift noemt de stand waarin je nu speelt; tikken wisselt (third person <-> bovenbeeld)
+	_camera_button.text = "3E PERSOON" if combat else "TACTISCH"
+	_camera_button.tooltip_text = "Schakel tussen third person en het tactische bovenbeeld (C)"
 
 
 func _build_radar() -> void:

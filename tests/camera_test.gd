@@ -24,6 +24,7 @@ func _settle_camera(camera: Camera3D, count := 60) -> void:
 
 
 func _run() -> void:
+	load("res://scripts/data.gd").set("mcv_autodeploy", true)   # niet in de bouwwagen beginnen: die vraagt het bovenbeeld
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	game = root.get_node("Game")
@@ -33,15 +34,58 @@ func _run() -> void:
 	await main.call("begin")
 	for _i in 3:
 		await process_frame
+	for g in ["mcv_opbouw", "mcv", "mcv_wagen"]:
+		for n in get_nodes_in_group(g):
+			n.queue_free()
+	await process_frame
 	var camera: Camera3D = main.get_node("Camera")
 	var player: Node3D = game.get("player")
 	_check(player != null, "main scène heeft geen speler")
 	if player == null:
 		quit(1)
 		return
-	_check(not bool(camera.get("combat_view")), "strategisch zicht is niet de standaard")
-	await _settle_camera(camera)
-	# afstand en hoek gelden voor het kijkpunt (speler + look-ahead + schuif naar achteren)
+	# v231: third person is de standaard (camerakaart 1A-9A); de TACTISCH-knop geeft het oude bovenbeeld.
+	GameSettings.set_value("camera_view", "third")
+	_check(bool(camera.get("combat_view")), "third person is niet de standaard")
+	await _settle_camera(camera, 120)
+	_check(bool(camera.call("third_person_active")), "third person is niet actief na de start")
+	var tp_distance := camera.global_position.distance_to(camera.get("focus"))
+	_check(absf(tp_distance - 8.0) < 0.8, "third-personafstand is %.2f i.p.v. 8 m" % tp_distance)
+	var tp_angle := rad_to_deg(atan2(camera.global_transform.basis.z.y, Vector2(camera.global_transform.basis.z.x, camera.global_transform.basis.z.z).length()))
+	_check(absf(tp_angle - 25.0) < 2.0, "third-personhoek is %.1f° i.p.v. 25°" % tp_angle)
+	# de camera hangt achter de soldaat: hij kijkt dezelfde kant op als de speler
+	var cam_fwd := -camera.global_transform.basis.z
+	var face: float = player.get("face")
+	_check(Vector2(cam_fwd.x, cam_fwd.z).normalized().dot(Vector2(sin(face), cos(face))) > 0.95, "third-personcamera hangt niet achter de speler")
+	_check(absf(camera.fov - 58.0) < 1.0, "third-personlens is %.1f° i.p.v. 58°" % camera.fov)
+	# 2A: zacht meedraaien met de looprichting, nooit sneller dan 120°/s
+	var yaw0: float = camera.get("yaw")
+	player.set("face", yaw0 + PI * 0.5)
+	game.set("move", Vector2(1, 0))
+	camera.call("_process", 1.0 / 60.0)
+	var yaw1: float = camera.get("yaw")
+	_check(absf(angle_difference(yaw0, yaw1)) <= deg_to_rad(120.0) / 60.0 + 0.0001, "camera draait sneller dan 120°/s")
+	_check(absf(angle_difference(yaw0, yaw1)) > 0.0, "camera draait niet mee met de looprichting")
+	# sticks t.o.v. de camera: omhoog = vooruit in beeld
+	var turn: float = camera.call("input_turn")
+	var up := Vector2(0, -1).rotated(-turn)
+	_check(Vector2(sin(yaw1), cos(yaw1)).distance_to(up) < 0.01, "stick omhoog loopt niet vooruit in beeld")
+	# 5A: bij richten staat de draai stil
+	game.set("aim", 0.3)
+	var yaw2: float = camera.get("yaw")
+	await _settle_camera(camera, 30)
+	_check(absf(angle_difference(yaw2, float(camera.get("yaw")))) < 0.0001, "camera draait weg tijdens richten")
+	game.set("aim", NAN)
+	game.set("move", Vector2.ZERO)
+	player.set("face", PI)
+	camera.call("snap_to_player")
+	await _settle_camera(camera, 30)
+	# tactisch bovenbeeld via de knop
+	camera.call("toggle_view")
+	_check(GameSettings.get_value("camera_view") == "tact", "cameravoorkeur wordt niet bewaard")
+	await _settle_camera(camera, 150)
+	_check(not bool(camera.call("third_person_active")), "tactisch bovenbeeld schakelt niet in")
+	_check(absf(float(camera.call("input_turn"))) < 0.0001, "sticks draaien nog in het bovenbeeld")
 	var strategic_distance := camera.global_position.distance_to(camera.get("focus"))
 	_check(absf(strategic_distance - 22.5) < 0.8, "strategische cameraafstand is %.2f i.p.v. 22,5 m" % strategic_distance)
 	var screen_h := float(root.get_visible_rect().size.y)
@@ -51,11 +95,11 @@ func _run() -> void:
 	var saved_pitch := GameSettings.get_value("camera_pitch")
 	var expected_pitch := clampf(float(saved_pitch), 35.0, 75.0)
 	_check(absf(strategic_angle - expected_pitch) < 0.8, "strategische kijkhoek is %.2f° i.p.v. %.0f°" % [strategic_angle, expected_pitch])
+	_check(absf(camera.fov - 45.0) < 0.1, "camerafov is niet 45° in het bovenbeeld")
 	var pitch_slider := main.find_child("CameraPitchSlider", true, false) as HSlider
 	_check(pitch_slider != null, "camerahoek-schuifregelaar ontbreekt in Instellingen")
 	if pitch_slider != null:
 		_check(pitch_slider.min_value == 35.0 and pitch_slider.max_value == 75.0 and pitch_slider.step == 1.0, "camerahoek-schuifregelaar heeft verkeerde grenzen of stappen")
-	# Echte camera-test: wijzig live de opgeslagen instelling en meet de resulterende camerastand.
 	for new_pitch in [40, 65, 53]:
 		GameSettings.set_value("camera_pitch", str(new_pitch))
 		await _settle_camera(camera, 90)
@@ -63,30 +107,38 @@ func _run() -> void:
 		_check(absf(measured - float(new_pitch)) < 1.2, "hoek %d° geeft camerastand %.2f°" % [new_pitch, measured])
 	GameSettings.set_value("camera_pitch", saved_pitch)
 	await _settle_camera(camera, 90)
+	# bevelstand gaat vanzelf naar het bovenbeeld, ook vanuit third person
 	camera.call("toggle_view")
-	await _settle_camera(camera, 150)  # inzoomen gaat bewust langzaam (0,85/s)
-	var combat_distance := camera.global_position.distance_to(camera.get("focus"))
-	_check(bool(camera.get("combat_view")), "gevechtsstand schakelt niet in")
-	_check(absf(combat_distance - 20.0) < 0.8, "gevechtscameraafstand is %.2f i.p.v. 20 m" % combat_distance)
-	var combat_angle := rad_to_deg(atan2(camera.global_transform.basis.z.y, Vector2(camera.global_transform.basis.z.x, camera.global_transform.basis.z.z).length()))
-	_check(absf(combat_angle - expected_pitch) < 0.8, "gevechtskijkhoek is %.2f° i.p.v. %.0f°" % [combat_angle, expected_pitch])
-	_check(absf(camera.fov - 45.0) < 0.01, "camerafov is niet 45°")
-	camera.call("toggle_view")
-	await _settle_camera(camera)
-	_check(not bool(camera.get("combat_view")), "camera wisselt niet terug naar strategisch")
+	await _settle_camera(camera, 60)
+	var flag := Node.new()
+	flag.add_to_group("bevelstand_actief")
+	root.add_child(flag)
+	await _settle_camera(camera, 5)
+	_check(not bool(camera.call("third_person_active")), "bevelstand blijft in third person")
+	flag.queue_free()
+	await process_frame
+	await _settle_camera(camera, 60)
+	_check(bool(camera.call("third_person_active")), "third person komt niet terug na de bevelstand")
 	game.set("build_mode", true)
 	var selected_view: bool = bool(camera.get("combat_view"))
 	_check(not camera.has_method("zoom"), "handmatige gameplayzoom mag niet meer bestaan")
 	_check(not camera.has_method("_unhandled_input"), "muiswielzoom mag niet meer bestaan")
+	# 8A: de vlucht naar boven duurt ca. 1,2 s, niet één beeld
+	await _settle_camera(camera, 12)
+	var mid_y := camera.global_position.y
 	await _settle_camera(camera, 90)
 	var build_pitch := rad_to_deg(asin(camera.global_transform.basis.z.y))
 	_check(absf(build_pitch - 71.0) < 3.0, "bouwcamera kijkt onder %.1f° i.p.v. circa 70°" % build_pitch)
-	_check(camera.global_position.y > 35.0, "bouwcamera hangt niet hoog boven de basis")
+	_check(camera.global_position.y > 35.0 * 1.6, "bouwcamera hangt niet 1,6 keer hoger boven de basis (%.1f m)" % camera.global_position.y)
+	_check(mid_y < camera.global_position.y * 0.6, "bouwcamera springt in één keer omhoog in plaats van te vliegen")
 	game.set("build_mode", false)
 	await _settle_camera(camera, 120)
 	_check(bool(camera.get("combat_view")) == selected_view, "bouwmodus vergat de geselecteerde speelcamera")
 	var after_distance := camera.global_position.distance_to(camera.get("focus"))
-	_check(absf(after_distance - 22.5) < 1.0, "camera keert niet terug op de vaste speelafstand (%.2f m)" % after_distance)
+	_check(absf(after_distance - 8.0) < 1.0, "camera keert niet terug op de third-personafstand (%.2f m)" % after_distance)
+	# groepskadrering hoort bij het bovenbeeld
+	camera.call("toggle_view")
+	await _settle_camera(camera, 150)
 	# Een nabije tank en twee teamleden mogen het kader tijdelijk verruimen, zonder handmatige zoom.
 	var tank := load("res://scenes/tank.tscn").instantiate() as Node3D
 	tank.position = player.position + Vector3(6.0, 0.0, 2.0)
@@ -185,6 +237,7 @@ func _run() -> void:
 	_check(not bool(mid.get_shader_parameter("fade_sightline")), "foliage-fade blijft aan buiten het speelbeeld")
 	foliage_script.call("update_visibility_focus", player.global_position, camera.global_position, 1.0, true)
 	_check(bool(mid.get_shader_parameter("fade_sightline")), "foliage-fade komt niet terug na de bouwmodus")
+	GameSettings.set_value("camera_view", "third")
 	main.queue_free()
 	await process_frame
 	await process_frame

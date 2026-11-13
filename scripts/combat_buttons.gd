@@ -793,7 +793,7 @@ func grenade_stick_drag(pointer: int, stick_direction: Vector2) -> void:
 	if not grenade_stick_armed or pointer != aim_finger:
 		return
 	# Reuse the exact existing 2..12m trajectory/target calculation.
-	aim_drag = stick_direction.limit_length(1.0) * AIM_FULL
+	aim_drag = _cam_turn(stick_direction.limit_length(1.0) * AIM_FULL)
 	if aim_drag.length() > AIM_DEAD:
 		_aim_out = true
 	_update_aim()
@@ -829,7 +829,7 @@ func _begin_aim(finger: int, at: Vector2) -> void:
 
 
 func drag_aim(d: Vector2) -> void:
-	aim_drag = d
+	aim_drag = _cam_turn(d)
 	if d.length() > AIM_DEAD:
 		_aim_out = true
 	_update_aim()
@@ -1022,3 +1022,11 @@ func _process(_delta: float) -> void:
 	_roll.bar = (1.0 - p.dodge_cd / p.DODGE_CD) if p.dodge_cd > 0.0 else -1.0
 	_roll.queue_redraw()
 	_reload.queue_redraw()
+
+
+## Third person: een schermrichting (rechts = +x, omlaag = +y) omzetten naar de wereld achter de camera.
+func _cam_turn(d: Vector2) -> Vector2:
+	var cam := get_viewport().get_camera_3d()
+	if cam == null or not cam.has_method("input_turn") or d == Vector2.ZERO:
+		return d
+	return d.rotated(-float(cam.call("input_turn")))

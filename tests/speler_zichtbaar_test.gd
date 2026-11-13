@@ -17,6 +17,7 @@ func _meshes(n: Node) -> int:
 
 
 func _run() -> void:
+	GameSettings.set_value("markeringen", "on")   # de ring telt mee; in third person staat "tact" hem uit
 	for soldaat in ["vq2", "meshy"]:
 		GameSettings.set_value("soldaat", soldaat)
 		var main: Node = load("res://scenes/main.tscn").instantiate()

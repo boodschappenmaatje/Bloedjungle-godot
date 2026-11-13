@@ -1265,7 +1265,7 @@ func _zoom_by(f: float) -> void:
 
 
 func _set_zoom(z: float) -> void:
-	Game.bcam.z = clampf(z, 0.35, 2.4)
+	Game.bcam.z = clampf(z, 0.35, 3.2)   # 7A: verder uitzoomen dan vroeger (2,4)
 	_clamp_pan()
 	_airfield_preview_dirty = true
 

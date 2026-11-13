@@ -207,7 +207,7 @@ func _process(_d: float) -> bool:
 				row = r
 				break
 		var a0 := _screen(K.vertex(Vector2i(6, row)))
-		var a1 := _screen(K.vertex(Vector2i(9, row))) + Vector2(0, 38)
+		var a1 := _screen(K.vertex(Vector2i(9, row))) + Vector2(0, 38.0 / 1.6)   # 2,5 stuk afdwalen; de bouwcamera hangt sinds v231 1,6 keer hoger
 		bm._down(12, a0)
 		bm._move(12, a0.lerp(a1, 0.5))
 		bm._move(12, a1)

@@ -226,6 +226,7 @@ func _process(_delta: float) -> void:
 		float(Input.is_physical_key_pressed(KEY_D) or Input.is_physical_key_pressed(KEY_RIGHT)) - float(Input.is_physical_key_pressed(KEY_A) or Input.is_physical_key_pressed(KEY_LEFT)),
 		float(Input.is_physical_key_pressed(KEY_S) or Input.is_physical_key_pressed(KEY_DOWN)) - float(Input.is_physical_key_pressed(KEY_W) or Input.is_physical_key_pressed(KEY_UP)))
 	var aim := NAN
+	var mouse_aim := false
 	var fire := false
 	var right_stick_firing := false
 	aim_d = Vector2.ZERO
@@ -255,6 +256,7 @@ func _process(_delta: float) -> void:
 			var p: Vector3 = Game.player.global_position
 			aim = atan2(hit.x - p.x, hit.z - p.z)
 		fire = _mouse_down
+		mouse_aim = not is_nan(aim)
 	if combat != null and (bool(combat.call("stick_armed")) or combat.call("wheel_is_open")):
 		# Right stick aims the existing GrenadeAim arc (or the chosen power's aid), no weapon trigger.
 		fire = false
@@ -266,6 +268,13 @@ func _process(_delta: float) -> void:
 		right_stick_firing = false
 		_m1911_fire_latched = false
 	info = "touch %d · sticks %d · %dx%d" % [_events, _sticks.size(), get_viewport_rect().size.x, get_viewport_rect().size.y]
+	# Third person: "stick omhoog" is vooruit in beeld, niet het noorden (de muis richt al via de wereld).
+	var cam_rig := get_viewport().get_camera_3d()
+	var turn: float = float(cam_rig.call("input_turn")) if cam_rig != null and cam_rig.has_method("input_turn") else 0.0
+	if turn != 0.0:
+		mv = mv.rotated(-turn)
+		if not is_nan(aim) and not mouse_aim:
+			aim += turn
 	Game.move = mv.limit_length(1.0)
 	Game.aim = aim
 	Game.fire = fire and Game.state != "over" and Game.state != "shop" and Game.state != "menu"

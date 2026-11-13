@@ -15,6 +15,9 @@ var btn: Control
 
 func _initialize() -> void:
 	OS.set_environment("BJ_TOUCH", "1")
+	# deze test rekent stickrichting = wereldrichting (noord boven): dat is het tactische bovenbeeld.
+	# In third person draait de stick mee met de camera (camera_test controleert dat).
+	GameSettings.set_value("camera_view", "tact")
 	root.size = Vector2i(932, 430)
 	call_deferred("_run")
 
@@ -273,6 +276,7 @@ func _run() -> void:
 			g5 = g
 	_check(g5 != null, "rechterstick loslaten gooit na gerichte beweging één granaat")
 	if g5 == null:
+		GameSettings.set_value("camera_view", "third")
 		quit(1)
 		return
 	var r5: Dictionary = await _follow(g5)
@@ -328,4 +332,5 @@ func _run() -> void:
 
 	print("GRANAAT_RICHTEN_TEST fouten=", failures)
 	print("TEST OK" if failures == 0 else "TEST MISLUKT")
+	GameSettings.set_value("camera_view", "third")
 	quit(1 if failures > 0 else 0)

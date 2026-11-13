@@ -61,7 +61,7 @@ func _process(_d: float) -> bool:
 		for m in get_nodes_in_group("menus"):
 			m._show("")
 		cam = root.get_viewport().get_camera_3d()
-	if frames >= 4 and frames < 20:
+	if frames >= 4:
 		for g in ["mcv_opbouw", "mcv", "mcv_wagen"]:
 			for n in get_nodes_in_group(g):
 				n.queue_free()

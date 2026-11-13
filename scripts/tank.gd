@@ -216,7 +216,12 @@ func _process(raw_delta: float) -> void:
 	_aim(delta)
 
 
+var _hold_until := 0   # ms: zolang loopt de Schieten-animatie door (terugslag)
+
+
 func _play(clip: String, speed: float) -> void:
+	if Time.get_ticks_msec() < _hold_until:
+		return
 	if clip != _clip:
 		_clip = clip
 		_anim.play(clip, 0.35)
@@ -256,14 +261,21 @@ func _aim(delta: float, may_fire := true) -> void:
 		_shoot(aim_at)
 
 
-## Schiet een granaat: vuur uit de loop, een halve seconde later ontploft hij waar de vijand stond.
+## Schiet een granaat: cinematisch schot uit de loop (TankFx), een lichtstreep, en een halve seconde later ontploft hij waar de vijand stond.
 func _shoot(at: Vector3) -> void:
 	var tip := _muzzle.global_position
-	Fx.muzzle(get_parent(), tip)
-	Fx.dust(get_parent(), tip)
+	var fwd := -_muzzle.global_transform.basis.z
+	TankFx.shot(get_parent(), tip, fwd, true, driven)
+	if TankFx.enabled() and _anim != null and _anim.has_animation("Schieten"):
+		# de terugslag uit Blender: de loop schiet terug en de romp deint; de rij-animaties wachten tot hij uit is
+		_clip = "Schieten"
+		_anim.speed_scale = 1.0
+		_anim.play("Schieten", 0.03)
+		_hold_until = Time.get_ticks_msec() + int(minf(_anim.get_animation("Schieten").length, 1.2) * 1000.0)
 	var boom := at
+	TankFx.flight(get_parent(), tip, boom, 0.5)
 	get_tree().create_timer(0.5).timeout.connect(func() -> void:
-		Fx.explosion(get_parent(), boom, 1.0)
+		TankFx.impact(get_parent(), boom, 1.0)
 		Game.note_blast(boom, SHELL_RADIUS)
 		Barrel.catch_blast(boom, 2.0)
 		VijandHk.blast(boom, SHELL_RADIUS, SHELL_DAMAGE * 3.0)  # tegen een gebouw driemaal zo hard als tegen een soldaat

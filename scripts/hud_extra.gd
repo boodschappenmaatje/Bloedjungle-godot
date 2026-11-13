@@ -713,8 +713,26 @@ func _draw_radar_routes(map: Rect2) -> void:
 		_cv.draw_circle(line[0], 2.5 * _k, col)
 
 
+## 9A: na contact een rode stippellijn van waar de groep gezien is naar waar hij heen gaat (verzamelpunt, gebouw).
+func _draw_radar_contacts(map: Rect2) -> void:
+	if AanvalAI.ik == null or AanvalAI.ik.contacten.is_empty():
+		return
+	var pulse := 0.6 + 0.3 * sin(Time.get_ticks_msec() / 220.0)
+	for c in AanvalAI.ik.contacten:
+		var a := _radar_point(c.van, map)
+		var b := _radar_point(c.naar, map)
+		var alpha := clampf(float(c.t) / 6.0, 0.0, 1.0) * pulse
+		var col := Color(1.0, 0.3, 0.15, alpha)
+		_cv.draw_dashed_line(a, b, col, 2.0 * _k, 4.0 * _k, true)
+		var d := (b - a).normalized() if (b - a).length() > 0.5 else Vector2.DOWN
+		var s := Vector2(-d.y, d.x)
+		_cv.draw_colored_polygon(PackedVector2Array([b, b - d * 6.0 * _k + s * 3.5 * _k, b - d * 6.0 * _k - s * 3.5 * _k]), col)
+		_cv.draw_circle(a, 2.6 * _k, col)
+
+
 func _draw_radar_attacks(map: Rect2) -> void:
 	_draw_radar_routes(map)
+	_draw_radar_contacts(map)
 	var cx := map.position.x + map.size.x * 0.5
 	var cy := map.position.y + map.size.y * 0.5
 	var pulse := 0.65 + 0.35 * sin(Time.get_ticks_msec() / 180.0)

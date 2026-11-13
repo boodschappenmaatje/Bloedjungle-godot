@@ -108,7 +108,7 @@ func _model_en_schema(g) -> void:
 	_check("begin: state prep en nog geen groep gestuurd", g.state == "prep" and g.wave == 0)
 	_check("eerste rust is 10 minuten (%.0f s)" % g.prep_t, g.prep_t > 590.0 and g.prep_t <= D.MCV_RUST)
 	_check("constanten: 600 s rust (vanaf het uitklappen), 90 s tussen groepen", D.MCV_RUST == 600.0 and D.GROEP_TUSSEN == 90.0)
-	_check("de komende routes staan al klaar", not g.next_routes.is_empty())
+	_check("slimme aanval (9A): de komende kant blijft geheim tijdens het aftellen", g.next_routes.is_empty() and g.routes.is_empty())
 	var alle_stad := true
 	for n in range(1, 25):
 		for id in AR.pick_group(n):
@@ -156,8 +156,8 @@ func _groepen(g) -> void:
 	_check("start nu: state play, groep 1", g.state == "play" and g.wave == 1)
 	_check("aftellen naar de tweede groep is 90 s: %.0f" % g.prep_t, g.prep_t > 89.0 and g.prep_t <= D.GROEP_TUSSEN)
 	_check("de wachtrij heeft de hele groep (%d)" % main.queue.size(), main.queue.size() == D.build_group(1).size())
-	_check("pijlen wijzen naar de route van groep 1 (hoofdstraat)", g.routes == ["brug"])
-	_check("de volgende groep is al bepaald", g.next_routes == AR.pick_group(2))
+	_check("slimme aanval (9A): geen pijlen vooraf, elke vijand hoort bij het groepsbrein", g.routes.is_empty() and main.queue.all(func(it): return it is Dictionary and (it.has("groep") or it.get("voertuig", false))))
+	_check("slimme aanval (9A): de volgende kant is nog niet bekend", g.next_routes.is_empty())
 	_check("het vorige aftellen was langer dan 90 s (rust)", tel > 90.0)
 
 

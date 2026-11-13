@@ -3,7 +3,7 @@ extends CanvasLayer
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
 const VLIEGTUIG := preload("res://scripts/vliegtuig.gd")
-const VERSION := "v228"
+const VERSION := "v229"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big
@@ -146,6 +146,8 @@ func _process(delta: float) -> void:
 				for id in Game.next_routes:
 					names.append(String(AanvalRoutes.LIST[id].naam))
 				small.text += "  ·  VIA " + " + ".join(names)
+			elif AanvalAI.aan:
+				small.text += "  ·  KANT ONBEKEND"   # 9A: verkennen
 		else:
 			small.text = ""
 	# Tijdens het vliegen: golf-plaat en knoppen worden doorzichtig en pakken geen tikken, zodat je niet per ongeluk "Start nu" raakt.

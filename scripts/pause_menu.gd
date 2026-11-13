@@ -44,6 +44,7 @@ class MenuIcon extends Control:
 const ROWS := [
 	["soldaat", "Mannetjes (na nieuw spel)", [["vq2", "Realistisch"], ["meshy", "Meshy-speler"], ["v1", "Oud model"]]],
 	["enemy_models", "Vijandmodellen", [["all", "Alle types"], ["meshy", "Alleen Meshy"]]],
+	["ai_niveau", "Vijand slimheid", [["makkelijk", "Makkelijk"], ["normaal", "Normaal"], ["moeilijk", "Moeilijk"]]],
 	["m1911_fire_mode", "M1911 schieten", [["assist", "Rustig (0,5 s)"], ["manual", "Handmatig"]]],
 	["vliegtuig_hoogte", "Vliegtuighoogte (rechterstick)", [["normaal", "Omlaag = stijgen"], ["omgekeerd", "Omhoog = stijgen"]]],
 	["ragdoll", "Doodsval vijanden", [["on", "Ragdoll"], ["off", "Animatie"]]],
@@ -78,7 +79,7 @@ const ROWS := [
 const SETTINGS_TABS := [
 	{"title": "BEELD", "left": ["quality", "upscaling", "hz", "perf"], "right": ["fps", "treeshadow", "buildshadow", "g2", "wapenfx"], "note": true},
 	{"title": "WERELD", "left": ["time", "weather"], "right": ["wind"]},
-	{"title": "SOLDATEN", "left": ["soldaat", "enemy_models"], "right": ["ragdoll", "markeringen", "#meshy"]},
+	{"title": "SOLDATEN", "left": ["soldaat", "enemy_models", "ai_niveau"], "right": ["ragdoll", "markeringen", "#meshy"]},
 	{"title": "GELUID & BESTURING", "left": ["sound", "m1911_fire_mode", "vliegtuig_hoogte", "#m1911"], "right": ["#camera", "wapen_haptiek"]},
 	{"title": "TEST", "left": ["t_sun", "t_jungle", "t_stad", "t_post", "t_res"], "right": ["g2_fx", "g2_licht", "g2_diepte", "t_krachten", "diag"]},
 ]

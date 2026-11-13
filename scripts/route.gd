@@ -25,10 +25,12 @@ static func _river(from: Vector3, goal: Vector3) -> Variant:
 		return null
 	var cx := Data.BRIDGE_X
 	if sf == 0:
-		cx = Data.FORD_X if absf(from.x - Data.FORD_X) < absf(from.x - Data.BRIDGE_X) else Data.BRIDGE_X
+		for x in [Data.FORD_X, Data.BACKDOOR_X]:   # midden in de rivier: de dichtstbijzijnde oversteek
+			if absf(from.x - x) < absf(from.x - cx):
+				cx = x
 	else:
 		var best := INF
-		for x in [Data.BRIDGE_X, Data.FORD_X]:
+		for x in [Data.BRIDGE_X, Data.FORD_X, Data.BACKDOOR_X]:   # brug, ondiepte en (sinds de slimme aanval) de smalle Backdoor
 			if x == Data.BRIDGE_X and Game.bridge != null and is_instance_valid(Game.bridge) and not Game.bridge.is_down():
 				continue  # de brug staat omhoog: dan alleen de ondiepte
 			var rz := Data.river_z(x)

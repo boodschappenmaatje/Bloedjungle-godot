@@ -48,6 +48,19 @@ var _burn_dir := Vector3.ZERO
 var _burn_turn := 0.0
 
 
+# Slimme vijandaanval (AanvalAI, keuzes 1A-10A): het groepsbrein geeft opdrachten, de soldaat voert ze uit met zijn eigen gedrag.
+var ai_groep: Variant = null   # de groep (Dictionary in AanvalAI.groepen) of null
+var ai_ploeg := 0              # ploeg 0 of 1 voor vuur en beweging
+var ai_kant := ""              # N, O, Z of W: de kant van jouw kamp die hij aanvalt
+var ai_hold: Variant = null    # Vector3: hier wachten (verzamelpunt, sprong, terugtrekken); null = gewoon naar het doel
+var ai_vuur := false           # dekkingsvuur: ook buiten zijn gewone bereik schieten (tot AI_VUUR_R m)
+var ai_snel := false           # oprukken of terugtrekken: rennen
+var ai_order := ""             # "storm" of ""
+var _ai_far_t := 0.0
+var ai_doel: Node3D = null     # 4A: waar hij op schiet als jij niet dichtbij bent (null = het HK)
+var _ai_wacht := false         # staat nu op zijn wachtplek (gehurkt)
+const AI_VUUR_R := 34.0
+
 var _stuck_t := 0.0  # hoe lang hij tegen iets aan loopt zonder vooruit te komen
 var _detour_t := 0.0  # nog zo lang opzij omlopen
 var _detour_side := 1.0
@@ -170,6 +183,13 @@ func _physics_process(delta: float) -> void:
 	_tgt_y = player.global_position.y if at_player else 0.0
 	var goal: Vector3 = player.global_position if at_player else Game.base_pos
 	var dist := to_player if at_player else _bunker_dist()
+	if ai_doel != null and not is_instance_valid(ai_doel):
+		ai_doel = null
+	if not at_player and ai_doel != null and not (ai_doel == player and player.dead):
+		goal = ai_doel.global_position
+		goal.y = 0.0
+		_tgt_y = 1.0 if ai_doel != player else player.global_position.y
+		dist = _flat(goal - global_position).length() - 1.0
 	if rb != null:
 		at_player = false
 		_tgt_y = 0.0
@@ -198,6 +218,8 @@ func _physics_process(delta: float) -> void:
 		flanking = true
 	elif not at_player and rb == null and _route_goal() != null:
 		move_goal = _route_goal()
+	elif not at_player and rb == null and ai_hold != null:
+		move_goal = ai_hold
 	var hold := 1.0 if melee else 0.65 + 0.1 * float(slot % 4)  # schutters houden verschillende afstanden aan (gelaagd, niet in een kluitje)
 	var cover_look := 0.0
 	if tactical:
@@ -241,6 +263,8 @@ func _physics_process(delta: float) -> void:
 				if at_player:
 					if not BaseWallRules.blocks_blast(global_position, player.global_position):
 						player.hit(t.dmg, Vector3(sin(look), 0, cos(look)), false)
+				elif ai_doel != null:
+					_ai_steek(ai_doel)   # 4A: het mes op wat hij uitkoos (soldaat, wacht, gebouw, truck)
 				elif not BaseWallRules.blocks_blast(global_position, Game.base_pos):
 					Game.damage_base(t.dmg)
 	elif not flanking and dist < range_ * hold and (rb != null or _clear_shot(aim_at, not at_player)):
@@ -248,6 +272,22 @@ func _physics_process(delta: float) -> void:
 		look = _angle_to(goal)
 		if fire_t <= 0.0:
 			_shoot(look)
+
+	# AanvalAI: staat zijn doel (een soldaat van jou) pal voor hem, dan treft een kogel niet meer: kolfslag
+	if not melee and not at_player and rb == null and ai_doel is Ally and fire_t <= 0.0 and _flat((ai_doel as Node3D).global_position - global_position).length() < 2.0:
+		fire_t = t.rate
+		Sfx.play("knife", 0.8, global_position)
+		_ai_steek(ai_doel)
+
+	# AanvalAI: op zijn wachtplek blijven (gehurkt); de ploeg met dekkingsvuur schiet ook op grotere afstand
+	_ai_wacht = false
+	if ai_hold != null and not at_player and rb == null and mode == "attack" and _route_goal() == null:
+		if _flat((ai_hold as Vector3) - global_position).length() < 1.2:
+			want_move = false
+			_ai_wacht = true
+			look = _angle_to(goal)
+			if ai_vuur and not melee and fire_t <= 0.0 and dist < AI_VUUR_R and _clear_shot(aim_at, true):
+				_shoot(look)
 
 	# een dichte poort in de weg: erop slaan of schieten tot hij kapot is
 	var gate: Variant = Game.gates.blocking(global_position, move_goal) if want_move and Game.gates else null
@@ -295,7 +335,7 @@ func _physics_process(delta: float) -> void:
 		var wp := Route.waypoint(global_position, move_goal)
 		var d := _flat(wp - global_position)
 		if d.length() > 0.05:
-			vel = Vector3(d.x, 0.0, d.y).normalized() * t.speed * speed_mul * (0.4 if slow_t > 0.0 else 1.0) * (1.25 if mode == "cover" else 1.0)
+			vel = Vector3(d.x, 0.0, d.y).normalized() * t.speed * speed_mul * (0.4 if slow_t > 0.0 else 1.0) * (1.25 if mode == "cover" else 1.0) * (1.35 if ai_snel else 1.0)
 			look = atan2(d.x, d.y) if mode != "cover" else cover_look
 	elif mode == "retreat":
 		var away2 := _flat(global_position - goal).normalized()
@@ -340,6 +380,21 @@ func _route_goal() -> Variant:
 	return null
 
 
+## AanvalAI 4A: een messteek op zijn doel. Een soldaat of wacht verliest levenspunten (en sneuvelt zoals bij een M2-kogel), de rest krijgt een vijandelijke treffer.
+func _ai_steek(doel: Node3D) -> void:
+	if doel is Ally:
+		var a: Ally = doel
+		if a.onraakbaar():
+			return
+		a.hp -= t.dmg
+		if a.hp <= 0.0:
+			Game.allies.erase(a)
+			a.queue_free()
+			Game.changed.emit()
+	elif doel.has_method("hit"):
+		doel.hit(t.dmg, Vector3(sin(face), 0, cos(face)), false)
+
+
 ## Ver van de speler en ver van de basis: niemand ziet hem, dus hij rekent maar af en toe en loopt rechtstreeks.
 func _is_far(player: Variant) -> bool:
 	if player == null or player.dead or slow_t > 0.0:
@@ -366,6 +421,21 @@ func _far_step(delta: float) -> void:
 	if _far_n % 4 != 0:
 		return
 	var rg: Variant = _route_goal()
+	if rg == null and ai_hold != null:
+		if _flat((ai_hold as Vector3) - global_position).length() < 1.0:
+			_far_acc = 0.0
+			return   # wacht op zijn plek (verzamelpunt), ook als niemand kijkt
+		rg = ai_hold
+	elif rg == null and ai_doel != null and is_instance_valid(ai_doel):
+		rg = ai_doel.global_position
+	# AanvalAI: een soldaat van jou pal voor hem, ook als jij ver weg bent: hij slaat (anders was die soldaat onaantastbaar)
+	if ai_doel is Ally and _flat((ai_doel as Node3D).global_position - global_position).length() < 2.5:
+		_ai_far_t -= _far_acc
+		if _ai_far_t <= 0.0:
+			_ai_far_t = maxf(float(t.rate), 0.8)
+			_ai_steek(ai_doel)
+		_far_acc = 0.0
+		return
 	var wp := Route.waypoint(global_position, rg if rg != null else Game.base_pos)
 	var d := _flat(wp - global_position)
 	if d.length() > 0.05:
@@ -432,7 +502,9 @@ func _shoot(a: float) -> void:
 	_shot_sequence += 1
 	var tracer_every := 1 if type == "heavy" else 2
 	var tracer_weapon := weapon_kind if _shot_sequence % tracer_every == 0 else ""
-	Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread * _aim_mult(), Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false, false, 0, 0.0, 0.0, rise, tracer_weapon)
+	var kogel := Bullet.fire(get_parent(), muzzle, a + randf_range(-1.0, 1.0) * t.spread * _aim_mult(), Data.ENEMY_BULLET_SPEED, t.dmg, Data.ENEMY_BULLET_LIFE, false, false, 0, 0.0, 0.0, rise, tracer_weapon)
+	if kogel != null and ai_doel != null and is_instance_valid(ai_doel) and ai_doel is Ally:
+		kogel.src = "vijand"   # 4A: hij mikt op een soldaat van jou; zo raakt de kogel die ook (zoals een M2-kogel)
 	model.shoot_recoil(weapon_kind)
 	_shoot_pose_t = 0.24
 	Fx.muzzle(get_parent(), muzzle, weapon_kind, a)
@@ -489,10 +561,17 @@ func _clear_shot(target: Vector3, at_bunker: bool) -> bool:
 	var from := global_position + Vector3.UP * 1.33
 	if BaseWallRules.blocks_ground_fire(from, target):
 		return false
+	if AanvalFx.rook_blokkeert(from, target):
+		return false   # rookgordijn: hij ziet zijn doel niet
 	var mask := Bullet.MASK_WALL | (0 if at_bunker else Bullet.MASK_BUNKER)
 	var q := PhysicsRayQueryParameters3D.create(from, target, mask)
 	q.hit_from_inside = true
-	return get_world_3d().direct_space_state.intersect_ray(q).is_empty()
+	var r := get_world_3d().direct_space_state.intersect_ray(q)
+	if r.is_empty():
+		return true
+	# AanvalAI (4A): mikt hij op een gebouw of toren, dan is dat gebouw zelf geen blokkade
+	var c: Object = r.collider
+	return ai_doel != null and is_instance_valid(ai_doel) and c is Node and (c == ai_doel or ai_doel.is_ancestor_of(c) or (c as Node).is_ancestor_of(ai_doel))
 
 
 ## Een plek achter het dichtstbijzijnde gebouw (of zandzak, muur) vanaf waar de dreiging komt, binnen 14 m; null als er niets is.
@@ -561,6 +640,9 @@ func _animate(spd: float, moving: bool) -> void:
 			model.play("herladen", 0.08)
 		return
 	if model.current == "steken" and model.anim.is_playing():
+		return
+	if _ai_wacht and _shoot_pose_t <= 0.0 and model.anim != null and model.anim.has_animation("hurken_stil"):
+		model.play("hurken_stil", 0.25)   # wachten op het verzamelpunt of achter dekking: gehurkt (echte Meshy-clip)
 		return
 	if type == "assault" and moving:
 		var local_motion: Vector3 = global_transform.basis.inverse() * velocity

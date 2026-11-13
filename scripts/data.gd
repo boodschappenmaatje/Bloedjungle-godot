@@ -109,6 +109,7 @@ const RIVER_HALF := 2.6
 const BRIDGE_X := 0.0
 ## De doorwaadplaats schuift wel mee bij een willekeurige wereld-seed (W2); zie _randomize_river(). Vaste standaard: 38.0.
 static var FORD_X := 38.0
+static var BACKDOOR_X := -112.0   # slimme vijandaanval (2A): een derde, smalle oversteek aan de andere kant van de brug dan de ondiepte (Backdoor)
 
 
 ## Gebieden in de jungle-strook tussen basismuur en rivier: "moeras" (west), "open" (oost, met rotsen en stammen), anders "dicht".
@@ -177,6 +178,7 @@ static func _randomize_river() -> void:
 		_river_freq2 = 0.15
 		_river_phase2 = 1.0
 		FORD_X = 38.0
+		BACKDOOR_X = -112.0
 		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = world_seed + 3001
@@ -188,6 +190,7 @@ static func _randomize_river() -> void:
 	_river_phase2 = rng.randf_range(0.0, TAU)
 	var side := -1.0 if rng.randf() < 0.5 else 1.0
 	FORD_X = side * rng.randf_range(20.0, 65.0)   # ruim weg van de vaste brug (x=0) en van de kaartrand
+	BACKDOOR_X = -side * rng.randf_range(100.0, 128.0)   # de Backdoor ligt aan de andere kant, ver van de stad
 
 
 static func river_z(x: float) -> float:

@@ -918,7 +918,7 @@ static func _in_river(p: Vector3) -> bool:
 		return true
 	if p.z < Data.FOREST_Z0 and p.z > Data.river_z(0.0) and absf(p.x - Data.path_x(p.z)) < 3.4:
 		return true  # het pad door het bos blijft open
-	if d < 12.0 and (absf(p.x - Data.BRIDGE_X) < 4.2 or absf(p.x - Data.FORD_X) < 3.6):
+	if d < 12.0 and (absf(p.x - Data.BRIDGE_X) < 4.2 or absf(p.x - Data.FORD_X) < 3.6 or absf(p.x - Data.BACKDOOR_X) < 3.2):
 		return true
 	if Stad.covers(p, 4.0):
 		return true  # de stad met zijn wegen en gebouwen, en een strook eromheen

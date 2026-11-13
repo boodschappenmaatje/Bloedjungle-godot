@@ -22,6 +22,7 @@ func _ready() -> void:
 	add_child(Game.supply)
 	Game.gates = Gates.new()
 	add_child(Game.gates)
+	add_child(AanvalAI.new())   # slimme vijandaanval: één brein voor alle aanvalsgroepen (keuzes 1A-10A)
 	GameSettings.apply_hz()
 	add_child(PerfGovernor.new())
 	add_child(JungleGeluid.new())
@@ -203,6 +204,10 @@ func _start_prep() -> void:
 	Game.wave = maxi(0, Progress.test_groep - 1)   # testoptie: de eerste groep die uitrukt is dan groep test_groep
 	Game.next_routes = AanvalRoutes.pick_group(Game.wave + 1)
 	Game.routes = Game.next_routes.duplicate()  # de pijlen tonen al tijdens de rust waar de eerste groep vandaan komt
+	if AanvalAI.aan and AanvalAI.ik != null:
+		AanvalAI.ik.reset()
+		Game.next_routes = []   # 9A: de kant zie je pas bij contact, niet meer tijdens het aftellen
+		Game.routes = []
 	Game.state = "prep"
 	Game.prep_t = Progress.eerste_rust()
 	clear_t = -1.0
@@ -227,8 +232,12 @@ func _launch_group() -> void:
 	if routes.is_empty():
 		routes = AanvalRoutes.pick_group(Game.wave)
 	var was_leeg := queue.is_empty()
-	for kind in Data.build_group(Game.wave):
-		queue.append({"kind": kind, "n": Game.wave, "routes": routes})
+	var slim := AanvalAI.aan and AanvalAI.ik != null
+	if slim:
+		queue.append_array(AanvalAI.ik.nieuwe_groep(Game.wave, Data.build_group(Game.wave)))
+	else:
+		for kind in Data.build_group(Game.wave):
+			queue.append({"kind": kind, "n": Game.wave, "routes": routes})
 	# voertuigen (Dennis, keuze 1B): ze rukken uit voor de soldaten, en rijden hun eigen weg (AanvalRoutes.voertuig_pad)
 	var voertuigen := Data.groep_voertuigen(Game.wave)
 	for i in voertuigen.size():
@@ -239,7 +248,12 @@ func _launch_group() -> void:
 	Game.routes = routes
 	Game.next_routes = AanvalRoutes.pick_group(Game.wave + 1)
 	Game.prep_t = Data.GROEP_TUSSEN
-	Game.banner.emit("GROEP %d ONDERWEG" % Game.wave, "Ze komen " + AanvalRoutes.describe(routes), 1.5)
+	if slim:
+		Game.routes = []
+		Game.next_routes = []
+		Game.banner.emit("GROEP %d ONDERWEG" % Game.wave, "Kant onbekend · torens, soldaten en de satelliet verkennen", 1.5)
+	else:
+		Game.banner.emit("GROEP %d ONDERWEG" % Game.wave, "Ze komen " + AanvalRoutes.describe(routes), 1.5)
 	Game.changed.emit()
 
 
@@ -262,7 +276,7 @@ func _process(delta: float) -> void:
 			elif spawn_t <= 0.0 and Game.enemies.size() < max_alive and not wacht_op_plek:
 				_spawn(queue.pop_front())
 				spawn_t = maxf(0.25, 1.2 - Game.wave * 0.06) * randf_range(0.6, 1.3)
-				if queue.is_empty():
+				if queue.is_empty() and not AanvalAI.aan:
 					Game.routes = Game.next_routes.duplicate()   # alles is uitgerukt: de pijlen wijzen al naar de volgende groep
 		elif Game.enemies.is_empty():
 			if clear_t < 0.0:
@@ -294,9 +308,15 @@ func _spawn(item: Variant) -> void:
 		Game.rocket_seen = true
 		Game.banner.emit("RAKETWERPERS", "Ze schieten je gebouwen kapot", 2.5)
 	# elke vijand komt uit de poort van de vijandbasis en loopt een van de vaste stadsroutes van zijn groep
-	var routes: Array = entry.routes
-	e.path = AanvalRoutes.path_from_base(routes.pick_random())
 	e.position = VijandBasis.spawn_point()
+	if entry.has("groep") and AanvalAI.ik != null:
+		add_child(e)
+		AanvalAI.ik.lid_erbij(entry.groep, e)   # het groepsbrein geeft hem zijn pad, zijn plek in de waaier en zijn kant
+		return
+	var routes: Array = entry.get("routes", [])
+	if routes.is_empty():
+		routes = AanvalRoutes.pick_group(1)
+	e.path = AanvalRoutes.path_from_base(routes.pick_random())
 	add_child(e)
 
 
@@ -308,9 +328,29 @@ func _spawn_voertuig(entry: Dictionary) -> void:
 	v.position = VijandBasis.gate_inside() + Vector3(0.0, 0.0, -2.0)
 	v.rotation.y = PI   # met de neus naar de poort (zuid)
 	add_child(v)
+	if AanvalAI.ik != null:
+		AanvalAI.ik.voertuig_erbij(int(entry.n), v)   # fase 3: de groep wacht op hem
 	Game.banner.emit("VIJANDELIJKE TANK ONDERWEG" if tank else "VIJANDELIJKE JEEP ONDERWEG", "Hij rijdt door de stad naar je basis" if not tank else "Hij belegert alles binnen 38 m met granaten", 2.0)
 	if Game.builds != null and Game.builds.radio != null:
 		Game.builds.radio.say("voertuig_onderweg")   # Dennis neemt de zin nog op; zonder opname blijft het stil
+
+
+## 7A najagen: een ploeg van `n` man rukt meteen uit naar een kant van jouw kamp die net is weggevallen (AanvalAI._check_najagen).
+func ploeg_uitsturen(g: Dictionary, n: int) -> void:
+	if Game.state not in ["prep", "play"]:
+		return
+	for i in n:
+		var e := ENEMY.instantiate()
+		e.setup("assault", maxi(1, Game.wave))
+		e.position = VijandBasis.spawn_point() + Vector3(i * 1.2, 0.0, 0.0)
+		add_child(e)
+		g.leden.append(e)
+		g.start += 1
+		e.ai_groep = g
+		e.ai_kant = g.kant
+		e.path = AanvalAI.ik.najaag_pad(g)
+	Game.state = "play"
+	Game.changed.emit()
 
 
 ## Applied by the Settings toggle, including while the mission is paused.

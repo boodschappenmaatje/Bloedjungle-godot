@@ -2,7 +2,7 @@ class_name GameSettings
 ## Instellingen uit het web-menu (grafiek, tijd, bouwtijd, weer, fps-teller); blijven bewaard op het apparaat.
 
 const PATH := "user://instellingen.cfg"
-const DEFAULTS := {"quality": "high", "upscaling": "quality", "time": "day", "prep": "60", "weather": "clear", "fps": "off", "perf": "off", "hz": "60", "sound": "on", "wind": "off", "treeshadow": "fake", "buildshadow": "medium", "t_sun": "on", "t_jungle": "on", "t_stad": "on", "t_post": "on", "t_res": "auto", "diag": "off", "t_krachten": "off", "soldaat": "vq2", "enemy_models": "all", "ragdoll": "on", "markeringen": "on", "camera_pitch": "53", "m1911_fire_mode": "assist", "vliegtuig_hoogte": "normaal", "g2": "on", "g2_fx": "on", "g2_licht": "on", "g2_diepte": "on", "wapenfx": "nieuw", "wapen_haptiek": "on"}
+const DEFAULTS := {"quality": "high", "upscaling": "quality", "time": "day", "prep": "60", "weather": "clear", "fps": "off", "perf": "off", "hz": "60", "sound": "on", "wind": "off", "treeshadow": "fake", "buildshadow": "medium", "t_sun": "on", "t_jungle": "on", "t_stad": "on", "t_post": "on", "t_res": "auto", "diag": "off", "t_krachten": "off", "soldaat": "vq2", "enemy_models": "all", "ragdoll": "on", "markeringen": "on", "camera_pitch": "53", "m1911_fire_mode": "assist", "vliegtuig_hoogte": "normaal", "g2": "on", "g2_fx": "on", "g2_licht": "on", "g2_diepte": "on", "wapenfx": "nieuw", "wapen_haptiek": "on", "ai_niveau": "normaal"}
 
 static var values := {}
 static var _loaded := false

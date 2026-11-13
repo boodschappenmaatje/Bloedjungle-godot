@@ -25,7 +25,8 @@ static func build(parent: Node3D) -> void:
 
 ## Hoogte-factor: bij de doorwaadbare plek is de bedding ondiep (1 = volle diepte).
 static func _depth(x: float) -> float:
-	return 1.0 - 0.65 * (1.0 - smoothstep(2.0, 4.0, absf(x - Data.FORD_X)))
+	var near := minf(absf(x - Data.FORD_X), absf(x - Data.BACKDOOR_X) + 0.6)   # de Backdoor is iets smaller en dieper
+	return 1.0 - 0.65 * (1.0 - smoothstep(2.0, 4.0, near))
 
 
 static func _pt(x: float, off: float, y: float) -> Vector3:
@@ -111,7 +112,7 @@ static func _banks(root: Node3D) -> void:
 	while x < X_MAX:
 		var cx := x + 0.75
 		x += 1.5
-		if absf(cx - Data.BRIDGE_X) < 3.0 or absf(cx - Data.FORD_X) < 2.4:
+		if absf(cx - Data.BRIDGE_X) < 3.0 or absf(cx - Data.FORD_X) < 2.4 or absf(cx - Data.BACKDOOR_X) < 2.0:
 			continue
 		var cs := CollisionShape3D.new()
 		var bs := BoxShape3D.new()
@@ -139,16 +140,17 @@ static func _ford(root: Node3D) -> void:
 	rng.seed = 21
 	var xf: Array = []
 	var cols: Array = []
-	for k in range(-3, 4):
-		var z := Data.river_z(Data.FORD_X) + k * 0.8
-		for pass_ in 2:
-			var px := Data.FORD_X + (rng.randf_range(-0.5, 0.5) if pass_ == 0 else rng.randf_range(1.0, 1.6) * (1.0 if k % 2 else -1.0))
-			var pz := z + (0.0 if pass_ == 0 else 0.3)
-			var r := rng.randf_range(0.35, 0.5) if pass_ == 0 else rng.randf_range(0.3, 0.42)
-			var b := Basis.from_euler(Vector3(0, rng.randf() * TAU, 0)).scaled(Vector3(r * 2.0, r * 1.2, r * 2.0))
-			xf.append(Transform3D(b, Vector3(px, -0.3 + r * 0.25, pz)))
-			var v := rng.randf_range(0.8, 1.1)
-			cols.append(Color(v, v, v))
+	for fx in [Data.FORD_X, Data.BACKDOOR_X]:
+		for k in range(-3, 4):
+			var z := Data.river_z(fx) + k * 0.8
+			for pass_ in (2 if fx == Data.FORD_X else 1):
+				var px: float = fx + (rng.randf_range(-0.5, 0.5) if pass_ == 0 else rng.randf_range(1.0, 1.6) * (1.0 if k % 2 else -1.0))
+				var pz := z + (0.0 if pass_ == 0 else 0.3)
+				var r := rng.randf_range(0.35, 0.5) if pass_ == 0 else rng.randf_range(0.3, 0.42)
+				var b := Basis.from_euler(Vector3(0, rng.randf() * TAU, 0)).scaled(Vector3(r * 2.0, r * 1.2, r * 2.0))
+				xf.append(Transform3D(b, Vector3(px, -0.3 + r * 0.25, pz)))
+				var v := rng.randf_range(0.8, 1.1)
+				cols.append(Color(v, v, v))
 	var sph := SphereMesh.new()
 	sph.radius = 0.5
 	sph.height = 1.0
@@ -170,7 +172,7 @@ static func _reeds(root: Node3D) -> void:
 		var x := rng.randf_range(-Data.WORLD_R + 2.0, Data.WORLD_R - 2.0)
 		var side := -1.0 if rng.randf() < 0.5 else 1.0
 		var z := Data.river_z(x) + side * (W + rng.randf_range(-0.2, 0.6))
-		if absf(x - Data.BRIDGE_X) < 4.0 or absf(x - Data.FORD_X) < 3.0:
+		if absf(x - Data.BRIDGE_X) < 4.0 or absf(x - Data.FORD_X) < 3.0 or absf(x - Data.BACKDOOR_X) < 2.6:
 			continue
 		var h := rng.randf_range(0.9, 2.0)
 		var b := Basis.from_euler(Vector3(rng.randf_range(-0.15, 0.15), 0, rng.randf_range(-0.15, 0.15))).scaled(Vector3(1, h, 1))

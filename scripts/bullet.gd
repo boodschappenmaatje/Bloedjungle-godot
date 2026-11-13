@@ -324,10 +324,11 @@ func _physics_process(delta: float) -> void:
 	var hit := get_world_3d().direct_space_state.intersect_ray(q)
 	# Allies have no physics collision layer. M2 rounds test their swept path explicitly,
 	# and only hit when closer than the first wall/building collision.
-	if src == "m2" and step.length_squared() > 0.0001:
+	if (src == "m2" or src == "vijand") and step.length_squared() > 0.0001:
 		var nearest: Ally = null
 		var nearest_distance := INF
-		for soldier in Game.allies:
+		var soldaten: Array = Game.allies if src == "m2" else Game.allies + get_tree().get_nodes_in_group("wacht")   # slimme aanval: ook je wachten
+		for soldier in soldaten:
 			if not is_instance_valid(soldier) or soldier.onraakbaar():
 				continue
 			var center: Vector3 = soldier.global_position + Vector3.UP * 1.2

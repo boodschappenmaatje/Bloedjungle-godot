@@ -28,6 +28,7 @@ const KINDS := {
 	"plein": {"cat": "weg", "name": "Plein", "plein": true, "hx": 6.0, "hz": 6.0, "snap": 3.0, "cost": 3.0, "part": "Plein"},
 	"woonhuis": {"cat": "gebouw", "name": "Woonhuis", "hx": 4.0, "hz": 3.5, "snap": 0.5, "cost": 10.0, "model": true, "h": 7.0},
 	"winkel": {"cat": "gebouw", "name": "Winkel met flat", "hx": 4.5, "hz": 4.0, "snap": 0.5, "cost": 14.0, "model": true, "h": 9.0},
+	"tropical_shop_a": {"cat": "gebouw", "name": "Tropisch winkelpand A · 2 lagen", "hx": 5.15, "hz": 4.3, "snap": 0.5, "cost": 16.0, "model": true, "h": 7.2, "glb": "res://assets/tropical_shop_a.glb"},
 	"kerk": {"cat": "gebouw", "name": "Kerk met toren", "hx": 4.75, "hz": 9.5, "snap": 0.5, "cost": 20.0, "model": true, "h": 12.0, "glb": "res://assets/kerk.glb"},
 	"benzine": {"cat": "gebouw", "name": "Benzinestation", "hx": 5.0, "hz": 5.5, "snap": 0.5, "cost": 12.0, "model": true, "h": 5.0, "glb": "res://assets/benzine.glb"},
 	"magazijn": {"cat": "gebouw", "name": "Magazijn", "hx": 6.0, "hz": 4.0, "snap": 0.5, "cost": 8.0, "model": true, "h": 5.8, "glb": "res://assets/magazijn.glb"},
@@ -60,7 +61,7 @@ const KINDS := {
 ## Volgorde in het palet van de editor.
 const ORDER := {
 	"weg": ["weg_recht", "weg_bocht", "weg_t", "weg_kruis", "weg_steeg", "weg_zebra", "stoep", "plein"],
-	"gebouw": ["woonhuis", "winkel", "kerk", "benzine", "magazijn", "hotel", "blok1", "blok2", "blok3", "blok4"],
+	"gebouw": ["woonhuis", "winkel", "tropical_shop_a", "kerk", "benzine", "magazijn", "hotel", "blok1", "blok2", "blok3", "blok4"],
 	"straat": ["lantaarn", "bankje", "bushokje", "prullenbak", "brandkraan", "container", "bord", "stoplicht", "auto", "autowrak", "autobrand", "bus", "buswrak", "busbrand", "zandzakken", "puin", "hek", "boom", "struik"],
 }
 

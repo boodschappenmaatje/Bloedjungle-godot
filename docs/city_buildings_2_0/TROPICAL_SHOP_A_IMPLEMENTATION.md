@@ -1,6 +1,9 @@
 # City Buildings 2.0 — Tropical WWII Shop A
 
-Status: implementation in progress; **do not merge or publish OTA**.
+Status: model and city editor integration implemented on `feature/city-buildings-2-0-tropical-shop`; Draft PR #306 remains unmerged. **Do not publish OTA**.
+
+Completed implementation evidence and current test status are tracked in
+[`TROPICAL_SHOP_A_PRODUCTION_REPORT.md`](TROPICAL_SHOP_A_PRODUCTION_REPORT.md).
 
 ## Approved design
 - Tropical 1940s colonial two-storey shop, weathered plaster, blue-green shutters, tiled roof and awning.
@@ -21,13 +24,14 @@ Status: implementation in progress; **do not merge or publish OTA**.
 8. CI and iOS unsigned export only on featurebranch. Native 60 FPS performance remains unverified until device test. NO merge / NO OTA without explicit approval.
 
 ## Acceptance checklist
-- [ ] Blender source and actual modified GLB created (not just concept)
-- [ ] Model visually faithful to Meshy source from all sides
-- [ ] Both storeys, doors, staircase, balcony physically traversable
-- [ ] Roof independently toggleable; third-person camera avoids clipping
-- [ ] Build-mode footprint and full roof visible; no regression to current buildings
-- [ ] Godot 4.7.2 scene imports and tests pass; capture evidence committed
-- [ ] 3D viewer and performance report provided
-- [ ] Draft PR remains unmerged and OTA unpublished
+- [x] Blender source and actual modified GLB created (not just concept)
+- [x] Model retains the approved Meshy roof/material and has a hollow playable shell
+- [x] Both storeys, doors, staircase, balcony are traversable in the isolated scene test
+- [x] Roof visibility, floor cutaway, third-person and top-down cameras tested
+- [x] Build-mode footprint and full roof integrated in the editor; default layout unchanged
+- [x] Godot 4.7.2 scene and focused placement/collision tests run; evidence committed
+- [x] 3D viewer, renders, USDZ and performance limits documented
+- [x] Draft PR remains unmerged and OTA unpublished
+- [ ] Native iPhone install and FPS profile (pending physical device test)
 
 Do not claim any checkbox is complete without real output/test proof.

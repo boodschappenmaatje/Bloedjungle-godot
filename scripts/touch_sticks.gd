@@ -10,8 +10,6 @@ const AIM_FIRE := 0.8
 const M1911_FIRE_ENTER := 0.82
 const M1911_FIRE_EXIT := 0.72
 
-var _last_left_tap := -10.0   # v234 (4A): tijdstip van de vorige aanraking links; twee snel achter elkaar = rol
-var _dodge_wait := -1.0
 var _sticks := {}  # vinger-index -> {"aim": bool, "origin": Vector2, "d": Vector2}
 var _mouse_used := false
 var _mouse_down := false
@@ -138,13 +136,6 @@ func _input(event: InputEvent) -> void:
 				d = d.normalized() * STICK_R
 			_sticks[event.index] = {"aim": aim, "origin": origin, "d": d / STICK_R}
 			_mouse_used = false
-			if not aim and UI.is_touch_platform():
-				var now := Time.get_ticks_msec() / 1000.0
-				if now - _last_left_tap < 0.3:
-					_dodge_wait = 0.12   # even wachten tot de stick een richting heeft; zonder richting rol je een stap terug
-					_last_left_tap = -10.0
-				else:
-					_last_left_tap = now
 			if aim and combat != null and bool(combat.call("stick_armed")):
 				combat.call("stick_begin", event.index)
 		else:
@@ -286,12 +277,6 @@ func _process(_delta: float) -> void:
 			aim += turn
 	Game.move = mv.limit_length(1.0)
 	Game.aim = aim
-	if _dodge_wait >= 0.0:
-		_dodge_wait -= _delta
-		if _dodge_wait < 0.0 or Game.move.length() > 0.3:
-			_dodge_wait = -1.0
-			if Game.player != null and is_instance_valid(Game.player) and Game.player.has_method("request_dodge"):
-				Game.player.request_dodge()
 	Game.fire = fire and Game.state != "over" and Game.state != "shop" and Game.state != "menu"
 	m1911_touch_firing = right_stick_firing and Game.fire
 

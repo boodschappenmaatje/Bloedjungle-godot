@@ -36,6 +36,7 @@ var score := 0
 var kills := 0
 var base_hp := Data.BASE_HP
 var rocket_seen := false
+var soort_gezien := {}   # v236: welke soorten schutter (schild, granaat, flank) je al hebt gezien: de melding komt één keer
 var base_max := Data.BASE_HP
 var hq_level := 1   # niveau van het hoofdkwartier (1..3)
 var prep_t := 0.0
@@ -165,6 +166,7 @@ func reset() -> void:
 	routes = []
 	next_routes = []
 	rocket_seen = false
+	soort_gezien = {}
 	points = Data.START_POINTS
 	score = 0
 	kills = 0

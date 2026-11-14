@@ -61,6 +61,19 @@ var ai_doel: Node3D = null     # 4A: waar hij op schiet als jij niet dichtbij be
 var _ai_wacht := false         # staat nu op zijn wachtplek (gehurkt)
 const AI_VUUR_R := 34.0
 
+# v236 (6A): soorten schutter met een zichtbaar teken en eigen gedrag. type blijft "assault" (zelfde model en herlaad-logica, ook in Alleen Meshy).
+# "schild": schild vooraan (kogels van voren doen 20%, van opzij of achteren gewoon), traag en taai. "granaat": gooit een granaat met een rode waarschuwingscirkel.
+# "flank": de schutter die om je heen loopt (bestond al als role "flank", nu met een teken).
+const SCHILD_VOOR := 0.2
+const SCHILD_HOEK := 0.5          # dot-product: ca. 60 graden aan weerszijden van waar hij naartoe kijkt
+const GRANAAT_CD := 7.0
+const GRANAAT_VLUCHT := 1.3
+const GRANAAT_STRAAL := 3.5
+const GRANAAT_SCHADE := 30.0
+var soort := ""
+var _gr_cd := 2.5
+var _teken: Node3D
+
 var _stuck_t := 0.0  # hoe lang hij tegen iets aan loopt zonder vooruit te komen
 var _detour_t := 0.0  # nog zo lang opzij omlopen
 var _detour_side := 1.0
@@ -80,6 +93,21 @@ func setup(kind: String, wave: int) -> void:
 	slot = Game.next_slot()
 	if kind in ["rifle", "assault"] and slot % 3 == 1:
 		role = "flank"
+	if role == "flank" and kind == "assault":
+		soort = "flank"
+
+
+## Maakt van een gewone schutter een schild- of granaatsoldaat (v236). Aanroepen na setup(), voor add_child().
+func set_soort(s: String) -> void:
+	soort = s
+	if s == "schild":
+		max_hp *= 1.6
+		hp = max_hp
+		speed_mul *= 0.82
+		role = "assault"
+	elif s == "granaat":
+		role = "assault"
+		_gr_cd = randf_range(2.0, 4.0)
 
 
 func _ready() -> void:
@@ -88,6 +116,122 @@ func _ready() -> void:
 	(shape.shape as CapsuleShape3D).radius = t.r
 	Game.enemies.append(self)
 	_build_range_marker()
+	_bouw_soort()
+
+
+static var _teken_mat := {}
+
+
+static func _teken_materiaal(c: Color) -> StandardMaterial3D:
+	var k := c.to_html()
+	if not _teken_mat.has(k):
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.albedo_color = c
+		_teken_mat[k] = m
+	return _teken_mat[k]
+
+
+## Het zichtbare teken boven zijn hoofd (en bij de schildsoldaat het schild zelf): een klein vormpje in een eigen kleur, geen tekst of viewport.
+## schild = blauwe ruit, granaat = oranje bol, flanker = groene pijl.
+func _bouw_soort() -> void:
+	if soort == "":
+		return
+	var sc: float = float(t.scale) * Data.SOLDIER_SCALE
+	_teken = Node3D.new()
+	_teken.name = "Teken"
+	_teken.position.y = 3.0 * sc
+	add_child(_teken)
+	var mi := MeshInstance3D.new()
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	if soort == "schild":
+		var b := BoxMesh.new()
+		b.size = Vector3(0.34, 0.34, 0.34)
+		mi.mesh = b
+		mi.rotation = Vector3(0.0, 0.0, PI / 4.0)
+		mi.material_override = _teken_materiaal(Color(0.35, 0.62, 1.0))
+		var sh := MeshInstance3D.new()
+		var sb := BoxMesh.new()
+		sb.size = Vector3(1.0, 1.2, 0.09)
+		sh.mesh = sb
+		sh.name = "Schild"
+		sh.position = Vector3(0.0, 1.05, 0.62)
+		var mat := StandardMaterial3D.new()
+		mat.albedo_color = Color(0.22, 0.26, 0.3)
+		mat.metallic = 0.7
+		mat.roughness = 0.45
+		sh.material_override = mat
+		add_child(sh)
+	elif soort == "granaat":
+		var sp := SphereMesh.new()
+		sp.radius = 0.2
+		sp.height = 0.4
+		sp.radial_segments = 10
+		sp.rings = 5
+		mi.mesh = sp
+		mi.material_override = _teken_materiaal(Color(1.0, 0.55, 0.1))
+	else:
+		var pr := PrismMesh.new()
+		pr.size = Vector3(0.36, 0.34, 0.12)
+		mi.mesh = pr
+		mi.rotation = Vector3(-PI / 2.0, 0.0, 0.0)   # de punt wijst vooruit
+		mi.material_override = _teken_materiaal(Color(0.4, 0.95, 0.35))
+	_teken.add_child(mi)
+
+
+## Eerste keer dat je een nieuwe soort ziet: een korte melding (en de radiozin als Dennis die heeft ingesproken).
+func _meld_soort() -> void:
+	if soort == "" or Game.soort_gezien.has(soort):
+		return
+	Game.soort_gezien[soort] = true
+	match soort:
+		"schild":
+			Game.banner.emit("SCHILDSOLDAAT", "Kogels van voren ketsen af. Schiet van opzij.", 2.5)
+		"granaat":
+			Game.banner.emit("GRANAATWERPER", "Loop uit de rode cirkel", 2.5)
+		"flank":
+			Game.banner.emit("FLANKER", "Hij loopt om je heen", 2.5)
+	if Game.builds != null and Game.builds.get("radio") != null:
+		Game.builds.radio.say(soort + "_gezien")
+
+
+## De granaat van een granaatwerper: een rode cirkel op de grond (waar hij landt), een boog van 1,3 s, dan een knal die de speler binnen 3,5 m raakt.
+func _gooi_granaat(doel: Vector3) -> void:
+	var parent := get_parent()
+	if parent == null:
+		return
+	var van := global_position + Vector3.UP * 1.5
+	var landing := Vector3(doel.x, 0.0, doel.z)
+	var ring := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = GRANAAT_STRAAL
+	cyl.bottom_radius = GRANAAT_STRAAL
+	cyl.height = 0.02
+	cyl.radial_segments = 28
+	ring.mesh = cyl
+	var rm := StandardMaterial3D.new()
+	rm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	rm.albedo_color = Color(1.0, 0.15, 0.1, 0.32)
+	rm.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ring.material_override = rm
+	ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(ring)
+	ring.global_position = landing + Vector3.UP * 0.06
+	var ball := MeshInstance3D.new()
+	var sp := SphereMesh.new()
+	sp.radius = 0.11
+	sp.height = 0.22
+	sp.radial_segments = 8
+	sp.rings = 4
+	ball.mesh = sp
+	ball.material_override = _teken_materiaal(Color(0.18, 0.22, 0.12))
+	parent.add_child(ball)
+	ball.global_position = van
+	Sfx.play("knife", 0.8, global_position)
+	var tw := ball.create_tween()
+	tw.tween_method(func(k: float) -> void:
+		ball.global_position = van.lerp(landing, k) + Vector3.UP * sin(k * PI) * 3.2, 0.0, 1.0, GRANAAT_VLUCHT)
+	tw.tween_callback(Grenade.vijand_knal.bind(parent, landing, ring, ball, GRANAAT_STRAAL, GRANAAT_SCHADE))
 
 
 ## Een kleine gezondheidsstreep boven verre vijanden, alleen wanneer ze in zicht zijn.
@@ -121,6 +265,8 @@ func _process(_delta: float) -> void:
 		return
 	var player: Node3D = Game.player
 	var distance := player.global_position.distance_to(global_position) if player != null and is_instance_valid(player) else INF
+	if soort != "" and not dead and distance < 34.0:
+		_meld_soort()
 	var marker_mode := GameSettings.get_value("markeringen")
 	var cam := get_viewport().get_camera_3d()
 	var markers_on := marker_mode == "on" or (marker_mode == "tact" and cam != null and not bool(cam.get("combat_view")))
@@ -238,6 +384,16 @@ func _physics_process(delta: float) -> void:
 		if mode != "attack" and mode_t <= 0.0:
 			mode = "attack"
 		cover_look = _angle_to(goal)
+
+	if soort == "granaat" and at_player and mode == "attack" and rb == null:
+		_gr_cd -= delta
+		if _gr_cd <= 0.0 and to_player > 6.0 and to_player < 17.0:
+			_gr_cd = GRANAAT_CD
+			face = _angle_to(goal)
+			rotation.y = face
+			_gooi_granaat(player.global_position)
+			stun_t = 0.6   # hij staat stil terwijl hij gooit
+			return
 
 	fire_t -= delta
 	var want_move := true
@@ -666,6 +822,18 @@ func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	if not from_player or dead:
 		return
 	dmg *= Data.counter(Game.hit_class, armor)   # steen-papier-schaar: raketten tegen zwaar, sluipschutters tegen mensen
+	if soort == "schild" and Game.hit_class != "raket" and dir.length() > 0.01:
+		var vooruit := Vector3(sin(face), 0.0, cos(face))
+		if Vector3(dir.x, 0.0, dir.z).normalized().dot(vooruit) < -SCHILD_HOEK:
+			# op het schild: ketst af, bijna geen schade, geen wankelen
+			hp -= dmg * SCHILD_VOOR
+			hurt_t = 0.0
+			Sfx.play("ping", 0.9, global_position)
+			Fx.spark(get_parent(), global_position + Vector3(vooruit.x, 1.2, vooruit.z) * 0.7, -dir)
+			if hp <= 0.0:
+				Game.hitstop(0.06)
+				_die(dir)
+			return
 	hp -= dmg
 	hurt_t = 0.0
 	model.flash(Color(1.0, 0.38, 0.07))

@@ -216,3 +216,20 @@ func _explode() -> void:
 		var pd: float = Vector2(p.global_position.x - at.x, p.global_position.z - at.z).length()
 		if pd < r and not BaseWallRules.blocks_blast(at, p.global_position):
 			p.hit(DAMAGE * 0.25 * (1.0 - pd / r), (p.global_position - at).normalized(), false)
+
+
+## v236: de granaat van een vijandelijke granaatwerper landt (Enemy._gooi_granaat): ruimt de cirkel en de bal op, knalt en raakt de speler binnen `straal`.
+static func vijand_knal(parent: Node, at: Vector3, ring: Node, ball: Node, straal: float, schade: float) -> void:
+	if is_instance_valid(ring):
+		ring.queue_free()
+	if is_instance_valid(ball):
+		ball.queue_free()
+	if not is_instance_valid(parent):
+		return
+	Fx.explosion(parent, at, 0.6)
+	Sfx.play("boom", 0.7, at)
+	var p = Game.player
+	if p != null and is_instance_valid(p) and not p.dead:
+		var d: float = Vector3(p.global_position.x - at.x, 0.0, p.global_position.z - at.z).length()
+		if d < straal:
+			p.hit(schade * (1.0 - d / (straal + 1.0)), (p.global_position - at).normalized(), false, true)

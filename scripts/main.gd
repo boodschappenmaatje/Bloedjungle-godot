@@ -304,6 +304,8 @@ func _spawn(item: Variant) -> void:
 			return
 	var e := ENEMY.instantiate()
 	e.setup(kind, int(entry.n))
+	if kind == "assault":
+		_kies_soort(e, int(entry.n))
 	if kind == "rocket" and not Game.rocket_seen:
 		Game.rocket_seen = true
 		Game.banner.emit("RAKETWERPERS", "Ze schieten je gebouwen kapot", 2.5)
@@ -318,6 +320,22 @@ func _spawn(item: Variant) -> void:
 		routes = AanvalRoutes.pick_group(1)
 	e.path = AanvalRoutes.path_from_base(routes.pick_random())
 	add_child(e)
+
+
+## v236 (6A): vanaf golf 3 een schildsoldaat en vanaf golf 4 een granaatwerper tussen de gewone schutters; nooit meer dan 3 en 2 tegelijk.
+func _kies_soort(e: Node, n: int) -> void:
+	var schild := 0
+	var granaat := 0
+	for o in Game.enemies:
+		if is_instance_valid(o):
+			var so: String = str(o.get("soort"))
+			schild += 1 if so == "schild" else 0
+			granaat += 1 if so == "granaat" else 0
+	var r := randf()
+	if n >= 3 and r < 0.14 and schild < 3:
+		e.set_soort("schild")
+	elif n >= 4 and r < 0.26 and granaat < 2:
+		e.set_soort("granaat")
 
 
 ## Een vijandelijk voertuig rijdt uit de poort van de vijandbasis: de weg staat in AanvalRoutes.voertuig_pad. De jeep (stap V1) rijdt snel en schiet met zijn MG,

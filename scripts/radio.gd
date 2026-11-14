@@ -12,10 +12,11 @@ const POOLS := {
 	"basis_aanval": ["basis_aanval_1", "basis_aanval_2", "basis_aanval_3"],
 	"eenheid_klaar": ["eenheid_klaar_1", "eenheid_klaar_2"],
 	"voertuig_onderweg": ["voertuig_onderweg_1"],
+	"schild_gezien": ["schild_gezien_1"], "granaat_gezien": ["granaat_gezien_1"], "flank_gezien": ["flank_gezien_1"],   # v236: nog geen opname, zonder bestand blijft het stil
 	"gebouw_vrij": ["gebouw_vrij_1"],   # F2: nog geen opname (Dennis spreekt de radiozinnen zelf in); zonder bestand blijft het stil   # stap V1: Dennis sloeg deze radiozin over (9 nov); zonder bestand blijft het stil, een wav kan later gewoon bij assets/geluid/radio/
 }
 ## Minimaal aantal seconden tussen twee meldingen van dezelfde soort (zodat een gevecht niet blijft roepen).
-const COOLDOWN := {"bouw_klaar": 0.0, "gebouw_vernield": 4.0, "basis_aanval": 25.0, "eenheid_klaar": 3.0, "voertuig_onderweg": 20.0, "gebouw_vrij": 5.0}
+const COOLDOWN := {"bouw_klaar": 0.0, "gebouw_vernield": 4.0, "basis_aanval": 25.0, "eenheid_klaar": 3.0, "voertuig_onderweg": 20.0, "gebouw_vrij": 5.0, "schild_gezien": 30.0, "granaat_gezien": 30.0, "flank_gezien": 30.0}
 const VOLUME_DB := -3.0
 
 var _player: AudioStreamPlayer

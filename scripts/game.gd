@@ -389,3 +389,18 @@ func mark_attack(pos: Vector3) -> void:
 	if absf(pos.x) <= absf(pos.z):
 		k = "Z" if pos.z > 0 else "N"
 	attack[k] = 2.5
+
+
+## v234 (7A): een korte stop op een zware of dodelijke treffer, zodat een schot gewicht heeft. Duurt in echte tijd (niet in spelseconden),
+## niet vaker dan eens per kwart seconde en nooit tijdens pauze, zodat snelvuur (MG) er geen stroperig spel van maakt.
+var _hitstop_until := 0.0
+
+
+func hitstop(seconds: float) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	if now < _hitstop_until or get_tree().paused or Engine.time_scale != 1.0 or seconds <= 0.0:
+		return
+	_hitstop_until = now + 0.25
+	Engine.time_scale = 0.08
+	await get_tree().create_timer(seconds, true, false, true).timeout
+	Engine.time_scale = 1.0

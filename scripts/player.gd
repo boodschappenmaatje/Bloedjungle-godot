@@ -37,6 +37,10 @@ var dodge_dir := Vector2.ZERO
 var grenade_cd := 0.0
 var stance := 0             # 0 staan, 1 hurken, 2 liggen: alleen met de Meshy-speler (instelling Soldaat = meshy)
 var _stam_wait := 0.0
+var _lock: Node3D = null    # v234 (1A): vijand waarop het richten blijft kleven
+var _cover_t := 0.0         # v234 (3A): hoe lang hij stilstaat tegen lage dekking
+var _cover_auto := false    # de hurkhouding komt van de dekking, niet van de houdingknop
+var _cover_off_t := 0.0
 var _exhausted := false     # leeg geraakt: pas weer sprinten als er wat bij is
 var _reload_dur := 1.0      # hoe lang het lopende herladen duurt (de herlaadbeweging past zich daaraan aan)
 var _reload_elapsed := 0.0
@@ -182,6 +186,7 @@ func _physics_process(delta: float) -> void:
 		aim = atan2(mv.x, mv.y)
 	face += angle_difference(face, aim) * minf(1.0, delta * 18.0)
 	rotation.y = face
+	_update_cover(delta, moving)
 	_update_infantry_preview(delta, w)
 
 	fire_t -= delta
@@ -729,20 +734,86 @@ func _hugging_wall(fwd: Vector3) -> bool:
 	return not get_world_3d().direct_space_state.intersect_ray(q).is_empty()
 
 
-## Trekt de richting iets naar een vijand binnen 20 m die er vlak naast staat (zoals aimAssist).
+## v234 (1A): vergrendelen. Het richten kleeft aan de vijand die het dichtst bij je stickrichting staat (tot 26 m, binnen 30 graden).
+## Hij blijft vergrendeld zolang je stick binnen 14 graden van hem blijft; duw je verder opzij, dan springt hij naar de volgende.
+const LOCK_RANGE := 26.0
+const LOCK_CONE := 0.52     # 30 graden: nieuwe vijand kiezen
+const LOCK_KEEP := 0.25     # 14 graden: de huidige vijand houden
+const LOCK_PULL := 0.9      # zo ver draait het richten naar de vijand toe
+
+
+func _lock_angle(e: Node3D) -> float:
+	var d := e.global_position - global_position
+	return atan2(d.x, d.z)
+
+
+func _lock_valid(e: Node3D) -> bool:
+	if e == null or not is_instance_valid(e) or bool(e.get("dead")):
+		return false
+	var d := e.global_position - global_position
+	return Vector2(d.x, d.z).length() <= LOCK_RANGE + 4.0
+
+
 func _aim_assist(a: float) -> float:
-	var best := NAN
-	var bd := 0.2
+	if _lock_valid(_lock) and absf(angle_difference(a, _lock_angle(_lock))) <= LOCK_KEEP:
+		return a + angle_difference(a, _lock_angle(_lock)) * LOCK_PULL
+	var best: Node3D = null
+	var bd := LOCK_CONE
 	for e: Node3D in Game.enemies:
-		var d := e.global_position - global_position
-		if Vector2(d.x, d.z).length() > 20.0:
+		if not _lock_valid(e):
 			continue
-		var ea := atan2(d.x, d.z)
-		var diff := absf(angle_difference(a, ea))
-		if diff < bd:
-			bd = diff
-			best = ea
-	return a if is_nan(best) else a + angle_difference(a, best) * 0.6
+		var d := e.global_position - global_position
+		var dist := Vector2(d.x, d.z).length()
+		if dist > LOCK_RANGE:
+			continue
+		var diff := absf(angle_difference(a, atan2(d.x, d.z)))
+		var score := diff + dist * 0.004   # bij gelijke hoek wint de dichtstbijzijnde
+		if diff < LOCK_CONE and score < bd:
+			bd = score
+			best = e
+	_lock = best
+	if best == null:
+		return a
+	return a + angle_difference(a, _lock_angle(best)) * LOCK_PULL
+
+
+## v234 (3A): automatisch in dekking. Sta je stil met je neus tegen lage dekking (kist, lage muur), dan zakt hij erachter in hurkhouding en
+## staat hij weer op zodra je wegloopt, de houdingknop gebruikt of de dekking weg is. Alleen met de Meshy-soldaat (alleen die kent hurken).
+func _low_cover_ahead() -> bool:
+	var fwd := Vector3(sin(face), 0.0, cos(face))
+	var space := get_world_3d().direct_space_state
+	var low := global_position + Vector3.UP * 0.8
+	var high := global_position + Vector3.UP * 2.3
+	var hit_low := space.intersect_ray(PhysicsRayQueryParameters3D.create(low, low + fwd * 1.1, Bullet.MASK_WALL))
+	if hit_low.is_empty():
+		return false
+	var hit_high := space.intersect_ray(PhysicsRayQueryParameters3D.create(high, high + fwd * 1.5, Bullet.MASK_WALL))
+	return hit_high.is_empty()   # een muur die tot boven je hoofd reikt is geen dekking maar een muur
+
+
+func _update_cover(delta: float, moving: float) -> void:
+	if not model.meshy_player or tower != null or climb >= 0.0:
+		_cover_auto = false
+		return
+	if _cover_auto and stance != 1:
+		_cover_auto = false   # houdingknop gebruikt: jij beslist
+	if _cover_auto:
+		_cover_off_t = _cover_off_t + delta if (moving > 0.3 or not _low_cover_ahead()) else 0.0
+		if _cover_off_t > 0.25:
+			_cover_auto = false
+			_cover_off_t = 0.0
+			set_stance(0)
+		return
+	if stance == 0 and moving < 0.25 and _low_cover_ahead():
+		_cover_t += delta
+		if _cover_t > 0.3:
+			_cover_t = 0.0
+			set_stance(1)
+			if stance == 1:
+				_cover_auto = true
+				_cover_off_t = 0.0
+	else:
+		_cover_t = 0.0
 
 
 var _back := false   # loopt achteruit (zie _animate)

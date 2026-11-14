@@ -208,6 +208,12 @@ static func clamp_world(p: Vector2) -> Vector2:
 	return Vector2(clampf(p.x, -WORLD_X, WORLD_X), clampf(p.y, -WORLD_Z_N, WORLD_Z_S))
 
 
+## Hoogte van het land (dambreuk-plan stap 1): 0 op de hele grondplaat waar gespeeld wordt, daarbuiten heuvels, bergen,
+## het rivierdal en de kloof van Bergland. Bestaande gameplay blijft op 0; nieuwe dingen buiten de plaat vragen dit.
+static func ground_y(x: float, z: float) -> float:
+	return Bergland.height(x, z)
+
+
 static func river_off(x: float, z: float) -> float:
 	return absf(z - river_z(x))
 

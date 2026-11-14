@@ -862,7 +862,7 @@ static func _south_scatter(rng: RandomNumberGenerator, kind: String, count: int,
 			continue
 		if kind == "rock":
 			var reserved := false
-			for region in AirfieldHQ23.site_regions():
+			for region in AirfieldHQ23.site_and_zone_regions():
 				if _point_in_build_region(p, AirfieldHQ23.SUGGESTED_CENTER, 0.0, region, 1.0):
 					reserved = true
 					break
@@ -897,7 +897,7 @@ static func _fill_scatter(rng: RandomNumberGenerator, kind: String, count: int, 
 			continue
 		if kind == "rock":
 			var reserved := false
-			for region in AirfieldHQ23.site_regions():
+			for region in AirfieldHQ23.site_and_zone_regions():
 				if _point_in_build_region(p, AirfieldHQ23.SUGGESTED_CENTER, 0.0, region, 1.0):
 					reserved = true
 					break
@@ -1039,7 +1039,7 @@ static func _crates(parent: Node3D, seed_: int) -> void:
 		if _in_river(p) or absf(x) < Data.START_ROAD_HALF + 2.0:
 			continue
 		var reserved := false
-		for region in AirfieldHQ23.site_regions():
+		for region in AirfieldHQ23.site_and_zone_regions():
 			if _point_in_build_region(p, AirfieldHQ23.SUGGESTED_CENTER, 0.0, region, 1.0):
 				reserved = true
 				break

@@ -6,40 +6,40 @@ extends RefCounted
 const BUILD_COST := 2800
 const P47_COST := 1800
 const P47_PURCHASE_ENABLED := false # aircraft work resumes only after iPhone approval
-const AIRCRAFT_CAPACITY := 1
+const AIRCRAFT_CAPACITY := 2 # keuze 7B (14 nov 2026): twee toestellen naast elkaar in één hangar
 const UNWANTED_WORKSHOP_LIGHT_PREFIX := "Warm workshop practical light"
 
 # De grootte van het oude vaste kamp (56,65 x 56,95 m); sinds stap 4b alleen nog het oppervlaktebudget van het vliegveld (MAX_GROUND_AREA).
 const BASE_GROUND_SIZE := Vector2(56.65, 56.95)
 const MAX_GROUND_AREA := 2.0 * BASE_GROUND_SIZE.x * BASE_GROUND_SIZE.y
 
-# The actual construction footprint is a connected composition of the fixed
-# hangar/tower and separate paving lobes. Its map-placement bounds include empty
-# existing terrain between components; only the conservative surface sum below
-# is charged against the 2× land-take limit.
-const FOOTPRINT := Vector3(75.0, 23.0, 53.0) # symmetric component bounds for build-camera framing only
+## Vliegveld op basismaat (keuzes Dennis 14 nov 2026: 1A 2A 3B 4B 5A 6A 7B 8A), stap 1 = proef met het bestaande model verkleind.
+## Eén hangar (HQ2.3 x HANGAR_SCALE) voor twee toestellen van ~8,5 m, met de deuren op een korte betonstrook van 36 x 8 m
+## (opstijgen na ~12 m rollen, landen + remmen in ~11 m), een lage toren van ~9 m ernaast en aan beide uiteinden van de strook
+## een vrije aanvliegzone van 20 m waar je niets hoogs mag bouwen. Was 75 x 53 m, nu ongeveer 36 x 25 m.
+const HANGAR_SCALE := 0.85    # 22 x 20 m HQ2.3-hangar -> 18,7 x 17 m, deuropening 12,75 m
+const TOWER_SCALE := 0.4      # HQ2.3-toren 22,7 m -> ~9 m hoog
+const FOOTPRINT := Vector3(36.0, 9.5, 25.2) # hangar + toren + strook (zonder aanvliegzones); voor camera en bouwkaart
 
-const HANGAR_CENTER := Vector2(0.0, 2.5)
-const HANGAR_SIZE := Vector2(28.0, 24.0) # construction zone around a 22 × 20 m shell
-const TOWER_CENTER := Vector2(-17.0, 19.5)
-const TOWER_SIZE := Vector2(8.0, 8.0) # tower core; exterior stair access has its own zone
-const TOWER_STAIR_CENTER := Vector2(-22.0, 19.5)
-const TOWER_STAIR_SIZE := Vector2(4.0, 8.0)
+const HANGAR_CENTER := Vector2(0.0, -4.05)
+const HANGAR_SIZE := Vector2(19.4, 17.6) # 18,7 x 17 m hangar met een randje
+const HANGAR_DOOR_Z := HANGAR_CENTER.y + 9.775 * HANGAR_SCALE # buitenkant van de deuren (vliegveldcoördinaten)
+const TOWER_CENTER := Vector2(-12.6, -6.0)
+const TOWER_SIZE := Vector2(4.6, 4.6)
+const SLOT_X := [-3.3, 3.3]   # parkeerplekken in de hangar (x t.o.v. het midden van de hangar)
 
-const RUNWAY_LENGTH_M := 75.0
-const RUNWAY_WIDTH_M := 18.0
-const RUNWAY_START_X := -37.5
+const RUNWAY_LENGTH_M := 36.0
+const RUNWAY_WIDTH_M := 8.0
+const RUNWAY_START_X := -18.0
 const RUNWAY_END_X := RUNWAY_START_X + RUNWAY_LENGTH_M
-const RUNWAY_CENTER_Z := -17.5
-const APRON_CENTER := Vector2(0.0, 19.5)
-const TAXI_ARC_CENTER := Vector2(16.0, 7.5)
-const TAXI_ARC_RADIUS := 12.0
-const TAXIWAY_WIDTH_M := 18.0
-const TAXI_START := Vector2(9.0, 19.5)
-const TAXI_ARC_START := Vector2(16.0, 19.5)
-const TAXI_ARC_END := Vector2(28.0, 7.5)
-const TAXI_RUNWAY_END := Vector2(28.0, -8.5)
-const TAXI_RUNWAY_HOLD := Vector2(28.0, -4.5)
+const RUNWAY_CENTER_Z := HANGAR_DOOR_Z + 0.3 + RUNWAY_WIDTH_M * 0.5
+const APPROACH_ZONE_M := 20.0   # keuze 5A: vrij verlengde aan beide uiteinden
+const APPROACH_ZONE_WIDTH_M := 10.0
+const APRON_CENTER := Vector2(0.0, RUNWAY_CENTER_Z) # de strook voor de deuren is ook het platform
+const TAXIWAY_WIDTH_M := RUNWAY_WIDTH_M
+const TAXI_START := Vector2(0.0, RUNWAY_CENTER_Z)
+const TAXI_RUNWAY_END := Vector2(RUNWAY_END_X - 2.0, RUNWAY_CENTER_Z)
+const TAXI_RUNWAY_HOLD := Vector2(0.0, RUNWAY_CENTER_Z)
 
 # The derived compact hangar is centred at its authored floor origin.
 const COMPLEX_CENTER_OFFSET := Vector3(0.0, 0.0, HANGAR_CENTER.y)
@@ -82,14 +82,22 @@ static func make_complex() -> StaticBody3D:
 	slab_collision.position = Vector3(0, -0.25, 0)
 	slab_collision.disabled = true
 	body.add_child(slab_collision)
-	var complex := packed.instantiate()
-	complex.name = "AirfieldHQ23CompactCore"
+	# "complex" is een onverschaalde wortel op het midden van de hangar (metrisch, zoals vliegtuig.gd verwacht);
+	# alleen de hangar zelf is verkleind (HANGAR_SCALE, gelijk in alle richtingen zodat botsing en deuren meeschalen).
+	var complex := Node3D.new()
+	complex.name = "AirfieldCompactRoot"
 	complex.position = COMPLEX_CENTER_OFFSET
 	body.add_child(complex)
-	_compact_approved_core(complex)
+	var hangar := packed.instantiate() as Node3D
+	hangar.name = "AirfieldHQ23CompactCore"
+	hangar.scale = Vector3.ONE * HANGAR_SCALE
+	complex.add_child(hangar)
+	complex.set_meta("hangar", hangar)
+	_compact_approved_core(hangar)
+	var flight := hangar.get_node_or_null("AirfieldFlightIntegration") as Node3D
+	if flight != null:
+		flight.scale = Vector3.ONE / HANGAR_SCALE   # markers in meters t.o.v. het hangarmidden
 	_add_hq23_tower(complex)
-	_add_hq22_tower_motion(complex)
-	_add_tower_stair_collisions(complex)
 	var paving := AirfieldPavementModules.new()
 	paving.name = "AirfieldHQ23PavementModules"
 	complex.add_child(paving)
@@ -130,10 +138,12 @@ static func _disable_unwanted_workshop_lights(complex: Node3D) -> void:
 			light.visible = false
 
 static func _add_hq23_tower(complex: Node3D) -> void:
+	# Keuze 6A: een lage toren (~9 m) naast de hangar. In deze proef is het de HQ2.3-toren gelijkmatig verkleind,
+	# dus niet beklimbaar (de trap zou 1 m hoge deuren krijgen); het nieuwe model in stap 2 krijgt weer een echte trap.
 	var tower_root := Node3D.new()
 	tower_root.name = "ControlTowerHQ23"
 	tower_root.position = layout_point(TOWER_CENTER.x, TOWER_CENTER.y, 0.0)
-	tower_root.scale = Vector3(0.54, 1.0, 0.54)
+	tower_root.scale = Vector3.ONE * TOWER_SCALE
 	complex.add_child(tower_root)
 	for index in TOWER_LOD_SCENES.size():
 		var path: String = TOWER_LOD_SCENES[index]
@@ -149,7 +159,15 @@ static func _add_hq23_tower(complex: Node3D) -> void:
 			mesh.visibility_range_begin = begin_distance
 			mesh.visibility_range_end = end_distance
 			mesh.visibility_range_fade_mode = GeometryInstance3D.VISIBILITY_RANGE_FADE_DISABLED
+		_strip_motion_source_lights(root)
 		tower_root.add_child(root)
+	var solid := StaticBody3D.new()
+	solid.name = "Tower solid collision"
+	solid.collision_layer = Kit.LAYER_WALL
+	solid.collision_mask = 0
+	solid.position = layout_point(TOWER_CENTER.x, TOWER_CENTER.y, 0.0)
+	complex.add_child(solid)
+	_add_box_collision(solid, Vector3(0.0, 4.6, 0.0), Vector3(TOWER_SIZE.x - 0.4, 9.2, TOWER_SIZE.y - 0.4))
 
 static func _strip_motion_source_lights(motion_root: Node) -> void:
 	# The full HQ2.2 LOD0 GLB is instanced only for the door and windsock clips.
@@ -161,84 +179,6 @@ static func _strip_motion_source_lights(motion_root: Node) -> void:
 	for node in motion_root.find_children("*", "Light3D", true, false):
 		node.get_parent().remove_child(node)
 		node.free()
-
-static func _add_hq22_tower_motion(complex: Node3D) -> void:
-	# Reuse the approved HQ2.2 animated access door and shape-key windsock as
-	# separate motion details. All other HQ2.2 tower geometry stays hidden; the
-	# visible tower shell remains the authored HQ2.3 asset. Transform the details
-	# from the old tower's (72, -20) ground center to the compact 8 m tower.
-	var packed := load(HQ22_ANIMATED_TOWER_SCENE) as PackedScene
-	if packed == null:
-		push_error("Approved HQ2.2 tower motion source is missing: " + HQ22_ANIMATED_TOWER_SCENE)
-		return
-	var motion_root := packed.instantiate() as Node3D
-	if motion_root == null:
-		push_error("Approved HQ2.2 tower motion source did not instantiate as Node3D")
-		return
-	motion_root.name = "HQ22 Approved Tower Motion Details"
-	motion_root.scale = Vector3(0.54, 1.0, 0.54)
-	motion_root.rotation.y = PI
-	var target_local := Vector3(TOWER_CENTER.x, 0.0, TOWER_CENTER.y - COMPLEX_CENTER_OFFSET.z)
-	var source_tower_center := Vector3(72.0, 0.0, -20.0)
-	motion_root.position = target_local - (Basis(Vector3.UP, motion_root.rotation.y) * (source_tower_center * motion_root.scale))
-	for node in motion_root.find_children("*", "MeshInstance3D", true, false):
-		var mesh := node as MeshInstance3D
-		mesh.visible = mesh.name == "Tower access door | animated" or mesh.name == "Tower wind sock | wind animation"
-	_strip_motion_source_lights(motion_root)
-	var source_animator: AnimationPlayer
-	for node in motion_root.find_children("*", "AnimationPlayer", true, false):
-		var animator := node as AnimationPlayer
-		if animator.has_animation("Open_Tower_Door") and animator.has_animation("Wind_Sock_Gust"):
-			source_animator = animator
-			break
-	if source_animator == null:
-		push_error("Approved HQ2.2 tower door/windsock animation clips are missing")
-		return
-	var wind_animator := source_animator.duplicate() as AnimationPlayer
-	wind_animator.name = "HQ22 Wind Sock Loop"
-	var wind_animation := source_animator.get_animation("Wind_Sock_Gust").duplicate() as Animation
-	wind_animation.loop_mode = Animation.LOOP_LINEAR
-	var wind_library := AnimationLibrary.new()
-	wind_library.add_animation("Wind_Sock_Gust", wind_animation)
-	for library_name in wind_animator.get_animation_library_list():
-		wind_animator.remove_animation_library(library_name)
-	wind_animator.add_animation_library("", wind_library)
-	source_animator.get_parent().add_child(wind_animator)
-	complex.add_child(motion_root)
-	var tower_door := motion_root.find_child("Tower access door | animated", true, false) as Node3D
-	if tower_door == null:
-		push_error("Approved HQ2.2 animated tower door node is missing")
-		return
-	var collision := complex.get_node_or_null("GameplayCollisions/TowerDoorCollision") as Node3D
-	if collision != null:
-		var door_transform := motion_root.transform * tower_door.transform
-		collision.transform = door_transform
-
-static func _add_tower_stair_collisions(complex: Node3D) -> void:
-	var body := StaticBody3D.new()
-	body.name = "HQ23 Tower stair and level collisions"
-	body.position = layout_point(TOWER_CENTER.x, TOWER_CENTER.y, 0.0)
-	body.collision_layer = Kit.LAYER_GROUND
-	body.collision_mask = 0
-	complex.add_child(body)
-	var flight_xs := [5.10, 7.45, 5.10, 7.45]
-	var flight_dirs := [1, -1, 1, -1]
-	for flight_index in 4:
-		var x: float = flight_xs[flight_index] * 0.54
-		var direction: int = flight_dirs[flight_index]
-		var low := 0.45 + float(flight_index) * 3.03
-		var y_start := (-2.65 if direction > 0 else 2.65) * 0.54
-		var y_end := y_start + direction * 5.30
-		for step in 18:
-			var t := (float(step) + 0.5) / 18.0
-			var z := low + 3.03 * t
-			var y := y_start + (y_end - y_start) * t
-			_add_box_collision(body, Vector3(x, z, -y), Vector3(1.0, 0.12, 0.30))
-	for level in range(1, 5):
-		var high := 0.45 + float(level) * 3.03
-		var x: float = flight_xs[level - 1]
-		var y := (-2.65 if level % 2 == 1 else 2.65) * 0.54
-		_add_box_collision(body, Vector3((x + 4.55) * 0.5 * 0.54, high - 0.06, -y), Vector3((absf(x - 4.55) + 1.4) * 0.54, 0.14, 1.0))
 
 static func _add_box_collision(parent: Node, at: Vector3, dimensions: Vector3) -> void:
 	var node := CollisionShape3D.new()
@@ -261,46 +201,51 @@ static func layout_point(x: float, z: float, y: float = 0.22) -> Vector3:
 	# Convert airport-local coordinates into the compact hangar-centered scene.
 	return Vector3(x - COMPLEX_CENTER_OFFSET.x, y, z - COMPLEX_CENTER_OFFSET.z)
 
+## Taxiroute: geen aparte taxibaan meer, de strook ligt direct voor de deuren.
 static func taxi_centerline_points() -> Array[Vector2]:
-	var points: Array[Vector2] = [TAXI_START, TAXI_ARC_START]
-	for i in range(1, 9):
-		var angle := lerpf(PI * 0.5, 0.0, float(i) / 8.0)
-		points.append(TAXI_ARC_CENTER + Vector2(cos(angle), sin(angle)) * TAXI_ARC_RADIUS)
-	points.append(TAXI_RUNWAY_END)
+	var points: Array[Vector2] = [TAXI_START, TAXI_RUNWAY_END]
 	return points
 
-static func _taxi_regions(step_m: float = 4.0) -> Array[Dictionary]:
-	var points := taxi_centerline_points()
-	var out: Array[Dictionary] = []
-	for i in range(points.size() - 1):
-		var a := points[i]
-		var b := points[i + 1]
-		var delta := b - a
-		var length := delta.length()
-		if length < 0.01:
-			continue
-		var direction := delta / length
-		var count := maxi(1, ceili(length / step_m))
-		var section := length / count
-		for j in count:
-			var center := a + direction * (float(j) + 0.5) * section
-			var heading := atan2(direction.x, direction.y)
-			out.append({"name": "taxiway", "center": center, "size": Vector2(TAXIWAY_WIDTH_M, section + 0.5), "yaw": heading})
-	return out
+static func slot_point(slot: int) -> Vector2:
+	return Vector2(HANGAR_CENTER.x + float(SLOT_X[clampi(slot, 0, SLOT_X.size() - 1)]), HANGAR_CENTER.y)
 
+## Hangar, toren en strook: wat echt gebouwd wordt (botsing, rivier, spawn, wegduwen).
 static func site_regions() -> Array[Dictionary]:
 	var regions: Array[Dictionary] = [
 		{"name": "hangar", "center": HANGAR_CENTER, "size": HANGAR_SIZE, "yaw": 0.0},
 		{"name": "tower", "center": TOWER_CENTER, "size": TOWER_SIZE, "yaw": 0.0},
-		{"name": "tower_access", "center": TOWER_STAIR_CENTER, "size": TOWER_STAIR_SIZE, "yaw": 0.0},
 		{"name": "runway", "center": Vector2((RUNWAY_START_X + RUNWAY_END_X) * 0.5, RUNWAY_CENTER_Z), "size": Vector2(RUNWAY_WIDTH_M, RUNWAY_LENGTH_M), "yaw": PI * 0.5},
-		{"name": "apron", "center": APRON_CENTER, "size": Vector2(18.0, 14.0), "yaw": 0.0},
 	]
-	regions.append_array(_taxi_regions())
+	return regions
+
+## Keuze 5A: het verlengde van de strook blijft vrij (geen gebouw, toren of muur; zandzakken mogen). Bomen worden gekapt.
+static func approach_zones() -> Array[Dictionary]:
+	var zones: Array[Dictionary] = []
+	for side in [-1.0, 1.0]:
+		var edge: float = RUNWAY_END_X if side > 0.0 else RUNWAY_START_X
+		zones.append({"name": "approach", "center": Vector2(edge + side * APPROACH_ZONE_M * 0.5, RUNWAY_CENTER_Z), "size": Vector2(APPROACH_ZONE_M, APPROACH_ZONE_WIDTH_M), "yaw": 0.0, "zone": true})
+	return zones
+
+static func site_and_zone_regions() -> Array[Dictionary]:
+	var regions := site_regions()
+	regions.append_array(approach_zones())
 	return regions
 
 static func preview_regions() -> Array[Dictionary]:
-	return site_regions()
+	return site_and_zone_regions()
+
+## Raakt een gebouwvlak (wereld: midden, maat x/z, draaiing) de aanvliegzone van een gebouwd vliegveld?
+static func blocks_approach(center: Vector3, size: Vector2, yaw: float) -> bool:
+	for b in Game.buildings:
+		if b.kind != "airfield" or b.get("down", false):
+			continue
+		var at: Vector3 = b.at
+		var by: float = b.yaw
+		for zone in approach_zones():
+			var zc := Vector2(at.x, at.z) + _rotate_local(zone.center, by)
+			if _rectangles_overlap(zc, zone.size, by + float(zone.yaw), Vector2(center.x, center.z), size, yaw):
+				return true
+	return false
 
 static func _region_corners(region: Dictionary) -> Array[Vector2]:
 	var half: Vector2 = region.size * 0.5
@@ -312,17 +257,13 @@ static func _region_corners(region: Dictionary) -> Array[Vector2]:
 	return corners
 
 static func footprint_area() -> float:
-	var taxi_length := TAXI_START.distance_to(TAXI_ARC_START) + TAXI_ARC_RADIUS * PI * 0.5 + TAXI_ARC_END.distance_to(TAXI_RUNWAY_END)
-	# A full 8 m of modular end coverage is added as a safe upper bound. Areas at
-	# the apron, runway, and structure joints are intentionally counted twice.
-	var taxi_with_endcaps := (taxi_length + 8.0) * TAXIWAY_WIDTH_M
-	return HANGAR_SIZE.x * HANGAR_SIZE.y + TOWER_SIZE.x * TOWER_SIZE.y + TOWER_STAIR_SIZE.x * TOWER_STAIR_SIZE.y + RUNWAY_LENGTH_M * RUNWAY_WIDTH_M + 18.0 * 14.0 + taxi_with_endcaps
+	return HANGAR_SIZE.x * HANGAR_SIZE.y + TOWER_SIZE.x * TOWER_SIZE.y + RUNWAY_LENGTH_M * RUNWAY_WIDTH_M
 
 static func area_limit_ok() -> bool:
 	return footprint_area() <= MAX_GROUND_AREA
 
 static func site_inside_world(at: Vector3, yaw: float) -> bool:
-	for region in site_regions():
+	for region in site_and_zone_regions():
 		for corner in _region_corners(region):
 			var world := Vector2(at.x, at.z) + _rotate_local(corner, yaw)
 			if absf(world.x) > Data.WORLD_X - 1.0:
@@ -411,7 +352,8 @@ static func buy(_buildings, building: Dictionary, kind: String) -> bool:
 		Game.changed.emit()
 		aircraft.free()
 		return false
-	var parking := complex.get_node_or_null("AirfieldFlightIntegration/P47_Apron_Parking") as Node3D
+	var hangar: Node = complex.get_meta("hangar") if complex.has_meta("hangar") else complex
+	var parking := hangar.get_node_or_null("AirfieldFlightIntegration/P47_Apron_Parking") as Node3D
 	if parking == null:
 		Game.points += def.cost
 		Game.changed.emit()
@@ -438,7 +380,7 @@ static func step(building: Dictionary, delta: float) -> void:
 		var n = list[i].get("node")
 		if n == null or not is_instance_valid(n):
 			list.remove_at(i)
-	if not list.is_empty():
+	if list.size() >= AIRCRAFT_CAPACITY:
 		return
 	building["spawn_t"] = building.get("spawn_t", 1.0) - delta
 	if building.spawn_t > 0.0:
@@ -447,14 +389,23 @@ static func step(building: Dictionary, delta: float) -> void:
 	if not building.node.has_meta("complex"):
 		building["spawn_status"] = "geen toestel: vliegveldscène mist (complex)"
 		return
-	var v = VLIEGTUIG.spawn(building)
+	var slot := 0
+	var used: Array[int] = []
+	for a in list:
+		used.append(int(a.get("slot", 0)))
+	while used.has(slot):
+		slot += 1
+	var v = VLIEGTUIG.spawn(building, slot)
 	if v == null:
 		building["spawn_status"] = "geen toestel: spawn mislukt"
 		building["spawn_t"] = RESPAWN_S
 		return
 	building["spawn_status"] = "toestel staat klaar" if v._model != null else "toestel staat klaar, maar het model laadt niet (%s)" % VLIEGTUIG.MODEL_PATH
-	building["spawn_t"] = RESPAWN_S
-	list.append({"kind": "test", "node": v, "state": "PARKED", "slot": 0, "health": 1.0})
+	# het tweede toestel komt vlak na het eerste; na een crash duurt het RESPAWN_S
+	building["spawn_t"] = 1.0 if list.size() + 1 < AIRCRAFT_CAPACITY and not building.get("had_planes", false) else RESPAWN_S
+	if list.size() + 1 >= AIRCRAFT_CAPACITY:
+		building["had_planes"] = true
+	list.append({"kind": "test", "node": v, "state": "PARKED", "slot": slot, "health": 1.0})
 
 static func cleanup(building: Dictionary) -> void:
 	for aircraft in building.get("aircraft", []):

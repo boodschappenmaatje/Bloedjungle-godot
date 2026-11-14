@@ -428,8 +428,8 @@ func _refresh() -> void:
 			c.off = built or need != "" or (c.kind != "airfield" and not Game.can_afford_build(cost))
 			c.sub = ("gebouwd" if not Game.builds.is_piece(c.kind) else "max") if built else ("eerst " + String(Buildings.DEFS[need].name) if need != "" else ("GRATIS" if cost == 0 else UI.nl(cost) + " pt"))
 		elif c.kind == "poort":
-			c.off = not Game.mcv_deployed or not Game.can_afford_build(Kampmuur.GATE_COST)
-			c.sub = UI.nl(Kampmuur.GATE_COST) + " pt"
+			c.off = not Game.mcv_deployed or not (Buildings.test_bouw() or Game.can_afford_build(Kampmuur.GATE_COST))
+			c.sub = "GRATIS" if Buildings.test_bouw() else UI.nl(Kampmuur.GATE_COST) + " pt"
 		else:
 			c.off = true
 			c.sub = "binnenkort"

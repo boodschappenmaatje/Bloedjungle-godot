@@ -14,20 +14,21 @@ func _run() -> void:
 	assert(is_equal_approx(AirfieldHQ23.BASE_GROUND_SIZE.x, 56.65) and is_equal_approx(AirfieldHQ23.BASE_GROUND_SIZE.y, 56.95), "Base ground size is the old camp footprint, the airfield area budget")
 	assert(is_equal_approx(AirfieldHQ23.MAX_GROUND_AREA, 6452.435), "Area ceiling must equal exactly twice the authored base ground area")
 	assert(AirfieldHQ23.footprint_area() <= AirfieldHQ23.MAX_GROUND_AREA, "The conservative sum of constructed regions must stay within twice the base area")
-	assert(is_equal_approx(AirfieldHQ23.footprint_area(), 3267.2920), "The conservative compact-layout area must include hangar, tower/access, 75x18 runway, apron and taxi end coverage")
-	assert(AirfieldHQ23.HANGAR_SIZE.is_equal_approx(Vector2(28.0, 24.0)), "Hangar construction zone must be 28 × 24 m")
-	assert(AirfieldHQ23.TOWER_SIZE.is_equal_approx(Vector2(8.0, 8.0)), "Tower core zone must be 8 × 8 m")
-	assert(is_equal_approx(AirfieldFlightIntegration.RUNWAY_LENGTH_M, 75.0), "The revised runway must be exactly 75 m long")
-	assert(is_equal_approx(AirfieldFlightIntegration.RUNWAY_WIDTH_M, 18.0), "The revised runway must be exactly 18 m wide")
-	assert(is_equal_approx(AirfieldFlightIntegration.DOOR_CLEAR_WIDTH_M, 15.0), "The compact hangar door must clear 15 m")
-	assert(is_equal_approx(AirfieldFlightIntegration.DOOR_CLEAR_HEIGHT_M, 5.89), "The compact hangar door must clear 5.89 m")
-	var plane_clearance := AirfieldFlightIntegration.new().clearance_report()
-	assert(is_equal_approx(plane_clearance.door_wing_margin_each_side_m, 1.28), "The P-47 wingspan must have at least 1.25 m clearance per tip")
-	assert(is_equal_approx(plane_clearance.door_height_margin_m, 1.44), "The P-47 profile must have at least 1.25 m headroom")
-	assert(is_equal_approx(plane_clearance.taxi_wing_margin_each_side_m, 2.78), "Taxiway width must retain vehicle wing clearance")
-	assert(plane_clearance.clear_interior_m.is_equal_approx(Vector3(15.0, 6.0, 13.0)), "The central hangar envelope must retain 15 × 13 × 6 m of clear space")
-	assert(AirfieldHQ23.taxi_centerline_points().front() == AirfieldHQ23.TAXI_START, "Taxi route must start at the distinct apron edge")
-	assert(AirfieldHQ23.taxi_centerline_points().back() == AirfieldHQ23.TAXI_RUNWAY_END, "Taxi route must end at the runway edge after its separate curve")
+	# Basismaat (14 nov 2026, keuzes 1A 2A 3B 6A 7B): ~36 x 25 m in plaats van 75 x 53 m.
+	assert(is_equal_approx(AirfieldHQ23.footprint_area(), 19.4 * 17.6 + 4.6 * 4.6 + 36.0 * 8.0), "The compact area is hangar + tower + 36 x 8 m strip")
+	assert(AirfieldHQ23.FOOTPRINT.x <= 36.5 and AirfieldHQ23.FOOTPRINT.z <= 26.0, "The airfield must fit the base scale (about 36 x 25 m)")
+	assert(AirfieldHQ23.HANGAR_SIZE.is_equal_approx(Vector2(19.4, 17.6)), "Hangar construction zone must be 19.4 × 17.6 m")
+	assert(AirfieldHQ23.TOWER_SIZE.is_equal_approx(Vector2(4.6, 4.6)), "Tower core zone must be 4.6 × 4.6 m")
+	assert(is_equal_approx(AirfieldFlightIntegration.RUNWAY_LENGTH_M, 36.0), "The short strip must be 36 m long")
+	assert(is_equal_approx(AirfieldFlightIntegration.RUNWAY_WIDTH_M, 8.0), "The short strip must be 8 m wide")
+	assert(is_equal_approx(AirfieldFlightIntegration.DOOR_CLEAR_WIDTH_M, 15.0 * AirfieldHQ23.HANGAR_SCALE), "The scaled hangar door clears 12.75 m")
+	assert(AirfieldHQ23.AIRCRAFT_CAPACITY == 2 and AirfieldHQ23.SLOT_X.size() == 2, "Two aircraft slots side by side")
+	assert(absf(AirfieldHQ23.SLOT_X[1] - AirfieldHQ23.SLOT_X[0]) + 5.2 < AirfieldFlightIntegration.DOOR_CLEAR_WIDTH_M, "Both ~5 m wingspans must fit inside the door opening")
+	assert(AirfieldHQ23.approach_zones().size() == 2 and is_equal_approx(AirfieldHQ23.approach_zones()[0].size.x, 20.0), "A 20 m free approach zone at both strip ends")
+	var takeoff := AirfieldFlightIntegration.new().takeoff_profile_report()
+	assert(takeoff.fits_demonstration, "The takeoff roll must fit the short strip")
+	assert(AirfieldHQ23.taxi_centerline_points().front() == AirfieldHQ23.TAXI_START, "Taxi route must start in front of the doors")
+	assert(AirfieldHQ23.taxi_centerline_points().back() == AirfieldHQ23.TAXI_RUNWAY_END, "Taxi route must end at the strip end")
 	assert(AirfieldHQ23.RUNWAY_END_X - AirfieldHQ23.RUNWAY_START_X == AirfieldFlightIntegration.RUNWAY_LENGTH_M, "Runway slab span must match route/runway configuration")
 	assert(absf(AirfieldHQ23.RUNWAY_START_X) <= AirfieldHQ23.FOOTPRINT.x * 0.5 and absf(AirfieldHQ23.RUNWAY_END_X) <= AirfieldHQ23.FOOTPRINT.x * 0.5, "Runway longitudinal bounds must be within the airport's map-view bounds")
 	assert(absf(AirfieldHQ23.RUNWAY_CENTER_Z) + AirfieldFlightIntegration.RUNWAY_WIDTH_M * 0.5 <= AirfieldHQ23.FOOTPRINT.z * 0.5, "Runway cross-section must be within the airport's map-view bounds")
@@ -39,7 +40,7 @@ func _run() -> void:
 	var points_before: int = int(game.points)
 	assert(not AirfieldHQ23.can_buy(null, candidate, "p47"), "Missing model must prevent charge and purchase")
 	assert(game.points == points_before, "A blocked model purchase must not deduct points")
-	var shop_building := {"kind": "airfield", "down": false, "hp": 2400.0, "max_hp": 3000.0, "aircraft": [], "aircraft_capacity": 1}
+	var shop_building := {"kind": "airfield", "down": false, "hp": 2400.0, "max_hp": 3000.0, "aircraft": [], "aircraft_capacity": AirfieldHQ23.AIRCRAFT_CAPACITY}
 	game.buildings.append(shop_building)
 	var shop_builds := Buildings.new()
 	add_child(shop_builds)
@@ -54,7 +55,7 @@ func _run() -> void:
 	for label in shop_panel._box.find_children("*", "Label", true, false):
 		shop_text += (label as Label).text + "\n"
 	assert(shop_text.contains("VLIEGVELD — VLIEGTUIGHANGAR"), "Airfield shop must show the required title")
-	assert(shop_text.contains("schade 20%") and shop_text.contains("Vliegtuigplaatsen: 0 / 1"), "Shop must show building damage and available capacity")
+	assert(shop_text.contains("schade 20%") and shop_text.contains("Vliegtuigplaatsen: 0 / 2"), "Shop must show building damage and available capacity")
 	assert(shop_text.contains("uitgesteld tot na de iPhone-vliegveldtest") and shop_text.contains("origineel Meshy Pro-model ontbreekt"), "Shop must disclose that the purchase is deferred and the source model is missing")
 	var p47_button: Button
 	for button in shop_panel._box.find_children("*", "Button", true, false):
@@ -67,6 +68,7 @@ func _run() -> void:
 	shop_builds.free()
 	var builder := Buildings.new()
 	add_child(builder)
+	game.mcv_deployed = true   # het vliegveld kan pas als je wagen is uitgeklapt
 	await get_tree().process_frame
 	assert(builder.can_place("airfield", AirfieldHQ23.SUGGESTED_CENTER, 0.0), "A valid free-map site outside protected areas should be accepted")
 	assert(not builder.can_place("airfield", Vector3.ZERO, 0.0), "The protected base and enemy spawn zone must be rejected")
@@ -233,7 +235,7 @@ func _run() -> void:
 	assert(game.pay_build(2800), "Build payment should combine the existing credit and point balances")
 	assert(game.build_credit == 0 and game.points == 200, "Build credit must be spent before points")
 	assert(not AirfieldHQ23.P47_PURCHASE_ENABLED, "P-47 purchases must remain disabled until after the native airport test")
-	assert(AirfieldHQ23.site_regions().size() > 8, "The airport placement footprint must expose separate construction regions, including taxi turns")
+	assert(AirfieldHQ23.site_regions().size() == 3 and AirfieldHQ23.site_and_zone_regions().size() == 5, "The airport footprint has hangar, tower and strip regions plus two approach zones")
 	builder.free()
 	print("AIRFIELD HQ 2.3 contract: PASS")
 	get_tree().quit(0)

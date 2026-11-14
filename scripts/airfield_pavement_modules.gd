@@ -7,7 +7,8 @@ const SLAB_DEPTH := 0.22
 ## met verschillende textuurfase = z-fighting (flikkerende baan). Ze komt daarom 2 cm hoger te liggen.
 const TAXI_LIFT := 0.02
 const RUNWAY_WIDTH := AirfieldHQ23.RUNWAY_WIDTH_M
-const RUNWAY_SEGMENT := 15.0
+const RUNWAY_SEGMENT := 12.0
+const MODULE_LENGTH := 15.0   # de HQ23-betonplaat is 15 m lang en 18 m breed; voor de korte strook geschaald
 const TAXIWAY_WIDTH := AirfieldHQ23.TAXIWAY_WIDTH_M
 const TAXI_COLLISION_STEP := 4.0
 const APRON_SIZE := Vector2(18.0, 14.0)
@@ -39,11 +40,8 @@ var _apron_meshes: Array[Mesh] = []
 
 func _ready() -> void:
 	_runway_meshes = _load_module_meshes(RUNWAY_MODULES)
-	_taxi_meshes = _load_module_meshes(TAXI_MODULES)
-	_apron_meshes = _load_module_meshes(APRON_MODULES)
 	_build_runway()
-	_build_apron()
-	_build_taxiway()
+	# Basismaat (14 nov 2026): geen los platform en geen taxibaan meer; de strook voor de deuren is beide.
 
 func _load_module_meshes(paths: Array) -> Array[Mesh]:
 	var meshes: Array[Mesh] = []
@@ -99,13 +97,15 @@ func _collider(name: String, dimensions: Vector3, transform: Transform3D) -> voi
 	add_child(body)
 
 func _build_runway() -> void:
-	# Five bevelled 15 m HQ23 PBR concrete modules share one exact straight axis.
+	# Bevelled HQ23 PBR concrete modules along one straight axis, scaled to the short 36 x 8 m strip.
 	var transforms: Array[Transform3D] = []
-	for i in range(5):
+	var count := roundi(AirfieldHQ23.RUNWAY_LENGTH_M / RUNWAY_SEGMENT)
+	var squeeze := Basis(Vector3.UP, PI * 0.5).scaled_local(Vector3(RUNWAY_WIDTH / 18.0, 1.0, RUNWAY_SEGMENT / MODULE_LENGTH))
+	for i in range(count):
 		var x := AirfieldHQ23.RUNWAY_START_X + RUNWAY_SEGMENT * 0.5 + i * RUNWAY_SEGMENT
-		var transform := Transform3D(Basis(Vector3.UP, PI * 0.5), AirfieldHQ23.layout_point(x, AirfieldHQ23.RUNWAY_CENTER_Z, SLAB_DEPTH * 0.5))
-		transforms.append(transform)
-		_collider("Runway slab collision %02d" % i, Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT + 0.04), transform)
+		var at := AirfieldHQ23.layout_point(x, AirfieldHQ23.RUNWAY_CENTER_Z, SLAB_DEPTH * 0.5)
+		transforms.append(Transform3D(squeeze, at))
+		_collider("Runway slab collision %02d" % i, Vector3(RUNWAY_WIDTH, SLAB_DEPTH, RUNWAY_SEGMENT + 0.04), Transform3D(Basis(Vector3.UP, PI * 0.5), at))
 	_multimesh("Runway concrete slabs LOD0", _runway_meshes[0], transforms, 0.0, LOD0_END_M)
 	_multimesh("Runway concrete slabs LOD1", _runway_meshes[1], transforms, LOD0_END_M, LOD1_END_M)
 	_multimesh("Runway concrete slabs LOD2", _runway_meshes[2], transforms, LOD1_END_M, LOD2_END_M)

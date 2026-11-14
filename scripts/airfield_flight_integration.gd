@@ -6,11 +6,11 @@ class_name AirfieldFlightIntegration
 const P47_LENGTH_M := 11.0
 const P47_WINGSPAN_M := 12.44
 const P47_HEIGHT_M := 4.45
-const DOOR_CLEAR_WIDTH_M := 15.0
-const DOOR_CLEAR_HEIGHT_M := 5.89
-const INTERIOR_CLEAR_WIDTH_M := 15.0
-const INTERIOR_CLEAR_LENGTH_M := 13.0
-const INTERIOR_CLEAR_HEIGHT_M := 6.0
+const DOOR_CLEAR_WIDTH_M := 15.0 * AirfieldHQ23.HANGAR_SCALE
+const DOOR_CLEAR_HEIGHT_M := 5.89 * AirfieldHQ23.HANGAR_SCALE
+const INTERIOR_CLEAR_WIDTH_M := 15.0 * AirfieldHQ23.HANGAR_SCALE
+const INTERIOR_CLEAR_LENGTH_M := 13.0 * AirfieldHQ23.HANGAR_SCALE
+const INTERIOR_CLEAR_HEIGHT_M := 6.0 * AirfieldHQ23.HANGAR_SCALE
 const TAXIWAY_WIDTH_M := AirfieldHQ23.TAXIWAY_WIDTH_M
 const RUNWAY_WIDTH_M := AirfieldHQ23.RUNWAY_WIDTH_M
 const RUNWAY_LENGTH_M := AirfieldHQ23.RUNWAY_LENGTH_M
@@ -88,17 +88,17 @@ func _build_paths() -> void:
 	taxi_route.curve = _curve(taxi_points)
 	takeoff_path.curve = _curve([
 		AirfieldHQ23.layout_point(TAKEOFF_START_X, AirfieldHQ23.RUNWAY_CENTER_Z),
-		AirfieldHQ23.layout_point(-10.0, AirfieldHQ23.RUNWAY_CENTER_Z, 0.22),
-		AirfieldHQ23.layout_point(-37.0, AirfieldHQ23.RUNWAY_CENTER_Z, 2.0),
-		AirfieldHQ23.layout_point(-55.0, AirfieldHQ23.RUNWAY_CENTER_Z + 4.0, 12.0),
-		AirfieldHQ23.layout_point(-70.0, AirfieldHQ23.RUNWAY_CENTER_Z + 8.0, 24.0),
+		AirfieldHQ23.layout_point(AirfieldHQ23.RUNWAY_START_X + 8.0, AirfieldHQ23.RUNWAY_CENTER_Z, 0.22),
+		AirfieldHQ23.layout_point(AirfieldHQ23.RUNWAY_START_X, AirfieldHQ23.RUNWAY_CENTER_Z, 2.0),
+		AirfieldHQ23.layout_point(AirfieldHQ23.RUNWAY_START_X - 18.0, AirfieldHQ23.RUNWAY_CENTER_Z, 12.0),
+		AirfieldHQ23.layout_point(AirfieldHQ23.RUNWAY_START_X - 33.0, AirfieldHQ23.RUNWAY_CENTER_Z, 24.0),
 	])
 	landing_path.curve = _curve([
 		AirfieldHQ23.layout_point(AirfieldHQ23.RUNWAY_START_X - 25.0, AirfieldHQ23.RUNWAY_CENTER_Z, 24.0),
 		AirfieldHQ23.layout_point(AirfieldHQ23.RUNWAY_START_X - 12.0, AirfieldHQ23.RUNWAY_CENTER_Z, 10.0),
 		AirfieldHQ23.layout_point(AirfieldHQ23.RUNWAY_START_X - 5.0, AirfieldHQ23.RUNWAY_CENTER_Z, 3.0),
 		$P47_Landing_Touchdown.position,
-		AirfieldHQ23.layout_point(AirfieldHQ23.RUNWAY_START_X + 18.0, AirfieldHQ23.RUNWAY_CENTER_Z),
+		AirfieldHQ23.layout_point(AirfieldHQ23.RUNWAY_START_X + 14.0, AirfieldHQ23.RUNWAY_CENTER_Z),
 	])
 
 func place_real_aircraft(aircraft: Node3D) -> void:

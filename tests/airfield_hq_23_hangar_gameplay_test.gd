@@ -26,7 +26,7 @@ func _walk(body: CharacterBody3D, direction: Vector3, frames: int) -> void:
 func _run() -> void:
 	var complex_body := AirfieldHQ23.make_complex()
 	get_tree().root.add_child(complex_body)
-	var showcase := complex_body.get_node("AirfieldHQ23CompactCore") as AirfieldHQ23CompactShowcase
+	var showcase := complex_body.get_node("AirfieldCompactRoot/AirfieldHQ23CompactCore") as AirfieldHQ23CompactShowcase
 	var far := Node3D.new()
 	get_tree().root.add_child(far)
 	far.global_position = Vector3(0, 0, 400)

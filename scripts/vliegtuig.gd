@@ -11,10 +11,10 @@ extends Node3D
 ## Op een pc: WASD/pijlen = richting, Q = stijgen, E = dalen.
 ## Het model staat in MODEL_PATH en is zo te verwisselen (Meshy-toestel): pas ook MODEL_SCALE en MODEL_YAW aan.
 
-enum Mode { PARKED, GROUND, AIR, ROLLOUT, TAXI, WRECK }
+enum Mode { PARKED, GROUND, AIR, ROLLOUT, TAXI, WRECK, AUTOLAND }
 
 const MODEL_PATH := "res://assets/straaljager.glb"   # plaatsvervanger tot Dennis' Meshy-toestel er is
-const MODEL_SCALE := 0.62                             # straaljager is op schaal 1 ~16 m: zo past hij in de hangar
+const MODEL_SCALE := 0.5                              # straaljager is op schaal 1 ~16 m: ~8,5 m, zo groot als een tank (keuze 3B, 14 nov)
 const MODEL_YAW := 0.0                                # de neus van het model kijkt naar -Z
 const FLY_CLIP := "Vliegen"
 
@@ -38,6 +38,13 @@ const PAVEMENT_Y := 0.22
 const DEADZONE := 0.15
 const BLAST_RADIUS := 11.0
 const BLAST_HURT := 420.0
+const ROLLOUT_BRAKE := 9.0     # m/s²: op de korte strook (36 m) staat hij na een landing binnen ~12-18 m stil
+# LAND-knop (keuze 4B): het toestel vliegt zelf de aanvlieglijn in, landt aan het begin van de strook en rijdt de hangar in.
+const AUTO_ALT := 10.0         # m: hoogte tot het begin van de eindnadering (boven de bomen)
+const AUTO_SPEED := 18.0
+const AUTO_FINAL := 30.0       # m voor de strook: begin van de eindnadering (de laatste 20 m zijn de vrije aanvliegzone)
+const AUTO_FAR := 58.0         # m voor de strook: eerst hierheen, zodat hij recht op de strook uitkomt
+const TOUCH_SPEED := 14.0
 
 static var driven_plane: Vliegtuig   # het toestel waar de speler nu in zit
 
@@ -79,6 +86,9 @@ var _span := 12.0
 var _len := 12.0
 var _hangar_fit := false
 var _tree_t := 0.0
+var slot := 0                  # parkeerplek in de hangar (0 links, 1 rechts)
+var _auto: Array[Vector3] = [] # LAND-knop: punten (x, hoogte, z) in de wereld
+var _auto_final := false
 
 const SHADOW_SHADER := """
 shader_type spatial;
@@ -97,11 +107,12 @@ static var _shadow_shader: Shader
 
 
 ## Zet een toestel op de parkeerplek van het vliegveld. b = het vliegveldbouwstuk.
-static func spawn(b: Dictionary) -> Vliegtuig:
+static func spawn(b: Dictionary, at_slot := 0) -> Vliegtuig:
 	var cx: Node3D = b.node.get_meta("complex") if b.node.has_meta("complex") else null
 	if cx == null:
 		return null
 	var v := Vliegtuig.new()
+	v.slot = at_slot
 	v.airfield = b
 	v.complex = cx
 	b.node.get_parent().add_child(v)
@@ -300,10 +311,11 @@ func _stick_label(txt: String, left: bool) -> Label:
 
 # ------------------------------------------------------------------ plaats en grond
 
-## Parkeerplek: in de hangar als het toestel erin past, anders op het platform ervoor.
+## Parkeerplek: in de hangar (eigen plek, neus naar de deur) als het toestel erin past, anders op de strook ervoor.
 func _park_transform() -> Transform3D:
-	var local := Vector3(0.0, PAVEMENT_Y, 0.0) if _hangar_fit else AirfieldHQ23.layout_point(AirfieldHQ23.APRON_CENTER.x, AirfieldHQ23.APRON_CENTER.y, PAVEMENT_Y)
-	return complex.global_transform * Transform3D(Basis.IDENTITY, local)
+	var sp := AirfieldHQ23.slot_point(slot)
+	var local := AirfieldHQ23.layout_point(sp.x, sp.y, PAVEMENT_Y) if _hangar_fit else AirfieldHQ23.layout_point(sp.x, AirfieldHQ23.RUNWAY_CENTER_Z, PAVEMENT_Y)
+	return complex.global_transform * Transform3D(Basis(Vector3.UP, PI), local)
 
 
 ## Vliegveldcoördinaten (zoals AirfieldHQ23.layout_point ze omzet) van een wereldpunt.
@@ -324,13 +336,6 @@ func on_pavement(world: Vector3) -> bool:
 	if absf(a.x - (AirfieldHQ23.RUNWAY_START_X + AirfieldHQ23.RUNWAY_END_X) * 0.5) <= AirfieldHQ23.RUNWAY_LENGTH_M * 0.5 \
 			and absf(a.y - AirfieldHQ23.RUNWAY_CENTER_Z) <= AirfieldHQ23.RUNWAY_WIDTH_M * 0.5:
 		return true
-	if absf(a.x - AirfieldHQ23.APRON_CENTER.x) <= 9.0 and absf(a.y - AirfieldHQ23.APRON_CENTER.y) <= 7.0:
-		return true
-	var pts := AirfieldHQ23.taxi_centerline_points()
-	for i in range(pts.size() - 1):
-		var c := Geometry2D.get_closest_point_to_segment(a, pts[i], pts[i + 1])
-		if c.distance_to(a) <= AirfieldHQ23.TAXIWAY_WIDTH_M * 0.5:
-			return true
 	return false
 
 
@@ -348,6 +353,8 @@ func _press() -> void:
 		_board(p)
 	elif mode == Mode.GROUND and speed < 1.5:
 		_leave(p, false)
+	elif mode == Mode.AIR:
+		start_autoland()
 
 
 func _board(p) -> void:
@@ -385,7 +392,8 @@ func _leave(p, auto: bool) -> void:
 		p.visible = true
 		var out: Vector3
 		if mode == Mode.PARKED and _hangar_fit:
-			out = complex.to_global(Vector3(0.0, 0.0, 11.5))   # voor de hangardeur
+			var sp := AirfieldHQ23.slot_point(slot)
+			out = _world_of(sp.x, AirfieldHQ23.HANGAR_DOOR_Z + 1.2)   # net voor de hangardeur
 		else:
 			out = global_position + global_transform.basis.x * (_span * 0.5 + 2.0)
 		p.global_position = Vector3(out.x, 0.0, out.z)
@@ -437,7 +445,7 @@ func _step(delta: float) -> void:
 	var live: bool = Game.state == "play" or Game.state == "prep"
 	var p = Game.player
 	if driven and (p == null or p.dead):
-		if mode == Mode.AIR:
+		if mode == Mode.AIR or mode == Mode.AUTOLAND:
 			crash()
 		else:
 			_leave(p, false)
@@ -450,6 +458,8 @@ func _step(delta: float) -> void:
 			_rollout(delta)
 		Mode.TAXI:
 			_taxi(delta)
+		Mode.AUTOLAND:
+			_autoland(delta)
 		Mode.PARKED, Mode.WRECK:
 			pass
 	if driven and p != null and mode != Mode.WRECK:
@@ -570,7 +580,7 @@ func _touchdown() -> void:
 
 
 func _rollout(delta: float) -> void:
-	speed = move_toward(speed, 0.0, 5.5 * delta)
+	speed = move_toward(speed, 0.0, ROLLOUT_BRAKE * delta)
 	_bank = lerpf(_bank, 0.0, minf(1.0, delta * 4.0))
 	_pitch = lerpf(_pitch, 0.0, minf(1.0, delta * 4.0))
 	var before := global_position
@@ -584,29 +594,92 @@ func _rollout(delta: float) -> void:
 		_start_taxi()
 
 
-## Route terug naar de hangar: via de baan-aansluiting en de taxibaan naar het platform, de hangar in.
+## Route terug naar de hangar: over de strook tot voor de eigen plek, dan recht de hangar in.
 func _start_taxi() -> void:
 	mode = Mode.TAXI
-	var pts := AirfieldHQ23.taxi_centerline_points()
-	var path: Array[Vector2] = [Vector2(AirfieldHQ23.TAXI_RUNWAY_END.x, AirfieldHQ23.RUNWAY_CENTER_Z + 2.0)]
-	for i in range(pts.size() - 1, -1, -1):
-		path.append(pts[i])
-	path.append(AirfieldHQ23.APRON_CENTER)
+	var sp := AirfieldHQ23.slot_point(slot)
+	var path: Array[Vector2] = [Vector2(sp.x, AirfieldHQ23.RUNWAY_CENTER_Z)]
 	if _hangar_fit:
-		path.append(Vector2(0.0, AirfieldHQ23.HANGAR_CENTER.y + 8.0))
-		path.append(Vector2(0.0, AirfieldHQ23.HANGAR_CENTER.y))
-	var here := _airport_xy(global_position)
-	var best := 0
-	var best_d := INF
-	for i in path.size():
-		var d := here.distance_to(path[i])
-		if d < best_d:
-			best_d = d
-			best = i
-	# staan we al voorbij het eerste punt (op de taxibaan), dan niet terug naar de baan
+		path.append(Vector2(sp.x, AirfieldHQ23.HANGAR_DOOR_Z - 1.0))
+		path.append(sp)
 	_route.clear()
-	for i in range(best, path.size()):
-		_route.append(_world_of(path[i].x, path[i].y))
+	for pt in path:
+		_route.append(_world_of(pt.x, pt.y))
+
+
+# ------------------------------------------------------------------ LAND-knop
+
+## Begin van de strook in de landingsrichting en de richting zelf (wereld). Kiest de kant waar het toestel het snelst uitkomt.
+func _landing_line() -> Array:
+	var best: Array = []
+	var best_d := INF
+	for d in [1.0, -1.0]:
+		var edge: float = AirfieldHQ23.RUNWAY_START_X if d > 0.0 else AirfieldHQ23.RUNWAY_END_X
+		var far := _world_of(edge - d * AUTO_FAR, AirfieldHQ23.RUNWAY_CENTER_Z)
+		var dist := Vector2(far.x - global_position.x, far.z - global_position.z).length()
+		if dist < best_d:
+			best_d = dist
+			best = [_world_of(edge, AirfieldHQ23.RUNWAY_CENTER_Z), _world_of(edge + d, AirfieldHQ23.RUNWAY_CENTER_Z) - _world_of(edge, AirfieldHQ23.RUNWAY_CENTER_Z)]
+	return best
+
+
+func start_autoland() -> void:
+	if mode != Mode.AIR or complex == null or not is_instance_valid(complex):
+		return
+	var line := _landing_line()
+	var edge: Vector3 = line[0]
+	var dir: Vector3 = (line[1] as Vector3).normalized()
+	_auto.clear()
+	for k in [AUTO_FAR, AUTO_FINAL]:
+		var p: Vector3 = edge - dir * k
+		_auto.append(Vector3(p.x, AUTO_ALT, p.z))
+	var t := edge + dir * 3.0
+	_auto.append(Vector3(t.x, 0.0, t.z))
+	_auto_final = false
+	mode = Mode.AUTOLAND
+	Sfx.play("click")
+	Game.banner.emit("LANDEN", "Het toestel landt zelf en rijdt de hangar in", 2.0)
+
+
+func _autoland(delta: float) -> void:
+	if _auto.is_empty():
+		_touchdown()
+		return
+	var tgt := _auto[0]
+	var to := Vector2(tgt.x - global_position.x, tgt.z - global_position.z)
+	var d := to.length()
+	var f := _forward()
+	var last := _auto.size() == 1
+	if last and not _auto_final:
+		_auto_final = true
+	# draaien naar het volgende punt (net iets scherper dan met de hand)
+	var want := atan2(-to.x, -to.y)
+	var diff := wrapf(want - rotation.y, -PI, PI)
+	var turn := clampf(diff, -TURN_AIR * 1.25 * delta, TURN_AIR * 1.25 * delta)
+	rotation.y += turn
+	_bank = lerpf(_bank, clampf(turn / maxf(delta, 0.001) * 0.45, -0.9, 0.9), minf(1.0, delta * 5.0))
+	speed = move_toward(speed, TOUCH_SPEED if last else AUTO_SPEED, ACCEL * delta)
+	var before := alt
+	if last:
+		# eindnadering: van AUTO_ALT naar de grond over de laatste meters, recht over de middenlijn
+		var span_d := AUTO_FINAL + 3.0
+		alt = minf(alt, AUTO_ALT * clampf(d / span_d, 0.0, 1.0))
+		alt = maxf(alt, 0.0)
+	else:
+		alt = move_toward(alt, AUTO_ALT, CLIMB_RATE * delta)
+	climb = signf(alt - before)
+	_move_flat(delta)
+	global_position.y = ground_y(global_position) + alt
+	_pitch = lerpf(_pitch, clampf((alt - before) / maxf(delta, 0.001) * 0.04, -0.3, 0.3), minf(1.0, delta * 4.0))
+	var passed := Vector2(f.x, f.z).dot(to) < 0.0 and d < 20.0
+	if d < (2.5 if last else 9.0) or passed:
+		_auto.pop_front()
+		if last:
+			alt = 0.0
+			_touchdown()
+			return
+	if alt < 3.0 and _blocked(CRASH_R, 0.0):
+		crash()
 
 
 func _taxi(delta: float) -> void:
@@ -625,7 +698,7 @@ func _taxi(delta: float) -> void:
 	var turn := clampf(diff, -1.3 * delta, 1.3 * delta)
 	rotation.y += turn
 	_bank = lerpf(_bank, 0.0, minf(1.0, delta * 4.0))
-	var v_goal := TAXI_SPEED * (0.45 if absf(diff) > 0.6 else 1.0)
+	var v_goal := TAXI_SPEED * (0.3 if absf(diff) > 0.6 else 1.0)
 	if last:
 		v_goal = clampf(d * 1.2, 1.5, TAXI_SPEED)
 	speed = move_toward(speed, v_goal, 4.0 * delta)
@@ -635,7 +708,7 @@ func _taxi(delta: float) -> void:
 
 func _inside_hangar() -> bool:
 	var l := complex.to_local(global_position)
-	return absf(l.x) < 10.5 and absf(l.z) < 10.5
+	return absf(l.x) < AirfieldHQ23.HANGAR_SIZE.x * 0.5 and absf(l.z) < AirfieldHQ23.HANGAR_SIZE.y * 0.5
 
 
 func _park() -> void:
@@ -646,7 +719,10 @@ func _park() -> void:
 	var p = Game.player
 	if driven:
 		_leave(p, true)
-	home = global_transform
+	# terugduwen: neus weer naar de deur, klaar voor de volgende vlucht
+	home = _park_transform() if _hangar_fit else global_transform
+	var tw := create_tween()
+	tw.tween_property(self, "global_transform", home, 1.6).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 
 
 ## Raakt het toestel op deze hoogte iets (muur, bunker, voertuig)? lift = hoogte van het midden boven de grond.
@@ -744,14 +820,14 @@ func blast_dist(at: Vector3) -> float:
 func _visuals(delta: float) -> void:
 	if mode == Mode.WRECK:
 		return
-	var in_air := mode == Mode.AIR
+	var in_air := mode == Mode.AIR or mode == Mode.AUTOLAND
 	# Hoger = dichter bij de camera: het toestel wordt tot ~30% groter, zodat hoogte ook zonder getal te zien is.
 	var up := 1.0 + clampf(alt / MAX_ALT, 0.0, 1.0) * 0.3 if in_air else 1.0
 	_wrap.scale = _wrap.scale.lerp(Vector3.ONE * up, minf(1.0, delta * 5.0))
 	_wrap.rotation.z = lerpf(_wrap.rotation.z, _bank if in_air else _bank * 0.15, minf(1.0, delta * 6.0))
 	_wrap.rotation.x = lerpf(_wrap.rotation.x, _pitch if in_air else 0.0, minf(1.0, delta * 6.0))
 	if _anim != null and _anim.has_animation(FLY_CLIP):
-		if (driven or mode == Mode.TAXI or mode == Mode.ROLLOUT) and not _anim.is_playing():
+		if (driven or mode == Mode.TAXI or mode == Mode.ROLLOUT or mode == Mode.AUTOLAND) and not _anim.is_playing():
 			_anim.play(FLY_CLIP)
 	var trail_on := in_air and speed > 16.0 and alt > 2.0
 	for t in _trails:
@@ -789,13 +865,15 @@ func _update_ui(p, live: bool) -> void:
 		what = "in"
 	elif driven and mode == Mode.GROUND and speed < 1.5:
 		what = "uit"
+	elif driven and live and mode == Mode.AIR:
+		what = "land"
 	_btn.visible = what != ""
 	if what != "":
 		_btn.dock(2)
-		_btn.kind = "enter" if what == "in" else "exit"
-		_btn.set_caption("IN" if what == "in" else "UIT")
+		_btn.kind = {"in": "enter", "uit": "exit", "land": "land"}[what]
+		_btn.set_caption({"in": "IN", "uit": "UIT", "land": "LAND"}[what])
 		_btn.queue_redraw()
-	var show_meter := driven and (mode == Mode.AIR or mode == Mode.GROUND or mode == Mode.ROLLOUT or mode == Mode.TAXI)
+	var show_meter := driven and (mode == Mode.AIR or mode == Mode.GROUND or mode == Mode.ROLLOUT or mode == Mode.TAXI or mode == Mode.AUTOLAND)
 	_meter.visible = show_meter
 	if show_meter:
 		var inv := GameSettings.get_value("vliegtuig_hoogte") == "omgekeerd"
@@ -807,7 +885,9 @@ func _update_ui(p, live: bool) -> void:
 				if _hint_t > 0.0:
 					hint = "Gas geven, dan rechterstick %s om op te stijgen" % ("omhoog" if inv else "omlaag")
 			Mode.AIR:
-				hint = "Landen: laag boven asfalt en langzaam" if alt < 6.0 else ""
+				hint = "Landen: tik LAND, of laag en langzaam boven de strook"
+			Mode.AUTOLAND:
+				hint = "Automatisch landen…"
 			Mode.ROLLOUT:
 				hint = "Uitrollen…"
 			Mode.TAXI:

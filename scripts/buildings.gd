@@ -26,6 +26,7 @@ const GARAGE_RIJ_MAX := 3  # wagens die tegelijk in de garagerij mogen staan; va
 # Generals-plan stap 1 (docs/GENERALS_PLAN.md): bouwtijd in seconden en wat je eerst nodig hebt (techboom).
 # Muren en zandzakken staan er meteen. Tests en code die place() zonder bouwtijd aanroepen bouwen direct.
 const BUILD_TIME := {"wachttoren": 8.0, "depot": 12.0, "kazerne": 12.0, "garage": 15.0, "helipad": 20.0, "airfield": 30.0}
+const APPROACH_MSG := "Aanvliegzone van het vliegveld moet vrij blijven"
 const REQUIRES := {"garage": "kazerne", "helipad": "garage", "airfield": "helipad"}
 const PAD_T := 4.5  # seconden dat de luiken en de lift nodig hebben (de clips Open en Dicht)
 const INFO := {
@@ -124,6 +125,8 @@ func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null)
 			return _placement_result(false, "Vliegveldassets ontbreken", 0)
 		if me == null and full(kind):
 			return _placement_result(false, "Er is al een vliegveld gebouwd", 0)
+		if not Game.mcv_deployed:
+			return _placement_result(false, "Klap eerst je wagen uit", 0)
 		if not AirfieldHQ23.site_inside_world(at, yaw):
 			return _placement_result(false, "Buiten speelbaar gebied", 0)
 		if not AirfieldHQ23.site_clear_of_combat_spawns(at, yaw):
@@ -137,17 +140,19 @@ func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null)
 			exclusions.append(me.node.get_rid())
 			for child in me.node.find_children("*", "CollisionObject3D", true, false):
 				exclusions.append((child as CollisionObject3D).get_rid())
-		for region in AirfieldHQ23.site_regions():
+		for region in AirfieldHQ23.site_and_zone_regions():
+			var zone: bool = region.get("zone", false)
 			var site_shape := BoxShape3D.new()
 			site_shape.size = Vector3(region.size.x + 0.2, 1.4, region.size.y + 0.2)
 			var site_query := PhysicsShapeQueryParameters3D.new()
 			site_query.shape = site_shape
-			site_query.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_NATURE | Kit.LAYER_WATER
+			# de aanvliegzones mogen over water (er wordt gevlogen), maar niet over gebouwen of muren
+			site_query.collision_mask = Kit.LAYER_WALL | Kit.LAYER_BUNKER | Kit.LAYER_NATURE | (0 if zone else Kit.LAYER_WATER)
 			site_query.exclude = exclusions
 			site_query.transform = AirfieldHQ23.region_transform(at + Vector3(0.0, 0.7, 0.0), yaw, region)
 			var blocker := _first_protected_overlap(site_query)
 			if blocker != null:
-				return _placement_result(false, _overlap_message(blocker), 0)
+				return _placement_result(false, ("Aanvliegzone niet vrij: " if zone else "") + _overlap_message(blocker), 0)
 		var removable := Foliage.count_clearable_in_regions(_clearance_regions(kind), at, yaw)
 		return _placement_result(true, "Bouwen mogelijk — begroeiing wordt verwijderd" if removable > 0 else "Bouwen mogelijk", removable)
 	if kind == "kampmuur":
@@ -178,6 +183,8 @@ func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null)
 		ex.append(me.node.get_rid())
 	if _hits(Vector3(sz.x - 0.2, 1.0, sz.z - 0.2) if piece else Vector3(sz.x + 0.4, 1.0, sz.z + 0.4), at, yaw, ex):
 		return _placement_result(false, "Te dicht bij bestaande gebouwen", 0)
+	if kind != "zandzak" and AirfieldHQ23.blocks_approach(at, Vector2(sz.x, sz.z), yaw):
+		return _placement_result(false, APPROACH_MSG, 0)
 	if kind == "depot" and Game.supply != null and is_instance_valid(Game.supply):
 		var stem_why: String = Game.supply.stem_blocker(at, yaw, me)
 		if stem_why != "":
@@ -225,6 +232,8 @@ func _kampmuur_status(at: Vector3, yaw: float, me: Variant) -> Dictionary:
 	# iets korter dan het stuk: de uiteinden raken de buurstukken
 	if _hits(Vector3(sz.x - 0.9, 1.0, sz.z - 0.1), at, yaw, ex):
 		return _placement_result(false, "Er staat iets in de weg", 0)
+	if AirfieldHQ23.blocks_approach(at, Vector2(sz.x, sz.z), yaw):
+		return _placement_result(false, APPROACH_MSG, 0)
 	var removable := Foliage.count_clearable_in_regions(_clearance_regions("kampmuur"), at, yaw)
 	return _placement_result(true, "Bouwen mogelijk — begroeiing wordt verwijderd" if removable > 0 else "Bouwen mogelijk", removable)
 
@@ -247,6 +256,8 @@ func _tower_status(at: Vector3, yaw: float, me: Variant) -> Dictionary:
 		ex.append((me.node as CollisionObject3D).get_rid())
 	if _hits(Vector3(sz.x + 0.4, 1.0, sz.z + 0.4), at, yaw, ex):
 		return _placement_result(false, "Er staat iets in de weg", 0)
+	if AirfieldHQ23.blocks_approach(at, Vector2(sz.x + 1.8, sz.z), yaw):
+		return _placement_result(false, APPROACH_MSG, 0)
 	# de voet van de trap (aan de lokale +x-kant) moet vrij zijn, anders kom je er niet op
 	var foot := at + Basis(Vector3.UP, yaw) * Vector3(1.8, 0.0, 0.0)
 	if _hits(Vector3(1.4, 1.0, 1.4), foot, yaw, ex):
@@ -265,7 +276,7 @@ func _placement_result(valid: bool, reason: String, removable: int) -> Dictionar
 
 func _clearance_regions(kind: String) -> Array:
 	if kind == "airfield":
-		return AirfieldHQ23.site_regions()
+		return AirfieldHQ23.site_and_zone_regions()   # ook de bomen in de aanvliegzones gaan weg
 	var size: Vector3 = DEFS[kind].size
 	return [{"name": kind, "center": Vector2.ZERO, "size": Vector2(size.x, size.z), "yaw": 0.0}]
 
@@ -401,6 +412,8 @@ func _bags(root: Node3D, sz: Vector3) -> void:
 
 ## Welk gebouw ontbreekt er nog voor dit gebouw? Leeg als je mag bouwen. Een gebouw in aanbouw of een wrak telt niet mee.
 func missing(kind: String) -> String:
+	if test_bouw():
+		return ""
 	var need: String = REQUIRES.get(kind, "")
 	if need == "":
 		return ""
@@ -416,7 +429,15 @@ static func under_construction(b: Dictionary) -> bool:
 
 ## with_time = true (bouwmodus): het gebouw groeit op in BUILD_TIME seconden met steigers en een voortgangsbalk.
 ## Wat een gebouw nu kost: het gratis eerste voorraaddepot van de MCV-start kost niets (Game.free_depot).
+## Testinstelling (Instellingen > Test): zodra het HK staat is elk gebouw meteen te kiezen en gratis. Gebouwen bouwen nog wel op
+## (bouwtijd) en verkopen levert niets op, zodat je er geen punten mee kunt verdienen.
+static func test_bouw() -> bool:
+	return GameSettings.get_value("t_bouw") == "on"
+
+
 static func cost_of(kind: String) -> int:
+	if test_bouw():
+		return 0
 	if kind == "depot" and Game.free_depot > 0:
 		return 0
 	if kind == "kampmuur":
@@ -438,7 +459,8 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 	var gratis := not free and kind == "depot" and Game.free_depot > 0   # het gratis depot van de MCV-start (en daarmee de eerste truck gratis)
 	var gratis_muur := not free and kind == "kampmuur" and Kampmuur.free_left() > 0   # een stuk van de gratis eerste omheining
 	var gratis_toren := not free and kind == "wachttoren" and Game.free_towers > 0   # een van de vier gratis torens
-	if not free and not gratis and not gratis_muur and not gratis_toren and not Game.pay_build(DEFS[kind].cost):
+	var gratis_test := not free and test_bouw() and not gratis and not gratis_muur and not gratis_toren   # testinstelling: alles gratis
+	if not free and not gratis and not gratis_muur and not gratis_toren and not gratis_test and not Game.pay_build(DEFS[kind].cost):
 		if node != null:
 			node.free()
 		return null
@@ -453,6 +475,8 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 	node.ref = b
 	if gratis_toren:
 		Game.free_towers -= 1
+		b["gratis"] = true   # verkopen levert niets op
+	if gratis_test:
 		b["gratis"] = true   # verkopen levert niets op
 	if kind == "kazerne":
 		b["wachten"] = []   # MCV-start: de wachten van deze kazerne (Wachten)

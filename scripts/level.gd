@@ -21,6 +21,7 @@ func build_now() -> void:
 		c.free()
 	_ground()
 	River.build(self)
+	Bergland.build(self)
 	Stad.build(self)
 	VijandBasis.build(self)
 	Foliage.plant(self, Data.world_seed)
@@ -41,6 +42,8 @@ func build_stepped(progress: Callable) -> void:
 	await tick.call(0.1, "Basis bouwen...")
 	await tick.call(0.2, "Rivier en brug...")
 	River.build(self)
+	await tick.call(0.25, "Bergen en dalen...")
+	Bergland.build(self)
 	Stad.build(self)
 	VijandBasis.build(self)
 	var names := {"palm": "Palmen planten...", "bush": "Struiken planten...", "fern": "Varens planten...", "grass": "Gras laten groeien...", "rock": "Rotsen neerleggen..."}

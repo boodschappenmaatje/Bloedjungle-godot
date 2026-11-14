@@ -80,7 +80,12 @@ func _run() -> void:
 	# bouwtijd overslaan
 	for b in game.buildings:
 		b["build_t"] = 0.0
-	await _frames(240)   # twee toestellen klaarzetten
+	for _i in 2400:   # twee toestellen klaarzetten
+		await process_frame
+		if af.aircraft.size() >= 2:
+			break
+	print("toestellen klaar: ", af.aircraft.size())
+	await _frames(30)
 	for c in root.find_children("*", "CanvasLayer", true, false):
 		(c as CanvasLayer).visible = false
 	var cam := Camera3D.new()

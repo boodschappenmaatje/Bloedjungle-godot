@@ -202,6 +202,13 @@ func _run() -> void:
 	_check("LAND: daarna zelf de hangar in en geparkeerd", auto_park and plane._inside_hangar() and not plane.driven)
 
 	# ---------------------------------------------------------------- vrije aanvliegzone (keuze 5A)
+	var zone_trees := 0
+	for z in AH.approach_zones():
+		for k in 5:
+			var zp: Vector3 = b.node.global_transform * Vector3(z.center.x - z.size.x * 0.5 + 2.0 + k * 4.0, 0.0, z.center.y)
+			if FO.has_tree_near(zp.x, zp.z, 3.0):
+				zone_trees += 1
+	_check("geen bomen meer op de aanvlieglijn (%d punten met boom)" % zone_trees, zone_trees == 0)
 	var zone: Dictionary = AH.approach_zones()[1]
 	var zone_at: Vector3 = b.node.global_transform * Vector3(zone.center.x, 0.0, zone.center.y)
 	var st: Dictionary = game.builds.placement_status("kazerne", zone_at, 0.0)

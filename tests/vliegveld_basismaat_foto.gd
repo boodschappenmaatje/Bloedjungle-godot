@@ -85,6 +85,8 @@ func _run() -> void:
 		if af.aircraft.size() >= 2:
 			break
 	print("toestellen klaar: ", af.aircraft.size())
+	for a in af.aircraft:
+		print("toestel ", a.slot, " op ", a.node.global_position, " vliegveld ", af.at, " zichtbaar ", a.node.is_visible_in_tree())
 	await _frames(30)
 	for c in root.find_children("*", "CanvasLayer", true, false):
 		(c as CanvasLayer).visible = false
@@ -99,12 +101,14 @@ func _run() -> void:
 	var basis := Basis(Vector3.UP, af.yaw)
 	var hangar: Vector3 = at + basis * Vector3(AH.HANGAR_CENTER.x, 2.0, AH.HANGAR_CENTER.y)
 	await _shot(cam, hangar + basis * Vector3(14.0, 22.0, 34.0), hangar + basis * Vector3(0.0, 0.0, 6.0), 45.0, "03_hangar_toren_strook.png")
-	# deuren open en dak weg: de twee toestellen in de hangar
+	# deuren open, laag door de deuropening: de twee toestellen in de hangar (hoger kijkt de dakrand ervoor)
 	var core: Node = af.node.get_meta("complex").get_meta("hangar")
 	core.call("open_door", &"left")
 	core.call("open_door", &"right")
 	await _frames(200)
-	await _shot(cam, hangar + basis * Vector3(0.0, 12.0, 24.0), hangar, 45.0, "04_twee_toestellen_door_de_deur.png")
+	for a in af.aircraft:
+		print("toestel voor foto 4 ", a.slot, " op ", a.node.global_position, " modus ", a.node.mode)
+	await _shot(cam, hangar + basis * Vector3(0.0, 2.5, 20.0), hangar + basis * Vector3(0.0, 0.5, 0.0), 50.0, "04_twee_toestellen_door_de_deur.png")
 	# een toestel op de LAND-aanvlieglijn
 	var plane = af.aircraft[0].node
 	var p = game.player

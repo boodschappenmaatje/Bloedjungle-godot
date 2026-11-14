@@ -160,7 +160,9 @@ func _run() -> void:
 	var clear_count := Foliage.count_clearable_in_regions(AirfieldHQ23.site_regions(), AirfieldHQ23.SUGGESTED_CENTER, 0.0)
 	assert(clear_count == 2, "Only the palm and grass instances within the paved and building regions should be selected for clearance")
 	var invalid_status: Dictionary = builder.placement_status("airfield", Vector3.ZERO, 0.0)
-	assert(not invalid_status.valid and invalid_status.reason == "Vijandelijke spawnzone", "Protected base/spawn locations must report a specific rejection")
+	assert(not invalid_status.valid and invalid_status.reason == "Te dicht op de startplek", "The start point must report a specific rejection")
+	# het vliegveld mag dicht bij de basis: 30 m van de startplek moet de spawnregel niet meer tegenhouden
+	assert(AirfieldHQ23.site_clear_of_combat_spawns(Vector3(0.0, 0.0, 30.0), 0.0), "The airfield must be allowed next to the base")
 	assert(not tree_entry.cleared and not tree_shape.disabled, "Preview and cancellation must not remove trees or collisions")
 	if DisplayServer.get_name() != "headless":
 		assert(tree_mm_nodes[0].multimesh.get_instance_transform(0).origin.is_equal_approx(tree_at), "Preview must leave the actual palm instance in place")

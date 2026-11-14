@@ -278,6 +278,10 @@ static func _region_closest_to_spawn(region: Dictionary) -> Vector2:
 	var closest := Vector2(clampf(local_spawn.x, -half.x, half.x), clampf(local_spawn.y, -half.y, half.y))
 	return Vector2(region.center.x, region.center.y) + _rotate_local(closest, float(region.get("yaw",0.0)))
 
+## Alleen de startplek zelf (waar je wagen begint en je terugkomt) blijft vrij. Vroeger hield het vliegveld 60 m
+## (Data.SPAWN_R) afstand van de oorsprong: toen kon het niet naast je basis staan (gemeld door Dennis, 14 nov 2026).
+const START_GUARD_R := 6.0
+
 static func site_clear_of_combat_spawns(at: Vector3, yaw: float) -> bool:
 	for region in site_regions():
 		var spawn_local := Vector2(-at.x, -at.z).rotated(yaw)
@@ -285,7 +289,7 @@ static func site_clear_of_combat_spawns(at: Vector3, yaw: float) -> bool:
 		from_center = from_center.rotated(float(region.get("yaw", 0.0)))
 		var half: Vector2 = region.size * 0.5
 		var closest := Vector2(clampf(from_center.x,-half.x,half.x),clampf(from_center.y,-half.y,half.y))
-		if from_center.distance_to(closest) < Data.SPAWN_R + 2.0:
+		if from_center.distance_to(closest) < START_GUARD_R:
 			return false
 	return true
 

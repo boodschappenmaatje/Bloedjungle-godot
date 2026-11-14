@@ -37,6 +37,7 @@ func _settle(camera: Camera3D) -> void:
 
 
 func _run() -> void:
+	GameSettings.set_value("camera_view", "tact")   # sinds v231 is third person de standaard; deze test gaat over de tactische stand
 	main = load("res://scenes/main.tscn").instantiate()
 	root.add_child(main)
 	game = root.get_node("Game")
@@ -93,6 +94,8 @@ func _run() -> void:
 	await process_frame
 	if failures.is_empty():
 		print("MARKERING TEST PASS: ringen per soort, groter in Tactisch, instelling aan/alleen Tactisch/uit, geen ring bij dood")
+		GameSettings.set_value("camera_view", "third")
 		quit(0)
 	else:
+		GameSettings.set_value("camera_view", "third")
 		quit(1)

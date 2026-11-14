@@ -80,6 +80,7 @@ func _draw() -> void:
 		if point != null:
 			var state: String = str(_prediction.get("state", "clear"))
 			var col: Color = ENEMY if state == "enemy" else (BLOCKED if state == "blocked" else NEUTRAL)
+			_draw_aim_line(camera, point, col)
 			_draw_cross(point, col, state == "enemy", state == "blocked")
 			if bool(_prediction.get("can_explode", false)):
 				_draw_bazooka_blast_ring(camera, _prediction.point, float(_prediction.get("blast_radius", 0.0)))
@@ -93,6 +94,25 @@ func _draw() -> void:
 			var col := Color(CONFIRMED.r, CONFIRMED.g, CONFIRMED.b, alpha)
 			for delta in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
 				draw_line(hit_at + delta * 6.0, hit_at + delta * 11.0, col, 2.5, true)
+
+
+## Camera v232 (5A): dunne richtlijn van de loop tot het raakpunt, kort dikker tijdens het schieten. Alleen te voet; de loop
+## wordt elk beeld opnieuw gelezen zodat de lijn niet losraakt van een rennende soldaat.
+func _draw_aim_line(camera: Camera3D, to: Vector2, col: Color) -> void:
+	if str(_prediction.get("source", "")) != "infantry":
+		return
+	var game := get_tree().root.get_node_or_null("Game")
+	var player = game.get("player") if game != null else null
+	if player == null or not is_instance_valid(player) or player.get("model") == null:
+		return
+	var muzzle: Vector3 = player.model.muzzle_position()
+	if camera.is_position_behind(muzzle):
+		return
+	var from := camera.unproject_position(muzzle)
+	var firing: bool = bool(game.get("fire"))
+	var w := 2.6 if firing else 1.3
+	draw_line(from, to, Color(0, 0, 0, 0.28), w + 1.6, true)
+	draw_line(from, to, Color(col, 0.62 if firing else 0.4), w, true)
 
 
 func _draw_cross(p: Vector2, col: Color, selected: bool, blocked: bool) -> void:

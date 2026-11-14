@@ -313,7 +313,7 @@ static func free_left() -> int:
 
 ## Wat het volgende muurstuk kost.
 static func next_cost() -> int:
-	return 0 if free_left() > 0 else COST
+	return 0 if free_left() > 0 or Buildings.test_bouw() else COST
 
 
 # ---------------------------------------------------------------- omheining
@@ -553,12 +553,14 @@ static func place_gate(k: Vector4i, toward: Vector3) -> Dictionary:
 	var pair: Variant = gate_pair(k, toward)
 	if pair == null:
 		return {"ok": false, "reason": "Een poort heeft twee muurstukken naast elkaar nodig"}
-	if not Game.can_afford_build(GATE_COST):
+	var gate_cost := 0 if Buildings.test_bouw() else GATE_COST
+	if not Game.can_afford_build(gate_cost):
 		return {"ok": false, "reason": "Onvoldoende punten"}
 	var walls := existing()
 	var b1: Dictionary = walls[pair[0]]
 	var b2: Dictionary = walls[pair[1]]
-	Game.pay_build(GATE_COST)
+	if gate_cost > 0:
+		Game.pay_build(gate_cost)
 	Game.builds.batch = true
 	Game.builds.remove(b1)
 	Game.builds.remove(b2)

@@ -136,6 +136,14 @@ func _draw() -> void:
 				for x in [-10.0, 0.0, 10.0]:
 					draw_line(c + Vector2(x, 4), c + Vector2(x, -7), col, 1.6)
 				draw_circle(c + Vector2(0, -10), 3.5, col)
+		"land":
+			# strook met een dalende pijl erboven (vliegtuig: automatisch landen)
+			draw_line(c + Vector2(-15, 11), c + Vector2(15, 11), col, 3.0)
+			for x in [-9.0, -1.0, 7.0]:
+				draw_line(c + Vector2(x, 11), c + Vector2(x + 4, 11), Color(0.05, 0.06, 0.04, 0.9), 1.2)
+			draw_line(c + Vector2(-13, -11), c + Vector2(6, 4), col, w)
+			draw_line(c + Vector2(6, 4), c + Vector2(-1, 3), col, w)
+			draw_line(c + Vector2(6, 4), c + Vector2(4, -3), col, w)
 		"exit", "enter":
 			draw_rect(Rect2(c + Vector2(-13, -11), Vector2(13, 22)), col, false, 2.2)
 			var d := 1.0 if kind == "exit" else -1.0

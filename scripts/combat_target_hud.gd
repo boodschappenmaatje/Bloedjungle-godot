@@ -96,23 +96,31 @@ func _draw() -> void:
 				draw_line(hit_at + delta * 6.0, hit_at + delta * 11.0, col, 2.5, true)
 
 
-## Camera v232 (5A): dunne richtlijn van de loop tot het raakpunt, kort dikker tijdens het schieten. Alleen te voet; de loop
-## wordt elk beeld opnieuw gelezen zodat de lijn niet losraakt van een rennende soldaat.
+## Camera v233: de richtstreep staat alleen aan tijdens het schieten (Dennis vond een vaste streep een laser). Hij is kort (hoogstens
+## 150 px of tot het raakpunt) en vervaagt naar het einde. De loop wordt elk beeld opnieuw gelezen.
 func _draw_aim_line(camera: Camera3D, to: Vector2, col: Color) -> void:
 	if str(_prediction.get("source", "")) != "infantry":
 		return
 	var game := get_tree().root.get_node_or_null("Game")
-	var player = game.get("player") if game != null else null
+	if game == null or not bool(game.get("fire")):
+		return
+	var player = game.get("player")
 	if player == null or not is_instance_valid(player) or player.get("model") == null:
 		return
 	var muzzle: Vector3 = player.model.muzzle_position()
 	if camera.is_position_behind(muzzle):
 		return
 	var from := camera.unproject_position(muzzle)
-	var firing: bool = bool(game.get("fire"))
-	var w := 2.6 if firing else 1.3
-	draw_line(from, to, Color(0, 0, 0, 0.28), w + 1.6, true)
-	draw_line(from, to, Color(col, 0.62 if firing else 0.4), w, true)
+	var span := minf(from.distance_to(to), 150.0)
+	if span < 8.0:
+		return
+	var dir := (to - from).normalized()
+	var steps := 6
+	for i in steps:
+		var t0 := span * float(i) / float(steps)
+		var t1 := span * float(i + 1) / float(steps)
+		var fade := 1.0 - float(i) / float(steps)
+		draw_line(from + dir * t0, from + dir * t1, Color(col, 0.6 * fade), 2.2, true)
 
 
 func _draw_cross(p: Vector2, col: Color, selected: bool, blocked: bool) -> void:

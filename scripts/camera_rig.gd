@@ -52,6 +52,7 @@ const TRANS_BUILD := 1.2          # 8A: vlucht tussen spelen en bouwen
 const TRANS_VIEW := 0.6           # wissel tussen third person en tactisch
 var yaw := PI                     # kijkrichting van de third-personcamera (atan2(x, z), PI = noord)
 var _tp_lead := 1.2               # gladgestreken kijkvoorsprong
+var _aim_hold := 0.0              # v233: tot 0,6 s na het richten draait de camera niet mee, zodat de rechterstick niet onder je duim wegdraait
 var _tp_raise := 0.0              # 0..1: hoeveel de camera omhoog is gegaan om een obstakel
 var _ppos := Vector3.ZERO         # gladgestreken camerapositie in de speelstanden
 var _bpos := Vector3.ZERO         # idem in de bouwstand
@@ -494,13 +495,14 @@ func _third(delta: float, p: Node3D) -> void:
 	_tp_lead = look_lead if _snap else lerpf(_tp_lead, look_lead, 1.0 - exp(-5.0 * delta))
 	# 2A: draaien. Te voet alleen als je loopt en niet richt (anders drijft je richting weg onder je duim);
 	# achteruit lopen draait de camera niet om. Een voertuig trekt de camera altijd zacht achter zich aan.
+	_aim_hold = 0.6 if aiming else maxf(0.0, _aim_hold - delta)
 	var target := yaw
 	var rate := 0.0
 	if v != null:
 		target = _player_heading(p)
 		var spd := (v.get("velocity") as Vector3).length() if v.get("velocity") is Vector3 else 3.0
 		rate = 2.2 if spd > 0.5 else 0.8
-	elif not aiming and Game.move.length() > 0.2:
+	elif not aiming and _aim_hold <= 0.0 and Game.move.length() > 0.2:
 		target = float(p.get("face"))
 		var d := absf(angle_difference(yaw, target))
 		if d < deg_to_rad(135.0):

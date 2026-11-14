@@ -130,7 +130,7 @@ func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null)
 		if not AirfieldHQ23.site_inside_world(at, yaw):
 			return _placement_result(false, "Buiten speelbaar gebied", 0)
 		if not AirfieldHQ23.site_clear_of_combat_spawns(at, yaw):
-			return _placement_result(false, "Vijandelijke spawnzone", 0)
+			return _placement_result(false, "Te dicht op de startplek", 0)
 		if not AirfieldHQ23.site_clear_of_river(at, yaw):
 			return _placement_result(false, "Kan niet in de rivier bouwen", 0)
 		if not is_inside_tree():

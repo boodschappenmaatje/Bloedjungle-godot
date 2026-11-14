@@ -79,6 +79,18 @@ func _run() -> void:
 	game.build_credit = 100000
 	game.points = 100000
 	game.mcv_deployed = true
+	# het vliegveld mag naast de basis bij de startplek (de oude 60 m-spawnregel hield dat tegen, v237)
+	var dichtbij := 0
+	for k in 16:
+		var a := TAU * float(k) / 16.0
+		var spot := Vector3(cos(a), 0.0, sin(a)) * 34.0
+		var st: Dictionary = game.builds.placement_status("airfield", spot, 0.0)
+		if st.valid:
+			dichtbij += 1
+		elif st.reason == "Te dicht op de startplek":
+			dichtbij = -100
+	print("vliegveld-plekken op 34 m van de startplek: ", dichtbij)
+	_check("vliegveld past naast de basis (34 m van de startplek)", dichtbij > 0)
 	var at := Vector3(70.0, 0.0, 115.0)
 	var b = game.builds.place("airfield", at, 0.0)
 	_check("vliegveld staat", b != null)

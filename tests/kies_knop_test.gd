@@ -67,6 +67,10 @@ func _process(_d: float) -> bool:
 		game.state = "play"
 		game.player.driving = false    # het spel begint in de bouwwagen; Dennis speelt te voet
 		game.add_score(840)
+	if frames == 33:
+		# sinds v235 staan KIES en HOUDING achter de MEER-knop: eerst MEER openen
+		if not combat._more_open:
+			combat._toggle_more()
 	if frames == 36:
 		# deel 1: de volgorde van een vinger op de iPhone, zonder afhankelijk te zijn van de vensterafmetingen
 		_check(game.rang_punten == 1 and combat._air2.visible, "KIES-knop zichtbaar met een punt over")

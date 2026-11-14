@@ -5,7 +5,7 @@ extends Button
 
 const SIZE := Vector2(54, 54)
 const GAP := 62.0
-const ICON_ONLY := ["combined", "granaat", "herlaad", "sprint", "rol", "krachten", "kies", "houding"]
+const ICON_ONLY := ["combined", "granaat", "herlaad", "sprint", "rol", "krachten", "kies", "houding", "meer"]
 
 var kind := ""
 var caption := ""
@@ -43,6 +43,7 @@ static func make(k: String, cap: String) -> ActionBtn:
 		"rol": "Ontwijkrol · afkoeling wordt rond de knop getoond",
 		"houding": "Houding · tik: staan, hurken, liggen · vasthouden: meteen liggen of opstaan",
 		"krachten": "Krachten van je rang · tik: wiel (kies een kracht, daarna vuurt de rechterstick af) · op een computer: tik gebruikt, napalm en artillerie slepen om te richten",
+		"meer": "Meer knoppen: houding en rangpunten",
 		"kies": "Rangpunt uitgeven · kies een nieuwe kracht of een upgrade",
 	}.get(k, cap)
 	b.add_to_group("hud_button")
@@ -152,6 +153,10 @@ func _draw() -> void:
 			for i in 2:
 				var o := Vector2(-6.0 + i * 11.0, 0)
 				draw_polyline(PackedVector2Array([c + o + Vector2(-5, -10), c + o + Vector2(5, 0), c + o + Vector2(-5, 10)]), col, 3.4)
+		"meer":
+			# drie puntjes
+			for dx in [-10.0, 0.0, 10.0]:
+				draw_circle(c + Vector2(dx, 0), 3.2, col)
 		"rol":
 			# gebogen pijl: een koprol
 			draw_arc(c, 11.0, PI * 0.15, PI * 1.75, 16, col, w)

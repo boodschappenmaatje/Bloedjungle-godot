@@ -7,6 +7,9 @@ var _reload: ActionBtn
 var _sprint: ActionBtn
 var _grenade: ActionBtn
 var _roll: ActionBtn
+var _more: ActionBtn         # v235 (5A): MEER opent de zelden gebruikte knoppen (HOUDING, KIES) op aanraking
+var _more_open := false
+var _more_t := 0.0
 var _stance: ActionBtn        # houding: staan, hurken, liggen (alleen de Meshy-speler)
 var _stance_down_ms := 0
 var _sprint_down_ms := 0
@@ -70,19 +73,19 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_cancel_gesture)
 	_reload = _make("herlaad", "HERLAAD", func(): _player_call("request_reload"))
 	_sprint = _make("sprint", "SPRINT", func(): _sprint_down_ms = Time.get_ticks_msec())
-	_sprint.button_up.connect(func():
-		if Time.get_ticks_msec() - _sprint_down_ms >= 420 and UI.is_touch_platform():
-			_player_call("request_dodge")
-		else:
-			_player_call("toggle_sprint"))
-	_sprint.tooltip_text = "Tik: sprint · ingedrukt houden: ontwijkrol"
+	_sprint.button_up.connect(func(): _player_call("toggle_sprint"))
+	_sprint.tooltip_text = "Sprint aan of uit"
 	_grenade = _make("granaat", "UITRUSTING", func(): pass) # only equipment wheel, never release-to-throw
 	_grenade.tooltip_text = "Uitrusting kiezen · GRANAAT daarna richten met de rechterstick"
 	_roll = _make("rol", "ROL", func(): _player_call("request_dodge"))
-	_roll.visible = not UI.is_touch_platform()
+	_more = _make("meer", "MEER", func(): _toggle_more())
 	_stance = _make("houding", "HOUDING", func(): _stance_down_ms = Time.get_ticks_msec())
-	_stance.button_up.connect(func(): _player_call_args("cycle_stance", [Time.get_ticks_msec() - _stance_down_ms >= 420]))   # tik: doorschakelen, lang: plat/opstaan
-	_air2 = _make("kies", "KIES", func(): _open_keuze())
+	_stance.button_up.connect(func():
+		_player_call_args("cycle_stance", [Time.get_ticks_msec() - _stance_down_ms >= 420])
+		_more_open = false)   # tik: doorschakelen, lang: plat/opstaan
+	_air2 = _make("kies", "KIES", func():
+		_more_open = false
+		_open_keuze())
 	_air = _make("krachten", "KRACHTEN", func(): pass)  # de aanraking loopt via _input (tik of slepen)
 	_wheel_ui = Control.new()
 	_wheel_ui.name = "WheelLayer"
@@ -93,6 +96,13 @@ func _ready() -> void:
 	add_child(_wheel_ui)
 	resized.connect(_layout)
 	_layout()
+
+
+func _toggle_more() -> void:
+	_more_open = not _more_open
+	_more_t = 6.0   # sluit vanzelf na 6 s
+	Sfx.play("click")
+	_more.queue_redraw()
 
 
 func _cancel_gesture() -> void:
@@ -445,7 +455,7 @@ func _draw() -> void:
 		return
 	# zolang een wiel open is, verdwijnen de knoppen eronder: geen door elkaar lopende pictogrammen
 	var open := _wheel_kind != ""
-	for b in [_reload, _sprint, _grenade, _roll, _air, _air2, _stance]:
+	for b in [_reload, _sprint, _grenade, _roll, _air, _air2, _stance, _more]:
 		b.modulate.a = 0.0 if open else 1.0
 	_wheel_ui.queue_redraw()
 
@@ -920,10 +930,16 @@ func _layout() -> void:
 	_grenade.position = Vector2(maxf(safe.x + 4.0, weapon_bar_start.x - ActionBtn.SIZE.x - 12.0),
 		weapon_bar_start.y - ActionBtn.SIZE.y - 9.0)
 	_reload.position = Vector2(x1, y0)
-	_air2.position = Vector2(x1, y0 - g)   # KIES: rechts van de krachten-knop
-	_stance.position = Vector2(x1, y0 - 2.0 * g)   # vrij van plaatsingsvakken en de rechter joystick
+	if UI.is_touch_platform():
+		_more.position = Vector2(x1, y0 - g)          # MEER: opent HOUDING en KIES (v235)
+		_air2.position = Vector2(x0, y0 - 2.0 * g)
+		_stance.position = Vector2(x1, y0 - 2.0 * g)
+	else:
+		_more.position = Vector2(x1, y0 - g)
+		_air2.position = Vector2(x1, y0 - g)   # KIES: rechts van de krachten-knop
+		_stance.position = Vector2(x1, y0 - 2.0 * g)   # vrij van plaatsingsvakken en de rechter joystick
 	_air.position = Vector2(x0, y0 - g)   # KRACHTEN: boven GEBRUIK; links ervan staat de wapenstrip, erboven de uitrustingskiezer
-	for b in [_reload, _sprint, _grenade, _roll, _air, _air2, _stance]:
+	for b in [_reload, _sprint, _grenade, _roll, _air, _air2, _stance, _more]:
 		b.size = ActionBtn.SIZE
 
 
@@ -990,9 +1006,22 @@ func _process(_delta: float) -> void:
 		_update_kstick()   # idem voor de richthulp van een kracht
 	var rid := _air_id()
 	_air.visible = rid != "" and not p.driving and not p.dead
-	_air2.visible = Game.rang_punten > 0 and not p.driving and not p.dead
-	_stance.visible = p.model.meshy_player and not Game.place_armed
-	_roll.visible = not UI.is_touch_platform()
+	var touch := UI.is_touch_platform()
+	if _more_open:
+		_more_t -= _delta
+		if _more_t <= 0.0:
+			_more_open = false
+	var has_points: bool = Game.rang_punten > 0
+	var has_stance: bool = p.model.meshy_player and not Game.place_armed
+	_more.visible = touch and (has_points or has_stance) and not p.driving and not p.dead
+	var more_badge: String = "+%d" % Game.rang_punten if (has_points and not _more_open) else ""
+	if more_badge != _more.badge or _more.open_state != _more_open:
+		_more.badge = more_badge
+		_more.open_state = _more_open
+		_more.queue_redraw()
+	_air2.visible = has_points and not p.driving and not p.dead and (not touch or _more_open)
+	_stance.visible = has_stance and (not touch or _more_open)
+	_roll.visible = true
 	if _stance.stance != p.stance:
 		_stance.stance = p.stance
 		_stance.queue_redraw()

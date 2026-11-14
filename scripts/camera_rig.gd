@@ -287,7 +287,10 @@ func _process(delta: float) -> void:
 	_camera_distance = dist
 	if portrait:
 		dist = minf(dist * 1.2, 44.0)
-	var angle: float = deg_to_rad(clampf(float(GameSettings.get_value("camera_pitch")), 35.0, 75.0))
+	# Vliegen: de camera kantelt rustig naar een schuinere hoek, zodat je over het land uitkijkt en hoogte als diepte ziet.
+	_fly_w = lerpf(_fly_w, 1.0 if plane != null else 0.0, 1.0 - exp(-1.6 * delta))
+	var pitch_deg := clampf(float(GameSettings.get_value("camera_pitch")), 35.0, 75.0)
+	var angle: float = deg_to_rad(lerpf(pitch_deg, minf(pitch_deg, FLY_PITCH), _fly_w))
 	var h: float = sin(angle) * dist
 	var back: float = cos(angle) * dist
 	var aiming: bool = not is_nan(Game.aim)
@@ -312,7 +315,8 @@ func _process(delta: float) -> void:
 	# De ingestelde kijkhoek blijft behouden; de uitsnede houdt ruimte voor de schietrichting.
 	focus = target + Vector3(0.0, 0.0, -dist * (0.05 if portrait else 0.07))
 	var goal: Vector3 = focus + Vector3(0.0, h, back)
-	if opbouw == null and _opbouw_weight < 0.05:
+	if opbouw == null and _opbouw_weight < 0.05 and plane == null and _fly_w < 0.05:
+		# niet tijdens het vliegen: de straal vanaf de grond raakte huizen en trok de camera omlaag (raar inzoomen boven de stad)
 		goal = _avoid_obstacles(target + Vector3.UP * 1.2, goal, p)   # tijdens de opbouw telt de bouwplek zelf niet als obstakel
 	var follow := 1.0 - exp(-(8.0 if plane != null else 5.0) * delta)
 	var hard := _snap or _snap_pose
@@ -349,6 +353,8 @@ var _opbouw_focus := Vector3.ZERO
 const OPBOUW_DISTANCE := 27.0   # camera-afstand tijdens wegrijden, uitklappen en bouwen (dichterbij: je ziet de kraan en de bouwers)
 const MCV_DISTANCE := 38.0   # camera-afstand terwijl de bouwwagen een plek zoekt (normaal 22,5)
 var _camera_distance := 0.0
+const FLY_PITCH := 48.0   # kijkhoek tijdens het vliegen (graden boven de horizon); lager = meer diepte en vooruitzicht
+var _fly_w := 0.0         # 0..1, glijdt in bij instappen in een vliegtuig
 
 
 ## Een goedkope periodieke scan, met tijdsmarge tegen voortdurend pompend zoomen.

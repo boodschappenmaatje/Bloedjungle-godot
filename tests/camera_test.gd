@@ -52,7 +52,8 @@ func _run() -> void:
 	var tp_distance := camera.global_position.distance_to(camera.get("focus"))
 	_check(absf(tp_distance - 8.0) < 0.8, "third-personafstand is %.2f i.p.v. 8 m" % tp_distance)
 	var tp_angle := rad_to_deg(atan2(camera.global_transform.basis.z.y, Vector2(camera.global_transform.basis.z.x, camera.global_transform.basis.z.z).length()))
-	_check(absf(tp_angle - 25.0) < 2.0, "third-personhoek is %.1f° i.p.v. 25°" % tp_angle)
+	# v232: het kijkpunt ligt 1,2 m voorbij de soldaat, dus de camera kantelt een paar graden omhoog (21-25°)
+	_check(tp_angle > 20.0 and tp_angle < 25.5, "third-personhoek is %.1f° i.p.v. 21-25°" % tp_angle)
 	# de camera hangt achter de soldaat: hij kijkt dezelfde kant op als de speler
 	var cam_fwd := -camera.global_transform.basis.z
 	var face: float = player.get("face")
@@ -70,11 +71,25 @@ func _run() -> void:
 	var turn: float = camera.call("input_turn")
 	var up := Vector2(0, -1).rotated(-turn)
 	_check(Vector2(sin(yaw1), cos(yaw1)).distance_to(up) < 0.01, "stick omhoog loopt niet vooruit in beeld")
-	# 5A: bij richten staat de draai stil
+	# 3B: bij richten staat de draai stil
+	var d_walk := Vector2(camera.global_position.x - player.global_position.x, camera.global_position.z - player.global_position.z).length()
+	var y_walk := camera.unproject_position(player.global_position + Vector3.UP).y / float(root.get_visible_rect().size.y)
 	game.set("aim", 0.3)
 	var yaw2: float = camera.get("yaw")
-	await _settle_camera(camera, 30)
+	await _settle_camera(camera, 90)
 	_check(absf(angle_difference(yaw2, float(camera.get("yaw")))) < 0.0001, "camera draait weg tijdens richten")
+	# 1A/2A (v232): bij richten blijft de camera even ver achter de soldaat en blijft hij boven de wapenbalk
+	var d_aim := Vector2(camera.global_position.x - player.global_position.x, camera.global_position.z - player.global_position.z).length()
+	var y_aim := camera.unproject_position(player.global_position + Vector3.UP).y / float(root.get_visible_rect().size.y)
+	_check(absf(d_aim - d_walk) < 0.15, "camera komt dichterbij bij richten (%.2f m -> %.2f m)" % [d_walk, d_aim])
+	_check(d_aim > 6.5, "camera hangt bij richten te dichtbij (%.2f m)" % d_aim)
+	_check(y_walk > 0.45 and y_walk < 0.65, "soldaat staat niet rond 55%% schermhoogte tijdens lopen (%.2f)" % y_walk)
+	_check(y_aim > 0.45 and y_aim < 0.68, "soldaat zakt bij richten te ver naar beneden (%.2f)" % y_aim)
+	_check(absf(camera.fov - 58.0) < 0.3, "lens zoomt in bij richten (%.1f°)" % camera.fov)
+	# 6A: een schot geeft in third person nauwelijks lensstoot
+	camera.call("fov_punch", 1.5)
+	camera.call("_process", 1.0 / 60.0)
+	_check(absf(camera.fov - 58.0) < 0.5, "lensstoot in third person is te groot (%.2f°)" % camera.fov)
 	game.set("aim", NAN)
 	game.set("move", Vector2.ZERO)
 	player.set("face", PI)

@@ -38,7 +38,10 @@ const TP_DISTANCE := 8.0          # te voet: 8 m achter het kijkpunt
 const TP_PITCH := 25.0            # graden onder de horizon
 const TP_PITCH_BLOCKED := 55.0    # muur of dak vlak achter je: de camera klimt naar boven-achter
 const TP_FOV := 58.0
-const TP_FOV_AIM := 52.0
+const TP_LOOK_AHEAD := 1.2        # kijkpunt voorbij de soldaat te voet (m): soldaat staat op ca. 55% schermhoogte
+const TP_LOOK_AHEAD_AIM := 2.0    # bij richten 2 m vooruit; de camera zelf blijft staan
+const TP_LOOK_AHEAD_VEHICLE := 3.0
+const TP_PUNCH_SCALE := 0.25      # lensstoot en schermschok per schot in third person
 const TP_FAR := 60.0              # zichtafstand in third person (tactisch 220); verder weg verdwijnt alles in de mist
 const TP_FOG := 2.2               # mistdichtheid x2,2 in third person: de rand van de zichtafstand valt weg in de nevel
 const TP_TURN_MAX := deg_to_rad(120.0)   # nooit sneller draaien dan 120°/s
@@ -48,6 +51,7 @@ const BUILD_HEIGHT := 1.6         # 7A: bouwcamera 1,6 keer hoger dan voor v231
 const TRANS_BUILD := 1.2          # 8A: vlucht tussen spelen en bouwen
 const TRANS_VIEW := 0.6           # wissel tussen third person en tactisch
 var yaw := PI                     # kijkrichting van de third-personcamera (atan2(x, z), PI = noord)
+var _tp_lead := 1.2               # gladgestreken kijkvoorsprong
 var _tp_raise := 0.0              # 0..1: hoeveel de camera omhoog is gegaan om een obstakel
 var _ppos := Vector3.ZERO         # gladgestreken camerapositie in de speelstanden
 var _bpos := Vector3.ZERO         # idem in de bouwstand
@@ -479,12 +483,15 @@ func _third(delta: float, p: Node3D) -> void:
 	var aiming: bool = not is_nan(Game.aim)
 	var anchor: Vector3 = v.global_position if v != null else p.global_position
 	var dist := TP_DISTANCE
-	var lead := 2.0
+	# 1A (v232): alleen het KIJKPUNT schuift vooruit, de camera zelf blijft even ver achter de soldaat. In v231 schoof de
+	# camera mee, waardoor hij bij richten van 7,25 m naar 2,75 m kwam en de soldaat achter de wapenbalk wegzakte.
+	var look_lead := TP_LOOK_AHEAD
 	if v != null:
 		dist = float(TP_VEHICLE_DISTANCE.get(_vehicle_kind(v), TP_VEHICLE_DEFAULT))
-		lead = 3.5
+		look_lead = TP_LOOK_AHEAD_VEHICLE
 	elif aiming:
-		lead = 4.5   # 5A: bij richten verder vooruit kijken
+		look_lead = TP_LOOK_AHEAD_AIM
+	_tp_lead = look_lead if _snap else lerpf(_tp_lead, look_lead, 1.0 - exp(-5.0 * delta))
 	# 2A: draaien. Te voet alleen als je loopt en niet richt (anders drijft je richting weg onder je duim);
 	# achteruit lopen draait de camera niet om. Een voertuig trekt de camera altijd zacht achter zich aan.
 	var target := yaw
@@ -505,8 +512,9 @@ func _third(delta: float, p: Node3D) -> void:
 		yaw = wrapf(yaw + clampf(step, -TP_TURN_MAX * delta, TP_TURN_MAX * delta), -PI, PI)
 	var fwd := Vector3(sin(yaw), 0.0, cos(yaw))
 	var pitch := deg_to_rad(lerpf(TP_PITCH, TP_PITCH_BLOCKED, _tp_raise))
-	var look := anchor + Vector3.UP * (1.9 if v != null else 1.5) + fwd * lead
-	var wanted := look - fwd * cos(pitch) * dist + Vector3.UP * sin(pitch) * dist
+	var base := anchor + Vector3.UP * (1.9 if v != null else 1.5)   # de soldaat zelf: hier meet de afstand vanaf
+	var look := base + fwd * _tp_lead   # 2A: iets voorbij de soldaat, zodat hij op ca. 55% schermhoogte staat, boven de wapenbalk
+	var wanted := base - fwd * cos(pitch) * dist + Vector3.UP * sin(pitch) * dist
 	# 4A: muur, gebouw of bunker tussen speler en camera: de camera schuift naar voren en klimt zacht naar boven-achter
 	var goal := _avoid_obstacles(anchor + Vector3.UP * 1.4, wanted, p)
 	var blocked := goal.distance_to(wanted) > 0.3
@@ -517,10 +525,11 @@ func _third(delta: float, p: Node3D) -> void:
 	_look = look if hard else _look.lerp(look, follow)
 	_snap = false
 	_snap_pose = false
-	focus = look
+	focus = base
 	global_position = _ppos
 	if _combat_shake_time > 0.0:
-		var envelope := clampf(_combat_shake_time / 0.13, 0.0, 1.0) * _combat_shake_strength
+		# 6A: in third person bijna geen schermschok en lensstoot per schot: de mondingsvlam en het geluid doen het werk
+		var envelope := clampf(_combat_shake_time / 0.13, 0.0, 1.0) * _combat_shake_strength * TP_PUNCH_SCALE
 		var t := float(Time.get_ticks_usec()) * 0.000001
 		global_position += Vector3(sin(t * 97.0) * envelope, sin(t * 131.0) * envelope * 0.3, cos(t * 83.0) * envelope)
 		_combat_shake_time = maxf(0.0, _combat_shake_time - delta)
@@ -528,9 +537,8 @@ func _third(delta: float, p: Node3D) -> void:
 			_combat_shake_strength = 0.0
 	if _fov_punch > 0.0:
 		_fov_punch = maxf(0.0, _fov_punch - delta * 9.0)
-	var want_fov := TP_FOV_AIM if (aiming and v == null) else TP_FOV
-	_base_fov = lerpf(_base_fov, want_fov, 1.0 - exp(-6.0 * delta))
-	fov = _base_fov - _fov_punch
+	_base_fov = lerpf(_base_fov, TP_FOV, 1.0 - exp(-6.0 * delta))   # geen inzoomen bij richten meer: dat leek ook "dichterbij"
+	fov = _base_fov - _fov_punch * TP_PUNCH_SCALE
 	far = lerpf(far, TP_FAR, minf(1.0, delta * 3.0))
 	_nlook = _look
 	look_at(_look, Vector3.UP)

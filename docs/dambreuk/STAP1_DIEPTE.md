@@ -1,4 +1,4 @@
-# Dambreuk-plan stap 1a: diepte rond de kaart (v238)
+# Dambreuk-plan stap 1a: diepte rond de kaart (v239)
 
 **Keuzes van Dennis (14 november 2026):** 1A 2A 3B 4A 5A 6A 7A 8A 9A 10A 11A 12A 13A 14A. Keuzekaart: `/mnt/project-files/generals/dam/dam-keuzes.html`.
 **Status:** Draft PR. Niet mergen en geen OTA zonder Dennis' aparte go. Native iPhone: **NIET GETEST**.
@@ -24,7 +24,7 @@ Bestaande gameplay is ongewijzigd: alles op de plaat blijft op hoogte 0 (`tests/
 - Waterdiepte in de watershader (helder bij de oever, bodem zichtbaar): pas zinvol als de rivier echt dieper is.
 - Rotsmeshes langs steile wanden (nu alleen in de shader).
 
-## Opnames (zelfde camera's, licht en seed; links v237, rechts v238)
+## Opnames (zelfde camera's, licht en seed; links main zonder deze PR, rechts deze PR; de labels op de beelden zeggen nog v237/v238)
 `tools/diepte_foto.gd`, Godot 4.7.2, Vulkan op lavapipe (cloud), 1280 x 720, zonder HUD. Bestanden: `docs/dambreuk/captures/`.
 1. Overzicht rivier en stad (tactisch, zichtafstand 220 m)
 2. Noordkant met de kloof achter de vijandbasis (zichtafstand 400 m)

@@ -676,7 +676,11 @@ func hit(dmg: float, dir: Vector3, from_player: bool) -> void:
 	if randf() < 0.5:
 		Fx.ground_blood(get_parent(), global_position + dir * 0.6, 0.5)
 	if hp <= 0.0:
+		Game.hitstop(0.06)
 		_die(dir)
+	elif dmg >= 40.0:
+		Game.hitstop(0.035)
+		global_position += Vector3(dir.x, 0.0, dir.z).normalized() * 0.2   # de klap schuift hem een stukje terug
 
 
 func _aim_mult() -> float:

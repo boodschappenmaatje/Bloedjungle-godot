@@ -792,7 +792,10 @@ FALL["Loopbrug"] = dict(d0=1.4, dur=2.6, dy=-6.0, dx=0.0, rest_z=-18.0, rot=(-0.
 
 
 def breken(nm, t):
-    if nm.startswith("Kraak_"):
+    if nm.startswith("Kraak_"):   # scheuren op het middenstuk verdwijnen met de blokken; die op de flanken blijven
+        if abs(REST[nm][0].x) < CEN:
+            u = 1.0 - ease((t - 0.5) / 0.5)
+            return (0, 0, 0), (0, 0, 0), (max(u, 0.001), max(u, 0.001), max(u, 0.001))
         return (0, 0, 0), (0, 0, 0), (1, 1, 1)
     if nm.startswith("Lek_"):
         u = 1.0 - ease(t / 0.8)

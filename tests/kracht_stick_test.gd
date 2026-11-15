@@ -66,13 +66,13 @@ func _stick_r() -> float:
 	return float(script.get_script_constant_map().get("STICK_R"))
 
 
-## Tik op de knop, daarna op een vak van het zesvaks wiel (E2): 0 = artillerie, 1 = napalm, 2 = satelliet, 3 = reparatie
+## Tik op de knop, daarna op een vak van het zevenvaks wiel (E2): 0 = artillerie, 1 = napalm, 2 = satelliet, 3 = reparatie
 ## (de vakken van luchtaanval en parachutisten zijn hier overgeslagen: vak 1 en 5 van zes).
 func _kies(sector: int) -> void:
 	await _tap(btn.get_global_rect().get_center())
 	var mid := (_wheel_value("INNER") + _wheel_value("OUTER")) * 0.5
 	var vak: int = [0, 2, 3, 4][sector]
-	var hoek := float(vak) * TAU / 6.0
+	var hoek := float(vak) * TAU / 7.0   # zeven vakken sinds C4
 	await _tap(cb._wheel_center() + Vector2(sin(hoek), -cos(hoek)) * mid)
 
 

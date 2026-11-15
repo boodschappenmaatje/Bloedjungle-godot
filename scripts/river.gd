@@ -5,8 +5,8 @@ class_name River
 ## Onzichtbare oevers houden mensen tegen; kogels vliegen erover. Brug en ford blijven open.
 
 const W := Data.RIVER_HALF
-const BEDDING := [[-1.0, 0.0, 0.0], [-0.73, -0.5, 0.45], [-0.5, -0.85, 0.85], [0.5, -0.85, 0.85], [0.73, -0.5, 0.45], [1.0, 0.0, 0.0]]  # dwarsprofiel: factor van W, hoogte, modder -> bodem
-const WATER_Y := -0.2
+const BEDDING := [[-1.0, 0.0, 0.0], [-0.78, -0.7, 0.4], [-0.52, -1.9, 0.85], [0.52, -1.9, 0.85], [0.78, -0.7, 0.4], [1.0, 0.0, 0.0]]  # dwarsprofiel: factor van W, hoogte, modder -> bodem
+const WATER_Y := -0.45   # dambreuk stap 1b: de rivier is nu 1,9 m diep (was 0,85), het water staat 0,45 m onder de oever
 const X_MAX := 210.0
 const BRIDGE_HALF := 2.5
 
@@ -26,7 +26,7 @@ static func build(parent: Node3D) -> void:
 ## Hoogte-factor: bij de doorwaadbare plek is de bedding ondiep (1 = volle diepte).
 static func _depth(x: float) -> float:
 	var near := minf(absf(x - Data.FORD_X), absf(x - Data.BACKDOOR_X) + 0.6)   # de Backdoor is iets smaller en dieper
-	return 1.0 - 0.65 * (1.0 - smoothstep(2.0, 4.0, near))
+	return 1.0 - 0.71 * (1.0 - smoothstep(2.0, 4.0, near))
 
 
 static func _pt(x: float, off: float, y: float) -> Vector3:
@@ -148,7 +148,7 @@ static func _ford(root: Node3D) -> void:
 				var pz := z + (0.0 if pass_ == 0 else 0.3)
 				var r := rng.randf_range(0.35, 0.5) if pass_ == 0 else rng.randf_range(0.3, 0.42)
 				var b := Basis.from_euler(Vector3(0, rng.randf() * TAU, 0)).scaled(Vector3(r * 2.0, r * 1.2, r * 2.0))
-				xf.append(Transform3D(b, Vector3(px, -0.3 + r * 0.25, pz)))
+				xf.append(Transform3D(b, Vector3(px, -0.55 + r * 0.25, pz)))
 				var v := rng.randf_range(0.8, 1.1)
 				cols.append(Color(v, v, v))
 	var sph := SphereMesh.new()

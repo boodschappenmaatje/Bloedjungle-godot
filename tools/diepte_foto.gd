@@ -15,6 +15,10 @@ var shots := [
 	[280, "3_ooghoogte_thirdperson", Vector3(-30, 2.2, -78), Vector3(10, 4.0, -160), 60.0],
 	[320, "4_oostrand_rivier", Vector3(150, 45, -40), Vector3(270, 0, -92), 220.0],
 	[360, "5_vlucht_hoog", Vector3(0, 140, 160), Vector3(0, 0, -120), 600.0],
+	[400, "6_heuvelrug_zuidoever", Vector3(-95, 14, -20), Vector3(-95, 0, -92), 140.0],
+	[440, "7_flank_oost_tactisch", Vector3(100, 32, 20), Vector3(185, 3, -60), 200.0],
+	[480, "8_rivier_diep_dichtbij", Vector3(20, 9, -66), Vector3(30, -1, -92), 80.0],
+	[520, "9_rivier_ooghoogte", Vector3(-60, 2.4, -72), Vector3(-45, 0, -94), 80.0],
 ]
 
 func _initialize() -> void:

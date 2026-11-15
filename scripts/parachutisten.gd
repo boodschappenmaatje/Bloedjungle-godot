@@ -233,7 +233,7 @@ func _step(j: Dictionary, delta: float) -> void:
 			_drift(a, j, land, delta)
 			_sway(j.chute, float(j.t))
 			if a.global_position.y <= 0.02:
-				a.global_position.y = 0.0
+				a.global_position.y = Data.ground_y(a.global_position.x, a.global_position.z)
 				j.state = "inzak"
 				j.t = 0.0
 				_play(j.chute, "Inzakken")

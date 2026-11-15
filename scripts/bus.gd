@@ -623,7 +623,7 @@ func _physics_process(delta: float) -> void:
 		if p == null or p.dead:
 			_exit_player(false)
 		else:
-			p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+			p.global_position = Vector3(global_position.x, Data.ground_y(global_position.x, global_position.z), global_position.z)
 			p.face = rotation.y + PI
 			_horn_tick()
 			_ram()
@@ -719,7 +719,7 @@ func _exit_player(blasted: bool) -> void:
 		p.visible = true
 		var side := global_transform.basis.x
 		p.global_position = global_position + side * (4.2 if blasted else 2.9) - global_transform.basis.z * 4.2
-		p.global_position.y = 0.0
+		p.global_position.y = Data.ground_y(p.global_position.x, p.global_position.z)
 		p.collision_mask = p.get("_mask0")
 	_door_wave()
 	_kneel(true)
@@ -849,7 +849,7 @@ func _drive(delta: float, live: bool) -> void:
 	velocity = -global_transform.basis.z * _speed
 	move_and_slide()
 	Foliage.ram(self, absf(_speed), 4.0, 8.0)   # tegen een boom aan: hij valt om
-	global_position.y = 0.0
+	global_position.y = Data.ground_y(global_position.x, global_position.z)
 	if get_slide_collision_count() > 0:
 		if absf(_speed) > 6.0:
 			take(absf(_speed) * 2.0)    # hard tegen iets aan: schade aan de auto
@@ -859,7 +859,7 @@ func _drive(delta: float, live: bool) -> void:
 	var clamped := Data.clamp_world(flat)
 	if clamped != flat:
 		flat = clamped
-		global_position = Vector3(flat.x, 0.0, flat.y)
+		global_position = Vector3(flat.x, Data.ground_y(flat.x, flat.y), flat.y)
 
 
 func _animate(delta: float) -> void:

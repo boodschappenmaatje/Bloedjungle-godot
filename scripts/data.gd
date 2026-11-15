@@ -214,6 +214,21 @@ static func ground_y(x: float, z: float) -> float:
 	return Bergland.height(x, z)
 
 
+## Waar een kijkstraal (camera -> vinger) de grond raakt, met het reliëf erbij: een paar keer opnieuw snijden met het vlak op
+## de hoogte van de grond onder het vorige punt. Geeft null als de straal niet naar beneden wijst.
+static func ground_ray(origin: Vector3, dir: Vector3) -> Variant:
+	if dir.y > -0.02:
+		return null
+	var y := 0.0
+	var hit: Variant = null
+	for i in 3:
+		hit = Plane(Vector3.UP, y).intersects_ray(origin, dir)
+		if hit == null:
+			return null
+		y = ground_y(hit.x, hit.z)
+	return Vector3(hit.x, y, hit.z)
+
+
 static func river_off(x: float, z: float) -> float:
 	return absf(z - river_z(x))
 

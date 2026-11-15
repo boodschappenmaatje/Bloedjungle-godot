@@ -690,7 +690,7 @@ static func _collide(parent: Node3D, xforms: Array, radius: float, impact: Strin
 			shapes[r] = cyl
 		var cs := CollisionShape3D.new()
 		cs.shape = shapes[r]
-		cs.position = Vector3(xt.origin.x, 1.1, xt.origin.z)
+		cs.position = Vector3(xt.origin.x, 1.1 + xt.origin.y, xt.origin.z)
 		cs.set_meta("vegetation_kind", vegetation_kind)
 		bodies[key].add_child(cs)
 		out.append(cs)
@@ -802,7 +802,7 @@ static func fell(e: Dictionary, from: Vector3, solid := true) -> void:
 	stump_col.height = 1.3 if boom else 0.8
 	if solid:
 		(e["shape"] as CollisionShape3D).set_deferred("shape", stump_col)
-		(e["shape"] as CollisionShape3D).set_deferred("position", Vector3(xf.origin.x, stump_col.height * 0.5, xf.origin.z))
+		(e["shape"] as CollisionShape3D).set_deferred("position", Vector3(xf.origin.x, stump_col.height * 0.5 + xf.origin.y, xf.origin.z))
 	else:   # door een voertuig geveld: stronk en stam worden platgereden, het voertuig blijft niet haken
 		(e["shape"] as CollisionShape3D).set_deferred("disabled", true)
 	# de stronk blijft op de plek (een klein stuk van de oude stam, met splinterrand)
@@ -928,6 +928,7 @@ static func _in_river(p: Vector3) -> bool:
 static func _add(rng: RandomNumberGenerator, out: Array, cols: Array, p: Vector3, s_min: float, s_max: float, tilt: float) -> void:
 	var s := rng.randf_range(s_min, s_max)
 	var b := Basis.from_euler(Vector3(rng.randf_range(-tilt, tilt), rng.randf() * TAU, rng.randf_range(-tilt, tilt))).scaled(Vector3(s, s * rng.randf_range(0.85, 1.2), s))
+	p.y += Data.ground_y(p.x, p.z)   # reliëf (dambreuk stap 1b): plant op de grond, niet op hoogte 0
 	out.append(Transform3D(b, p))
 	var v := rng.randf_range(0.78, 1.12)
 	cols.append(Color(v, v * rng.randf_range(0.94, 1.08), v * 0.92))
@@ -976,7 +977,8 @@ static func logs(parent: Node3D, seed_ := 41) -> void:
 	while xf.size() < 30 and tries < 800:
 		tries += 1
 		var x := rng.randf_range(-Data.WORLD_X + 3.0, Data.WORLD_X - 3.0)
-		var p := Vector3(x, 0.32, rng.randf_range(Data.river_z(x) + 5.0, -Data.START_CLEAR - 3.0))
+		var lz := rng.randf_range(Data.river_z(x) + 5.0, -Data.START_CLEAR - 3.0)
+		var p := Vector3(x, 0.32 + Data.ground_y(x, lz), lz)
 		if absf(x) < 6.0 or _in_river(p) or Data.strip_zone(x) == "moeras" and rng.randf() < 0.5:
 			continue
 		var len_ := rng.randf_range(3.0, 4.6)   # de Meshy-stam is 3 m lang, de schaal volgt de lengte
@@ -1035,7 +1037,7 @@ static func _crates(parent: Node3D, seed_: int) -> void:
 		var x := rng.randf_range(-Data.WORLD_X + 6.0, Data.WORLD_X - 6.0)
 		# zelfde strook als logs(): tussen de basismuur en de rivier, waar x zijn eigen rivierdiepte heeft
 		var z := rng.randf_range(Data.river_z(x) + 6.0, -Data.START_CLEAR - 4.0)
-		var p := Vector3(x, 0.0, z)
+		var p := Vector3(x, Data.ground_y(x, z), z)
 		if _in_river(p) or absf(x) < Data.START_ROAD_HALF + 2.0:
 			continue
 		var reserved := false

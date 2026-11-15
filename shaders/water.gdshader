@@ -59,5 +59,5 @@ void fragment() {
 	ROUGHNESS = 0.08 + 0.25 * flake;
 	SPECULAR = 0.85;
 	METALLIC = 0.0;
-	ALPHA = clamp(mix(0.62, 0.94, depth), 0.0, 1.0);
+	ALPHA = clamp(mix(0.42, 0.97, depth * depth), 0.0, 1.0);   // dambreuk 1b: bij de oever zie je de bodem, in het diepe midden niet
 }

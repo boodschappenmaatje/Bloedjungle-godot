@@ -59,18 +59,14 @@ func _ground() -> void:
 	var body := StaticBody3D.new()
 	body.collision_layer = Kit.LAYER_GROUND
 	var col := CollisionShape3D.new()
-	var depth := Z_MAX - Data.GROUND_Z_MIN
-	var mid_z := (Z_MAX + Data.GROUND_Z_MIN) * 0.5
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(SIZE, 1, depth)
-	col.shape = shape
-	col.position = Vector3(0, -0.5, mid_z)
+	# de speelplaat heeft sinds stap 1b van het dambreuk-plan reliëf (Bergland.relief): mesh en botsing uit dezelfde hoogtes
+	var hs := Bergland.plate_heights()
+	col.shape = Bergland.plate_shape(hs)
+	col.position = Vector3(0, 0, Bergland.plate_center_z())
+	col.scale = Vector3(Bergland.PLATE_CELL, 1.0, Bergland.PLATE_CELL)
 	body.add_child(col)
 	var mesh := MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(SIZE, depth)
-	mesh.mesh = plane
-	mesh.position.z = mid_z
+	mesh.mesh = Bergland.plate_mesh(hs)
 	var mat := ShaderMaterial.new()
 	mat.shader = preload("res://shaders/ground.gdshader")
 	mat.set_shader_parameter("noise_a", Kit.noise_tex(0.02, 3))

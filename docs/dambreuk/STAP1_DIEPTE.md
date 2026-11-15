@@ -37,3 +37,34 @@ Bestaande gameplay is ongewijzigd: alles op de plaat blijft op hoogte 0 (`tests/
 - Lucht: een paar sinussen per luchtpixel, geen texturen; de cubemap-pas slaat de bergen over. Geschat < 0,1 ms.
 - Laadtijd: het raster (21k hoogtes + normalen) wordt bij het bouwen van de wereld gemaakt; in de cloud ongeveer 0,1-0,2 s.
 - Native iPhone-fps: **NIET GETEST**. Lavapipe-tijden zeggen niets over de iPhone.
+
+---
+
+# Stap 1b: reliëf in het speelveld en diepe rivier (v239)
+
+**Status:** zelfde Draft PR. Niet mergen en geen OTA zonder Dennis' aparte go. Native iPhone: **NIET GETEST**.
+
+## Wat stap 1b toevoegt
+| Onderdeel | Wat |
+| --- | --- |
+| `Bergland.relief(x, z)` | Heuvelrug langs de rivier (tot 2,2 m, behalve bij brug, voorde en achterdeur) en flanken aan de oost- en westkant (tot 4 m). Steilste helling 0,18. Loopt zonder sprong over in `Bergland.height()` aan de plaatrand. |
+| Vlakke terrassen | Kamp, stad, vijandbasis, rivierstrook (3,5 m) en oversteekplaatsen blijven exact op 0 (test met 600 punten). |
+| Grond | Mesh op 4 m raster met normalen en tangenten, botsing met `HeightMapShape3D`. |
+| Bewegende dingen | Soldaten, bondgenoten, vijanden, jeep, tank, vijandjeep en -tank, MCV, auto, bus, vrachtwagen, voorraadtruck, parachutisten, vliegtuig, Apache, effecten, decals en begroeiing volgen `Data.ground_y()`. |
+| Bouwen | Gebouwen, MCV en verdedigingen staan op grondhoogte. Te steil (meer dan 0,6 m verschil onder de bouwvlak) geeft "Te steil om te bouwen". Vinger naar grond via `Data.ground_ray()` (build_mode, napalm, bevelstand). |
+| Rivier | Bedding 1,9 m diep, waterpeil -0,45 m, voorde ondieper. Watershader is helder bij de oever (bodem zichtbaar) en donkerder in het midden. |
+
+## Tests
+- `tests/bergland_test.gd` slaagt (heuvelrug 2,2 m, flank 4,0 m, steilste helling 0,18; terrassen exact 0; vliegtuigen op 12 m blijven vrij; kloof en bekken; mesh <= 45k driehoeken).
+- `tests/vijand_basis_test.gd` aangepast voor `HeightMapShape3D`.
+- Volledige ronde (170 tests): 26 falende tests falen ook op main met dezelfde melding; de overige twee waren niet door 1b veroorzaakt (magazijn_dak is wisselvallig, vijand_basis is aangepast).
+
+## Opnames (links main zonder deze PR, rechts deze PR)
+`tools/diepte_foto.gd`, Godot 4.7.2, lavapipe, 1280 x 720, zelfde camera's en seed: `docs/dambreuk/captures/1b_k_*.jpg` (9 stuks, onder andere heuvelrug zuidoever, flank oost, diepe rivier dichtbij, rivier op ooghoogte).
+
+## Bekende beperkingen
+- Voertuigen volgen de hoogte maar kantelen niet mee met de helling.
+- Soldaten bij de voorde lopen op y = 0 boven de diepere bedding (nog geen wadiepte).
+- Kogels worden niet door heuvels tegengehouden.
+- Rotsmeshes langs steile wanden ontbreken nog (alleen in de shader).
+- Native iPhone (fps, aanraking, spel op hellingen): **NIET GETEST**.

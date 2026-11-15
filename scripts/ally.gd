@@ -178,7 +178,7 @@ func _physics_process(delta: float) -> void:
 			_detour_side = 1.0 if randf() < 0.5 else -1.0
 	else:
 		_stuck_t = 0.0
-	position.y = 0.0
+	position.y = Data.ground_y(position.x, position.z)
 	var look := face
 	if target != null:
 		var td := target.global_position - global_position
@@ -247,7 +247,7 @@ func _far_step(delta: float) -> void:
 			rotation.y = face
 	elif command == "basis":
 		_beleg = true   # op zijn plek voor het HK en niemand kijkt: het beleg rekent voor hem (Beleg.step)
-	position.y = 0.0
+	position.y = Data.ground_y(position.x, position.z)
 	_far_acc = 0.0
 	if _beleg:
 		Beleg.step(get_tree())

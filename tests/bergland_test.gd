@@ -20,15 +20,60 @@ func _process(_d: float) -> bool:
 	frames += 1
 	if frames < 4:
 		return false
-	# 1. speelveld blijft plat
+	# 1. terrassen blijven precies vlak: kamp, stad, vijandbasis, oevers en de overgangen (brug, ondiepte, Backdoor)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = 7
-	for i in 400:
+	for i in 600:
+		var x := 0.0
+		var z := 0.0
+		match i % 5:
+			0:   # kamp en startplek
+				x = rng.randf_range(-50.0, 50.0)
+				z = rng.randf_range(-32.0, 60.0)
+			1:   # stad
+				x = rng.randf_range(-Bergland.CITY_HALF_X, Bergland.CITY_HALF_X)
+				z = rng.randf_range(-230.0, -100.0)
+			2:   # vijandbasis
+				x = rng.randf_range(Data.VIJAND_POS.x - Data.VIJAND_HALF.x, Data.VIJAND_POS.x + Data.VIJAND_HALF.x)
+				z = rng.randf_range(Data.VIJAND_POS.z - Data.VIJAND_HALF.y, Data.VIJAND_POS.z + Data.VIJAND_HALF.y)
+			3:   # strook langs de rivier (3 m) en de oversteken (ruim 5 m breed)
+				x = rng.randf_range(-190.0, 190.0)
+				z = Data.river_z(x) + rng.randf_range(-3.4, 3.4)
+			4:
+				var cx: float = [Data.BRIDGE_X, Data.FORD_X, Data.BACKDOOR_X][rng.randi() % 3]
+				x = cx + rng.randf_range(-5.0, 5.0)
+				z = Data.river_z(x) + rng.randf_range(-20.0, 20.0)
+		if Data.ground_y(x, z) != 0.0:
+			_fail("terras niet vlak bij %s: %.2f" % [Vector2(x, z), Data.ground_y(x, z)])
+			return true
+	# 1b. er is wel reliëf: heuvelrug langs de zuidoever, noordoever buiten de stad en hoge flanken, nergens te steil
+	var top_berm := 0.0
+	var top_flank := 0.0
+	var steepest := 0.0
+	for i in 4000:
 		var x := rng.randf_range(-Bergland.PLATE_X, Bergland.PLATE_X)
 		var z := rng.randf_range(Bergland.PLATE_Z_N, Bergland.PLATE_Z_S)
-		if Data.ground_y(x, z) != 0.0:
-			_fail("grond niet plat op de plaat bij %s" % Vector2(x, z))
-			return true
+		var y := Data.ground_y(x, z)
+		if absf(x) < 130.0:
+			top_berm = maxf(top_berm, y)
+		else:
+			top_flank = maxf(top_flank, y)
+		var gx := (Data.ground_y(x + 1.0, z) - Data.ground_y(x - 1.0, z)) * 0.5
+		var gz := (Data.ground_y(x, z + 1.0) - Data.ground_y(x, z - 1.0)) * 0.5
+		steepest = maxf(steepest, sqrt(gx * gx + gz * gz))
+	if top_berm < 1.5:
+		_fail("heuvelrug langs de rivier te laag: %.2f" % top_berm)
+	if top_flank < 3.0:
+		_fail("flanken te laag: %.2f" % top_flank)
+	if steepest > 0.2:
+		_fail("te steil voor voertuigen: helling %.2f" % steepest)
+	print("reliëf: heuvelrug ", snappedf(top_berm, 0.01), " m, flank ", snappedf(top_flank, 0.01), " m, steilste helling ", snappedf(steepest, 0.001))
+	# 1c. de plaatrand sluit aan op het bergland erbuiten (geen scheur in het landschap)
+	for z in range(-290, 211, 25):
+		var inside := Data.ground_y(Bergland.PLATE_X - 0.5, z)
+		var outside := Data.ground_y(Bergland.PLATE_X + 0.5, z)
+		if absf(inside - outside) > 0.4 and z > -270 and absf(z - Data.river_z(Bergland.PLATE_X)) > 20.0:
+			_fail("scheur aan de plaatrand bij z=%d: %.2f naast %.2f" % [z, inside, outside])
 	# 2. vliegtuigen (12 m) blijven vrij in de eerste 60 m buiten de kaart, behalve de kloofwanden in het noorden
 	for x in range(-280, 281, 20):
 		for z in [Bergland.PLATE_Z_S + 50.0]:

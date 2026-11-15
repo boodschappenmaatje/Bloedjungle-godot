@@ -118,7 +118,7 @@ func _uitstappen(p) -> void:
 	p.visible = true
 	_clear_sight()
 	p.global_position = global_position - global_transform.basis.x * 3.2
-	p.global_position.y = 0.0
+	p.global_position.y = Data.ground_y(p.global_position.x, p.global_position.z)
 	p.collision_mask = p.get("_mask0")
 	_btn.kind = "enter"
 	_btn.set_caption("IN")
@@ -300,7 +300,7 @@ static func shell_can_damage(origin: Vector3, target: Vector3) -> bool:
 func _drive_driven(delta: float, live: bool) -> void:
 	_drive_body(delta, live, Game.move)
 	var p = Game.player
-	p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+	p.global_position = Vector3(global_position.x, Data.ground_y(global_position.x, global_position.z), global_position.z)
 	p.face = rotation.y + PI
 	_drive_gun(delta, live)
 
@@ -324,14 +324,14 @@ func _drive_body(delta: float, live: bool, mv: Vector2) -> void:
 		velocity = -global_transform.basis.z * _speed * _stap_k   # bij een beeldsprong (> 1/30 s) rijdt hij niet door een muur heen
 		move_and_slide()
 		Foliage.ram(self, absf(_speed), 1.5, 2.5)   # tegen een boom aan: hij valt om
-		global_position.y = 0.0
+		global_position.y = Data.ground_y(global_position.x, global_position.z)
 		if get_slide_collision_count() > 0:
 			_speed *= 0.5
 		var flat := Vector2(global_position.x, global_position.z)
 		var clamped := Data.clamp_world(flat)
 		if clamped != flat:
 			flat = clamped
-			global_position = Vector3(flat.x, 0.0, flat.y)
+			global_position = Vector3(flat.x, Data.ground_y(flat.x, flat.y), flat.y)
 	if absf(_speed) > 0.3:
 		_play("Rijden" if _speed > 0.0 else "Achteruit", absf(_speed) / ANIM_SPEED)
 	elif turning:

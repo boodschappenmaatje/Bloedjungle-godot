@@ -204,7 +204,7 @@ func _toggle() -> void:
 		p.visible = true
 		var side := global_transform.basis.x
 		p.global_position = global_position - side * 2.2 + global_transform.basis.z * -1.6
-		p.global_position.y = 0.0
+		p.global_position.y = Data.ground_y(p.global_position.x, p.global_position.z)
 		p.collision_mask = p.get("_mask0")
 		_btn.kind = "enter"
 		_btn.set_caption("IN")
@@ -317,7 +317,7 @@ func _release(a: Node) -> void:
 	_riders.erase(a)
 	if is_instance_valid(a):
 		a.truck = null
-		a.position.y = 0.0
+		a.global_position.y = Data.ground_y(a.global_position.x, a.global_position.z)
 
 
 func _open_klep() -> void:
@@ -389,7 +389,7 @@ func ride_step(a: Node, delta: float) -> void:
 				var d := Vector3(wp.x - a.global_position.x, 0, wp.z - a.global_position.z)
 				a.velocity = d.normalized() * minf(RUN, to.length() * 4.0)
 				a.move_and_slide()
-				a.position.y = 0.0
+				a.global_position.y = Data.ground_y(a.global_position.x, a.global_position.z)
 				a.face = lerp_angle(a.face, _face_of(d), minf(1.0, delta * 12.0))
 				a.model.play("rennen" if to.length() > 1.2 else "lopen", 0.15)
 			else:
@@ -574,7 +574,7 @@ func _physics_process(delta: float) -> void:
 	_animate(delta)
 	_engine_step(delta)
 	if driven and p != null:
-		p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+		p.global_position = Vector3(global_position.x, Data.ground_y(global_position.x, global_position.z), global_position.z)
 		p.face = rotation.y + PI
 		_ram()
 
@@ -643,14 +643,14 @@ func _drive(delta: float, live: bool) -> void:
 	velocity = -global_transform.basis.z * _speed
 	move_and_slide()
 	Foliage.ram(self, absf(_speed), 5.0)   # tegen een boom aan: hij valt om
-	global_position.y = 0.0
+	global_position.y = Data.ground_y(global_position.x, global_position.z)
 	if get_slide_collision_count() > 0:
 		_speed *= 0.6
 	var flat := Vector2(global_position.x, global_position.z)
 	var clamped := Data.clamp_world(flat)
 	if clamped != flat:
 		flat = clamped
-		global_position = Vector3(flat.x, 0.0, flat.y)
+		global_position = Vector3(flat.x, Data.ground_y(flat.x, flat.y), flat.y)
 
 
 func _animate(delta: float) -> void:

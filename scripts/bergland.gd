@@ -14,9 +14,9 @@ const EXTENT_X := 760.0          # tot hier loopt het bergland (oost/west)
 const EXTENT_Z_N := -860.0
 const EXTENT_Z_S := 620.0
 const CELL := 10.0               # rastermaat van de berg-mesh in meters
-const RIVER_FLOOR := -1.0        # bodem van het rivierdal buiten de plaat (water op RIVER_WATER_Y erboven)
+const RIVER_FLOOR := -1.9        # bodem van het rivierdal buiten de plaat (water op RIVER_WATER_Y erboven)
 const RIVER_X_MAX := 210.0       # = River.X_MAX (hier herhaald: River hangt aan Game, Data en tests moeten zonder kunnen)
-const RIVER_WATER_Y := -0.2      # = River.WATER_Y
+const RIVER_WATER_Y := -0.45     # = River.WATER_Y
 
 # kloof en stuwmeer (stap 2): de kloof loopt vanaf de noordrand van de plaat recht boven de vijandbasis de bergen in
 const GORGE_X := -36.0
@@ -58,11 +58,36 @@ static func gorge_x(z: float) -> float:
 	return GORGE_X + 7.0 * sin(z * 0.021 + 0.6)
 
 
-## Hoogte van het land. Op de grondplaat altijd 0.
+## Reliëf op de grondplaat zelf (stap 1b). De terrassen waar gespeeld en gebouwd wordt blijven precies 0: het kamp, de
+## stad, de vijandbasis, de strook langs de oever en de overgangen (brug, ondiepte, Backdoor). Reliëf is er alleen
+## langs de rivier (een zachte heuvelrug aan beide oevers, behalve bij de overgangen) en op de flanken van de kaart.
+const BERM_SOUTH := 2.2          # hoogte van de heuvelrug langs de zuidoever (jouw kant)
+const BERM_NORTH := 1.6          # idem aan de noordoever, buiten de stad
+const FLANK := 4.0               # hoogte aan de oost- en westrand van de kaart
+const CITY_HALF_X := 80.0        # de stad (StadData) ligt binnen x -80..80; de noordheuvels beginnen daarbuiten
+
+
+static func relief(x: float, z: float) -> float:
+	var ax := absf(x)
+	var rz := Data.river_z(clampf(x, -RIVER_X_MAX, RIVER_X_MAX))
+	var s := z - rz   # > 0 aan de zuidkant (jouw kant) van de rivier
+	var cx := minf(absf(x - Data.BRIDGE_X), minf(absf(x - Data.FORD_X), absf(x - Data.BACKDOOR_X)))
+	var gap := smoothstep(5.0, 32.0, cx)   # bij de overgangen loopt de heuvelrug uit
+	var fl := smoothstep(140.0, 195.0, ax)   # op de flanken neemt de heuvel van de rand de plaats in van de heuvelrug
+	var h := 0.0
+	if s > 0.0:
+		h += BERM_SOUTH * smoothstep(3.5, 26.0, s) * (1.0 - smoothstep(30.0, 50.0, s)) * gap * (1.0 - fl)
+	else:
+		h += BERM_NORTH * smoothstep(3.5, 26.0, -s) * (1.0 - smoothstep(30.0, 60.0, -s)) * gap * smoothstep(CITY_HALF_X, CITY_HALF_X + 25.0, ax) * (1.0 - fl)
+	h += FLANK * fl * smoothstep(3.5, 45.0, absf(s))   # niet tegen de rivier aan: de oever blijft op 0
+	return h
+
+
+## Hoogte van het land: op de grondplaat het reliëf (0 op de terrassen), daarbuiten heuvels, bergen, rivierdal en kloof.
 static func height(x: float, z: float) -> float:
 	var d := plate_dist(x, z)
 	if d <= 0.0:
-		return 0.0
+		return relief(x, z)
 	_init_noise()
 	var ridge := _noise.get_noise_2d(x, z) * 0.5 + 0.5          # 0..1, ruggen
 	var det := _detail.get_noise_2d(x, z)                      # -1..1, kleine bulten (boomkruinen, kopjes)
@@ -74,14 +99,16 @@ static func height(x: float, z: float) -> float:
 	var wall := smoothstep(PLATE_Z_N + 2.0, PLATE_Z_N - 20.0, z) * (1.0 - smoothstep(PLATE_X - 40.0, PLATE_X + 30.0, absf(x)))
 	var foot := 4.0 * smoothstep(0.0, 40.0, d)
 	var big := smoothstep(lerpf(45.0, 4.0, wall), lerpf(170.0, 60.0, wall), d)
-	var h := foot + big * (8.0 + wall * 14.0 + peak * ridge * ridge) + det * 2.0 * smoothstep(0.0, 30.0, d)
+	var edge := relief(clampf(x, -PLATE_X, PLATE_X), clampf(z, PLATE_Z_N, PLATE_Z_S))   # sluit aan op de plaatrand en loopt daarbuiten uit
+	var h := foot + big * (8.0 + wall * 14.0 + peak * ridge * ridge) + det * 2.0 * smoothstep(0.0, 30.0, d) + edge * (1.0 - smoothstep(0.0, 90.0, d))
 
 	# rivierdal: de rivier loopt oost en west door de heuvels verder in een eigen dal
 	if absf(x) > PLATE_X - 30.0:
 		var rz := Data.river_z(clampf(x, -RIVER_X_MAX, RIVER_X_MAX))
 		var w := 13.0 + 0.08 * maxf(absf(x) - PLATE_X, 0.0)   # breder dan de rivier zelf: het raster is 10 m grof
-		var v := exp(-pow((z - rz) / w, 4.0))
-		var bank := exp(-pow((z - rz) / (w * 2.2), 2.0))
+		var fade := smoothstep(0.0, 40.0, d)   # het dal begint pas buiten de plaat: aan de rand sluit alles aan op het reliëf van de plaat
+		var v := exp(-pow((z - rz) / w, 4.0)) * fade
+		var bank := exp(-pow((z - rz) / (w * 2.2), 2.0)) * fade
 		h = lerpf(h, h * 0.5, bank)
 		h = lerpf(h, RIVER_FLOOR, v)
 
@@ -213,3 +240,84 @@ static func _river_out(root: Node3D) -> void:
 	mi.material_override = m
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	root.add_child(mi)
+
+
+# ---------------------------------------------------------------- de grondplaat met reliëf (stap 1b)
+
+const PLATE_CELL := 4.0   # rastermaat van de speelplaat en zijn botsing in meters (reliëf is zacht, dus 4 m is genoeg)
+
+
+static func plate_cols() -> int:
+	return int((PLATE_X * 2.0) / PLATE_CELL) + 1
+
+
+static func plate_rows() -> int:
+	return int((PLATE_Z_S - PLATE_Z_N) / PLATE_CELL) + 1
+
+
+## Hoogtes van de speelplaat, rij voor rij (z van noord naar zuid), voor de mesh en de botsing.
+static func plate_heights() -> PackedFloat32Array:
+	var nx := plate_cols()
+	var nz := plate_rows()
+	var hs := PackedFloat32Array()
+	hs.resize(nx * nz)
+	for j in nz:
+		var z := PLATE_Z_N + j * PLATE_CELL
+		for i in nx:
+			hs[j * nx + i] = relief(-PLATE_X + i * PLATE_CELL, z)
+	return hs
+
+
+## De speelplaat als mesh (één vlak, geen UV: de grondshader werkt met wereldplaatsen).
+static func plate_mesh(hs: PackedFloat32Array) -> ArrayMesh:
+	var nx := plate_cols()
+	var nz := plate_rows()
+	var verts := PackedVector3Array()
+	var norms := PackedVector3Array()
+	var tans := PackedFloat32Array()   # de grondshader gebruikt een normaalkaart: raaklijn (1, 0, 0) zoals bij een PlaneMesh
+	verts.resize(nx * nz)
+	norms.resize(nx * nz)
+	tans.resize(nx * nz * 4)
+	for j in nz:
+		for i in nx:
+			var k := j * nx + i
+			verts[k] = Vector3(-PLATE_X + i * PLATE_CELL, hs[k], PLATE_Z_N + j * PLATE_CELL)
+			var l := hs[k - 1] if i > 0 else hs[k]
+			var r := hs[k + 1] if i < nx - 1 else hs[k]
+			var u := hs[k - nx] if j > 0 else hs[k]
+			var dn := hs[k + nx] if j < nz - 1 else hs[k]
+			norms[k] = Vector3(l - r, 2.0 * PLATE_CELL, u - dn).normalized()
+			var t := Vector3(2.0 * PLATE_CELL, r - l, 0.0).normalized()
+			tans[k * 4] = t.x
+			tans[k * 4 + 1] = t.y
+			tans[k * 4 + 2] = t.z
+			tans[k * 4 + 3] = 1.0
+	var idx := PackedInt32Array()
+	for j in nz - 1:
+		for i in nx - 1:
+			var a := j * nx + i
+			var c := a + nx
+			idx.append_array([a, a + 1, c, a + 1, c + 1, c])
+	var arr := []
+	arr.resize(Mesh.ARRAY_MAX)
+	arr[Mesh.ARRAY_VERTEX] = verts
+	arr[Mesh.ARRAY_NORMAL] = norms
+	arr[Mesh.ARRAY_TANGENT] = tans
+	arr[Mesh.ARRAY_INDEX] = idx
+	var mesh := ArrayMesh.new()
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+	mesh.custom_aabb = AABB(Vector3(-PLATE_X, -4.0, PLATE_Z_N), Vector3(PLATE_X * 2.0, 12.0, PLATE_Z_S - PLATE_Z_N))
+	return mesh
+
+
+## Botsing van de speelplaat: een HeightMapShape3D op dezelfde punten als de mesh. Zet de node op position (0, 0, plate_center_z()) en scale (PLATE_CELL, 1, PLATE_CELL).
+static func plate_shape(hs: PackedFloat32Array) -> HeightMapShape3D:
+	var shape := HeightMapShape3D.new()
+	shape.map_width = plate_cols()
+	shape.map_depth = plate_rows()
+	shape.map_data = hs
+	return shape
+
+
+static func plate_center_z() -> float:
+	return (PLATE_Z_N + PLATE_Z_S) * 0.5

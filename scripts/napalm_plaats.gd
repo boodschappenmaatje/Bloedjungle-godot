@@ -171,7 +171,7 @@ func _set_center(at: Vector2) -> void:
 		return
 	var o := cam.project_ray_origin(at)
 	var n := cam.project_ray_normal(at)
-	var hit = Plane(Vector3.UP, 0.0).intersects_ray(o, n)
+	var hit = Data.ground_ray(o, n)
 	if hit == null:
 		return
 	var base: Vector3 = p.global_position

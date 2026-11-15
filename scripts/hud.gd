@@ -3,7 +3,7 @@ extends CanvasLayer
 ## en munitie staan in hud_extra.gd, de wapenkamer in shop.gd; alles in de stijl van de web-versie.
 
 const VLIEGTUIG := preload("res://scripts/vliegtuig.gd")
-const VERSION := "v242"
+const VERSION := "v243"
 
 @onready var info: Label = %Info
 @onready var big: Label = %Big

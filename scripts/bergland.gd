@@ -121,6 +121,9 @@ static func height(x: float, z: float) -> float:
 		if z < DAM_Z:   # achter de dam: kloof loopt over in het bekken
 			g *= smoothstep(DAM_Z - 70.0, DAM_Z - 10.0, z)
 		h = lerpf(h, floor_y + det * 0.4, g)
+		# vlakke kloofbodem van 52 m breed direct voor de dam: de slijtvloer van de Meshy-dam (met geleidemuren tot x +-26) ligt vrij
+		var pad := exp(-pow((x - gorge_x(DAM_Z)) / 27.0, 8.0)) * smoothstep(DAM_Z - 2.0, DAM_Z + 2.0, z) * (1.0 - smoothstep(DAM_Z + 18.0, DAM_Z + 34.0, z))
+		h = lerpf(h, DAM_FLOOR - 0.05, pad)
 		var b := smoothstep(BASIN_R, BASIN_R * 0.62, Vector2(x, z).distance_to(BASIN))
 		h = lerpf(h, BASIN_FLOOR + det * 0.6, b)
 		h = DamPad.height(x, z, h)   # helling naar de kroon, trap en loopbrug van de dam (stap 3a)

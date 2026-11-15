@@ -25,3 +25,7 @@
 
 ## Tests
 `tests/dam_pad_test.gd` (begaanbaarheid, hoogtes, een lopende route van het pad tot de loopbrug), `tests/dam_c4_test.gd` (schade, plakken, ontsteken, twee deuren kapot = kraken en breken, C4 via `Rang`, zes wachters), `tests/bergland_test.gd` aangepast (kloofbodem voor de dam).
+
+## Fix v242 (Dennis' melding op v241: "bij de dam komen kan niet, bergen in de weg")
+Oorzaak (nagelopen met `tests/dam_loop_test.gd`, een echte speler met botsing en bomen): het pad werkte, maar was onzichtbaar en de ingang achter de vijandbasis was maar ongeveer 16 m breed; wie recht naar het noorden liep botste tegen de onzichtbare kaartrand (z -285) en zag alleen bergen.
+Aanpassing: de hele noordrand tussen x -128 en x -36 is een brede strook (20 m), de kloof is vanaf de kaartrand (z -285) 36 m breed open (recht naar het noorden lopen werkt), een zichtbare donkere aardeweg (`DamPad.build_road`) en een bord "DAM >>>" bij het begin. Tests: `dam_pad_test` (recht naar het noorden op vier plekken, noordrand open), `dam_loop_test` (fysiek lopen van het pad tot de kroon: PASS). Jeep en tank gebruiken dezelfde `clamp_world` (zonder helling en kroon); fysiek gereden is dat niet, alleen de clamp is getest.

@@ -154,6 +154,7 @@ static func build(parent: Node3D) -> void:
 	root.add_child(mi)
 	_river_out(root)
 	Dam.build(root)
+	DamPad.build_road(root)
 	Stuwmeer.build(root)
 
 

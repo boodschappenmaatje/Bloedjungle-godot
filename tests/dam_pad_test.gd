@@ -40,8 +40,8 @@ func _init() -> void:
 	ok(absf(Data.ground_y(dx + 25.0, z0 + 2.0) - (Bergland.DAM_FLOOR + DamPad.CROWN_Y)) < 0.01, "kroon vlak")
 	ok(absf(Data.ground_y(dx, z0 - 2.0) - (Bergland.DAM_FLOOR + DamPad.WALK_Y)) < 0.01, "loopbrug hoog")
 	# een route van het pad naar de kroon bestaat: stap voor stap lopen zonder te worden teruggezet
-	var path: Array = [Vector2(-168, -214), Vector2(-132, -262), Vector2(-108, -291), Vector2(-74, -294), Vector2(Bergland.gorge_x(-297), -297),
-		Vector2(Bergland.gorge_x(z0 + 30.0), z0 + 30.0), Vector2(dx + 12.0, z0 + 36.0), Vector2(dx + 30.0, z0 + 14.0), Vector2(dx + 30.0, z0 + 3.0), Vector2(dx, z0 - 2.0)]
+	var path: Array = [Vector2(-168, -214), Vector2(-146, -250), Vector2(-128, -290), Vector2(-80, -291), Vector2(Bergland.gorge_x(-291.0), -291.0), Vector2(Bergland.gorge_x(-310.0), -310.0),
+		Vector2(Bergland.gorge_x(z0 + 30.0), z0 + 30.0), Vector2(dx + 12.0, z0 + 36.0), Vector2(dx + 30.0, z0 + 14.0), Vector2(dx + 30.0, z0 + 3.0), Vector2(dx, z0 + 1.5)]
 	for i in path.size() - 1:
 		var a: Vector2 = path[i]
 		var b: Vector2 = path[i + 1]
@@ -52,5 +52,18 @@ func _init() -> void:
 			if Data.clamp_world(p, true).distance_to(p) > 0.3:
 				bad += 1
 		ok(bad == 0, "route stuk %d begaanbaar (%d plekken dicht)" % [i, bad])
+	# recht naar het noorden vanaf elke plek achter de vijandbasis (x -44 tot -28) tot in de kloof
+	for x in [-44.0, -38.0, -34.0, -28.0]:
+		var bad2 := 0
+		var z := -240.0
+		while z > -320.0:
+			var p := Vector2(x, z)
+			if Data.clamp_world(p, false).distance_to(p) > 0.3 and z > Bergland.DAM_Z + 18.0:
+				bad2 += 1
+			z -= 0.5
+		ok(bad2 == 0, "recht naar het noorden bij x %d: %d dichte plekken" % [int(x), bad2])
+	# de hele noordrand tussen x -126 en x -36 is open
+	for x in [-126.0, -100.0, -70.0, -40.0]:
+		ok(Data.clamp_world(Vector2(x, -292.0), false) == Vector2(x, -292.0), "noordrand open bij x %d" % int(x))
 	print("dam_pad_test: ", "PASS" if fails == 0 else "FAIL (%d)" % fails)
 	quit(1 if fails > 0 else 0)

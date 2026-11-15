@@ -144,7 +144,7 @@ func _run() -> void:
 	await _frames(2)
 	var keuze: Node = buttons._keuze
 	_check("het kiesscherm opent en houdt sticks en schieten stil", keuze != null and is_instance_valid(keuze) and keuze.is_in_group("kaart_open"))
-	_check("zes kaarten: artillerie, luchtaanval, napalm, satelliet, reparatie, parachutisten", keuze._cards.size() == 6 and Rg.VOLGORDE == ["artillerie", "luchtaanval", "napalm", "satelliet", "reparatie", "parachutisten"])
+	_check("zeven kaarten: artillerie, luchtaanval, napalm, satelliet, reparatie, parachutisten, c4", keuze._cards.size() == 7 and Rg.VOLGORDE == ["artillerie", "luchtaanval", "napalm", "satelliet", "reparatie", "parachutisten", "c4"])
 	_check("kies napalm: niveau 1, een punt minder", keuze.kies("napalm") and int(G.krachten["napalm"]) == 1 and G.rang_punten == 4)
 	_check("de eerste kracht wordt meteen de gekozen kracht", G.kracht_sel == "napalm" and Rg.huidig() == "napalm")
 	_check("kies napalm nog eens: niveau 2, daarna 3", keuze.kies("napalm") and keuze.kies("napalm") and int(G.krachten["napalm"]) == 3 and G.rang_punten == 2)
@@ -355,7 +355,7 @@ func _run() -> void:
 	_check("een nieuw spel begint zonder sterren, punten, krachten, afkoeling en satelliet", G.rang == 0 and G.rang_punten == 0 and G.krachten.is_empty() and G.kracht_cd.is_empty() and G.kracht_sel == "" and is_equal_approx(G.satelliet_t, 0.0) and G.score == 0)
 	var gs: GDScript = load("res://scripts/game_settings.gd")
 	gs.set_value("t_krachten", "on")
-	_check("testschakelaar: alle krachten op niveau 3 zonder afkoeling", Rg.heeft("napalm") and Rg.niveau("satelliet") == 3 and Rg.beschikbaar().size() == 6)
+	_check("testschakelaar: alle krachten op niveau 3 zonder afkoeling", Rg.heeft("napalm") and Rg.niveau("satelliet") == 3 and Rg.beschikbaar().size() == 7)
 	G.kracht_cd["satelliet"] = 99.0
 	_check("testschakelaar: nooit afkoeling", Rg.klaar("satelliet") and is_equal_approx(Rg.cd_rest("satelliet"), 0.0))
 	_check("testschakelaar: een lege kracht-keuze telt niet als kracht (KRACHTEN-knop staat dan klaar)", not Rg.heeft("") and Rg.huidig() != "")

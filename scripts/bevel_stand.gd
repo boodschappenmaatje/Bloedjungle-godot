@@ -508,13 +508,9 @@ func _finish_box() -> void:
 	ts.select(list)
 
 
-## Een punt op de grond onder de vinger (de grond ligt op y = 0).
+## Een punt op de grond onder de vinger (met reliëf: dambreuk stap 1b).
 func _ground(cam: Camera3D, pos: Vector2) -> Variant:
-	var o := cam.project_ray_origin(pos)
-	var d := cam.project_ray_normal(pos)
-	if d.y > -0.02:
-		return null
-	return o + d * (-o.y / d.y)
+	return Data.ground_ray(cam.project_ray_origin(pos), cam.project_ray_normal(pos))
 
 
 func _tap(pos: Vector2) -> void:

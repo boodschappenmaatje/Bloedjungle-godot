@@ -4,7 +4,7 @@ extends Node3D
 ## filmische kleuren en een zachte gloed. Alles in code, zodat je het hier makkelijk kunt bijstellen.
 # Test synchronisatie iPhone
 
-var _sky_mat: ProceduralSkyMaterial
+var _sky_mat: ShaderMaterial   # lucht met verre bergen (shaders/lucht_bergen.gdshader), zelfde kleuren als de oude ProceduralSkyMaterial
 var _env: Environment
 var _sun: DirectionalLight3D
 var _rain: GPUParticles3D
@@ -32,13 +32,14 @@ var _luts := {}
 
 func _ready() -> void:
 	add_to_group("atmosphere")
-	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color("56707a")
-	sky_mat.sky_horizon_color = Color("a3b09a")
-	sky_mat.ground_horizon_color = Color("8e9c80")
-	sky_mat.ground_bottom_color = Color("2a3820")
-	sky_mat.sky_curve = 0.18
-	sky_mat.sun_angle_max = 25.0
+	var sky_mat := ShaderMaterial.new()
+	sky_mat.shader = preload("res://shaders/lucht_bergen.gdshader")
+	sky_mat.set_shader_parameter("sky_top_color", Color("56707a"))
+	sky_mat.set_shader_parameter("sky_horizon_color", Color("a3b09a"))
+	sky_mat.set_shader_parameter("ground_horizon_color", Color("8e9c80"))
+	sky_mat.set_shader_parameter("ground_bottom_color", Color("2a3820"))
+	sky_mat.set_shader_parameter("sky_curve", 0.18)
+	sky_mat.set_shader_parameter("sun_angle_max", 25.0)
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
 
@@ -131,9 +132,9 @@ func apply_settings() -> void:
 	_sun.light_color = Color(t["col"])
 	_sun.light_energy = t["e"] * dim
 	_env.ambient_light_energy = t["amb"] * (1.0 if weather == "clear" else 0.9)
-	_sky_mat.sky_top_color = Color(t["top"])
-	_sky_mat.sky_horizon_color = Color(t["hor"])
-	_sky_mat.ground_horizon_color = Color(t["gnd"])
+	_sky_mat.set_shader_parameter("sky_top_color", Color(t["top"]))
+	_sky_mat.set_shader_parameter("sky_horizon_color", Color(t["hor"]))
+	_sky_mat.set_shader_parameter("ground_horizon_color", Color(t["gnd"]))
 	_env.fog_light_color = Color(t["fog"]).lerp(Color("9aa59a"), 0.0 if weather == "clear" else 0.35)
 	_env.fog_density = {"clear": 0.0075, "rain": 0.014, "mist": 0.018}[weather]
 	_env.tonemap_exposure = t["exp"]

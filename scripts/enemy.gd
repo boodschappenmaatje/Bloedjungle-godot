@@ -357,7 +357,7 @@ func _physics_process(delta: float) -> void:
 			_detour_side = 1.0 if randf() < 0.5 else -1.0
 	else:
 		_stuck_t = 0.0
-	position.y = 0.0
+	position.y = Data.ground_y(position.x, position.z)
 	face += angle_difference(face, look) * minf(1.0, delta * 10.0)
 	rotation.y = face
 	_animate(vel.length(), want_move)
@@ -443,7 +443,7 @@ func _far_step(delta: float) -> void:
 		position += Vector3(v.x, 0.0, v.y)
 		face = atan2(d.x, d.y)
 		rotation.y = face
-	position.y = 0.0
+	position.y = Data.ground_y(position.x, position.z)
 	_far_acc = 0.0
 
 
@@ -709,9 +709,9 @@ func _burn_step(delta: float) -> void:
 		_burn_dir = Vector3(sin(a), 0.0, cos(a))
 	velocity = _burn_dir * 5.8 * speed_mul
 	move_and_slide()
-	position.y = 0.0
+	position.y = Data.ground_y(position.x, position.z)
 	var flat := Data.clamp_world(Vector2(global_position.x, global_position.z))
-	global_position = Vector3(flat.x, 0.0, flat.y)
+	global_position = Vector3(flat.x, Data.ground_y(flat.x, flat.y), flat.y)
 	face += angle_difference(face, atan2(_burn_dir.x, _burn_dir.z)) * minf(1.0, delta * 8.0)
 	rotation.y = face
 	model.play("brand_rennen", 0.1)

@@ -913,8 +913,7 @@ func _over_ui(p: Vector2) -> bool:
 
 func _ground(p: Vector2) -> Variant:
 	var cam := get_viewport().get_camera_3d()
-	var hit = Plane(Vector3.UP, 0.0).intersects_ray(cam.project_ray_origin(p), cam.project_ray_normal(p))
-	return hit
+	return Data.ground_ray(cam.project_ray_origin(p), cam.project_ray_normal(p))   # met reliëf (dambreuk stap 1b)
 
 
 func _struct_at(g: Vector3) -> Variant:

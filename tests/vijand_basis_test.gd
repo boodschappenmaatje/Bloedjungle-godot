@@ -89,10 +89,18 @@ func _structure() -> void:
 	if ground != null:
 		for c in ground.get_children():
 			if c is CollisionShape3D:
-				var s := (c as CollisionShape3D).shape as BoxShape3D
 				var cz := (c as CollisionShape3D).position.z
-				var zmin := cz - s.size.z * 0.5
-				var zmax := cz + s.size.z * 0.5
+				var zmin := 0.0
+				var zmax := 0.0
+				if (c as CollisionShape3D).shape is HeightMapShape3D:   # sinds dambreuk stap 1b heeft de grondplaat reliëf (Bergland)
+					var hm := (c as CollisionShape3D).shape as HeightMapShape3D
+					var half := (hm.map_depth - 1) * 0.5 * (c as CollisionShape3D).scale.z
+					zmin = cz - half
+					zmax = cz + half
+				else:
+					var s := (c as CollisionShape3D).shape as BoxShape3D
+					zmin = cz - s.size.z * 0.5
+					zmax = cz + s.size.z * 0.5
 				ok_ground = absf(zmin - D.GROUND_Z_MIN) < 0.01 and absf(zmax - 220.0) < 0.01
 	_check("grondplaat loopt van z -300 tot 220", ok_ground)
 

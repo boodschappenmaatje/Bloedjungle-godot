@@ -56,6 +56,7 @@ static func start_aanval(main: Node, at: Vector3, d: Vector3, n: int) -> void:
 static func schade(at: Vector3, radius: float, dmg: float) -> int:
 	VijandHk.blast(at, radius, dmg)
 	VijandM2Toren.blast(at, radius, dmg)
+	Dam.blast_alle(at, radius, dmg)
 	Garnizoen.blast(at, radius, dmg, "vijand")
 	var hits := 0
 	for e in Game.enemies.duplicate():

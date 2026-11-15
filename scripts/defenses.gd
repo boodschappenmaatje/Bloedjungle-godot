@@ -104,7 +104,7 @@ func cycle() -> void:
 func _spot(k: String) -> Vector3:
 	var a: float = Game.player.face
 	var at: Vector3 = Game.player.global_position + Vector3(sin(a), 0, cos(a)) * (2.3 if k == "trench" else 1.7)
-	at.y = 0.0
+	at.y = Data.ground_y(at.x, at.z)
 	return at
 
 

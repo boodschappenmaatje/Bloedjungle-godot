@@ -470,6 +470,7 @@ func _explode(at: Vector3) -> void:
 	VijandHk.blast(at, explosive, dmg)   # de bazooka tegen het vijandelijke hoofdkwartier
 	Garnizoen.blast(at, explosive, dmg, "vijand")   # door een raam of tegen de muur van een bezet gebouw (F2)
 	VijandM2Toren.blast(at, explosive, dmg)
+	Dam.blast_alle(at, explosive, dmg)
 	if Game.builds:
 		Game.builds.blast(at, explosive, dmg, true)  # eigen raketten doen een beetje schade aan je eigen bouwwerk
 	for e in Game.enemies.duplicate():

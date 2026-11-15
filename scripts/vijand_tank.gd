@@ -420,13 +420,13 @@ func _drive(delta: float) -> void:
 	velocity = -global_transform.basis.z * _speed
 	move_and_slide()
 	Foliage.ram(self, absf(_speed), 1.5, 2.5)   # tegen een boom aan: hij valt om (zelfde gewichtsklasse als jouw tank)
-	global_position.y = 0.0
+	global_position.y = Data.ground_y(global_position.x, global_position.z)
 	if get_slide_collision_count() > 0:
 		_speed *= 0.6
 	var flat := Vector2(global_position.x, global_position.z)
 	var clamped := Data.clamp_world(flat)
 	if clamped != flat:
-		global_position = Vector3(clamped.x, 0.0, clamped.y)
+		global_position = Vector3(clamped.x, Data.ground_y(clamped.x, clamped.y), clamped.y)
 	if _snd != null:
 		_snd.pitch_scale = 0.75 + clampf(absf(_speed) / SPEED, 0.0, 1.0) * 0.5 + clampf(absf(_yaw_rate), 0.0, 0.8) * 0.2
 

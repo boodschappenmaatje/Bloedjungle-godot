@@ -268,7 +268,7 @@ static func impact(parent: Node, pos: Vector3, scale := 1.0) -> void:
 	Fx.explosion(parent, pos + Vector3.UP * 0.2, scale * 1.25)
 	if not Fx._near_camera(parent, pos, 60.0):
 		return
-	_flipbook(parent, "tankaarde", "tankfx_aarde.png", false, Vector3(pos.x, 0.0, pos.z), 0.0, 7.5 * scale, 1.7, false, Color(1.0, 0.95, 0.9), 1.0)
+	_flipbook(parent, "tankaarde", "tankfx_aarde.png", false, Vector3(pos.x, Data.ground_y(pos.x, pos.z), pos.z), 0.0, 7.5 * scale, 1.7, false, Color(1.0, 0.95, 0.9), 1.0)
 	if WapenFx.tier() >= 1:
 		_flipbook(parent, "tankstof", "tankfx_stof.png", false, Vector3(pos.x, 0.18, pos.z), randf() * TAU, 11.0 * scale, 1.8, true, Color(0.95, 0.88, 0.76), 0.8)
 	Fx._burst(parent, Vector3(pos.x, 0.4, pos.z), Vector3.UP, [10, 18, 28][WapenFx.tier()], Color(0.25, 0.18, 0.1), 0.12, 9.0 * scale, Vector3(0.1, 0.1, 0.1))

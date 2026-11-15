@@ -99,6 +99,14 @@ static func site_status(at: Vector3, yaw: float, world: World3D = null, exclude:
 			return {"valid": false, "reason": "Te dicht bij de rand van de kaart", "vegetation": 0}
 		if not dry_side(p, RIVER_MARGIN):
 			return {"valid": false, "reason": "Te dicht bij de rivier", "vegetation": 0}
+	var lo := INF   # reliëf (dambreuk stap 1b): het hoofdkwartier staat alleen op bijna vlakke grond
+	var hi := -INF
+	for fp: Vector3 in footprint_points(at, yaw):
+		var gy := Data.ground_y(fp.x, fp.z)
+		lo = minf(lo, gy)
+		hi = maxf(hi, gy)
+	if hi - lo > 0.6:
+		return {"valid": false, "reason": "Te steil om te bouwen", "vegetation": 0}
 	if world != null:
 		var shape := BoxShape3D.new()
 		shape.size = Vector3(FOOT_SIZE.x, 2.0, FOOT_SIZE.y)
@@ -216,7 +224,7 @@ func _board() -> void:
 	p.visible = false
 	p.collision_mask = 0
 	p.velocity = Vector3.ZERO
-	p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+	p.global_position = Vector3(global_position.x, Data.ground_y(global_position.x, global_position.z), global_position.z)
 	Game.banner.emit("KLAP JE WAGEN UIT", "Rijd naar een plek, groen = hier kan het", 4.0)
 
 
@@ -247,15 +255,15 @@ func _physics_process(delta: float) -> void:
 		velocity = -global_transform.basis.z * _speed
 		move_and_slide()
 		Foliage.ram(self, absf(_speed), 3.0, 5.0)   # zwaar voertuig: palmen en jungle-bomen vallen om
-		global_position.y = 0.0
+		global_position.y = Data.ground_y(global_position.x, global_position.z)
 		if get_slide_collision_count() > 0:
 			_speed *= 0.5
 		var flat := Vector2(global_position.x, global_position.z)
 		var clamped := Data.clamp_world(flat)
 		if clamped != flat:
-			global_position = Vector3(clamped.x, 0.0, clamped.y)
+			global_position = Vector3(clamped.x, Data.ground_y(clamped.x, clamped.y), clamped.y)
 	if p != null and is_instance_valid(p):
-		p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+		p.global_position = Vector3(global_position.x, Data.ground_y(global_position.x, global_position.z), global_position.z)
 		p.face = rotation.y + PI
 	_status_t -= delta
 	if _status_t <= 0.0:
@@ -292,7 +300,7 @@ func deploy_now() -> void:
 		return
 	deployed = true
 	deploying = false
-	var at := Vector3(global_position.x, 0.0, global_position.z)
+	var at := Vector3(global_position.x, Data.ground_y(global_position.x, global_position.z), global_position.z)
 	var yaw := rotation.y
 	var level := get_parent().get_node_or_null("Level")
 	if level == null:

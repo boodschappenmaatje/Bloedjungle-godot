@@ -298,7 +298,7 @@ func _fly(delta: float, live: bool) -> void:
 		Fx.muzzle(get_parent(), global_position + fwd * 3.4 + Vector3(0, -0.6, 0))
 		Sfx.play("mg", 0.4, global_position)
 	if p != null:
-		p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+		p.global_position = Vector3(global_position.x, Data.ground_y(global_position.x, global_position.z), global_position.z)
 		p.face = rotation.y + PI
 
 
@@ -329,7 +329,7 @@ func _land_free(delta: float) -> void:
 	global_position.y = move_toward(global_position.y, 0.0, 2.6 * delta)
 	_wrap.rotation = _wrap.rotation.lerp(Vector3.ZERO, minf(1.0, delta * 3.0))
 	if p != null and driven:
-		p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+		p.global_position = Vector3(global_position.x, Data.ground_y(global_position.x, global_position.z), global_position.z)
 	if global_position.y <= 0.02:
 		mode = Mode.GROUND
 		if p != null and driven:
@@ -363,4 +363,4 @@ func _land(delta: float) -> void:
 			mode = Mode.LIFT
 	_wrap.rotation = _wrap.rotation.lerp(Vector3.ZERO, minf(1.0, delta * 3.0))
 	if p != null and driven:
-		p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+		p.global_position = Vector3(global_position.x, Data.ground_y(global_position.x, global_position.z), global_position.z)

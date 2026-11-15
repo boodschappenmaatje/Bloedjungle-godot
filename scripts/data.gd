@@ -204,8 +204,33 @@ static func path_x(z: float) -> float:
 
 
 ## Houdt iets binnen de kaart: een rechthoek die in het noorden voorbij de rivier doorloopt.
-static func clamp_world(p: Vector2) -> Vector2:
-	return Vector2(clampf(p.x, -WORLD_X, WORLD_X), clampf(p.y, -WORLD_Z_N, WORLD_Z_S))
+## Buiten die rechthoek is alleen het bergpad en de kloof naar de dam begaanbaar (DamPad); `voet` = ook de helling en de kroon van de dam (alleen soldaten).
+static func clamp_world(p: Vector2, voet := false) -> Vector2:
+	var c := Vector2(clampf(p.x, -WORLD_X, WORLD_X), clampf(p.y, -WORLD_Z_N, WORLD_Z_S))
+	if c == p:
+		return p
+	return DamPad.clamp_walk(p, c, voet)
+
+
+## Hoogte van het land (dambreuk-plan stap 1): 0 op de hele grondplaat waar gespeeld wordt, daarbuiten heuvels, bergen,
+## het rivierdal en de kloof van Bergland. Bestaande gameplay blijft op 0; nieuwe dingen buiten de plaat vragen dit.
+static func ground_y(x: float, z: float) -> float:
+	return Bergland.height(x, z)
+
+
+## Waar een kijkstraal (camera -> vinger) de grond raakt, met het reliëf erbij: een paar keer opnieuw snijden met het vlak op
+## de hoogte van de grond onder het vorige punt. Geeft null als de straal niet naar beneden wijst.
+static func ground_ray(origin: Vector3, dir: Vector3) -> Variant:
+	if dir.y > -0.02:
+		return null
+	var y := 0.0
+	var hit: Variant = null
+	for i in 3:
+		hit = Plane(Vector3.UP, y).intersects_ray(origin, dir)
+		if hit == null:
+			return null
+		y = ground_y(hit.x, hit.z)
+	return Vector3(hit.x, y, hit.z)
 
 
 static func river_off(x: float, z: float) -> float:

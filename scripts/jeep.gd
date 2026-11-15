@@ -162,7 +162,7 @@ func _disembark(p) -> void:
 	p.visible = true
 	var side := global_transform.basis.x
 	p.global_position = global_position - side * 1.9
-	p.global_position.y = 0.0
+	p.global_position.y = Data.ground_y(p.global_position.x, p.global_position.z)
 	p.collision_mask = p.get("_mask0")
 	p.velocity = Vector3.ZERO
 	_set_firing(false)
@@ -212,7 +212,7 @@ func _process(raw_delta: float) -> void:
 	_drive(delta, live, ai)
 	_animate(delta)
 	if driven and p != null:
-		p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+		p.global_position = Vector3(global_position.x, Data.ground_y(global_position.x, global_position.z), global_position.z)
 		p.face = rotation.y + PI
 		_aim_driven(delta, live)
 		_ram()
@@ -269,14 +269,14 @@ func _drive(delta: float, live: bool, ai := false) -> void:
 	velocity = -global_transform.basis.z * _speed * _stap_k   # bij een beeldsprong (> 1/30 s) rijdt hij niet door een muur heen
 	move_and_slide()
 	Foliage.ram(self, absf(_speed), 6.0)   # tegen een boom aan: hij valt om
-	global_position.y = 0.0
+	global_position.y = Data.ground_y(global_position.x, global_position.z)
 	if get_slide_collision_count() > 0:
 		_speed *= 0.6
 	var flat := Vector2(global_position.x, global_position.z)
 	var clamped := Data.clamp_world(flat)
 	if clamped != flat:
 		flat = clamped
-		global_position = Vector3(flat.x, 0.0, flat.y)
+		global_position = Vector3(flat.x, Data.ground_y(flat.x, flat.y), flat.y)
 
 
 func _animate(delta: float) -> void:

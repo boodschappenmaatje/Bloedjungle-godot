@@ -37,7 +37,7 @@ func setup(site_: Dictionary, slot_: int, amount: int, face := Vector2.ZERO) -> 
 	slot = slot_
 	left = amount
 	full = amount
-	position = Vector3(site.pos.x, 0.0, site.pos.y)
+	position = Vector3(site.pos.x, Data.ground_y(site.pos.x, site.pos.y), site.pos.y)
 	name = "Stapel%d" % (slot + 1)
 	add_to_group("voorraadstapel")
 	if face.length() > 0.01:

@@ -160,7 +160,7 @@ func _add_point(groups: Dictionary, rng: RandomNumberGenerator, kind: String, po
 		groups[key] = {"kind": kind, "cell": cell, "variant": variant, "xf": [], "colors": []}
 	var scale_ := rng.randf_range(0.9, 1.08)
 	var basis := Basis(Vector3.UP, rng.randf()*TAU).scaled(Vector3(scale_, scale_, scale_))
-	groups[key].xf.append(Transform3D(basis, pos))
+	groups[key].xf.append(Transform3D(basis, Vector3(pos.x, pos.y + Data.ground_y(pos.x, pos.z), pos.z)))   # reliëf (dambreuk stap 1b)
 	var shade := rng.randf_range(0.88, 1.0)
 	groups[key].colors.append(Color(shade, shade, shade))
 

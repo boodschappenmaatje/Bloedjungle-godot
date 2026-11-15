@@ -158,7 +158,7 @@ func _physics_process(delta: float) -> void:
 	velocity = Vector3(mv.x, 0.0, mv.y) * Data.PLAYER_SPEED * spd_mul * (SPRINT_MUL if sprinting else 1.0) * STANCE_SPEED[stance]
 	move_and_slide()
 	var flat := Vector2(position.x, position.z)
-	var clamped := Data.clamp_world(flat)
+	var clamped := Data.clamp_world(flat, true)
 	if clamped != flat:
 		flat = clamped
 		position = Vector3(flat.x, position.y, flat.y)
@@ -167,7 +167,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		# in een huis: vloerhoogte volgens de trap en de verdieping; vallen gaat geleidelijk
 		var hy := Woonhuis.floor_at(global_position, position.y)
-		hy = maxf(hy, 0.0)
+		hy = maxf(hy, Data.ground_y(global_position.x, global_position.z))
 		position.y = hy if hy >= position.y else maxf(hy, position.y - 9.0 * delta)
 		elev = position.y
 		_find_stairs(mv)
@@ -356,10 +356,10 @@ func _dodge_step(delta: float) -> void:
 	velocity = Vector3(dodge_dir.x, 0.0, dodge_dir.y) * DODGE_SPEED * (1.0 - 0.5 * p)
 	move_and_slide()
 	var flat := Vector2(position.x, position.z)
-	var clamped := Data.clamp_world(flat)
+	var clamped := Data.clamp_world(flat, true)
 	if clamped != flat:
 		position = Vector3(clamped.x, position.y, clamped.y)
-	position.y = 0.0
+	position.y = Data.ground_y(position.x, position.z)
 	model.play("rollen", 0.04, maxf(0.5, model.clip_length("rollen")) / DODGE_TIME)
 	if dodge_t <= 0.0:
 		model.position = Vector3.ZERO
@@ -485,7 +485,7 @@ func _climb_step(delta: float) -> void:
 		collision_mask = _mask0
 		_roof(tower, true)
 		tower = null
-		position.y = 0.0
+		position.y = Data.ground_y(position.x, position.z)
 
 
 ## Pure trigger rule, shared with headless regressions.

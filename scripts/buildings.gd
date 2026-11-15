@@ -119,7 +119,26 @@ func _tower_feet() -> Array:
 
 
 ## Shared source of truth for the preview and the final transaction.
+## Reliëf (dambreuk stap 1b): bouwen mag alleen op bijna vlakke grond. Het hoogteverschil onder de voetafdruk (negen punten) mag
+## hooguit SLOPE_MAX zijn; losse stukken (muur, zandzak) en de wachttoren hebben geen eigen voetafdruk en volgen gewoon de grond.
+const SLOPE_MAX := 0.6
+const SLOPE_MSG := "Te steil om te bouwen"
+
+
+func _slope_ok(at: Vector3, yaw: float, half: Vector2) -> bool:
+	var lo := INF
+	var hi := -INF
+	for iu in 3:
+		for iv in 3:
+			var p := _pt(at, yaw, (iu - 1) * half.x, (iv - 1) * half.y)
+			var y := Data.ground_y(p.x, p.z)
+			lo = minf(lo, y)
+			hi = maxf(hi, y)
+	return hi - lo <= SLOPE_MAX
+
+
 func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null) -> Dictionary:
+	at.y = Data.ground_y(at.x, at.z)
 	if kind == "airfield":
 		if not AirfieldHQ23.complex_available() or not AirfieldHQ23.area_limit_ok():
 			return _placement_result(false, "Vliegveldassets ontbreken", 0)
@@ -133,6 +152,8 @@ func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null)
 			return _placement_result(false, "Te dicht op de startplek", 0)
 		if not AirfieldHQ23.site_clear_of_river(at, yaw):
 			return _placement_result(false, "Kan niet in de rivier bouwen", 0)
+		if not _slope_ok(at, yaw, Vector2(AirfieldHQ23.FOOTPRINT.x * 0.5, AirfieldHQ23.FOOTPRINT.z * 0.5)):
+			return _placement_result(false, SLOPE_MSG, 0)
 		if not is_inside_tree():
 			return _placement_result(true, "Bouwen mogelijk", 0)
 		var exclusions: Array[RID] = []
@@ -169,6 +190,8 @@ func placement_status(kind: String, at: Vector3, yaw: float, me: Variant = null)
 		return _placement_result(false, "Buiten speelbaar gebied", 0)
 	if not Mcv.dry_side(at, 3.0):
 		return _placement_result(false, "Kan niet in of voorbij de rivier bouwen", 0)
+	if not piece and not _slope_ok(at, yaw, Vector2(sz.x * 0.5, sz.z * 0.5)):
+		return _placement_result(false, SLOPE_MSG, 0)
 	var feet := _tower_feet()
 	for iu in 3:
 		for iv in 3:
@@ -466,6 +489,7 @@ func place(kind: String, at: Vector3, yaw: float, with_time := false, free := fa
 		return null
 	if node == null:
 		node = make_node(kind)
+	at.y = Data.ground_y(at.x, at.z)
 	node.position = at
 	node.rotation.y = yaw
 	add_child(node)
@@ -583,6 +607,7 @@ func move_to(b: Dictionary, at: Vector3, yaw: float) -> void:
 	var status := placement_status(b.kind, at, yaw, b)
 	if not status.valid:
 		return
+	at.y = Data.ground_y(at.x, at.z)
 	b.at = at
 	b.yaw = yaw
 	b.node.position = at

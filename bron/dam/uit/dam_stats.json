@@ -1,0 +1,13 @@
+{
+ "triangles": 54066,
+ "objects": 71,
+ "per_material": {
+  "DAM_Beton": 35960,
+  "DAM_Kraak": 1818,
+  "DAM_Staal": 10736,
+  "DAM_Lamp": 216,
+  "DAM_Glas": 72,
+  "DAM_Steen": 3680,
+  "DAM_Water": 1584
+ }
+}

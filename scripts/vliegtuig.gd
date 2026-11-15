@@ -463,7 +463,7 @@ func _step(delta: float) -> void:
 		Mode.PARKED, Mode.WRECK:
 			pass
 	if driven and p != null and mode != Mode.WRECK:
-		p.global_position = Vector3(global_position.x, 0.0, global_position.z)
+		p.global_position = Vector3(global_position.x, Data.ground_y(global_position.x, global_position.z), global_position.z)
 		p.face = rotation.y + PI
 		var thrust := clampf(speed / MAX_SPEED, 0.0, 1.0)
 		Sfx.jet_set(0.35 + 0.5 * thrust, 0.8 + 0.6 * thrust)

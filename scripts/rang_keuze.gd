@@ -140,7 +140,7 @@ func _draw() -> void:
 func _teken_kaart(i: int, r: Rect2) -> void:
 	var id: String = Rang.VOLGORDE[i]
 	var n := Rang.echt_niveau(id)
-	var max_ := n >= Rang.MAX_NIVEAU
+	var max_ := n >= Rang.max_niveau(id)
 	var hot := i == _hot and not max_
 	draw_style_box(UI.box(Color(0.2, 0.155, 0.055, 0.98) if hot else Color(0.025, 0.04, 0.035, 0.92), Color(UI.BRASS, 0.9 if hot else (0.28 if max_ else 0.55)), 1, 8, 0), r)
 	var col := Color(UI.INK_DIM, 0.55) if max_ else UI.BRASS
@@ -151,7 +151,7 @@ func _teken_kaart(i: int, r: Rect2) -> void:
 	var tx := r.position.x + 58.0
 	draw_string(fh, Vector2(tx, r.position.y + 21.0 * kk), String(Rang.KRACHTEN[id].naam), HORIZONTAL_ALIGNMENT_LEFT, -1, 13, UI.INK if not max_ else UI.INK_DIM)
 	var pip_x := tx + fh.get_string_size(String(Rang.KRACHTEN[id].naam), HORIZONTAL_ALIGNMENT_LEFT, -1, 13).x + 12.0
-	for k in Rang.MAX_NIVEAU:
+	for k in Rang.max_niveau(id):
 		var c := Vector2(pip_x + float(k) * 12.0, r.position.y + 16.5 * kk)
 		if k < n:
 			draw_circle(c, 4.0, UI.BRASS)
@@ -159,7 +159,7 @@ func _teken_kaart(i: int, r: Rect2) -> void:
 			draw_arc(c, 3.6, 0.0, TAU, 12, Color(UI.INK_DIM, 0.7), 1.3, true)
 	var regel := ""
 	if max_:
-		regel = "Niveau 3: %s" % Rang.tekst(id, 3)
+		regel = ("Gekozen: %s" % Rang.tekst(id, 1)) if Rang.max_niveau(id) == 1 else "Niveau 3: %s" % Rang.tekst(id, 3)
 	elif n == 0:
 		regel = "Nieuw: %s" % Rang.tekst(id, 1)
 	else:

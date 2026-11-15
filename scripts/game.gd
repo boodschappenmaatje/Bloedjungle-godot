@@ -91,6 +91,7 @@ var krachten := {}               # id -> niveau 1 tot 3 van de krachten die je h
 var kracht_cd := {}              # id -> seconden afkoeling die nog resten (loopt in Game._process)
 var kracht_sel := ""             # de kracht die de KRACHTEN-knop toont (leeg of niet meer beschikbaar = de eerste die je hebt)
 var krachten_gebruikt := {}      # id -> hoe vaak je hem dit spel gebruikte
+var c4_ladingen := 0             # springladingen die je nog hebt (kracht C4, Rang)
 var satelliet_t := 0.0           # s dat de spionagesatelliet nog alle vijanden op radar en kaart toont
 var power := true:   # stroom in de basis en de straatlantaarns (de generator komt later terug als gebouw: Generals-plan A4)
 	set(v):
@@ -212,6 +213,7 @@ func reset() -> void:
 	kracht_cd.clear()
 	kracht_sel = ""
 	krachten_gebruikt.clear()
+	c4_ladingen = 0
 	satelliet_t = 0.0
 	hit_src = "speler"
 

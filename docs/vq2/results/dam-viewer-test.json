@@ -1,0 +1,25 @@
+{
+ "stats": {
+  "dam": "Dam: 54.066 driehoeken · 130 meshes · 7 materialen · texturen 4096×4096 (beton en staal, 4K). Geen iPhone-FPS gemeten."
+ },
+ "browser": "Chromium headless, software WebGL; geen fysieke Safari/iPhone-test",
+ "errors": [],
+ "clips": [
+  "Kraken",
+  "Breken"
+ ],
+ "blok": {
+  "rust": [
+   -2.2506356239318848,
+   8.50025463104248,
+   1.9505254030227661
+  ],
+  "gebroken": [
+   -2.4143800735473633,
+   0.9000000953674316,
+   7.869647026062012
+  ]
+ },
+ "kraak": 1,
+ "ok": true
+}

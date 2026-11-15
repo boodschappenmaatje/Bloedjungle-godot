@@ -21,6 +21,7 @@ func build_now() -> void:
 		c.free()
 	_ground()
 	River.build(self)
+	Bergland.build(self)
 	Stad.build(self)
 	VijandBasis.build(self)
 	Foliage.plant(self, Data.world_seed)
@@ -41,6 +42,8 @@ func build_stepped(progress: Callable) -> void:
 	await tick.call(0.1, "Basis bouwen...")
 	await tick.call(0.2, "Rivier en brug...")
 	River.build(self)
+	await tick.call(0.25, "Bergen en dalen...")
+	Bergland.build(self)
 	Stad.build(self)
 	VijandBasis.build(self)
 	var names := {"palm": "Palmen planten...", "bush": "Struiken planten...", "fern": "Varens planten...", "grass": "Gras laten groeien...", "rock": "Rotsen neerleggen..."}
@@ -56,18 +59,14 @@ func _ground() -> void:
 	var body := StaticBody3D.new()
 	body.collision_layer = Kit.LAYER_GROUND
 	var col := CollisionShape3D.new()
-	var depth := Z_MAX - Data.GROUND_Z_MIN
-	var mid_z := (Z_MAX + Data.GROUND_Z_MIN) * 0.5
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(SIZE, 1, depth)
-	col.shape = shape
-	col.position = Vector3(0, -0.5, mid_z)
+	# de speelplaat heeft sinds stap 1b van het dambreuk-plan reliëf (Bergland.relief): mesh en botsing uit dezelfde hoogtes
+	var hs := Bergland.plate_heights()
+	col.shape = Bergland.plate_shape(hs)
+	col.position = Vector3(0, 0, Bergland.plate_center_z())
+	col.scale = Vector3(Bergland.PLATE_CELL, 1.0, Bergland.PLATE_CELL)
 	body.add_child(col)
 	var mesh := MeshInstance3D.new()
-	var plane := PlaneMesh.new()
-	plane.size = Vector2(SIZE, depth)
-	mesh.mesh = plane
-	mesh.position.z = mid_z
+	mesh.mesh = Bergland.plate_mesh(hs)
 	var mat := ShaderMaterial.new()
 	mat.shader = preload("res://shaders/ground.gdshader")
 	mat.set_shader_parameter("noise_a", Kit.noise_tex(0.02, 3))

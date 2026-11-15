@@ -124,7 +124,7 @@ static func decal(parent: Node, pos: Vector3, normal: Vector3, kind: String, siz
 
 ## Bloedplek op de grond onder een plek in de lucht.
 static func ground_blood(parent: Node, pos: Vector3, size := 1.2) -> void:
-	decal(parent, Vector3(pos.x, 0.0, pos.z), Vector3.UP, "blood", size)
+	decal(parent, Vector3(pos.x, Data.ground_y(pos.x, pos.z), pos.z), Vector3.UP, "blood", size)
 
 
 static func blood(parent: Node, pos: Vector3, dir: Vector3, amount := 14, color := Color(0.52, 0.015, 0.015)) -> void:
@@ -842,7 +842,7 @@ static func explosion(parent: Node, pos: Vector3, scale := 1.0, chunks: Array = 
 		tw.tween_property(l, "light_energy", 5.0 if g2 else 3.5, 0.12)
 		tw.tween_property(l, "light_energy", 0.0, 1.5 if g2 else 0.9)
 		tw.tween_callback(l.queue_free)
-	decal(parent, Vector3(pos.x, 0.0, pos.z), Vector3.UP, "scorch", 3.6 * scale, 80.0)
+	decal(parent, Vector3(pos.x, Data.ground_y(pos.x, pos.z), pos.z), Vector3.UP, "scorch", 3.6 * scale, 80.0)
 
 
 ## Graphics 2.0: wat een explosie erbij krijgt. Een korte felle flits, een schokgolf van stof over de grond, een stofring die
@@ -1159,9 +1159,9 @@ static func wreck(parent: Node, pos: Vector3) -> void:
 	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 	mi.rotation.y = randf() * TAU
 	parent.add_child(mi)
-	mi.global_position = Vector3(pos.x, 0.0, pos.z)
+	mi.global_position = Vector3(pos.x, Data.ground_y(pos.x, pos.z), pos.z)
 	var fire := flame(parent, Vector3(pos.x, 0.45, pos.z), 0.8)
-	var smoke := burning(parent, Vector3(pos.x, 0.0, pos.z), false)
+	var smoke := burning(parent, Vector3(pos.x, Data.ground_y(pos.x, pos.z), pos.z), false)
 	var tw := mi.create_tween()
 	tw.tween_interval(WRECK_BURN_TIME)
 	tw.tween_callback(func():

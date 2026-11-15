@@ -341,6 +341,19 @@ func _make(name: String) -> StandardMaterial3D:
 			m.metallic_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_BLUE
 			m.metallic = 1.0 if name == "DAM_Staal" else 0.0
 			m.roughness = 1.0
+		"DAM_Meshy", "DAM_Sluis":   # Dennis' Meshy-dam en -sluisdeur: gebakken kleur/normal/ORM uit de importstraat, geen vertexkleur
+			var k := "meshy_dam" if name == "DAM_Meshy" else "meshy_sluis"
+			m.vertex_color_use_as_albedo = false
+			m.albedo_texture = _tex(k + "_albedo.jpg")
+			m.normal_enabled = true
+			m.normal_texture = _tex(k + "_normal.jpg")
+			var orm2 := _tex(k + "_orm.jpg")
+			m.roughness_texture = orm2
+			m.roughness_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_GREEN
+			m.metallic_texture = orm2
+			m.metallic_texture_channel = BaseMaterial3D.TEXTURE_CHANNEL_BLUE
+			m.metallic = 1.0
+			m.roughness = 1.0
 		"DAM_Steen":   # stortsteen: het betonbeeld, donkerder (geen extra 4K-set in het geheugen)
 			m.albedo_texture = _tex("beton_albedo.jpg")
 			m.albedo_color = Color(0.62, 0.6, 0.55)

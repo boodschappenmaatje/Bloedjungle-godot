@@ -123,6 +123,7 @@ static func height(x: float, z: float) -> float:
 		h = lerpf(h, floor_y + det * 0.4, g)
 		var b := smoothstep(BASIN_R, BASIN_R * 0.62, Vector2(x, z).distance_to(BASIN))
 		h = lerpf(h, BASIN_FLOOR + det * 0.6, b)
+		h = DamPad.height(x, z, h)   # helling naar de kroon, trap en loopbrug van de dam (stap 3a)
 	return h
 
 

@@ -56,6 +56,7 @@ static func _blast(at: Vector3, r: float, dmg: float) -> void:
 	Barrel.catch_blast(at, r)
 	VijandHk.blast(at, r, dmg)
 	VijandM2Toren.blast(at, r, dmg)
+	Dam.blast_alle(at, r, dmg)
 	VijandBasis.blast(at, r, dmg)   # muur van de vijandelijke basis: stukken breken weg
 	if Game.builds:
 		Game.builds.blast(at, r, dmg, true)   # inclusief Woonhuis.blast_all: huizen en muren gaan stuk

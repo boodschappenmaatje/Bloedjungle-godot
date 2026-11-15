@@ -204,8 +204,12 @@ static func path_x(z: float) -> float:
 
 
 ## Houdt iets binnen de kaart: een rechthoek die in het noorden voorbij de rivier doorloopt.
-static func clamp_world(p: Vector2) -> Vector2:
-	return Vector2(clampf(p.x, -WORLD_X, WORLD_X), clampf(p.y, -WORLD_Z_N, WORLD_Z_S))
+## Buiten die rechthoek is alleen het bergpad en de kloof naar de dam begaanbaar (DamPad); `voet` = ook de helling en de kroon van de dam (alleen soldaten).
+static func clamp_world(p: Vector2, voet := false) -> Vector2:
+	var c := Vector2(clampf(p.x, -WORLD_X, WORLD_X), clampf(p.y, -WORLD_Z_N, WORLD_Z_S))
+	if c == p:
+		return p
+	return DamPad.clamp_walk(p, c, voet)
 
 
 ## Hoogte van het land (dambreuk-plan stap 1): 0 op de hele grondplaat waar gespeeld wordt, daarbuiten heuvels, bergen,

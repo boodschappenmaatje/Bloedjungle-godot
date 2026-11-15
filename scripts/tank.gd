@@ -280,6 +280,7 @@ func _shoot(at: Vector3) -> void:
 		Barrel.catch_blast(boom, 2.0)
 		VijandHk.blast(boom, SHELL_RADIUS, SHELL_DAMAGE * 3.0)  # tegen een gebouw driemaal zo hard als tegen een soldaat
 		VijandM2Toren.blast(boom, SHELL_RADIUS, SHELL_DAMAGE * 3.0)
+		Dam.blast_alle(boom, SHELL_RADIUS, SHELL_DAMAGE * 3.0)
 		Woonhuis.blast_all(boom, 1.8, 140.0)  # kleiner dan de straal tegen vijanden: alleen de muur waar hij op mikt
 		Garnizoen.blast(boom, SHELL_RADIUS, SHELL_DAMAGE, "vijand")   # een tankgranaat in een bezet gebouw (F2)
 		for e in Game.enemies.duplicate():

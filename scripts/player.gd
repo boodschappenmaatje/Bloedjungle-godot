@@ -158,7 +158,7 @@ func _physics_process(delta: float) -> void:
 	velocity = Vector3(mv.x, 0.0, mv.y) * Data.PLAYER_SPEED * spd_mul * (SPRINT_MUL if sprinting else 1.0) * STANCE_SPEED[stance]
 	move_and_slide()
 	var flat := Vector2(position.x, position.z)
-	var clamped := Data.clamp_world(flat)
+	var clamped := Data.clamp_world(flat, true)
 	if clamped != flat:
 		flat = clamped
 		position = Vector3(flat.x, position.y, flat.y)
@@ -356,7 +356,7 @@ func _dodge_step(delta: float) -> void:
 	velocity = Vector3(dodge_dir.x, 0.0, dodge_dir.y) * DODGE_SPEED * (1.0 - 0.5 * p)
 	move_and_slide()
 	var flat := Vector2(position.x, position.z)
-	var clamped := Data.clamp_world(flat)
+	var clamped := Data.clamp_world(flat, true)
 	if clamped != flat:
 		position = Vector3(clamped.x, position.y, clamped.y)
 	position.y = Data.ground_y(position.x, position.z)

@@ -9,10 +9,25 @@ extends Node3D
 const MODEL := "res://assets/dam.glb"
 const TEX := "res://assets/textures/dam/"
 
+const GATE_HP := 900.0         # levenspunten per sluisdeur (dambreuk stap 3a, keuze 4A: twee van de drie kapot)
+const GATE_MULT := 3.0         # zwaar spul doet zo veel keer zijn schade tegen een deur (zoals tegen een gebouw)
+const C4_DMG := 2400.0         # een springlading op een deur
+const C4_RADIUS := 7.0
+const C4_FUSE := 5.0           # s afteltijd na ontsteken
+const KRAAK_TIJD := 5.0        # s kraken voor de dam breekt (clip Kraken)
+
+static var current: Dam
+
 var model: Node3D
 var player: AnimationPlayer
 var intact: MeshInstance3D
 var _mats := {}
+var gate_hp: Array[float] = [GATE_HP, GATE_HP, GATE_HP]
+var gate_c4: Array[bool] = [false, false, false]    # er zit een lading op de deur
+var gate_dead: Array[bool] = [false, false, false]
+var breaching := false
+var broken := false
+var _fuse := -1.0
 
 
 static func build(parent: Node3D) -> Dam:
@@ -20,7 +35,168 @@ static func build(parent: Node3D) -> Dam:
 	d.name = "Dam"
 	d.position = Vector3(Bergland.gorge_x(Bergland.DAM_Z), Bergland.DAM_FLOOR, Bergland.DAM_Z)
 	parent.add_child(d)
+	current = d
 	return d
+
+
+func _exit_tree() -> void:
+	if current == self:
+		current = null
+
+
+# Game en Sfx zijn autoloads; zo blijft dit script ook zonder die autoloads te laden (tests en Bergland).
+static func _auto(n: String) -> Node:
+	var ml := Engine.get_main_loop() as SceneTree
+	return ml.root.get_node_or_null(n) if ml != null else null
+
+
+static func _sfx(name: String, vol := 1.0, pos = null) -> void:
+	var s := _auto("Sfx")
+	if s != null:
+		if pos == null:
+			s.call("play", name, vol)
+		else:
+			s.call("play", name, vol, pos)
+
+
+static func _banner(big: String, small: String, t: float) -> void:
+	var g := _auto("Game")
+	if g != null:
+		g.emit_signal("banner", big, small, t)
+
+
+## Zwaar spul (tankgranaat, raket, artillerie, luchtaanval): elke ontploffing in de buurt van de dam gaat hierheen.
+static func blast_alle(at: Vector3, radius: float, dmg: float) -> void:
+	if current != null and is_instance_valid(current):
+		current.blast(at, radius, dmg)
+
+
+## Schade aan de sluisdeuren: horizontaal gemeten tot het gebied van de deur (x +-4 m, van de loopbrug tot de voet van de achterkant), kogels doen niets.
+func blast(at: Vector3, radius: float, dmg: float, mult := GATE_MULT) -> void:
+	if breaching or broken:
+		return
+	for i in 3:
+		if gate_dead[i]:
+			continue
+		var g := DamPad.gate_pos(i)
+		var dx := maxf(absf(at.x - g.x) - 4.0, 0.0)
+		var dz := 0.0
+		if at.z > g.z + 11.5:
+			dz = at.z - (g.z + 11.5)
+		elif at.z < g.z - 2.0:
+			dz = (g.z - 2.0) - at.z
+		var d := sqrt(dx * dx + dz * dz)
+		if d >= radius:
+			continue
+		gate_hp[i] -= dmg * mult * (1.0 - d / radius)
+		if gate_hp[i] <= 0.0:
+			_gate_down(i)
+
+
+func gates_dead() -> int:
+	var n := 0
+	for b in gate_dead:
+		if b:
+			n += 1
+	return n
+
+
+func _gate_down(i: int) -> void:
+	gate_dead[i] = true
+	gate_hp[i] = 0.0
+	var p := DamPad.gate_pos(i)
+	(load("res://scripts/fx.gd") as GDScript).call("explosion", get_parent(), p, 1.8)
+	_sfx("rocket", 1.0, p)
+	var n := gates_dead()
+	if n >= 2:
+		_breach()
+	else:
+		_banner("SLUISDEUR KAPOT", "Nog %d deur(en) en de dam breekt" % (2 - n), 3.0)
+
+
+func _breach() -> void:
+	if breaching or broken:
+		return
+	breaching = true
+	_banner("DE DAM KRAAKT!", "Wegwezen: over 5 seconden breekt hij", 4.0)
+	_sfx("alarm", 1.0)
+	kraken()
+	await get_tree().create_timer(KRAAK_TIJD).timeout
+	if not is_inside_tree():
+		return
+	broken = true
+	breken()
+
+
+## C4: plakken op de deur bij jou in de buurt (binnen 5 m horizontaal). Geeft de index van de deur of -1.
+func nearest_gate(pos: Vector3) -> int:
+	var best := -1
+	var bd := 6.0
+	for i in 3:
+		if gate_dead[i]:
+			continue
+		var g := DamPad.gate_pos(i)
+		var d := Vector2(pos.x - g.x, pos.z - g.z).length()
+		if d < bd and pos.y > Bergland.DAM_FLOOR + 10.0:   # je moet op de kroon of de loopbrug staan
+			bd = d
+			best = i
+	return best
+
+
+func plant_c4(i: int) -> bool:
+	if i < 0 or gate_c4[i] or gate_dead[i]:
+		return false
+	gate_c4[i] = true
+	var p := DamPad.gate_pos(i) + Vector3(0.0, -3.0, -0.2)
+	var lamp := MeshInstance3D.new()
+	var bm := BoxMesh.new()
+	bm.size = Vector3(0.7, 0.35, 0.5)
+	lamp.mesh = bm
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(0.45, 0.42, 0.3)
+	m.emission_enabled = true
+	m.emission = Color(1.0, 0.1, 0.05)
+	m.emission_energy_multiplier = 2.0
+	lamp.material_override = m
+	lamp.name = "C4_%d" % i
+	get_parent().add_child(lamp)
+	lamp.global_position = p
+	lamp.add_to_group("dam_c4")
+	return true
+
+
+func c4_geplakt() -> int:
+	var n := 0
+	for i in 3:
+		if gate_c4[i] and not gate_dead[i]:
+			n += 1
+	return n
+
+
+## Ontsteekt alle ladingen na 5 s. Returns false als er niets zit.
+func ontsteek_c4() -> bool:
+	if c4_geplakt() == 0 or _fuse >= 0.0:
+		return false
+	_fuse = C4_FUSE
+	_banner("C4 ONTSTOKEN", "Over %d seconden gaat hij af" % roundi(C4_FUSE), 2.5)
+	return true
+
+
+func _process(delta: float) -> void:
+	if _fuse < 0.0:
+		return
+	var before := ceili(_fuse)
+	_fuse -= delta
+	if ceili(_fuse) != before and _fuse > 0.0:
+		_sfx("ping", 1.2)
+	if _fuse <= 0.0:
+		_fuse = -1.0
+		for i in 3:
+			if gate_c4[i] and not gate_dead[i]:
+				gate_c4[i] = false
+				blast(DamPad.gate_pos(i), C4_RADIUS, C4_DMG, 1.0)
+		for l in get_tree().get_nodes_in_group("dam_c4"):
+			l.queue_free()
 
 
 func _ready() -> void:
@@ -34,6 +210,22 @@ func _ready() -> void:
 	player = _find_player(model)
 	_merge_intact()
 	_set_pieces_visible(false)
+	_build_barriers()
+
+
+## Onzichtbare botsing: een borstwering tussen de kroon en de trap/loopbrug, zodat je alleen via de uiteinden van de trap omhoog loopt.
+func _build_barriers() -> void:
+	var body := StaticBody3D.new()
+	body.name = "Barriere"
+	body.collision_layer = Kit.LAYER_WALL
+	body.collision_mask = 0
+	var sh := CollisionShape3D.new()
+	var bx := BoxShape3D.new()
+	bx.size = Vector3(DamPad.STAIR_X1 * 2.0, 8.0, 0.4)
+	sh.shape = bx
+	sh.position = Vector3(0.0, DamPad.CROWN_Y + 4.0, -1.3)   # lokaal: dam staat op (gorge_x, DAM_FLOOR, DAM_Z)
+	body.add_child(sh)
+	add_child(body)
 
 
 ## Kleinste dam-eis voor tests: namen van de stukken die de breuk gebruikt.

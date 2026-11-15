@@ -85,7 +85,7 @@ func _process(_d: float) -> bool:
 		top = maxf(top, Data.ground_y(x, -620.0))
 	if top < 35.0:
 		_fail("noordelijke bergen te laag: %.1f" % top)
-	var gorge := Data.ground_y(Bergland.gorge_x(Bergland.DAM_Z), Bergland.DAM_Z)
+	var gorge := Data.ground_y(Bergland.gorge_x(Bergland.DAM_Z + 20.0), Bergland.DAM_Z + 20.0)   # voor de dam (de kroon zelf ligt 14 m hoger)
 	if absf(gorge - Bergland.DAM_FLOOR) > 1.5:
 		_fail("kloofbodem bij de dam op %.1f in plaats van %.1f" % [gorge, Bergland.DAM_FLOOR])
 	var wall := Data.ground_y(Bergland.gorge_x(Bergland.DAM_Z) + 70.0, Bergland.DAM_Z)

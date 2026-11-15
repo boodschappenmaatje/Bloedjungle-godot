@@ -152,6 +152,8 @@ static func build(parent: Node3D) -> void:
 	mi.extra_cull_margin = 4.0
 	root.add_child(mi)
 	_river_out(root)
+	Dam.build(root)
+	Stuwmeer.build(root)
 
 
 ## Raster over het hele gebied; cellen die helemaal op de grondplaat liggen worden overgeslagen (die tekent level.gd).

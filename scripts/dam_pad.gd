@@ -9,7 +9,8 @@ extends RefCounted
 ## loopbrug op 18,6 (+0,26) boven de bodem, sluisdeuren op x = -10, 0, 10 (bovenstrooms, y 1,5).
 
 const PAD_HW := 8.0            # halve breedte van het pad
-const GORGE_HW := 17.0         # halve breedte van de kloofbodem waar je mag lopen
+const STRIP_HW := 10.0         # halve breedte van de brede strook langs de noordrand (z -301 tot -281)
+const GORGE_HW := 18.0         # halve breedte van de kloofbodem waar je mag lopen
 const RAMP_HW := 3.2           # halve breedte van de helling naar de kroon
 const CROWN_Y := 14.0          # kroon boven de kloofbodem (DAM_FLOOR)
 const WALK_Y := 18.86          # loopbrug (boven DAM_FLOOR)
@@ -39,11 +40,12 @@ static func segments() -> Array:
 	var dx := dam_x()
 	var z0 := Bergland.DAM_Z
 	var gz := func(z: float) -> Vector2: return Vector2(Bergland.gorge_x(z), z)
-	# het pad: van de westkant van de kaart langs de noordrand tot de ingang van de kloof, dan de kloof in tot 17 m voor de voet van de dam
-	var pad := [Vector2(-168.0, -214.0), Vector2(-132.0, -262.0), Vector2(-108.0, -291.0), Vector2(-74.0, -294.0), gz.call(-297.0), gz.call(z0 + TOE_DZ + 17.0)]
+	# het pad: van de westflank langs de noordrand tot achter de vijandbasis, daar een brede strook (de hele noordrand tussen x -128 en x -36 is open),
+	# en de kloof in tot 17 m voor de voet van de dam. De kloof is vanaf de kaartrand (z -285) breed open: recht naar het noorden lopen werkt ook.
+	var pad := [Vector2(-168.0, -214.0), Vector2(-146.0, -250.0), Vector2(-128.0, -290.0), Vector2(-36.0, -291.0)]
 	for i in pad.size() - 1:
-		var kloof: bool = i >= pad.size() - 2
-		_segs.append({"a": pad[i], "b": pad[i + 1], "hw": GORGE_HW if kloof else PAD_HW, "voet": false})
+		_segs.append({"a": pad[i], "b": pad[i + 1], "hw": STRIP_HW if i == pad.size() - 2 else PAD_HW, "voet": false})
+	_segs.append({"a": gz.call(-284.0), "b": gz.call(z0 + TOE_DZ + 17.0), "hw": GORGE_HW, "voet": false})
 	# helling in de rotswand naar de kroon (alleen te voet), daarna de kroon zelf
 	for r in _ramp_pts().size() - 1:
 		_segs.append({"a": Vector2(dx + _ramp_pts()[r].x, z0 + _ramp_pts()[r].y), "b": Vector2(dx + _ramp_pts()[r + 1].x, z0 + _ramp_pts()[r + 1].y), "hw": RAMP_HW, "voet": true})
@@ -123,3 +125,51 @@ static func height(x: float, z: float, terrain: float) -> float:
 			y = fl + lerpf(CROWN_Y, WALK_Y, clampf((STAIR_X1 - absf(dx)) / (STAIR_X1 - STAIR_X0), 0.0, 1.0))
 		h = y
 	return h
+
+
+## Een zichtbare weg (aangestampte aarde) over het pad en de kloofbodem, zodat je ziet waar je langs moet, plus een bord bij het begin.
+static func build_road(parent: Node3D) -> void:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for s in segments():
+		if bool(s.voet):
+			continue
+		var a: Vector2 = s.a
+		var b: Vector2 = s.b
+		var hw: float = minf(float(s.hw) * 0.55, 6.0)
+		var d := (b - a).normalized()
+		var nrm := Vector2(-d.y, d.x)
+		var len := a.distance_to(b)
+		var n := maxi(int(len / 4.0), 1)
+		for i in n:
+			var p0 := a.lerp(b, float(i) / float(n))
+			var p1 := a.lerp(b, float(i + 1) / float(n))
+			var q := [p0 + nrm * hw, p0 - nrm * hw, p1 - nrm * hw, p1 + nrm * hw]
+			var v: Array[Vector3] = []
+			for c in q:
+				v.append(Vector3(c.x, Bergland.height(c.x, c.y) + 0.07, c.y))
+			for k in [0, 1, 2, 0, 2, 3]:
+				st.set_normal(Vector3.UP)
+				st.add_vertex(v[k])
+	var mi := MeshInstance3D.new()
+	mi.name = "DamWeg"
+	mi.mesh = st.commit()
+	var m := StandardMaterial3D.new()
+	m.albedo_color = Color(0.17, 0.14, 0.1)
+	m.roughness = 1.0
+	m.cull_mode = BaseMaterial3D.CULL_DISABLED
+	mi.material_override = m
+	mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	parent.add_child(mi)
+	var sign_ := Label3D.new()
+	sign_.name = "DamBord"
+	sign_.text = "DAM  >>>"
+	sign_.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	sign_.font_size = 96
+	sign_.pixel_size = 0.02
+	sign_.outline_size = 14
+	sign_.modulate = Color(1.0, 0.88, 0.45)
+	sign_.no_depth_test = true
+	var a0: Vector2 = segments()[0].a
+	sign_.position = Vector3(a0.x, Bergland.height(a0.x, a0.y) + 4.0, a0.y)
+	parent.add_child(sign_)

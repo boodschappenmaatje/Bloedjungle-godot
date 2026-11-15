@@ -13,7 +13,7 @@ const GRENZEN := [600, 2000, 4500, 8000, 13000]     # score voor ster 1 tot 5 (v
 const NAMEN := ["SOLDAAT", "SERGEANT", "LUITENANT", "KAPITEIN", "MAJOOR", "GENERAAL"]
 const MAX_NIVEAU := 3
 const GERICHT := ["artillerie", "napalm", "luchtaanval", "parachutisten"]   # krachten met een richthulp (stick of slepen); satelliet en reparatie gaan meteen
-const VOLGORDE := ["artillerie", "luchtaanval", "napalm", "satelliet", "reparatie", "parachutisten"]   # in het wiel (zes vakken van 60 graden, met de klok mee vanaf boven)
+const VOLGORDE := ["artillerie", "luchtaanval", "napalm", "satelliet", "reparatie", "parachutisten", "c4"]   # in het wiel (zeven vakken, met de klok mee vanaf boven)
 
 ## Per kracht: naam, afkoeling per niveau (s) en de waarde die per niveau groeit.
 const KRACHTEN := {
@@ -23,7 +23,9 @@ const KRACHTEN := {
 	"reparatie": {"naam": "REPARATIE", "cd": [60.0, 50.0, 40.0], "waarde": [0.4, 0.7, 1.0]},      # deel dat wordt geheeld
 	"luchtaanval": {"naam": "LUCHTAANVAL", "cd": [100.0, 85.0, 70.0], "waarde": [1, 1, 2]},       # P-47 toestellen (niveau 2: ook raketten; niveau 3: een tweede toestel)
 	"parachutisten": {"naam": "PARACHUTISTEN", "cd": [150.0, 130.0, 110.0], "waarde": [4, 6, 8], "kort": "PARA'S"}, # soldaten die springen (E2)
+	"c4": {"naam": "C4", "cd": [3.0, 3.0, 3.0], "waarde": [3, 3, 3], "max": 1},   # dambreuk 3a (keuze 5C): drie springladingen per spel, geen afkoeling om te vullen
 }
+const C4_LADINGEN := 3
 const REPARATIE_STRAAL := [20.0, 28.0, 36.0]   # m rond jou
 
 # De napalmstrook (het toestel, het vuur en de richthulp gebruiken deze maten).
@@ -102,7 +104,12 @@ static func echt_niveau(id: String) -> int:
 
 ## Niveau waarmee de kracht nu werkt (in de test altijd het hoogste).
 static func niveau(id: String) -> int:
-	return MAX_NIVEAU if (test() and KRACHTEN.has(id)) else echt_niveau(id)
+	return max_niveau(id) if (test() and KRACHTEN.has(id)) else echt_niveau(id)
+
+
+## Hoogste niveau van een kracht (C4 heeft er één).
+static func max_niveau(id: String) -> int:
+	return int(KRACHTEN[id].get("max", MAX_NIVEAU)) if KRACHTEN.has(id) else MAX_NIVEAU
 
 
 static func heeft(id: String) -> bool:
@@ -161,6 +168,8 @@ static func tekst(id: String, n: int) -> String:
 			return "P-47 over een strook van %d m, mitrailleurs en 2 bommen%s, %s" % [roundi(LUCHT_LENGTH), extra, cd]
 		"parachutisten":
 			return "%d parachutisten springen bij je doel, %s" % [int(w), cd]
+		"c4":
+			return "%d springladingen: plak ze op een sluisdeur van de dam, daarna ontsteken (5 s)" % C4_LADINGEN
 		_:
 			return "heelt %d%% in %d m, %s" % [roundi(float(w) * 100.0), roundi(float(REPARATIE_STRAAL[n - 1])), cd]
 
@@ -183,10 +192,12 @@ static func tick(delta: float) -> void:
 
 ## Geeft een punt uit: een nieuwe kracht of een niveau hoger. Returns false als dat niet kan (geen punt of al niveau 3).
 static func punt_uitgeven(id: String) -> bool:
-	if Game.rang_punten <= 0 or not KRACHTEN.has(id) or echt_niveau(id) >= MAX_NIVEAU:
+	if Game.rang_punten <= 0 or not KRACHTEN.has(id) or echt_niveau(id) >= max_niveau(id):
 		return false
 	var n := echt_niveau(id) + 1
 	Game.krachten[id] = n
+	if id == "c4":
+		Game.c4_ladingen = C4_LADINGEN
 	Game.rang_punten -= 1
 	if Game.kracht_sel == "" or not heeft(Game.kracht_sel):
 		Game.kracht_sel = id
@@ -219,6 +230,9 @@ static func gebruik(id: String, main: Node, at: Vector3, dir: Vector3) -> bool:
 			LuchtAanval.start_aanval(main, at, dir, n)
 		"parachutisten":
 			Parachutisten.start_drop(main, at, n)
+		"c4":
+			if not C4Dam.gebruik():
+				return false
 	start_cd(id)
 	Game.krachten_gebruikt[id] = int(Game.krachten_gebruikt.get(id, 0)) + 1
 	Game.changed.emit()
@@ -269,6 +283,11 @@ static func teken_icoon(ci: CanvasItem, id: String, c: Vector2, s: float, col: C
 			ci.draw_line(c + Vector2(-4, -12) * s, c + Vector2(0, 11) * s, col, 1.2 * s, true)
 			ci.draw_line(c + Vector2(4, -12) * s, c + Vector2(0, 11) * s, col, 1.2 * s, true)
 			ci.draw_circle(c + Vector2(0, 13) * s, 2.4 * s, col)
+		"c4":
+			ci.draw_rect(Rect2(c + Vector2(-11, -7) * s, Vector2(22, 17) * s), col, false, 2.4 * s)
+			ci.draw_line(c + Vector2(-7, -7) * s, c + Vector2(-7, -13) * s, col, 2.0 * s)
+			ci.draw_line(c + Vector2(-7, -13) * s, c + Vector2(2, -15) * s, col, 2.0 * s)
+			ci.draw_circle(c + Vector2(0, 2) * s, 3.2 * s, col)
 		"ster":
 			ci.draw_colored_polygon(ster_punten(c, 12.0 * s, 5.0 * s), col)
 

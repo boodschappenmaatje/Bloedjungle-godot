@@ -162,6 +162,9 @@ func plant_c4(i: int) -> bool:
 	get_parent().add_child(lamp)
 	lamp.global_position = p
 	lamp.add_to_group("dam_c4")
+	var g := _auto("Game")
+	if g != null:
+		g.call("alert", p, 45.0, 6.0)   # de wachters horen het plakken (keuze 6A: alarm)
 	return true
 
 
@@ -211,6 +214,7 @@ func _ready() -> void:
 	_merge_intact()
 	_set_pieces_visible(false)
 	_build_barriers()
+	call_deferred("_spawn_wachters")
 
 
 ## Onzichtbare botsing: een borstwering tussen de kroon en de trap/loopbrug, zodat je alleen via de uiteinden van de trap omhoog loopt.
@@ -226,6 +230,34 @@ func _build_barriers() -> void:
 	sh.position = Vector3(0.0, DamPad.CROWN_Y + 4.0, -1.3)   # lokaal: dam staat op (gorge_x, DAM_FLOOR, DAM_Z)
 	body.add_child(sh)
 	add_child(body)
+
+
+## De wachters (keuze 6A): zes soldaten op de kloofbodem voor de dam. Ze blijven op hun post en schieten binnen 16 m (zoals de verdedigers van de vijandbasis).
+## Twee MG-torens staan nog niet: de toren van de vijandbasis hangt aan de muren van die basis (komt later).
+const WACHT_PLEKKEN := [Vector2(-7.0, 18.0), Vector2(6.0, 17.0), Vector2(-3.0, 24.0), Vector2(9.0, 25.0), Vector2(-9.0, 30.0), Vector2(2.0, 31.0)]
+var wachters: Array = []
+
+
+func _spawn_wachters() -> void:
+	if not is_inside_tree() or get_tree().root.get_node_or_null("Game") == null:
+		return
+	var ps: PackedScene = load("res://scenes/vijand_verdediger.tscn")
+	if ps == null:
+		return
+	for pl in WACHT_PLEKKEN:
+		var wp := Vector3(global_position.x + pl.x, 0.0, Bergland.DAM_Z + pl.y)
+		wp.y = Bergland.height(wp.x, wp.z)
+		var sol = ps.instantiate()
+		sol.setup("assault", 1)
+		sol.post = "poort"
+		sol.max_hp = 90.0
+		sol.hp = 90.0
+		sol.home = wp
+		sol.name = "DamWachter"
+		sol.add_to_group("dam_wachter")
+		get_parent().add_child(sol)
+		sol.global_position = wp
+		wachters.append(sol)
 
 
 ## Kleinste dam-eis voor tests: namen van de stukken die de breuk gebruikt.

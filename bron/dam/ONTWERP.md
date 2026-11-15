@@ -34,3 +34,11 @@
 - Tekenbudget in het spel: de dam tekent als één samengevoegd net (6 oppervlakken) zonder schaduw; de 71 losse stukken zijn verborgen tot `kraken()`/`breken()`.
 - Geheugen: zes 4K-maps; geschat ongeveer 130 MB VRAM met ASTC en mipmaps op de iPhone. **NIET GETEST** op een echt toestel.
 - Acceptatie: `tests/dam_test.gd`, viewer-test `tools/blender-vq2-viewer/test-dam.mjs`, opnames `docs/dambreuk/captures/dam_*.jpg`, geen iPhone-meting geclaimd.
+
+## Versie 2: Dennis' Meshy-dam via de importstraat (15 november 2026)
+- Bron: Dennis' eigen Meshy-dam (2.403.118 driehoeken) en Meshy-sluisdeur (898.670), Google Drive, niet in de repo. Eerst door `tools/importstraat/straat.py` (dam 14 m hoog, 50.000 driehoeken, 4K gebakken; deur 8 m breed, 8.000 driehoeken, 2K), daarna `DAM_MESHY=<straat-uitvoer> python3 maak_dam.py uit/` met `meshy_dam.py`.
+- De Meshy-dam is ~31 x 15 m en heeft geen deuren. Zonder vervorming verbreed naar 60 m: het vlakke muurstuk naast het midden gespiegeld herhaald (naden als dilatatievoegen). In het midden boven 10 m uitgezaagd voor de pijlers, de drie Meshy-sluisdeuren, loopbrug en hijsmachines (procedureel gebleven). Onder de drempel 24 blokken met dichte zaagvlakken (`Blok_i_j`, pivot in hun midden).
+- Meshy-kroon is ~1,3 m dik: een kroondek van 6 m op betonconsoles (Flank_L/R) zodat het spel (kroon y -3..3) klopt. Pijlers staan op de muur in plaats van op de oude schuine achterkant. Scheuren en lekstralen liggen op het nieuwe achtervlak; in Breken verdwijnen de scheuren op het middenstuk met de blokken.
+- Zelfde knopen en clips (Kraken 5 s, Breken 6 s). 109.341 driehoeken (Meshy-muur 67.550, deuren 24.000). Materialen `DAM_Meshy` en `DAM_Sluis` (gebakken, `assets/textures/dam/meshy_*`), beton en staal blijven 4K Poly Haven.
+- Geheugen (schatting ASTC): Meshy-dam 3 x 4K ~67 MB + deur 3 x 2K ~17 MB bovenop de bestaande ~130 MB. iPhone **NIET GETEST**.
+- Oude dam: `assets/vq2_baseline/dam.glb` (viewer V1).

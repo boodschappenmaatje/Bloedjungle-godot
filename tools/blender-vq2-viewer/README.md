@@ -106,4 +106,4 @@ De viewer bevat vier invoeren uit `bron/voorraad/`: **Voorraaddepot** (`assets/v
 
 ## Betonnen dam (dambreuk stap 2)
 
-Kies **Betonnen dam** in de modellenlijst. De viewer laadt `assets/dam.glb` (54.066 driehoeken, 71 stukken) en hangt de 4K-foto-PBR van `assets/textures/dam/` aan `DAM_Beton` en `DAM_Staal`, net als `scripts/dam.gd` in Godot. De echte clips **Kraken** (5 s) en **Breken** (6 s) staan in de clipkeuze. `node test-dam.mjs` controleert beide clips en schrijft opnames naar `docs/dambreuk/captures/`. Geen iPhone-meting.
+Kies **Betonnen dam** in de modellenlijst. Sinds 15 november is dit Dennis' Meshy-dam via de importstraat (109.341 driehoeken, Meshy-materialen `DAM_Meshy`/`DAM_Sluis` met gebakken texturen); **V1** is de oude procedurele dam (`assets/vq2_baseline/dam.glb`, 54.066 driehoeken, 71 stukken). De viewer laadt `assets/dam.glb` en hangt de 4K-foto-PBR van `assets/textures/dam/` aan `DAM_Beton` en `DAM_Staal`, net als `scripts/dam.gd` in Godot. De echte clips **Kraken** (5 s) en **Breken** (6 s) staan in de clipkeuze. `node test-dam.mjs` controleert beide clips en schrijft opnames naar `docs/dambreuk/captures/`. Geen iPhone-meting.

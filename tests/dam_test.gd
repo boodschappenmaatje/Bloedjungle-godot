@@ -45,7 +45,7 @@ func _process(_d: float) -> bool:
 	print("dam driehoeken: ", tris)
 	if tris < 40000:
 		_fail("dam te grof: %d driehoeken (eis: minstens 40.000)" % tris)
-	if tris > 80000:
+	if tris > 120000:   # sinds de Meshy-dam (importstraat, 15 nov): muur ~68k + drie sluisdeuren 24k; Godot maakt LOD's
 		_fail("dam te zwaar: %d driehoeken" % tris)
 	for k in ["beton", "staal"]:
 		for t in ["albedo", "normal", "orm"]:

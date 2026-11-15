@@ -18,6 +18,12 @@ from mathutils import noise as mnoise
 
 OUT = os.path.abspath(sys.argv[sys.argv.index("--") + 1] if "--" in sys.argv else sys.argv[-1])
 TEX = os.environ.get("DAM_TEX", os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "assets", "textures", "dam")))
+# DAM_MESHY = map met de importstraat-uitvoer (dam/*.glb en sluisdeur/*.glb): dan komen Dennis' Meshy-dam en -sluisdeur in het
+# model (bron/dam/meshy_dam.py). De knopen, namen, maten en clips blijven precies hetzelfde.
+MESHY = os.environ.get("DAM_MESHY")
+if MESHY:
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import meshy_dam
 os.makedirs(OUT, exist_ok=True)
 bpy.ops.wm.read_factory_settings(use_empty=True)
 scene = bpy.context.scene
@@ -96,6 +102,10 @@ M = {
     "DAM_Glas": mat("DAM_Glas", (0.18, 0.26, 0.30), 0.1, 0.0, alpha=0.6),
     "DAM_Kraak": mat("DAM_Kraak", (0.05, 0.05, 0.05), 1.0),
 }
+if MESHY:   # gebakken Meshy-texturen (importstraat), geen vertexkleur nodig
+    MATS += ["DAM_Meshy", "DAM_Sluis"]
+    M["DAM_Meshy"] = mat("DAM_Meshy", (1.0, 1.0, 1.0), 0.9, tex="meshy_dam")
+    M["DAM_Sluis"] = mat("DAM_Sluis", (1.0, 1.0, 1.0), 0.6, tex="meshy_sluis")
 MI = {n: i for i, n in enumerate(MATS)}
 
 # ------------------------------------------------------------------ objecten
@@ -232,9 +242,17 @@ prism(fund, [(5.4, -2.6), (-15.2, -2.6), (-15.2, 0.0), (5.4, 0.0)], -44, 44, "DA
 for side, sx in (("L", -1), ("R", 1)):
     fl = Ob("Flank_" + side)
     xa, xb = sorted((sx * CEN, sx * HALF))
-    prism(fl, prof(0.0, H), xa, xb, "DAM_Beton", bevel=0.05, maxlen=0.8)
+    if not MESHY:
+        prism(fl, prof(0.0, H), xa, xb, "DAM_Beton", bevel=0.05, maxlen=0.8)
     xa2, xb2 = sorted((sx * HALF, sx * 44.0))
     prism(fl, [(y_up(0) + 0.3, 0.0), (y_dn(0) + 1.0, 0.0), (y_dn(H - 2) + 3, H + 0.9), (y_up(H) - 0.3, H + 0.9)], xa2, xb2, "DAM_Beton", maxlen=2.0)
+    if MESHY:
+        # Meshy-kroon is ~1,3 m dik: een betonnen kroondek (6 m breed, zoals het spel loopt) op consoles tegen de muur
+        box(fl, ((xa + xb) / 2, (-CW + 1.9) / 2, H - 0.25), ((xb - xa), 1.9 + CW, 0.5), "DAM_Beton", bevel=0.03, maxlen=0.8)
+        box(fl, ((xa + xb) / 2, -CW + 0.12, H + 0.25), ((xb - xa), 0.24, 0.5), "DAM_Beton", bevel=0.02, maxlen=0.8)
+        for k in range(int((xb - xa) / 2.4) + 1):
+            prism(fl, [(-CW + 0.3, H - 0.5), (1.6, H - 0.5), (1.6, H - 3.2)], xa + 0.3 + k * 2.4 - 0.2, xa + 0.3 + k * 2.4 + 0.2, "DAM_Beton", bevel=0.02)
+        continue
     # parapetten op de kroon (0,9 m), achterkant ook met leuning (apart)
     box(fl, ((xa + xb) / 2, CW - 0.25, H + 0.45), ((xb - xa), 0.5, 0.9), "DAM_Beton", bevel=0.03, maxlen=0.8)
     box(fl, ((xa + xb) / 2, -CW + 0.25, H + 0.45), ((xb - xa), 0.5, 0.9), "DAM_Beton", bevel=0.03, maxlen=0.8)
@@ -252,9 +270,9 @@ for side, sx in (("L", -1), ("R", 1)):
     cyl(fl, (gx + 0.5, y_dn(2.0) - 0.55, 1.5), 0.07, 0.1, "DAM_Staal", axis="Y")
 
 # slijtvloer (energiedempend bekken) met barrièreblokken en eindrichel
-sl = Ob("Slijtvloer")
 def apron_z(y):
     return -0.15 - 1.2 * max(0.0, (-y - 13.5) / 12.5)
+sl = Ob("Slijtvloer") if not MESHY else Ob("_slijtvloer_proc")   # Meshy-dam heeft een eigen slijtvloer
 pts = [(-13.0, apron_z(-13.0) - 1.4), (-27.0, apron_z(-27.0) - 1.4), (-27.0, apron_z(-27.0)), (-13.0, apron_z(-13.0))]
 prism(sl, pts, -22, 22, "DAM_Beton", bevel=0.06, maxlen=2.0)
 for i in range(-4, 5):
@@ -330,7 +348,7 @@ for k in range(5):                                                              
     box(wh, (hx - 2.0 + k * 1.0, hy - 2.1, H + 0.9 + 3.35), (0.08, 0.08, 0.3), "DAM_Staal")
 
 # stenen (damtenen, landhoofd aan de achterkant en de oevers van de slijtvloer)
-st = Ob("Stenen")
+st = Ob("Stenen") if not MESHY else Ob("_stenen_proc")   # Meshy-dam heeft eigen stortsteen
 for i in range(46):
     side = rnd.choice((-1, 1))
     if i < 18:
@@ -357,23 +375,34 @@ for j in range(3):
             zz = rnd.uniform(z0 + 0.4, z1 - 0.4); yy = rnd.uniform(y_dn(zz) + 0.6, y_up(zz) - 0.6)
             cyl(b, (x0 - 0.04, yy, zz), 0.014, 0.22, "DAM_Staal", axis="X", seg=5)
 
+MESHY_STATS = {}
+PY0 = -5.5   # achterkant van de pijlers (stroomafwaarts)
+if MESHY:
+    Ob("Slijtvloer")   # krijgt de slijtvloer van de Meshy-dam (meshy_dam.build)
+    WALL_BVH, MESHY_STATS = meshy_dam.build(OBJ, MI, block_c, MESHY)
+    hits = [WALL_BVH.ray_cast(Vector((x, -60.0, SILL - 0.3)), Vector((0, 1, 0)), 120.0)[0] for x in (-15.0, -5.0, 5.0, 15.0)]
+    PY0 = min(h.y for h in hits if h is not None) - 0.15   # de pijlers staan op de Meshy-muur, niet erover heen
+for _n in ("_slijtvloer_proc", "_stenen_proc"):
+    if _n in OBJ:
+        OBJ.pop(_n).bm.free()
+
 # pijlers boven de drempel
 PX = (-15.0, -5.0, 5.0, 15.0)
 pier_c = {}
 for k, px in enumerate(PX):
     po = Ob(f"Pijler_{k + 1}", (px, 0.0, SILL))
     pier_c[k] = Vector((px, 0, SILL))
-    box(po, (px, -1.1, SILL + 4.3), (2.0, 8.8, 8.6), "DAM_Beton", bevel=0.07, maxlen=0.9)
+    box(po, (px, (PY0 + 3.3) / 2, SILL + 4.3), (2.0, 3.3 - PY0, 8.6), "DAM_Beton", bevel=0.07, maxlen=0.9)
     cyl(po, (px, 3.3, SILL + 4.3), 1.0, 8.6, "DAM_Beton", seg=16, smooth=True)
     for sg in (-1, 1):   # sleuvegeleiders (stalen U-profielen) en bouten
         box(po, (px + sg * 1.02, 1.9, SILL + 3.4), (0.08, 0.5, 6.8), "DAM_Staal", bevel=0.01)
         for z in range(0, 14):
             cyl(po, (px + sg * 1.08, 1.9, SILL + 0.4 + 0.5 * z), 0.03, 0.06, "DAM_Staal", axis="X", seg=6)
     for z in range(0, 16):  # ladder op de achterkant
-        box(po, (px, -5.55, SILL + 0.5 + z * 0.5), (0.7, 0.04, 0.04), "DAM_Staal")
+        box(po, (px, PY0 - 0.05, SILL + 0.5 + z * 0.5), (0.7, 0.04, 0.04), "DAM_Staal")
     for sg in (-1, 1):
-        box(po, (px + sg * 0.35, -5.55, SILL + 4.3), (0.04, 0.04, 8.6), "DAM_Staal")
-    box(po, (px, 0.0, SILL + 8.9), (2.3, 9.2, 0.35), "DAM_Beton", bevel=0.05, maxlen=1.0)   # kop onder de loopbrug
+        box(po, (px + sg * 0.35, PY0 - 0.05, SILL + 4.3), (0.04, 0.04, 8.6), "DAM_Staal")
+    box(po, (px, (PY0 + 3.3) / 2 + 1.1, SILL + 8.9), (2.3, 3.7 - PY0, 0.35), "DAM_Beton", bevel=0.05, maxlen=1.0)   # kop onder de loopbrug
 
 # poorten (stalen schuiven) met ribben, bouten, hijsogen en kabels
 GX = (-10.0, 0.0, 10.0)
@@ -381,6 +410,11 @@ gate_c = {}
 for k, gx in enumerate(GX):
     go = Ob(f"Poort_{k + 1}", (gx, 1.5, SILL + 3.2))
     gate_c[k] = Vector((gx, 1.5, SILL + 3.2))
+    if MESHY:   # Dennis' Meshy-sluisdeur (8 m breed, ribben stroomafwaarts zoals de oude), plus de kabels naar de hijsmachine
+        meshy_dam.append(go.bm, meshy_dam.gate_mesh(MESHY, MI), Matrix.Translation(Vector((gx, 1.5, SILL)) - go.pivot))
+        for sg in (-1, 1):
+            cyl(go, (gx + sg * 2.0, 1.5, SILL + 8.1), 0.035, 3.0, "DAM_Staal", seg=6)
+        continue
     box(go, (gx, 1.75, SILL + 3.2), (8.0, 0.14, 6.4), "DAM_Staal", bevel=0.015, maxlen=0.9)  # huid
     for i in range(6):   # horizontale liggers aan de achterkant
         zz = SILL + 0.5 + i * 1.1
@@ -498,6 +532,21 @@ for k, (cx, cz, ln) in enumerate(cracks_spec[:11]):
     bmesh.ops.recalc_face_normals(o.bm, faces=list(o.bm.faces))
     leaks.append((o, top, rnd.uniform(0.5, 2.2)))
 
+if MESHY:   # scheuren en lekstralen op het Meshy-achtervlak leggen (dat ligt veel steiler dan het oude)
+    hit = meshy_dam.snap_to_wall(None, WALL_BVH)
+    for o, _, _ in cracks:
+        p0 = hit(o.pivot)
+        if p0 is None:
+            continue
+        for v in o.bm.verts:
+            q = hit(v.co + o.pivot)
+            v.co = (q if q is not None else v.co + p0) - p0
+        o.pivot = p0
+    for o, _, _ in leaks:
+        p0 = hit(o.pivot)
+        if p0 is not None:
+            o.pivot = p0
+
 # ------------------------------------------------------------------ UV's, vertexkleur, meshes maken
 TILE = {"DAM_Beton": 3.0, "DAM_Staal": 2.0, "DAM_Steen": 2.5, "DAM_Kraak": 2.0, "DAM_Water": 2.0, "DAM_Lamp": 2.0, "DAM_Glas": 2.0}
 
@@ -520,9 +569,11 @@ for name, o in OBJ.items():
     if not bm.faces:
         continue
     bm.normal_update()
-    uvl = bm.loops.layers.uv.new("UVMap")
+    uvl = bm.loops.layers.uv.get("UVMap") or bm.loops.layers.uv.new("UVMap")
     for f in bm.faces:
         mn = MATS[f.material_index]
+        if mn in ("DAM_Meshy", "DAM_Sluis"):   # gebakken Meshy-UV's blijven
+            continue
         for l in f.loops:
             wp = l.vert.co + o.pivot
             l[uvl].uv = uv_for(wp, f.normal, mn)
@@ -587,14 +638,19 @@ for ob in meshes.values():
     mw = ob.matrix_world
     ca = me.color_attributes.new("Col", "FLOAT_COLOR", "CORNER")
     nrm_mat = mw.to_3x3()
+    # normalen en punten eerst ophalen: elke kleurtoewijzing markeert het net als gewijzigd, en dan zou elke .normal-vraag alles opnieuw rekenen
+    vco = [v.co.copy() for v in me.vertices]
+    vno = [v.normal.copy() for v in me.vertices]
+    pno = [p_.normal.copy() for p_ in me.polygons]
+    lvi = [l.vertex_index for l in me.loops]
     for poly in me.polygons:
         mname = MATS[poly.material_index] if poly.material_index < len(MATS) else "DAM_Beton"
         for li in poly.loop_indices:
-            vi = me.loops[li].vertex_index
-            p = mw @ me.vertices[vi].co
-            n = (nrm_mat @ (me.vertices[vi].normal if poly.use_smooth else poly.normal)).normalized()
+            vi = lvi[li]
+            p = mw @ vco[vi]
+            n = (nrm_mat @ (vno[vi] if poly.use_smooth else pno[poly.index])).normalized()
             key = (round(p.x, 2), round(p.y, 2), round(p.z, 2), round(n.x, 1), round(n.y, 1), round(n.z, 1))
-            if mname in ("DAM_Water", "DAM_Lamp", "DAM_Glas", "DAM_Kraak"):
+            if mname in ("DAM_Water", "DAM_Lamp", "DAM_Glas", "DAM_Kraak", "DAM_Meshy", "DAM_Sluis"):
                 ca.data[li].color = (1, 1, 1, 1)
                 continue
             if key not in ao_cache:
@@ -736,7 +792,10 @@ FALL["Loopbrug"] = dict(d0=1.4, dur=2.6, dy=-6.0, dx=0.0, rest_z=-18.0, rot=(-0.
 
 
 def breken(nm, t):
-    if nm.startswith("Kraak_"):
+    if nm.startswith("Kraak_"):   # scheuren op het middenstuk verdwijnen met de blokken; die op de flanken blijven
+        if abs(REST[nm][0].x) < CEN:
+            u = 1.0 - ease((t - 0.5) / 0.5)
+            return (0, 0, 0), (0, 0, 0), (max(u, 0.001), max(u, 0.001), max(u, 0.001))
         return (0, 0, 0), (0, 0, 0), (1, 1, 1)
     if nm.startswith("Lek_"):
         u = 1.0 - ease(t / 0.8)
@@ -768,7 +827,7 @@ scene.frame_start, scene.frame_end = 0, 180
 
 # ------------------------------------------------------------------ opslaan en exporteren
 bpy.ops.wm.save_as_mainfile(filepath=os.path.join(OUT, "dam.blend"))
-stats = {"triangles": 0, "objects": len(meshes), "per_material": {}}
+stats = {"triangles": 0, "objects": len(meshes), "per_material": {}, **MESHY_STATS}
 for ob in meshes.values():
     ob.data.calc_loop_triangles()
     stats["triangles"] += len(ob.data.loop_triangles)

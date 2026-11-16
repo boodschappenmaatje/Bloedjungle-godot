@@ -1,0 +1,15 @@
+; Isolated Godot 4 VFX reference project. Does not change the production project.
+config_version=5
+
+[application]
+config/name="Bloedjungle VFX Reference Lab 1.0"
+run/main_scene="res://scenes/lab.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[display]
+window/size/viewport_width=1280
+window/size/viewport_height=720
+
+[rendering]
+renderer/rendering_method="mobile"
+renderer/rendering_method.mobile="gl_compatibility"

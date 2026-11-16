@@ -58,8 +58,15 @@ const LOOKS := {
 	"vijand:rocket": ["Lijf_Vijand", "Pet", "Raketzak", "Laarzen_V"],
 	"vijand:heavy": ["Lijf_Vijand", "Staalhelm", "Patroongordels", "Laarzen_V"],
 }
-const LOOPS := ["stil", "lopen", "rennen", "achteruit", "schieten", "klimmen", "zitten", "sprinten"]  # herladen en rollen spelen één keer
-const LOCOMOTION := ["lopen", "rennen", "achteruit"]
+const LOOPS := ["stil", "lopen", "rennen", "achteruit", "schieten", "klimmen", "zitten", "sprinten", "zij_links", "zij_rechts", "terug"]  # herladen en rollen spelen één keer
+const LOCOMOTION := ["lopen", "rennen", "achteruit", "zij_links", "zij_rechts", "terug"]
+## NVIDIA MotionBricks-bewegingen (bron/soldaat_vq2/nvidia): opzij lopen, achteruit, draaien op de plek en afremmen.
+## Gewone clips op het VQ2-skelet, dus geen rekenwerk in het spel. Instelling "nv_anim" = "off" geeft de oude beweging.
+const NV_PAD := "res://assets/nv_bewegingen.glb"
+const NV_CLIPS := ["zij_links", "zij_rechts", "terug", "draai_links", "draai_rechts", "stoppen"]
+const NV_SPEED := {"zij_links": 2.85, "zij_rechts": 2.85, "terug": 2.33}   # m/s bij speed_scale 1
+const NV_ONCE := ["draai_links", "draai_rechts", "stoppen"]   # spelen één keer uit, daarna weer stil
+const NV_TURN_RATE := 2.2   # rad/s: sneller draaien terwijl hij stilstaat = stapjes zetten (draai_links/draai_rechts)
 const CLIMB_PAD := "res://assets/klimmen.glb"  # klim-animatie uit bron/klimmen
 const SIT_PAD := "res://assets/zitten.glb"  # zitten in de vrachtwagen, uit bron/zitten
 const ACTIONS_PAD := "res://assets/acties.glb"  # rollen, sprinten en een nieuwe herlaadbeweging, uit bron/acties
@@ -200,6 +207,14 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 		lib.get_animation("explosie_dood").loop_mode = Animation.LOOP_NONE
 		lib.get_animation("brand_rennen").loop_mode = Animation.LOOP_LINEAR   # in brand door napalm: wild rennen, daarna brand_val
 		lib.get_animation("brand_val").loop_mode = Animation.LOOP_NONE
+	if v2 and GameSettings.get_value("nv_anim") != "off":
+		var nv_scene := _laad_scene(NV_PAD)
+		if nv_scene != null and not lib.has_animation("zij_links"):
+			var nvp: AnimationPlayer = nv_scene.instantiate().find_child("AnimationPlayer", true, false)
+			for n in NV_CLIPS:
+				if nvp != null and nvp.has_animation(n):
+					lib.add_animation(n, nvp.get_animation(n))
+					lib.get_animation(n).loop_mode = Animation.LOOP_NONE
 	for n in LOOPS:
 		if anim.has_animation(n):
 			anim.get_animation(n).loop_mode = Animation.LOOP_LINEAR
@@ -207,6 +222,7 @@ func setup(uniform: Color, gun_kind := "rifle", look_ := "eigen") -> void:
 		_model = model
 		_setup_v2(uniform)
 		_attach_gun(model, gun_kind)
+		nv = anim.has_animation("zij_links") and GameSettings.get_value("nv_anim") != "off"
 		_setup_upper_body_animation()
 		_setup_pose()
 		play("stil")
@@ -237,7 +253,7 @@ const LICHT_LAAG := 1 << 10   # renderlaag 11: alleen het invullicht van Graphic
 var _parts := {}   # naam -> MeshInstance3D (VQ2)
 var pose: SoldierPose   # benen los van de romp draaien, treffers per richting en wapen vasthouden (alleen VQ2)
 var _palm_r := Vector3.ZERO   # midden van de rechterhandpalm in de ruimte van DEF-handR
-const HOLD_CLIPS := ["stil", "lopen", "rennen", "schieten", "geraakt"]   # hierin houdt hij het wapen met beide handen vast
+const HOLD_CLIPS := ["stil", "lopen", "rennen", "schieten", "geraakt", "zij_links", "zij_rechts", "terug", "draai_links", "draai_rechts", "stoppen"]   # hierin houdt hij het wapen met beide handen vast
 
 
 ## Graphics 2.0: soldaten staan ook op een eigen lichtlaag, zodat Atmosphere ze in het tegenlicht apart kan aanlichten.
@@ -1068,6 +1084,12 @@ func play(clip: String, blend := 0.18, speed := 1.0) -> void:
 	if meshy_player:
 		_play_meshy_clip(clip, blend, speed)
 		return
+	if nv and clip in ["stil", "schieten"]:
+		if current in NV_ONCE and anim.is_playing():
+			return   # draaien of afremmen eerst afmaken
+		if clip == "stil" and current in ["lopen", "rennen"]:
+			clip = "stoppen"   # niet abrupt stilstaan: een paar remstappen
+			speed = 1.25 if current == "rennen" else 1.0
 	if current == clip or not anim.has_animation(clip):
 		if current == clip:
 			anim.speed_scale = speed
@@ -1162,6 +1184,43 @@ func _stow_meshy_weapon() -> void:
 
 
 ## Lengte van een animatie in seconden (0 als hij niet bestaat); handig om een clip precies op een duur te laten passen.
+## NVIDIA-bewegingen beschikbaar op dit mannetje (VQ2 en instelling aan).
+var nv := false
+var _nv_yaw := 0.0
+var _nv_yaw_set := false
+
+
+## Zijwaarts of achteruit lopen met de NVIDIA-clips. rel = looprichting t.o.v. het gezicht (radialen, + = naar links
+## van het mannetje, zelfde teken als player._animate). Geeft false als het niet kan (dan de oude manier).
+func play_nv_move(rel: float, spd: float) -> bool:
+	if not nv:
+		return false
+	var a := absf(rel)
+	if a > 1.83:
+		play("terug", 0.2, spd / NV_SPEED["terug"])
+		set_leg_yaw(rel - signf(rel) * PI)
+		return true
+	if a > 0.95:
+		var clip := "zij_links" if rel > 0.0 else "zij_rechts"
+		play(clip, 0.2, spd / NV_SPEED[clip])
+		set_leg_yaw(rel - signf(rel) * PI * 0.5)
+		return true
+	return false
+
+
+## Draaien op de plek: zet stapjes als de romp snel draait terwijl hij stilstaat (alleen NVIDIA-clips).
+func _nv_turn(delta: float) -> void:
+	var y := global_rotation.y
+	if not _nv_yaw_set:
+		_nv_yaw = y
+		_nv_yaw_set = true
+		return
+	var rate := angle_difference(_nv_yaw, y) / maxf(delta, 0.001)
+	_nv_yaw = y
+	if current in ["stil", "schieten"] and absf(rate) > NV_TURN_RATE:
+		play("draai_links" if rate > 0.0 else "draai_rechts", 0.12, clampf(absf(rate) / 1.6, 1.0, 2.2))
+
+
 func clip_length(clip: String) -> float:
 	return anim.get_animation(clip).length if anim != null and anim.has_animation(clip) else 0.0
 
@@ -1173,6 +1232,8 @@ func flash(color := Color(0.9, 0.1, 0.05)) -> void:
 
 
 func _process(delta: float) -> void:
+	if nv:
+		_nv_turn(delta)
 	if pose != null:
 		pose.recoil = _recoil
 	if _recoil > 0.0:

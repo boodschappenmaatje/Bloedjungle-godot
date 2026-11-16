@@ -1,4 +1,4 @@
-// Controle van de soldaat in de VQ2-viewer: V1 en VQ2 laden, alle 17 echte clips (ook klimmen, zitten en acties) bewegen
+// Controle van de soldaat in de VQ2-viewer: V1 en VQ2 laden, alle 23 echte clips (ook klimmen, zitten, acties en de NVIDIA-bewegingen) bewegen
 // het skelet, elke rol toont precies zijn lichaam en uitrusting, naast-elkaar-weergave, gamecamera en 360°.
 import {chromium} from 'playwright-core';
 import http from 'node:http';
@@ -24,7 +24,7 @@ try{
  await page.selectOption('#asset','soldaat');
  await page.waitForFunction(()=>window.__VQ2_TEST__.ready()&&window.__VQ2_TEST__.loaded().asset==='soldaat',null,{timeout:60000});await page.waitForTimeout(300);
  const clips=await page.evaluate(()=>window.__VQ2_TEST__.clips());
- for(const c of ['stil','lopen','rennen','achteruit','schieten','geraakt','dood1','dood2','steken','herladen','klimmen','zitten','rollen','sprinten','explosie_dood','brand_rennen','brand_val'])assert(clips.includes(c),'clip ontbreekt: '+c);
+ for(const c of ['stil','lopen','rennen','achteruit','schieten','geraakt','dood1','dood2','steken','herladen','klimmen','zitten','rollen','sprinten','explosie_dood','brand_rennen','brand_val','zij_links','zij_rechts','terug','draai_links','draai_rechts','stoppen'])assert(clips.includes(c),'clip ontbreekt: '+c);
  const B=()=>page.evaluate(()=>[window.__VQ2_TEST__.bone('DEF-thighL'),window.__VQ2_TEST__.bone('DEF-upper_armR'),window.__VQ2_TEST__.bone('DEF-spine002')]);
  const ang=(a,b)=>Math.max(...a.map((q,i)=>Math.acos(Math.min(1,Math.abs(q.reduce((s,v,k)=>s+v*b[i][k],0))))*2));
  await page.selectOption('#clips','stil');await scrub(page,0);const ref=await B();

@@ -837,6 +837,8 @@ func _animate(mv: Vector2, moving: float) -> void:
 		var back := _back
 		var spd := moving * Data.PLAYER_SPEED * run_mul
 		var leg := rel - signf(rel) * PI if back else rel
+		if not sprinting and spd <= 4.0 and model.play_nv_move(rel, spd):
+			return   # NVIDIA-clips: echt opzij of achteruit stappen (zet zelf de beendraaiing)
 		if back and model.v2:
 			model.play("lopen", 0.2, -spd / 2.4)   # VQ2: de loopcyclus achterstevoren, wapen blijft in de aanslag
 		elif back:

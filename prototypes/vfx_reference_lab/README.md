@@ -5,6 +5,9 @@ Standalone Godot 4 project. **This is an executable procedural reference prototy
 ## Open
 Open **this folder**, not the production root, as a project in Godot 4.7.x and press F6/F5 to run `scenes/lab.tscn`. Controls: **1** wood, **2** concrete, **3** metal, **Space** fire, **A** toggle automatic fire. The camera and three targets are created at runtime.
 
+## Smoke test
+Run `godot --headless --path prototypes/vfx_reference_lab --script res://tests/lab_smoke_test.gd` from the repository root. This checks scene loading, camera presence, three impact material choices and the 64-transient / 24-mark pool limits. Test has been authored but **has not yet run** because Godot is unavailable in this environment.
+
 ## Demonstrates
 - Two-layer muzzle flash (warm outer halo and white-hot inner flash).
 - Two-layer narrow amber tracer; no ballistic or damage logic.
@@ -33,6 +36,6 @@ This preview **does not implement** actual raycast detection, smoke flipbooks, d
 Review the in-editor prototype first. Compare under identical camera/lighting conditions against existing Colt, Thompson, and Browning M2 VFX. Keep a single source of truth for damage and collision, hook effects to existing shot/impact events, preserve flash/tracer/impact pooling limits and old-mark eviction, and use an explicit opt-in A/B switch. Run Godot 4.7.2 import and tests, capture real before/after game-camera images and inspect drawcalls/overdraw. Test 60 FPS in the **native** iPhone app only after separate OTA approval.
 
 ## Validation status
-- GitHub source structure inspected; independent main project created.
+- GitHub source structure inspected; independent project and headless smoke test created.
 - **NOT RUN**: Godot executable unavailable in authoring environment, so scene parser/runtime, renderer, shader, FPS, screenshots and iPhone validation are unverified.
 - **NOT DONE**: merger, OTA upload, modifications to `scripts/fx.gd`, `scripts/bullet.gd` or any gameplay settings.

@@ -58,9 +58,9 @@ func _process(delta: float) -> void:
 func _setup_world() -> void:
 	var camera := Camera3D.new()
 	camera.position = Vector3(0, 12.5, 15.0)
+	add_child(camera)
 	camera.look_at(Vector3(0, 0.7, 0), Vector3.UP)
 	camera.current = true
-	add_child(camera)
 	var world := WorldEnvironment.new()
 	world.environment = Environment.new()
 	world.environment.background_mode = Environment.BG_COLOR

@@ -153,11 +153,13 @@ static func stukken_nodig(m: Dictionary, actief: Dictionary, keten: Dictionary) 
 
 
 ## Hoeveel van de zware stukken die we al hebben kloppen (zelfde volgorde en SHA-256 als in het manifest)?
+## Alleen het kloppende begin blijft; wijkt een stuk af (bijv. het laatste na een dubbele OTA-run), dan vervangen we dat stuk en wat erna komt,
+## niet de hele keten.
 static func behouden(zwaar: Array, heb: Array) -> int:
 	var n := 0
 	while n < heb.size() and n < zwaar.size() and str(heb[n].get("sha256", "")) == str((zwaar[n] as Dictionary).get("sha256", "x")):
 		n += 1
-	return n if n == heb.size() else 0
+	return n
 
 
 func _lees(naam: String) -> Dictionary:

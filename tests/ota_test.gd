@@ -221,6 +221,12 @@ func _run() -> void:
 	_check(Panel.stukken_nodig(m3d, {"sha256": lt.pck.sha256}, {"basis": "BASIS1", "stukken": [{"sha256": z1.pck.sha256}, {"sha256": z2.pck.sha256}]}).is_empty(), "alles binnen: niets meer nodig")
 	_check(Panel.stukken_nodig(m3d, {"sha256": lt.pck.sha256}, {"basis": "ANDERS", "stukken": [{"sha256": z1.pck.sha256}]}).size() == 2, "een keten van een andere basis telt niet mee")
 	_check(Panel.stukken_nodig({"versie": "x", "pck": lt.pck}, {}, {}).is_empty(), "een manifest zonder licht/zwaar valt terug op de gewone route")
+	# afwijkend laatste stuk (bijv. dubbele OTA-run voor dezelfde commit): alleen dat stuk en wat erna komt opnieuw, niet de hele keten
+	var afwijkend := {"basis": "BASIS1", "stukken": [{"sha256": z1.pck.sha256}, {"sha256": "ANDERE-SHA"}]}
+	_check(Panel.behouden(m3d.zwaar, afwijkend.stukken) == 1, "afwijkend laatste stuk: het kloppende begin hoort te blijven")
+	var nodig_a: Array = Panel.stukken_nodig(m3d, {"sha256": lt.pck.sha256}, afwijkend)
+	_check(nodig_a.size() == 1 and str(nodig_a[0].naam) == "zwaar-2.pck", "afwijkend laatste stuk: alleen zwaar stuk 2 opnieuw, kreeg %d stukken" % nodig_a.size())
+	_check(Panel.behouden(m3d.zwaar, [{"sha256": "ANDERE-SHA"}, {"sha256": z2.pck.sha256}]) == 0, "afwijkend eerste stuk: alles opnieuw")
 	var Keten: Script = load("res://scripts/ota_keten.gd")
 	DirAccess.make_dir_recursive_absolute(DIR + "/keten")
 	var lijst_d: Array = []

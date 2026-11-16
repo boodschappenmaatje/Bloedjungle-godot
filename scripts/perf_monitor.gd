@@ -161,11 +161,24 @@ func _refresh_text() -> void:
 	t += "GPU %s · render-CPU %.1f · proces %.1f · fysica %.1f ms\n" % ["%.1f" % gpu if gpu > 0.0 else "n.b.", cpu, Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0, Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0]
 	t += "draw calls %d · objecten %d · driehoeken %dk · videogeh. %d MB\n" % [Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_OBJECTS_IN_FRAME), Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME) / 1000, Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0]
 	t += "vijanden %d · kogels %d · vaten %d · nodes %d · %s" % [Game.enemies.size(), bullets_live, Game.barrels.size(), Performance.get_monitor(Performance.OBJECT_NODE_COUNT), Game.state]
+	t += "\n" + _speler_anim_tekst()
 	_text.text = t
 	var lines := PackedStringArray()
 	for s in spikes:
 		lines.append("%.0f ms · %s · %d vijanden%s" % [s.ms, s.state, s.enemies, (" · na: %s (%.1f s)" % [s.after, s.ago]) if s.after != "" else ""])
 	_spike_text.text = ("rapport: %s\n" % saved_to if saved_to != "" else "") + "PIEKEN (>33 ms):\n" + ("\n".join(lines) if not lines.is_empty() else "geen")
+
+
+## Animatiestand van de speler (voor filmpjes bij een vastgelopen beweging): clip, wat de AnimationPlayer echt speelt, snelheid, tijdschaal, stick en houding.
+func _speler_anim_tekst() -> String:
+	var p: Variant = Game.get("player")
+	if p == null or not is_instance_valid(p) or p.get("model") == null:
+		return "speler: –"
+	var m: SoldierModel = p.model
+	var a: AnimationPlayer = m.anim
+	if a == null:
+		return "speler: geen animatie"
+	return "speler: %s [%s %s %.2f×] pos %.2f · stick %.2f · houding %d · tijd %.2f" % [m.current, a.current_animation, "speelt" if a.is_playing() else "STIL", a.speed_scale, a.current_animation_position, Game.move.length(), int(p.get("stance")), Engine.time_scale]
 
 
 func _draw() -> void:

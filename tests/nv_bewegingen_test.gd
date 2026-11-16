@@ -65,6 +65,21 @@ func _run() -> void:
 			await process_frame
 		m.play("stil")
 		_check(m.current == "stil", "na stoppen niet terug naar stil: %s" % m.current)
+		# rennen en dan loslaten: elke frame stil roepen zoals de speler, daarna moet hij echt stilstaan (geen blijvende looppas)
+		m.play("rennen", 0.0, 1.0)
+		for _i in 30:
+			await process_frame
+		for _i in 150:
+			m.play("stil")
+			await process_frame
+		_check(m.current == "stil" and m.anim.is_playing() and m.anim.current_animation == "stil", "%s: na rennen en loslaten niet in stil: %s" % [look, m.current])
+		# vastgelopen afremclip (stilstaande afspeelsnelheid) hoort zichzelf te herstellen
+		m.play("lopen", 0.0)
+		m.play("stil")
+		m.anim.speed_scale = 0.0
+		for _i in 5:
+			await process_frame
+		_check(m.current == "stil" and m.anim.speed_scale > 0.5, "%s: vastgelopen stoppen herstelt niet (%s, %.2f)" % [look, m.current, m.anim.speed_scale])
 		# snel draaien op de plek
 		for _i in 6:
 			m.rotation.y += 0.08

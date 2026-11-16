@@ -1085,7 +1085,7 @@ func play(clip: String, blend := 0.18, speed := 1.0) -> void:
 		_play_meshy_clip(clip, blend, speed)
 		return
 	if nv and clip in ["stil", "schieten"]:
-		if current in NV_ONCE and anim.is_playing():
+		if _nv_busy():
 			return   # draaien of afremmen eerst afmaken
 		if clip == "stil" and current in ["lopen", "rennen"]:
 			clip = "stoppen"   # niet abrupt stilstaan: een paar remstappen
@@ -1209,6 +1209,26 @@ func play_nv_move(rel: float, spd: float) -> bool:
 
 
 ## Draaien op de plek: zet stapjes als de romp snel draait terwijl hij stilstaat (alleen NVIDIA-clips).
+## Vangnet: een afrem- of draaiclip mag nooit blijven hangen. Is hij klaar (of staat hij bijna stil), dan terug naar stil.
+func _nv_bewaker() -> void:
+	if current in NV_ONCE and not _nv_busy():
+		anim.speed_scale = 1.0
+		current = "stil"
+		pose.leg_yaw = 0.0
+		pose.hold = true
+		anim.play("stil", 0.18)
+	elif current == "stil" and (anim.speed_scale < 0.2 or not anim.is_playing() or anim.current_animation != "stil"):
+		anim.speed_scale = 1.0
+		anim.play("stil", 0.18)
+
+
+func _nv_busy() -> bool:
+	if not current in NV_ONCE or not anim.is_playing() or anim.current_animation != current:
+		return false
+	var len_ := anim.get_animation(current).length
+	return anim.current_animation_position < len_ - 0.04 and anim.speed_scale > 0.2
+
+
 func _nv_turn(delta: float) -> void:
 	var y := global_rotation.y
 	if not _nv_yaw_set:
@@ -1234,6 +1254,7 @@ func flash(color := Color(0.9, 0.1, 0.05)) -> void:
 func _process(delta: float) -> void:
 	if nv:
 		_nv_turn(delta)
+		_nv_bewaker()
 	if pose != null:
 		pose.recoil = _recoil
 	if _recoil > 0.0:

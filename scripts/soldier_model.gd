@@ -36,7 +36,7 @@ const MESHY_STOW_BONE := "mixamorig_Spine2"
 const MESHY_STOW_OFFSET := Transform3D(Basis(Vector3.BACK, deg_to_rad(-32.0)) * Basis(Vector3.RIGHT, PI / 2.0), Vector3(0.04, -0.28, -0.2))
 ## Alleen in deze clips houdt de Meshy-speler het geweer vast (IK aan, wapen in de handen); in de andere (rollen, vallen,
 ## klimmen, zitten, mes) hangt het wapen op de rug.
-const MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten", "hurken_stil", "hurken_lopen", "hurken_achteruit", "liggen_stil", "kruipen"]
+const MESHY_HOLD := ["zij_links", "zij_rechts", "terug", "draai_links", "draai_rechts", "stoppen", "stil", "lopen", "rennen", "sprinten", "achteruit", "schieten", "hurken_stil", "hurken_lopen", "hurken_achteruit", "liggen_stil", "kruipen"]
 const ASSAULT_MESHY_HOLD := ["stil", "lopen", "rennen", "sprinten", "achteruit", "schieten", "Combat_Stance", "Rifle_Charge_inplace", "Run_and_Shoot", "Walk_Left_with_Gun", "Walk_Backward_with_Gun", "Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Left", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun", "hurken_stil", "hurken_lopen", "hurken_achteruit", "liggen_stil", "kruipen"]
 const ASSAULT_MESHY_LOOPS := ["Combat_Stance", "Run_and_Shoot", "Walk_Left_with_Gun", "Walk_Backward_with_Gun", "Cautious_Crouch_Walk_Forward", "Cautious_Crouch_Walk_Left", "Cautious_Crouch_Walk_Right_inplace", "Crouch_Walk_Left_with_Gun", "Rifle_Charge_inplace"]
 const MESHY_GARAND_PROFILE_PAD := "res://resources/weapon_profiles/garand_meshy.tres"   # verwijst naar zware bestanden: pas laden als het nodig is
@@ -63,6 +63,7 @@ const LOCOMOTION := ["lopen", "rennen", "achteruit", "zij_links", "zij_rechts", 
 ## NVIDIA MotionBricks-bewegingen (bron/soldaat_vq2/nvidia): opzij lopen, achteruit, draaien op de plek en afremmen.
 ## Gewone clips op het VQ2-skelet, dus geen rekenwerk in het spel. Instelling "nv_anim" = "off" geeft de oude beweging.
 const NV_PAD := "res://assets/nv_bewegingen.glb"
+const NV_MESHY_PAD := "res://assets/nv_bewegingen_meshy.glb"   # dezelfde clips op het Mixamo-skelet van de Meshy-speler (bron/soldaat_vq2/nvidia/meshy_clips.py)
 const NV_CLIPS := ["zij_links", "zij_rechts", "terug", "draai_links", "draai_rechts", "stoppen"]
 const NV_SPEED := {"zij_links": 2.85, "zij_rechts": 2.85, "terug": 2.33}   # m/s bij speed_scale 1
 const NV_ONCE := ["draai_links", "draai_rechts", "stoppen"]   # spelen één keer uit, daarna weer stil
@@ -321,6 +322,29 @@ func _setup_v2(uniform: Color) -> void:
 
 ## Meshy-player-only setup: keep the Mixamo skeleton and the shared gameplay-facing SoldierModel API.
 ## This path does not touch the 53-bone DEF model used by allies, enemies, or the fallback player.
+## NVIDIA-bewegingen voor de Meshy-speler: gewone clips op het Mixamo-skelet; de sporen wijzen naar het skelet van deze speler.
+func _add_meshy_nv_clips(lib: AnimationLibrary) -> void:
+	if GameSettings.get_value("nv_anim") == "off":
+		return
+	var nv_scene := _laad_scene(NV_MESHY_PAD)
+	if nv_scene == null:
+		return
+	var nvp: AnimationPlayer = nv_scene.instantiate().find_child("AnimationPlayer", true, false)
+	if nvp == null:
+		return
+	for n in NV_CLIPS:
+		if not nvp.has_animation(n):
+			return
+	for n in NV_CLIPS:
+		var a: Animation = nvp.get_animation(n).duplicate()
+		for t in a.get_track_count():
+			var bone := String(a.track_get_path(t)).get_slice(":", 1)
+			a.track_set_path(t, NodePath("target_character/Skeleton3D:" + bone))
+		a.loop_mode = Animation.LOOP_LINEAR if n in ["zij_links", "zij_rechts", "terug"] else Animation.LOOP_NONE
+		lib.add_animation(n, a)
+	nv = true
+
+
 func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 	var skels := _model.find_children("*", "Skeleton3D", true, false)
 	if skels.is_empty() or anim == null:
@@ -359,6 +383,8 @@ func _setup_meshy_player(uniform: Color, gun_kind: String) -> void:
 	_alias_meshy_clip(lib, "lopen", "Walking")
 	_alias_meshy_clip(lib, "rennen", "Running")
 	_alias_meshy_clip(lib, "sprinten", "RunFast")
+	if not assault_rig_test:
+		_add_meshy_nv_clips(lib)
 	for clip in ["lopen", "rennen", "sprinten"]:
 		lib.get_animation(clip).loop_mode = Animation.LOOP_LINEAR
 	if assault_rig_test:
@@ -1092,15 +1118,15 @@ const GUN_SCALE := {}
 
 ## Speelt een animatie met een zachte overgang; doet niets als hij al speelt.
 func play(clip: String, blend := 0.18, speed := 1.0) -> void:
-	if meshy_player:
-		_play_meshy_clip(clip, blend, speed)
-		return
 	if nv and clip in ["stil", "schieten"]:
 		if _nv_busy():
 			return   # draaien of afremmen eerst afmaken
 		if clip == "stil" and current in ["lopen", "rennen"]:
 			clip = "stoppen"   # niet abrupt stilstaan: een paar remstappen
 			speed = 1.25 if current == "rennen" else 1.0
+	if meshy_player:
+		_play_meshy_clip(clip, blend, speed)
+		return
 	if current == clip or not anim.has_animation(clip):
 		if current == clip:
 			anim.speed_scale = speed
@@ -1224,10 +1250,16 @@ func play_nv_move(rel: float, spd: float) -> bool:
 func _nv_bewaker() -> void:
 	if current in NV_ONCE and not _nv_busy():
 		anim.speed_scale = 1.0
+		if meshy_player:
+			current = ""
+			_play_meshy_clip("stil", 0.18, 1.0)
+			return
 		current = "stil"
 		pose.leg_yaw = 0.0
 		pose.hold = true
 		anim.play("stil", 0.18)
+	elif meshy_player:
+		return
 	elif current == "stil" and (anim.speed_scale < 0.2 or not anim.is_playing() or anim.current_animation != "stil"):
 		anim.speed_scale = 1.0
 		anim.play("stil", 0.18)

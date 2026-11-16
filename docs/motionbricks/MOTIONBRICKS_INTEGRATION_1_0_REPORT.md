@@ -101,7 +101,7 @@ correct is.
 | Native demo HTTP-flowtest | **PASS** — de test controleert echte modeloutput: 24+ frames, 34 gewrichten, roots/rotaties, stijlwissel en batchvorm |
 | CPU-planmeting | **PASS** — 3 plannen; 44 frames × 34 gewrichten; 149, 180 en 199 ms; 5.984 rotatiescalars per plan |
 | Officiële Chromium-flowtest | **FAIL** — herhaaldelijk timeout bij “non-interruptible Kimodo playback” na upload/selectie; browserstatus bleef `ready`. Dit onderdeel is niet als werkend gevalideerd. |
-| Godot 4.7.2 geïsoleerde soldaatpreview | **PASS** — headless geladen en 60 frames gedraaid, exitcode 0; geen preview- of scriptfout |
+| Godot 4.7.2 geïsoleerde soldaatpreview | **PASS** — headless geladen en 60 frames gedraaid, exitcode 0; geen parse- of scriptfout. Bij afsluiten meldde Godot generiek 7 gelekte ObjectDB-instances. |
 | Windows-build, iPhone-installatie of native iPhone-profiel | **NIET GETEST** |
 
 De CPU-planmeting is een 3-core Linux-containerresultaat, met twee inference-

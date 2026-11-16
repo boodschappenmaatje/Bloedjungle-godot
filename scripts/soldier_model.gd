@@ -635,21 +635,32 @@ func _add_meshy_pose_clip(lib: AnimationLibrary, pose_name: String, source: Stri
 
 
 func _add_meshy_idle(lib: AnimationLibrary, skel: Skeleton3D) -> void:
+	# Elke bot krijgt een eigen spoor in de stilstaande houding. Met alleen sporen voor romp, nek en hoofd bleven de benen en armen
+	# na rennen of lopen in de laatste pas hangen (AnimationPlayer laat botten zonder spoor staan), ook als stil gewoon speelde.
 	var idle := Animation.new()
 	idle.resource_name = "Idle"
 	idle.length = 2.4
 	idle.loop_mode = Animation.LOOP_LINEAR
-	for bone in ["mixamorig_Spine2", "mixamorig_Neck", "mixamorig_Head"]:
-		var index := skel.find_bone(bone)
-		if index < 0:
-			continue
+	for index in skel.get_bone_count():
+		var bone := skel.get_bone_name(index)
 		var track := idle.add_track(Animation.TYPE_ROTATION_3D)
 		idle.track_set_path(track, NodePath("target_character/Skeleton3D:" + bone))
 		var rest := skel.get_bone_pose_rotation(index)
-		var swing := deg_to_rad(0.8 if bone == "mixamorig_Spine2" else 0.25)
+		var swing := 0.0
+		if bone == "mixamorig_Spine2":
+			swing = deg_to_rad(0.8)
+		elif bone == "mixamorig_Neck" or bone == "mixamorig_Head":
+			swing = deg_to_rad(0.25)
 		idle.track_insert_key(track, 0.0, rest)
 		idle.track_insert_key(track, idle.length * 0.5, rest * Quaternion(Vector3.RIGHT, swing))
 		idle.track_insert_key(track, idle.length, rest)
+	var hips := skel.find_bone("mixamorig_Hips")
+	if hips >= 0:
+		var pos_track := idle.add_track(Animation.TYPE_POSITION_3D)
+		idle.track_set_path(pos_track, NodePath("target_character/Skeleton3D:mixamorig_Hips"))
+		var rest_pos := skel.get_bone_pose_position(hips)
+		idle.track_insert_key(pos_track, 0.0, rest_pos)
+		idle.track_insert_key(pos_track, idle.length, rest_pos)
 	lib.add_animation("Idle", idle)
 
 

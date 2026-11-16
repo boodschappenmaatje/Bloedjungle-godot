@@ -652,6 +652,12 @@ func _animate(spd: float, moving: bool) -> void:
 		if local_motion.z < -absf(local_motion.x) * 1.25:
 			model.play("achteruit", 0.2, spd / 2.4)
 			return
+	if model.nv and moving and spd >= 0.3 and spd <= 4.0:
+		# VQ2-vijand loopt zijwaarts of achteruit terwijl hij naar de speler kijkt: NVIDIA-clips (bron/soldaat_vq2/nvidia)
+		var lm: Vector3 = global_transform.basis.inverse() * velocity
+		if model.play_nv_move(atan2(lm.x, lm.z), spd):
+			return
+		model.set_leg_yaw(0.0)
 	if spd < 0.3:
 		model.play("schieten" if not moving and not t.get("melee", false) else "stil")
 	elif type == "assault" and spd > 5.0:

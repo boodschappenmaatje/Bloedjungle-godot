@@ -85,6 +85,36 @@
    "duration": 0.533,
    "rotation_in_clip_rad": 0.93,
    "pose_vs_stil_rad": 0.95
+  },
+  "zij_links": {
+   "duration": 1.467,
+   "rotation_in_clip_rad": 0.047,
+   "pose_vs_stil_rad": 0.893
+  },
+  "zij_rechts": {
+   "duration": 1.467,
+   "rotation_in_clip_rad": 0.395,
+   "pose_vs_stil_rad": 0.865
+  },
+  "terug": {
+   "duration": 1.467,
+   "rotation_in_clip_rad": 0.653,
+   "pose_vs_stil_rad": 0.547
+  },
+  "draai_links": {
+   "duration": 1.633,
+   "rotation_in_clip_rad": 0.381,
+   "pose_vs_stil_rad": 0.384
+  },
+  "draai_rechts": {
+   "duration": 1.633,
+   "rotation_in_clip_rad": 0.225,
+   "pose_vs_stil_rad": 0.228
+  },
+  "stoppen": {
+   "duration": 1.233,
+   "rotation_in_clip_rad": 0.698,
+   "pose_vs_stil_rad": 0.556
   }
  },
  "looks": {
@@ -95,6 +125,12 @@
    "Lijf_Uniform",
    "Rugzak",
    "Vest"
+  ],
+  "speler:jungle": [
+   "Hoofdband",
+   "Koppel",
+   "Laarzen",
+   "Lijf_Uniform"
   ],
   "speler:bloot": [
    "Hoofdband",

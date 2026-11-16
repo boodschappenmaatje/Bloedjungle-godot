@@ -48,6 +48,7 @@ const ROWS := [
 	["m1911_fire_mode", "M1911 schieten", [["assist", "Rustig (0,5 s)"], ["manual", "Handmatig"]]],
 	["vliegtuig_hoogte", "Vliegtuighoogte (rechterstick)", [["normaal", "Omlaag = stijgen"], ["omgekeerd", "Omhoog = stijgen"]]],
 	["ragdoll", "Doodsval vijanden", [["on", "Ragdoll"], ["off", "Animatie"]]],
+	["nv_anim", "Bewegingen (na nieuw spel)", [["on", "NVIDIA (nieuw)"], ["off", "Oud"]]],
 	["markeringen", "Markeringen soldaten", [["on", "Aan"], ["tact", "Tactisch"], ["off", "Uit"]]],
 	["sound", "Geluid", [["on", "Aan"], ["off", "Uit"]]],
 	["g2", "Graphics 2.0", [["on", "Aan"], ["off", "Klassiek"]]],
@@ -80,7 +81,7 @@ const ROWS := [
 const SETTINGS_TABS := [
 	{"title": "BEELD", "left": ["quality", "upscaling", "hz", "perf"], "right": ["fps", "treeshadow", "buildshadow", "g2", "wapenfx"], "note": true},
 	{"title": "WERELD", "left": ["time", "weather"], "right": ["wind"]},
-	{"title": "SOLDATEN", "left": ["soldaat", "enemy_models", "ai_niveau"], "right": ["ragdoll", "markeringen", "#meshy"]},
+	{"title": "SOLDATEN", "left": ["soldaat", "enemy_models", "ai_niveau"], "right": ["ragdoll", "markeringen", "nv_anim", "#meshy"]},
 	{"title": "GELUID & BESTURING", "left": ["sound", "m1911_fire_mode", "vliegtuig_hoogte", "#m1911"], "right": ["#camera", "wapen_haptiek"]},
 	{"title": "TEST", "left": ["t_sun", "t_jungle", "t_stad", "t_post", "t_res", "t_bouw"], "right": ["g2_fx", "g2_licht", "g2_diepte", "t_krachten", "diag"]},
 ]

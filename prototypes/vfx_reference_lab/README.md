@@ -1,41 +1,48 @@
-# BLOEDJUNGLE — VFX Reference Lab 1.0 (isolated preview)
+# BLOEDJUNGLE — VFX Reference Lab 1.0
 
-Standalone Godot 4 project. **This is an executable procedural reference prototype, not finished AAA art**. It uses generated mesh primitives and no third-party visual assets. It is NOT imported by the main game, does not change its defaults, and cannot publish OTA.
+An isolated, visual-only scene inside the existing Godot project. It displays the real M1911A1 GLB from `assets/meshy_m1911.glb` in a camera matching the gameplay camera's 40° lens and 60° downward angle, with classic and enhanced effects shown side by side against wood, concrete, and metal targets.
 
-## Open
-Open **this folder**, not the production root, as a project in Godot 4.7.x and press F6/F5 to run `scenes/lab.tscn`. Controls: **1** wood, **2** concrete, **3** metal, **Space** fire, **A** toggle automatic fire. The camera and three targets are created at runtime.
+## Open the preview
 
-## Smoke test
-Run `godot --headless --path prototypes/vfx_reference_lab --script res://tests/lab_smoke_test.gd` from the repository root. This checks scene loading, camera presence, three impact material choices and the 64-transient / 24-mark pool limits. Test has been authored but **has not yet run** because Godot is unavailable in this environment.
+Open the repository root in Godot 4.7.2, then run `prototypes/vfx_reference_lab/scenes/lab.tscn` with **F6**. From a terminal:
 
-## Demonstrates
-- Two-layer muzzle flash (warm outer halo and white-hot inner flash).
-- Two-layer narrow amber tracer; no ballistic or damage logic.
-- Different debris colors and counts for wood / concrete / metal.
-- Persistent, bounded impact markers (oldest removed first).
-- Bounded transient visuals to avoid unlimited effect growth.
+```sh
+godot --path . --scene res://prototypes/vfx_reference_lab/scenes/lab.tscn
+```
 
-This preview **does not implement** actual raycast detection, smoke flipbooks, decals, physical fragments, sound, animation synchronization or weapon model integration. Metal sparks are placeholders, and material detection is selected manually. A browser-rendered preview and iPhone FPS have NOT been captured.
+Controls work with keyboard and the touch-sized on-screen buttons:
 
-## Source review (2026-11-16)
-- [haowg/GODOT-VFX-LIBRARY](https://github.com/haowg/GODOT-VFX-LIBRARY): MIT; oriented toward 2D particle/shader studies, not a drop-in 3D gunfire stack. License inspected: https://github.com/haowg/GODOT-VFX-LIBRARY/blob/main/LICENSE
-- [seloc0des/godot-explosion-vfx-lite](https://github.com/seloc0des/godot-explosion-vfx-lite): MIT, useful for a future explosion lab but **out of scope** of gunfire reference lab. License inspected: https://github.com/seloc0des/godot-explosion-vfx-lite/blob/main/LICENSE
-- [gdquest-demos/godot-4-VFX-assets](https://github.com/gdquest-demos/godot-4-VFX-assets): MIT for scripts/scenes/shaders; CC-BY-NC-SA 4.0 for art assets. **Do not copy its noncommercial art** into the commercial Bloedjungle asset pipeline. https://github.com/gdquest-demos/godot-4-VFX-assets/blob/main/LICENSE
-- Procedural VFX Kit (itch.io) is an external asset package: ownership/asset-by-asset licensing not audited in this commit. Do not vendor it until verified.
+- `Space`: fire at the selected target in both lanes
+- `1`, `2`, `3`: wood, concrete, metal
+- `B`: cycle both lanes, classic only, enhanced only
+- `H`, `M`: High and Mobile preview presets
+- `A`: toggle automatic fire
 
-**No external code or textures were copied** into this prototype; these links are research only.
+For an automated Mobile preset capture, pass `-- --vfx-mobile` after Godot's regular options. This flag changes the lab's in-memory preset only.
 
-## Existing canonical Bloedjungle systems to reuse in a later phase
-- `scripts/bullet.gd`: existing tracer and projectile.
-- `scripts/fx.gd`: existing pooled muzzle flashes, impact material response, decals.
-- `assets/vfx/m1911/`: existing optional Colt flipbook.
-- `tests/colt_vfx_test.gd`: existing material/limit regression.
-- `docs/superpowers/specs/2026-11-10-colt-shot-vfx-design.md`: approved realistic/arcade look.
+The High/Mobile presets exist only while this scene is running. They change the in-memory quality tier, lab glow, and lab key-light shadows. The scene restores the starting in-memory settings when it exits and never calls the settings save function.
 
-## Before any main-game integration
-Review the in-editor prototype first. Compare under identical camera/lighting conditions against existing Colt, Thompson, and Browning M2 VFX. Keep a single source of truth for damage and collision, hook effects to existing shot/impact events, preserve flash/tracer/impact pooling limits and old-mark eviction, and use an explicit opt-in A/B switch. Run Godot 4.7.2 import and tests, capture real before/after game-camera images and inspect drawcalls/overdraw. Test 60 FPS in the **native** iPhone app only after separate OTA approval.
+## Reused game systems
 
-## Validation status
-- GitHub source structure inspected; independent project and headless smoke test created.
-- **NOT RUN**: Godot executable unavailable in authoring environment, so scene parser/runtime, renderer, shader, FPS, screenshots and iPhone validation are unverified.
-- **NOT DONE**: merger, OTA upload, modifications to `scripts/fx.gd`, `scripts/bullet.gd` or any gameplay settings.
+- The Colt mesh and its animated slide come from the existing `assets/meshy_m1911.glb`.
+- Classic flashes, impacts, sparks, decals, and their caps come from `scripts/fx.gd`.
+- Enhanced muzzle flashes, material responses, and tracer mesh come from `scripts/wapenfx.gd` and `scripts/bullet.gd`.
+- The comparison lanes use the same underlying base-impact path. The enhanced lane adds the current WapenFx material response, as the gameplay shot path does.
+- Tracers are visual-only mesh instances with a fixed two-entry pool. This lab does not instantiate `Bullet`, perform collision queries, change health/damage, play audio, or alter controls.
+- The VFX sources/assets are existing Bloedjungle project files. No external assets or code were copied.
+
+## Validation
+
+Run the visual smoke test from the repository root:
+
+```sh
+godot --headless --path . --scene res://prototypes/vfx_reference_lab/tests/lab_smoke_test.tscn
+```
+
+The test checks scene load, camera, all three materials, bounded transient/decal pools, and that gameplay state and settings are restored. It does not establish GPU frame rate or certify a physical iPhone. Record screenshots/video from a rendered preview before treating visual quality or device performance as approved.
+
+Executed evidence and missing platform checks are recorded in [evidence/RESULTS.md](evidence/RESULTS.md). The [High screenshot](evidence/vfx-reference-high.png), [High video](evidence/vfx-reference-high.mp4), [Mobile screenshot](evidence/vfx-reference-mobile.png), and [Mobile video](evidence/vfx-reference-mobile.mp4) show the 3D A/B preview from the gameplay camera. Captures use Mesa llvmpipe software OpenGL and do not establish hardware or iPhone performance.
+
+## Scope
+
+Only this lab scene and its test/documentation belong to the preview. No gameplay, controls, damage, audio, game settings, renderer defaults, merge, or OTA publication are changed.

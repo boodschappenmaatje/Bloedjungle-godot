@@ -96,9 +96,9 @@ func fov_punch(deg: float) -> void:
 	_fov_punch = maxf(_fov_punch, clampf(deg, 0.0, 1.5))
 
 
-func combat_impulse(strength: float) -> void:
+func combat_impulse(strength: float, duration := 0.13) -> void:
 	_combat_shake_strength = maxf(_combat_shake_strength, clampf(strength, 0.0, 0.055))
-	_combat_shake_time = maxf(_combat_shake_time, 0.13)
+	_combat_shake_time = maxf(_combat_shake_time, clampf(duration, 0.05, 0.5))
 
 
 func _unhandled_key_input(event: InputEvent) -> void:

@@ -47,3 +47,14 @@ De geluiden zijn **zelf gesynthetiseerd** (`bron/wapenfx/maak_geluid.py`), geen 
 ## v224: kogelsporen mooier en duidelijker
 
 Na de iPhone-opname van v223 waren de kogels te dunne, korte witte streepjes. Het spoor is nu één mesh met een brede zachte oranje halo en een dunne witgele kern, een kop die toespitst en een staart die uitdooft; pistool 3,4 m, shotgun-korrels 2,0 m, HDR-helder zodat het gras warm meekleurt. Nog steeds één vlak per kogel (zelfde kosten als eerst). Native iPhone-fps: NIET GETEST.
+
+## v249: referentiestijl (Dennis' referentiefilmpje, 17 nov)
+
+Referentie: `/mnt/project-files/wapeneffecten/REFERENTIE.md` (top-down shooter met hete, felle effecten). Gekozen 1A-9A:
+- Kogelspoor met drie lagen (rode halo, witgele kern, korte felle kogelkop), heet HDR-palet (`HEET_*`); gloed op Ultra zoals al ingesteld, op Hoog geen extra gloed om de 60 fps te sparen.
+- Inslag (`WapenFx.inslag`): ster-flits, vonkenregen, gloedstipjes, op de grond gloeiende barstjes (Decal met emissie die in 2,4 s dooft) en een lage stofring.
+- Vijand: korte treffer-flits, bij een kill donkere brokstukken, extra bloed en stof (`kill_fx`).
+- Hulzen blijven ca. 20 s liggen: max 20 / 40 / 60 (Prestatie / Hoog / Ultra), oudste verdwijnt eerst (`Fx._lying`).
+- Ster-mondingsvuur met lichtlijnen en gloedstipjes bij elk schot.
+- Explosies: langere schermschok (0,34 s) en inzoomstoot, alleen met Wapeneffecten Nieuw.
+Native iPhone-fps: NIET GETEST.

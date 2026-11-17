@@ -34,7 +34,13 @@ const PROFIEL := {
 	},
 }
 
-const CAP := {"flash": 6, "patch": 4, "light": 3, "rook": 40, "bank": 8, "stof": 18}
+const CAP := {"flash": 6, "patch": 4, "light": 3, "rook": 40, "bank": 8, "stof": 18, "ring": 8, "barst": 10, "gloed": 24, "brok": 6}
+
+## Referentiestijl (17 nov): heet palet in HDR, zodat de gloed op Ultra het oppakt en het op Hoog fel blijft.
+const HEET_WIT := Color(2.4, 2.1, 1.6)
+const HEET_GEEL := Color(2.6, 1.7, 0.5)
+const HEET_ORANJE := Color(2.2, 0.85, 0.18)
+const HEET_ROOD := Color(1.6, 0.28, 0.06)
 
 static var _pools := {}    # naam -> vrije knopen
 static var _made := {}     # naam -> aantal knopen dat bestaat
@@ -125,6 +131,10 @@ static func muzzle(parent: Node, pos: Vector3, weapon: String, angle: float) -> 
 	if t >= 1:
 		_flash(parent, pos, weapon, angle + randf_range(-0.22, 0.22), p, 0.62)   # tweede, kleinere tong ernaast: de vlam flakkert
 	Fx._flash_quad(parent, pos + Vector3.UP * 0.1 + fwd * 0.12, p.glow, p.flash_life * 0.9, Color(1.0, 0.66, 0.24, 0.6))
+	# felle ster met lichtlijnen over de vlam heen (referentie): leest ook op afstand als een echte flits
+	Fx._flash_quad(parent, pos + Vector3.UP * 0.15 + fwd * 0.35, float(p.glow) * 1.25, float(p.flash_life) * 1.1, Color(HEET_GEEL.r, HEET_GEEL.g, HEET_GEEL.b, 0.95), "star")
+	if t >= 1:
+		_gloed(parent, pos + fwd * 0.6 + Vector3.UP * 0.2, fwd, 5 if weapon == "trench" else 3)
 	_patch(parent, pos + fwd * 0.3, p)
 	_light(parent, pos + fwd * 0.6 + Vector3.UP * 0.5, p)
 	var n := [3, int(p.smoke_n * 0.7), int(p.smoke_n)][t] as int
@@ -300,21 +310,34 @@ static func tracer_mesh(weapon: String) -> ArrayMesh:
 	var lang: float = p.trace_len
 	var head: Color = p.trace_head
 	var tail: Color = p.trace_tail
-	var halo := Color(1.0, 0.5, 0.12)
 	# twee lagen in één vlak: een brede zachte oranje halo en daarbinnen een dunne, witgele kern.
 	# Elke laag bestaat uit twee kruislings gezette linten met een kop die toespitst en een staart die uitdooft.
-	for laag in 2:
-		var breed: float = float(p.trace_w) * (3.4 if laag == 0 else 1.0)
-		var kleur_kop: Color = Color(halo.r, halo.g, halo.b, 0.42) if laag == 0 else head
-		var kleur_mid: Color = Color(halo.r, halo.g, halo.b, 0.2) if laag == 0 else head.lerp(tail, 0.45)
-		var kleur_eind: Color = Color(halo.r, halo.g, halo.b, 0.0) if laag == 0 else tail
-		# stations: [z, breedtefactor, kleur]
-		var st_list := [
-			[-lang, 0.1, kleur_eind],
-			[-lang * 0.45, 0.62, kleur_mid],
-			[0.0, 1.0, kleur_kop],
-			[0.16, 0.12, Color(kleur_kop.r, kleur_kop.g, kleur_kop.b, kleur_kop.a * 0.0)],
-		]
+	# drie lagen in één vlak: brede rode/oranje halo, witgele kern met staart, en een korte felle kogelkop (referentie).
+	for laag in 3:
+		var breed: float = float(p.trace_w) * [3.6, 1.0, 2.0][laag]
+		var kleur_kop: Color
+		var kleur_mid: Color
+		var kleur_eind: Color
+		var stations: Array
+		if laag == 0:
+			kleur_kop = Color(1.0, 0.5, 0.12, 0.45)
+			kleur_mid = Color(1.0, 0.32, 0.06, 0.22)
+			kleur_eind = Color(0.9, 0.15, 0.03, 0.0)
+			stations = [[-lang, 0.1], [-lang * 0.45, 0.62], [0.0, 1.0], [0.16, 0.12]]
+		elif laag == 1:
+			kleur_kop = head
+			kleur_mid = Color(1.0, 0.6, 0.16, 0.75)
+			kleur_eind = tail
+			stations = [[-lang, 0.1], [-lang * 0.45, 0.62], [0.0, 1.0], [0.16, 0.12]]
+		else:
+			kleur_kop = Color(1.0, 1.0, 0.92, 1.0)
+			kleur_mid = Color(1.0, 0.85, 0.5, 0.9)
+			kleur_eind = Color(1.0, 0.6, 0.2, 0.0)
+			stations = [[-0.42, 0.3], [-0.2, 0.8], [0.0, 1.0], [0.12, 0.2]]
+		var kleuren := [kleur_eind, kleur_mid, kleur_kop, Color(kleur_kop.r, kleur_kop.g, kleur_kop.b, 0.0)]
+		var st_list: Array = []
+		for i in 4:
+			st_list.append([stations[i][0], stations[i][1], kleuren[i]])
 		for ang in [0.0, PI * 0.5]:
 			var zijde := Vector3(cos(ang), sin(ang), 0.0)
 			for i in st_list.size() - 1:
@@ -336,7 +359,7 @@ static func tracer_mesh(weapon: String) -> ArrayMesh:
 	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
 	mat.vertex_color_use_as_albedo = true
 	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.albedo_color = Color(2.1, 1.9, 1.6)   # HDR: de kern straalt, de halo kleurt het gras eromheen warm
+	mat.albedo_color = Color(2.5, 2.1, 1.6)   # HDR: de kern straalt, de halo kleurt het gras eromheen warm
 	m.surface_set_material(0, mat)
 	_meshes[key] = m
 	return m
@@ -353,11 +376,13 @@ static func ground_hit(parent: Node, at: Vector3, weapon: String) -> void:
 	if not enabled(weapon) or not is_instance_valid(parent) or not Fx._near_camera(parent, at, 34.0):
 		return
 	var p: Dictionary = PROFIEL[weapon]
-	var g := Vector3(at.x, 0.0, at.z)
+	var g := Vector3(at.x, Data.ground_y(at.x, at.z), at.z)
 	if weapon == "trench" and randf() > 0.4:
 		_dust(parent, g, p, 0.7)   # van de negen korrels laten er een paar een volledig effect achter
+		_vonken(parent, g + Vector3.UP * 0.05, Vector3.UP, 0.6)
 		return
 	_dust(parent, g, p, 1.0)
+	inslag(parent, g, Vector3.UP, weapon, true)
 	Fx._burst(parent, g + Vector3.UP * 0.05, Vector3.UP, 7, Color(0.36, 0.26, 0.14), 0.05, 4.2, Vector3(0.05, 0.04, 0.05))
 	Fx._burst(parent, g + Vector3.UP * 0.05, Vector3.UP, 5, Color(0.22, 0.42, 0.1), 0.04, 3.4, Vector3(0.02, 0.05, 0.02))   # grassprieten
 	if tier() >= 1:
@@ -400,6 +425,7 @@ static func surface_hit(parent: Node, pos: Vector3, normal: Vector3, material: S
 	if not enabled(weapon) or not is_instance_valid(parent) or not Fx._near_camera(parent, pos, 30.0):
 		return
 	var n := normal.normalized()
+	inslag(parent, pos, n, weapon, false)
 	match material:
 		"wood":
 			Fx._burst(parent, pos, n, 6, Color(0.3, 0.5, 0.12), 0.08, 2.4, Vector3(0.08, 0.012, 0.05))   # blaadjes dwarrelen weg
@@ -411,6 +437,195 @@ static func surface_hit(parent: Node, pos: Vector3, normal: Vector3, material: S
 				_dust(parent, pos, PROFIEL[weapon], 0.55)
 		_:
 			_dust(parent, pos, PROFIEL[weapon], 0.5)
+
+
+# ---------- inslag in referentiestijl ----------
+
+## Korte hete flits, vonkenregen en gloedstipjes; op de grond ook gloeiende barstjes en een lage stofring (Hoog en Ultra).
+static func inslag(parent: Node, pos: Vector3, normal: Vector3, weapon: String, op_grond: bool) -> void:
+	if not enabled(weapon) or not is_instance_valid(parent) or not Fx._near_camera(parent, pos, 34.0):
+		return
+	var t := tier()
+	var n := normal.normalized()
+	var zwaar := 1.0 if weapon == "m1911" else 0.75   # shotgun: negen korrels, dus per korrel iets kleiner
+	Fx._flash_quad(parent, pos + n * 0.08, 0.75 * zwaar, 0.07, Color(HEET_GEEL.r, HEET_GEEL.g, HEET_GEEL.b, 0.95), "star")
+	_vonken(parent, pos + n * 0.04, n, zwaar)
+	if t >= 1:
+		_gloed(parent, pos + n * 0.1, n, 3 if t >= 2 else 2)
+		if op_grond:
+			_barst(parent, pos, zwaar)
+			if t >= 2 or weapon == "m1911":
+				_ring(parent, pos, zwaar)
+
+
+static func _vonken(parent: Node, pos: Vector3, n: Vector3, mul: float) -> void:
+	Fx._burst(parent, pos, n, int(10 * mul) + 2, HEET_GEEL, 0.022, 9.5, Vector3(0.016, 0.016, 0.12))
+	Fx._burst(parent, pos, n, int(6 * mul) + 1, HEET_ORANJE, 0.03, 5.5, Vector3(0.024, 0.024, 0.024))
+
+
+## Zwevende gloedstipjes: kleine hete vonkjes die omhoog drijven en in ruim een seconde doven.
+static func _gloed(parent: Node, pos: Vector3, dir: Vector3, n: int) -> void:
+	var e := _acquire("gloed", parent, func() -> Node3D:
+		var c := CPUParticles3D.new()
+		c.one_shot = true
+		c.explosiveness = 0.85
+		c.lifetime = 1.3
+		c.amount = 6
+		c.spread = 70.0
+		c.initial_velocity_min = 0.6
+		c.initial_velocity_max = 2.2
+		c.gravity = Vector3(0.15, 0.9, 0.0)
+		c.damping_min = 1.5
+		c.damping_max = 2.5
+		var b := BoxMesh.new()
+		b.size = Vector3.ONE * 0.035
+		var m := StandardMaterial3D.new()
+		m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		m.albedo_color = HEET_ORANJE
+		m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		m.vertex_color_use_as_albedo = true
+		b.material = m
+		c.mesh = b
+		var ramp := Gradient.new()
+		ramp.set_color(0, Color(1.0, 0.9, 0.6, 1.0))
+		ramp.set_color(1, Color(1.0, 0.25, 0.05, 0.0))
+		c.color_ramp = ramp
+		return c)
+	if e == null:
+		return
+	var c := e as CPUParticles3D
+	c.amount = clampi(n, 1, 6)
+	c.global_position = pos
+	c.direction = (dir + Vector3.UP).normalized()
+	c.emitting = false
+	c.restart()
+	c.emitting = true
+	var tw := c.create_tween()
+	tw.tween_interval(c.lifetime + 0.1)
+	tw.tween_callback(_release.bind(c))
+
+
+static var _barst_tex_albedo: ImageTexture
+static var _barst_tex_emissie: ImageTexture
+
+
+## Gloeiende barstjes: een donker plekje met hete oranje scheuren die in ruim twee seconden uitdoven (zoals in de referentie).
+static func _barst_textures() -> void:
+	if _barst_tex_albedo != null:
+		return
+	var n := 128
+	var alb := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	var emi := Image.create(n, n, false, Image.FORMAT_RGBA8)
+	alb.fill(Color(0, 0, 0, 0))
+	emi.fill(Color(0, 0, 0, 1))
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 2611
+	var c := Vector2(n, n) * 0.5
+	for y in n:
+		for x in n:
+			var d := Vector2(x, y).distance_to(c) / (n * 0.5)
+			if d < 1.0:
+				alb.set_pixel(x, y, Color(0.035, 0.025, 0.02, clampf((1.0 - d) * 1.6, 0.0, 0.8)))
+	for arm in 7:
+		var ang := float(arm) / 7.0 * TAU + rng.randf_range(-0.3, 0.3)
+		var p := c
+		var lengte := rng.randf_range(0.55, 0.95) * n * 0.5
+		var stap := 0.0
+		while stap < lengte:
+			ang += rng.randf_range(-0.45, 0.45)
+			p += Vector2(cos(ang), sin(ang)) * 1.5
+			stap += 1.5
+			var hitte := 1.0 - stap / lengte
+			for o in [Vector2.ZERO, Vector2(1, 0), Vector2(0, 1)]:
+				var q: Vector2 = p + o
+				if q.x >= 0 and q.y >= 0 and q.x < n and q.y < n:
+					emi.set_pixel(int(q.x), int(q.y), Color(1.0, 0.35 + 0.4 * hitte, 0.08, 1.0) * (0.4 + 0.6 * hitte))
+					alb.set_pixel(int(q.x), int(q.y), Color(0.05, 0.02, 0.01, 0.95))
+			if rng.randf() < 0.05:
+				ang += rng.randf_range(-1.0, 1.0)   # zijtak
+	_barst_tex_albedo = ImageTexture.create_from_image(alb)
+	_barst_tex_emissie = ImageTexture.create_from_image(emi)
+
+
+static func _barst(parent: Node, pos: Vector3, mul: float) -> void:
+	var d := _acquire("barst", parent, func() -> Node3D:
+		_barst_textures()
+		var dc := Decal.new()
+		dc.texture_albedo = _barst_tex_albedo
+		dc.texture_emission = _barst_tex_emissie
+		dc.distance_fade_enabled = true
+		dc.distance_fade_begin = 45.0
+		dc.distance_fade_length = 10.0
+		return dc)
+	if d == null:
+		return
+	var dc := d as Decal
+	var size := randf_range(0.9, 1.3) * mul
+	dc.size = Vector3(size, 0.5, size)
+	dc.rotation = Vector3(0.0, randf() * TAU, 0.0)
+	dc.global_position = pos + Vector3.UP * 0.05
+	dc.emission_energy = 3.0
+	dc.modulate = Color(1, 1, 1, 1)
+	var tw := dc.create_tween()
+	tw.tween_property(dc, "emission_energy", 0.0, 2.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+	tw.tween_interval(3.0)
+	tw.tween_property(dc, "modulate:a", 0.0, 1.5)
+	tw.tween_callback(_release.bind(dc))
+
+
+static var _ring_mesh: PlaneMesh
+
+
+## Lage stofring die van de inslag wegrolt.
+static func _ring(parent: Node, pos: Vector3, mul: float) -> void:
+	var r := _acquire("ring", parent, func() -> Node3D:
+		if _ring_mesh == null:
+			var n := 64
+			var img := Image.create(n, n, false, Image.FORMAT_RGBA8)
+			for y in n:
+				for x in n:
+					var d := Vector2(x + 0.5, y + 0.5).distance_to(Vector2(n, n) * 0.5) / (n * 0.5)
+					var a := clampf(1.0 - absf(d - 0.75) / 0.22, 0.0, 1.0)
+					img.set_pixel(x, y, Color(1, 1, 1, a * a))
+			var m := StandardMaterial3D.new()
+			m.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+			m.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+			m.albedo_texture = ImageTexture.create_from_image(img)
+			m.albedo_color = Color(0.62, 0.52, 0.38)
+			_ring_mesh = PlaneMesh.new()
+			_ring_mesh.size = Vector2.ONE
+			_ring_mesh.material = m
+		var mi := MeshInstance3D.new()
+		mi.mesh = _ring_mesh
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		return mi)
+	if r == null:
+		return
+	var mi := r as MeshInstance3D
+	mi.global_position = pos + Vector3.UP * 0.08
+	mi.rotation = Vector3(0.0, randf() * TAU, 0.0)
+	mi.scale = Vector3.ONE * 0.3
+	mi.transparency = 0.35
+	var eind := 2.2 * mul
+	var tw := mi.create_tween()
+	tw.tween_method(func(u: float) -> void:
+		var k := 1.0 - pow(1.0 - u, 3.0)
+		mi.scale = Vector3.ONE * lerpf(0.3, eind, k)
+		mi.transparency = lerpf(0.35, 1.0, u), 0.0, 1.0, 0.55)
+	tw.tween_callback(_release.bind(mi))
+
+
+## Kill-effect: donkere brokstukken (kleding, uitrusting) en een korte rookstreep, zwaarder bij de shotgun.
+static func kill_fx(parent: Node, at: Vector3, dir: Vector3, weapon: String) -> void:
+	if not enabled(weapon) or not is_instance_valid(parent) or not Fx._near_camera(parent, at, 34.0):
+		return
+	var flat := Vector3(dir.x, 0.0, dir.z).normalized()
+	var zwaar := weapon == "trench"
+	Fx._burst(parent, at + Vector3.UP * 0.3, flat + Vector3.UP * 0.5, 10 if zwaar else 6, Color(0.16, 0.14, 0.1), 0.07, 6.5 if zwaar else 4.5, Vector3(0.09, 0.05, 0.07))
+	Fx._burst(parent, at + Vector3.UP * 0.3, flat + Vector3.UP * 0.3, 18 if zwaar else 10, Color(0.5, 0.02, 0.02), 0.06, 7.0, Vector3.ZERO)
+	_dust(parent, Vector3(at.x, Data.ground_y(at.x, at.z), at.z), PROFIEL[weapon], 1.3 if zwaar else 1.0)
+	if tier() >= 1:
+		_gloed(parent, at + Vector3.UP * 0.5, flat, 4)
 
 
 # ---------- hulzen ----------
@@ -425,6 +640,11 @@ static func casing_mesh(weapon: String) -> Mesh:
 	_add_cylinder(m, 0.0112, 0.019, -0.022, Color(0.92, 0.66, 0.26), 0.85, 0.28)  # koperen bodem
 	_meshes["shell"] = m
 	return m
+
+
+## Hoeveel hulzen er op de grond mogen blijven liggen (Prestatie, Hoog, Ultra).
+static func casings_max() -> int:
+	return [20, 40, 60][tier()]
 
 
 static func casing_scale(weapon: String) -> float:
@@ -495,6 +715,9 @@ static func treffer(parent: Node, target: Node, at: Vector3, dir: Vector3, weapo
 	var flat := Vector3(dir.x, 0.0, dir.z).normalized()
 	Fx.blood(parent, at + Vector3.UP * 0.1, flat + Vector3.UP * 0.15, 32 if weapon == "trench" else 20)
 	Fx.ground_blood(parent, at + flat * 0.9, 0.9 if weapon == "trench" else 0.6)
+	Fx._flash_quad(parent, at + Vector3.UP * 0.15 - flat * 0.1, 1.1 if weapon == "trench" else 0.8, 0.06, Color(HEET_WIT.r, HEET_WIT.g, HEET_WIT.b, 0.9), "star")   # korte treffer-flits
+	if target != null and is_instance_valid(target) and target.get("hp") != null and float(target.get("hp")) <= 0.0:
+		kill_fx(parent, at, dir, weapon)
 	if target != null and is_instance_valid(target) and target.get("model") != null and target.get("model").has_method("hit_reaction"):
 		target.get("model").hit_reaction(flat, 2.8 if weapon == "trench" else 1.9)
 	Sfx.play_file("tik_treffer", 0.45)

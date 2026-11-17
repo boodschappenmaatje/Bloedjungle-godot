@@ -276,8 +276,16 @@ static var _casings := 0
 static var _casing_pool: Array[MeshInstance3D] = []
 
 
+static var _lying: Array[MeshInstance3D] = []   # Wapeneffecten: hulzen die op de grond blijven liggen, oudste eerst
+
+
 static func casing(parent: Node, pos: Vector3, eject_right := Vector3.RIGHT, forward := Vector3.FORWARD, kind := "") -> void:
-	if _casings >= MAX_CASINGS or not _near_camera(parent, pos, 42.0):
+	var blijft := kind != "" and WapenFx.enabled(kind)
+	if blijft:
+		# referentie: een spoor van hulzen blijft liggen; is het maximum bereikt, dan verdwijnt de oudste
+		while _lying.size() >= WapenFx.casings_max() or (_casings >= MAX_CASINGS + WapenFx.casings_max() and not _lying.is_empty()):
+			_recycle_casing(_lying.pop_front())
+	if _casings >= (MAX_CASINGS + WapenFx.casings_max() if blijft else MAX_CASINGS) or not _near_camera(parent, pos, 42.0):
 		return
 	if _casing_mesh == null:
 		# het echte hulsmodel uit bron/wapens; terugval op een blokje
@@ -327,6 +335,7 @@ static func casing(parent: Node, pos: Vector3, eject_right := Vector3.RIGHT, for
 	var d := (v.y + sqrt(v.y * v.y + 2.0 * g * y0)) / g
 	var spin := Vector3(randf_range(-25.0, 25.0), randf_range(-25.0, 25.0), randf_range(-25.0, 25.0))
 	var tw := c.create_tween()
+	c.set_meta("casing_tw", tw)   # bij vroeg opruimen (oudste huls) stopt deze animatie, anders ruimt hij later een hergebruikte huls op
 	tw.tween_method(func(t: float):
 		c.global_position = pos + Vector3(v.x * t, v.y * t - 0.5 * g * t * t, v.z * t)
 		c.rotation = spin * t, 0.0, d, d)
@@ -338,20 +347,27 @@ static func casing(parent: Node, pos: Vector3, eject_right := Vector3.RIGHT, for
 			c.global_position = land + Vector3(v.x * 0.3 * t, 1.1 * t - 0.5 * g * t * t, v.z * 0.3 * t)
 			c.rotation = spin * (d + t) * 0.4, 0.0, hop, hop)
 		tw.tween_callback(func(): Sfx.play_file("huls_tink", 0.15, land))
-	tw.tween_interval(0.9)
+		_lying.append(c)
+		tw.tween_interval(20.0)
+	else:
+		tw.tween_interval(0.9)
 	tw.tween_property(c, "scale", Vector3.ZERO, 0.28)
 	tw.tween_callback(_recycle_casing.bind(c))
 
 
 static func _recycle_casing(c: MeshInstance3D) -> void:
+	_lying.erase(c)
 	if not is_instance_valid(c) or not c.get_meta("casing_active", false):
 		return
+	var oud_tw = c.get_meta("casing_tw", null)
+	if oud_tw is Tween and (oud_tw as Tween).is_valid():
+		(oud_tw as Tween).kill()
 	c.set_meta("casing_active", false)
 	_casings = maxi(0, _casings - 1)
 	c.visible = false
 	c.scale = Vector3.ONE
 	c.position = Vector3.ZERO
-	if _casing_pool.size() < MAX_CASINGS:
+	if _casing_pool.size() < MAX_CASINGS + 60:
 		_casing_pool.append(c)
 	else:
 		c.queue_free()
@@ -359,6 +375,7 @@ static func _recycle_casing(c: MeshInstance3D) -> void:
 
 static func _on_casing_tree_exiting(c: MeshInstance3D) -> void:
 	_casing_pool.erase(c)
+	_lying.erase(c)
 	if is_instance_valid(c) and c.get_meta("casing_active", false):
 		c.set_meta("casing_active", false)
 		_casings = maxi(0, _casings - 1)
@@ -815,7 +832,10 @@ static func explosion(parent: Node, pos: Vector3, scale := 1.0, chunks: Array = 
 	if Game.player and is_instance_valid(Game.player) and Game.player.global_position.distance_to(pos) < 32.0:
 		var camera: Camera3D = Game.player.get_parent().get_node_or_null("Camera") as Camera3D
 		if camera and camera.has_method("combat_impulse"):
-			camera.call("combat_impulse", 0.035 * clampf(scale, 0.7, 1.4))
+			var nieuw := GameSettings.get_value("wapenfx") == "nieuw"   # referentie: grote knallen schudden het beeld echt
+			camera.call("combat_impulse", (0.055 if nieuw else 0.035) * clampf(scale, 0.7, 1.4), 0.34 if nieuw else 0.13)
+			if nieuw and camera.has_method("fov_punch"):
+				camera.call("fov_punch", 1.3 * clampf(scale, 0.7, 1.4) * clampf(1.2 - Game.player.global_position.distance_to(pos) / 32.0, 0.2, 1.0))
 	_fireball(parent, pos, scale)
 	_debris(parent, pos, scale, chunks)
 	crater(parent, pos, scale)

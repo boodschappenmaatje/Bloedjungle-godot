@@ -51,6 +51,17 @@ func _run() -> void:
 	for key in counts:
 		var base := String(key).get_slice(":", 0)
 		_check(int(counts[key]) <= int(wfx.CAP[base]), "voorraad %s te groot: %d" % [key, int(counts[key])])
+	# referentiestijl: inslagen en hulzen blijven begrensd
+	for i in 100:
+		wfx.inslag(stage, Vector3(i * 0.05, 0, 4), Vector3.UP, "m1911", true)
+		wfx.inslag(stage, Vector3(i * 0.05, 0, 5), Vector3.UP, "trench", true)
+		fx.casing(stage, Vector3(i * 0.05, 1.2, 6), Vector3.RIGHT, Vector3.FORWARD, "m1911")
+	counts = wfx.counts()
+	for key in counts:
+		var base2 := String(key).get_slice(":", 0)
+		_check(int(counts[key]) <= int(wfx.CAP[base2]), "voorraad %s te groot na inslagen: %d" % [key, int(counts[key])])
+	_check(int(counts.get("barst", 0)) > 0 and int(counts.get("gloed", 0)) > 0, "inslag maakt geen gloeiende barst of gloedstipjes")
+	_check(fx._lying.size() <= wfx.casings_max(), "te veel hulzen blijven liggen: %d" % fx._lying.size())
 	var lights := stage.find_children("*", "OmniLight3D", true, false).size()
 	_check(lights <= int(wfx.CAP.light), "te veel flitslichten: %d" % lights)
 
@@ -88,7 +99,7 @@ func _run() -> void:
 
 	# --- opruimen: alles in de voorraad wordt vanzelf weer vrij ---
 	gs.set_value("wapenfx", "nieuw")
-	await create_timer(5.6).timeout
+	await create_timer(8.6).timeout
 	var active := 0
 	for n in stage.find_children("*", "Node3D", true, false):
 		if n.get_meta("wfx_active", false):

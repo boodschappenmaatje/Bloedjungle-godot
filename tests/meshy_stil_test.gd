@@ -56,7 +56,33 @@ func _run() -> void:
 			var d: float = (rust[n] as Quaternion).angle_to(daarna[n])
 			_check(d < 0.12, "%s -> stil: %s staat %.2f rad van de rusthouding (blijft hangen)" % [loop, n, d])
 		m.queue_free()
+	# NVIDIA-bewegingen op het Meshy-skelet: opzij, achteruit en afremmen
+	_check(vers.nv, "NVIDIA-bewegingen staan niet aan voor de Meshy-speler")
+	for n in ["zij_links", "zij_rechts", "terug", "draai_links", "draai_rechts", "stoppen"]:
+		_check(vers.anim.has_animation(n), "clip %s ontbreekt" % n)
+	for r in [[1.4, "zij_links"], [-1.4, "zij_rechts"], [2.5, "terug"]]:
+		var m := SoldierModel.new()
+		root.add_child(m)
+		m.setup(Color("4b5a2c"), "m1911", "speler:uniform")
+		for _i in 40:
+			_check(m.play_nv_move(r[0], 2.0), "play_nv_move(%s) deed niets" % r[0])
+			await process_frame
+		_check(m.current == r[1], "rel %s: speelt %s, verwacht %s" % [r[0], m.current, r[1]])
+		var beweging := _bones(m)
+		var v := 0.0
+		for n in rust:
+			v = maxf(v, (rust[n] as Quaternion).angle_to(beweging[n]))
+		_check(v > 0.25, "%s: lijkt niet op bewegen (%.2f rad)" % [r[1], v])
+		for _i in 150:
+			m.play("stil")
+			await process_frame
+		var rust2 := _bones(m)
+		for n in rust:
+			var d: float = (rust[n] as Quaternion).angle_to(rust2[n])
+			_check(d < 0.12, "%s -> stil: %s staat %.2f rad van de rusthouding" % [r[1], n, d])
+		_check(m.current == "stil", "%s -> stil: huidige clip is %s" % [r[1], m.current])
+		m.queue_free()
 	vers.queue_free()
 	if failures.is_empty():
-		print("MESHY STIL TEST OK: na rennen, lopen en sprinten staat de Meshy-speler weer in de rusthouding")
+		print("MESHY STIL TEST OK: na rennen, lopen, sprinten, opzij en achteruit staat de Meshy-speler weer in de rusthouding")
 	quit(1 if not failures.is_empty() else 0)

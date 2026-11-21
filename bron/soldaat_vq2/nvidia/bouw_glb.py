@@ -23,7 +23,7 @@ def lees(path):
     return j, d[off + 8: off + 8 + bl]
 
 
-def bouw(clips, uit=UIT, bron=BRON, met_mesh=False):
+def bouw(clips, uit=UIT, bron=BRON, met_mesh=False, heup='DEF-hips'):
     """clips: {naam: (LT (F,n,3), LQ (F,n,4))} in de volgorde van skin.joints. met_mesh=True: volledige soldaat (viewer)."""
     j, b = lees(bron)
     if met_mesh:
@@ -73,7 +73,7 @@ def bouw(clips, uit=UIT, bron=BRON, met_mesh=False):
         an = {'name': naam, 'channels': [], 'samplers': []}
         for i, node in enumerate(joints):
             paden = [('rotation', LQ[:, i], 'VEC4')]
-            if names[i] == 'DEF-hips': paden.append(('translation', LT[:, i], 'VEC3'))
+            if names[i] == heup: paden.append(('translation', LT[:, i], 'VEC3'))
             for pad, data, typ in paden:
                 an['samplers'].append({'input': ti, 'output': add(data, typ), 'interpolation': 'LINEAR'})
                 an['channels'].append({'sampler': len(an['samplers']) - 1, 'target': {'node': node, 'path': pad}})

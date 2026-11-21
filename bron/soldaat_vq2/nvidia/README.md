@@ -62,3 +62,15 @@ De clips zelf opnieuw genereren (CPU volstaat, geen NVIDIA-videokaart nodig; ca.
   afremmen).
 - Viewer `tools/blender-vq2-viewer/` model Soldaat toont alle 23 clips (`node test-soldaat.mjs`).
 - Native iPhone-fps: NIET GETEST. Kosten in het spel: zes extra clips (GLB 325 kB), geen extra rekenwerk.
+
+## Meshy-speler (v249)
+
+`meshy_clips.py` zet dezelfde zes clips (uit `clips.npz`, DEF-skelet) met dezelfde wereldrotatie-methode om naar het
+Mixamo-skelet van `assets/meshy_jungle_commando.glb` -> `assets/nv_bewegingen_meshy.glb` (A-houding tegenover onze
+T-houding wordt door de botuitlijning opgevangen; heuphoogte geschaald). Geen NVIDIA-model nodig:
+
+    python3 -I bron/soldaat_vq2/nvidia/meshy_clips.py [/pad/viewer.glb]
+
+`SoldierModel._add_meshy_nv_clips` hangt ze aan de Meshy-speler (niet aan de Assault-vijand); `play`, `play_nv_move`,
+draaien en afremmen gebruiken dezelfde logica als bij het VQ2-mannetje. Test: `tests/meshy_stil_test.gd`.
+Bij de Meshy-speler is er geen `SoldierPose`, dus geen beendraaiing voor tussenhoeken (alleen opzij/achteruit/vooruit).
